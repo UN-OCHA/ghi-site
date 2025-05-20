@@ -86,7 +86,7 @@ class ArticleCollection extends ConfigurationContainerItemPluginBase implements 
     // Get the defaults.
     $default_tags = $this->getSubmittedValue($element, $form_state, 'tags') ?? ($this->config['article_selection_form']['tags'] ?? []);
     $default_tag_ids = array_filter(array_map(function ($item) {
-      return $item['target_id'] ?? NULL;
+      return $item['target_id'] ?? ($item ?: NULL);
     }, $default_tags['tag_ids'] ?: []));
 
     $default_tags['tag_ids'] = array_values(array_map(function ($tag_id) {
@@ -405,8 +405,11 @@ class ArticleCollection extends ConfigurationContainerItemPluginBase implements 
       if (is_int($item)) {
         $tag_ids[$item] = $item;
       }
-      if (is_array($item) && !empty($item['target_id'])) {
+      elseif (is_array($item) && !empty($item['target_id'])) {
         $tag_ids[$item['target_id']] = $item['target_id'];
+      }
+      elseif ((int) $item != 0 && is_int((int) $item)) {
+        $tag_ids[$item] = (int) $item;
       }
     }
     return $tag_ids;
