@@ -28,10 +28,8 @@ class QueryProfileSubscriber implements EventSubscriberInterface {
    */
   public static function getSubscribedEvents() {
     $events = [];
-    $events[KernelEvents::TERMINATE] = [
-      ['logQueryProfileForRequest'],
-      ['logCustomProfileSummaryForRequest'],
-    ];
+    $events[KernelEvents::TERMINATE][] = ['logQueryProfileForRequest'];
+    $events[KernelEvents::TERMINATE][] = ['logCustomProfileSummaryForRequest'];
     return $events;
   }
 
@@ -53,7 +51,7 @@ class QueryProfileSubscriber implements EventSubscriberInterface {
   }
 
   /**
-   * Dump the call times tgether with memory usage.
+   * Dump the call times together with memory usage.
    *
    * @param \Symfony\Component\HttpKernel\Event\TerminateEvent $event
    *   The post response event.

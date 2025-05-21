@@ -111,11 +111,13 @@ interface RemoteSourceInterface extends PluginInspectionInterface, ContainerFact
    *
    * @param string $payload
    *   The payload for the query.
+   * @param array $cache_tags
+   *   An array of cache tags for the query result.
    *
    * @return \Drupal\ghi_content\RemoteResponse\RemoteResponseInterface
    *   A response object.
    */
-  public function query($payload);
+  public function query($payload, array $cache_tags = []);
 
   /**
    * Change the links to public ressources.

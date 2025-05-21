@@ -1,0 +1,11 @@
+uuid: 91948789-4c57-416a-b9bf-d07b8201992c
+langcode: en
+status: true
+dependencies:
+  module:
+    - node
+id: needs_review_flag
+label: 'Flag for review'
+type: node
+plugin: needs_review_flag
+configuration: {  }

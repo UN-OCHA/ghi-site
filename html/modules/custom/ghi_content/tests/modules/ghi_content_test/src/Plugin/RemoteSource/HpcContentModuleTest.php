@@ -4,6 +4,7 @@ namespace Drupal\ghi_content_test\Plugin\RemoteSource;
 
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\ghi_content\RemoteContent\HpcContentModule\RemoteArticle;
+use Drupal\ghi_content\RemoteContent\HpcContentModule\RemoteDocument;
 use Drupal\ghi_content\RemoteSource\RemoteSourceBaseHpcContentModule;
 use Drupal\ghi_content\RemoteSource\RemoteSourceInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -52,7 +53,15 @@ class HpcContentModuleTest extends RemoteSourceBaseHpcContentModule implements R
    */
   public function getArticle($id, $rendered = TRUE) {
     $json = $this->getFixture('article', $id);
-    return $json->article ? new RemoteArticle($json->article, $this) : NULL;
+    return $json?->article ? new RemoteArticle($json->article, $this) : NULL;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getDocument($id, $rendered = TRUE) {
+    $json = $this->getFixture('document', $id);
+    return $json?->document ? new RemoteDocument($json->document, $this) : NULL;
   }
 
   /**
@@ -92,12 +101,13 @@ class HpcContentModuleTest extends RemoteSourceBaseHpcContentModule implements R
    * @param string $name
    *   The name of the fixture.
    *
-   * @return mixed
-   *   The json decoded content of the fixture.
+   * @return mixed|null
+   *   The json decoded content of the fixture or NULL if not found.
    */
   private function getFixture($type, $name) {
     $file_path = $this->extensionPathResolver->getPath('module', 'ghi_content_test') . '/fixtures/' . $type . '/' . $name . '.json';
-    return json_decode(file_get_contents($file_path));
+    $file_content = @file_get_contents($file_path);
+    return $file_content ? json_decode($file_content) : NULL;
   }
 
 }

@@ -9,7 +9,7 @@
   }
 
   /**
-   * Constructor for the chloropleth style object.
+   * Constructor for the choropleth style object.
    *
    * @param {String} id
    *   The ID of the map container.
@@ -18,7 +18,7 @@
    * @param {Object} options
    *   The options for the map style.
    */
-  window.ghi.chloroplethMap = class {
+  window.ghi.choroplethMap = class {
 
     constructor (map, state, options) {
       this.map = map;
@@ -27,6 +27,7 @@
       this.loaded = false;
       this.sourceId = state.getMapId();
       this.featureLayerId = this.sourceId + '-fill';
+      this.labelLayerId = this.sourceId + '-label';
       this.config = {
         feature_style: {
           weight: 1,
@@ -77,6 +78,10 @@
         map.addLayer(this.buildFillLayer(self.sourceId));
         map.addLayer(this.buildOutlineLayer(self.sourceId));
         map.on('click', self.featureLayerId, (e) => self.clickHandler(e, self));
+
+        // Add a layer for the labels, so that we can keep showing them on top
+        // of colored admin area or country outlines.
+        map.addLayer(this.state.buildLabelLayer(self.labelLayerId));
 
         // Add event handling.
         this.addEventListeners(self.sourceId);
@@ -208,7 +213,7 @@
      *
      * @param {Event} e
      *   The event.
-     * @param {ghi.chloroplethMap} self
+     * @param {ghi.choroplethMap} self
      *   The current style instance.
      */
     clickHandler = function (e, self) {
