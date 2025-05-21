@@ -19,7 +19,7 @@
           continue;
         }
         var options = {
-          style: 'chloropleth',
+          style: 'choropleth',
           admin_level_selector: true,
           search_enabled: true,
           search_options: {

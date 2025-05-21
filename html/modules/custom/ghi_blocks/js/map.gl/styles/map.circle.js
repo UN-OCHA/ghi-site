@@ -28,6 +28,7 @@
       this.sourceId = state.getMapId();
       this.featureLayerId = this.sourceId + '-circle';
       this.activeFeatureLayerId = this.sourceId + '-circle-active';
+      this.labelLayerId = this.sourceId + '-label';
       this.config = {
         // Scales used to determine color.
         colors: [
@@ -86,6 +87,10 @@
           this.addCountryOutlines();
         }
 
+        // Add a layer for the labels, so that we can keep showing them on top
+        // of colored admin area or country outlines.
+        map.addLayer(this.state.buildLabelLayer(this.labelLayerId));
+
         // Initial drawing of the circles.
         map.addSource(self.sourceId, this.buildSource());
         map.addLayer(this.buildCircleLayer());
@@ -93,7 +98,7 @@
 
         // Build a layer that can hold active features, so that they pop up
         // from behind and appearingly come to the foreground.
-        map.addLayer(this.buildActiveLayer());
+        map.addLayer(this.buildActiveFeatureLayer());
 
         // Add event handling.
         this.addEventListeners(self.sourceId);
@@ -308,12 +313,12 @@
     }
 
     /**
-     * Build the active layer.
+     * Build the active feature layer.
      *
      * @returns {Object}
      *   A layer object.
      */
-    buildActiveLayer = function () {
+    buildActiveFeatureLayer = function () {
       let layer_id = this.activeFeatureLayerId;
       return {
         'id': layer_id,
@@ -557,8 +562,10 @@
       let hover_feature = state.getHoverFeature();
       let focus_feature = state.getFocusFeature();
       let features = [hover_feature, focus_feature].filter(d => d !== null);
+
       self.updateMapData(layer_id, features);
       map.setLayoutProperty(layer_id, 'visibility', features.length ? 'visible' : 'none');
+
       if (focus_feature) {
         // There was an issue when selecting a feature, then moving and zooming
         // the map so that the selected feature wouldn't be visible anymore,
