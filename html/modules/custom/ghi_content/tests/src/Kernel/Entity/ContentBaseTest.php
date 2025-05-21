@@ -1,6 +1,6 @@
 <?php
 
-namespace Drupal\Tests\ghi_content\Kernel;
+namespace Drupal\Tests\ghi_content\Kernel\Entity;
 
 use Drupal\Core\Field\FieldStorageDefinitionInterface;
 use Drupal\Core\Url;

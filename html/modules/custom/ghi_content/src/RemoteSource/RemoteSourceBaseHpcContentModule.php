@@ -34,14 +34,17 @@ abstract class RemoteSourceBaseHpcContentModule extends RemoteSourceBase {
    *   A set of arguments as key value pairs. Can be empty.
    * @param array $fields
    *   An set of fields.
+   * @param array $cache_tags
+   *   An array of cache tags.
    *
    * @return mixed
    *   The resuklt of the query. Most often an object.
    */
-  private function fetchData($query_name, array $arguments, array $fields) {
+  private function fetchData($query_name, array $arguments, array $fields, array $cache_tags = []) {
     $argument_string = $this->getArgumentString($arguments);
     $field_string = $this->getFieldString($fields);
-    $response = $this->query("{ $query_name $argument_string { $field_string }}");
+
+    $response = $this->query("{ $query_name $argument_string { $field_string }}", $cache_tags);
     if (!$response->has($query_name)) {
       return NULL;
     }
@@ -85,7 +88,8 @@ abstract class RemoteSourceBaseHpcContentModule extends RemoteSourceBase {
       'location',
       'text',
     ];
-    $document_data = $this->fetchData('document', ['id' => $id], $fields);
+    $cache_tags = [$this->getPluginId() . ':document:' . $id];
+    $document_data = $this->fetchData('document', ['id' => $id], $fields, $cache_tags);
     return $document_data ? new RemoteDocument($document_data, $this) : NULL;
   }
 
@@ -128,7 +132,8 @@ abstract class RemoteSourceBaseHpcContentModule extends RemoteSourceBase {
       'location',
       'text',
     ];
-    $article_data = $this->fetchData('article', ['id' => $id], $fields);
+    $cache_tags = [$this->getPluginId() . ':article:' . $id];
+    $article_data = $this->fetchData('article', ['id' => $id], $fields, $cache_tags);
     return $article_data ? new RemoteArticle($article_data, $this) : NULL;
   }
 
@@ -209,7 +214,7 @@ abstract class RemoteSourceBaseHpcContentModule extends RemoteSourceBase {
   /**
    * {@inheritdoc}
    */
-  public function query($payload) {
+  public function query($payload, array $cache_tags = []) {
     $query = 'query ' . str_replace("\n", " ", addslashes(trim($payload)));
     $body = '{"query": "' . $query . '"}';
 
@@ -280,7 +285,7 @@ abstract class RemoteSourceBaseHpcContentModule extends RemoteSourceBase {
       // Just catch it for the moment.
     }
     // Store the response in the cache.
-    $this->cache($cache_key, $response);
+    $this->cache($cache_key, $response, FALSE, NULL, $cache_tags);
     return $response;
   }
 

@@ -4,6 +4,7 @@ namespace Drupal\Tests\ghi_blocks\Kernel;
 
 use Drupal\KernelTests\KernelTestBase;
 use Drupal\layout_builder\SectionComponent;
+use Drupal\Tests\ghi_blocks\Traits\PrivateMethodTrait;
 
 /**
  * Base class for block kernel tests.
@@ -11,6 +12,8 @@ use Drupal\layout_builder\SectionComponent;
  * @group ghi_blocks
  */
 abstract class BlockKernelTestBase extends KernelTestBase {
+
+  use PrivateMethodTrait;
 
   /**
    * Modules to enable.
@@ -74,25 +77,6 @@ abstract class BlockKernelTestBase extends KernelTestBase {
   protected function createBlockPlugin($plugin_id, $configuration, array $contexts = [], $label = '<none>', $label_display = FALSE) {
     $plugin = $this->createSectionComponent($plugin_id, $configuration, $label, $label_display)?->getPlugin($contexts);
     return $plugin;
-  }
-
-  /**
-   * Call a private or protected method on the given class.
-   *
-   * @param object $class
-   *   The object.
-   * @param string $method_name
-   *   The method name.
-   * @param array $arguments
-   *   Optional arguments for the method.
-   *
-   * @return mixed
-   *   The return of the method call.
-   */
-  protected function callPrivateMethod($class, $method_name, $arguments = NULL) {
-    // Make the private method callable.
-    $method = (new \ReflectionClass($class::class))->getMethod($method_name);
-    return $arguments ? $method->invokeArgs($class, $arguments) : $method->invoke($class);
   }
 
 }

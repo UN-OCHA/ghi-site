@@ -49,6 +49,6 @@ Use the above commands to preview the commands, the add an `| sh` at the end to 
 ### Usage in Drupal
 
 These shape files are used for the homepage maps to highlight countries and
-associated countries, as well as in attachment and chloropleth maps.
+associated countries, as well as in attachment and choropleth maps.
 
-See \Drupal\ghi_base_objects\ApiObjects\Location for technical details.
+See `\Drupal\ghi_base_objects\ApiObjects\Location` for technical details.

@@ -492,6 +492,17 @@ abstract class ContentBase extends Node implements NodeInterface, ImageNodeInter
   /**
    * {@inheritdoc}
    */
+  public function getCacheTagsToInvalidate() {
+    $cache_tags = parent::getCacheTagsToInvalidate();
+    if ($this->getSourceType() && $this->getSourceId()) {
+      $cache_tags[] = $this->getSourceType() . ':' . $this->bundle() . ':' . $this->getSourceId();
+    }
+    return $cache_tags;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function getCacheContexts() {
     $cache_contexts = parent::getCacheContexts();
     $cache_contexts = Cache::mergeContexts($cache_contexts, ['url.path']);
@@ -517,16 +528,6 @@ abstract class ContentBase extends Node implements NodeInterface, ImageNodeInter
    *   The content manager factory.
    */
   protected static function getContentManagerFactory() {
-    return \Drupal::service('ghi_content.manager.factory');
-  }
-
-  /**
-   * Get the content manager factory.
-   *
-   * @return \Drupal\ghi_content\ContentManager\ManagerFactory
-   *   The content manager factory.
-   */
-  protected static function getRemote() {
     return \Drupal::service('ghi_content.manager.factory');
   }
 

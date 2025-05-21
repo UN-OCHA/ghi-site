@@ -327,6 +327,9 @@ function ghi_subpages_preprocess_page_title(&$variables) {
   if (!$node instanceof SubpageNodeInterface || \Drupal::routeMatch()->getRouteName() != 'entity.node.canonical') {
     return;
   }
+  if (!$node->getParentBaseNode()) {
+    return;
+  }
   $variables['title'] = $node->getParentBaseNode()->getPageTitle();
 }
 

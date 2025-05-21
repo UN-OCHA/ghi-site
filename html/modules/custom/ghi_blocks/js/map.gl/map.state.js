@@ -81,7 +81,6 @@
         mapDisclaimer.textContent = options.disclaimer;
         this.getContainer().append(mapDisclaimer);
       }
-      // map.addControl(new ghi.disclaimerControl(this, options.disclaimer));
 
       this.setIsReady();
     }
@@ -112,8 +111,8 @@
         if (options.style === 'circle') {
           this.style = new ghi.circleMap(this.getMapController(), this, options, config);
         }
-        if (options.style === 'chloropleth') {
-          this.style = new ghi.chloroplethMap(this.getMapController(), this, options, config);
+        if (options.style === 'choropleth') {
+          this.style = new ghi.choroplethMap(this.getMapController(), this, options, config);
         }
       }
       if ((typeof this.style['renderLocations']) != "function") {
@@ -1238,6 +1237,95 @@
      */
     getContainerClass = function () {
       return '.map-wrapper-' + this.getMapId();
+    }
+
+    /**
+     * Get the background layer that holds the country labels.
+     *
+     * @returns {Layer}
+     *   A mapbox layer object.
+     */
+    getBackgroundLayer = function () {
+      let map = this.getMap();
+      let zoom = map.getZoom();
+      let layers = map.getStyle().layers;
+      for (let layer of layers) {
+        if (!layer.id) {
+          continue;
+        }
+        let Layer = map.getLayer(layer.id)
+        if (Layer["source-layer"] != "wrl_polbndp_int_ocha_fr_en_ar") {
+          continue;
+        }
+        if (Layer.minzoom > zoom || Layer.maxzoom < zoom) {
+          continue;
+        }
+        return Layer;
+      }
+    }
+
+    /**
+     * Build the label layer.
+     *
+     * @returns {Object}
+     *   A layer object.
+     */
+    buildLabelLayer = function (layer_id) {
+      let map = this.getMap();
+      let source_id = layer_id + '-source';
+      map.addSource(source_id, this.buildGeoJsonSource(null));
+
+      map.on('styledata', () => {
+        this.updateLabelLayer(layer_id);
+      });
+      map.on('zoom', () => {
+        this.updateLabelLayer(layer_id);
+      });
+
+      return {
+        'id': layer_id,
+        'type': 'symbol',
+        'source': source_id,
+        'layout': {
+          'text-field': ['get', 'en_short'],
+          'text-font': [
+            'Roboto Regular',
+            'Arial Unicode MS Regular'
+          ],
+          'text-transform': 'uppercase',
+        },
+        'paint': {
+          'text-halo-width': 0
+        },
+      }
+    }
+
+    /**
+     * Update the label layer.
+     */
+    updateLabelLayer = function (label_layer_id) {
+      let map = this.getMap();
+
+      let backgroundFeatures = [];
+      let backgroundLayer = this.getBackgroundLayer(map);
+      if (backgroundLayer) {
+        backgroundFeatures = map.querySourceFeatures(backgroundLayer.source, {
+          sourceLayer: backgroundLayer['source-layer'],
+        });
+
+        map.setFilter(label_layer_id, map.getFilter(backgroundLayer.id));
+
+        map.setLayoutProperty(label_layer_id, 'text-field', backgroundLayer.layout['text-field']);
+        map.setLayoutProperty(label_layer_id, 'text-font', backgroundLayer.layout['text-font']);
+        map.setLayoutProperty(label_layer_id, 'text-letter-spacing', backgroundLayer.layout['text-letter-spacing']);
+        map.setLayoutProperty(label_layer_id, 'text-size', backgroundLayer.layout['text-size']);
+        map.setLayoutProperty(label_layer_id, 'text-transform', backgroundLayer.layout['text-transform']);
+
+        map.setPaintProperty(label_layer_id, 'text-color', backgroundLayer.paint['text-color']);
+        map.setPaintProperty(label_layer_id, 'text-halo-color', backgroundLayer.paint['text-halo-color']);
+        map.setPaintProperty(label_layer_id, 'text-halo-width', backgroundLayer.paint['text-halo-width']);
+      }
+      this.updateMapData(label_layer_id + '-source', backgroundFeatures);
     }
 
     /**

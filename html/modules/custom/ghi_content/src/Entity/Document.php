@@ -14,17 +14,6 @@ use Drupal\node\NodeInterface;
 class Document extends ContentBase {
 
   /**
-   * {@inheritdoc}
-   */
-  public function toLink($text = NULL, $rel = 'canonical', array $options = []) {
-    if (!isset($text)) {
-      // Use the short title as default.
-      $text = $this->get('field_short_title')->value ?? NULL;
-    }
-    return parent::toLink($text, $rel, $options);
-  }
-
-  /**
    * Check if the given article is part of this document.
    */
   public function hasArticle(Article $article) {

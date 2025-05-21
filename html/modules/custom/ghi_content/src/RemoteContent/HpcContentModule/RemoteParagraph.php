@@ -43,7 +43,8 @@ class RemoteParagraph extends RemoteEntityBase implements RemoteParagraphInterfa
    * {@inheritdoc}
    */
   public function getRendered() {
-    return $this->getSource()->changeRessourceLinks($this->data->rendered);
+    $rendered = $this->data->rendered ?? '';
+    return $this->getSource()->changeRessourceLinks($rendered);
   }
 
   /**

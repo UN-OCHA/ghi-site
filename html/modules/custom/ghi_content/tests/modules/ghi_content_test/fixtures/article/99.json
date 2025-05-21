@@ -1,0 +1,170 @@
+{
+  "article": {
+    "id": 99,
+    "title": "Achievements by sector",
+    "title_short": "Achievements by sector",
+    "summary": null,
+    "tags": [
+      "GHO",
+      "2022"
+    ],
+    "created": "2021-11-30T18:07:03+0000",
+    "updated": "2023-11-29T19:17:21+0000",
+    "content_space": {
+      "id": 20,
+      "title": "Global",
+      "tags": []
+    },
+    "content": [
+      {
+        "id": 1781,
+        "uuid": "5e4082e3-c7ab-477f-9fac-d7fd8e165884",
+        "type": "photo_gallery",
+        "typeLabel": "Photo Gallery",
+        "promoted": false,
+        "rendered": "\n\n  <div class=\"paragraph paragraph--type--photo-gallery paragraph--view-mode--single-column gho-photo-gallery gho-aside gho-photo-gallery--single-column content-width\">\n          <div class=\"gho-photo-gallery__photos\"><div class=\"gho-photo-gallery__photo\">\n  <div class=\"media media--type-image media--view-mode-photo-gallery-single-column\">\n  \n            <picture>\n                  <source srcset=\"/sites/default/files/styles/full_width_16_9_100/public/images/OCHA-bangassou-RCA-210216-BY1A0596.jpg 1x, /sites/default/files/styles/full_width_16_9_200/public/images/OCHA-bangassou-RCA-210216-BY1A0596.jpg 2x\" media=\"(min-width: 1024px)\" type=\"image/jpeg\" width=\"1140\" height=\"641\"/>\n              <source srcset=\"/sites/default/files/styles/full_width_16_9_90/public/images/OCHA-bangassou-RCA-210216-BY1A0596.jpg 1x, /sites/default/files/styles/full_width_16_9_180/public/images/OCHA-bangassou-RCA-210216-BY1A0596.jpg 2x\" media=\"(min-width: 768px)\" type=\"image/jpeg\" width=\"1026\" height=\"577\"/>\n              <source srcset=\"/sites/default/files/styles/full_width_16_9_66/public/images/OCHA-bangassou-RCA-210216-BY1A0596.jpg 1x, /sites/default/files/styles/full_width_16_9_133/public/images/OCHA-bangassou-RCA-210216-BY1A0596.jpg 2x\" media=\"(min-width: 576px)\" type=\"image/jpeg\" width=\"760\" height=\"428\"/>\n              <source srcset=\"/sites/default/files/styles/full_width_16_9_50/public/images/OCHA-bangassou-RCA-210216-BY1A0596.jpg 1x, /sites/default/files/styles/full_width_16_9_100/public/images/OCHA-bangassou-RCA-210216-BY1A0596.jpg 2x\" media=\"(min-width: 0px)\" type=\"image/jpeg\" width=\"570\" height=\"321\"/>\n                  <img loading=\"eager\" width=\"570\" height=\"321\" src=\"/sites/default/files/styles/full_width_16_9_50/public/images/OCHA-bangassou-RCA-210216-BY1A0596.jpg\" alt=\"OCHA\"/>\n\n  </picture>\n\n\n\n  </div>\n\n  </div></div>\n\n      <div class=\"gho-photo-gallery__caption gho-caption gho-caption--formatted\">\n        <p class=\"field--name-field-location gho-caption__location\">Bangassou, CAR</p>\n\n        <div class=\"gho-caption__text\">\n          <p>A local worker unloads a cargo plane carrying humanitarian aid.</p>\n          <span class=\"gho-caption__credits\">OCHA/Adrienne Surprenant</span>\n        </div>\n      </div>\n      </div>\n",
+        "configuration": "{  }"
+      },
+      {
+        "id": 376,
+        "uuid": "1ef40351-6b64-42e9-ae98-61016ec999a8",
+        "type": "text",
+        "typeLabel": "Text",
+        "promoted": false,
+        "rendered": "\n  <div class=\"paragraph paragraph--type--text paragraph--view-mode--default gho-text content-width\">\n          <div class=\"gho-text__text\"><gho-footnotes-text data-id=\"paragraph-376\"><p class=\"highlight\"><strong>Overcoming disruption to health services</strong></p>\n\n<p>Global health services have been disrupted due to the COVID-19 pandemic, severely impacting the most vulnerable. Humanitarian response has included the provision of personal protective supplies in 29 countries, life-saving child immunization campaigns and the supply of critical hygiene items and services.</p></gho-footnotes-text></div>\n\n      </div>\n",
+        "configuration": "{  }"
+      },
+      {
+        "id": 953,
+        "uuid": "651f210f-0b6c-4ef2-836f-ca1bef53a995",
+        "type": "interactive_content",
+        "typeLabel": "Interactive content",
+        "promoted": false,
+        "rendered": "\n\n  <div class=\"paragraph paragraph--type--interactive-content paragraph--view-mode--default gho-aside gho-interactive-content content-width\">\n          <header class=\"gho-interactive-content__header visually-hidden\">\n        <span class=\"gho-aside__pre-title\"></span>\n        <h2 class=\"gho-aside__title\">\n            <div class=\"field field--name-field-title field--type-string field--label-hidden field__item\">Health</div>\n      </h2>\n      </header>\n              \n            <div class=\"field field--name-field-image field--type-entity-reference field--label-hidden field__item\">      <a href=\"http://gho.unocha.org/achievements-sector-accessible-version\" class=\"link\">  <picture>\n                  <source srcset=\"/sites/default/files/styles/full_width_100/public/images/1.png 1x, /sites/default/files/styles/full_width_200/public/images/1.png 2x\" media=\"(min-width: 1024px)\" type=\"image/png\" width=\"1140\" height=\"764\"/>\n              <source srcset=\"/sites/default/files/styles/full_width_90/public/images/1.png 1x, /sites/default/files/styles/full_width_180/public/images/1.png 2x\" media=\"(min-width: 768px)\" type=\"image/png\" width=\"1026\" height=\"687\"/>\n              <source srcset=\"/sites/default/files/styles/full_width_66/public/images/1.png 1x, /sites/default/files/styles/full_width_133/public/images/1.png 2x\" media=\"(min-width: 576px)\" type=\"image/png\" width=\"760\" height=\"509\"/>\n              <source srcset=\"/sites/default/files/styles/full_width_50/public/images/1.png 1x, /sites/default/files/styles/full_width_100/public/images/1.png 2x\" media=\"(min-width: 0px)\" type=\"image/png\" width=\"570\" height=\"382\"/>\n                  <img width=\"570\" height=\"382\" src=\"/sites/default/files/styles/full_width_50/public/images/1.png\" alt=\"Health\" loading=\"lazy\"/>\n\n  </picture>\n</a>\n  </div>\n      \n            \n      </div>\n",
+        "configuration": "{  }"
+      },
+      {
+        "id": 954,
+        "uuid": "2444ef52-465a-41bc-a442-1ac3529ad90d",
+        "type": "text",
+        "typeLabel": "Text",
+        "promoted": false,
+        "rendered": "\n  <div class=\"paragraph paragraph--type--text paragraph--view-mode--default gho-text content-width\">\n          <div class=\"gho-text__text\"><gho-footnotes-text data-id=\"paragraph-954\"><p class=\"highlight\"><strong>Averting alarming levels of hunger and extreme poverty</strong></p>\n\n<p> </p>\n\n<p>COVID-19 has devastated livelihoods around the globe and extreme poverty is rising. Drought, floods and other climate crises have threatened the livelihoods of those living in rural areas in addition to ongoing conflict and political instability. The number of acutely food insecure people has increased dramatically and the risk of famine is now a reality. Humanitarians have responded with urgent actions including cash-based transfers and direct food assistance, support to the self-employed, live-stock feed and help with crop production.</p></gho-footnotes-text></div>\n\n      </div>\n",
+        "configuration": "{  }"
+      },
+      {
+        "id": 958,
+        "uuid": "99d741ed-119f-4791-b9b8-18b64560dcaa",
+        "type": "interactive_content",
+        "typeLabel": "Interactive content",
+        "promoted": false,
+        "rendered": "\n\n  <div class=\"paragraph paragraph--type--interactive-content paragraph--view-mode--default gho-aside gho-interactive-content content-width\">\n          <header class=\"gho-interactive-content__header visually-hidden\">\n        <span class=\"gho-aside__pre-title\"></span>\n        <h2 class=\"gho-aside__title\">\n            <div class=\"field field--name-field-title field--type-string field--label-hidden field__item\">Livelihoods</div>\n      </h2>\n      </header>\n              \n            <div class=\"field field--name-field-image field--type-entity-reference field--label-hidden field__item\">      <a href=\"http://gho.unocha.org/http://gho.unocha.org/achievements-sector-accessible-version\" class=\"link\">  <picture>\n                  <source srcset=\"/sites/default/files/styles/full_width_100/public/images/2.png 1x, /sites/default/files/styles/full_width_200/public/images/2.png 2x\" media=\"(min-width: 1024px)\" type=\"image/png\" width=\"1140\" height=\"764\"/>\n              <source srcset=\"/sites/default/files/styles/full_width_90/public/images/2.png 1x, /sites/default/files/styles/full_width_180/public/images/2.png 2x\" media=\"(min-width: 768px)\" type=\"image/png\" width=\"1026\" height=\"687\"/>\n              <source srcset=\"/sites/default/files/styles/full_width_66/public/images/2.png 1x, /sites/default/files/styles/full_width_133/public/images/2.png 2x\" media=\"(min-width: 576px)\" type=\"image/png\" width=\"760\" height=\"509\"/>\n              <source srcset=\"/sites/default/files/styles/full_width_50/public/images/2.png 1x, /sites/default/files/styles/full_width_100/public/images/2.png 2x\" media=\"(min-width: 0px)\" type=\"image/png\" width=\"570\" height=\"382\"/>\n                  <img width=\"570\" height=\"382\" src=\"/sites/default/files/styles/full_width_50/public/images/2.png\" alt=\"Livelihoods\" loading=\"lazy\"/>\n\n  </picture>\n</a>\n  </div>\n      \n            \n      </div>\n",
+        "configuration": "{  }"
+      },
+      {
+        "id": 963,
+        "uuid": "592856d5-27f9-4951-a71f-ef00a2cfedac",
+        "type": "text",
+        "typeLabel": "Text",
+        "promoted": false,
+        "rendered": "\n  <div class=\"paragraph paragraph--type--text paragraph--view-mode--default gho-text content-width\">\n          <div class=\"gho-text__text\"><gho-footnotes-text data-id=\"paragraph-963\"><p class=\"highlight\"><strong>Prioritizing the Most Vulnerable People</strong></p>\n\n<p> </p>\n\n<p>The COVID-19 pandemic and its effects have taken a heavy toll on the most vulnerable in communities, who were already experiencing disproportionate challenges in accessing services including health care and education. Humanitarians have responded with actions including the provision of facilities for women and children to access reproductive health services, supporting persons with disabilities to participate in communities and assistance to survivors.</p></gho-footnotes-text></div>\n\n      </div>\n",
+        "configuration": "{  }"
+      },
+      {
+        "id": 959,
+        "uuid": "f7c1e0d4-fdbd-41cf-9244-a00d3842bde8",
+        "type": "interactive_content",
+        "typeLabel": "Interactive content",
+        "promoted": false,
+        "rendered": "\n\n  <div class=\"paragraph paragraph--type--interactive-content paragraph--view-mode--default gho-aside gho-interactive-content content-width\">\n          <header class=\"gho-interactive-content__header visually-hidden\">\n        <span class=\"gho-aside__pre-title\"></span>\n        <h2 class=\"gho-aside__title\">\n            <div class=\"field field--name-field-title field--type-string field--label-hidden field__item\">Vulnerable Groups</div>\n      </h2>\n      </header>\n              \n            <div class=\"field field--name-field-image field--type-entity-reference field--label-hidden field__item\">      <a href=\"http://gho.unocha.org/achievements-sector-accessible-version\" class=\"link\">  <picture>\n                  <source srcset=\"/sites/default/files/styles/full_width_100/public/images/3.png 1x, /sites/default/files/styles/full_width_200/public/images/3.png 2x\" media=\"(min-width: 1024px)\" type=\"image/png\" width=\"1140\" height=\"741\"/>\n              <source srcset=\"/sites/default/files/styles/full_width_90/public/images/3.png 1x, /sites/default/files/styles/full_width_180/public/images/3.png 2x\" media=\"(min-width: 768px)\" type=\"image/png\" width=\"1026\" height=\"667\"/>\n              <source srcset=\"/sites/default/files/styles/full_width_66/public/images/3.png 1x, /sites/default/files/styles/full_width_133/public/images/3.png 2x\" media=\"(min-width: 576px)\" type=\"image/png\" width=\"760\" height=\"494\"/>\n              <source srcset=\"/sites/default/files/styles/full_width_50/public/images/3.png 1x, /sites/default/files/styles/full_width_100/public/images/3.png 2x\" media=\"(min-width: 0px)\" type=\"image/png\" width=\"570\" height=\"370\"/>\n                  <img width=\"570\" height=\"370\" src=\"/sites/default/files/styles/full_width_50/public/images/3.png\" alt=\"Vulnerable Groups\" loading=\"lazy\"/>\n\n  </picture>\n</a>\n  </div>\n      \n            \n      </div>\n",
+        "configuration": "{  }"
+      },
+      {
+        "id": 964,
+        "uuid": "8910d543-904a-4889-ab74-77ae00036ba0",
+        "type": "text",
+        "typeLabel": "Text",
+        "promoted": false,
+        "rendered": "\n  <div class=\"paragraph paragraph--type--text paragraph--view-mode--default gho-text content-width\">\n          <div class=\"gho-text__text\"><gho-footnotes-text data-id=\"paragraph-964\"><p class=\"highlight\"><strong>Basic Services to Support Refugees</strong></p>\n\n<p> </p>\n\n<p>The number of refugees remains at a record high. As crises become increasingly complex and protracted, fewer can return home and are living-in crowded conditions with limited access to water, sanitation and health facilities. The humanitarian system has provided key services to support refugees, almost half of which are women and girls. This includes provision of safe drinking water, cash assistance, mental health services and vital health care.</p></gho-footnotes-text></div>\n\n      </div>\n",
+        "configuration": "{  }"
+      },
+      {
+        "id": 960,
+        "uuid": "9750d6ef-b11c-4daf-a34d-b5caccdd2397",
+        "type": "interactive_content",
+        "typeLabel": "Interactive content",
+        "promoted": false,
+        "rendered": "\n\n  <div class=\"paragraph paragraph--type--interactive-content paragraph--view-mode--default gho-aside gho-interactive-content content-width\">\n          <header class=\"gho-interactive-content__header visually-hidden\">\n        <span class=\"gho-aside__pre-title\"></span>\n        <h2 class=\"gho-aside__title\">\n            <div class=\"field field--name-field-title field--type-string field--label-hidden field__item\">Refugees</div>\n      </h2>\n      </header>\n              \n            <div class=\"field field--name-field-image field--type-entity-reference field--label-hidden field__item\">      <a href=\"http://gho.unocha.org/achievements-sector-accessible-version\" class=\"link\">  <picture>\n                  <source srcset=\"/sites/default/files/styles/full_width_100/public/images/4.png 1x, /sites/default/files/styles/full_width_200/public/images/4.png 2x\" media=\"(min-width: 1024px)\" type=\"image/png\" width=\"1140\" height=\"764\"/>\n              <source srcset=\"/sites/default/files/styles/full_width_90/public/images/4.png 1x, /sites/default/files/styles/full_width_180/public/images/4.png 2x\" media=\"(min-width: 768px)\" type=\"image/png\" width=\"1026\" height=\"687\"/>\n              <source srcset=\"/sites/default/files/styles/full_width_66/public/images/4.png 1x, /sites/default/files/styles/full_width_133/public/images/4.png 2x\" media=\"(min-width: 576px)\" type=\"image/png\" width=\"760\" height=\"509\"/>\n              <source srcset=\"/sites/default/files/styles/full_width_50/public/images/4.png 1x, /sites/default/files/styles/full_width_100/public/images/4.png 2x\" media=\"(min-width: 0px)\" type=\"image/png\" width=\"570\" height=\"382\"/>\n                  <img width=\"570\" height=\"382\" src=\"/sites/default/files/styles/full_width_50/public/images/4.png\" alt=\"Refugees\" loading=\"lazy\"/>\n\n  </picture>\n</a>\n  </div>\n      \n            \n      </div>\n",
+        "configuration": "{  }"
+      },
+      {
+        "id": 965,
+        "uuid": "d4fcde6e-48de-4797-9c12-358242919248",
+        "type": "text",
+        "typeLabel": "Text",
+        "promoted": false,
+        "rendered": "\n  <div class=\"paragraph paragraph--type--text paragraph--view-mode--default gho-text content-width\">\n          <div class=\"gho-text__text\"><gho-footnotes-text data-id=\"paragraph-965\"><p class=\"highlight\"><strong>Mainstreaming Protection and Gender-Based Violence</strong></p>\n\n<p> </p>\n\n<p>Over 70 per cent of women and girls living in some conflict contexts have experienced GBV. The pandemic’s socioeconomic impacts have only intensified this risk. Greater access to social protection and affordable, quality and accessible health-care services is urgently needed. Humanitarian actors have provided protection services including legal aid, GBV services and psychological support to vulnerable groups including women and girls, young people refugees and asylum seekers.</p></gho-footnotes-text></div>\n\n      </div>\n",
+        "configuration": "{  }"
+      },
+      {
+        "id": 961,
+        "uuid": "ddba0af6-f868-469b-9468-4e15f552ed5b",
+        "type": "interactive_content",
+        "typeLabel": "Interactive content",
+        "promoted": false,
+        "rendered": "\n\n  <div class=\"paragraph paragraph--type--interactive-content paragraph--view-mode--default gho-aside gho-interactive-content content-width\">\n          <header class=\"gho-interactive-content__header visually-hidden\">\n        <span class=\"gho-aside__pre-title\"></span>\n        <h2 class=\"gho-aside__title\">\n            <div class=\"field field--name-field-title field--type-string field--label-hidden field__item\">Protection</div>\n      </h2>\n      </header>\n              \n            <div class=\"field field--name-field-image field--type-entity-reference field--label-hidden field__item\">      <a href=\"http://gho.unocha.org/achievements-sector-accessible-version\" class=\"link\">  <picture>\n                  <source srcset=\"/sites/default/files/styles/full_width_100/public/images/5.png 1x, /sites/default/files/styles/full_width_200/public/images/5.png 2x\" media=\"(min-width: 1024px)\" type=\"image/png\" width=\"1140\" height=\"374\"/>\n              <source srcset=\"/sites/default/files/styles/full_width_90/public/images/5.png 1x, /sites/default/files/styles/full_width_180/public/images/5.png 2x\" media=\"(min-width: 768px)\" type=\"image/png\" width=\"1026\" height=\"336\"/>\n              <source srcset=\"/sites/default/files/styles/full_width_66/public/images/5.png 1x, /sites/default/files/styles/full_width_133/public/images/5.png 2x\" media=\"(min-width: 576px)\" type=\"image/png\" width=\"760\" height=\"249\"/>\n              <source srcset=\"/sites/default/files/styles/full_width_50/public/images/5.png 1x, /sites/default/files/styles/full_width_100/public/images/5.png 2x\" media=\"(min-width: 0px)\" type=\"image/png\" width=\"570\" height=\"187\"/>\n                  <img width=\"570\" height=\"187\" src=\"/sites/default/files/styles/full_width_50/public/images/5.png\" alt=\"Protection\" loading=\"lazy\"/>\n\n  </picture>\n</a>\n  </div>\n      \n            \n      </div>\n",
+        "configuration": "{  }"
+      },
+      {
+        "id": 966,
+        "uuid": "22e57f3d-13c8-495e-8157-fdd7a4c42238",
+        "type": "text",
+        "typeLabel": "Text",
+        "promoted": false,
+        "rendered": "\n  <div class=\"paragraph paragraph--type--text paragraph--view-mode--default gho-text content-width\">\n          <div class=\"gho-text__text\"><gho-footnotes-text data-id=\"paragraph-966\"><p class=\"highlight\"><strong>Ensuring Timely and Efficient Humanitarian Operations</strong></p>\n\n<p> </p>\n\n<p>From moving goods and equipment to relocating disaster-affected people, humanitarian response relies on efficient transport and communications systems to reach those in crises and provide the help they need. Coordination and information management is key to supporting operational decision-making and improving the predictability, timeliness and efficiency of the humanitarian emergency response.</p></gho-footnotes-text></div>\n\n      </div>\n",
+        "configuration": "{  }"
+      },
+      {
+        "id": 962,
+        "uuid": "e8cbe2fb-76fb-416c-b177-5969c727946c",
+        "type": "interactive_content",
+        "typeLabel": "Interactive content",
+        "promoted": false,
+        "rendered": "\n\n  <div class=\"paragraph paragraph--type--interactive-content paragraph--view-mode--default gho-aside gho-interactive-content content-width\">\n          <header class=\"gho-interactive-content__header visually-hidden\">\n        <span class=\"gho-aside__pre-title\"></span>\n        <h2 class=\"gho-aside__title\">\n            <div class=\"field field--name-field-title field--type-string field--label-hidden field__item\">Logistics</div>\n      </h2>\n      </header>\n              \n            <div class=\"field field--name-field-image field--type-entity-reference field--label-hidden field__item\">      <a href=\"http://gho.unocha.org/achievements-sector-accessible-version\" class=\"link\">  <picture>\n                  <source srcset=\"/sites/default/files/styles/full_width_100/public/images/6.png 1x, /sites/default/files/styles/full_width_200/public/images/6.png 2x\" media=\"(min-width: 1024px)\" type=\"image/png\" width=\"1140\" height=\"374\"/>\n              <source srcset=\"/sites/default/files/styles/full_width_90/public/images/6.png 1x, /sites/default/files/styles/full_width_180/public/images/6.png 2x\" media=\"(min-width: 768px)\" type=\"image/png\" width=\"1026\" height=\"336\"/>\n              <source srcset=\"/sites/default/files/styles/full_width_66/public/images/6.png 1x, /sites/default/files/styles/full_width_133/public/images/6.png 2x\" media=\"(min-width: 576px)\" type=\"image/png\" width=\"760\" height=\"249\"/>\n              <source srcset=\"/sites/default/files/styles/full_width_50/public/images/6.png 1x, /sites/default/files/styles/full_width_100/public/images/6.png 2x\" media=\"(min-width: 0px)\" type=\"image/png\" width=\"570\" height=\"187\"/>\n                  <img width=\"570\" height=\"187\" src=\"/sites/default/files/styles/full_width_50/public/images/6.png\" alt=\"Logistics\" loading=\"lazy\"/>\n\n  </picture>\n</a>\n  </div>\n      \n            \n      </div>\n",
+        "configuration": "{  }"
+      },
+      {
+        "id": 995,
+        "uuid": "9db77a31-1ad6-4098-8d42-c5da16f60b4d",
+        "type": "text",
+        "typeLabel": "Text",
+        "promoted": false,
+        "rendered": "\n  <div class=\"paragraph paragraph--type--text paragraph--view-mode--default gho-text content-width\">\n          <div class=\"gho-text__text\"><gho-footnotes-text data-id=\"paragraph-995\"><p class=\"highlight\">Providing Multi-Sectoral Responses to Regional Situations</p>\n\n<p>At regional level, humanitarian partners continued joint and coordinated efforts to address the needs of and risks faced by refugees and migrants, as well as other persons of concern, and host community members in 39 countries. Inter-agency partners focused on ensuring protection and promoting solutions through multi-sectoral response activities supporting the objectives stated in the 2016 New York Declaration for Refugees and Migrants and ensuring appropriate linkages with the Global Compact on Refugees (GCR) and Global Compact on Migration (GCM).</p></gho-footnotes-text></div>\n\n      </div>\n",
+        "configuration": "{  }"
+      },
+      {
+        "id": 998,
+        "uuid": "8ff43ccd-dfc1-4573-9020-34cad3ff2bd2",
+        "type": "interactive_content",
+        "typeLabel": "Interactive content",
+        "promoted": false,
+        "rendered": "\n\n  <div class=\"paragraph paragraph--type--interactive-content paragraph--view-mode--default gho-aside gho-interactive-content content-width\">\n          <header class=\"gho-interactive-content__header visually-hidden\">\n        <span class=\"gho-aside__pre-title\"></span>\n        <h2 class=\"gho-aside__title\">\n            <div class=\"field field--name-field-title field--type-string field--label-hidden field__item\">Multi-Sectoral</div>\n      </h2>\n      </header>\n              \n            <div class=\"field field--name-field-image field--type-entity-reference field--label-hidden field__item\">      <a href=\"http://gho.unocha.org/achievements-sector-accessible-version\" class=\"link\">  <picture>\n                  <source srcset=\"/sites/default/files/styles/full_width_100/public/images/7.png 1x, /sites/default/files/styles/full_width_200/public/images/7.png 2x\" media=\"(min-width: 1024px)\" type=\"image/png\" width=\"1140\" height=\"374\"/>\n              <source srcset=\"/sites/default/files/styles/full_width_90/public/images/7.png 1x, /sites/default/files/styles/full_width_180/public/images/7.png 2x\" media=\"(min-width: 768px)\" type=\"image/png\" width=\"1026\" height=\"336\"/>\n              <source srcset=\"/sites/default/files/styles/full_width_66/public/images/7.png 1x, /sites/default/files/styles/full_width_133/public/images/7.png 2x\" media=\"(min-width: 576px)\" type=\"image/png\" width=\"760\" height=\"249\"/>\n              <source srcset=\"/sites/default/files/styles/full_width_50/public/images/7.png 1x, /sites/default/files/styles/full_width_100/public/images/7.png 2x\" media=\"(min-width: 0px)\" type=\"image/png\" width=\"570\" height=\"187\"/>\n                  <img width=\"570\" height=\"187\" src=\"/sites/default/files/styles/full_width_50/public/images/7.png\" alt=\"Multi-Sectoral\" loading=\"lazy\"/>\n\n  </picture>\n</a>\n  </div>\n      \n            \n      </div>\n",
+        "configuration": "{  }"
+      },
+      {
+        "id": 989,
+        "uuid": "4c34f495-527c-4335-9989-234309f45ea7",
+        "type": "interactive_content",
+        "typeLabel": "Interactive content",
+        "promoted": false,
+        "rendered": "\n\n  <div class=\"paragraph paragraph--type--interactive-content paragraph--view-mode--default gho-aside gho-interactive-content content-width\">\n          <header class=\"gho-interactive-content__header visually-hidden\">\n        <span class=\"gho-aside__pre-title\"></span>\n        <h2 class=\"gho-aside__title\">\n            <div class=\"field field--name-field-title field--type-string field--label-hidden field__item\">Footnotes</div>\n      </h2>\n      </header>\n              \n            <div class=\"field field--name-field-image field--type-entity-reference field--label-hidden field__item\">      <a href=\"http://gho.unocha.org/achievements-sector-accessible-version\" class=\"link\">  <picture>\n                  <source srcset=\"/sites/default/files/styles/full_width_100/public/images/Screenshot%202021-11-22%20at%2018.33.01.png 1x, /sites/default/files/styles/full_width_200/public/images/Screenshot%202021-11-22%20at%2018.33.01.png 2x\" media=\"(min-width: 1024px)\" type=\"image/png\" width=\"1140\" height=\"47\"/>\n              <source srcset=\"/sites/default/files/styles/full_width_90/public/images/Screenshot%202021-11-22%20at%2018.33.01.png 1x, /sites/default/files/styles/full_width_180/public/images/Screenshot%202021-11-22%20at%2018.33.01.png 2x\" media=\"(min-width: 768px)\" type=\"image/png\" width=\"1026\" height=\"43\"/>\n              <source srcset=\"/sites/default/files/styles/full_width_66/public/images/Screenshot%202021-11-22%20at%2018.33.01.png 1x, /sites/default/files/styles/full_width_133/public/images/Screenshot%202021-11-22%20at%2018.33.01.png 2x\" media=\"(min-width: 576px)\" type=\"image/png\" width=\"760\" height=\"32\"/>\n              <source srcset=\"/sites/default/files/styles/full_width_50/public/images/Screenshot%202021-11-22%20at%2018.33.01.png 1x, /sites/default/files/styles/full_width_100/public/images/Screenshot%202021-11-22%20at%2018.33.01.png 2x\" media=\"(min-width: 0px)\" type=\"image/png\" width=\"570\" height=\"24\"/>\n                  <img width=\"570\" height=\"24\" src=\"/sites/default/files/styles/full_width_50/public/images/Screenshot%202021-11-22%20at%2018.33.01.png\" alt=\"Footnotes\" loading=\"lazy\"/>\n\n  </picture>\n</a>\n  </div>\n      \n            \n      </div>\n",
+        "configuration": "{  }"
+      }
+    ],
+    "image": null,
+    "imageCaption": {
+      "location": null,
+      "text": null
+    }
+  }
+}

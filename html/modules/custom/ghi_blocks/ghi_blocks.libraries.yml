@@ -97,7 +97,7 @@ map.gl:
   js:
     js/map.gl/map.mapbox.js: {}
     js/map.gl/styles/map.circle.js: {}
-    js/map.gl/styles/map.chloropleth.js: {}
+    js/map.gl/styles/map.choropleth.js: {}
     js/map.gl/map.js: {}
   dependencies:
     - core/jquery

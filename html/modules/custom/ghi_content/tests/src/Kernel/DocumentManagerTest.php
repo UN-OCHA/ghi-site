@@ -8,9 +8,9 @@ use Drupal\Tests\field\Traits\EntityReferenceFieldCreationTrait;
 use Drupal\Tests\taxonomy\Traits\TaxonomyTestTrait;
 use Drupal\Tests\user\Traits\UserCreationTrait;
 use Drupal\ghi_sections\Entity\Section;
-use Drupal\node\Entity\Node;
 use Drupal\node\Entity\NodeType;
 use Drupal\taxonomy\TermInterface;
+use Drupal\Tests\ghi_content\Traits\ContentTestTrait;
 
 /**
  * Tests the document manager.
@@ -22,6 +22,7 @@ class DocumentManagerTest extends KernelTestBase {
   use TaxonomyTestTrait;
   use UserCreationTrait;
   use EntityReferenceFieldCreationTrait;
+  use ContentTestTrait;
 
   /**
    * Modules to enable.
@@ -115,9 +116,15 @@ class DocumentManagerTest extends KernelTestBase {
     ];
 
     // Create documents.
-    $document_1 = $this->createDocument('Document 1', array_merge($section_terms, $document_terms));
-    $document_2 = $this->createDocument('Document 2', array_merge($section_terms, $document_terms));
-    $this->createDocument('Document 3');
+    $document_1 = $this->createDocument([
+      'title' => 'Document 1',
+      'field_tags' => $this->mapTermsToFieldValue(array_merge($section_terms, $document_terms)),
+    ]);
+    $document_2 = $this->createDocument([
+      'title' => 'Document 2',
+      'field_tags' => $this->mapTermsToFieldValue(array_merge($section_terms, $document_terms)),
+    ]);
+    $this->createDocument();
 
     // Create a section with 2 documents.
     $section = Section::create([
@@ -138,27 +145,18 @@ class DocumentManagerTest extends KernelTestBase {
   }
 
   /**
-   * Create a document node with the given title.
+   * Map an array of terms to an array of ids suitable for field values.
    *
-   * @param string $title
-   *   The title of the document.
-   * @param \Drupal\taxonomy\TermInterface[] $tags
-   *   The title of the document.
+   * @param \Drupal\taxonomy\TermInterface[] $terms
+   *   An array of term objects.
    *
-   * @return \Drupal\node\NodeInterface
-   *   The created node object.
+   * @return int[]
+   *   An array of term ids.
    */
-  private function createDocument($title, $tags = []) {
-    $document = Node::create([
-      'type' => self::DOCUMENT_BUNDLE,
-      'title' => $title,
-      'uid' => 0,
-      'field_tags' => array_map(function (TermInterface $term) {
-        return $term->id();
-      }, $tags),
-    ]);
-    $document->save();
-    return $document;
+  private function mapTermsToFieldValue(array $terms) {
+    return array_map(function (TermInterface $term) {
+      return $term->id();
+    }, $terms);
   }
 
 }
