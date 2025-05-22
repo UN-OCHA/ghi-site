@@ -123,6 +123,7 @@ class LocationsQuery extends EndpointQueryBase {
     $cache_key = $this->getCacheKey([
       'country_id' => $country_id,
       'max_level' => $max_level,
+      'limit_location_ids' => implode(',', $limit_location_ids ?? []),
     ]);
     $locations = $this->getCache($cache_key);
     if ($locations) {
