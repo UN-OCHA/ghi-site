@@ -110,22 +110,12 @@ class BaseObjectHelper extends EntityHelper {
    * @param string $bundle
    *   The bundle that the requested node belongs to.
    *
-   * @return \Drupal\ghi_base_objects\Entity\BaseObjectInterface
+   * @return \Drupal\ghi_base_objects\Entity\BaseObjectInterface|null
    *   The base object or NULL|FALSE if not found or if found too many.
    */
   public static function getBaseObjectFromOriginalId($original_id, $bundle) {
-    $nodes = &drupal_static(__FUNCTION__, []);
-    if (empty($nodes[$bundle])) {
-      $nodes[$bundle] = [];
-    }
-    if (empty($nodes[$bundle][$original_id])) {
-      $result = self::getBaseObjectsFromOriginalIds([$original_id], $bundle);
-      if (is_array($result) && count($result) > 1) {
-        return NULL;
-      }
-      $nodes[$bundle][$original_id] = $result ? reset($result) : NULL;
-    }
-    return $nodes[$bundle][$original_id];
+    $result = self::getBaseObjectsFromOriginalIds([$original_id], $bundle);
+    return count($result) ? reset($result) : NULL;
   }
 
   /**
