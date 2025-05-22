@@ -1,5 +1,5 @@
 _core:
   default_config_hash: RxwZoWRF61FrREs7iffK1ziY2IuKkEci1uWvcznnXwA
 max_bundle_number: 20
-hoverintent_functionality: true
 show_local_tasks: false
+hoverintent_functionality: true
