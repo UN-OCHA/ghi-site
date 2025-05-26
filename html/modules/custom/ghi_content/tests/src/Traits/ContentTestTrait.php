@@ -10,6 +10,7 @@ use Drupal\ghi_content\Entity\ContentBase;
 use Drupal\ghi_content\Entity\Document;
 use Drupal\ghi_content\Plugin\RemoteSource\HpcContentModule;
 use Drupal\ghi_content\RemoteContent\HpcContentModule\RemoteArticle;
+use Drupal\ghi_content\RemoteContent\HpcContentModule\RemoteDocument;
 use Drupal\node\Entity\NodeType;
 
 /**
@@ -79,6 +80,27 @@ trait ContentTestTrait {
     $this->assertSame(SAVED_NEW, $document->save());
     $this->assertInstanceOf(ContentBase::class, $document);
     return $document;
+  }
+
+  /**
+   * Mock a remote document.
+   *
+   * @param array $data
+   *   Optional document data.
+   *
+   * @return \Drupal\ghi_content\RemoteContent\RemoteDocumentInterface
+   *   A remote document object.
+   */
+  public function mockRemoteDocument(?array $data = []) {
+    // Mock the remote source.
+    $remote_source = $this->createMock(HpcContentModule::class);
+
+    // Mock the document to be imported.
+    return new RemoteDocument((object) ($data + [
+      'id' => 42,
+      'title' => 'Nigeria',
+      'title_short' => 'Nigeria',
+    ]), $remote_source);
   }
 
   /**

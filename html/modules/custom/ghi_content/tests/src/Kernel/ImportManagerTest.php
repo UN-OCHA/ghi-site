@@ -6,6 +6,7 @@ use Drupal\Core\Block\BlockPluginInterface;
 use Drupal\Core\Messenger\MessengerInterface;
 use Drupal\ghi_content\Entity\Article;
 use Drupal\ghi_content\Entity\ContentReviewInterface;
+use Drupal\ghi_content\Entity\Document;
 use Drupal\KernelTests\KernelTestBase;
 use Drupal\Tests\taxonomy\Traits\TaxonomyTestTrait;
 use Drupal\ghi_content\Import\ImportManager;
@@ -64,6 +65,7 @@ class ImportManagerTest extends KernelTestBase {
 
   const BUNDLE = 'page';
   const ARTICLE_BUNDLE = 'article';
+  const DOCUMENT_BUNDLE = 'document';
   const TAGS_VID = 'tags';
 
   /**
@@ -80,6 +82,7 @@ class ImportManagerTest extends KernelTestBase {
 
     NodeType::create(['type' => self::BUNDLE])->save();
     NodeType::create(['type' => self::ARTICLE_BUNDLE])->save();
+    NodeType::create(['type' => self::DOCUMENT_BUNDLE])->save();
     $this->createVocabulary([
       'vid' => self::TAGS_VID,
     ]);
@@ -94,9 +97,9 @@ class ImportManagerTest extends KernelTestBase {
   }
 
   /**
-   * Tests that text fields can be imported.
+   * Tests that text fields can be imported to articles.
    */
-  public function testImportTextfield() {
+  public function testImportTextfieldArticle() {
     /** @var \Drupal\ghi_content\Import\ImportManager $import_manager */
     $import_manager = \Drupal::service('ghi_content.import');
 
@@ -129,6 +132,44 @@ class ImportManagerTest extends KernelTestBase {
     ]);
     $import_manager->importTextfield($article, $remote_article, 'Short title', 'getShortTitle', 'field_short_title', 'plain_text', $messenger->reveal());
     $this->assertEquals(NULL, $article->getShortTitle());
+  }
+
+  /**
+   * Tests that text fields can be imported to documents.
+   */
+  public function testImportTextfieldDocument() {
+    /** @var \Drupal\ghi_content\Import\ImportManager $import_manager */
+    $import_manager = \Drupal::service('ghi_content.import');
+
+    // Create the short title field.
+    $this->createField('node', self::DOCUMENT_BUNDLE, 'string', 'field_short_title', 'Short title');
+
+    $messenger = $this->prophesize(MessengerInterface::class);
+    $messenger->addMessage(Argument::exact('Imported short title'))->shouldBeCalled();
+    $messenger->addMessage(Argument::exact('Removed short title'))->shouldBeCalled();
+
+    // Create a node.
+    $document = Document::create([
+      'type' => self::DOCUMENT_BUNDLE,
+      'title' => 'A node',
+      'uid' => 0,
+    ]);
+
+    // Mock the document to be imported.
+    $remote_document = $this->mockRemoteDocument([
+      'title' => 'Burundi',
+      'title_short' => 'Burundi short',
+    ]);
+    $import_manager->importTextfield($document, $remote_document, 'Short title', 'getShortTitle', 'field_short_title', 'plain_text', $messenger->reveal());
+    $this->assertEquals('Burundi short', $document->getShortTitle());
+
+    // Mock the document to be imported.
+    $remote_document = $this->mockRemoteDocument([
+      'title' => 'Burundi',
+      'title_short' => NULL,
+    ]);
+    $import_manager->importTextfield($document, $remote_document, 'Short title', 'getShortTitle', 'field_short_title', 'plain_text', $messenger->reveal());
+    $this->assertEquals(NULL, $document->getShortTitle());
   }
 
   /**
