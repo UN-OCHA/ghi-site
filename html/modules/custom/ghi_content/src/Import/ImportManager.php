@@ -142,7 +142,7 @@ class ImportManager implements ContainerInjectionInterface {
    *
    * @param \Drupal\node\NodeInterface $node
    *   The node for which elements should be imported/synced.
-   * @param \Drupal\ghi_content\RemoteContent\RemoteArticleInterface $content
+   * @param \Drupal\ghi_content\RemoteContent\RemoteContentInterface $content
    *   The content object as retrieved from the remote source.
    * @param string $label
    *   The label of the field.
@@ -155,7 +155,7 @@ class ImportManager implements ContainerInjectionInterface {
    * @param \Drupal\Core\Messenger\MessengerInterface $messenger
    *   An optional messenger to use for result messages.
    */
-  public function importTextfield(NodeInterface $node, RemoteArticleInterface $content, $label, $method, $field_name, $format = 'plain_text', ?MessengerInterface $messenger = NULL) {
+  public function importTextfield(NodeInterface $node, RemoteContentInterface $content, $label, $method, $field_name, $format = 'plain_text', ?MessengerInterface $messenger = NULL) {
     if (!$node->hasField($field_name)) {
       return FALSE;
     }
