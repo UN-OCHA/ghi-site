@@ -51,7 +51,7 @@ class RemoteDocument extends RemoteDocumentBase {
    * {@inheritdoc}
    */
   public function getShortTitle() {
-    return trim($this->data->title_short);
+    return trim($this->data->title_short ?? '');
   }
 
   /**
