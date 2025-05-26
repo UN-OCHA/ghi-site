@@ -268,13 +268,16 @@ class AttachmentData extends ConfigurationContainerItemPluginBase {
    * {@inheritdoc}
    */
   public function fixConfigurationErrors() {
-    $conf = &$this->config;
-    $attachment_id = &$conf['attachment']['attachment_id'];
+    // Get the configured attachment id by reference to update it.
+    $attachment_id = &$this->config['attachment']['attachment_id'];
+
+    // Original attachment is the attachment object with id $attachment_id.
     $original_attachment = $this->getAttachmentObject();
 
     /** @var \Drupal\ghi_plans\Entity\Plan $plan */
     $plan = $this->getContextValue('plan_object');
     if ($original_attachment && $plan && $original_attachment->getPlanId() != $plan->getSourceId()) {
+      // Unset the configured selected attachment if the plan changed.
       $attachment_id = NULL;
     }
 
@@ -294,17 +297,17 @@ class AttachmentData extends ConfigurationContainerItemPluginBase {
       elseif (count($filtered_attachments) == 1) {
         $attachment_id = array_key_first($filtered_attachments);
       }
-    }
 
-    if (!empty($attachment_id)) {
-      // Lets see if we can assure that the data points are properly translated
-      // if needed.
-      $new_attachment = $filtered_attachments[$attachment_id];
-      $data_point_conf = &$this->config['data_point'];
-      $data_points = &$data_point_conf['data_points'];
-      $data_points[0]['index'] = AttachmentMatcher::matchDataPointOnAttachments($data_points[0]['index'], $original_attachment, $new_attachment);
-      if ($data_point_conf['processing'] != 'single') {
-        $data_points[1]['index'] = AttachmentMatcher::matchDataPointOnAttachments($data_points[1]['index'], $original_attachment, $new_attachment);
+      if (!empty($attachment_id)) {
+        // Lets see if we can assure that the data points are properly
+        // translated if needed.
+        $new_attachment = $filtered_attachments[$attachment_id];
+        $data_point_conf = &$this->config['data_point'];
+        $data_points = &$data_point_conf['data_points'];
+        $data_points[0]['index'] = AttachmentMatcher::matchDataPointOnAttachments($data_points[0]['index'], $original_attachment, $new_attachment);
+        if ($data_point_conf['processing'] != 'single') {
+          $data_points[1]['index'] = AttachmentMatcher::matchDataPointOnAttachments($data_points[1]['index'], $original_attachment, $new_attachment);
+        }
       }
     }
   }
