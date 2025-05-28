@@ -4,9 +4,6 @@ namespace Drupal\hpc_common\Plugin\Block;
 
 use Drupal\Core\Block\BlockBase;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
-use Drupal\Core\Routing\CurrentRouteMatch;
-use Drupal\Core\Session\AccountInterface;
-use Drupal\hpc_common\Hid\HidUserData;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -44,25 +41,12 @@ class HIDSessionInformation extends BlockBase implements ContainerFactoryPluginI
   /**
    * {@inheritdoc}
    */
-  public function __construct(array $configuration, $plugin_id, $plugin_definition, CurrentRouteMatch $routeMatch, AccountInterface $account, HidUserData $hid_user_data) {
-    parent::__construct($configuration, $plugin_id, $plugin_definition);
-    $this->routeMatch = $routeMatch;
-    $this->account = $account;
-    $this->hidUserData = $hid_user_data;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
   public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
-    return new static(
-      $configuration,
-      $plugin_id,
-      $plugin_definition,
-      $container->get('current_route_match'),
-      $container->get('current_user'),
-      $container->get('hpc_common.hid_user_data'),
-    );
+    $instance = new static($configuration, $plugin_id, $plugin_definition);
+    $instance->routeMatch = $container->get('current_route_match');
+    $instance->account = $container->get('current_user');
+    $instance->hidUserData = $container->get('hpc_common.hid_user_data');
+    return $instance;
   }
 
   /**
@@ -71,7 +55,7 @@ class HIDSessionInformation extends BlockBase implements ContainerFactoryPluginI
   public function build() {
     $user_viewed = $this->routeMatch->getParameter('user');
     if (!$user_viewed) {
-      return NULL;
+      return [];
     }
     // Get the Hid ID associated to the user.
     $id = $this->hidUserData->getId($user_viewed);
@@ -79,7 +63,7 @@ class HIDSessionInformation extends BlockBase implements ContainerFactoryPluginI
     // If we get no ID, it means the user has never logged in and we have no
     // data to show. In this case, we do not show this block.
     if (!$id) {
-      return NULL;
+      return [];
     }
 
     // Check the user viewed is the same as logged in user.

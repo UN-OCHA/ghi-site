@@ -287,7 +287,7 @@ class PlanEntitiesQuery extends EndpointQueryBase {
    */
   public function getPlanEntities(?ContentEntityInterface $context_object = NULL, $entity_type = NULL, ?array $filters = NULL) {
     $cache_key = $this->getCacheKey(array_filter([
-      'id' => $context_object ? $context_object->id() : NULL,
+      'id' => $context_object ? ($context_object->getEntityTypeId() . '::' . $context_object->id()) : NULL,
       'entity_type' => $entity_type,
     ] + ($filters ?? [])));
 

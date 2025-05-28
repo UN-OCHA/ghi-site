@@ -7,3 +7,7 @@ services:
     tags:
       - {name: event_subscriber}
     arguments: ['@current_user']
+  ghi_user.route_subscriber:
+    class: Drupal\ghi_user\EventSubscriber\RouteSubscriber
+    tags:
+      - { name: event_subscriber }
