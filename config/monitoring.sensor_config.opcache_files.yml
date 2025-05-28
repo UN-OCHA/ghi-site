@@ -1,0 +1,17 @@
+uuid: 26fc2c9b-f7d8-4323-bdb7-0dacb9870f22
+langcode: en
+status: false
+dependencies: {  }
+id: opcache_files
+label: 'OPcache accelerated files'
+description: ''
+category: Performance
+plugin_id: opcache_files
+result_class: null
+value_label: '% used'
+value_type: number
+caching_time: null
+settings: {  }
+thresholds:
+  type: exceeds
+  warning: 90
