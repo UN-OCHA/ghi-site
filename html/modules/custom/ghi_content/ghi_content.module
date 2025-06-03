@@ -98,27 +98,24 @@ function ghi_content_batch_alter(&$batch) {
 
   $current_set = $batch['current_set'];
   $operations = &$batch['sets'][$current_set]['operations'];
-  $callback = $operations[0][0] ?? NULL;
-  $migration_name = $operations[0][1][0] ?? NULL;
-  if ($callback != $targeted_callback || !array_key_exists($migration_name, $targeted_migrations)) {
-    return;
+
+  foreach ($operations as $operation) {
+    $callback = $operation[0] ?? NULL;
+    $migration_name = $operation[1][0] ?? NULL;
+    if ($callback != $targeted_callback || !array_key_exists($migration_name, $targeted_migrations)) {
+      return;
+    }
+    // Add a post-process batch set to article imports to make sure that content
+    // that is not available on the remote source anymore will get unpublished.
+    /** @var \Drupal\ghi_content\ContentManager\DocumentManager $document_manager */
+    $content_manager = \Drupal::service($targeted_migrations[$migration_name]);
+    $batch_builder = (new BatchBuilder())
+      ->addOperation(
+          [MigrationBatchController::class, 'batchProcessCleanup'],
+          [$operation[1][0], $operation[1][1], $content_manager]
+        )
+      ->setFinishCallback([MigrationBatchController::class, 'batchFinished']);
   }
-  // Add a post-process batch set to article imports to make sure that articles
-  // that are not available on the remote source anymore will get unpublished.
-  $placeholders = [
-    '@name' => $migration_name,
-  ];
-  /** @var \Drupal\ghi_content\ContentManager\DocumentManager $document_manager */
-  $content_manager = \Drupal::service($targeted_migrations[$migration_name]);
-  $batch_builder = (new BatchBuilder())
-    ->setTitle(t('Post process @name', $placeholders))
-    ->setInitMessage(t('Start post-processing for @name', $placeholders))
-    ->setProgressMessage(t('Post-processing @name', $placeholders))
-    ->addOperation(
-        [MigrationBatchController::class, 'batchProcessCleanup'],
-        [$operations[0][1][0], $operations[0][1][1], $content_manager]
-      )
-    ->setFinishCallback([MigrationBatchController::class, 'batchFinished']);
   batch_set($batch_builder->toArray());
 }
 
