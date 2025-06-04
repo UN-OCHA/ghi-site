@@ -90,7 +90,7 @@ abstract class ContentBase extends Node implements NodeInterface, ImageNodeInter
    * @return string|null
    *   The type on the remote source or NULL.
    */
-  protected function getSourceType() {
+  public function getSourceType() {
     $field_name = $this->getContentManager()->getRemoteFieldName();
     return $this->hasField($field_name) ? $this->get($field_name)->remote_source : NULL;
   }
@@ -101,7 +101,7 @@ abstract class ContentBase extends Node implements NodeInterface, ImageNodeInter
    * @return int|null
    *   The id on the remote source or NULL.
    */
-  protected function getSourceId() {
+  public function getSourceId() {
     $field_name = $this->getContentManager()->getRemoteFieldName();
     $bundle = $this->getContentManager()->getNodeBundle();
     return $this->hasField($field_name) ? $this->get($field_name)->{$bundle . '_id'} : NULL;
