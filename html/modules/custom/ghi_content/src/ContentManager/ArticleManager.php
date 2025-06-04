@@ -2,9 +2,9 @@
 
 namespace Drupal\ghi_content\ContentManager;
 
+use Drupal\ghi_content\Entity\ContentBase;
 use Drupal\ghi_content\RemoteContent\RemoteArticleInterface;
 use Drupal\ghi_content\RemoteContent\RemoteContentInterface;
-use Drupal\node\NodeInterface;
 
 /**
  * Article manager service class.
@@ -67,7 +67,7 @@ class ArticleManager extends BaseContentManager {
   /**
    * {@inheritdoc}
    */
-  public function loadRemoteContentForNode(NodeInterface $node, $refresh = FALSE, $rendered = TRUE) {
+  public function loadRemoteContentForNode(ContentBase $node, $refresh = FALSE, $rendered = TRUE) {
     $remote_field = $this->getRemoteFieldName();
     if (!$node->hasField($remote_field)) {
       return NULL;
@@ -96,7 +96,7 @@ class ArticleManager extends BaseContentManager {
    * @param string $title
    *   An title for the article node.
    *
-   * @return \Drupal\node\NodeInterface|null
+   * @return \Drupal\ghi_content\Entity\Article|null
    *   The created article node if successful or NULL otherwise.
    */
   public function createNodeFromRemoteArticle(RemoteArticleInterface $article, $title) {
@@ -145,11 +145,11 @@ class ArticleManager extends BaseContentManager {
   /**
    * {@inheritdoc}
    */
-  protected function getMigration(NodeInterface $node) {
-    if (!$node->hasField(self::REMOTE_ARTICLE_FIELD) || $node->get(self::REMOTE_ARTICLE_FIELD)->isEmpty()) {
+  protected function getMigration(ContentBase $node) {
+    if (!$node->getSourceIdentifier()) {
       return;
     }
-    $remote_source = $node->get(self::REMOTE_ARTICLE_FIELD)->remote_source;
+    $remote_source = $node->getSourceType();
     $migrations = $this->migrationManager->getDefinitions();
     foreach ($migrations as $key => $def) {
       if (empty($def['source'])) {
@@ -164,8 +164,7 @@ class ArticleManager extends BaseContentManager {
       if (!$migration) {
         continue;
       }
-      $source_id = $migration->getIdMap()->lookupSourceId(['nid' => $node->id()]);
-      if ($source_id) {
+      if ($migration->getIdMap()->lookupDestinationIds(['id' => $node->getSourceId()])) {
         return $migration;
       }
     }
@@ -174,18 +173,17 @@ class ArticleManager extends BaseContentManager {
   /**
    * {@inheritdoc}
    */
-  public function updateNodeFromRemote(NodeInterface $node, $dry_run = FALSE, $reset = FALSE) {
-    $remote_field = self::REMOTE_ARTICLE_FIELD;
+  public function updateNodeFromRemote(ContentBase $node, $dry_run = FALSE, $reset = FALSE) {
     $article = $this->loadRemoteContentForNode($node, TRUE, FALSE);
     if (!$article) {
       return;
     }
 
     // See if the article needs a cleanup.
-    $remote_source = $node->get($remote_field)->remote_source;
-    $article_id = $node->get($remote_field)->article_id;
-    $remote_source_original = $node->original ? $node->original->get($remote_field)->remote_source : NULL;
-    $article_id_original = $node->original ? $node->original->get($remote_field)->article_id : NULL;
+    $remote_source = $node->getSourceType();
+    $article_id = $node->getSourceId();
+    $remote_source_original = $node->original ? $node->original->getSourceType() : NULL;
+    $article_id_original = $node->original ? $node->original->getSourceId() : NULL;
     $changed_article = $remote_source_original && $article_id_original && ($remote_source != $remote_source_original || $article_id != $article_id_original);
     $cleanup = $reset || $changed_article;
 
@@ -223,17 +221,9 @@ class ArticleManager extends BaseContentManager {
   }
 
   /**
-   * Check if the given node is in-sync with its remote source.
-   *
-   * @param \Drupal\node\NodeInterface $node
-   *   The node object.
-   *
-   * @return bool|null
-   *   TRUE if in-sync, FALSE if not and NULL if the migration is not found.
-   *
-   * @see ghi_content_form_node_article_edit_form_alter()
+   * {@inheritdoc}
    */
-  public function isUpToDateWithRemote(NodeInterface $node) {
+  public function isUpToDateWithRemote(ContentBase $node) {
     $migration = $this->getMigration($node);
     if (!$migration) {
       return NULL;
