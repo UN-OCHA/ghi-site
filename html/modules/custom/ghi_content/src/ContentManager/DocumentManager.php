@@ -2,10 +2,10 @@
 
 namespace Drupal\ghi_content\ContentManager;
 
+use Drupal\ghi_content\Entity\ContentBase;
 use Drupal\ghi_content\RemoteContent\RemoteContentInterface;
 use Drupal\ghi_content\RemoteContent\RemoteDocumentInterface;
 use Drupal\layout_builder\LayoutEntityHelperTrait;
-use Drupal\node\NodeInterface;
 
 /**
  * Document manager service class.
@@ -65,7 +65,7 @@ class DocumentManager extends BaseContentManager {
   /**
    * {@inheritdoc}
    */
-  public function loadRemoteContentForNode(NodeInterface $node, $refresh = FALSE) {
+  public function loadRemoteContentForNode(ContentBase $node, $refresh = FALSE) {
     $remote_field = $this->getRemoteFieldName();
     if (!$node->hasField($remote_field) || $node->get($remote_field)->isEmpty()) {
       return;
@@ -90,7 +90,7 @@ class DocumentManager extends BaseContentManager {
    * @param int $team
    *   An optional term id for the team field.
    *
-   * @return \Drupal\node\NodeInterface|null
+   * @return \Drupal\ghi_content\Entity\Document|null
    *   The created document node if successful or NULL otherwise.
    */
   public function createNodeFromRemoteDocument(RemoteDocumentInterface $document, $title, $team = NULL) {
@@ -121,11 +121,11 @@ class DocumentManager extends BaseContentManager {
   /**
    * {@inheritdoc}
    */
-  protected function getMigration(NodeInterface $node) {
-    if (!$node->hasField(self::REMOTE_DOCUMENT_FIELD) || $node->get(self::REMOTE_DOCUMENT_FIELD)->isEmpty()) {
+  protected function getMigration(ContentBase $node) {
+    if (!$node->getSourceIdentifier()) {
       return;
     }
-    $remote_source = $node->get(self::REMOTE_DOCUMENT_FIELD)->remote_source;
+    $remote_source = $node->getSourceType();
     $migrations = $this->migrationManager->getDefinitions();
     foreach ($migrations as $key => $def) {
       if (empty($def['source'])) {
@@ -140,8 +140,7 @@ class DocumentManager extends BaseContentManager {
       if (!$migration) {
         continue;
       }
-      $source_id = $migration->getIdMap()->lookupSourceId(['nid' => $node->id()]);
-      if ($source_id) {
+      if ($migration->getIdMap()->lookupDestinationIds(['id' => $node->getSourceId()])) {
         return $migration;
       }
     }
@@ -150,18 +149,17 @@ class DocumentManager extends BaseContentManager {
   /**
    * {@inheritdoc}
    */
-  public function updateNodeFromRemote(NodeInterface $node, $dry_run = FALSE, $reset = FALSE) {
-    $remote_field = self::REMOTE_DOCUMENT_FIELD;
+  public function updateNodeFromRemote(ContentBase $node, $dry_run = FALSE, $reset = FALSE) {
     $document = $this->loadRemoteContentForNode($node, TRUE);
     if (!$document) {
       return;
     }
 
     // See if the document needs a cleanup.
-    $remote_source = $node->get($remote_field)->remote_source;
-    $document_id = $node->get($remote_field)->document_id;
-    $remote_source_original = $node->original ? $node->original->get($remote_field)->remote_source : NULL;
-    $document_id_original = $node->original ? $node->original->get($remote_field)->document_id : NULL;
+    $remote_source = $node->getSourceType();
+    $document_id = $node->getSourceId();
+    $remote_source_original = $node->original ? $node->original->getSourceType() : NULL;
+    $document_id_original = $node->original ? $node->original->getSourceId() : NULL;
     $changed_document = $remote_source_original && $document_id_original && ($remote_source != $remote_source_original || $document_id != $document_id_original);
     $cleanup = $reset || $changed_document;
 
@@ -194,17 +192,9 @@ class DocumentManager extends BaseContentManager {
   }
 
   /**
-   * Check if the given node is in-sync with its remote source.
-   *
-   * @param \Drupal\node\NodeInterface $node
-   *   The node object.
-   *
-   * @return bool|null
-   *   TRUE if in-sync, FALSE if not and NULL if the migration is not found.
-   *
-   * @see ghi_content_form_node_document_edit_form_alter()
+   * {@inheritdoc}
    */
-  public function isUpToDateWithRemote(NodeInterface $node) {
+  public function isUpToDateWithRemote(ContentBase $node) {
     $migration = $this->getMigration($node);
     if (!$migration) {
       return NULL;
