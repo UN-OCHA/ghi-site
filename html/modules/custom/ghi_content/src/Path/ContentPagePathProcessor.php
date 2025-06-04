@@ -30,6 +30,9 @@ class ContentPagePathProcessor implements InboundPathProcessorInterface, Outboun
    */
   public function processInbound($path, Request $request) {
     $original_path = $path;
+    if (PHP_SAPI === 'cli') {
+      return $path;
+    }
     if (strpos($path, '/article/') > 0) {
       $path = $this->processArticleUrl($path);
     }
