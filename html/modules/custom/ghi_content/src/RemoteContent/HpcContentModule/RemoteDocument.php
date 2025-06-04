@@ -98,7 +98,8 @@ class RemoteDocument extends RemoteDocumentBase {
    * {@inheritdoc}
    */
   public function getImageUri() {
-    return $this->data->image->imageUrl ?? NULL;
+    $image_url = $this->data->image->imageUrl ?? NULL;
+    return $image_url ? urldecode($image_url) : $image_url;
   }
 
   /**
