@@ -100,3 +100,12 @@ function ghi_content_deploy_update_tag_type_data(&$sandbox) {
   }
   $sandbox['#finished'] = 1 / (count($sandbox['tag_ids']) + 1);
 }
+
+/**
+ * Cleanup faulty migrate map entries.
+ */
+function ghi_content_deploy_cleanup_migrate_map_entries(&$sandbox) {
+  $query = \Drupal::database()->delete('migrate_map_articles_hpc_content_module');
+  $query->isNull('destid1');
+  $query->execute();
+}

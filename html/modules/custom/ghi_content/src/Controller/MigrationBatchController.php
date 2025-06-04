@@ -8,7 +8,7 @@ use Drupal\ghi_content\Entity\ContentBase;
 /**
  * Controller class for migration batches.
  *
- * This is used to assure correct status values for node articles.
+ * This is used to assure correct status values for articles and documents.
  *
  * @see ghi_content_batch_alter().
  */
@@ -121,17 +121,25 @@ class MigrationBatchController {
    */
   public static function batchFinished($success, array $results, array $operations) {
     if ($success) {
-      foreach ($results as $result) {
+      foreach ($results as $migration_id => $result) {
         if (empty($result['@updated'])) {
           // Only add a message if we actually changes something.
           continue;
         }
-        $singular_message = "Updated 1 previously imported content item - done with post-processing of '@name'";
-        $plural_message = "Updated @updated previously imported content items - done with post-processing of '@name'";
+        /** @var \Drupal\migrate\Plugin\MigrationInterface $migration */
+        $migration = \Drupal::getContainer()->get('plugin.manager.migration')->createInstance($migration_id, []);
+        $content_type = $migration->getSourceConfiguration()['content_type'];
+        $singular_message = "Updated 1 previously imported @content_type_singular";
+        $plural_message = "Updated @updated previously imported @content_type_plural";
+        $t_args = $result + [
+          // We are lazy.
+          '@content_type_singular' => $content_type,
+          '@content_type_plural' => $content_type . 's',
+        ];
         \Drupal::messenger()->addStatus(\Drupal::translation()->formatPlural($result['@updated'],
           $singular_message,
           $plural_message,
-          $result));
+          $t_args));
       }
     }
   }

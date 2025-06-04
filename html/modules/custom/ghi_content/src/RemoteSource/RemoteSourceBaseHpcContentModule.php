@@ -565,7 +565,7 @@ abstract class RemoteSourceBaseHpcContentModule extends RemoteSourceBase {
       'document' => 'documentExport',
     };
     $query = '{
-      ' . $query_name . ' ' . ($tags !== NULL ? '(tags:["' . implode('", "', $tags) . '"])' : '') . '{
+      ' . $query_name . ' ' . (!empty($tags) ? '(tags:["' . implode('", "', $tags) . '"])' : '') . '{
         count
         metaData {
           id
