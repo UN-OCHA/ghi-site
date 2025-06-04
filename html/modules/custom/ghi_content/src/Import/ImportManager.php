@@ -10,6 +10,7 @@ use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
 use Drupal\Core\DependencyInjection\DependencySerializationTrait;
 use Drupal\Core\Entity\EntityReferenceSelection\SelectionPluginManager;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\Core\File\Event\FileUploadSanitizeNameEvent;
 use Drupal\Core\File\FileSystem;
 use Drupal\Core\Messenger\MessengerInterface;
 use Drupal\Core\Messenger\MessengerTrait;
@@ -33,6 +34,7 @@ use Drupal\layout_builder\SectionComponent;
 use Drupal\node\NodeInterface;
 use Drupal\taxonomy\TermInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
+use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
 /**
  * Sync element service class.
@@ -108,9 +110,16 @@ class ImportManager implements ContainerInjectionInterface {
   protected $fileRepository;
 
   /**
+   * The event dispatcher.
+   *
+   * @var \Symfony\Contracts\EventDispatcher\EventDispatcherInterface
+   */
+  protected $eventDispatcher;
+
+  /**
    * Public constructor.
    */
-  public function __construct(ConfigFactoryInterface $config_factory, EntityTypeManagerInterface $entity_type_manager, BlockManagerInterface $block_manager, AccountInterface $current_user, UuidInterface $uuid, LayoutTempstoreRepositoryInterface $layout_tempstore_repository, SelectionPluginManager $selection_plugin_manager, FileRepositoryInterface $file_repository) {
+  public function __construct(ConfigFactoryInterface $config_factory, EntityTypeManagerInterface $entity_type_manager, BlockManagerInterface $block_manager, AccountInterface $current_user, UuidInterface $uuid, LayoutTempstoreRepositoryInterface $layout_tempstore_repository, SelectionPluginManager $selection_plugin_manager, FileRepositoryInterface $file_repository, EventDispatcherInterface $event_dispatcher) {
     $this->config = $config_factory;
     $this->entityTypeManager = $entity_type_manager;
     $this->blockManager = $block_manager;
@@ -119,6 +128,7 @@ class ImportManager implements ContainerInjectionInterface {
     $this->layoutTempstoreRepository = $layout_tempstore_repository;
     $this->selectionPluginManager = $selection_plugin_manager;
     $this->fileRepository = $file_repository;
+    $this->eventDispatcher = $event_dispatcher;
   }
 
   /**
@@ -134,6 +144,7 @@ class ImportManager implements ContainerInjectionInterface {
       $container->get('layout_builder.tempstore_repository'),
       $container->get('plugin.manager.entity_reference_selection'),
       $container->get('file.repository'),
+      $container->get('event_dispatcher'),
     );
   }
 
@@ -209,7 +220,11 @@ class ImportManager implements ContainerInjectionInterface {
     $local_file = !$node->get($field_name)->isEmpty() ? $this->entityTypeManager->getStorage('file')->load($node->get($field_name)->target_id) : NULL;
     if (!empty($image_url)) {
       $caption = $content->getImageCaptionPlain();
-      $image_name = basename($image_url);
+
+      // Call an event to sanitize the filename.
+      $event = new FileUploadSanitizeNameEvent(basename($image_url), '');
+      $this->eventDispatcher->dispatch($event);
+      $image_name = $event->getFilename();
 
       // Get the remote and local file size.
       $file_size_remote = $content->getSource()->getFileSize($image_url);
