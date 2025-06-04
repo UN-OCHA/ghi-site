@@ -194,7 +194,7 @@ abstract class BaseContentManager implements ContainerInjectionInterface {
   /**
    * Load the remote content for the given node.
    *
-   * @param \Drupal\node\NodeInterface $node
+   * @param \Drupal\ghi_content\Entity\ContentBase $node
    *   The node entity.
    * @param bool $refresh
    *   Wether to retrieve fresh data.
@@ -202,7 +202,7 @@ abstract class BaseContentManager implements ContainerInjectionInterface {
    * @return \Drupal\ghi_content\RemoteContent\RemoteContentInterface|null
    *   The remote article object if found.
    */
-  abstract public function loadRemoteContentForNode(NodeInterface $node, $refresh = FALSE);
+  abstract public function loadRemoteContentForNode(ContentBase $node, $refresh = FALSE);
 
   /**
    * Load major tags for a node.
@@ -530,7 +530,7 @@ abstract class BaseContentManager implements ContainerInjectionInterface {
   /**
    * Update the given node according to the data on its remote source.
    *
-   * @param \Drupal\node\NodeInterface $node
+   * @param \Drupal\ghi_content\Entity\ContentBase $node
    *   The node object.
    * @param bool $dry_run
    *   Whether the update should actually modify data.
@@ -540,12 +540,12 @@ abstract class BaseContentManager implements ContainerInjectionInterface {
    *
    * @see ghi_content_node_presave()
    */
-  abstract public function updateNodeFromRemote(NodeInterface $node, $dry_run = FALSE, $reset = FALSE);
+  abstract public function updateNodeFromRemote(ContentBase $node, $dry_run = FALSE, $reset = FALSE);
 
   /**
    * Check if the given node is in-sync with its remote source.
    *
-   * @param \Drupal\node\NodeInterface $node
+   * @param \Drupal\ghi_content\Entity\ContentBase $node
    *   The node object.
    *
    * @return bool|null
@@ -553,18 +553,18 @@ abstract class BaseContentManager implements ContainerInjectionInterface {
    *
    * @see ghi_content_form_node_article_edit_form_alter()
    */
-  abstract public function isUpToDateWithRemote(NodeInterface $node);
+  abstract public function isUpToDateWithRemote(ContentBase $node);
 
   /**
    * Normalize an article node for comparision between local and remote data.
    *
-   * @param \Drupal\node\NodeInterface $node
+   * @param \Drupal\ghi_content\Entity\ContentBase $node
    *   The node object to normalize.
    *
    * @return array
    *   A normalized array based on the given node object.
    */
-  protected function normalizeContentNodeData(NodeInterface $node) {
+  protected function normalizeContentNodeData(ContentBase $node) {
     $migration = $this->getMigration($node);
     $expected_fields = array_map(function ($item) {
       return str_contains($item, '/') ? explode('/', $item)[0] : $item;
@@ -581,12 +581,12 @@ abstract class BaseContentManager implements ContainerInjectionInterface {
   /**
    * Cleanup after a content object has been deleted.
    *
-   * @param \Drupal\node\NodeInterface $node
+   * @param \Drupal\ghi_content\Entity\ContentBase $node
    *   The node object.
    *
    * @see ghi_content_node_predelete()
    */
-  public function cleanupContentOnDelete(NodeInterface $node) {
+  public function cleanupContentOnDelete(ContentBase $node) {
     if ($node->bundle() != $this->getNodeBundle()) {
       return;
     }
@@ -596,13 +596,13 @@ abstract class BaseContentManager implements ContainerInjectionInterface {
   /**
    * Get the migration for the given node.
    *
-   * @param \Drupal\node\NodeInterface $node
+   * @param \Drupal\ghi_content\Entity\ContentBase $node
    *   The node object.
    *
    * @return \Drupal\migrate\Plugin\MigrationInterface|null
    *   The migration plugin if found.
    */
-  abstract protected function getMigration(NodeInterface $node);
+  abstract protected function getMigration(ContentBase $node);
 
   /**
    * Update the migration state of the given node.
@@ -655,16 +655,15 @@ abstract class BaseContentManager implements ContainerInjectionInterface {
    * Generally, articles can't be deleted in the backend but need to be removed
    * (unpublished/deleted) from the remote source.
    *
-   * @param \Drupal\node\NodeInterface $node
+   * @param \Drupal\ghi_content\Entity\ContentBase $node
    *   The node object.
    */
-  protected function removeMigrationMapEntries(NodeInterface $node) {
+  protected function removeMigrationMapEntries(ContentBase $node) {
     $migration = $this->getMigration($node);
     if (!$migration) {
       return;
     }
-    $source_id = $migration->getIdMap()->lookupSourceId(['nid' => $node->id()]);
-    $migration->getIdMap()->delete($source_id);
+    $migration->getIdMap()->delete(['id' => $node->getSourceId()]);
   }
 
   /**
