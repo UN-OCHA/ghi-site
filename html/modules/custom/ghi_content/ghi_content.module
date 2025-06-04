@@ -289,7 +289,7 @@ function ghi_content_node_predelete(NodeInterface $node) {
   /** @var \Drupal\ghi_content\ContentManager\ManagerFactory $manager_factory */
   $manager_factory = \Drupal::getContainer()->get('ghi_content.manager.factory');
   $content_manager = $manager_factory->getContentManager($node);
-  if ($content_manager) {
+  if ($node instanceof ContentBase && $content_manager) {
     $content_manager->cleanupContentOnDelete($node);
   }
 }
