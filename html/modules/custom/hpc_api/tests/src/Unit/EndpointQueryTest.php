@@ -10,10 +10,12 @@ use Drupal\Core\PageCache\ResponsePolicy\KillSwitch;
 use Drupal\Core\Session\AccountProxyInterface;
 use Drupal\Tests\UnitTestCase;
 use Drupal\hpc_api\ConfigService;
+use Drupal\hpc_api\Event\EndpointDataEvent;
 use Drupal\hpc_api\Query\EndpointQuery;
 use GuzzleHttp\Psr7\Response;
 use Prophecy\Argument;
 use Prophecy\PhpUnit\ProphecyTrait;
+use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
 /**
  * @covers Drupal\hpc_api\Query\EndpointQuery
@@ -97,6 +99,10 @@ class EndpointQueryTest extends UnitTestCase {
     // Mock kill switch.
     $kill_switch = $this->prophesize(KillSwitch::class)->reveal();
 
+    $event = $this->prophesize(EndpointDataEvent::class);
+    $event_dispatcher = $this->prophesize(EventDispatcherInterface::class);
+    $event_dispatcher->dispatch(Argument::any(), EndpointDataEvent::class)->willReturn($event->reveal());
+
     $config_service = new ConfigService($config_factory);
 
     // Set container.
@@ -107,7 +113,7 @@ class EndpointQueryTest extends UnitTestCase {
     $current_user = $this->prophesize(AccountProxyInterface::class)->reveal();
     $time = $this->prophesize(TimeInterface::class)->reveal();
 
-    $this->query = new OverrideEndpointQuery($config_service, $logger, $kill_switch, $http_client, $current_user, $time);
+    $this->query = new OverrideEndpointQuery($config_service, $event_dispatcher->reveal(), $logger, $kill_switch, $http_client, $current_user, $time);
   }
 
   /**
@@ -248,6 +254,81 @@ class EndpointQueryTest extends UnitTestCase {
     ]);
 
     $this->assertEquals($result, $this->query->getFullEndpointUrl());
+  }
+
+  /**
+   * Test setting and getting auth headers.
+   */
+  public function testAuthHeaders() {
+    $this->query->setArguments([]);
+    $this->assertArrayHasKey('Authorization', $this->query->getAuthHeaders());
+    $this->assertStringStartsWith('Basic', $this->query->getAuthHeaders()['Authorization']);
+    $this->query->setAuthMethod(EndpointQuery::AUTH_METHOD_API_KEY);
+    $this->assertArrayHasKey('Authorization', $this->query->getAuthHeaders());
+    $this->assertStringStartsWith('Bearer', $this->query->getAuthHeaders()['Authorization']);
+    $this->query->setAuthMethod(EndpointQuery::AUTH_METHOD_NONE);
+    $this->assertEquals([], $this->query->getAuthHeaders());
+    $this->query->setAuthHeader('123');
+    $this->assertEquals(['Authorization' => '123'], $this->query->getAuthHeaders());
+  }
+
+  /**
+   * Test setting and getting endpoint url.
+   */
+  public function testEndpointUrl() {
+    $this->query->setEndpoint('fts/project/plan');
+    $this->assertEquals('fts/project/plan', $this->query->getEndpoint());
+    $this->assertEquals('v1/fts/project/plan', $this->query->getEndpointUrl());
+  }
+
+  /**
+   * Test setting and getting endpoint version.
+   */
+  public function testEndpointVersion() {
+    $this->query->setEndpointVersion('v1');
+    $this->assertEquals('v1', $this->query->getEndpointVersion());
+    $this->query->setEndpointVersion('v2');
+    $this->assertEquals('v2', $this->query->getEndpointVersion());
+  }
+
+  /**
+   * Test setting and getting endpoint arguments.
+   */
+  public function testEndpointArgument() {
+    $this->query->setArguments([]);
+    $this->assertEquals([], $this->query->getEndpointArguments());
+    $this->query->setEndpointArguments([]);
+    $this->assertEquals([], $this->query->getEndpointArguments());
+
+    $this->query->setArguments([]);
+    $this->query->setEndpointArguments(['plan_id' => 1]);
+    $this->assertEquals(['plan_id' => 1], $this->query->getEndpointArguments());
+    $this->assertEquals(1, $this->query->getEndpointArgument('plan_id'));
+
+    $this->query->setArguments([]);
+    $this->query->setEndpointArgument('plan_id', 1);
+    $this->assertEquals(['plan_id' => 1], $this->query->getEndpointArguments());
+    $this->assertEquals(1, $this->query->getEndpointArgument('plan_id'));
+  }
+
+  /**
+   * Test setting and getting endpoint placeholders.
+   */
+  public function testEndpointPlaceholder() {
+    $this->query->setArguments([]);
+    $this->assertEquals([], $this->query->getPlaceholders());
+    $this->query->setPlaceholders([]);
+    $this->assertEquals([], $this->query->getPlaceholders());
+
+    $this->query->setArguments([]);
+    $this->query->setPlaceholders(['plan_id' => 1]);
+    $this->assertEquals(['plan_id' => 1], $this->query->getPlaceholders());
+    $this->assertEquals(1, $this->query->getPlaceholder('plan_id'));
+
+    $this->query->setArguments([]);
+    $this->query->setPlaceholder('plan_id', 1);
+    $this->assertEquals(['plan_id' => 1], $this->query->getPlaceholders());
+    $this->assertEquals(1, $this->query->getPlaceholder('plan_id'));
   }
 
   /**

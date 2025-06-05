@@ -236,7 +236,7 @@ class AttachmentData extends ConfigurationContainerItemPluginBase {
     }
     // Cast this to a scalar if necessary.
     $attachment_id = is_array($attachment_id) ? array_key_first($attachment_id) : $attachment_id;
-    $attachment = $this->attachmentQuery->getAttachment($attachment_id);
+    $attachment = $this->attachmentQuery->getAttachment($attachment_id, FALSE, 'all');
     if (!$attachment) {
       return NULL;
     }
