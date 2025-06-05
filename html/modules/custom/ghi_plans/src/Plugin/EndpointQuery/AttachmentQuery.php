@@ -46,19 +46,25 @@ class AttachmentQuery extends EndpointQueryBase implements ContainerFactoryPlugi
    *   The attachment id to query.
    * @param bool $disaggregated
    *   Whether to fetch disaggregated data directly.
+   * @param string|int $reporting_period
+   *   The reporting period for which to load the attachment data.
    *
    * @return \Drupal\ghi_plans\ApiObjects\Attachments\AttachmentInterface
    *   The processed attachment object.
    */
-  public function getAttachment($attachment_id, $disaggregated = FALSE) {
+  public function getAttachment($attachment_id, $disaggregated = FALSE, $reporting_period = 'latest') {
     if (is_string($attachment_id) && strpos($attachment_id, 'group_') === 0) {
       return NULL;
     }
     if ($disaggregated) {
-      $data = $this->getAttachmentDataWithDisaggregatedData($attachment_id);
+      $data = $this->getAttachmentDataWithDisaggregatedData($attachment_id, $reporting_period);
     }
     else {
-      $data = $this->getData(['attachment_id' => $attachment_id]);
+      $data = $this->getData([
+        'attachment_id' => $attachment_id,
+      ], [
+        'reporting_period' => $reporting_period,
+      ]);
     }
     if (empty($data)) {
       return NULL;
@@ -72,13 +78,16 @@ class AttachmentQuery extends EndpointQueryBase implements ContainerFactoryPlugi
    *
    * @param int $attachment_id
    *   The attachment id to query.
+   * @param string|int $reporting_period
+   *   The reporting period for which to load the attachment data.
    *
    * @return object
    *   The raw attachment object from the API.
    */
-  public function getAttachmentDataWithDisaggregatedData($attachment_id) {
+  public function getAttachmentDataWithDisaggregatedData($attachment_id, $reporting_period = 'latest') {
     $data = $this->getData(['attachment_id' => $attachment_id], [
       'disaggregation' => 'true',
+      'reporting_period' => $reporting_period,
     ]);
     if (empty($data)) {
       return NULL;
