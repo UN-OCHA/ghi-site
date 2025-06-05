@@ -784,7 +784,7 @@
         options.filter = filter;
       }
       let features = this.getMap().querySourceFeatures(source_id, options);
-      return unique ? this.getUniqueFeatures(features, 'object_id') : features;
+      return unique ? this.getUniqueFeatures(features, typeof unique == 'bool' ? 'object_id' : unique) : features;
     }
 
     /**
@@ -1265,6 +1265,27 @@
     }
 
     /**
+     * Hide a country label from the background layer.
+     *
+     * @param {String} country_label
+     *   The name of the country for which to hide the label.
+     */
+    hideCountryLabelFromBackgroundLayer = function (country_label) {
+      if (!country_label) {
+        return;
+      }
+      let map = this.getMap();
+      let backgroundLayer = this.getBackgroundLayer(map);
+
+      let rule = ['!=', ['get', 'en_short'], country_label];
+      let filters = map.getFilter(backgroundLayer.id);
+      if (filters.findIndex((value, index) => typeof value == 'object' && value.toString() == rule.toString()) == -1) {
+        filters.push(rule);
+        map.setFilter(backgroundLayer.id, filters);
+      }
+    }
+
+    /**
      * Build the label layer.
      *
      * @returns {Object}
@@ -1324,6 +1345,10 @@
         map.setPaintProperty(label_layer_id, 'text-color', backgroundLayer.paint['text-color']);
         map.setPaintProperty(label_layer_id, 'text-halo-color', backgroundLayer.paint['text-halo-color']);
         map.setPaintProperty(label_layer_id, 'text-halo-width', backgroundLayer.paint['text-halo-width']);
+
+        // Hide the label of the currently viewed country from the background
+        // layer.
+        this.hideCountryLabelFromBackgroundLayer(this.options?.outlineCountry?.location_name ?? null);
       }
       this.updateMapData(label_layer_id + '-source', backgroundFeatures);
     }
