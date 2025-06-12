@@ -30,8 +30,13 @@ class GhiMenuLinkContent extends MenuLinkContent {
     if (!$link || strpos($link->uri, 'internal:/document/') !== 0) {
       return parent::getUrlObject($title_attribute);
     }
+    $options = [];
     $uri = str_replace('internal:/document/', 'base:/document/', $link->uri);
-    return Url::fromUri($uri);
+    if (str_contains($uri, '#')) {
+      [$uri, $fragment] = explode('#', $uri);
+      $options['fragment'] = $fragment;
+    }
+    return Url::fromUri($uri, $options);
   }
 
 }
