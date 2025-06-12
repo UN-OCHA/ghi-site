@@ -93,6 +93,13 @@
 
         // Initial drawing of the circles.
         map.addSource(self.sourceId, this.buildSource());
+
+        if (!state.isOverviewMap()) {
+          // On plan attachment maps, we also want to show the names of the
+          // admin areas as map labels.
+          this.addAdminAreaLabels();
+        }
+
         map.addLayer(this.buildCircleLayer());
         map.on('click', self.featureLayerId, (e) => self.clickHandler(e, self));
 
@@ -258,6 +265,7 @@
      *   The geojson feature object.
      */
     buildFeatureForObject = function (object) {
+      let radius = this.getRadius(object);
       return {
         'id': object.object_id,
         'type': 'Feature',
@@ -272,9 +280,14 @@
           'admin_level': object.admin_level,
           'legend_type': object.plan_type ?? null,
           // Paint properties.
-          'radius': this.getRadius(object),
+          'radius': radius,
           'color': this.getColor(object),
           'opacity': this.getOpacity(object),
+          // Label properties.
+          'sort_order': Math.round((1 / radius) * 100),
+          'label_offset': Math.sqrt(Math.sqrt(Math.sqrt((radius)))),
+          'font_size': Math.sqrt(radius),
+          'icon_size': radius / 30,
         }
       };
     }
@@ -470,6 +483,88 @@
       // non-blocking.
       state.getMapController().loadFeaturesAsync(state.getLocations(), (features) => {
         self.updateMapData(geojson_source_id, features);
+      });
+    }
+
+    /**
+     * Add admin area labels to the map.
+     */
+    addAdminAreaLabels = function () {
+      let state = this.state;
+      let map = state.getMap();
+
+      let label_source_id = this.sourceId + '-labels';
+      let backgroundLayer = state.getBackgroundLayer(map);
+
+      map.on('styleimagemissing', (e) => {
+        const id = e.id; // id of the missing image
+
+        // Check if this missing icon is
+        // one this function can generate.
+        if (id != 'hidden-icon') return;
+
+        const width = 60; // The image will be 60 pixels square.
+        const bytesPerPixel = 4; // Each pixel is represented by 4 bytes: red, green, blue, and alpha.
+        const data = new Uint8Array(width * width * bytesPerPixel);
+
+        let debug = false;
+        for (let x = 0; x < width; x++) {
+            for (let y = 0; y < width; y++) {
+                const offset = (y * width + x) * bytesPerPixel;
+                data[offset + 0] = 255; // red
+                data[offset + 1] = 0; // green
+                data[offset + 2] = 0; // blue
+                data[offset + 3] = debug ? 120 : 0; // alpha
+            }
+        }
+
+        map.addImage(id, { width: width, height: width, data: data });
+      });
+
+      // Add a layer for the labels.
+      map.addLayer({
+        'id': label_source_id,
+        'type': 'symbol',
+        'source': this.sourceId,
+        'layout': {
+          'symbol-sort-key': ['get', 'sort_order'],
+          'text-field': ['get', 'object_name'],
+          'text-font': backgroundLayer.layout['text-font'],
+          'text-letter-spacing': backgroundLayer.layout['text-letter-spacing'],
+          'text-size': ['*', ['get', 'font_size'], 5],
+          'text-variable-anchor': [
+            'top',
+            'bottom',
+            'left',
+            'right',
+          ],
+          'text-radial-offset': [
+            'interpolate',
+            ['linear'],
+            ['zoom'],
+            2,
+            ['*', ['get', 'label_offset'], 1.3],
+            5,
+            ['get', 'label_offset'],
+          ],
+          'text-justify': 'auto',
+        },
+        'paint': {
+          'text-color': backgroundLayer.paint['text-color'],
+          'text-halo-color': backgroundLayer.paint['text-halo-color'],
+          'text-halo-width': backgroundLayer.paint['text-halo-width'],
+        }
+      });
+      // Add a layer for the labels.
+      map.addLayer({
+        'id': label_source_id + '-blocks',
+        'type': 'symbol',
+        'source': this.sourceId,
+        'layout': {
+          'icon-image': 'hidden-icon',
+          'icon-size': ['get', 'icon_size'],
+          'icon-allow-overlap': true,
+        },
       });
     }
 
