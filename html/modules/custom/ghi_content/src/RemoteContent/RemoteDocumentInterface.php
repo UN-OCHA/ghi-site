@@ -38,6 +38,17 @@ interface RemoteDocumentInterface extends RemoteContentInterface {
   public function getChapter($id);
 
   /**
+   * Get the chapter number according to the document structure.
+   *
+   * @param int $id
+   *   The chapter id on the remote.
+   *
+   * @return int|false
+   *   The chapter number, starting at 1, or FALSE.
+   */
+  public function getChapterNumber($id);
+
+  /**
    * Get the summary text of the document.
    *
    * @return string|\Drupal\Component\Render\MarkupInterface

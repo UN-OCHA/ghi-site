@@ -89,7 +89,10 @@ class DocumentSubpages extends SectionMenuPluginBase implements OptionalSectionM
     else {
       $nodes_grouped = [];
       foreach ($chapters as $chapter) {
-        $nodes_grouped[$chapter->getShortTitle()] = $document->getChapterArticles($chapter);
+        $chapter_link = $document->toLink($chapter->getShortTitle(), 'canonical', [
+          'fragment' => 'chapter-' . $document->getChapterNumber($chapter),
+        ])->toString();
+        $nodes_grouped[(string) $chapter_link] = $document->getChapterArticles($chapter);
       }
       $widget_header = [
         [
