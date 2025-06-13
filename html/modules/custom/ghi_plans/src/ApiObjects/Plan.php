@@ -98,4 +98,14 @@ class Plan extends BaseObject implements PlanEntityInterface {
     return ucfirst(strtolower(implode(' ', $pieces)));
   }
 
+  /**
+   * Get the latest published reporting period.
+   *
+   * @return int
+   *   The last published reporting period.
+   */
+  public function getLastPublishedReportingPeriodId() {
+    return $this->last_published_period;
+  }
+
 }

@@ -31,4 +31,12 @@ interface DataAttachmentInterface extends AttachmentInterface {
    */
   public function getCustomId();
 
+  /**
+   * Extract the plan id from an attachment object.
+   *
+   * @return int|null
+   *   The plan ID if any can be found.
+   */
+  public function getPlanId();
+
 }
