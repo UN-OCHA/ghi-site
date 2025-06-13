@@ -1,12 +1,12 @@
-uuid: fc502117-ad2a-47a7-916a-28e1e145c4db
+uuid: 2807a9c5-73cc-4d6a-8e92-ab91db03f10b
 langcode: en
 status: false
 dependencies:
   module:
-    - field_group
-id: core_requirements_field_group
-label: 'Module field_group'
-description: 'Requirements of the field_group module'
+    - ghi_base_objects
+id: core_requirements_ghi_base_objects
+label: 'Module ghi_base_objects'
+description: 'Requirements of the ghi_base_objects module'
 category: Requirements
 plugin_id: core_requirements
 result_class: null
@@ -14,7 +14,7 @@ value_label: null
 value_type: no_value
 caching_time: 3600
 settings:
-  module: field_group
+  module: ghi_base_objects
   exclude_keys: {  }
 thresholds:
   type: none

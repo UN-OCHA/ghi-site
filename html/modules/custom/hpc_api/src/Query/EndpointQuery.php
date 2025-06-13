@@ -620,6 +620,17 @@ class EndpointQuery {
   }
 
   /**
+   * Check if the current requests uses API key authentication.
+   *
+   * @return bool
+   *   TRUE if the current requests uses API key authentication, FALSE
+   *   otherwise.
+   */
+  public function isApiKeyRequest() {
+    return $this->authMethod == self::AUTH_METHOD_API_KEY;
+  }
+
+  /**
    * Set the sort options used for the query.
    *
    * @codeCoverageIgnore

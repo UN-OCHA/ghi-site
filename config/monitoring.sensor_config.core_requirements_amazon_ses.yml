@@ -1,0 +1,20 @@
+uuid: 0f2c11d2-d0cf-4376-a790-140f83bcff5c
+langcode: en
+status: false
+dependencies:
+  module:
+    - amazon_ses
+id: core_requirements_amazon_ses
+label: 'Module amazon_ses'
+description: 'Requirements of the amazon_ses module'
+category: Requirements
+plugin_id: core_requirements
+result_class: null
+value_label: null
+value_type: no_value
+caching_time: 3600
+settings:
+  module: amazon_ses
+  exclude_keys: {  }
+thresholds:
+  type: none

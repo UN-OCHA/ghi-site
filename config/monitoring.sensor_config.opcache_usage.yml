@@ -1,0 +1,17 @@
+uuid: 0de568cb-d5a8-4828-8f8e-c68853b3c9be
+langcode: en
+status: false
+dependencies: {  }
+id: opcache_usage
+label: 'OPcache usage'
+description: ''
+category: Performance
+plugin_id: opcache_usage
+result_class: null
+value_label: '% used'
+value_type: number
+caching_time: null
+settings: {  }
+thresholds:
+  type: exceeds
+  warning: 90

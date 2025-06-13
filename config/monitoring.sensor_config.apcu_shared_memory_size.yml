@@ -1,0 +1,17 @@
+uuid: 6f728f28-f33c-4a44-9296-7db92f8ef516
+langcode: en
+status: false
+dependencies: {  }
+id: apcu_shared_memory_size
+label: 'APCu Shared Memory size'
+description: ''
+category: Performance
+plugin_id: apcu_shared_memory_size
+result_class: null
+value_label: '% used'
+value_type: number
+caching_time: null
+settings: {  }
+thresholds:
+  type: exceeds
+  warning: 90

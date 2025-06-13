@@ -147,7 +147,7 @@ abstract class EndpointQueryBase extends PluginBase implements EndpointQueryPlug
       'auth_method' => $this->endpointQuery->getAuthMethod(),
     ];
 
-    if ($this->isAutenticatedEndpoint) {
+    if ($this->isAutenticatedEndpoint && !$this->endpointQuery->isApiKeyRequest()) {
       $hid_access_token = $this->getHidAccessToken();
       if ($hid_access_token) {
         $this->endpointQuery->setAuthHeader('Bearer ' . $hid_access_token);
