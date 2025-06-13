@@ -76,6 +76,14 @@ class RemoteDocument extends RemoteDocumentBase {
   /**
    * {@inheritdoc}
    */
+  public function getChapterNumber($id) {
+    $position = array_search($id, array_keys($this->chapters));
+    return $position !== FALSE ? $position + 1 : $position;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function getCreated() {
     return strtotime($this->data->created);
   }

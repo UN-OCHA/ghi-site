@@ -4,6 +4,8 @@ namespace Drupal\ghi_content\Plugin\Block;
 
 use Drupal\Core\Cache\Cache;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Render\Markup;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\ghi_blocks\Interfaces\MultiStepFormBlockInterface;
 use Drupal\ghi_blocks\Interfaces\OverrideDefaultTitleBlockInterface;
 use Drupal\ghi_content\Entity\ContentBase;
@@ -90,7 +92,10 @@ class DocumentChapter extends ContentBlockBase implements MultiStepFormBlockInte
     $tabs = [
       [
         'title' => [
-          '#markup' => $chapter->getTitle(),
+          '#markup' => Markup::create('<a name="@chapter_id">@title</a>', [
+            '@chapter_id' => $chapter->getId(),
+            '@title' => $chapter->getTitle(),
+          ]),
         ],
         'items' => [
           'summary' => [
@@ -165,7 +170,14 @@ class DocumentChapter extends ContentBlockBase implements MultiStepFormBlockInte
    * {@inheritdoc}
    */
   public function getDefaultTitle() {
-    return $this->getChapter()?->getTitle();
+    if (!$chapter = $this->getChapter()) {
+      return NULL;
+    }
+    $document = $this->getDocument();
+    return new TranslatableMarkup('<a name="@chapter_id" class="anchor"></a>@title', [
+      '@chapter_id' => 'chapter-' . $document->getChapterNumber($chapter->getId()),
+      '@title' => $chapter->getTitle(),
+    ]);
   }
 
   /**
