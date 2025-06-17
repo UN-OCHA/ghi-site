@@ -165,6 +165,21 @@ abstract class ContentBase extends Node implements NodeInterface, ImageNodeInter
   }
 
   /**
+   * Get some properties for the data layer.
+   *
+   * @return array
+   *   An array of simple key value pairs to be used in the GTM datalayer.
+   */
+  public function getDataLayerDocumentProperties() {
+    $data_layer = [];
+    $section = $this->getCurrentSectionNode();
+    if ($section) {
+      $data_layer += $section->getDataLayerSectionProperties();
+    }
+    return $data_layer;
+  }
+
+  /**
    * Check if the given node is a valid context.
    *
    * @param \Drupal\node\NodeInterface $node

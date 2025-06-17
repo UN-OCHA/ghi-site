@@ -246,6 +246,12 @@ function ghi_content_datalayer_alter(&$data_layer) {
   }
   // Don't expose the user id.
   unset($data_layer['userUid']);
+
+  // Add information about the current context if we have one.
+  $entity = _datalayer_menu_get_any_object();
+  if ($entity instanceof ContentBase) {
+    $data_layer += $entity->getDataLayerDocumentProperties();
+  }
 }
 
 /**
