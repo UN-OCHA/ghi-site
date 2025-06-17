@@ -36,6 +36,15 @@
     padding-top: 0;
   }
 
+  .cd-block-title a.anchor {
+    position: relative;
+    top: -2rem;
+
+    .gin--horizontal-toolbar & {
+      top: -5rem;
+    }
+  }
+
   &.ghi-block--hidden-preview > *:not(.contextual, .layout-builder__link) {
     opacity: 0.5;
 

@@ -153,7 +153,7 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
     if (!$attachment->hasDisaggregatedData()) {
       return FALSE;
     }
-    $reporting_period = $this->getCurrentReportingPeriod();
+    $reporting_period = $this->getCurrentReportingPeriod($attachment->getPlanId());
     return $attachment->canBeMapped($reporting_period);
   }
 
@@ -179,8 +179,8 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
     $reporting_periods_rendered = array_map(function ($reporting_period) {
       return $reporting_period->format('Monitoring period #@period_number: @date_range');
     }, $reporting_periods);
-    $reporting_period_id = $this->getCurrentReportingPeriod();
-    $configured_reporting_periods = $this->getConfiguredReportingPeriods();
+    $reporting_period_id = $this->getCurrentReportingPeriod($plan_id);
+    $configured_reporting_periods = $this->getConfiguredReportingPeriods($plan_id);
 
     $disaggregated_data = $attachment->getDisaggregatedData($reporting_period_id, TRUE);
     foreach ($disaggregated_data as $metric_index => $metric_item) {
@@ -343,12 +343,14 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
   /**
    * Get the current reporting period for this element.
    *
+   * @param int $plan_id
+   *   The plan id for which to retrieve the current reporting period.
+   *
    * @return int|null
    *   A reporting period id if found.
    */
-  private function getCurrentReportingPeriod() {
-    $plan_id = $this->getCurrentPlanId();
-    $configured_reporting_periods = $this->getConfiguredReportingPeriods();
+  private function getCurrentReportingPeriod(int $plan_id) {
+    $configured_reporting_periods = $this->getConfiguredReportingPeriods($plan_id);
     $reporting_periods = $this->getPlanReportingPeriods($plan_id);
     $reporting_period = reset($configured_reporting_periods);
     if ($reporting_period == 'latest' && !empty($reporting_periods)) {
@@ -437,11 +439,14 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
   /**
    * Get the reporting periods to show in the map.
    *
+   * @param int $plan_id
+   *   The plan id.
+   *
    * @return array
    *   An array of the configured reporting periods as either strings (latest,
    *   none) or ids.
    */
-  private function getConfiguredReportingPeriods() {
+  private function getConfiguredReportingPeriods(int $plan_id) {
     $conf = $this->getBlockConfig();
     $style = self::STYLE_CIRCLE;
     $monitoring_periods = $conf['map']['appearance'][$style]['monitoring_period'];
@@ -450,7 +455,6 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
     if (empty($configured_reporting_periods)) {
       return [];
     }
-    $plan_id = $this->getCurrentPlanId();
     $reporting_periods = $this->getPlanReportingPeriods($plan_id, TRUE);
     if (empty($reporting_periods)) {
       return [];

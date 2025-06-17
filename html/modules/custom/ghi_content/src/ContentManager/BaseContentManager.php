@@ -200,7 +200,7 @@ abstract class BaseContentManager implements ContainerInjectionInterface {
    *   Wether to retrieve fresh data.
    *
    * @return \Drupal\ghi_content\RemoteContent\RemoteContentInterface|null
-   *   The remote article object if found.
+   *   The remote content object if found.
    */
   abstract public function loadRemoteContentForNode(ContentBase $node, $refresh = FALSE);
 

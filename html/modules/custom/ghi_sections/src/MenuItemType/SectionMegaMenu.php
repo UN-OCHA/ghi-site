@@ -3,6 +3,7 @@
 namespace Drupal\ghi_sections\MenuItemType;
 
 use Drupal\Core\Cache\Cache;
+use Drupal\Core\Render\RenderableInterface;
 
 /**
  * A class for section mega menus.
@@ -155,7 +156,7 @@ class SectionMegaMenu extends SectionMenuWidgetBase {
           '#attributes' => [
             'class' => ['megamenu-group'],
           ],
-          [
+          $group instanceof RenderableInterface ? $group : [
             '#type' => 'html_tag',
             '#tag' => 'p',
             '#value' => $group,
