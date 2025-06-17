@@ -29,6 +29,18 @@ class Article extends ContentBase implements ContentReviewInterface {
   /**
    * {@inheritdoc}
    */
+  public function getDataLayerDocumentProperties() {
+    $data_layer = parent::getDataLayerDocumentProperties();
+    $document = $this->getCurrentDocumentNode();
+    if ($document) {
+      $data_layer += $document->getDataLayerDocumentProperties();
+    }
+    return $data_layer;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function isValidContextNode($node) {
     if ($node instanceof Document) {
       return $node->hasArticle($this);
