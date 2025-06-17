@@ -495,6 +495,7 @@
 
       let label_source_id = this.sourceId + '-labels';
       let backgroundLayer = state.getBackgroundLayer(map);
+      let options = state.getOptions();
 
       map.on('styleimagemissing', (e) => {
         const id = e.id; // id of the missing image
@@ -526,6 +527,7 @@
         'id': label_source_id,
         'type': 'symbol',
         'source': this.sourceId,
+        'minzoom': options.label_min_zoom ?? 0,
         'layout': {
           'symbol-sort-key': ['get', 'sort_order'],
           'text-field': ['get', 'object_name'],
@@ -555,7 +557,9 @@
           'text-halo-width': backgroundLayer.paint['text-halo-width'],
         }
       });
-      // Add a layer for the labels.
+      // Add a layer with blocking symbols that overlap the circles, so that
+      // these can be used by mapbox for collision detection. Otherwhise the
+      // labels would appear overlaying the circles.
       map.addLayer({
         'id': label_source_id + '-blocks',
         'type': 'symbol',

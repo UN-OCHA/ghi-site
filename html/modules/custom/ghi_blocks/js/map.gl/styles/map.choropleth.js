@@ -265,7 +265,9 @@
           'text-anchor': 'center',
         },
         'paint': {
-          'text-color': backgroundLayer.paint['text-color'],
+          'text-color': 'black',
+          'text-halo-color': backgroundLayer.paint['text-halo-color'],
+          'text-halo-width': 0.5,
         },
       });
     }

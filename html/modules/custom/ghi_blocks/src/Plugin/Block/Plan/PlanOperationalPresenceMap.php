@@ -116,7 +116,7 @@ class PlanOperationalPresenceMap extends GHIBlockBase implements MultiStepFormBl
       'id' => $chart_id,
       'disclaimer' => $conf['display']['disclaimer'] ?: $this->getDefaultMapDisclaimer($this->getCurrentPlanObject()->getPlanLanguage()),
       'pcodes_enabled' => $conf['display']['pcodes_enabled'] ?? TRUE,
-      'outlineCountry' => $outline_country,
+      'outline_country' => $outline_country,
     ];
 
     return [

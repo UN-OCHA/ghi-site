@@ -171,7 +171,7 @@
 
       // Set the bounds.
       var bounds = new mapboxgl.LngLatBounds();
-      let outline_country = typeof options.outlineCountry != 'undefined' ? this.getGeoJSON(options.outlineCountry, null, false) : null;
+      let outline_country = typeof options.outline_country != 'undefined' ? this.getGeoJSON(options.outline_country, null, false) : null;
       if (outline_country) {
         map.fitBounds(turf.envelope(outline_country).bbox, { padding: 50 });
       }
