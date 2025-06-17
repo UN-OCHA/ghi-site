@@ -35,6 +35,13 @@ class Section extends Node implements SectionNodeInterface, ImageNodeInterface {
   /**
    * {@inheritdoc}
    */
+  public function getFullLabel() {
+    return parent::label();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function getPageTitle() {
     return $this->label();
   }
@@ -91,6 +98,20 @@ class Section extends Node implements SectionNodeInterface, ImageNodeInterface {
       ]);
     }
     return $meta_data;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getDataLayerSectionProperties() {
+    $data_layer = [];
+    $data_layer['sectionTitle'] = $this->getFullLabel();
+    if ($base_object = $this->getBaseObject()) {
+      $data_layer['sectionObject'] = $base_object->label();
+      $data_layer['sectionType'] = $base_object->bundle();
+      $data_layer['sectionBaseId'] = $base_object->getSourceId();
+    }
+    return $data_layer;
   }
 
   /**
