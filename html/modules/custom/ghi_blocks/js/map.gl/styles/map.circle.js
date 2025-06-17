@@ -678,7 +678,7 @@
         if (state.shouldShowCountryOutlines()) {
           let location = state.getLocationById(focus_feature.properties.object_id);
           let highlight_countries = location?.highlight_countries;
-          let filter = highlight_countries ? ['in', ['get', 'location_id'], ['literal', location.highlight_countries]] : null;
+          let filter = highlight_countries ? ['in', ['get', 'location_id'], ['literal', highlight_countries]] : null;
           let geojson_features_ids = state.querySourceFeatures(geojson_source_id, geojson_source_id, filter)
             .map((d) => d.id);
           existing = state.querySourceFeatures(geojson_source_id + '-fill', geojson_source_id)

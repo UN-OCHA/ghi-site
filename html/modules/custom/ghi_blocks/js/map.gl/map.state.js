@@ -784,7 +784,7 @@
         options.filter = filter;
       }
       let features = this.getMap().querySourceFeatures(source_id, options);
-      return unique ? this.getUniqueFeatures(features, typeof unique == 'bool' ? 'object_id' : unique) : features;
+      return unique ? this.getUniqueFeatures(features, typeof unique == 'boolean' ? 'object_id' : unique) : features;
     }
 
     /**
@@ -842,7 +842,7 @@
           let geojson_source_id = source_id + '-geojson';
           let location = this.getLocationById(feature.properties.object_id);
           let highlight_countries = location?.highlight_countries;
-          let filter = highlight_countries ? ['in', ['get', 'location_id'], ['literal', location.highlight_countries]] : null;
+          let filter = highlight_countries ? ['in', ['get', 'location_id'], ['literal', highlight_countries]] : null;
           let geojson_features = this.querySourceFeatures(geojson_source_id, geojson_source_id, filter);
           geojson_features.forEach(item => {
             map.setFeatureState(
