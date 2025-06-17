@@ -1348,7 +1348,7 @@
 
         // Hide the label of the currently viewed country from the background
         // layer.
-        this.hideCountryLabelFromBackgroundLayer(this.options?.outlineCountry?.location_name ?? null);
+        this.hideCountryLabelFromBackgroundLayer(this.options?.outline_country?.location_name ?? null);
       }
       this.updateMapData(label_layer_id + '-source', backgroundFeatures);
     }
