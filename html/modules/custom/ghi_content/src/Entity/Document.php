@@ -30,6 +30,17 @@ class Document extends ContentBase {
   }
 
   /**
+   * Get the remote document.
+   *
+   * @return \Drupal\ghi_content\RemoteContent\RemoteDocumentInterface|null
+   *   The remote document object if found.
+   */
+  public function getRemoteDocument() {
+    $document_manager = $this->getDocumentManager();
+    return $document_manager->loadRemoteContentForNode($this);
+  }
+
+  /**
    * Get the document chapters.
    *
    * @param bool $include_hidden
@@ -39,8 +50,7 @@ class Document extends ContentBase {
    *   The document chapters.
    */
   public function getChapters($include_hidden = TRUE) {
-    $document_manager = $this->getDocumentManager();
-    $remote_document = $document_manager->loadRemoteContentForNode($this);
+    $remote_document = $this->getRemoteDocument();
     if (!$remote_document instanceof RemoteDocumentInterface) {
       return [];
     }
@@ -71,6 +81,20 @@ class Document extends ContentBase {
       return $node;
     }, $chapter->getArticles()));
     return $articles;
+  }
+
+  /**
+   * Get the chapter number.
+   *
+   * @param \Drupal\ghi_content\RemoteContent\RemoteChapterInterface $chapter
+   *   The chapter for which to get the number.
+   *
+   * @return int|false
+   *   The chapter number, starting at 1, or FALSE.
+   */
+  public function getChapterNumber(RemoteChapterInterface $chapter) {
+    $remote_document = $this->getRemoteDocument();
+    return $remote_document->getChapterNumber($chapter->getId());
   }
 
   /**
