@@ -1,0 +1,64 @@
+#!/usr/bin/env bash
+
+## Common access to geojson related commands.
+##
+## Usage: fin geojson [-h] [command]
+##
+
+# Environment variables passed from fin:
+#
+#   $PROJECT_ROOT - (string) absolute path to NEAREST .docksal folder
+#   $VIRTUAL_HOST - (string) ex. projectname.docksal
+#   $DOCROOT - name of the docroot folder
+#   $DOCKER_RUNNING - (string) "true" or "false"
+
+usage="$(basename "$0") [-h] report|import|update-pcodes|lookup-pcode
+
+where:
+    -h  show this help text"
+
+export GEOJSON_ASSET_DIRECTORY="${PROJECT_ROOT}/.docksal/commands/geojson-commands/assets"
+export GEOJSON_SOURCE_COUNTRIES_JSON="${GEOJSON_ASSET_DIRECTORY}/countries.json"
+export GEOJSON_STORAGE_DIRECTORY="${PROJECT_ROOT}/html/modules/custom/ghi_base_objects/assets/geojson"
+
+export URL_ADM0="https://gis.unocha.org/server/rest/services/COD/GBL_COD_Admin0/FeatureServer/0/query"
+export URL_ADM1="https://gis.unocha.org/server/rest/services/COD/GBL_COD_Admin1/FeatureServer/0/query"
+export URL_ADM2="https://gis.unocha.org/server/rest/services/COD/GLB_COD_Admin2/FeatureServer/0/query"
+export URL_ADM3="https://gis.unocha.org/server/rest/services/COD/GBL_COD_Admin3/FeatureServer/0/query"
+
+export COMMON_QUERY_STRING="?geometryType=esriGeometryEnvelope&spatialRel=esriSpatialRelIntersects&units=esriSRUnit_Foot&returnGeometry=true&returnDistinctValues=false&returnIdsOnly=false&returnCountOnly=false&returnExtentOnly=false&returnZ=false&returnM=false&multipatchOption=xyFootprint&returnTrueCurves=false&returnExceededLimitFeatures=false&returnCentroid=false&timeReferenceUnknownClient=false&sqlFormat=none&featureEncoding=esriDefault&cacheHint=false&f=geojson"
+
+while [ "$1" != "" ]; do
+  case $1 in
+    report )              shift
+                          fin geojson-commands/report
+                          exit
+                          ;;
+    import )              shift
+                          fin geojson-commands/import
+                          exit
+                          ;;
+    import-from-pcodes )  shift
+                          fin geojson-commands/import-from-pcodes
+                          exit
+                          ;;
+    lookup-pcode )        shift
+                          fin geojson-commands/lookup-pcode $1 $2
+                          exit
+                          ;;
+    lookup-country )      shift
+                          fin geojson-commands/lookup-country $1
+                          exit
+                          ;;
+    update-pcodes )       shift
+                          fin geojson-commands/update-pcodes
+                          exit
+                          ;;
+    -h | --help )         echo "$usage"
+                          exit
+                          ;;
+    * )                   echo "$usage"
+                          exit 1
+  esac
+  shift
+done
