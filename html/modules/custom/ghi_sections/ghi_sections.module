@@ -13,6 +13,7 @@ use Drupal\ghi_base_objects\Entity\BaseObjectInterface;
 use Drupal\ghi_sections\Entity\Section;
 use Drupal\ghi_sections\Entity\SectionNodeInterface;
 use Drupal\ghi_sections\Entity\Tag;
+use Drupal\ghi_subpages\Entity\SubpageNodeInterface;
 use Drupal\layout_builder\SectionStorageInterface;
 use Drupal\node\NodeInterface;
 
@@ -159,5 +160,23 @@ function ghi_sections_system_breadcrumb_alter(Breadcrumb $breadcrumb, RouteMatch
     if ($link->getUrl()->getRouteName() == 'system.admin_content') {
       $link->setText(t('Content'));
     }
+  }
+}
+
+/**
+ * Implements hook_datalayer_alter().
+ */
+function ghi_sections_datalayer_alter(&$data_layer, $skip = FALSE) {
+  $entity = _datalayer_menu_get_any_object();
+  $section = NULL;
+  if ($entity instanceof SubpageNodeInterface && $parent = $entity->getParentBaseNode()) {
+    $section = $parent;
+  }
+  elseif ($entity instanceof Section) {
+    $section = $entity;
+  }
+
+  if ($section instanceof SectionNodeInterface) {
+    $data_layer += $section->getDataLayerSectionProperties();
   }
 }
