@@ -13,6 +13,14 @@ interface SectionNodeInterface extends NodeInterface {
   const BASE_OBJECT_FIELD_NAME = 'field_base_object';
 
   /**
+   * Get the full label, that is the label that can be set on the edit page.
+   *
+   * @return string|\Drupal\Core\StringTranslation\TranslatableMarkup|null
+   *   The label of the entity, or NULL if there is no label defined.
+   */
+  public function getFullLabel();
+
+  /**
    * Get the title to be used in the section switcher.
    *
    * @return string
@@ -44,6 +52,14 @@ interface SectionNodeInterface extends NodeInterface {
    *   An array of metadata items.
    */
   public function getPageTitleMetaData();
+
+  /**
+   * Get some properties for the data layer.
+   *
+   * @return array
+   *   An array of simple key value pairs to be used in the GTM datalayer.
+   */
+  public function getDataLayerSectionProperties();
 
   /**
    * Get the tags associated to the section.

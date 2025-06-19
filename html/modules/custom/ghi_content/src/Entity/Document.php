@@ -14,6 +14,15 @@ use Drupal\node\NodeInterface;
 class Document extends ContentBase {
 
   /**
+   * {@inheritdoc}
+   */
+  public function getDataLayerDocumentProperties() {
+    $data_layer = parent::getDataLayerDocumentProperties();
+    $data_layer[$this->bundle() . 'Title'] = $this->label();
+    return $data_layer;
+  }
+
+  /**
    * Check if the given article is part of this document.
    */
   public function hasArticle(Article $article) {
