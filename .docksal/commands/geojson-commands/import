@@ -1,0 +1,155 @@
+#!/usr/bin/env bash
+
+## Create a report about the available geojson files.
+##
+## Usage: fin geojson import [-h]
+##
+
+# Environment variables passed from fin:
+#
+#   $PROJECT_ROOT - (string) absolute path to NEAREST .docksal folder
+#   $VIRTUAL_HOST - (string) ex. projectname.docksal
+#   $DOCROOT - name of the docroot folder
+#   $DOCKER_RUNNING - (string) "true" or "false"
+
+usage="$(basename "$0") [-h]
+
+where:
+    -h  show this help text"
+
+while [ "$1" != "" ]; do
+  case $1 in
+    -h | --help )         echo "$usage"
+                          exit
+                          ;;
+    * )                   echo "$usage"
+                          exit 1
+  esac
+  shift
+done
+
+# Define some constants we will be using.
+TEMPORARY_DIRECTORY="${GEOJSON_ASSET_DIRECTORY}/tmp"
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+GRAY='\033[0;37m'
+NC='\033[0m' # No Color
+
+# Download the set of admin level geojson files for a country.
+download_geojson_files() {
+  local ISO2=$1
+  local ISO3=$2
+  local ADMIN_LEVEL=$3
+
+  # Setup directory variables.
+  local COUNTRY_DIR=${TEMPORARY_DIRECTORY}/${ISO3}
+
+  if [[ ! ${ADMIN_LEVEL} ]]; then
+    printf "Processing ${RED}%s${NC}\n" ${ISO3}
+    # Download the country shape file.
+    if [[ ! -f "${COUNTRY_DIR}/${ISO3}_0.geojson" ]]; then
+      local REQUEST_URL_COUNTRY=${URL_ADM0}${COMMON_QUERY_STRING}"&geometryPrecision=6&where=adm0_pcode%3D%27"${ISO2}"%27&outFields="
+      curl -s ${REQUEST_URL_COUNTRY} -o "${COUNTRY_DIR}/${ISO3}_0.geojson"
+    fi
+    download_geojson_files ${ISO2} ${ISO3} 1
+    download_geojson_files ${ISO2} ${ISO3} 2
+    download_geojson_files ${ISO2} ${ISO3} 3
+    copy_geojson_files ${ISO3}
+    printf "${GREEN}  -> Done with %s${NC}\n" ${ISO3}
+    return
+  fi
+
+  local ADMIN_LEVEL_DIR=${COUNTRY_DIR}/"adm"${ADMIN_LEVEL}
+  local ADMIN_LEVEL_COUNTRY_FILE=${COUNTRY_DIR}/"adm"${ADMIN_LEVEL}".geojson"
+  local URL_VAR_NAME="URL_ADM"${ADMIN_LEVEL}
+  local BASE_URL=${!URL_VAR_NAME}
+
+  # Build the request URL.
+  local REQUEST_URL_ADMIN_LEVEL=${BASE_URL}${COMMON_QUERY_STRING}"&geometryPrecision=0&where=adm0_pcode%3D%27"${ISO2}"%27&outFields=adm"${ADMIN_LEVEL}"_pcode"
+
+  # Create country directory if needed.
+  if [ ! -d "${COUNTRY_DIR}" ]; then
+    mkdir -p ${COUNTRY_DIR}
+  fi
+
+  # Download the country level geojson file for the given country and admin level.
+  if [ ! -f "${ADMIN_LEVEL_COUNTRY_FILE}" ]; then
+    curl -s ${REQUEST_URL_ADMIN_LEVEL} -o "${ADMIN_LEVEL_COUNTRY_FILE}"
+  fi
+
+  printf "  -> Admin level %d\n" ${ADMIN_LEVEL}
+
+  # Extract the pcodes.
+  PCODES=`cat ${ADMIN_LEVEL_COUNTRY_FILE} | jq '.features[].properties.adm'${ADMIN_LEVEL}'_pcode' | tr -d '"'`
+  if [[ ! ${PCODES} ]]; then
+    echo "    -> Found no pcodes with geojson data"
+    return
+  fi
+  local PCODES_COUNT=`echo "${PCODES}" | wc -l`
+  printf "    -> Found %d pcodes with geojson data" ${PCODES_COUNT}
+  echo
+
+  # Create the directory if needed.
+  if [ ! -d "${ADMIN_LEVEL_DIR}" ]; then
+    mkdir -p ${ADMIN_LEVEL_DIR}
+  fi
+
+  # Download each pcode geojson file seperately.
+  local COUNT=0
+  for PCODE in ${PCODES}; do
+    ((COUNT++))
+    printf "\r${GRAY}    -> Downloading %d / %d: %s${NC}" ${COUNT} ${PCODES_COUNT} ${PCODE}
+    local REQUEST_URL_PCODES=${BASE_URL}${COMMON_QUERY_STRING}"&geometryPrecision=6&where=adm"${ADMIN_LEVEL}"_pcode%3D%27"${PCODE}"%27&outFields="
+    if [[ ! -f "${ADMIN_LEVEL_DIR}/${PCODE}.geojson" ]]; then
+      curl -s ${REQUEST_URL_PCODES} -o "${ADMIN_LEVEL_DIR}/${PCODE}.geojson"
+    fi
+  done
+  printf "\r${GREEN}    -> Downloading %d / %d: Download finished${NC}" ${COUNT} ${PCODES_COUNT}
+  echo
+}
+
+copy_geojson_files() {
+  local ISO3=$1
+  # Check if anything has been actually downloaded, if not skip the next step.
+  local COUNTRY_DIR=${TEMPORARY_DIRECTORY}/${ISO3}
+  if [[ `find ${COUNTRY_DIR} -type d -name adm* | wc -l` -eq 0 ]]; then
+    return
+  fi
+
+  local LAST_YEAR=`date -v-1y +%Y`
+
+  if [[ `ls ${GEOJSON_STORAGE_DIRECTORY}/${ISO3} | wc -l` -eq 1 ]]; then
+    # There is only the current version, so we move that into a year directory
+    # and store the newly imported files as the current version.
+    if [[ -d ${GEOJSON_STORAGE_DIRECTORY}/${ISO3}/current/adm1 ]]; then
+      mv ${GEOJSON_STORAGE_DIRECTORY}/${ISO3}/current ${GEOJSON_STORAGE_DIRECTORY}/${ISO3}/${LAST_YEAR}
+    fi
+    mkdir -p ${GEOJSON_STORAGE_DIRECTORY}/${ISO3}/current
+  elif [[ ! -d ${GEOJSON_STORAGE_DIRECTORY}/${ISO3}/${LAST_YEAR} ]]; then
+    # There are multiple versions already, but none yet for the last year.
+    mv ${GEOJSON_STORAGE_DIRECTORY}/${ISO3}/current ${GEOJSON_STORAGE_DIRECTORY}/${ISO3}/${LAST_YEAR}
+    mkdir -p ${GEOJSON_STORAGE_DIRECTORY}/${ISO3}/current
+  else
+    # There are multiple versions already, including one of the last year, so
+    # we replace the current one.
+    rm -r ${GEOJSON_STORAGE_DIRECTORY}/${ISO3}/current/*
+  fi
+
+  # Now move all files into the current
+  cp ${COUNTRY_DIR}/${ISO3}_0.geojson ${GEOJSON_STORAGE_DIRECTORY}/${ISO3}/current/${ISO3}_0.geojson
+  rsync -avrq --delete ${COUNTRY_DIR}/ ${GEOJSON_STORAGE_DIRECTORY}/${ISO3}/current/ --exclude 'adm*.geojson'
+
+  printf "${GREEN}  -> Copied downloaded files to destination directory${NC}\n"
+}
+
+# download_geojson_files "AF" "AFG"
+
+# Download the sources.
+for ISO3 in `ls ${GEOJSON_STORAGE_DIRECTORY}`; do
+  ISO2=`cat ${GEOJSON_SOURCE_COUNTRIES_JSON} | jq '. | keys[] as $k | {iso2:$k, iso3:.[$k].alpha3} | select(.iso3=="'${ISO3}'").iso2' | tr -d '"'`
+  if [[ -z "$ISO2" ]]; then
+    continue
+  fi
+
+  download_geojson_files ${ISO2} ${ISO3}
+done

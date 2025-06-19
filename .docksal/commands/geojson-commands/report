@@ -1,0 +1,56 @@
+#!/usr/bin/env bash
+
+## Create a report about the available geojson files.
+##
+## Usage: fin geojson report [-h]
+##
+
+# Environment variables passed from fin:
+#
+#   $PROJECT_ROOT - (string) absolute path to NEAREST .docksal folder
+#   $VIRTUAL_HOST - (string) ex. projectname.docksal
+#   $DOCROOT - name of the docroot folder
+#   $DOCKER_RUNNING - (string) "true" or "false"
+
+usage="$(basename "$0") [-h]
+
+where:
+    -h  show this help text"
+
+while [ "$1" != "" ]; do
+  case $1 in
+    -h | --help )         echo "$usage"
+                          exit
+                          ;;
+    * )                   echo "$usage"
+                          exit 1
+  esac
+  shift
+done
+
+cd ${GEOJSON_STORAGE_DIRECTORY}
+
+printf "%s\t\t%s\t\t%s\t%s\t%s\n" "Country" "Version" "Admin 1" "Admin 2" "Admin 3"
+LINE_FORMAT="\t\t%s\t\t%4d\t%4d\t%4d\n"
+for COUNTRY in `ls`; do
+  cd ${GEOJSON_STORAGE_DIRECTORY}/${COUNTRY}
+  for VERSION in `ls -r`; do
+    cd ${GEOJSON_STORAGE_DIRECTORY}/${COUNTRY}/${VERSION}
+    ADMIN_LEVELS=`ls | grep -v '.geojson'`
+    FILE_COUNTS_adm1=0;
+    FILE_COUNTS_adm2=0;
+    FILE_COUNTS_adm3=0;
+
+    if [[ -n ${ADMIN_LEVELS} ]]; then
+      for ADMIN_LEVEL in ${ADMIN_LEVELS}; do
+        cd ${GEOJSON_STORAGE_DIRECTORY}/${COUNTRY}/${VERSION}/${ADMIN_LEVEL}
+        declare "FILE_COUNTS_${ADMIN_LEVEL}=`find . | grep '.geojson' | grep -v '.min.geojson' | wc -l`"
+      done
+    fi
+    if [[ $VERSION -eq "current" ]]; then
+      printf "%s${LINE_FORMAT}" ${COUNTRY} ${VERSION} $FILE_COUNTS_adm1 $FILE_COUNTS_adm2 $FILE_COUNTS_adm3
+    else
+      printf "${LINE_FORMAT}" ${VERSION} $FILE_COUNTS_adm1 $FILE_COUNTS_adm2 $FILE_COUNTS_adm3
+    fi
+  done
+done
