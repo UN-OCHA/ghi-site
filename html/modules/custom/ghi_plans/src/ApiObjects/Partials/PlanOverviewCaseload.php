@@ -72,4 +72,11 @@ class PlanOverviewCaseload extends BaseObject implements CaseloadAttachmentInter
     return $this->original_field_types;
   }
 
+  /**
+   * {@inheritdoc}
+   */
+  public function getPlanId() {
+    return NULL;
+  }
+
 }

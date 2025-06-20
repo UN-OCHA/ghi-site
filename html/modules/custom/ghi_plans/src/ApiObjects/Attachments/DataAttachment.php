@@ -450,10 +450,7 @@ class DataAttachment extends AttachmentBase implements DataAttachmentInterface {
   }
 
   /**
-   * Extract the plan id from an attachment object.
-   *
-   * @return int|null
-   *   The plan ID if any can be found.
+   * {@inheritdoc}
    */
   public function getPlanId() {
     $attachment_data = $this->getRawData();

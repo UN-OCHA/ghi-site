@@ -9,10 +9,13 @@ use Drupal\Core\PageCache\ResponsePolicy\KillSwitch;
 use Drupal\Core\Session\AccountProxyInterface;
 use Drupal\Core\Url;
 use Drupal\hpc_api\ConfigService;
+use Drupal\hpc_api\Event\EndpointDataEvent;
 use Drupal\hpc_api\Helpers\QueryHelper;
 use Drupal\hpc_api\Traits\SimpleCacheTrait;
 use GuzzleHttp\ClientInterface;
+use JsonMachine\Items;
 use Psr\Http\Message\ResponseInterface;
+use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
 /**
  * Class representing an endpoint query.
@@ -42,6 +45,13 @@ class EndpointQuery {
    * @var \Drupal\hpc_api\ConfigService
    */
   protected $configService;
+
+  /**
+   * The event dispatcher service.
+   *
+   * @var \Symfony\Contracts\EventDispatcher\EventDispatcherInterface
+   */
+  protected $eventDispatcher;
 
   /**
    * The logger factory service.
@@ -161,8 +171,9 @@ class EndpointQuery {
   /**
    * Constructs a new EndpointQuery object.
    */
-  public function __construct(ConfigService $config_service, LoggerChannelFactoryInterface $logger_factory, KillSwitch $kill_switch, ClientInterface $http_client, AccountProxyInterface $user, TimeInterface $time) {
+  public function __construct(ConfigService $config_service, EventDispatcherInterface $event_dispatcher, LoggerChannelFactoryInterface $logger_factory, KillSwitch $kill_switch, ClientInterface $http_client, AccountProxyInterface $user, TimeInterface $time) {
     $this->configService = $config_service;
+    $this->eventDispatcher = $event_dispatcher;
     $this->loggerFactory = $logger_factory;
     $this->killSwitch = $kill_switch;
     $this->httpClient = $http_client;
@@ -370,18 +381,28 @@ class EndpointQuery {
     }
 
     // Now handle the JSON response, extract the data.
-    $json = json_decode($response);
+    $json = Items::fromString($response);
     if ($json === NULL) {
       // Malformed JSON or other reason that the decoding has failed. Reset
       // cache to force a new request on following calls.
       $this->cache($cache_key, NULL, TRUE);
     }
 
-    // Workaround for HPC-1840, until top level contains 'data' again.
-    if (!$json || !isset($json->data) || empty($json->data)) {
-      return !isset($json->data) && is_array($json) ? $json : [];
+    $data = $meta = NULL;
+    foreach ($json as $key => $item) {
+      switch ($key) {
+        case 'data':
+          $event = new EndpointDataEvent($this, $item);
+          $this->eventDispatcher->dispatch($event, EndpointDataEvent::class);
+          $data = $event->getData();
+          break;
+
+        case 'meta':
+          $meta = $item;
+          break;
+      }
     }
-    $data = $json->data;
+
     if (!is_array($data) && !is_object($data) && !count($data)) {
       return [];
     }
@@ -432,8 +453,8 @@ class EndpointQuery {
     }
 
     // Make sure we always have the meta data available.
-    if (!empty($json->meta) && empty($data->meta)) {
-      $data->meta = $json->meta;
+    if (!empty($meta) && empty($data->meta)) {
+      $data->meta = $meta;
     }
     return $data;
   }
@@ -530,8 +551,6 @@ class EndpointQuery {
 
   /**
    * Set the endpoint used for the query.
-   *
-   * @codeCoverageIgnore
    */
   public function setEndpoint($endpoint) {
     $this->endpointUrl = $endpoint;
@@ -539,8 +558,6 @@ class EndpointQuery {
 
   /**
    * Get the endpoint used for the query.
-   *
-   * @codeCoverageIgnore
    */
   public function getEndpoint() {
     return $this->endpointUrl;
@@ -562,8 +579,6 @@ class EndpointQuery {
 
   /**
    * Set additional arguments used for the query.
-   *
-   * @codeCoverageIgnore
    */
   public function setEndpointArguments($endpoint_arguments) {
     $this->endpointArgs = $endpoint_arguments + $this->endpointArgs;
@@ -571,8 +586,6 @@ class EndpointQuery {
 
   /**
    * Retrieve additional arguments used for the query.
-   *
-   * @codeCoverageIgnore
    */
   public function getEndpointArguments() {
     return $this->endpointArgs;
@@ -580,8 +593,6 @@ class EndpointQuery {
 
   /**
    * Set the endpoint version used for the query.
-   *
-   * @codeCoverageIgnore
    */
   public function setEndpointVersion($endpoint_version) {
     $this->endpointVersion = $endpoint_version;
@@ -589,8 +600,6 @@ class EndpointQuery {
 
   /**
    * Get the endpoint version used for the query.
-   *
-   * @codeCoverageIgnore
    */
   public function getEndpointVersion() {
     return $this->endpointVersion;
@@ -621,8 +630,6 @@ class EndpointQuery {
 
   /**
    * Set the sort options used for the query.
-   *
-   * @codeCoverageIgnore
    */
   public function setSort($order_by, $sort = NULL, $sort_method = NULL) {
     $this->orderBy = $order_by;
