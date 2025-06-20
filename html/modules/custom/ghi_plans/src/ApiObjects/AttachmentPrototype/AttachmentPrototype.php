@@ -32,7 +32,7 @@ class AttachmentPrototype extends ApiObjectBase {
     $metric_fields = $prototype->value->metrics ?? [];
     $measurement_fields = $prototype->value->measureFields ?? [];
     $calculated_fields = $prototype->value->calculatedFields ?? [];
-    if (count($calculated_fields) == 1 && !empty($calculated_fields[0][0])) {
+    if (count($calculated_fields) == 1 && is_array($calculated_fields[0])) {
       $calculated_fields = reset($calculated_fields);
     }
     $calculated_fields = array_filter($calculated_fields);
