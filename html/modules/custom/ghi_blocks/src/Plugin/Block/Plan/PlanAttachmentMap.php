@@ -637,7 +637,7 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
 
     $form['common']['label_min_zoom'] = [
       '#type' => 'number',
-      '#title' => $this->t('Minimum zoom for labes'),
+      '#title' => $this->t('Minimum zoom for labels'),
       '#description' => $this->t('Specifiy at which zoom level the admin area labels become visible. Setting this to <em>0</em> will show them at any zoom level. Default is <em>6</em>.'),
       '#min' => 0,
       '#max' => 9,
