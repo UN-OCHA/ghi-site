@@ -26,6 +26,7 @@
             empty_message: Drupal.t('Be sure to enter a location name within the current response plan.'),
           },
           pcodes_enabled: map_config.pcodes_enabled ?? false,
+          label_min_zoom: map_config.label_min_zoom ?? 0,
         };
         if (options.pcodes_enabled) {
           options.search_options.placeholder = Drupal.t('Filter by location name or pcode');
@@ -36,8 +37,8 @@
           options.style = map_config.style;
           options.style_config = map_config.style_config;
         }
-        if (typeof map_config.outlineCountry != 'undefined') {
-          options.outlineCountry = map_config.outlineCountry;
+        if (typeof map_config.outline_country != 'undefined') {
+          options.outline_country = map_config.outline_country;
         }
         if (typeof map_config.disclaimer != 'undefined') {
           options.disclaimer = map_config.disclaimer ?? null;

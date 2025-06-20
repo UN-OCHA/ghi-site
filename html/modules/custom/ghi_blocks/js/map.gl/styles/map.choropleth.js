@@ -26,6 +26,7 @@
       this.options = options;
       this.loaded = false;
       this.sourceId = state.getMapId();
+      this.areaLabelSourceId = this.sourceId + '-admin-area-labels';
       this.featureLayerId = this.sourceId + '-fill';
       this.labelLayerId = this.sourceId + '-label';
       this.config = {
@@ -60,7 +61,8 @@
      */
     setup = function () {
       let self = this;
-      let map = this.state.getMap();
+      let state = this.state;
+      let map = state.getMap();
 
       map.on('load', () => {
         if (self.loaded) {
@@ -73,7 +75,7 @@
           return;
         }
 
-        // Initial drawing of the circles.
+        // Initial drawing of the areas.
         map.addSource(self.sourceId, source);
         map.addLayer(this.buildFillLayer(self.sourceId));
         map.addLayer(this.buildOutlineLayer(self.sourceId));
@@ -81,7 +83,10 @@
 
         // Add a layer for the labels, so that we can keep showing them on top
         // of colored admin area or country outlines.
-        map.addLayer(this.state.buildLabelLayer(self.labelLayerId));
+        map.addLayer(state.buildLabelLayer(self.labelLayerId));
+
+        // We also want to show the names of the admin areas as map labels.
+        this.addAdminAreaLabels();
 
         // Add event handling.
         this.addEventListeners(self.sourceId);
@@ -103,6 +108,11 @@
       let features = this.buildFeatures();
       let data = this.state.buildFeatureCollection(features);
       this.state.getMap().getSource(this.sourceId).setData(data);
+
+      // Also update the data for the point features used for the labels.
+      let label_features = this.buildLabelFeatures();
+      let label_data = this.state.buildFeatureCollection(label_features);
+      this.state.getMap().getSource(this.areaLabelSourceId).setData(label_data);
     }
 
     /**
@@ -128,9 +138,21 @@
       let geojson_features = state.getLocations().map(item => state.getMapController().getGeoJSON(item, (feature, location) => {
         feature.properties.object_count = location.object_count;
         feature.properties.admin_level = location.admin_level;
+        feature.properties.sort_order = -1 * location.object_count;
         return feature;
       }, false)).filter(d => d);
       return geojson_features;
+    }
+
+    /**
+     * Build the point features for the labels.
+     *
+     * @returns {Array}
+     *   An array of feature objects.
+     */
+    buildLabelFeatures = function () {
+      let state = this.state;
+      return state.getLocations().map(object => object.feature ?? this.buildPointFeatureForObject(object));
     }
 
     /**
@@ -155,8 +177,8 @@
           },
           'fill-opacity': [
             'case',
-            ['==', ['get', 'user_object_count'], 0],
-            0,  // 0 opacity when no objects.
+            ['==', ['get', 'object_count'], 0],
+            1,  // 1 opacity when no objects.
             ['boolean', ['feature-state', 'hover'], false],
             1,  // 1 opacity when hovering.
             ['boolean', ['feature-state', 'focus'], false],
@@ -173,9 +195,6 @@
 
     /**
      * Build the outline layer feature.
-     *
-     * @param {String}
-     *   The source id.
      *
      * @returns {Object}
      *   The outline layer feature.
@@ -206,6 +225,75 @@
           ]
         }
       }
+    }
+
+    /**
+     * Add admin area labels to the map.
+     */
+    addAdminAreaLabels = function () {
+      let state = this.state;
+      let map = state.getMap();
+
+      let label_source_id = this.areaLabelSourceId;
+      let backgroundLayer = state.getBackgroundLayer(map);
+
+      // We need to add a new point data set to which the labels can be
+      // attached. Otherwise we would end up with duplicated labels on higher
+      // zoom levels due to https://github.com/mapbox/mapbox-gl-js/issues/5583.
+      let data = state.buildFeatureCollection(this.buildLabelFeatures());
+      map.addSource(label_source_id, state.buildGeoJsonSource(data));
+
+      // Add a layer for the labels.
+      map.addLayer({
+        'id': label_source_id,
+        'type': 'symbol',
+        'source': label_source_id,
+        'layout': {
+          'symbol-sort-key': ['get', 'sort_order'],
+          'text-field': ['get', 'location_name'],
+          'text-font': backgroundLayer.layout['text-font'],
+          'text-letter-spacing': backgroundLayer.layout['text-letter-spacing'],
+          'text-size': [
+            'interpolate',
+            ['linear'],
+            ['zoom'],
+            3,
+            8,
+            7,
+            20
+          ],
+          'text-anchor': 'center',
+        },
+        'paint': {
+          'text-color': 'black',
+          'text-halo-color': backgroundLayer.paint['text-halo-color'],
+          'text-halo-width': 0.5,
+        },
+      });
+    }
+
+    /**
+     * Build the geojson feature for the given object.
+     *
+     * @param {Object} object
+     *   The location object.
+     *
+     * @returns {Object}
+     *   The geojson feature object.
+     */
+    buildPointFeatureForObject = function (object) {
+      return {
+        'id': object.object_id,
+        'type': 'Feature',
+        'geometry': {
+          'type': 'Point',
+          'coordinates': [object.latLng[1], object.latLng[0]],
+        },
+        'properties': {
+          'location_name': object.location_name,
+          'sort_order': -1 * object.object_count,
+        }
+      };
     }
 
     /**
@@ -285,7 +373,7 @@
         if (index == ranges.length - 1) {
           text = '≥ ' + min.toString();
         }
-        else if (index > 0) {
+        else {
           let max = (ranges[next_index] - 1);
           text = min != max ? min.toString() + ' - ' + max.toString() : min.toString();
         }
@@ -397,7 +485,6 @@
      *   The location data object.
      */
     getTooltipContent = function (object) {
-      let state = this.state;
       return object.location_name + ' (' + object.object_count + ')';
     }
 

@@ -102,11 +102,21 @@ class PlanOperationalPresenceMap extends GHIBlockBase implements MultiStepFormBl
     $chart_class = Html::getClass('plan-operational-presence-map');
     $selected_view = $this->getSelectedView();
 
+    $outline_country = NULL;
+    $focus_country = $this->getCurrentPlanObject()->getFocusCountry();
+    if ($focus_country) {
+      /** @var \Drupal\ghi_base_objects\Plugin\EndpointQuery\LocationsQuery $locations_query */
+      $locations_query = $this->getQueryHandler('locations');
+      $country = $locations_query->getCountry($focus_country->getSourceId(), 0);
+      $outline_country = $country?->toArray();
+    }
+
     $map_settings = [
       'json' => $map_data,
       'id' => $chart_id,
       'disclaimer' => $conf['display']['disclaimer'] ?: $this->getDefaultMapDisclaimer($this->getCurrentPlanObject()->getPlanLanguage()),
       'pcodes_enabled' => $conf['display']['pcodes_enabled'] ?? TRUE,
+      'outline_country' => $outline_country,
     ];
 
     return [
