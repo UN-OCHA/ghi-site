@@ -57,7 +57,6 @@ dependencies:
     - path
     - publishcontent
     - role_delegation
-    - social_api
     - system
     - taxonomy
     - toolbar
@@ -81,7 +80,6 @@ permissions:
   - 'access toolbar'
   - 'access unpublished page variants'
   - 'access user profiles'
-  - 'administer account settings'
   - 'administer base object entities'
   - 'administer base_object_type labels'
   - 'administer content translation'
@@ -94,9 +92,6 @@ permissions:
   - 'administer page templates'
   - 'administer pages'
   - 'administer section cache'
-  - 'administer social api authentication'
-  - 'administer social api autoposting'
-  - 'administer social api widgets'
   - 'administer teams'
   - 'administer url aliases'
   - 'administer users'
