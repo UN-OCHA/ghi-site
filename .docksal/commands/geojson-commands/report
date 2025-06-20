@@ -30,12 +30,14 @@ done
 
 cd ${GEOJSON_STORAGE_DIRECTORY}
 
-printf "%s\t\t%s\t\t%s\t%s\t%s\n" "Country" "Version" "Admin 1" "Admin 2" "Admin 3"
-LINE_FORMAT="\t\t%s\t\t%4d\t%4d\t%4d\n"
+printf "%s\t\t%s\t\t%s\t%s\t%s\t%s\n" "Country" "Version" "adm1" "adm2" "adm3" "Directory"
+LINE_FORMAT="\t\t%s\t\t%4d\t%4d\t%4d\t%s\n"
 for COUNTRY in `ls`; do
   cd ${GEOJSON_STORAGE_DIRECTORY}/${COUNTRY}
   for VERSION in `ls -r`; do
-    cd ${GEOJSON_STORAGE_DIRECTORY}/${COUNTRY}/${VERSION}
+    VERSION_DIRECTORY=${GEOJSON_STORAGE_DIRECTORY}/${COUNTRY}/${VERSION}
+    VERSION_DIRECTORY_RELATIVE=${GEOJSON_STORAGE_DIRECTORY_RELATIVE}/${COUNTRY}/${VERSION}
+    cd ${VERSION_DIRECTORY}
     ADMIN_LEVELS=`ls | grep -v '.geojson'`
     FILE_COUNTS_adm1=0;
     FILE_COUNTS_adm2=0;
@@ -43,14 +45,14 @@ for COUNTRY in `ls`; do
 
     if [[ -n ${ADMIN_LEVELS} ]]; then
       for ADMIN_LEVEL in ${ADMIN_LEVELS}; do
-        cd ${GEOJSON_STORAGE_DIRECTORY}/${COUNTRY}/${VERSION}/${ADMIN_LEVEL}
+        cd ${VERSION_DIRECTORY}/${ADMIN_LEVEL}
         declare "FILE_COUNTS_${ADMIN_LEVEL}=`find . | grep '.geojson' | grep -v '.min.geojson' | wc -l`"
       done
     fi
     if [[ $VERSION -eq "current" ]]; then
-      printf "%s${LINE_FORMAT}" ${COUNTRY} ${VERSION} $FILE_COUNTS_adm1 $FILE_COUNTS_adm2 $FILE_COUNTS_adm3
+      printf "%s${LINE_FORMAT}" ${COUNTRY} ${VERSION} $FILE_COUNTS_adm1 $FILE_COUNTS_adm2 $FILE_COUNTS_adm3 ${VERSION_DIRECTORY_RELATIVE}
     else
-      printf "${LINE_FORMAT}" ${VERSION} $FILE_COUNTS_adm1 $FILE_COUNTS_adm2 $FILE_COUNTS_adm3
+      printf "${LINE_FORMAT}" ${VERSION} $FILE_COUNTS_adm1 $FILE_COUNTS_adm2 $FILE_COUNTS_adm3 ${VERSION_DIRECTORY_RELATIVE}
     fi
   done
 done

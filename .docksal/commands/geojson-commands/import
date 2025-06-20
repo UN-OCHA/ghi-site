@@ -28,10 +28,13 @@ while [ "$1" != "" ]; do
   shift
 done
 
+REPLACE=true
+
 # Define some constants we will be using.
 TEMPORARY_DIRECTORY="${GEOJSON_ASSET_DIRECTORY}/tmp"
 RED='\033[0;31m'
 GREEN='\033[0;32m'
+ORANGE='\033[0;33m'
 GRAY='\033[0;37m'
 NC='\033[0m' # No Color
 
@@ -45,11 +48,16 @@ download_geojson_files() {
   local COUNTRY_DIR=${TEMPORARY_DIRECTORY}/${ISO3}
 
   if [[ ! ${ADMIN_LEVEL} ]]; then
-    printf "Processing ${RED}%s${NC}\n" ${ISO3}
+    printf "Processing ${ORANGE}%s${NC}\n" ${ISO3}
+    local COUNTRY_LEVEL_FILE=${COUNTRY_DIR}/${ISO3}_0.geojson
     # Download the country shape file.
-    if [[ ! -f "${COUNTRY_DIR}/${ISO3}_0.geojson" ]]; then
-      local REQUEST_URL_COUNTRY=${URL_ADM0}${COMMON_QUERY_STRING}"&geometryPrecision=6&where=adm0_pcode%3D%27"${ISO2}"%27&outFields="
-      curl -s ${REQUEST_URL_COUNTRY} -o "${COUNTRY_DIR}/${ISO3}_0.geojson"
+    if [[ ! -f "${COUNTRY_LEVEL_FILE}" ]]; then
+      echo "  -> Download country level geojson"
+      local REQUEST_URL_COUNTRY=${URL_ADM0}${COMMON_QUERY_STRING}"&where=adm0_pcode%3D%27"${ISO2}"%27&outFields="
+      curl -s ${REQUEST_URL_COUNTRY} -o "${COUNTRY_LEVEL_FILE}"
+      if [[ ! -f "${COUNTRY_LEVEL_FILE}" ]]; then
+        printf "  -> ${RED}Download failed$ for %s{NC}\n" ${ISO2}
+      fi
     fi
     download_geojson_files ${ISO2} ${ISO3} 1
     download_geojson_files ${ISO2} ${ISO3} 2
@@ -77,17 +85,14 @@ download_geojson_files() {
     curl -s ${REQUEST_URL_ADMIN_LEVEL} -o "${ADMIN_LEVEL_COUNTRY_FILE}"
   fi
 
-  printf "  -> Admin level %d\n" ${ADMIN_LEVEL}
-
   # Extract the pcodes.
   PCODES=`cat ${ADMIN_LEVEL_COUNTRY_FILE} | jq '.features[].properties.adm'${ADMIN_LEVEL}'_pcode' | tr -d '"'`
   if [[ ! ${PCODES} ]]; then
-    echo "    -> Found no pcodes with geojson data"
+    printf "    -> ${ORANGE}Admin level %d:${NC} Found no pcodes with geojson data\n" ${ADMIN_LEVEL}
     return
   fi
   local PCODES_COUNT=`echo "${PCODES}" | wc -l`
-  printf "    -> Found %d pcodes with geojson data" ${PCODES_COUNT}
-  echo
+  printf "    -> ${ORANGE}Admin level %d:${NC}: Found %d pcodes with geojson data\n" ${ADMIN_LEVEL} ${PCODES_COUNT}
 
   # Create the directory if needed.
   if [ ! -d "${ADMIN_LEVEL_DIR}" ]; then
@@ -99,7 +104,7 @@ download_geojson_files() {
   for PCODE in ${PCODES}; do
     ((COUNT++))
     printf "\r${GRAY}    -> Downloading %d / %d: %s${NC}" ${COUNT} ${PCODES_COUNT} ${PCODE}
-    local REQUEST_URL_PCODES=${BASE_URL}${COMMON_QUERY_STRING}"&geometryPrecision=6&where=adm"${ADMIN_LEVEL}"_pcode%3D%27"${PCODE}"%27&outFields="
+    local REQUEST_URL_PCODES=${BASE_URL}${COMMON_QUERY_STRING}"&where=adm"${ADMIN_LEVEL}"_pcode%3D%27"${PCODE}"%27&outFields="
     if [[ ! -f "${ADMIN_LEVEL_DIR}/${PCODE}.geojson" ]]; then
       curl -s ${REQUEST_URL_PCODES} -o "${ADMIN_LEVEL_DIR}/${PCODE}.geojson"
     fi
@@ -118,21 +123,25 @@ copy_geojson_files() {
 
   local LAST_YEAR=`date -v-1y +%Y`
 
-  if [[ `ls ${GEOJSON_STORAGE_DIRECTORY}/${ISO3} | wc -l` -eq 1 ]]; then
-    # There is only the current version, so we move that into a year directory
-    # and store the newly imported files as the current version.
-    if [[ -d ${GEOJSON_STORAGE_DIRECTORY}/${ISO3}/current/adm1 ]]; then
-      mv ${GEOJSON_STORAGE_DIRECTORY}/${ISO3}/current ${GEOJSON_STORAGE_DIRECTORY}/${ISO3}/${LAST_YEAR}
-    fi
-    mkdir -p ${GEOJSON_STORAGE_DIRECTORY}/${ISO3}/current
-  elif [[ ! -d ${GEOJSON_STORAGE_DIRECTORY}/${ISO3}/${LAST_YEAR} ]]; then
-    # There are multiple versions already, but none yet for the last year.
-    mv ${GEOJSON_STORAGE_DIRECTORY}/${ISO3}/current ${GEOJSON_STORAGE_DIRECTORY}/${ISO3}/${LAST_YEAR}
-    mkdir -p ${GEOJSON_STORAGE_DIRECTORY}/${ISO3}/current
-  else
-    # There are multiple versions already, including one of the last year, so
-    # we replace the current one.
+  if [[ REPLACE ]]; then
     rm -r ${GEOJSON_STORAGE_DIRECTORY}/${ISO3}/current/*
+  else
+    if [[ `ls ${GEOJSON_STORAGE_DIRECTORY}/${ISO3} | wc -l` -eq 1 ]]; then
+      # There is only the current version, so we move that into a year directory
+      # and store the newly imported files as the current version.
+      if [[ -d ${GEOJSON_STORAGE_DIRECTORY}/${ISO3}/current/adm1 ]]; then
+        mv ${GEOJSON_STORAGE_DIRECTORY}/${ISO3}/current ${GEOJSON_STORAGE_DIRECTORY}/${ISO3}/${LAST_YEAR}
+      fi
+      mkdir -p ${GEOJSON_STORAGE_DIRECTORY}/${ISO3}/current
+    elif [[ ! -d ${GEOJSON_STORAGE_DIRECTORY}/${ISO3}/${LAST_YEAR} ]]; then
+      # There are multiple versions already, but none yet for the last year.
+      mv ${GEOJSON_STORAGE_DIRECTORY}/${ISO3}/current ${GEOJSON_STORAGE_DIRECTORY}/${ISO3}/${LAST_YEAR}
+      mkdir -p ${GEOJSON_STORAGE_DIRECTORY}/${ISO3}/current
+    else
+      # There are multiple versions already, including one of the last year, so
+      # we replace the current one.
+      rm -r ${GEOJSON_STORAGE_DIRECTORY}/${ISO3}/current/*
+    fi
   fi
 
   # Now move all files into the current
