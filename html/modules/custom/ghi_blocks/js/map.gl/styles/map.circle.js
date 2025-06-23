@@ -187,6 +187,7 @@
      */
     buildLocationFeatures = function () {
       let locations = this.state.getLocations();
+      locations = locations.filter((object) => object.total > 0);
       let features = locations.map(object => object.feature ?? this.buildFeatureForObject(object));
       return features;
     }
