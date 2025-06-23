@@ -183,7 +183,7 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
     $reporting_period_id = $this->getCurrentReportingPeriod($plan_id);
     $configured_reporting_periods = $this->getConfiguredReportingPeriods($plan_id);
 
-    $disaggregated_data = $attachment->getDisaggregatedData($reporting_period_id, TRUE);
+    $disaggregated_data = $attachment->getDisaggregatedData($reporting_period_id);
     foreach ($disaggregated_data as $metric_index => $metric_item) {
       if (empty($metric_item['locations'])) {
         continue;

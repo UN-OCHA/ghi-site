@@ -1001,6 +1001,7 @@
      */
     updateFeatures = function (source_id, layer_id, build_callback, transition_callback, duration = null) {
       let locations = this.getLocations();
+      locations = locations.filter((object) => object.total > 0);
       let features = [];
       for (let object of locations) {
         features.push(build_callback(object));
