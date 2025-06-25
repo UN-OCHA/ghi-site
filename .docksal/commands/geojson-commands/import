@@ -31,37 +31,44 @@ done
 REPLACE=true
 
 # Define some constants we will be using.
-TEMPORARY_DIRECTORY="${GEOJSON_ASSET_DIRECTORY}/tmp"
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 ORANGE='\033[0;33m'
 GRAY='\033[0;37m'
 NC='\033[0m' # No Color
 
-# Download the set of admin level geojson files for a country.
+# Download the set of admin level geojson files for a country. This will also
+# create the minified versions of the shape files.
 download_geojson_files() {
-  local ISO2=$1
+  local COUNTRY_PCODE=$1
   local ISO3=$2
   local ADMIN_LEVEL=$3
 
   # Setup directory variables.
   local COUNTRY_DIR=${TEMPORARY_DIRECTORY}/${ISO3}
 
+  # Create country directory if needed.
+  if [ ! -d "${COUNTRY_DIR}" ]; then
+    mkdir -p ${COUNTRY_DIR}
+  fi
+
   if [[ ! ${ADMIN_LEVEL} ]]; then
     printf "Processing ${ORANGE}%s${NC}\n" ${ISO3}
     local COUNTRY_LEVEL_FILE=${COUNTRY_DIR}/${ISO3}_0.geojson
+    local COUNTRY_LEVEL_FILE_MINIFIED=${COUNTRY_DIR}/${ISO3}_0.min.geojson
     # Download the country shape file.
     if [[ ! -f "${COUNTRY_LEVEL_FILE}" ]]; then
       echo "  -> Download country level geojson"
-      local REQUEST_URL_COUNTRY=${URL_ADM0}${COMMON_QUERY_STRING}"&where=adm0_pcode%3D%27"${ISO2}"%27&outFields="
+      local REQUEST_URL_COUNTRY=${URL_ADM0}${COMMON_QUERY_STRING}"&where=adm0_pcode%3D%27"${COUNTRY_PCODE}"%27&outFields="
       curl -s ${REQUEST_URL_COUNTRY} -o "${COUNTRY_LEVEL_FILE}"
+      geojson-shave -d 2 ${COUNTRY_LEVEL_FILE} -o ${COUNTRY_LEVEL_FILE_MINIFIED} &> /dev/null
       if [[ ! -f "${COUNTRY_LEVEL_FILE}" ]]; then
-        printf "  -> ${RED}Download failed$ for %s{NC}\n" ${ISO2}
+        printf "  -> ${RED}Download failed$ for %s${NC}\n" ${COUNTRY_PCODE}
       fi
     fi
-    download_geojson_files ${ISO2} ${ISO3} 1
-    download_geojson_files ${ISO2} ${ISO3} 2
-    download_geojson_files ${ISO2} ${ISO3} 3
+    download_geojson_files ${COUNTRY_PCODE} ${ISO3} 1
+    download_geojson_files ${COUNTRY_PCODE} ${ISO3} 2
+    download_geojson_files ${COUNTRY_PCODE} ${ISO3} 3
     copy_geojson_files ${ISO3}
     printf "${GREEN}  -> Done with %s${NC}\n" ${ISO3}
     return
@@ -73,16 +80,17 @@ download_geojson_files() {
   local BASE_URL=${!URL_VAR_NAME}
 
   # Build the request URL.
-  local REQUEST_URL_ADMIN_LEVEL=${BASE_URL}${COMMON_QUERY_STRING}"&geometryPrecision=0&where=adm0_pcode%3D%27"${ISO2}"%27&outFields=adm"${ADMIN_LEVEL}"_pcode"
-
-  # Create country directory if needed.
-  if [ ! -d "${COUNTRY_DIR}" ]; then
-    mkdir -p ${COUNTRY_DIR}
-  fi
+  local REQUEST_URL_ADMIN_LEVEL=${BASE_URL}${COMMON_QUERY_STRING}"&geometryPrecision=0&where=adm0_pcode%3D%27"${COUNTRY_PCODE}"%27&outFields=adm"${ADMIN_LEVEL}"_pcode"
 
   # Download the country level geojson file for the given country and admin level.
   if [ ! -f "${ADMIN_LEVEL_COUNTRY_FILE}" ]; then
     curl -s ${REQUEST_URL_ADMIN_LEVEL} -o "${ADMIN_LEVEL_COUNTRY_FILE}"
+    local HAS_ERRORS=`grep "error" ${ADMIN_LEVEL_COUNTRY_FILE} | wc -l`
+    local HAS_FEATURES=`cat ${ADMIN_LEVEL_COUNTRY_FILE} | jq '. | keys' | tr -d '"' | grep 'features' | wc -l`
+    if [[ ${HAS_ERRORS} -gt 0 || ${HAS_FEATURES} -eq 0 ]]; then
+      printf "    -> ${ORANGE}Failed to download %d:${NC}\n" ${REQUEST_URL_ADMIN_LEVEL}
+      rm ${REQUEST_URL_ADMIN_LEVEL}
+    fi
   fi
 
   # Extract the pcodes.
@@ -107,12 +115,17 @@ download_geojson_files() {
     local REQUEST_URL_PCODES=${BASE_URL}${COMMON_QUERY_STRING}"&where=adm"${ADMIN_LEVEL}"_pcode%3D%27"${PCODE}"%27&outFields="
     if [[ ! -f "${ADMIN_LEVEL_DIR}/${PCODE}.geojson" ]]; then
       curl -s ${REQUEST_URL_PCODES} -o "${ADMIN_LEVEL_DIR}/${PCODE}.geojson"
+      geojson-shave ${ADMIN_LEVEL_DIR}/${PCODE}.geojson -o "${ADMIN_LEVEL_DIR}/${PCODE}.min.geojson" &> /dev/null
+    fi
+    if [[ ! -f "${ADMIN_LEVEL_DIR}/${PCODE}.min.geojson" ]]; then
+      geojson-shave ${ADMIN_LEVEL_DIR}/${PCODE}.geojson -o "${ADMIN_LEVEL_DIR}/${PCODE}.min.geojson" &> /dev/null
     fi
   done
   printf "\r${GREEN}    -> Downloading %d / %d: Download finished${NC}" ${COUNT} ${PCODES_COUNT}
   echo
 }
 
+# Copy the temporary geojson files into the final location in the repository.
 copy_geojson_files() {
   local ISO3=$1
   # Check if anything has been actually downloaded, if not skip the next step.
@@ -151,14 +164,23 @@ copy_geojson_files() {
   printf "${GREEN}  -> Copied downloaded files to destination directory${NC}\n"
 }
 
-# download_geojson_files "AF" "AFG"
-
-# Download the sources.
-for ISO3 in `ls ${GEOJSON_STORAGE_DIRECTORY}`; do
-  ISO2=`cat ${GEOJSON_SOURCE_COUNTRIES_JSON} | jq '. | keys[] as $k | {iso2:$k, iso3:.[$k].alpha3} | select(.iso3=="'${ISO3}'").iso2' | tr -d '"'`
-  if [[ -z "$ISO2" ]]; then
-    continue
+# Download the source countries that will be processed. This retrieves the
+# country codes from the GIS server for which there is any geojson data.
+download_source_countries() {
+  local OUTFILE=$1
+  if [[ REPLACE && -f "${OUTFILE}" ]]; then
+    rm -r ${OUTFILE}
   fi
+  local REQUEST_URL_COUNTRIES=${URL_ADM0}"?where=ObjectId>0&objectIds=&time=&geometry=&geometryType=esriGeometryEnvelope&inSR=&defaultSR=&spatialRel=esriSpatialRelIntersects&distance=&units=esriSRUnit_Foot&relationParam=&outFields=adm0_pcode,iso3&returnGeometry=false&maxAllowableOffset=&geometryPrecision=&outSR=&havingClause=&gdbVersion=&historicMoment=&returnDistinctValues=true&returnIdsOnly=false&returnCountOnly=false&returnExtentOnly=false&orderByFields=&groupByFieldsForStatistics=&outStatistics=&returnZ=false&returnM=false&multipatchOption=xyFootprint&resultOffset=&resultRecordCount=&returnTrueCurves=false&returnExceededLimitFeatures=false&quantizationParameters=&returnCentroid=false&timeReferenceUnknownClient=false&maxRecordCountFactor=&sqlFormat=none&resultType=&featureEncoding=esriDefault&datumTransformation=&cacheHint=false&f=json"
+  curl -s ${REQUEST_URL_COUNTRIES} | jq -c '.features[] | {pcode: .attributes.adm0_pcode, iso3: .attributes.iso3}' > "${OUTFILE}"
+}
 
-  download_geojson_files ${ISO2} ${ISO3}
-done
+# download_geojson_files "CO" "COL"
+
+download_source_countries ${GEOJSON_SOURCE_COUNTRIES_JSON}
+
+while read LINE; do
+  COUNTRY_PCODE=$(jq -r '.pcode' <<< ${LINE})
+  ISO3=$(jq -r '.iso3' <<< ${LINE})
+  download_geojson_files ${COUNTRY_PCODE} ${ISO3}
+done < ${GEOJSON_SOURCE_COUNTRIES_JSON}

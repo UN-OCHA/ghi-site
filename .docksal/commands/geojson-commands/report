@@ -17,6 +17,8 @@ usage="$(basename "$0") [-h]
 where:
     -h  show this help text"
 
+FILTER_EMPTY=true
+
 while [ "$1" != "" ]; do
   case $1 in
     -h | --help )         echo "$usage"
@@ -49,6 +51,11 @@ for COUNTRY in `ls`; do
         declare "FILE_COUNTS_${ADMIN_LEVEL}=`find . | grep '.geojson' | grep -v '.min.geojson' | wc -l`"
       done
     fi
+
+    if [[ FILTER_EMPTY && $FILE_COUNTS_adm1 -eq 0 && $FILE_COUNTS_adm2 -eq 0 && $FILE_COUNTS_adm3 -eq 0 ]]; then
+      continue
+    fi
+
     if [[ $VERSION -eq "current" ]]; then
       printf "%s${LINE_FORMAT}" ${COUNTRY} ${VERSION} $FILE_COUNTS_adm1 $FILE_COUNTS_adm2 $FILE_COUNTS_adm3 ${VERSION_DIRECTORY_RELATIVE}
     else

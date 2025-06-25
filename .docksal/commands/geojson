@@ -17,8 +17,9 @@ usage="$(basename "$0") [-h] report|import|lookup-pcode|lookup-country
 where:
     -h  show this help text"
 
-export GEOJSON_ASSET_DIRECTORY="${PROJECT_ROOT}/.docksal/commands/geojson-commands/assets"
-export GEOJSON_SOURCE_COUNTRIES_JSON="${GEOJSON_ASSET_DIRECTORY}/countries.json"
+export GEOJSON_DIRECTORY="${PROJECT_ROOT}/.docksal/commands/geojson-commands"
+export TEMPORARY_DIRECTORY="${GEOJSON_DIRECTORY}/tmp"
+export GEOJSON_SOURCE_COUNTRIES_JSON="${TEMPORARY_DIRECTORY}/countries.json"
 export GEOJSON_STORAGE_DIRECTORY_RELATIVE="/html/modules/custom/ghi_base_objects/assets/geojson"
 export GEOJSON_STORAGE_DIRECTORY="${PROJECT_ROOT}${GEOJSON_STORAGE_DIRECTORY_RELATIVE}"
 
