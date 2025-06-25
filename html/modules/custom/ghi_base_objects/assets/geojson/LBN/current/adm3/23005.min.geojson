@@ -1,1 +1,1 @@
-{"type":"FeatureCollection","features":[{"type":"Feature","geometry":{"type":"Polygon","coordinates":[[[35.47688,33.62138],[35.47693,33.62159],[35.47663,33.62209],[35.47631,33.62189],[35.47688,33.62138]]]},"properties":{"adm3_name":"Litige"}}]}
+{"type":"FeatureCollection","features":[{"type":"Feature","geometry":{"type":"Polygon","coordinates":[[[35.47688,33.62137],[35.47693,33.62159],[35.47663,33.62209],[35.4763,33.62189],[35.47688,33.62137]]]},"properties":{"adm3_name":"Litige"}}]}
