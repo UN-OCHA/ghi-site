@@ -519,12 +519,32 @@ class DataAttachment extends AttachmentBase implements DataAttachmentInterface {
   public function canBeMapped($reporting_period) {
     $disaggregated_data = $this->getDisaggregatedData($reporting_period, TRUE);
     foreach ($disaggregated_data as $metric_item) {
-      if (empty($metric_item['locations'])) {
+      if ($this->metricItemIsEmpty($metric_item)) {
         continue;
       }
       return TRUE;
     }
     return FALSE;
+  }
+
+  /**
+   * Check if a metric item is empty.
+   *
+   * It is considered empty if there are no locations with values.
+   *
+   * @param array $metric_item
+   *   A metric item array.
+   *
+   * @return bool
+   *   TRUE if the metric item can be considered empty, FALSE otherwise.
+   */
+  public function metricItemIsEmpty($metric_item): bool {
+    if (!array_key_exists('locations', $metric_item) || empty($metric_item['locations'])) {
+      return TRUE;
+    }
+    return empty(array_filter($metric_item['locations'], function ($location) {
+      return !empty($location['total']);
+    }));
   }
 
   /**

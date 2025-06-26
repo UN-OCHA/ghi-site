@@ -82,7 +82,19 @@
           url: location.filepath,
           success: function (data) {
             let type = data.type ?? null;
-            let feature = type == 'FeatureCollection' ? (data.features[0] ?? null) : data;
+            let feature = data;
+            if (type == 'FeatureCollection') {
+              // Merge all feature geometries into a single object, because
+              // this is what we need.
+              feature = {
+                'type': 'Feature',
+                'properties': {},
+                'geometry': {
+                  'type': 'GeometryCollection',
+                  'geometries': data.features.map((item) => item.geometry),
+                }
+              };
+            }
             if (!type || !feature) {
               return;
             }

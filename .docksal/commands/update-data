@@ -17,5 +17,16 @@ usage="$(basename "$0") [-h] update-data
 where:
     -h  show this help text"
 
+while [ "$1" != "" ]; do
+  case $1 in
+    -h | --help )         echo "$usage"
+                          exit
+                          ;;
+    * )                   echo "$usage"
+                          exit 1
+  esac
+  shift
+done
+
 fin drush migrate:import --group hpc_api_data --update
 fin drush migrate:import --group ncms

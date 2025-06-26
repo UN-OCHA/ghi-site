@@ -28,6 +28,7 @@
       this.sourceId = state.getMapId();
       this.featureLayerId = this.sourceId + '-circle';
       this.activeFeatureLayerId = this.sourceId + '-circle-active';
+      this.adminAreaLayerId = this.sourceId + '-geojson';
       this.labelLayerId = this.sourceId + '-label';
       this.config = {
         // Scales used to determine color.
@@ -186,7 +187,7 @@
      *   An array of feature objects.
      */
     buildLocationFeatures = function () {
-      let locations = this.state.getLocations();
+      let locations = this.state.getLocations(true, true);
       let features = locations.map(object => object.feature ?? this.buildFeatureForObject(object));
       return features;
     }
@@ -359,7 +360,7 @@
       let state = this.state;
       let map = state.getMap();
 
-      let geojson_source_id = this.sourceId + '-geojson';
+      let geojson_source_id = this.adminAreaLayerId;
       if (map.getSource(geojson_source_id)) {
         map.removeLayer(geojson_source_id + '-outline');
         map.removeLayer(geojson_source_id + '-fill');
@@ -433,7 +434,7 @@
       let state = this.state;
       let map = state.getMap();
 
-      let geojson_source_id = this.sourceId + '-geojson';
+      let geojson_source_id = this.adminAreaLayerId;
 
       if (!map.getSource(geojson_source_id)) {
         map.addSource(geojson_source_id, this.state.buildGeoJsonSource(null));
@@ -581,7 +582,7 @@
      *   The current style instance.
      */
     clickHandler = function (e, self) {
-      let feature = self.state.getFeatureFromEvent(e, self.featureLayerId)
+      let feature = self.state.getFeatureFromEvent(e, self.adminAreaLayerId)
       if (!feature) {
         return;
       }
@@ -672,8 +673,7 @@
         // not unset the feature state of the previously active feature. So we
         // need to make sure to unset the feature state of that older feature
         // anytime it becomes visible.
-        let source_id = state.getMapId();
-        let geojson_source_id = source_id + '-geojson';
+        let geojson_source_id = self.adminAreaLayerId;
         let existing = [];
         if (state.shouldShowCountryOutlines()) {
           let location = state.getLocationById(focus_feature.properties.object_id);
@@ -848,7 +848,7 @@
 
       map.on('mouseenter', layer_id, (e) => {
         // Enable hover.
-        let feature = state.getFeatureFromEvent(e);
+        let feature = state.getFeatureFromEvent(e, self.adminAreaLayerId);
         if (!feature) {
           return;
         }
@@ -862,7 +862,7 @@
       });
 
       map.on('mousemove', layer_id, (e) => {
-        let feature = state.getFeatureFromEvent(e);
+        let feature = state.getFeatureFromEvent(e, self.adminAreaLayerId);
         if (!feature) {
           if (state.isHovered()) {
             // Disable hover.
