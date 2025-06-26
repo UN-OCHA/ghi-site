@@ -366,7 +366,7 @@ class PlanTable extends GHIBlockBase implements HPCDownloadExcelInterface, HPCDo
                 '#tag' => 'span',
                 '#attributes' => [
                   'data-toggle' => 'tooltip',
-                  'data-tippy-content' => $this->t('Download the document'),
+                  'data-tippy-content' => $this->t('Download the plan document'),
                 ],
                 'content' => DownloadHelper::getDownloadIcon($document_uri),
               ] : NULL,
