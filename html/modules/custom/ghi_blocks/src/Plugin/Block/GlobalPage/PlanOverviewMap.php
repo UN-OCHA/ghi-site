@@ -469,9 +469,7 @@ class PlanOverviewMap extends GHIBlockBase {
               '#tag' => 'span',
               '#attributes' => [
                 'data-toggle' => 'tooltip',
-                'data-tippy-content' => $this->t('Download the @type document', [
-                  '@type' => strtolower($plan->getTypeName()) == 'other' ? $this->t('plan') : $plan->getTypeShortName(),
-                ]),
+                'data-tippy-content' => $this->t('Download the plan document'),
               ],
               'content' => DownloadHelper::getDownloadIcon($document_uri),
             ] : NULL,
