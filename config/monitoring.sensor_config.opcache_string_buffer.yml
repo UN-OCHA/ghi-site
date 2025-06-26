@@ -1,0 +1,17 @@
+uuid: 8bde9c90-1816-4989-a6f8-a5c9132d420a
+langcode: en
+status: false
+dependencies: {  }
+id: opcache_string_buffer
+label: 'OPcache interned string buffer'
+description: ''
+category: Performance
+plugin_id: opcache_string_buffer
+result_class: null
+value_label: '% used'
+value_type: number
+caching_time: null
+settings: {  }
+thresholds:
+  type: exceeds
+  warning: 90
