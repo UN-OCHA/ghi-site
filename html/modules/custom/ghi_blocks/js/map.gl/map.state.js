@@ -354,7 +354,7 @@
      * @return {Array}
      *   An array of location data objects.
      */
-    getLocations = function (filter_by_admin_level = true) {
+    getLocations = function (filter_by_admin_level = true, filter_empty = false) {
       let data = this.getData();
       let locations = typeof data.locations != 'undefined' ? data.locations : [];
 
@@ -383,6 +383,11 @@
         d.variant_id = variant_id;
         return d;
       });
+
+      if (filter_empty) {
+        locations = this.filterEmptyLocations(locations);
+      }
+
       return locations;
     }
 
@@ -430,6 +435,20 @@
     getLocationFromFeature = function (feature) {
       let object_id = feature.properties.object_id ?? null;
       return object_id ? this.getLocationById(object_id) : null;
+    }
+
+    /**
+     *
+     * @param {Array} locations
+     *   An array of location data objects.
+     * @return {Array}
+     *   An array of location data objects.
+     */
+    filterEmptyLocations = function (locations) {
+      if (!this.isOverviewMap()) {
+        locations = locations.filter((object) => object.total > 0);
+      }
+      return locations;
     }
 
     /**
@@ -1000,8 +1019,7 @@
      *   An array of feature objects.
      */
     updateFeatures = function (source_id, layer_id, build_callback, transition_callback, duration = null) {
-      let locations = this.getLocations();
-      locations = locations.filter((object) => object.total > 0);
+      let locations = this.getLocations(true, true);
       let features = [];
       for (let object of locations) {
         features.push(build_callback(object));
