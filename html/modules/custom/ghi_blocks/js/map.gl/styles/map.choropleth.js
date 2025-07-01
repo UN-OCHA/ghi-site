@@ -79,7 +79,7 @@
         map.addSource(self.sourceId, source);
         map.addLayer(this.buildFillLayer(self.sourceId));
         map.addLayer(this.buildOutlineLayer(self.sourceId));
-        map.on('click', self.featureLayerId, (e) => self.clickHandler(e, self));
+        map.on('click', self.featureLayerId, (e) => self.handleFeatureClick(e, self));
 
         // Add a layer for the labels, so that we can keep showing them on top
         // of colored admin area or country outlines.
@@ -304,7 +304,7 @@
      * @param {ghi.choroplethMap} self
      *   The current style instance.
      */
-    clickHandler = function (e, self) {
+    handleFeatureClick = function (e, self) {
       let feature = self.state.getFeatureFromEvent(e, self.featureLayerId)
       if (!feature) {
         return;
