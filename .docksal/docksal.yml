@@ -38,9 +38,9 @@ services:
       - 'SE_VNC_NO_PASSWORD=1'
     # shm_size: '2gb'
     ports:
-      - 5900:5900
-      - 7900:7900
-      - 4444:4444
+      - 5902:5900
+      - 7902:7900
+      - 4446:4444
 
   snap:
     image: public.ecr.aws/unocha/tools-snap-service:dev-chromium
