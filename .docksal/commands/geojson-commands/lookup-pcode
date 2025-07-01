@@ -1,0 +1,25 @@
+#!/usr/bin/env bash
+
+## Lookup the geojson feature for a pcode.
+##
+## Usage: fin geojson lookup-pcode [-h]
+##
+
+# Environment variables passed from fin:
+#
+#   $PROJECT_ROOT - (string) absolute path to NEAREST .docksal folder
+#   $VIRTUAL_HOST - (string) ex. projectname.docksal
+#   $DOCROOT - name of the docroot folder
+#   $DOCKER_RUNNING - (string) "true" or "false"
+
+
+ADMIN_LEVEL=$1
+PCODE=$2
+
+URL_VAR_NAME="URL_ADM"${ADMIN_LEVEL}
+BASE_URL=${!URL_VAR_NAME}
+PCODE_FIELD="adm"${ADMIN_LEVEL}"_pcode"
+
+REQUEST_URL=${BASE_URL}${COMMON_QUERY_STRING}"&geometryPrecision=6&where=adm"${ADMIN_LEVEL}"_pcode%3D%27"${PCODE}"%27&outFields=${PCODE_FIELD}"
+curl -s ${REQUEST_URL} | jq
+echo
