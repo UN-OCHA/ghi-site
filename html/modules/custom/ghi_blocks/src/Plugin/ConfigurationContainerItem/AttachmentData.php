@@ -252,6 +252,10 @@ class AttachmentData extends ConfigurationContainerItemPluginBase {
 
     /** @var \Drupal\ghi_plans\Entity\Plan $plan */
     $plan = $this->getContextValue('plan_object');
+
+    /** @var \Drupal\ghi_base_objects\Entity\BaseObjectInterface $base_object */
+    $base_object = $this->getContextValue('base_object');
+
     if (!$attachment) {
       $errors[] = $this->t('No attachment configured');
     }
@@ -261,6 +265,10 @@ class AttachmentData extends ConfigurationContainerItemPluginBase {
     elseif ($attachment->getPlanId() != $plan->getSourceId()) {
       $errors[] = $this->t('Configured attachment is not available in the context of the current plan');
     }
+    elseif ($base_object && $attachment->getSourceEntity()->id() != $base_object->getSourceId()) {
+      $errors[] = $this->t('Configured attachment is not available in the context of the current base object');
+    }
+
     return $errors;
   }
 
