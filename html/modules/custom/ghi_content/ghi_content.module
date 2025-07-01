@@ -98,6 +98,7 @@ function ghi_content_batch_alter(&$batch) {
 
   $current_set = $batch['current_set'];
   $operations = &$batch['sets'][$current_set]['operations'];
+  $batch_builder = NULL;
 
   foreach ($operations as $operation) {
     $callback = $operation[0] ?? NULL;
@@ -116,7 +117,9 @@ function ghi_content_batch_alter(&$batch) {
         )
       ->setFinishCallback([MigrationBatchController::class, 'batchFinished']);
   }
-  batch_set($batch_builder->toArray());
+  if ($batch_builder) {
+    batch_set($batch_builder->toArray());
+  }
 }
 
 /**
