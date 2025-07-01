@@ -36,7 +36,7 @@
         casesensitive: false,
       };
       this.options = Object.assign({}, defaults, options);
-      this.updateSearchIndex(this.state.getLocations());
+      this.updateSearchIndex(this.state.getLocations(false));
       this.state.getMap().on('data', (event) => {
         let source_id = event.sourceId ?? null;
         let source_loaded = event.isSourceLoaded ?? false;
