@@ -205,11 +205,15 @@ class PlanEntityLogframe extends GHIBlockBase implements MultiStepFormBlockInter
     }
     $count = count($rendered_items);
 
+    $langcode = $this->getCurrentPlanObject()?->getPlanLanguage() ?? 'en';
     $first_entity = reset($entities);
     $build = [];
     $build['content'] = [
       '#theme' => 'plan_entity_logframe',
       '#items' => $rendered_items,
+      '#tooltip_show_data' => $this->t('Show data', [], ['langcode' => $langcode]),
+      '#tooltip_hide_data' => $this->t('Hide data', [], ['langcode' => $langcode]),
+      '#tooltip_no_data' => $this->t('No data', [], ['langcode' => $langcode]),
       '#wrapper_attributes' => [
         'class' => [
           'plan-entity-logframe',
