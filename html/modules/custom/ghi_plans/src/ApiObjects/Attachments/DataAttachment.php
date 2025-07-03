@@ -342,7 +342,10 @@ class DataAttachment extends AttachmentBase implements DataAttachmentInterface {
    *   TRUE if the index represents a measurement, FALSE otherwise.
    */
   public function isMeasurementIndex($index) {
-    return array_key_exists($index, $this->getMeasurementMetricFields());
+    // We prefer looking at the prototype, if that fails, look directly at what
+    // is in the attachmentVersion.
+    $measurement_fields = $this->getPrototype()?->getMeasurementMetricFields() ?? $this->getMeasurementMetricFields();
+    return array_key_exists($index, $measurement_fields);
   }
 
   /**
