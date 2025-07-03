@@ -5,11 +5,12 @@
   <div class="item-list--entity-logframe">
     {%- for item in items -%}
       <div class="item-wrapper">
-        <div class="entity-wrapper">
+        <div class="entity-wrapper {{ item.attachment_tables is empty ? 'no-tables' : ''}}">
           <div class="entity-wrapper--inner">
             {{ item.label }}
           </div>
-          <span class="table-toggle material-icons">keyboard_arrow_down</span>
+          <span class="table-toggle material-icons" tabindex="0" data-toggle="tooltip" data-tippy-content="{{ tooltip_show_data }}" data-tippy-content-open="{{ tooltip_hide_data }}">keyboard_arrow_down</span>
+          <span class="table-no-data material-icons" data-toggle="tooltip" data-tippy-content="{{ tooltip_no_data }}">horizontal_rule</span>
         </div>
         {%- if not item.attachment_tables is empty -%}
           <div class="attachment-tables-wrapper">

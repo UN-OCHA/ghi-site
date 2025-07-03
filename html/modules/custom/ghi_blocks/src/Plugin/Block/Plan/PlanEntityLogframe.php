@@ -302,7 +302,7 @@ class PlanEntityLogframe extends GHIBlockBase implements MultiStepFormBlockInter
         continue;
       }
       $table = $item_type->getRenderArray();
-      if (!$table) {
+      if (!$table || empty($table['#rows'])) {
         continue;
       }
       $tables[] = $table;

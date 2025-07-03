@@ -35,39 +35,23 @@
   font-weight: bold;
 }
 
-.item-list--entity-logframe
-  > .item-wrapper
-  .entity-wrapper--inner
-  p.description {
+.item-list--entity-logframe > .item-wrapper .entity-wrapper--inner p.description {
   flex-grow: 1;
-  font-size: var(--cd-font-size--default);
+  font-size: var(--cd-font-size--base);
 }
 
-.entity-type--plan
-  .item-list--entity-logframe
-  > .item-wrapper
-  .entity-wrapper--inner,
-.entity-type--governingentity
-  .item-list--entity-logframe
-  > .item-wrapper
-  .entity-wrapper--inner {
+.entity-type--plan .item-list--entity-logframe > .item-wrapper .entity-wrapper--inner,
+.entity-type--governingentity .item-list--entity-logframe > .item-wrapper .entity-wrapper--inner {
   flex-direction: column;
   gap: 0;
 }
-.entity-type--plan
-  .item-list--entity-logframe
-  > .item-wrapper
-  .entity-wrapper--inner
-  p,
-.entity-type--governingentity
-  .item-list--entity-logframe
-  > .item-wrapper
-  .entity-wrapper--inner
-  p {
+.entity-type--plan .item-list--entity-logframe > .item-wrapper .entity-wrapper--inner p,
+.entity-type--governingentity .item-list--entity-logframe > .item-wrapper .entity-wrapper--inner p {
   align-self: flex-start;
 }
 
-.item-list--entity-logframe > .item-wrapper .entity-wrapper span.table-toggle {
+.item-list--entity-logframe > .item-wrapper .entity-wrapper span.table-toggle,
+.item-list--entity-logframe > .item-wrapper .entity-wrapper span.table-no-data {
   flex-grow: 0;
   align-self: center;
   width: fit-content;
@@ -80,17 +64,19 @@
   transform: rotate(0deg);
   transition: transform 0.25s linear;
   transition-duration: 0.25s !important;
+  user-select: none;
 }
 
-.item-list--entity-logframe > .item-wrapper .entity-wrapper span.table-toggle.open{
+.item-list--entity-logframe > .item-wrapper .entity-wrapper span.table-toggle.open {
   transform: rotate(180deg);
 }
 
-.item-list--entity-logframe
-  > .item-wrapper
-  > .entity-wrapper
-  span.table-toggle {
+.item-list--entity-logframe > .item-wrapper > .entity-wrapper span.table-toggle,
+.item-list--entity-logframe > .item-wrapper > .entity-wrapper span.table-no-data {
   visibility: hidden;
+}
+.item-list--entity-logframe > .item-wrapper .entity-wrapper span.table-no-data {
+  display: none;
 }
 
 .item-list--entity-logframe > .item-wrapper > .attachment-tables-wrapper {
@@ -98,11 +84,6 @@
   padding: 2rem 1rem 2rem 2rem;
 }
 
-.item-list--entity-logframe
-  > .item-wrapper
-  > .attachment-tables-wrapper
-  table
-  thead
-  th:first-child {
+.item-list--entity-logframe > .item-wrapper > .attachment-tables-wrapper table thead th:first-child {
   width: 100%;
 }
