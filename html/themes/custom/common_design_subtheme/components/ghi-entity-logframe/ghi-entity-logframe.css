@@ -31,7 +31,7 @@
 .item-list--entity-logframe > .item-wrapper .entity-wrapper--inner p.label {
   flex-grow: 0;
   white-space: nowrap;
-  font-size: var(--cd-font-size--2xlarge);
+  font-size: var(--cd-font-size--large);
   font-weight: bold;
 }
 
@@ -76,6 +76,14 @@
   cursor: pointer;
   border-radius: 50%;
   background-color: var(--brand-grey);
+  will-change: transform;
+  transform: rotate(0deg);
+  transition: transform 0.25s linear;
+  transition-duration: 0.25s !important;
+}
+
+.item-list--entity-logframe > .item-wrapper .entity-wrapper span.table-toggle.open{
+  transform: rotate(180deg);
 }
 
 .item-list--entity-logframe

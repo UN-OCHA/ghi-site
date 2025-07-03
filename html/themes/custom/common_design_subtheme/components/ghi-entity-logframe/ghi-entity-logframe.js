@@ -11,6 +11,7 @@
         if ($table_wrapper.html().trim() !== '') {
           $table_wrapper.parents('.item-wrapper').find('.table-toggle').css('visibility', 'visible');
           $(once('logframe-toggle', item)).find('.table-toggle').click(function() {
+            $(this).toggleClass('open');
             $(item).find('.attachment-tables-wrapper').slideToggle({
               duration: 300,
             });
