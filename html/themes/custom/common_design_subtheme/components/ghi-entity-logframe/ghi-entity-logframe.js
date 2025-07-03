@@ -1,24 +1,52 @@
-(function ($, Drupal) {
+(function ($, Drupal, once) {
+  'use strict';
 
   Drupal.behaviors.EntityLogframe = {
     attach: function (context, settings) {
-      $items = $('.item-list--entity-logframe .item-wrapper');
+      let $items = $('.item-list--entity-logframe .item-wrapper');
       $items.each(function (i, item) {
-        $table_wrapper = $(item).find('.attachment-tables-wrapper');
-        if (!$table_wrapper.html() || $table_wrapper.html().includes('data-big-pipe-placeholder-id')) {
+        let $tableWrapper = $(item).find('.attachment-tables-wrapper');
+        if (!$tableWrapper.html() || $tableWrapper.html().includes('data-big-pipe-placeholder-id')) {
           return;
         }
-        if ($table_wrapper.html().trim() !== '') {
-          $table_wrapper.parents('.item-wrapper').find('.table-toggle').css('visibility', 'visible');
-          $(once('logframe-toggle', item)).find('.table-toggle').click(function() {
+        let $toggle = $tableWrapper.parents('.item-wrapper').find('.table-toggle');
+        let $noData = $tableWrapper.parents('.item-wrapper').find('.table-no-data');
+
+        if ($tableWrapper.html().trim() !== '') {
+          // We have data, so display the toggle and completely hide the
+          // no-data icon.
+          $toggle.css('visibility', 'visible');
+          $noData.css('display', 'none');
+
+          let openMessage = $toggle.data('tippy-content-open');
+          let closedMessage = $toggle.data('tippy-content');
+
+          // React to clicks and key presses.
+          $(once('logframe-toggle', item)).find('.table-toggle').on('keypress click', function (e) {
+            if (e.which !== 13 && e.type !== 'click') {
+              return;
+            }
+            // Toggle the "open" class on the toggle.
             $(this).toggleClass('open');
+            // Update the tooltip.
+            if ($(this)[0].hasOwnProperty('_tippy')) {
+              $(this)[0]._tippy.setContent($(this).hasClass('open') ? openMessage : closedMessage);
+            }
+            // Toggle the table display.
             $(item).find('.attachment-tables-wrapper').slideToggle({
-              duration: 300,
+              duration: 300
             });
           });
+        }
+        else {
+          // We have data, so completely hide the toggle and display the
+          // no-data icon.
+          $toggle.css('display', 'none');
+          $noData.css('visibility', 'visible');
+          $noData.css('display', 'block');
         }
       });
     }
   };
 
-}(jQuery, Drupal));
+})(jQuery, Drupal, once);
