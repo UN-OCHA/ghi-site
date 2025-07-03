@@ -33,12 +33,12 @@
 /* Add support for emphasis colors. */
 .gho-top-figures .gho-figures--large .gho-figure__value,
 .gho-top-figures .gho-figure--normal .gho-figure__value {
-  color: #0074b7;
-}
-.gho-top-figures .gho-figure--none .gho-figure__value {
   color: inherit;
 }
-.gho-top-figures .gho-figure--highlight .gho-figure__value {
+.gho-top-figures .gho-figure--needs-related .gho-figure__value {
+  color: #0074b7;
+}
+.gho-top-figures .gho-figure--emphasized .gho-figure__value {
   color: #eb1d48;
 }
 
