@@ -1,0 +1,99 @@
+diff --git a/config/install/warmer.settings.yml b/config/install/warmer.settings.yml
+index c08b276ab4a6e0009ec74c4e549677440126688e..bf6fae8ea42411ad814064825194a79a02a46b68 100644
+--- a/config/install/warmer.settings.yml
++++ b/config/install/warmer.settings.yml
+@@ -1 +1,2 @@
+ warmers: []
++enqueue_warmers_on_cron_run: true
+diff --git a/config/schema/warmer.schema.yml b/config/schema/warmer.schema.yml
+index 18122c8521495294db956531209dd170d7eb937b..63e6fd23c32c64080eda7429dd149095edf092d4 100644
+--- a/config/schema/warmer.schema.yml
++++ b/config/schema/warmer.schema.yml
+@@ -7,3 +7,6 @@ warmer.settings:
+       label: 'Warmers'
+       sequence:
+         type: warmer.settings.warmer_plugin.[%key]
++    enqueue_warmers_on_cron_run:
++      type: boolean
++      label: 'Enqueue warmers on cron run'
+diff --git a/modules/warmer_cdn/src/Plugin/warmer/CdnDependencyTrait.php b/modules/warmer_cdn/src/Plugin/warmer/CdnDependencyTrait.php
+index 385e995ee69772aa8aadd65376a6f64dcf57ea36..c3f2dcbb7cd8b6b676df019d6245e0d422406b97 100644
+--- a/modules/warmer_cdn/src/Plugin/warmer/CdnDependencyTrait.php
++++ b/modules/warmer_cdn/src/Plugin/warmer/CdnDependencyTrait.php
+@@ -5,6 +5,9 @@ namespace Drupal\warmer_cdn\Plugin\warmer;
+ use Drupal\warmer\Plugin\WarmerPluginBase;
+ use Drupal\warmer\Plugin\WarmerPluginManager;
+
++/**
++ * Trait for easier access to the CdnWarmer plugin.
++ */
+ trait CdnDependencyTrait {
+
+   /**
+diff --git a/src/Drush/Commands/WarmerCommands.php b/src/Drush/Commands/WarmerCommands.php
+index d70b78fba36a00cfdb42d6d4041a9ae5669eed81..ec8a399d8859c0a9a81f1f1301d11944268e10e6 100644
+--- a/src/Drush/Commands/WarmerCommands.php
++++ b/src/Drush/Commands/WarmerCommands.php
+@@ -115,7 +115,10 @@ class WarmerCommands extends DrushCommands implements SiteAliasManagerAwareInter
+     }
+     $this->logger()->success(dt('Warming caches in @count batches from the "warmer" queue.', ['@count' => $batch_count]));
+
+-    $this->processManager()->drush($this->siteAliasManager()->getSelf(), 'queue:run', ['warmer'], ['time-limit' => static::VERY_HIGH_NUMBER, 'items-limit' => $total]);
++    $this->processManager()->drush($this->siteAliasManager()->getSelf(), 'queue:run', ['warmer'], [
++      'time-limit' => static::VERY_HIGH_NUMBER,
++      'items-limit' => $total,
++    ]);
+   }
+
+   /**
+diff --git a/src/Form/SettingsForm.php b/src/Form/SettingsForm.php
+index 91cdd468107488ad25a06d1bb2feb4b92cec56f3..d51b43bba1de3516b521839f6a9c76db8b792f5b 100644
+--- a/src/Form/SettingsForm.php
++++ b/src/Form/SettingsForm.php
+@@ -61,6 +61,10 @@ final class SettingsForm extends ConfigFormBase {
+    */
+   public function buildForm(array $form, FormStateInterface $form_state) {
+     $form = parent::buildForm($form, $form_state);
++
++    $name = $this->getEditableConfigNames();
++    $config = $this->config(reset($name));
++
+     $form['help'] = [
+       '#type' => 'html_tag',
+       '#tag' => 'p',
+@@ -84,6 +88,13 @@ final class SettingsForm extends ConfigFormBase {
+       $form
+     );
+
++    $form['enqueue_warmers_on_cron_run'] = [
++      '#type' => 'checkbox',
++      '#title' => $this->t('Enqueue warmers on cron run'),
++      '#default_value' => $config->get('enqueue_warmers_on_cron_run'),
++      '#description' => $this->t('If unchecked, warmer plugins will not be called during cron runs to enqueue more items. Cache warming will then only happen if the warmers are enqueued manually, using drush for example.'),
++    ];
++
+     return $form;
+   }
+
+@@ -105,6 +116,7 @@ final class SettingsForm extends ConfigFormBase {
+       return $carry;
+     }, []);
+     $config->set('warmers', $warmer_configs);
++    $config->set('enqueue_warmers_on_cron_run', (bool) $form_state->getValue('enqueue_warmers_on_cron_run'));
+     $config->save();
+     $message = $this->t('Settings saved for plugin(s): %names', [
+       '%names' => implode(', ', array_map(function (WarmerPluginBase $warmer) {
+diff --git a/warmer.module b/warmer.module
+index d222a6d93782b3f2db85503c5d28965ec661e34f..33d6a87e997d1f5c2c8f870ac301f5faf5585a6f 100644
+--- a/warmer.module
++++ b/warmer.module
+@@ -12,6 +12,10 @@ use Drupal\Core\Routing\RouteMatchInterface;
+  * Implements hook_cron().
+  */
+ function warmer_cron() {
++  $config = \Drupal::configFactory()->get('warmer.settings');
++  if ($config->get('enqueue_warmers_on_cron_run') === FALSE) {
++    return;
++  }
+   HookImplementations::enqueueWarmers();
+ }
