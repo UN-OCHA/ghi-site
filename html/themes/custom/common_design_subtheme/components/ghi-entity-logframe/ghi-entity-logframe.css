@@ -78,6 +78,10 @@
 .item-list--entity-logframe > .item-wrapper .entity-wrapper span.table-no-data {
   display: none;
 }
+.item-list--entity-logframe > .item-wrapper .entity-wrapper.no-tables.no-alignment span.table-no-data {
+  display: block;
+  visibility: visible;
+}
 
 .item-list--entity-logframe > .item-wrapper > .attachment-tables-wrapper {
   display: none;
