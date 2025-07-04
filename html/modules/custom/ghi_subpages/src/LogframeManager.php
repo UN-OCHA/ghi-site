@@ -15,6 +15,7 @@ use Drupal\ghi_blocks\Traits\AttachmentTableTrait;
 use Drupal\ghi_plan_clusters\Entity\PlanCluster;
 use Drupal\ghi_plans\ApiObjects\AttachmentPrototype\AttachmentPrototype;
 use Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment;
+use Drupal\ghi_plans\ApiObjects\Plan as ApiObjectsPlan;
 use Drupal\ghi_plans\ApiObjects\PlanEntityInterface;
 use Drupal\ghi_plans\Entity\Plan;
 use Drupal\ghi_sections\Entity\SectionNodeInterface;
@@ -634,7 +635,7 @@ class LogframeManager implements ContainerInjectionInterface {
     if ($parent instanceof SectionNodeInterface) {
       // Logframes on plan level should only include the plan entities above
       // the first governing entity.
-      $ref_codes = ['PL', 'SO', 'SP'];
+      $ref_codes = [ApiObjectsPlan::ENTITY_REF_CODE, 'SO', 'SP'];
       $entity_types = array_intersect_key($entity_types, array_flip($ref_codes));
     }
 
@@ -676,7 +677,7 @@ class LogframeManager implements ContainerInjectionInterface {
     }
 
     $entity_types = [
-      'PL' => (string) $this->t('Plan'),
+      ApiObjectsPlan::ENTITY_REF_CODE => (string) $this->t('Plan'),
     ];
     foreach ($prototype->getEntityPrototypes() as $entity_prototype) {
       $ref_code = $entity_prototype->getRefCode();
@@ -711,7 +712,7 @@ class LogframeManager implements ContainerInjectionInterface {
 
     $entities = [];
     $base_object = $section->getBaseObject();
-    if ($base_object instanceof Plan && $ref_code == 'PL') {
+    if ($base_object instanceof Plan && $ref_code == ApiObjectsPlan::ENTITY_REF_CODE) {
       /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\EntityQuery $query */
       $query = $this->endpointQueryManager->createInstance('entity_query');
       $plan_data = $query->getEntity('plan', $base_object->getSourceId());

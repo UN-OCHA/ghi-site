@@ -39,7 +39,7 @@
           });
         }
         else {
-          // We have data, so completely hide the toggle and display the
+          // We don't have data, so hide the toggle completely and display the
           // no-data icon.
           $toggle.css('display', 'none');
           $noData.css('visibility', 'visible');
