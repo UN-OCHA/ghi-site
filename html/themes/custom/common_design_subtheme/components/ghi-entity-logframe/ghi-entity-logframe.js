@@ -12,9 +12,10 @@
         let $toggle = $tableWrapper.parents('.item-wrapper').find('.table-toggle');
         let $noData = $tableWrapper.parents('.item-wrapper').find('.table-no-data');
 
-        if ($tableWrapper.html().trim() !== '') {
-          // We have data, so display the toggle and completely hide the
-          // no-data icon.
+        let $html = $tableWrapper.html();
+        if ($html.trim() !== '' && ($html.includes('plan-entity-contribution-wrapper') || !$html.includes('empty-message'))) {
+          // We have something to show, so display the toggle and completely
+          // hide the no-data icon.
           $toggle.css('visibility', 'visible');
           $noData.css('display', 'none');
 
@@ -39,8 +40,8 @@
           });
         }
         else {
-          // We don't have data, so hide the toggle completely and display the
-          // no-data icon.
+          // We don't have anything to show, so hide the toggle completely and
+          // display the no-data icon.
           $toggle.css('display', 'none');
           $noData.css('visibility', 'visible');
           $noData.css('display', 'block');

@@ -91,3 +91,7 @@
 .item-list--entity-logframe > .item-wrapper > .attachment-tables-wrapper table thead th:first-child {
   width: 100%;
 }
+
+.item-list--entity-logframe > .item-wrapper .empty-message {
+  font-size: var(--cd-font-size--small);
+}
