@@ -802,3 +802,22 @@ function ghi_blocks_deploy_9012_remove_overridden_disclaimer_page_templates(&$sa
     ]);
   }
 }
+
+/**
+ * Queue entities to update the id type on all plan entity logframe elements.
+ *
+ * As this is not a critical change, let's just queue all entities that use
+ * this element so that they can be processed during cron runs.
+ */
+function ghi_blocks_deploy_9013_update_plan_entity_logframe_id_type(&$sandbox) {
+  $plugin_id = 'plan_entity_logframe';
+  $queue_id = 'ghi_blocks_plugin_configuration_update';
+
+  /** @var \Drupal\ghi_blocks\Services\NodeQueue $node_queue */
+  $node_queue = \Drupal::service('ghi_blocks.node_queue');
+  $node_queue->queueNodesForPlugin($plugin_id, $queue_id);
+
+  /** @var \Drupal\ghi_blocks\Services\PageTemplateQueue $page_template_queue */
+  $page_template_queue = \Drupal::service('ghi_blocks.page_template_queue');
+  $page_template_queue->queuePageTemplatesForPlugin($plugin_id, $queue_id);
+}
