@@ -4,8 +4,15 @@
 {%- if items -%}
   <div class="item-list--entity-logframe">
     {%- for item in items -%}
+      {%
+        set wrapper_classes = [
+          'entity-wrapper',
+          item.attachment_tables is empty ? 'no-tables',
+          item.contributes_heading is empty ? 'no-alignment',
+        ]
+      %}
       <div class="item-wrapper">
-        <div class="entity-wrapper {{ item.attachment_tables is empty ? 'no-tables' : ''}}">
+        <div class="{{ wrapper_classes|join(' ') }}">
           <div class="entity-wrapper--inner">
             <p class="label">{{ item.label }}</p>
             <p class="description">{{ item.description }}</p>
