@@ -113,6 +113,7 @@ function ghi_blocks_theme($existing, $type, $theme, $path) {
         'tooltip_show_data' => t('Show data'),
         'tooltip_hide_data' => t('Hide data'),
         'tooltip_no_data' => t('No data'),
+        'no_tables_message' => t('There is no caseload or indicator available'),
       ],
       'file' => 'ghi_blocks.theme.inc',
       'template' => 'plan-entity-logframe',

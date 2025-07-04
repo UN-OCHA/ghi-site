@@ -354,7 +354,14 @@ class PlanEntityLogframe extends GHIBlockBase implements MultiStepFormBlockInter
     // tables at all.
     drupal_static_reset();
 
-    return $tables;
+    return $tables ?: [
+      '#type' => 'html_tag',
+      '#tag' => 'span',
+      '#value' => t('There is no caseload or indicator available', [], ['langcode' => $block_instance->getCurrentPlanObject()?->getPlanLanguage() ?? 'en']),
+      '#attributes' => [
+        'class' => ['empty-message'],
+      ],
+    ];
   }
 
   /**
