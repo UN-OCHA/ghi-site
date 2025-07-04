@@ -115,3 +115,6 @@ msgstr "Cacher les données"
 
 msgid "No data"
 msgstr "Pas de données"
+
+msgid "There is no caseload or indicator available"
+msgstr "Aucun caseload ou indicateur n’est disponible"
