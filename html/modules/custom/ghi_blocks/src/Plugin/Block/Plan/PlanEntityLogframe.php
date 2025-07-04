@@ -5,7 +5,6 @@ namespace Drupal\ghi_blocks\Plugin\Block\Plan;
 use Drupal\Component\Utility\Html;
 use Drupal\Component\Utility\Unicode;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\Core\Render\Markup;
 use Drupal\Core\Security\TrustedCallbackInterface;
 use Drupal\ghi_blocks\Interfaces\ConfigValidationInterface;
 use Drupal\ghi_blocks\Interfaces\ConfigurableTableBlockInterface;
@@ -15,6 +14,7 @@ use Drupal\ghi_blocks\Interfaces\OverrideDefaultTitleBlockInterface;
 use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
 use Drupal\ghi_blocks\Traits\AttachmentTableTrait;
 use Drupal\ghi_blocks\Traits\ConfigValidationTrait;
+use Drupal\ghi_form_elements\Helpers\FormElementHelper;
 use Drupal\ghi_form_elements\Traits\ConfigurationContainerTrait;
 use Drupal\ghi_form_elements\Traits\CustomLinkTrait;
 use Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment;
@@ -24,6 +24,7 @@ use Drupal\ghi_plans\ApiObjects\Plan as ApiObjectsPlan;
 use Drupal\ghi_plans\ApiObjects\PlanEntityInterface;
 use Drupal\ghi_plans\Entity\Plan;
 use Drupal\ghi_plans\Helpers\AttachmentHelper;
+use Drupal\ghi_subpages\Entity\LogframeSubpage;
 use Drupal\hpc_api\Query\EndpointQuery;
 use Drupal\hpc_common\Helpers\BlockHelper;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -196,9 +197,8 @@ class PlanEntityLogframe extends GHIBlockBase implements MultiStepFormBlockInter
       $entity_id = $this->getPlanEntityId($entity, $conf['entities']);
       $entity_description = $this->getPlanEntityDescription($entity, $conf['entities']);
       $rendered_items[] = [
-        'label' => [
-          '#markup' => Markup::create('<p class="label">' . $entity_id . '</p><p class="description">' . $entity_description . '</p>'),
-        ],
+        'label' => $entity_id,
+        'description' => $entity_description,
         'contributes_heading' => $contributes_heading,
         'attachment_tables' => $tables ?: NULL,
       ];
@@ -254,7 +254,7 @@ class PlanEntityLogframe extends GHIBlockBase implements MultiStepFormBlockInter
    */
   private function getPlanEntityId(PlanEntityInterface $entity, array $conf) {
     $id_type = $conf['id_type'] ?? 'custom_id';
-    return $entity->getCustomName($id_type);
+    return $entity instanceof ApiObjectsPlan ? $entity->getPlanTypeAbbreviation() : $entity->getCustomName($id_type);
   }
 
   /**
@@ -398,6 +398,8 @@ class PlanEntityLogframe extends GHIBlockBase implements MultiStepFormBlockInter
     $ajax_parents = array_merge($form['#array_parents']);
     array_pop($ajax_parents);
 
+    $page_node = $this->getPageNode();
+
     // Get the defaults for easier access.
     $defaults = [
       'entity_ref_code' => $this->getDefaultFormValueFromFormState($form_state, 'entity_ref_code') ?: array_key_first($entity_ref_code_options),
@@ -406,23 +408,46 @@ class PlanEntityLogframe extends GHIBlockBase implements MultiStepFormBlockInter
       'sort_column' => $this->getDefaultFormValueFromFormState($form_state, 'sort_column') ?: NULL,
       'entity_ids' => $this->getDefaultFormValueFromFormState($form_state, 'entity_ids') ?: NULL,
     ];
+    $form['type_container'] = [
+      '#type' => 'container',
+      '#parents' => ['type_container'],
+      '#attributes' => [
+        'class' => ['group-container'],
+      ],
+    ];
     $form['entity_ref_code'] = [
       '#type' => 'select',
       '#title' => $this->t('Entity type'),
-      '#description' => $this->t('The type of plan entity to show, e.g. <em>Cluster Objective</em> or <em>Strategic Objective</em>'),
+      '#description' => $this->t('The entity type, e.g. <em>Cluster Objective</em> or <em>Strategic Objective</em>'),
       '#options' => $entity_ref_code_options,
       '#default_value' => $defaults['entity_ref_code'],
       '#required' => count($entity_ref_code_options),
       '#disabled' => empty($entity_ref_code_options),
+      '#group' => 'type_container',
     ];
+    // The ID type selector is only visible on non-logframe pages and if the
+    // selected entity type is not a the plan.
+    $ref_code_selector = FormElementHelper::getStateSelector($form, ['entity_ref_code']);
     $form['id_type'] = [
       '#type' => 'select',
       '#title' => $this->t('ID type'),
-      '#description' => $this->t('Define how the ID element should be constructed. See the table below for a preview of the data.'),
+      '#description' => $this->t('Define how to show the ID. See the table below for a preview.'),
       '#options' => AttachmentHelper::idTypes(),
       '#default_value' => $defaults['id_type'],
       '#disabled' => empty($entity_ref_code_options),
+      '#states' => [
+        'visible' => [
+          'select[name="' . $ref_code_selector . '"]' => ['!value' => ApiObjectsPlan::ENTITY_REF_CODE],
+        ],
+      ],
+      '#group' => 'type_container',
     ];
+    if ($page_node instanceof LogframeSubpage) {
+      $form['id_type'] = [
+        '#value' => 'custom_id_prefixed_refcode',
+        '#type' => 'hidden',
+      ];
+    }
 
     // If we have a plan context, add checkboxes to select individual entities.
     if ($this->getCurrentPlanId() && count($entity_ref_code_options)) {
@@ -458,6 +483,14 @@ class PlanEntityLogframe extends GHIBlockBase implements MultiStepFormBlockInter
         }
       }
 
+      $form['sort_container'] = [
+        '#type' => 'container',
+        '#parents' => ['sort_container'],
+        '#attributes' => [
+          'class' => ['group-container'],
+        ],
+      ];
+
       $form['sort'] = [
         '#type' => 'checkbox',
         '#title' => $this->t('Sort the data'),
@@ -468,10 +501,12 @@ class PlanEntityLogframe extends GHIBlockBase implements MultiStepFormBlockInter
           'wrapper' => $wrapper_id,
           'array_parents' => $ajax_parents,
         ],
+        '#group' => 'sort_container',
       ];
       $form['sort_column'] = [
         '#type' => 'select',
         '#title' => $this->t('Sort column'),
+        '#title_display' => 'invisible',
         '#options' => [
           'id_' . EndpointQuery::SORT_ASC => $this->t('ID (asc)'),
           'id_' . EndpointQuery::SORT_DESC => $this->t('ID (desc)'),
@@ -490,6 +525,7 @@ class PlanEntityLogframe extends GHIBlockBase implements MultiStepFormBlockInter
           'wrapper' => $wrapper_id,
           'array_parents' => $ajax_parents,
         ],
+        '#group' => 'sort_container',
       ];
 
       $form['entity_ids_header'] = [
@@ -619,7 +655,7 @@ class PlanEntityLogframe extends GHIBlockBase implements MultiStepFormBlockInter
   private function getPlanEntities($entity_ref_code = NULL) {
     $context_object = $this->getCurrentBaseObject();
 
-    if ($entity_ref_code == 'PL' && $context_object instanceof Plan) {
+    if ($entity_ref_code == ApiObjectsPlan::ENTITY_REF_CODE && $context_object instanceof Plan) {
       /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\EntityQuery $query */
       $query = $this->getQueryHandler('entity');
       $plan_data = $query->getEntity('plan', $context_object->getSourceId());
@@ -712,8 +748,7 @@ class PlanEntityLogframe extends GHIBlockBase implements MultiStepFormBlockInter
       return FALSE;
     }
 
-    $id_type = $conf['entities']['id_type'] ?? 'custom_id';
-    if (empty($entity->getCustomName($id_type))) {
+    if (empty($this->getPlanEntityId($entity, $conf))) {
       return FALSE;
     }
     return TRUE;

@@ -16,6 +16,19 @@
   margin: 1rem 0;
 }
 
+.ghi-glb-form .glb-form-wrapper .group-container {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  align-items: center;
+  margin-top: 1.5em !important;
+  margin-bottom: 1.5em !important;
+}
+.ghi-glb-form .glb-form-wrapper .group-container > .glb-form-item {
+  margin-top: 0 !important;
+  margin-bottom: 0 !important;
+}
+
 .ghi-glb-form .glb-form-item--error-message {
   padding: 0.5rem 0;
 }
