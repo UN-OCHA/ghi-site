@@ -142,6 +142,25 @@ trait AttachmentTableTrait {
   }
 
   /**
+   * Get the entity alignments, that is all parent entities.
+   *
+   * @param \Drupal\ghi_plans\ApiObjects\Entities\PlanEntity $entity
+   *   The plan entity.
+   *
+   * @return \Drupal\ghi_plans\ApiObjects\Entities\PlanEntity[]
+   *   The parent entities.
+   */
+  private function getEntityAlignments(PlanEntity $entity): array {
+    $parents = $entity->getPlanEntityParents();
+    if (!empty($parents)) {
+      foreach ($parents as $parent) {
+        $parents = array_filter(array_merge($parents, $parent->getPlanEntityParents()));
+      }
+    }
+    return $parents;
+  }
+
+  /**
    * Build a "contributes to" heading.
    *
    * @param \Drupal\ghi_plans\ApiObjects\Entities\PlanEntity $entity
@@ -151,22 +170,29 @@ trait AttachmentTableTrait {
    *   A render array or NULL.
    */
   public function buildContributesToHeading(PlanEntity $entity) {
-    $parents = $entity->getPlanEntityParents();
+    // Get the complete chain or parent entities.
+    $parents = $this->getEntityAlignments($entity);
     if (empty($parents)) {
       return NULL;
     }
-    $contribute_items = array_map(function (PlanEntity $plan_entity) {
-      return [
-        [
-          '#theme' => 'hpc_icon',
-          '#icon' => 'check_circle',
-          '#tag' => 'span',
-        ],
-        [
-          '#markup' => $plan_entity->getEntityName(),
-        ],
-      ];
-    }, $parents);
+
+    // Group by ref code and extract the information we need later on.
+    $contribute_items = [];
+    foreach (array_reverse($parents) as $plan_entity) {
+      $ref_code = $plan_entity->getEntityTypeRefCode();
+
+      if (!array_key_exists($ref_code, $contribute_items)) {
+        $contribute_items[$ref_code] = [
+          'singular_name' => $plan_entity->singular_name,
+          'plural_name' => $plan_entity->plural_name,
+          'items' => [],
+        ];
+      }
+      $contribute_items[$ref_code]['items'][] = $plan_entity->custom_reference;
+      sort($contribute_items[$ref_code]['items']);
+    }
+
+    // Build the output.
     return [
       '#type' => 'container',
       '#attributes' => [
@@ -179,7 +205,20 @@ trait AttachmentTableTrait {
       ],
       [
         '#theme' => 'item_list',
-        '#items' => $contribute_items,
+        '#items' => array_map(function ($item) {
+          $label = count($item['items']) == 1 ? $item['singular_name'] : $item['plural_name'];
+          return [
+            [
+              '#type' => 'html_tag',
+              '#tag' => 'span',
+              '#value' => $label,
+            ],
+            [
+              '#theme' => 'item_list',
+              '#items' => $item['items'],
+            ],
+          ];
+        }, $contribute_items),
       ],
     ];
   }
