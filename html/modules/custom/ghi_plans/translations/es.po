@@ -118,3 +118,6 @@ msgstr "Sin datos"
 
 msgid "There is no caseload or indicator available"
 msgstr "Ningun caseload o indicador esta disponible"
+
+msgid "Population data"
+msgstr "Datos de población"
