@@ -19,13 +19,14 @@ use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\file\FileRepositoryInterface;
 use Drupal\ghi_content\ContentManager\ArticleManager;
 use Drupal\ghi_content\Entity\ContentReviewInterface;
+use Drupal\ghi_content\Plugin\Block\DocumentChapter;
 use Drupal\ghi_content\Plugin\Block\Paragraph;
 use Drupal\ghi_content\RemoteContent\RemoteArticleInterface;
 use Drupal\ghi_content\RemoteContent\RemoteContentImageInterface;
 use Drupal\ghi_content\RemoteContent\RemoteContentInterface;
 use Drupal\ghi_content\RemoteContent\RemoteContentItemBaseInterface;
 use Drupal\ghi_content\RemoteContent\RemoteDocumentInterface;
-use Drupal\ghi_content\RemoteContent\RemoteParagraphInterface;
+use Drupal\hpc_common\Helpers\ArrayHelper;
 use Drupal\layout_builder\LayoutEntityHelperTrait;
 use Drupal\layout_builder\LayoutTempstoreRepositoryInterface;
 use Drupal\layout_builder\Plugin\SectionStorage\OverridesSectionStorage;
@@ -291,19 +292,22 @@ class ImportManager implements ContainerInjectionInterface {
 
     $sections = $this->getNodeSections($node);
     $delta = 0;
+    $section = &$sections[$delta];
 
     $existing_paragraphs_count = count(array_filter(array_map(function ($component) {
       return $component->getPlugin() instanceof Paragraph;
-    }, $sections[$delta]->getComponents())));
+    }, $section->getComponents())));
 
-    if ($cleanup && $sections[$delta]->getComponents()) {
-      foreach ($sections[$delta]->getComponents() as $component) {
-        $sections[$delta]->removeComponent($component->getUuid());
+    if ($cleanup && $section->getComponents()) {
+      foreach ($section->getComponents() as $component) {
+        $section->removeComponent($component->getUuid());
       }
     }
 
     $paragraph_uuids = [];
-    foreach ($article->getParagraphs() as $paragraph) {
+    $new_components = [];
+    $remote_paragraphs = $article->getParagraphs();
+    foreach ($remote_paragraphs as $paragraph) {
       if (!empty($paragraph_ids) && !in_array($paragraph->getId(), $paragraph_ids)) {
         continue;
       }
@@ -364,21 +368,19 @@ class ImportManager implements ContainerInjectionInterface {
         ]) + $context_mapping;
         $config += $paragraph_configuration;
         $component = new SectionComponent($this->uuidGenerator->generate(), 'content', $config);
-        $sections[$delta]->appendComponent($component);
+        $new_components[] = $component;
+        $section->appendComponent($component);
         $paragraph_uuids[] = $component->getUuid();
-
-        if ($existing_paragraphs_count) {
-          // If paragraphs already existed before, try to position the new
-          // paragraph according to some rules.
-          $this->positionNewParagraph($sections[$delta], $component, $paragraph, $article->getParagraphs());
-          if ($node instanceof ContentReviewInterface) {
-            // Articles where paragraphs have been added to existing articles
-            // need to be reviewed.
-            $node->needsReview(TRUE);
-          }
-        }
       }
+    }
 
+    if ($existing_paragraphs_count && !empty($new_components)) {
+      $this->positionNewComponents($section, $new_components, $remote_paragraphs);
+      if ($node instanceof ContentReviewInterface) {
+        // Articles where paragraphs have been added to existing articles
+        // need to be reviewed.
+        $node->needsReview(TRUE);
+      }
     }
 
     // Always cleanup paragraphs that have been removed from the source.
@@ -439,14 +441,22 @@ class ImportManager implements ContainerInjectionInterface {
 
     $sections = $this->getNodeSections($node);
     $delta = 0;
+    $section = &$sections[$delta];
 
-    if ($cleanup && $sections[$delta]->getComponents()) {
-      foreach ($sections[$delta]->getComponents() as $component) {
-        $sections[$delta]->removeComponent($component->getUuid());
+    // @codingStandardsIgnoreStart
+    $existing_chapters_count = count(array_filter(array_map(function ($component) {
+      return $component->getPlugin() instanceof DocumentChapter;
+    }, $section->getComponents())));
+    // @codingStandardsIgnoreEnd
+
+    if ($cleanup && $section->getComponents()) {
+      foreach ($section->getComponents() as $component) {
+        $section->removeComponent($component->getUuid());
       }
     }
 
     $chapter_uuids = [];
+    $new_components = [];
     $chapters = $document->getChapters(FALSE);
     foreach ($chapters as $chapter) {
       if (!empty($chapter_ids) && !in_array($chapter->id, $chapter_ids)) {
@@ -506,15 +516,27 @@ class ImportManager implements ContainerInjectionInterface {
         ]) + $context_mapping;
         $config += $chapter_configuration;
         $component = new SectionComponent($this->uuidGenerator->generate(), 'content', $config);
-        $sections[$delta]->appendComponent($component);
+        $new_components[] = $component;
+        $section->appendComponent($component);
         $chapter_uuids[] = $component->getUuid();
       }
 
     }
 
+    // @codingStandardsIgnoreStart
+    // if ($existing_chapters_count && !empty($new_components)) {
+    //   $this->positionNewComponents($section, $new_components, $chapters);
+    //   if ($node instanceof ContentReviewInterface) {
+    //     // Articles where paragraphs have been added to existing articles
+    //     // need to be reviewed.
+    //     $node->needsReview(TRUE);
+    //   }
+    // }
+    // @codingStandardsIgnoreEnd
+
     // Always cleanup chapters that have been removed from the source.
     $definition = $this->getChapterPluginDefintion();
-    foreach ($sections[$delta]->getComponents() as $component) {
+    foreach ($section->getComponents() as $component) {
       if ($component->getPluginId() != $definition['id']) {
         // Not a chapter, ignore.
         continue;
@@ -535,7 +557,7 @@ class ImportManager implements ContainerInjectionInterface {
       if (in_array($component->getUuid(), $chapter_uuids)) {
         continue;
       }
-      $sections[$delta]->removeComponent($component->getUuid());
+      $section->removeComponent($component->getUuid());
     }
 
     $node->get(OverridesSectionStorage::FIELD_NAME)->setValue($sections);
@@ -662,7 +684,7 @@ class ImportManager implements ContainerInjectionInterface {
   }
 
   /**
-   * Position the given component in the section.
+   * Get the new component order, based on a single new component.
    *
    * The logic is this:
    *  - Get the previous and following paragraphs as currently defined in the
@@ -674,44 +696,84 @@ class ImportManager implements ContainerInjectionInterface {
    *  - Otherwise, keep the current behaviour which places the newly added
    *    paragraph as the last element on the HA article page.
    *
-   * @param \Drupal\layout_builder\Section $section
-   *   The section of the new component.
+   * @param \Drupal\layout_builder\SectionComponent[] $components
+   *   The full set of components, including the new one.
    * @param \Drupal\layout_builder\SectionComponent $component
    *   The newly added component.
-   * @param \Drupal\ghi_content\RemoteContent\RemoteParagraphInterface $paragraph
-   *   The remote paragraph represented by the newly added component.
-   * @param \Drupal\ghi_content\RemoteContent\RemoteParagraphInterface[] $paragraphs
-   *   An array of rmeote paragraphs of the remote article in the order
+   * @param \Drupal\ghi_content\RemoteContent\RemoteContentItemBaseInterface[] $remote_items
+   *   An array of remote items of the remote content in the order
    *   defined on the remote.
+   * @param \Drupal\layout_builder\SectionComponent[] $exclude_components
+   *   An array of components to exclude from the position logic.
    *
    * @return array|false
    *   An array of uuids of section components in the new order.
    */
-  private function positionNewParagraph(Section $section, SectionComponent $component, RemoteParagraphInterface $paragraph, array $paragraphs) {
-    // Find the surrounding paragraphs in the original array of paragraphs.
-    $paragraph_ids = array_keys($paragraphs);
-    $position = array_search($paragraph->getId(), $paragraph_ids);
-    $previous_paragraph_position = $position > 0 ? $paragraph_ids[$position - 1] : NULL;
-    $following_paragraph_position = $position < count($paragraph_ids) - 1 ? $paragraph_ids[$position + 1] : NULL;
+  private function getNewComponentOrder(array $components, SectionComponent $component, array $remote_items, $exclude_components = []) {
+    $plugin = $component->getPlugin();
+    if (!$plugin instanceof Paragraph && !$plugin instanceof DocumentChapter) {
+      return FALSE;
+    }
+    $remote_item = match ($plugin->getPluginId()) {
+      'document_chapter' => $plugin->getChapter(),
+      'paragraph' => $plugin->getParagraph(),
+    };
+    if (!$remote_item) {
+      return FALSE;
+    }
+
+    // $exclude_component_uuids = [];
+    $exclude_component_uuids = array_map(function ($exclude_component) {
+      return $exclude_component->getUuid();
+    }, $exclude_components);
 
     // Get an array of section component weights keyed by the section
-    // component uuids.
+    // component uuids. Ignore components listed in $exclude_components.
     $component_weights = [];
-    $paragraphs_by_uuids = [];
-    foreach ($section->getComponents() as $_component) {
-      $component_weights[$_component->getUuid()] = $_component->getWeight();
+    $remote_items_by_uuids = [];
+    foreach ($components as $weight => $_component) {
+      if (!empty($exclude_component_uuids) && $_component->getUuid() && in_array($_component->getUuid(), $exclude_component_uuids)) {
+        continue;
+      }
       $plugin = $_component->getPlugin();
-      $paragraphs_by_uuids[$_component->getUuid()] = $plugin instanceof Paragraph ? $plugin->getParagraph()?->getId() : NULL;
+      $component_weights[$_component->getUuid()] = $weight;
+      $remote_items_by_uuids[$_component->getUuid()] = $plugin instanceof Paragraph ? $plugin->getParagraph()?->getId() : NULL;
     }
     asort($component_weights);
+
+    // Ignore all paragraphs not listed in $remote_items_by_uuids.
+    $remote_items = array_filter($remote_items, function (RemoteContentItemBaseInterface $_remote_item) use ($remote_items_by_uuids, $remote_item) {
+      return in_array($_remote_item->getId(), $remote_items_by_uuids) || $_remote_item->getId() == $remote_item->getId();
+    });
+
+    // Find the surrounding paragraphs in the original (filtered) array of
+    // paragraphs.
+    $remote_item_ids = array_keys($remote_items);
+    $position = array_search($remote_item->getId(), $remote_item_ids);
+    $previous_paragraph_position = NULL;
+    if ($position > 0) {
+      $previous_paragraphs = array_slice($remote_item_ids, 0, $position);
+      $previous_paragraphs = array_filter($previous_paragraphs, function ($remote_item_id) use ($remote_items_by_uuids) {
+        return in_array($remote_item_id, $remote_items_by_uuids);
+      });
+      $previous_paragraph_position = count($previous_paragraphs) ? end($previous_paragraphs) : NULL;
+    }
+    $following_paragraph_position = NULL;
+    if ($position < count($remote_item_ids) - 1) {
+      $following_paragraphs = array_slice($remote_item_ids, $position + 1);
+      $following_paragraphs = array_filter($following_paragraphs, function ($remote_item_id) use ($remote_items_by_uuids) {
+        return in_array($remote_item_id, $remote_items_by_uuids);
+      });
+      $following_paragraph_position = count($following_paragraphs) ? reset($following_paragraphs) : NULL;
+    }
 
     // Find the position where to add the new component.
     $component_order = array_values(array_flip($component_weights));
     $split_index = NULL;
-    if ($previous_paragraph_position && $previous_uuid = array_search($previous_paragraph_position, $paragraphs_by_uuids)) {
+    if ($previous_paragraph_position && $previous_uuid = array_search($previous_paragraph_position, $remote_items_by_uuids)) {
       $split_index = array_search($previous_uuid, $component_order) + 1;
     }
-    elseif ($following_paragraph_position && $following_uuid = array_search($following_paragraph_position, $paragraphs_by_uuids)) {
+    elseif ($following_paragraph_position && $following_uuid = array_search($following_paragraph_position, $remote_items_by_uuids)) {
       $split_index = array_search($following_uuid, $component_order);
     }
 
@@ -729,10 +791,44 @@ class ImportManager implements ContainerInjectionInterface {
         [$component->getUuid()],
         array_slice(array_flip($component_weights), $split_index),
       );
-      // And also update the section component weights with the new order.
-      foreach ($new_order as $weight => $uuid) {
-        $section->getComponent($uuid)->setWeight($weight);
+    }
+    return $new_order;
+  }
+
+  /**
+   * Position the given components in the section.
+   *
+   * @param \Drupal\layout_builder\Section $section
+   *   The section of the new component.
+   * @param \Drupal\layout_builder\SectionComponent[] $new_components
+   *   The newly added component.
+   * @param \Drupal\ghi_content\RemoteContent\RemoteContentItemBaseInterface[] $remote_items
+   *   An array of remote items in the order defined on the remote.
+   *
+   * @return array|false
+   *   An array of uuids of section components in the new order.
+   */
+  private function positionNewComponents(Section $section, array $new_components, array $remote_items) {
+    $new_order = FALSE;
+    $components = array_values($section->getComponents());
+    ArrayHelper::sortObjectsByMethod($components, 'getWeight');
+    $components = array_values($components);
+
+    foreach ($new_components as $key => $component) {
+      $new_order = $this->getNewComponentOrder($components, $component, $remote_items, $key < count($new_components) - 1 ? array_slice($new_components, $key + 1) : []);
+      if (!$new_order) {
+        continue;
       }
+      $components = [];
+      foreach ($new_order as $uuid) {
+        $components[] = $section->getComponent($uuid);
+      }
+    }
+    if (empty($new_order)) {
+      return $new_order;
+    }
+    foreach ($new_order as $weight => $uuid) {
+      $section->getComponent($uuid)->setWeight($weight);
     }
     return $new_order;
   }
