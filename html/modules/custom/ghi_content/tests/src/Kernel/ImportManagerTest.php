@@ -237,9 +237,9 @@ class ImportManagerTest extends KernelTestBase {
   }
 
   /**
-   * Tests that multiple new paragraphs are positioned correctly.
+   * Tests that multiple new components are positioned correctly.
    */
-  public function dataProviderPositionNewParagraphs() {
+  public function dataProviderPositionNewComponents() {
     // The 'existing_plugins' holds a list of to be created plugin types that
     // will be turned into section components during the test.
     // The 'expected_order' holds the keys of the section components in
@@ -355,9 +355,9 @@ class ImportManagerTest extends KernelTestBase {
   /**
    * Tests that multiple new paragraphs are positioned correctly.
    *
-   * @dataProvider dataProviderPositionNewParagraphs
+   * @dataProvider dataProviderPositionNewComponents
    */
-  public function testPositionNewParagraphs($existing_plugins, $new_paragraphs, $remote_order, $expected_order) {
+  public function testPositionNewComponents($existing_plugins, $new_paragraphs, $remote_order, $expected_order) {
 
     /** @var \Drupal\ghi_content\Import\ImportManager $import_manager */
     $import_manager = \Drupal::service('ghi_content.import');
@@ -415,9 +415,9 @@ class ImportManagerTest extends KernelTestBase {
       $paragraph_uuids[$remote_paragraph->getId()] = $component->getUuid();
     }
 
-    // Now call ImportManager::positionNewParagraphs to get the new order of
+    // Now call ImportManager::positionNewComponents to get the new order of
     // all components.
-    $new_order = $this->callPrivateMethod($import_manager, 'positionNewParagraphs', [
+    $new_order = $this->callPrivateMethod($import_manager, 'positionNewComponents', [
       $section,
       $new_components,
       $paragraphs,

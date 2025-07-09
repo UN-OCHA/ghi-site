@@ -305,7 +305,7 @@ class DocumentChapter extends ContentBlockBase implements MultiStepFormBlockInte
    * @return \Drupal\ghi_content\RemoteContent\RemoteChapterInterface|null
    *   A chapter object as retrieved from the document.
    */
-  private function getChapter() {
+  public function getChapter() {
     $document = $this->getDocument();
     $conf = $this->getBlockConfig();
     if (!$document || empty($conf['chapter']['chapter_id'])) {

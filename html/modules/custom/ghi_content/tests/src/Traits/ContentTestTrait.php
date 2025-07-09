@@ -193,6 +193,7 @@ trait ContentTestTrait {
   private function mockParagraphPlugin(RemoteParagraphInterface $remote_paragraph) {
     // Paragraph element.
     $paragraph = $this->prophesize(Paragraph::class);
+    $paragraph->getPluginId()->willReturn('paragraph');
     $paragraph->getParagraph()->willReturn($remote_paragraph);
     return $paragraph->reveal();
   }
