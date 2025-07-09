@@ -2,16 +2,22 @@
 
 namespace Drupal\Tests\ghi_content\Traits;
 
+use Drupal\Component\Plugin\PluginInspectionInterface;
 use Drupal\Tests\pathauto\Functional\PathautoTestHelperTrait;
 use Drupal\ghi_content\ContentManager\ArticleManager;
 use Drupal\ghi_content\ContentManager\DocumentManager;
 use Drupal\ghi_content\Entity\Article;
 use Drupal\ghi_content\Entity\ContentBase;
 use Drupal\ghi_content\Entity\Document;
+use Drupal\ghi_content\Plugin\Block\Paragraph;
 use Drupal\ghi_content\Plugin\RemoteSource\HpcContentModule;
 use Drupal\ghi_content\RemoteContent\HpcContentModule\RemoteArticle;
 use Drupal\ghi_content\RemoteContent\HpcContentModule\RemoteDocument;
+use Drupal\ghi_content\RemoteContent\RemoteParagraphInterface;
+use Drupal\layout_builder\Section;
+use Drupal\layout_builder\SectionComponent;
 use Drupal\node\Entity\NodeType;
+use Prophecy\Argument;
 
 /**
  * Provides methods to create content in tests.
@@ -173,6 +179,123 @@ trait ContentTestTrait {
         ] : NULL,
       ]),
     ], $remote_source);
+  }
+
+  /**
+   * Mock a paragraph plugin.
+   *
+   * @param \Drupal\ghi_content\RemoteContent\RemoteParagraphInterface $remote_paragraph
+   *   A remote paragraph object.
+   *
+   * @return \Drupal\ghi_content\Plugin\Block\Paragraph
+   *   A paragraph block plugin.
+   */
+  private function mockParagraphPlugin(RemoteParagraphInterface $remote_paragraph) {
+    // Paragraph element.
+    $paragraph = $this->prophesize(Paragraph::class);
+    $paragraph->getParagraph()->willReturn($remote_paragraph);
+    return $paragraph->reveal();
+  }
+
+  /**
+   * Mock a remote paragraph object.
+   *
+   * @param int $paragraph_id
+   *   The paragraph id.
+   *
+   * @return \Drupal\ghi_content\RemoteContent\RemoteParagraphInterface
+   *   A remote paragraph object.
+   */
+  private function mockRemoteParagraph($paragraph_id) {
+    $remote_paragraph = $this->prophesize(RemoteParagraphInterface::class);
+    $remote_paragraph->getId()->willReturn($paragraph_id);
+    return $remote_paragraph->reveal();
+  }
+
+  /**
+   * Add a component for a plugin to a section.
+   *
+   * @param \Drupal\Component\Plugin\PluginInspectionInterface $plugin
+   *   The plugin for the section component.
+   * @param string $uuid
+   *   The UUID for the new component.
+   * @param \Drupal\layout_builder\SectionComponent[] $section_components
+   *   The stored components for the section.
+   *
+   * @return \Drupal\layout_builder\Section
+   *   The section object.
+   */
+  private function addPluginComponentToSection($plugin, $uuid, &$section_components = []) {
+    if (is_array($plugin)) {
+      $weight = $plugin['weight'];
+      $plugin = $plugin['plugin'];
+    }
+    else {
+      $weight = count($section_components);
+    }
+    $component = $this->mockSectionComponentWithPlugin($uuid, $weight, $plugin);
+    $section_components[$component->getUuid()] = $component;
+    return $this->mockSectionWithComponents($section_components);
+  }
+
+  /**
+   * Mock a section object with components.
+   *
+   * @param \Drupal\layout_builder\SectionComponent[] $section_components
+   *   The components for the section.
+   *
+   * @return \Drupal\layout_builder\Section
+   *   The section object.
+   */
+  private function mockSectionWithComponents(array $section_components) {
+    $section = $this->prophesize(Section::class);
+    $section->getComponents()->willReturn($section_components);
+    foreach ($section_components as $section_component) {
+      $section->getComponent($section_component->getUuid())->willReturn($section_component);
+    }
+    return $section->reveal();
+  }
+
+  /**
+   * Mock a section component with a plugin.
+   *
+   * @param string $uuid
+   *   The UUID for the new component.
+   * @param int $weight
+   *   The weight for the component.
+   * @param \Drupal\Component\Plugin\PluginInspectionInterface $plugin
+   *   The plugin for the section component.
+   *
+   * @return \Drupal\layout_builder\SectionComponent
+   *   A section component object.
+   */
+  private function mockSectionComponentWithPlugin($uuid, $weight, PluginInspectionInterface $plugin) {
+    $uuid = $uuid ?? $weight . '-' . $this->randomString();
+    $component = $this->prophesize(SectionComponent::class);
+    $component->getWeight()->willReturn($weight);
+    $component->getUuid()->willReturn($uuid);
+    $component->getPlugin()->willReturn($plugin);
+    $component->setWeight(Argument::any())->shouldBeCalled();
+    return $component->reveal();
+  }
+
+  /**
+   * Mock a section object with components.
+   *
+   * @param \Drupal\Component\Plugin\PluginInspectionInterface[] $plugins
+   *   The plugins for the section.
+   * @param \Drupal\layout_builder\SectionComponent[] $section_components
+   *   The stored components for the section.
+   *
+   * @return \Drupal\layout_builder\Section
+   *   The section object.
+   */
+  private function mockSectionWithPlugins($plugins, &$section_components = []) {
+    $section = NULL;
+    foreach ($plugins as $uuid => $plugin) {
+      $section = $this->addPluginComponentToSection($plugin, $uuid, $section_components);
+    }
+    return $section;
   }
 
 }

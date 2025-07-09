@@ -26,6 +26,7 @@ use Drupal\ghi_content\RemoteContent\RemoteContentInterface;
 use Drupal\ghi_content\RemoteContent\RemoteContentItemBaseInterface;
 use Drupal\ghi_content\RemoteContent\RemoteDocumentInterface;
 use Drupal\ghi_content\RemoteContent\RemoteParagraphInterface;
+use Drupal\hpc_common\Helpers\ArrayHelper;
 use Drupal\layout_builder\LayoutEntityHelperTrait;
 use Drupal\layout_builder\LayoutTempstoreRepositoryInterface;
 use Drupal\layout_builder\Plugin\SectionStorage\OverridesSectionStorage;
@@ -291,19 +292,22 @@ class ImportManager implements ContainerInjectionInterface {
 
     $sections = $this->getNodeSections($node);
     $delta = 0;
+    $section = &$sections[$delta];
 
     $existing_paragraphs_count = count(array_filter(array_map(function ($component) {
       return $component->getPlugin() instanceof Paragraph;
-    }, $sections[$delta]->getComponents())));
+    }, $section->getComponents())));
 
-    if ($cleanup && $sections[$delta]->getComponents()) {
-      foreach ($sections[$delta]->getComponents() as $component) {
-        $sections[$delta]->removeComponent($component->getUuid());
+    if ($cleanup && $section->getComponents()) {
+      foreach ($section->getComponents() as $component) {
+        $section->removeComponent($component->getUuid());
       }
     }
 
     $paragraph_uuids = [];
-    foreach ($article->getParagraphs() as $paragraph) {
+    $new_components = [];
+    $remote_paragraphs = $article->getParagraphs();
+    foreach ($remote_paragraphs as $paragraph) {
       if (!empty($paragraph_ids) && !in_array($paragraph->getId(), $paragraph_ids)) {
         continue;
       }
@@ -364,21 +368,19 @@ class ImportManager implements ContainerInjectionInterface {
         ]) + $context_mapping;
         $config += $paragraph_configuration;
         $component = new SectionComponent($this->uuidGenerator->generate(), 'content', $config);
-        $sections[$delta]->appendComponent($component);
+        $new_components[] = $component;
+        $section->appendComponent($component);
         $paragraph_uuids[] = $component->getUuid();
-
-        if ($existing_paragraphs_count) {
-          // If paragraphs already existed before, try to position the new
-          // paragraph according to some rules.
-          $this->positionNewParagraph($sections[$delta], $component, $paragraph, $article->getParagraphs());
-          if ($node instanceof ContentReviewInterface) {
-            // Articles where paragraphs have been added to existing articles
-            // need to be reviewed.
-            $node->needsReview(TRUE);
-          }
-        }
       }
+    }
 
+    if ($existing_paragraphs_count && !empty($new_components)) {
+      $this->positionNewParagraphs($section, $new_components, $remote_paragraphs);
+      if ($node instanceof ContentReviewInterface) {
+        // Articles where paragraphs have been added to existing articles
+        // need to be reviewed.
+        $node->needsReview(TRUE);
+      }
     }
 
     // Always cleanup paragraphs that have been removed from the source.
@@ -662,7 +664,7 @@ class ImportManager implements ContainerInjectionInterface {
   }
 
   /**
-   * Position the given component in the section.
+   * Get the new component order, based on a single new component.
    *
    * The logic is this:
    *  - Get the previous and following paragraphs as currently defined in the
@@ -674,36 +676,73 @@ class ImportManager implements ContainerInjectionInterface {
    *  - Otherwise, keep the current behaviour which places the newly added
    *    paragraph as the last element on the HA article page.
    *
-   * @param \Drupal\layout_builder\Section $section
-   *   The section of the new component.
+   * @param \Drupal\layout_builder\SectionComponent[] $components
+   *   The full set of components, including the new one.
    * @param \Drupal\layout_builder\SectionComponent $component
    *   The newly added component.
-   * @param \Drupal\ghi_content\RemoteContent\RemoteParagraphInterface $paragraph
-   *   The remote paragraph represented by the newly added component.
    * @param \Drupal\ghi_content\RemoteContent\RemoteParagraphInterface[] $paragraphs
-   *   An array of rmeote paragraphs of the remote article in the order
+   *   An array of remote paragraphs of the remote article in the order
    *   defined on the remote.
+   * @param \Drupal\layout_builder\SectionComponent[] $exclude_components
+   *   An array of components to exclude from the position logic.
    *
    * @return array|false
    *   An array of uuids of section components in the new order.
    */
-  private function positionNewParagraph(Section $section, SectionComponent $component, RemoteParagraphInterface $paragraph, array $paragraphs) {
-    // Find the surrounding paragraphs in the original array of paragraphs.
-    $paragraph_ids = array_keys($paragraphs);
-    $position = array_search($paragraph->getId(), $paragraph_ids);
-    $previous_paragraph_position = $position > 0 ? $paragraph_ids[$position - 1] : NULL;
-    $following_paragraph_position = $position < count($paragraph_ids) - 1 ? $paragraph_ids[$position + 1] : NULL;
+  private function getNewComponentOrder(array $components, SectionComponent $component, array $paragraphs, $exclude_components = []) {
+    $plugin = $component->getPlugin();
+    if (!$plugin instanceof Paragraph) {
+      return FALSE;
+    }
+    $paragraph = $plugin->getParagraph();
+    if (!$paragraph) {
+      return FALSE;
+    }
+
+    // $exclude_component_uuids = [];
+    $exclude_component_uuids = array_map(function ($exclude_component) {
+      return $exclude_component->getUuid();
+    }, $exclude_components);
 
     // Get an array of section component weights keyed by the section
-    // component uuids.
+    // component uuids. Ignore components listed in $exclude_components.
     $component_weights = [];
     $paragraphs_by_uuids = [];
-    foreach ($section->getComponents() as $_component) {
-      $component_weights[$_component->getUuid()] = $_component->getWeight();
+    foreach ($components as $weight => $_component) {
+      if (!empty($exclude_component_uuids) && $_component->getUuid() && in_array($_component->getUuid(), $exclude_component_uuids)) {
+        continue;
+      }
       $plugin = $_component->getPlugin();
+      $component_weights[$_component->getUuid()] = $weight;
       $paragraphs_by_uuids[$_component->getUuid()] = $plugin instanceof Paragraph ? $plugin->getParagraph()?->getId() : NULL;
     }
     asort($component_weights);
+
+    // Ignore all paragraphs not listed in $paragraphs_by_uuids.
+    $paragraphs = array_filter($paragraphs, function (RemoteParagraphInterface $_paragraph) use ($paragraphs_by_uuids, $paragraph) {
+      return in_array($_paragraph->getId(), $paragraphs_by_uuids) || $_paragraph->getId() == $paragraph->getId();
+    });
+
+    // Find the surrounding paragraphs in the original (filtered) array of
+    // paragraphs.
+    $paragraph_ids = array_keys($paragraphs);
+    $position = array_search($paragraph->getId(), $paragraph_ids);
+    $previous_paragraph_position = NULL;
+    if ($position > 0) {
+      $previous_paragraphs = array_slice($paragraph_ids, 0, $position);
+      $previous_paragraphs = array_filter($previous_paragraphs, function ($paragraph_id) use ($paragraphs_by_uuids) {
+        return in_array($paragraph_id, $paragraphs_by_uuids);
+      });
+      $previous_paragraph_position = count($previous_paragraphs) ? end($previous_paragraphs) : NULL;
+    }
+    $following_paragraph_position = NULL;
+    if ($position < count($paragraph_ids) - 1) {
+      $following_paragraphs = array_slice($paragraph_ids, $position + 1);
+      $following_paragraphs = array_filter($following_paragraphs, function ($paragraph_id) use ($paragraphs_by_uuids) {
+        return in_array($paragraph_id, $paragraphs_by_uuids);
+      });
+      $following_paragraph_position = count($following_paragraphs) ? reset($following_paragraphs) : NULL;
+    }
 
     // Find the position where to add the new component.
     $component_order = array_values(array_flip($component_weights));
@@ -729,10 +768,45 @@ class ImportManager implements ContainerInjectionInterface {
         [$component->getUuid()],
         array_slice(array_flip($component_weights), $split_index),
       );
-      // And also update the section component weights with the new order.
-      foreach ($new_order as $weight => $uuid) {
-        $section->getComponent($uuid)->setWeight($weight);
+    }
+    return $new_order;
+  }
+
+  /**
+   * Position the given components in the section.
+   *
+   * @param \Drupal\layout_builder\Section $section
+   *   The section of the new component.
+   * @param \Drupal\layout_builder\SectionComponent[] $new_components
+   *   The newly added component.
+   * @param \Drupal\ghi_content\RemoteContent\RemoteParagraphInterface[] $paragraphs
+   *   An array of remote paragraphs of the remote article in the order
+   *   defined on the remote.
+   *
+   * @return array|false
+   *   An array of uuids of section components in the new order.
+   */
+  private function positionNewParagraphs(Section $section, array $new_components, array $paragraphs) {
+    $new_order = FALSE;
+    $components = array_values($section->getComponents());
+    ArrayHelper::sortObjectsByMethod($components, 'getWeight');
+    $components = array_values($components);
+
+    foreach ($new_components as $key => $component) {
+      $new_order = $this->getNewComponentOrder($components, $component, $paragraphs, $key < count($new_components) - 1 ? array_slice($new_components, $key + 1) : []);
+      if (!$new_order) {
+        continue;
       }
+      $components = [];
+      foreach ($new_order as $uuid) {
+        $components[] = $section->getComponent($uuid);
+      }
+    }
+    if (empty($new_order)) {
+      return $new_order;
+    }
+    foreach ($new_order as $weight => $uuid) {
+      $section->getComponent($uuid)->setWeight($weight);
     }
     return $new_order;
   }
