@@ -12,10 +12,8 @@ use Drupal\Tests\taxonomy\Traits\TaxonomyTestTrait;
 use Drupal\ghi_content\Import\ImportManager;
 use Drupal\ghi_content\Plugin\Block\Paragraph;
 use Drupal\ghi_content\RemoteContent\HpcContentModule\RemoteArticle;
-use Drupal\ghi_content\RemoteContent\RemoteParagraphInterface;
 use Drupal\layout_builder\Plugin\SectionStorage\OverridesSectionStorage;
 use Drupal\layout_builder\Section;
-use Drupal\layout_builder\SectionComponent;
 use Drupal\node\Entity\Node;
 use Drupal\node\Entity\NodeType;
 use Drupal\taxonomy\Entity\Term;
@@ -232,169 +230,205 @@ class ImportManagerTest extends KernelTestBase {
 
     // We expect 3 section components to be created.
     $section = $sections[0]['section'];
-    $this->assertCount(3, $section->getComponents(), '2 components have been created' . print_r($section->getComponents(), TRUE));
+    $this->assertCount(3, $section->getComponents(), '3 components have been created' . print_r($section->getComponents(), TRUE));
 
-    // Make sure the needs review flag is not set.
+    // Make sure the needs review flag is set.
     $this->assertTrue($article_node->needsReview());
   }
 
   /**
-   * Tests that new paragraphs are positioned correctly.
+   * Tests that multiple new paragraphs are positioned correctly.
    */
-  public function testPositionNewParagraph() {
+  public function dataProviderPositionNewParagraphs() {
+    // The 'existing_plugins' holds a list of to be created plugin types that
+    // will be turned into section components during the test.
+    // The 'expected_order' holds the keys of the section components in
+    // sequential order as added to the section. To be created remote
+    // paragraphs are recieiving IDs in sequential order.
+    // The 'new_paragraphs' are the additional remote paragraphs to be imported
+    // (and positioned) during the test. The number(s) represent the ID of each
+    // remote paragraph.
+    // The 'remote_order' lists the IDs of the remote paragraph in order.
+    // The 'expected_order' lists the keys of all the section components
+    // (existing plugins + newly added paragraphs) after the auto positioning.
+    $test_cases = [
+      [
+        'existing_plugins' => [
+          0 => 'block',
+          1 => 'paragraph',
+          2 => 'block',
+        ],
+        'new_paragraphs' => [2],
+        'remote_order' => [1, 2],
+        'expected_order' => [0, 1, 3, 2],
+      ],
+      [
+        'existing_plugins' => [
+          0 => 'paragraph',
+          1 => 'paragraph',
+          2 => 'paragraph',
+          3 => 'block',
+        ],
+        'new_paragraphs' => [4],
+        'remote_order' => [1, 4, 2, 3],
+        'expected_order' => [0, 4, 1, 2, 3],
+      ],
+      [
+        'existing_plugins' => [
+          0 => 'paragraph',
+          1 => 'paragraph',
+          2 => 'paragraph',
+          3 => 'block',
+        ],
+        'new_paragraphs' => [4],
+        'remote_order' => [1, 3, 4, 2],
+        'expected_order' => [0, 1, 2, 4, 3],
+      ],
+      [
+        'existing_plugins' => [
+          0 => 'paragraph',
+          1 => 'paragraph',
+          2 => 'paragraph',
+        ],
+        'new_paragraphs' => [4, 5],
+        'remote_order' => [1, 4, 2, 5, 3],
+        'expected_order' => [0, 3, 1, 4, 2],
+      ],
+      [
+        'existing_plugins' => [
+          0 => 'block',
+          1 => 'paragraph',
+          2 => 'block',
+        ],
+        'new_paragraphs' => [2],
+        'remote_order' => [2, 1],
+        'expected_order' => [0, 3, 1, 2],
+      ],
+      [
+        'existing_plugins' => [
+          0 => 'block',
+          1 => 'paragraph',
+          2 => 'paragraph',
+          3 => 'paragraph',
+          4 => 'block',
+        ],
+        'new_paragraphs' => [4, 5],
+        'remote_order' => [4, 5, 1, 2, 3],
+        'expected_order' => [0, 5, 6, 1, 2, 3, 4],
+      ],
+      [
+        'existing_plugins' => [
+          0 => 'block',
+          1 => 'paragraph',
+          2 => 'paragraph',
+          3 => 'paragraph',
+          4 => 'paragraph',
+          5 => 'paragraph',
+          6 => 'paragraph',
+          7 => 'paragraph',
+          8 => 'paragraph',
+          9 => 'block',
+        ],
+        'new_paragraphs' => [9, 10, 11, 12],
+        'remote_order' => [1, 2, 9, 10, 3, 4, 5, 12, 6, 7, 11, 8],
+        'expected_order' => [0, 1, 2, 10, 11, 3, 4, 5, 13, 6, 7, 12, 8, 9],
+      ],
+      // Now a special test case where the order of the defined existing
+      // section plugins does not represent the actual display order. The
+      // 'existing_plugins' lists the plugins in the order defined and each
+      // value has as the first item the plugin type and as a second item the
+      // display weight.
+      [
+        'existing_plugins' => [
+          0 => ['block', 2],
+          1 => ['paragraph', 1],
+          2 => ['block', 0],
+        ],
+        'new_paragraphs' => [2],
+        'remote_order' => [1, 2],
+        'expected_order' => [2, 1, 3, 0],
+      ],
+    ];
+    return $test_cases;
+  }
+
+  /**
+   * Tests that multiple new paragraphs are positioned correctly.
+   *
+   * @dataProvider dataProviderPositionNewParagraphs
+   */
+  public function testPositionNewParagraphs($existing_plugins, $new_paragraphs, $remote_order, $expected_order) {
+
     /** @var \Drupal\ghi_content\Import\ImportManager $import_manager */
     $import_manager = \Drupal::service('ghi_content.import');
 
-    // Prepare the arguments for ImportManager::positionNewParagraph().
-    $section = $this->prophesize(Section::class);
-    $remote_paragraphs[] = [];
+    // Prepare the plugins and paragraphs according to $existing_plugins.
+    $remote_paragraphs = [];
+    $section_plugins = [];
     $paragraph_uuids = [];
-    $component_uuids = [];
-    /** @var \Drupal\layout_builder\SectionComponent[] $section_components */
-    $section_components = array_map(function ($weight) use (&$remote_paragraphs, &$paragraph_uuids, &$component_uuids) {
-      $uuid = $this->randomString();
-      $component = $this->prophesize(SectionComponent::class);
-      $component->getWeight()->willReturn($weight);
-      $component->getUuid()->willReturn($uuid);
-      $component_uuids[$weight] = $uuid;
 
-      // The first and the last components should be non-paragraph blocks for
-      // the purpose of this test. The component with weight 10 represents the
-      // newly added component.
-      if ($weight != 0 && $weight != 9) {
-        // Paragraph element.
-        $paragraph_id = $weight;
-        $remote_paragraph = $this->prophesize(RemoteParagraphInterface::class);
-        $remote_paragraph->getId()->willReturn($paragraph_id);
-        $remote_paragraphs[$paragraph_id] = $remote_paragraph->reveal();
-        $paragraph_uuids[$paragraph_id] = $uuid;
-
-        $paragraph = $this->prophesize(Paragraph::class);
-        $paragraph->getParagraph()->willReturn($remote_paragraph->reveal());
-
-        $component->getPlugin()->willReturn($paragraph->reveal());
+    foreach ($existing_plugins as $weight => $plugin_type) {
+      if (is_array($plugin_type)) {
+        [$plugin_type, $weight] = $plugin_type;
       }
-      else {
-        // Non-paragraph element.
-        $other_plugin = $this->prophesize(BlockPluginInterface::class);
-        $component->getPlugin()->willReturn($other_plugin->reveal());
+      $uuid = $weight . '-' . $plugin_type . '-' . $this->randomString();
+      $plugin = match ($plugin_type) {
+        'block' => $this->prophesize(BlockPluginInterface::class)->reveal(),
+        'paragraph' => $this->mockParagraphPlugin($this->mockRemoteParagraph(count($paragraph_uuids) + 1)),
+      };
+      if ($plugin instanceof Paragraph) {
+        $remote_paragraph = $plugin->getParagraph();
+        $remote_paragraphs[$remote_paragraph->getId()] = $remote_paragraph;
+        $paragraph_uuids[$remote_paragraph->getId()] = $uuid;
       }
-      $component->setWeight(Argument::any())->shouldBeCalled();
-      return $component->reveal();
-    }, range(0, 10));
-
-    // Finalize mocking of the section object.
-    $section->getComponents()->willReturn($section_components);
-    foreach ($section_components as $section_component) {
-      $section->getComponent($section_component->getUuid())->willReturn($section_component);
+      $section_plugins[$uuid] = [
+        'weight' => $weight,
+        'plugin' => $plugin,
+      ];
     }
 
-    // This is the new component and its associated remote paragraph object.
-    $component = end($section_components);
-    $remote_paragraph = $component->getPlugin()->getParagraph();
+    // Then build the section components for these plugins.
+    $section_components = [];
+    $section = $this->mockSectionWithPlugins($section_plugins, $section_components);
 
-    // Test adding a new paragraph in the first position, which should place it
-    // as the second component, preceeding the first paragraph and following
-    // the actual first component which is not a paragraph.
-    $paragraphs = [
-      $remote_paragraph->getId() => $remote_paragraph,
-      $remote_paragraphs[1]->getId() => $remote_paragraphs[1],
-      $remote_paragraphs[2]->getId() => $remote_paragraphs[2],
-      $remote_paragraphs[3]->getId() => $remote_paragraphs[3],
-      $remote_paragraphs[4]->getId() => $remote_paragraphs[4],
-      $remote_paragraphs[5]->getId() => $remote_paragraphs[5],
-      $remote_paragraphs[6]->getId() => $remote_paragraphs[6],
-      $remote_paragraphs[7]->getId() => $remote_paragraphs[7],
-      $remote_paragraphs[8]->getId() => $remote_paragraphs[8],
-    ];
-    $new_order = $this->callPrivateMethod($import_manager, 'positionNewParagraph', [
-      $section->reveal(),
-      $component,
-      $remote_paragraph,
+    // Now mock the new remote paragraphs.
+    foreach ($new_paragraphs as $paragraph_id) {
+      $remote_paragraphs[$paragraph_id] = $this->mockRemoteParagraph($paragraph_id);
+    }
+
+    // And define their order on the remote.
+    $paragraphs = [];
+    foreach ($remote_order as $pid) {
+      $paragraphs[$pid] = $remote_paragraphs[$pid];
+    }
+
+    // Add a component for each of the new paragraphs. By default, these go to
+    // the end of the existing components.
+    $new_components = [];
+    foreach ($new_paragraphs as $paragraph_id) {
+      $remote_paragraph = $remote_paragraphs[$paragraph_id];
+      // Mock a section component for the new paragraph.
+      $paragraph = $this->mockParagraphPlugin($remote_paragraph);
+      $section = $this->addPluginComponentToSection($paragraph, NULL, $section_components);
+      $component = end($section_components);
+      $new_components[] = $component;
+      $paragraph_uuids[$remote_paragraph->getId()] = $component->getUuid();
+    }
+
+    // Now call ImportManager::positionNewParagraphs to get the new order of
+    // all components.
+    $new_order = $this->callPrivateMethod($import_manager, 'positionNewParagraphs', [
+      $section,
+      $new_components,
       $paragraphs,
     ]);
-    $expected = [
-      0 => $component_uuids[0],
-      1 => $paragraph_uuids[$remote_paragraph->getId()],
-      2 => $paragraph_uuids[$remote_paragraphs[1]->getId()],
-      3 => $paragraph_uuids[$remote_paragraphs[2]->getId()],
-      4 => $paragraph_uuids[$remote_paragraphs[3]->getId()],
-      5 => $paragraph_uuids[$remote_paragraphs[4]->getId()],
-      6 => $paragraph_uuids[$remote_paragraphs[5]->getId()],
-      7 => $paragraph_uuids[$remote_paragraphs[6]->getId()],
-      8 => $paragraph_uuids[$remote_paragraphs[7]->getId()],
-      9 => $paragraph_uuids[$remote_paragraphs[8]->getId()],
-      10 => $component_uuids[9],
-    ];
-    $this->assertEquals($expected, $new_order);
+    $this->assertCount(count($expected_order), $section_components);
 
-    // Test adding a new paragraph in the last position, which should place it
-    // as the second last component, following the last paragraph and
-    // preceeding the actual last component which is not a paragraph.
-    $paragraphs = [
-      $remote_paragraphs[1]->getId() => $remote_paragraphs[1],
-      $remote_paragraphs[2]->getId() => $remote_paragraphs[2],
-      $remote_paragraphs[3]->getId() => $remote_paragraphs[3],
-      $remote_paragraphs[4]->getId() => $remote_paragraphs[4],
-      $remote_paragraphs[5]->getId() => $remote_paragraphs[5],
-      $remote_paragraphs[6]->getId() => $remote_paragraphs[6],
-      $remote_paragraphs[7]->getId() => $remote_paragraphs[7],
-      $remote_paragraphs[8]->getId() => $remote_paragraphs[8],
-      $remote_paragraph->getId() => $remote_paragraph,
-    ];
-    $new_order = $this->callPrivateMethod($import_manager, 'positionNewParagraph', [
-      $section->reveal(),
-      $component,
-      $remote_paragraph,
-      $paragraphs,
-    ]);
-    $expected = [
-      0 => $component_uuids[0],
-      1 => $paragraph_uuids[$remote_paragraphs[1]->getId()],
-      2 => $paragraph_uuids[$remote_paragraphs[2]->getId()],
-      3 => $paragraph_uuids[$remote_paragraphs[3]->getId()],
-      4 => $paragraph_uuids[$remote_paragraphs[4]->getId()],
-      5 => $paragraph_uuids[$remote_paragraphs[5]->getId()],
-      6 => $paragraph_uuids[$remote_paragraphs[6]->getId()],
-      7 => $paragraph_uuids[$remote_paragraphs[7]->getId()],
-      8 => $paragraph_uuids[$remote_paragraphs[8]->getId()],
-      9 => $paragraph_uuids[$remote_paragraph->getId()],
-      10 => $component_uuids[9],
-    ];
-    $this->assertEquals($expected, $new_order);
-
-    // Test adding a new paragraph in a middle position, which should place it
-    // as the between the preceeding and the following paragraph.
-    $paragraphs = [
-      $remote_paragraphs[1]->getId() => $remote_paragraphs[1],
-      $remote_paragraphs[2]->getId() => $remote_paragraphs[2],
-      $remote_paragraphs[3]->getId() => $remote_paragraphs[3],
-      $remote_paragraphs[4]->getId() => $remote_paragraphs[4],
-      $remote_paragraph->getId() => $remote_paragraph,
-      $remote_paragraphs[5]->getId() => $remote_paragraphs[5],
-      $remote_paragraphs[6]->getId() => $remote_paragraphs[6],
-      $remote_paragraphs[7]->getId() => $remote_paragraphs[7],
-      $remote_paragraphs[8]->getId() => $remote_paragraphs[8],
-    ];
-    $new_order = $this->callPrivateMethod($import_manager, 'positionNewParagraph', [
-      $section->reveal(),
-      $component,
-      $remote_paragraph,
-      $paragraphs,
-    ]);
-    $expected = [
-      0 => $component_uuids[0],
-      1 => $paragraph_uuids[$remote_paragraphs[1]->getId()],
-      2 => $paragraph_uuids[$remote_paragraphs[2]->getId()],
-      3 => $paragraph_uuids[$remote_paragraphs[3]->getId()],
-      4 => $paragraph_uuids[$remote_paragraphs[4]->getId()],
-      5 => $paragraph_uuids[$remote_paragraph->getId()],
-      6 => $paragraph_uuids[$remote_paragraphs[5]->getId()],
-      7 => $paragraph_uuids[$remote_paragraphs[6]->getId()],
-      8 => $paragraph_uuids[$remote_paragraphs[7]->getId()],
-      9 => $paragraph_uuids[$remote_paragraphs[8]->getId()],
-      10 => $component_uuids[9],
-    ];
+    // And compare the new order with the expected result.
+    $expected = [];
+    foreach ($expected_order as $key) {
+      $expected[] = array_values($section_components)[$key]->getUuid();
+    }
     $this->assertEquals($expected, $new_order);
   }
 
