@@ -33,6 +33,13 @@ abstract class ContentBaseListController extends ControllerBase {
   protected $routeMatch;
 
   /**
+   * The key-value storage.
+   *
+   * @var \Drupal\Core\KeyValueStore\KeyValueFactoryInterface
+   */
+  protected $keyValueFactory;
+
+  /**
    * The time service.
    *
    * @var \Drupal\Component\Datetime\TimeInterface
@@ -46,6 +53,7 @@ abstract class ContentBaseListController extends ControllerBase {
     $instance = new static();
     $instance->migrationPluginManager = $container->get('plugin.manager.migration');
     $instance->routeMatch = $container->get('current_route_match');
+    $instance->keyValueFactory = $container->get('keyvalue');
     $instance->time = $container->get('datetime.time');
     return $instance;
   }
@@ -101,7 +109,7 @@ abstract class ContentBaseListController extends ControllerBase {
       // RemoteSourceGraphQL::preImport().
       $source_plugin->setCacheBaseTime($this->time->getRequestTime());
     }
-    $executable = new MigrateBatchExecutable($migration, new MigrateMessage());
+    $executable = new MigrateBatchExecutable($migration, new MigrateMessage(), $this->keyValueFactory, $this->time, $this->getStringTranslation(), $this->migrationPluginManager);
     $executable->batchImport();
     batch_process($redirect);
     $batch = batch_get();

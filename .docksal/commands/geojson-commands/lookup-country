@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+
+## Lookup the geojson feature for a country.
+##
+## Usage: fin geojson lookup-country [-h]
+##
+
+# Environment variables passed from fin:
+#
+#   $PROJECT_ROOT - (string) absolute path to NEAREST .docksal folder
+#   $VIRTUAL_HOST - (string) ex. projectname.docksal
+#   $DOCROOT - name of the docroot folder
+#   $DOCKER_RUNNING - (string) "true" or "false"
+
+
+ISO2=$1
+BASE_URL=
+REQUEST_URL_ADM1=${URL_ADM1}${COMMON_QUERY_STRING}"&geometryPrecision=0&where=adm0_pcode%3D%27"${ISO2}"%27&outFields=adm1_pcode"
+REQUEST_URL_ADM2=${URL_ADM2}${COMMON_QUERY_STRING}"&geometryPrecision=0&where=adm0_pcode%3D%27"${ISO2}"%27&outFields=adm2_pcode"
+REQUEST_URL_ADM3=${URL_ADM3}${COMMON_QUERY_STRING}"&geometryPrecision=0&where=adm0_pcode%3D%27"${ISO2}"%27&outFields=adm3_pcode"
+echo "Admin 1 locations"
+curl -s ${REQUEST_URL_ADM1} | jq '. | {type:.type, features: .features | length}'
+echo "Admin 2 locations"
+curl -s ${REQUEST_URL_ADM2} | jq '. | {type:.type, features: .features | length}'
+echo "Admin 3 locations"
+curl -s ${REQUEST_URL_ADM3} | jq '. | {type:.type, features: .features | length}'
+echo

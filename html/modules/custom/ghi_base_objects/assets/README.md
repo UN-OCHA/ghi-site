@@ -37,7 +37,7 @@ https://github.com/ben-nour/geojson-shave and some command line tools.
 For country level:
 
     cd geojson
-    find . | grep 0.geojson | awk -F '.' '{print "geojson-shave -d 2 "substr($0,3)" -o "substr($2,2)".min.geojson"}' | sh
+    find . | grep _0.geojson | awk -F '.' '{print "geojson-shave -d 2 "substr($0,3)" -o "substr($2,2)".min.geojson"}'
 
 For the admin level 1+ files:
 

@@ -100,8 +100,9 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
       'id' => $chart_id,
       'disclaimer' => $conf['map']['common']['disclaimer'] ?: $this->getDefaultMapDisclaimer($this->getCurrentPlanObject()->getPlanLanguage()),
       'pcodes_enabled' => $conf['map']['common']['pcodes_enabled'] ?? TRUE,
+      'label_min_zoom' => (int) ($conf['map']['common']['label_min_zoom'] ?? 6),
       'style' => $style,
-      'outlineCountry' => $outline_country,
+      'outline_country' => $outline_country,
     ] + $map['settings'];
 
     $attachment_switcher = $this->getAttachmentSwitcher();
@@ -182,9 +183,9 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
     $reporting_period_id = $this->getCurrentReportingPeriod($plan_id);
     $configured_reporting_periods = $this->getConfiguredReportingPeriods($plan_id);
 
-    $disaggregated_data = $attachment->getDisaggregatedData($reporting_period_id, TRUE);
+    $disaggregated_data = $attachment->getDisaggregatedData($reporting_period_id);
     foreach ($disaggregated_data as $metric_index => $metric_item) {
-      if (empty($metric_item['locations'])) {
+      if ($attachment->metricItemIsEmpty($metric_item)) {
         continue;
       }
       $metric_label = $this->getMetricLabel($metric_index);
@@ -221,7 +222,7 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
             if (empty($map['data'][$metric_map_key])) {
               continue;
             }
-            if (empty($metric_item['locations'])) {
+            if ($attachment->metricItemIsEmpty($metric_item)) {
               continue;
             }
             if (!empty($map['data'][$metric_map_key]['variants'][$reporting_period->id()])) {
@@ -505,6 +506,7 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
           'default_attachment' => NULL,
           'disclaimer' => NULL,
           'pcodes_enabled' => FALSE,
+          'label_min_zoom' => 6,
           'comment' => NULL,
         ],
         'metric_labels' => [],
@@ -568,7 +570,7 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
     ];
     $form['appearance'] = [
       '#type' => 'details',
-      '#title' => $this->t('Appearance'),
+      '#title' => $this->t('Data'),
       '#tree' => TRUE,
       '#group' => 'tabs',
     ];
@@ -592,7 +594,7 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
 
     $form['common'] = [
       '#type' => 'details',
-      '#title' => $this->t('Common'),
+      '#title' => $this->t('Map features'),
       '#tree' => TRUE,
       '#group' => 'tabs',
     ];
@@ -631,6 +633,18 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
         'common',
         'pcodes_enabled',
       ]) ?? FALSE,
+    ];
+
+    $form['common']['label_min_zoom'] = [
+      '#type' => 'number',
+      '#title' => $this->t('Minimum zoom for labels'),
+      '#description' => $this->t('Specifiy at which zoom level the admin area labels become visible. Setting this to <em>0</em> will show them at any zoom level. Default is <em>6</em>.'),
+      '#min' => 0,
+      '#max' => 9,
+      '#default_value' => $this->getDefaultFormValueFromFormState($form_state, [
+        'common',
+        'label_min_zoom',
+      ]) ?? 0,
     ];
 
     $form['common']['comment'] = $this->buildBlockCommentFormElement($this->getDefaultFormValueFromFormState($form_state, [
