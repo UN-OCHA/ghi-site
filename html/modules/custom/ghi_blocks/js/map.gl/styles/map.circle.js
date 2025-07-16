@@ -28,6 +28,7 @@
       this.sourceId = state.getMapId();
       this.featureLayerId = this.sourceId + '-circle';
       this.activeFeatureLayerId = this.sourceId + '-circle-active';
+      this.adminAreaLayerId = this.sourceId + '-geojson';
       this.labelLayerId = this.sourceId + '-label';
       this.config = {
         // Scales used to determine color.
@@ -93,8 +94,15 @@
 
         // Initial drawing of the circles.
         map.addSource(self.sourceId, this.buildSource());
+
+        if (!state.isOverviewMap()) {
+          // On plan attachment maps, we also want to show the names of the
+          // admin areas as map labels.
+          this.addAdminAreaLabels();
+        }
+
         map.addLayer(this.buildCircleLayer());
-        map.on('click', self.featureLayerId, (e) => self.clickHandler(e, self));
+        map.on('click', (e) => self.handleFeatureClick(e, self));
 
         // Build a layer that can hold active features, so that they pop up
         // from behind and appearingly come to the foreground.
@@ -139,9 +147,9 @@
       // Update the active feature if needed. This updates the position so that
       // the feature on the active layer keeps the same position as the actual
       // feature in the feature layer.
-      let hover_feature = this.state.getHoverFeature();
-      if (hover_feature) {
-        let active_feature = features.filter((d) => d.properties.object_id == hover_feature.properties.object_id)[0] ?? null;
+      let hover_location = this.state.getHoveredLocation();
+      if (hover_location) {
+        let active_feature = features.filter((d) => d.properties.object_id == hover_location.object_id)[0] ?? null;
         this.updateActiveFeature(active_feature);
       }
 
@@ -258,6 +266,7 @@
      *   The geojson feature object.
      */
     buildFeatureForObject = function (object) {
+      let radius = this.getRadius(object);
       return {
         'id': object.object_id,
         'type': 'Feature',
@@ -272,9 +281,14 @@
           'admin_level': object.admin_level,
           'legend_type': object.plan_type ?? null,
           // Paint properties.
-          'radius': this.getRadius(object),
+          'radius': radius,
           'color': this.getColor(object),
           'opacity': this.getOpacity(object),
+          // Label properties.
+          'sort_order': Math.round((1 / radius) * 100),
+          'label_offset': Math.sqrt(Math.sqrt(Math.sqrt((radius)))),
+          'font_size': Math.sqrt(radius),
+          'icon_size': radius / 30,
         }
       };
     }
@@ -346,10 +360,10 @@
       let state = this.state;
       let map = state.getMap();
 
-      let geojson_source_id = this.sourceId + '-geojson';
+      let geojson_source_id = this.adminAreaLayerId;
       if (map.getSource(geojson_source_id)) {
         map.removeLayer(geojson_source_id + '-outline');
-        map.removeLayer(geojson_source_id + '-fill');
+        map.removeLayer(geojson_source_id);
         map.removeSource(geojson_source_id);
       }
       map.addSource(geojson_source_id, {
@@ -359,7 +373,7 @@
       });
       // Fill the polygon.
       map.addLayer({
-        'id': geojson_source_id + '-fill',
+        'id': geojson_source_id,
         'type': 'fill',
         'source': geojson_source_id,
         'layout': {},
@@ -420,14 +434,14 @@
       let state = this.state;
       let map = state.getMap();
 
-      let geojson_source_id = this.sourceId + '-geojson';
+      let geojson_source_id = this.adminAreaLayerId;
 
       if (!map.getSource(geojson_source_id)) {
         map.addSource(geojson_source_id, this.state.buildGeoJsonSource(null));
 
         // Fill the polygon.
         map.addLayer({
-          'id': geojson_source_id + '-fill',
+          'id': geojson_source_id,
           'type': 'fill',
           'source': geojson_source_id,
           'layout': {},
@@ -468,27 +482,95 @@
 
       // Build the admin area features and add them to the source, but do it
       // non-blocking.
-      state.getMapController().loadFeaturesAsync(state.getLocations(), (features) => {
+      state.getMapController().loadFeaturesAsync(state.getLocations(true, false), (features) => {
         self.updateMapData(geojson_source_id, features);
       });
     }
 
     /**
-     * Click handler for the circles.
-     *
-     * @param {Event} e
-     *   The event.
-     * @param {ghi.circleMap} self
-     *   The current style instance.
+     * Add admin area labels to the map.
      */
-    clickHandler = function (e, self) {
-      let feature = self.state.getFeatureFromEvent(e, self.featureLayerId)
-      if (!feature) {
-        return;
-      }
-      let object_id = feature.properties.object_id;
-      let object = self.state.getLocationById(object_id);
-      self.showSidebarForObject(object);
+    addAdminAreaLabels = function () {
+      let state = this.state;
+      let map = state.getMap();
+
+      let label_source_id = this.sourceId + '-labels';
+      let backgroundLayer = state.getBackgroundLayer(map);
+      let options = state.getOptions();
+
+      map.on('styleimagemissing', (e) => {
+        const id = e.id; // id of the missing image
+
+        // Check if this missing icon is
+        // one this function can generate.
+        if (id != 'hidden-icon') return;
+
+        const width = 60; // The image will be 60 pixels square.
+        const bytesPerPixel = 4; // Each pixel is represented by 4 bytes: red, green, blue, and alpha.
+        const data = new Uint8Array(width * width * bytesPerPixel);
+
+        let debug = false;
+        for (let x = 0; x < width; x++) {
+            for (let y = 0; y < width; y++) {
+                const offset = (y * width + x) * bytesPerPixel;
+                data[offset + 0] = 255; // red
+                data[offset + 1] = 0; // green
+                data[offset + 2] = 0; // blue
+                data[offset + 3] = debug ? 120 : 0; // alpha
+            }
+        }
+
+        map.addImage(id, { width: width, height: width, data: data });
+      });
+
+      // Add a layer for the labels.
+      map.addLayer({
+        'id': label_source_id,
+        'type': 'symbol',
+        'source': this.sourceId,
+        'minzoom': options.label_min_zoom ?? 0,
+        'layout': {
+          'symbol-sort-key': ['get', 'sort_order'],
+          'text-field': ['get', 'object_name'],
+          'text-font': backgroundLayer.layout['text-font'],
+          'text-letter-spacing': backgroundLayer.layout['text-letter-spacing'],
+          'text-size': ['*', ['get', 'font_size'], 5],
+          'text-variable-anchor': [
+            'top',
+            'bottom',
+            'left',
+            'right',
+          ],
+          'text-radial-offset': [
+            'interpolate',
+            ['linear'],
+            ['zoom'],
+            2,
+            ['*', ['get', 'label_offset'], 1.3],
+            5,
+            ['get', 'label_offset'],
+          ],
+          'text-justify': 'auto',
+        },
+        'paint': {
+          'text-color': backgroundLayer.paint['text-color'],
+          'text-halo-color': backgroundLayer.paint['text-halo-color'],
+          'text-halo-width': backgroundLayer.paint['text-halo-width'],
+        }
+      });
+      // Add a layer with blocking symbols that overlap the circles, so that
+      // these can be used by mapbox for collision detection. Otherwhise the
+      // labels would appear overlaying the circles.
+      map.addLayer({
+        'id': label_source_id + '-blocks',
+        'type': 'symbol',
+        'source': this.sourceId,
+        'layout': {
+          'icon-image': 'hidden-icon',
+          'icon-size': ['get', 'icon_size'],
+          'icon-allow-overlap': true,
+        },
+      });
     }
 
     /**
@@ -559,7 +641,7 @@
       let state = this.state;
       let map = state.getMap();
       let layer_id = this.activeFeatureLayerId;
-      let hover_feature = state.getHoverFeature();
+      let hover_feature = state.getHoverFeature(layer_id);
       let focus_feature = state.getFocusFeature();
       let features = [hover_feature, focus_feature].filter(d => d !== null);
 
@@ -573,16 +655,15 @@
         // not unset the feature state of the previously active feature. So we
         // need to make sure to unset the feature state of that older feature
         // anytime it becomes visible.
-        let source_id = state.getMapId();
-        let geojson_source_id = source_id + '-geojson';
+        let geojson_source_id = self.adminAreaLayerId;
         let existing = [];
         if (state.shouldShowCountryOutlines()) {
           let location = state.getLocationById(focus_feature.properties.object_id);
           let highlight_countries = location?.highlight_countries;
-          let filter = highlight_countries ? ['in', ['get', 'location_id'], ['literal', location.highlight_countries]] : null;
+          let filter = highlight_countries ? ['in', ['get', 'location_id'], ['literal', highlight_countries]] : null;
           let geojson_features_ids = state.querySourceFeatures(geojson_source_id, geojson_source_id, filter)
             .map((d) => d.id);
-          existing = state.querySourceFeatures(geojson_source_id + '-fill', geojson_source_id)
+          existing = state.querySourceFeatures(geojson_source_id, geojson_source_id)
             .filter((d) => !geojson_features_ids.length || geojson_features_ids.indexOf(d.id) == -1)
             .filter((d) => (map.getFeatureState({
               source: geojson_source_id,
@@ -590,7 +671,7 @@
             })['focus'] ?? false) === true);
         }
         else {
-          existing = state.querySourceFeatures(geojson_source_id + '-fill', geojson_source_id)
+          existing = state.querySourceFeatures(geojson_source_id, geojson_source_id)
             .filter((d) => !focus_feature || d.id != focus_feature.id)
             .filter((d) => (map.getFeatureState({
               source: geojson_source_id,
@@ -670,14 +751,9 @@
       // the zoomed map area can't be focused yet before the panning operation
       // (triggered by sidebar.show()) is finished.
       let focus_feature = state.getFocusFeature();
-      this.state.getMap().once('movestart', () => {
-        let feature = state.getFeatureByObjectId(object_id);
-        if (feature && feature.properties.object_id != focus_feature?.properties?.object_id) {
-          state.resetFocus();
-        }
-      });
       this.state.getMap().once('moveend', () => {
         let feature = state.getFeatureByObjectId(object_id);
+        state.resetHover();
         if (feature && feature.properties.object_id != focus_feature?.properties?.object_id) {
           state.focusFeature(feature);
         }
@@ -739,6 +815,93 @@
     }
 
     /**
+     * Callback for handling mouseenter events
+     *
+     * @param {Event} e
+     *   The event.
+     * @param {String|null} layer_id
+     *   The layer id if different than the default one for circles.
+     */
+    handleMouseEnter = function (e, layer_id = null) {
+      let state = this.state;
+      // Enable hover.
+      let feature = state.getFeatureFromEvent(e, layer_id);
+      if (!feature) {
+        return;
+      }
+      if (this.isHidden(feature)) {
+        state.resetHover();
+        return;
+      }
+      state.hoverFeature(feature);
+      state.showTooltip(this.getTooltipContent(state.getLocationFromFeature(feature)));
+    }
+
+    /**
+     * Callback for handling mousemove events
+     *
+     * @param {Event} e
+     *   The event.
+     * @param {String|null} layer_id
+     *   The layer id if different than the default one for circles.
+     */
+    handleMouseMove = function (e, layer_id = null) {
+      let state = this.state;
+      let feature = state.getFeatureFromEvent(e, layer_id);
+      if (!feature && state.getHoveredLocation()) {
+        // Disable hover.
+        state.resetHover();
+        return;
+      }
+      if (feature && this.isHidden(feature)) {
+        state.resetHover();
+        return;
+      }
+      if (feature && !state.isHovered(feature)) {
+        // Update the hover if changed.
+        state.hoverFeature(feature);
+        state.showTooltip(this.getTooltipContent(state.getLocationFromFeature(feature)));
+      }
+    }
+
+    /**
+     * Callback for handling mouseleave events
+     *
+     * @param {Event} e
+     *   The event.
+     * @param {String|null} layer_id
+     *   The layer id if different than the default one for circles.
+     */
+    handleMouseLeave = function (e, layer_id = null) {
+      let state = this.state;
+      let feature = state.getFeatureFromEvent(e, layer_id);
+      if (feature) {
+        state.hoverFeature(feature, false);
+      }
+      else {
+        state.resetHover();
+      }
+    }
+
+    /**
+     * Click handler for the circles.
+     *
+     * @param {Event} e
+     *   The event.
+     * @param {ghi.circleMap} self
+     *   The current style instance.
+     */
+    handleFeatureClick = function (e, self) {
+      let feature = self.state.getFeatureFromEvent(e, self.adminAreaLayerId) ?? self.state.getFeatureFromEvent(e);
+      if (!feature || self.isHidden(feature)) {
+        return;
+      }
+      let object_id = feature.properties.object_id;
+      let object = self.state.getLocationById(object_id);
+      self.showSidebarForObject(object);
+    }
+
+    /**
      * Add event listeners.
      */
     addEventListeners = function () {
@@ -748,43 +911,30 @@
       let layer_id = this.featureLayerId;
 
       map.on('mouseenter', layer_id, (e) => {
-        // Enable hover.
-        let feature = state.getFeatureFromEvent(e);
-        if (!feature) {
-          return;
-        }
-        if (this.isHidden(feature)) {
-          state.resetHover();
-          return;
-        }
-
-        state.hoverFeature(feature);
-        state.showTooltip(this.getTooltipContent(state.getLocationFromFeature(feature)));
+        self.handleMouseEnter(e);
       });
+      if (!state.isOverviewMap()) {
+        map.on('mouseenter', self.adminAreaLayerId, (e) => {
+          self.handleMouseEnter(e, self.adminAreaLayerId);
+        });
+      }
 
       map.on('mousemove', layer_id, (e) => {
-        let feature = state.getFeatureFromEvent(e);
-        if (!feature) {
-          if (state.isHovered()) {
-            // Disable hover.
-            state.resetHover();
-          }
-          return;
-        }
-        if (this.isHidden(feature)) {
-          state.resetHover();
-          return;
-        }
-        if (!state.isHovered(feature)) {
-          // Update the hover if changed.
-          state.hoverFeature(feature);
-          state.showTooltip(this.getTooltipContent(state.getLocationFromFeature(feature)));
-        }
+        self.handleMouseMove(e);
       });
-      map.on('mouseleave', layer_id, () => {
-        // Disable hover.
-        state.resetHover();
+      if (!state.isOverviewMap()) {
+        map.on('mousemove', self.adminAreaLayerId, (e) => {
+          self.handleMouseMove(e, self.adminAreaLayerId);
+        });
+      }
+      map.on('mouseleave', layer_id, (e) => {
+        this.handleMouseLeave(e);
       });
+      if (!state.isOverviewMap()) {
+        map.on('mouseleave', self.adminAreaLayerId, (e) => {
+          this.handleMouseLeave(e, self.adminAreaLayerId);
+        });
+      }
 
       state.getCanvasContainer().on('focus-feature', function (event, feature) {
         self.updateActiveFeatures();
@@ -975,7 +1125,12 @@
      *   TRUE if the feature is marked as hidden, FALSE otherwise.
      */
     isHidden = function (feature) {
-      return feature.state.hidden ?? false;
+      let state = this.state;
+      if (state.isOverviewMap()) {
+        return feature.state.hidden ?? false;
+      }
+      let location = state.getLocationFromFeature(feature);
+      return location === null || location.total == 0;
     }
 
   }

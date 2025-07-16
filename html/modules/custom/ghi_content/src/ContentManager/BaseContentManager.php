@@ -733,7 +733,7 @@ abstract class BaseContentManager implements ContainerInjectionInterface {
       '#group' => 'advanced',
     ];
 
-    $form['remote_content_info']['status'] = [
+    $form['remote_content_info']['content_status'] = [
       '#type' => 'item',
       '#title' => $this->t('Up to date'),
       '#markup' => '<p>' . $this->t('This @label is up to date with its source content on @remote_source.', $t_args) . '</p>',
@@ -741,12 +741,12 @@ abstract class BaseContentManager implements ContainerInjectionInterface {
     ];
 
     if (!$content) {
-      $form['remote_content_info']['status']['#title'] = $this->t('Deleted');
-      $form['remote_content_info']['status']['#markup'] = '<p>' . $this->t('The source of this @label page has been removed on @remote_source.', $t_args) . '</p>';
+      $form['remote_content_info']['content_status']['#title'] = $this->t('Deleted');
+      $form['remote_content_info']['content_status']['#markup'] = '<p>' . $this->t('The source of this @label page has been removed on @remote_source.', $t_args) . '</p>';
     }
     elseif (!$content_in_sync) {
-      $form['remote_content_info']['status']['#title'] = $this->t('Outdated');
-      $form['remote_content_info']['status']['#markup'] = '<p>' . $this->t('The source of this @label page has changed on @remote_source. It will be automatically updated the next time that the @label import will run. To apply the changes immediately use the button below.', $t_args) . '</p>';
+      $form['remote_content_info']['content_status']['#title'] = $this->t('Outdated');
+      $form['remote_content_info']['content_status']['#markup'] = '<p>' . $this->t('The source of this @label page has changed on @remote_source. It will be automatically updated the next time that the @label import will run. To apply the changes immediately use the button below.', $t_args) . '</p>';
 
       $form['remote_content_info']['apply_changes'] = [
         '#type' => 'submit',
@@ -804,7 +804,7 @@ abstract class BaseContentManager implements ContainerInjectionInterface {
           '#open' => $node->needsReview(),
           '#group' => 'advanced',
         ];
-        $form['needs_review']['status'] = [
+        $form['needs_review']['content_status'] = [
           '#type' => 'item',
           '#title' => $node->needsReview() ? $this->t('Needs review') : $this->t('No issues'),
           '#markup' => '<p>' . ($node->needsReview() ? $this->t('This @label has been flagged as needing a review.', $t_args) : $this->t('This @label has not been flagged as needing a review yet.', $t_args)) . '</p>',

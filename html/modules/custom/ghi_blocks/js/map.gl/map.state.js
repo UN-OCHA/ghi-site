@@ -38,7 +38,7 @@
       this.disabled = false;
       this.variantId = null;
       this.currentIndex = null;
-      this.hoverId = null;
+      this.hoveredLocation = null;
       this.focusId = null;
       this.focusedLocation = null;
       this.tooltip = null;
@@ -354,7 +354,7 @@
      * @return {Array}
      *   An array of location data objects.
      */
-    getLocations = function (filter_by_admin_level = true) {
+    getLocations = function (filter_by_admin_level = true, filter_empty = true) {
       let data = this.getData();
       let locations = typeof data.locations != 'undefined' ? data.locations : [];
 
@@ -383,6 +383,11 @@
         d.variant_id = variant_id;
         return d;
       });
+
+      if (filter_empty) {
+        locations = this.filterEmptyLocations(locations);
+      }
+
       return locations;
     }
 
@@ -430,6 +435,20 @@
     getLocationFromFeature = function (feature) {
       let object_id = feature.properties.object_id ?? null;
       return object_id ? this.getLocationById(object_id) : null;
+    }
+
+    /**
+     *
+     * @param {Array} locations
+     *   An array of location data objects.
+     * @return {Array}
+     *   An array of location data objects.
+     */
+    filterEmptyLocations = function (locations) {
+      if (!this.isOverviewMap()) {
+        locations = locations.filter((object) => object.total > 0);
+      }
+      return locations;
     }
 
     /**
@@ -553,7 +572,10 @@
       if (this.sidebar?.isVisible()) {
         // If we have an open popup, keep it open and update the content, or
         // close it if there is nothing to show.
-        if (this.focusedLocation && this.getFeatureByObjectId(this.focusedLocation.object_id) && this.getLocationById(this.focusedLocation.object_id)) {
+        let focused_location = this.focusedLocation ? this.getLocationById(this.focusedLocation.object_id) : null;
+        let focused_feature = focused_location ? this.getFeatureByObjectId(focused_location.object_id) : null;
+        let location_is_visible = this.isOverviewMap() || (focused_location && focused_location.total > 0);
+        if (focused_location && focused_feature && location_is_visible) {
           this.style.showSidebarForObject(this.focusedLocation);
         }
         else {
@@ -656,18 +678,18 @@
      *
      * @param {Event} e
      *   The event.
-     * @param {String} source_id
-     *   The source id.
+     * @param {String} layer_id
+     *   The layer id.
      *
      * @returns {Object}|null
      *   A feature object or NULL.
      */
-    getFeatureFromEvent = function (e, source_id) {
+    getFeatureFromEvent = function (e, layer_id = null) {
       let self = this;
       let map = this.getMap();
-      let is_circle_style = this.options.style == 'circle';
-
-      let features = e.features.length ? e.features : map.queryRenderedFeatures(e.point, {layers: [source_id]});
+      layer_id = layer_id ?? this.style.getFeatureLayerId();
+      let is_circle_style = layer_id === this.style.getFeatureLayerId() && this.options.style == 'circle';
+      let features = e.features?.length ? e.features : map.queryRenderedFeatures(e.point, {layers: [layer_id]});
       if (!features.length) {
         // No features found.
         return;
@@ -784,7 +806,7 @@
         options.filter = filter;
       }
       let features = this.getMap().querySourceFeatures(source_id, options);
-      return unique ? this.getUniqueFeatures(features, 'object_id') : features;
+      return unique ? this.getUniqueFeatures(features, typeof unique == 'boolean' ? 'object_id' : unique) : features;
     }
 
     /**
@@ -827,8 +849,9 @@
      * @param {*} value
      *   The value to set.
      */
-    setFeatureState = function (id, property, value) {
-      let source_id = this.getMapId();
+    setFeatureState = function (id, property, value, layer_id = null, source_id = null) {
+      layer_id = layer_id ?? this.style.getFeatureLayerId();
+      source_id = source_id ?? this.getMapId();
       let map = this.getMap();
       let values = {};
       values[property] = value;
@@ -836,30 +859,31 @@
         { source: source_id, id: id },
         values
       );
-      let feature = this.getFeatureById(id, source_id);
-      if (feature) {
-        if (this.shouldShowCountryOutlines()) {
-          let geojson_source_id = source_id + '-geojson';
-          let location = this.getLocationById(feature.properties.object_id);
-          let highlight_countries = location?.highlight_countries;
-          let filter = highlight_countries ? ['in', ['get', 'location_id'], ['literal', location.highlight_countries]] : null;
-          let geojson_features = this.querySourceFeatures(geojson_source_id, geojson_source_id, filter);
-          geojson_features.forEach(item => {
-            map.setFeatureState(
-              { source: geojson_source_id, id: item.id },
-              values
-            );
-          });
-        }
-        else {
-          let geojson_source_id = source_id + '-geojson';
-          let geojson_feature = this.getFeatureById(id, geojson_source_id + '-fill', geojson_source_id);
-          if (geojson_feature) {
-            map.setFeatureState(
-              { source: geojson_source_id, id: geojson_feature.id },
-              values
-            );
-          }
+      let feature = this.getFeatureById(id, layer_id, source_id);
+      if (!feature) {
+        return;
+      }
+      if (this.shouldShowCountryOutlines()) {
+        let geojson_source_id = source_id + '-geojson';
+        let location = this.getLocationById(feature.properties.object_id);
+        let highlight_countries = location?.highlight_countries;
+        let filter = highlight_countries ? ['in', ['get', 'location_id'], ['literal', highlight_countries]] : null;
+        let geojson_features = this.querySourceFeatures(geojson_source_id, geojson_source_id, filter);
+        geojson_features.forEach(item => {
+          map.setFeatureState(
+            { source: geojson_source_id, id: item.id },
+            values
+          );
+        });
+      }
+      else {
+        let geojson_source_id = source_id + '-geojson';
+        let geojson_feature = this.getFeatureById(id, geojson_source_id, geojson_source_id);
+        if (geojson_feature) {
+          map.setFeatureState(
+            { source: geojson_source_id, id: geojson_feature.id },
+            values
+          );
         }
       }
     }
@@ -890,17 +914,44 @@
      *   The hover state to set.
      */
     hoverFeature = function (feature, hover_state = true) {
-      if (hover_state === true && this.hoverId !== null) {
+      let layer_id = feature.layer.id;
+      if (hover_state === true && this.hoveredLocation !== null && !this.isHovered(feature)) {
         // Disable hover on previous feature.
-        this.setFeatureState(this.hoverId, 'hover', false);
+        Object.keys(this.hoveredLocation.layers).forEach((layer_id) => {
+          this.setFeatureState(this.hoveredLocation.layers[layer_id], 'hover', false, feature.source);
+        });
       }
       // Update the cursor.
       this.getMap().getCanvas().style.cursor = hover_state ? 'pointer' : '';
 
-      this.hoverId = hover_state ? feature.id : null;
-      this.setFeatureState(feature.id, 'hover', hover_state);
-      let event = this.hoverId !== null ? 'focus-feature' : 'reset-focus';
-      this.getCanvasContainer().trigger(event, [feature]);
+      if (hover_state === true) {
+        // Mark feature as hovered.
+        if (this.hoveredLocation === null) {
+          this.hoveredLocation = {
+            object_id: feature.properties.object_id,
+            layers: {},
+          };
+        }
+        this.hoveredLocation.layers[layer_id] = feature.id;
+      }
+      else if (this.hoveredLocation && this.hoveredLocation.layers.hasOwnProperty(layer_id)) {
+        delete this.hoveredLocation.layers[layer_id];
+      }
+
+      if (this.hoveredLocation && this.hoveredLocation.layers.length == 0) {
+        state.resetHover();
+      }
+
+      this.setFeatureState(feature.id, 'hover', hover_state, feature.source);
+      if (this.hoveredLocation === null) {
+        this.getCanvasContainer().trigger('reset-focus', [feature]);
+      }
+      else if (!this.hoveredLocation.layers.hasOwnProperty(layer_id)) {
+        this.getCanvasContainer().trigger('reset-focus', [feature]);
+      }
+      else {
+        this.getCanvasContainer().trigger('focus-focus', [feature]);
+      }
     }
 
     /**
@@ -912,33 +963,52 @@
      * @returns {Boolean}
      *   TRUE if currently hovered, FALSE otherwise.
      */
-    isHovered = function (feature = null) {
-      return this.hoverId !== null && (!feature || feature.id == this.hoverId);
+    isHovered = function (feature) {
+      if (this.hoveredLocation === null || !feature) {
+        return false;
+      }
+      if (this.hoveredLocation.object_id != feature.properties.object_id) {
+        return false;
+      }
+      return this.hoveredLocation.layers[feature.layer.id] == feature.id;
     }
 
     /**
-     * Get the hovered feature if any.
+     * Get the hovered location if any.
+     *
+     * @returns {Object}|null
+     *   A location object or null.
+     */
+    getHoveredLocation = function () {
+      if (this.hoveredLocation === null) {
+        return null;
+      }
+      return this.getLocationById(this.hoveredLocation.object_id);
+    }
+
+    /**
+     * Get the hovered features if any.
      *
      * @returns {Object}|null
      *   A feature object or null.
      */
-    getHoverFeature = function () {
-      if (this.hoverId === null) {
+    getHoverFeature = function (layer_id) {
+      if (this.hoveredLocation === null || !this.hoveredLocation.layers.hasOwnProperty(layer_id)) {
         return null;
       }
-      return this.getFeatureById(this.hoverId);
+      return this.getFeatureById(this.hoveredLocation.layers[layer_id], layer_id);
     }
 
     /**
      * Reset the hover state on features.
      */
     resetHover = function () {
-      if (this.hoverId === null) {
-        return;
+      if (this.hoveredLocation !== null && this.hoveredLocation.layers) {
+        Object.keys(this.hoveredLocation.layers).forEach((layer_id) => {
+          this.setFeatureState(this.hoveredLocation.layers[layer_id], 'hover', false);
+        });
       }
-      this.getMap().getCanvas().style.cursor = '';
-      this.setFeatureState(this.hoverId, 'hover', false);
-      this.hoverId = null;
+      this.hoveredLocation = null;
       this.hideTooltip();
       this.getCanvasContainer().trigger('reset-focus');
     }
@@ -953,12 +1023,12 @@
      */
     focusFeature = function(feature, focus_state = true) {
       if (focus_state && this.focusId !== null) {
-        // Unfocus previously focussed feature.
+        // Unfocus previously focused feature.
         this.setFeatureState(this.focusId, 'focus', false);
       }
-      if (focus_state && this.hoverId !== null) {
+      if (focus_state && this.hoveredLocation !== null) {
         // Unhover any currently hovered feature.
-        this.hoverFeature(feature, false);
+        this.resetHover();
       }
       this.setFeatureState(feature.id, 'focus', focus_state);
       this.focusId = focus_state ? feature.properties.object_id : null;
@@ -968,7 +1038,7 @@
     }
 
     /**
-     * Get the focussed feature if any.
+     * Get the focused feature if any.
      *
      * @returns {Object}|null
      *   A feature object or null.
@@ -981,7 +1051,7 @@
     }
 
     /**
-     * Reset the focus state if a feature is currently focussed.
+     * Reset the focus state if a feature is currently focused.
      */
     resetFocus = function () {
       if (this.focusId === null) {
@@ -1189,7 +1259,7 @@
      * Hide the tooltip.
      */
     hideTooltip = function () {
-      this.tooltip.hide();
+      this.tooltip?.hide();
     }
 
     /**
@@ -1265,6 +1335,27 @@
     }
 
     /**
+     * Hide a country label from the background layer.
+     *
+     * @param {String} country_label
+     *   The name of the country for which to hide the label.
+     */
+    hideCountryLabelFromBackgroundLayer = function (country_label) {
+      if (!country_label) {
+        return;
+      }
+      let map = this.getMap();
+      let backgroundLayer = this.getBackgroundLayer(map);
+
+      let rule = ['!=', ['get', 'en_short'], country_label];
+      let filters = map.getFilter(backgroundLayer.id);
+      if (filters.findIndex((value, index) => typeof value == 'object' && value.toString() == rule.toString()) == -1) {
+        filters.push(rule);
+        map.setFilter(backgroundLayer.id, filters);
+      }
+    }
+
+    /**
      * Build the label layer.
      *
      * @returns {Object}
@@ -1324,6 +1415,10 @@
         map.setPaintProperty(label_layer_id, 'text-color', backgroundLayer.paint['text-color']);
         map.setPaintProperty(label_layer_id, 'text-halo-color', backgroundLayer.paint['text-halo-color']);
         map.setPaintProperty(label_layer_id, 'text-halo-width', backgroundLayer.paint['text-halo-width']);
+
+        // Hide the label of the currently viewed country from the background
+        // layer.
+        this.hideCountryLabelFromBackgroundLayer(this.options?.outline_country?.location_name ?? null);
       }
       this.updateMapData(label_layer_id + '-source', backgroundFeatures);
     }
