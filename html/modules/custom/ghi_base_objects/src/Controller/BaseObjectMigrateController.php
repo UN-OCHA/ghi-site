@@ -10,7 +10,6 @@ use Drupal\ghi_base_objects\Migrate\BaseObjectMigrateBatchExecutable;
 use Drupal\hpc_api\Helpers\QueryHelper;
 use Drupal\migrate\MigrateMessage;
 use Drupal\migrate\Plugin\MigrationInterface;
-use Drupal\migrate\Plugin\MigrationPluginManagerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 
@@ -32,19 +31,28 @@ class BaseObjectMigrateController extends ControllerBase {
   protected $migrationPluginManager;
 
   /**
-   * Public constructor.
+   * The key-value storage.
+   *
+   * @var \Drupal\Core\KeyValueStore\KeyValueFactoryInterface
    */
-  public function __construct(MigrationPluginManagerInterface $migration_plugin_manager) {
-    $this->migrationPluginManager = $migration_plugin_manager;
-  }
+  protected $keyValueFactory;
+
+  /**
+   * The time service.
+   *
+   * @var \Drupal\Component\Datetime\TimeInterface
+   */
+  protected $time;
 
   /**
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container) {
-    return new static(
-      $container->get('plugin.manager.migration'),
-    );
+    $instance = new static();
+    $instance->migrationPluginManager = $container->get('plugin.manager.migration');
+    $instance->keyValueFactory = $container->get('keyvalue');
+    $instance->time = $container->get('datetime.time');
+    return $instance;
   }
 
   /**
@@ -110,7 +118,7 @@ class BaseObjectMigrateController extends ControllerBase {
     // Clear the import files.
     $this->clearMigrationSourceFiles($migration);
 
-    $executable = new BaseObjectMigrateBatchExecutable($migration, new MigrateMessage(), $options);
+    $executable = new BaseObjectMigrateBatchExecutable($migration, new MigrateMessage(), $this->keyValueFactory, $this->time, $this->getStringTranslation(), $this->migrationPluginManager, $options);
     $executable->batchImport();
     batch_process($redirect);
     $batch = batch_get();
