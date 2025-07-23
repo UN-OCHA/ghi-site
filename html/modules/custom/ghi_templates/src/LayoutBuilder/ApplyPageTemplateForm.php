@@ -230,7 +230,7 @@ class ApplyPageTemplateForm extends TemplateFormBase {
     $form['settings']['overwrite'] = [
       '#type' => 'checkbox',
       '#title' => $this->t('Clear layout'),
-      '#description' => $this->t('If checked, this will remove all existing page elements from the current page before doing the import. If unchecked, the imported configuration will be appended to the current page instead.'),
+      '#description' => $this->t('If checked, this will remove all existing (and removable) page elements from the current page before doing the import. If unchecked, the imported configuration will be appended to the current page instead.'),
       '#default_value' => TRUE,
     ];
 
