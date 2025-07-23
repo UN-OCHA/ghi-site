@@ -6,8 +6,10 @@ use Drupal\Component\Utility\Html;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\Markup;
 use Drupal\Core\Security\TrustedCallbackInterface;
+use Drupal\ghi_blocks\Interfaces\ConfigValidationInterface;
 use Drupal\ghi_blocks\Interfaces\MultiStepFormBlockInterface;
 use Drupal\ghi_blocks\Interfaces\OptionalTitleBlockInterface;
+use Drupal\ghi_blocks\Traits\ConfigValidationTrait;
 use Drupal\ghi_content\Entity\Article;
 use Drupal\ghi_content\RemoteContent\RemoteArticleInterface;
 use Drupal\ghi_content\RemoteContent\RemoteParagraphInterface;
@@ -35,9 +37,10 @@ use Drupal\hpc_common\Helpers\ThemeHelper;
  *  }
  * )
  */
-class Paragraph extends ContentBlockBase implements OptionalTitleBlockInterface, MultiStepFormBlockInterface, TrustedCallbackInterface {
+class Paragraph extends ContentBlockBase implements OptionalTitleBlockInterface, MultiStepFormBlockInterface, ConfigValidationInterface, TrustedCallbackInterface {
 
   use CustomLinkTrait;
+  use ConfigValidationTrait;
 
   /**
    * The CSS class used for promoted paragraphs. This comes from the NCMS.
@@ -378,6 +381,13 @@ class Paragraph extends ContentBlockBase implements OptionalTitleBlockInterface,
     if ($subform_key == 'paragraph') {
       return $this->getArticle() && $this->getArticle() instanceof RemoteArticleInterface;
     }
+    return !$this->lockArticle();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function canBeRemoved() {
     return !$this->lockArticle();
   }
 
@@ -835,6 +845,28 @@ class Paragraph extends ContentBlockBase implements OptionalTitleBlockInterface,
       $twig_service->enableDebug();
     }
     return $html;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getConfigErrors() {
+    // We don't expect any errors. But we must implement this method due to
+    // ConfigValidationInterface, that we need to remove the lock state in
+    // ::fixConfigErrors().
+    return [];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function fixConfigErrors() {
+    // As this is only called during (a) manual imports of a block config to
+    // add to a page, or (b) when importing an entire page config or applying a
+    // page template, we want to unset the lock state, so that paragraphs that
+    // are added this way can also be removed again.
+    unset($this->configuration['lock_article']);
+    unset($this->configuration['sync']);
   }
 
 }

@@ -140,9 +140,21 @@ class PageTemplateManager implements ContainerInjectionInterface {
       ]);
     }
 
+    $delta = 0;
+    $section = $section_storage->getSection($delta);
+
     // Clear the current storage.
-    if ($overwrite) {
-      $section_storage->removeAllSections();
+    if ($overwrite && $section->getComponents()) {
+      foreach ($section->getComponents() as $component) {
+        $plugin = $component->getPlugin();
+        if ($plugin instanceof GHIBlockBase && !$plugin->canBeRemoved()) {
+          // Don't remove components that could not have been removed manually
+          // via the UI. In this case, the paragraph is locked, so it can't be
+          // removed.
+          continue;
+        }
+        $section->removeComponent($component->getUuid());
+      }
     }
 
     // Now setup each section according to the imported config.

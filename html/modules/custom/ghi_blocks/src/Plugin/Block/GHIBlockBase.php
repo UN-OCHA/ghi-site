@@ -566,6 +566,16 @@ abstract class GHIBlockBase extends HPCBlockBase {
   }
 
   /**
+   * Check if a block can be removed from the section storage.
+   *
+   * @return bool
+   *   TRUE if the block can be removed, FALSE otherwise.
+   */
+  public function canBeRemoved() {
+    return TRUE;
+  }
+
+  /**
    * See if this block needs to configure the data object it works with.
    *
    * @return bool

@@ -160,24 +160,6 @@ function ghi_content_layout_builder_ipe_links_alter(array &$links, SectionStorag
 }
 
 /**
- * Implements hook_contextual_links_alter().
- *
- * Disable contextual links to declutter the interface. If it wouldn't be for
- * layout builder who needs the contextual links for it's own interface, we
- * could just disable the module entirely.
- * See https://www.drupal.org/project/drupal/issues/3042516
- */
-function ghi_content_contextual_links_alter(array &$links, $group, array $route_parameters) {
-  $allowed_groups = ['layout_builder_block'];
-  if (!in_array($group, $allowed_groups)) {
-    return;
-  }
-  /** @var \Drupal\ghi_content\ContextualLinks\BlockHandler $contextual_links_block_handler */
-  $contextual_links_block_handler = \Drupal::service('ghi_content.contextual_links.block_handler');
-  $contextual_links_block_handler->alterLinks($links, $group, $route_parameters);
-}
-
-/**
  * Implements hook_form_FORM_ID_alter().
  */
 function ghi_content_form_ghi_subpages_admin_views_form_alter(array &$form, FormStateInterface $form_state) {
