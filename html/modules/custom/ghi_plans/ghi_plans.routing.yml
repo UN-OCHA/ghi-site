@@ -22,12 +22,11 @@ ghi_plans.plan_autocomplete:
   options:
     no_cache: TRUE
 ghi_plans.modal_content.dissaggregation:
-  path: '/modal-content/disaggregation/{attachment}/{metric}/{reporting_period}/{use_calculation_method}'
+  path: '/modal-content/disaggregation/{attachment}/{metric}/{reporting_period}'
   defaults:
     _controller: '\Drupal\ghi_plans\Controller\DisaggregationModalController::loadDisaggregationModalData'
     _format: json
     reporting_period: 'latest'
-    use_calculation_method: 'FALSE'
   requirements:
     # No access restriction needed for the disaggregation modal.
     _access: 'TRUE'
