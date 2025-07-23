@@ -962,6 +962,11 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
       $conf['map']['common']['default_attachment'] = NULL;
     }
 
+    // Update the selected monitoring periods if necessary.
+    if (empty($configured_attachments) || reset($configured_attachments)->getPlanId() != $this->getCurrentPlanId()) {
+      $conf['map']['appearance']['circle']['monitoring_period'] = ['latest' => 'latest'];
+    }
+
     $this->setBlockConfig($conf);
   }
 

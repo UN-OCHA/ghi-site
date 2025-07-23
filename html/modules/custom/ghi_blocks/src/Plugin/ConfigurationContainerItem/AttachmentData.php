@@ -316,6 +316,14 @@ class AttachmentData extends ConfigurationContainerItemPluginBase {
         if ($data_point_conf['processing'] != 'single') {
           $data_points[1]['index'] = AttachmentMatcher::matchDataPointOnAttachments($data_points[1]['index'], $original_attachment, $new_attachment);
         }
+
+        if ($plan && $original_attachment->getPlanId() != $plan->getSourceId()) {
+          // Reset the monitoring periods to latest if the template is applied
+          // in a new plan context, before any previously selected values won't
+          // be valid anymore in the plan context.
+          $data_points[0]['monitoring_period'] = 'latest';
+          $data_points[1]['monitoring_period'] = 'latest';
+        }
       }
     }
   }
