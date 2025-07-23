@@ -1,14 +1,11 @@
 .item-list--entity-logframe {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 2rem;
 }
 .item-list--entity-logframe + .cd-button,
 .item-list--entity-logframe + .link-wrapper {
   margin-top: 1rem;
-}
-.item-list--entity-logframe > .item-wrapper {
-  border-left: 4px solid var(--ghi-yellow);
 }
 .item-list--entity-logframe > .item-wrapper > .entity-wrapper {
   display: flex;
@@ -19,7 +16,7 @@
 }
 .item-list--entity-logframe > .item-wrapper .entity-wrapper--inner {
   display: flex;
-  gap: 2rem;
+  gap: 3rem;
   justify-content: space-between;
   margin-left: 1rem;
 }
@@ -29,13 +26,23 @@
   padding: 0;
 }
 .item-list--entity-logframe > .item-wrapper .entity-wrapper--inner p.label {
+  position: relative;
   flex-grow: 0;
   white-space: nowrap;
   font-size: var(--cd-font-size--large);
   font-weight: bold;
 }
+.item-list--entity-logframe > .item-wrapper .entity-wrapper--inner p.label::after {
+  position: absolute;
+  top: -10%;
+  right: -1.5rem;
+  height: 120%;
+  content: "";
+  border-right: 4px solid var(--ghi-yellow);
+}
 
 .item-list--entity-logframe > .item-wrapper .entity-wrapper--inner p.description {
+  position: relative;
   flex-grow: 1;
   font-size: var(--cd-font-size--base);
 }
@@ -86,6 +93,7 @@
 .item-list--entity-logframe > .item-wrapper > .attachment-tables-wrapper {
   display: none;
   padding: 2rem 1rem 2rem 2rem;
+  border-left: 4px solid var(--ghi-yellow);
 }
 
 .item-list--entity-logframe > .item-wrapper > .attachment-tables-wrapper table thead th:first-child {
