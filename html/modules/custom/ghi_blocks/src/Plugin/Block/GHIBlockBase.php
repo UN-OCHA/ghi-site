@@ -668,11 +668,12 @@ abstract class GHIBlockBase extends HPCBlockBase {
         $options[$bundle][$object->id()] = (string) ($object instanceof BaseObjectChildInterface ? $object->labelWithParent() : $object->label());
       }
     }
+    $current_base_object_type = $this->getCurrentBaseObject()?->type?->entity?->label();
     $form['data_object'] = [
       '#type' => 'select',
       '#title' => $this->t('Data object'),
       '#options' => $options,
-      '#default_value' => $this->getSelectedDataObjectId(),
+      '#default_value' => $this->getSelectedDataObjectId() ?? array_key_last($options[$current_base_object_type] ?? []),
       '#access' => count($options) > 0,
     ];
     return $form;
