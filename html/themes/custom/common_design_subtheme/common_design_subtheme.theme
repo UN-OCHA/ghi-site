@@ -206,7 +206,7 @@ function common_design_subtheme_preprocess_block(&$variables) {
     'mailing_list_subscribe',
   ];
 
-  if ($variables['plugin_id'] == 'system_main_block' && strpos(\Drupal::routeMatch()->getRouteName(), 'system.40') === 0) {
+  if ($variables['plugin_id'] == 'system_main_block' && str_starts_with(\Drupal::routeMatch()->getRouteName(), 'system.40')) {
     $variables['attributes']['class'][] = 'content-width';
   }
 
@@ -232,7 +232,8 @@ function common_design_subtheme_preprocess_block(&$variables) {
     ];
     $is_qualified_node = $page_node && in_array($page_node->bundle(), $qualified_bundles);
     $is_layout_builder = $block_instance->isLayoutBuilder();
-    if (!$full_width_block && !$is_layout_builder && $is_qualified_node) {
+    $is_ajax = \Drupal::requestStack()->getCurrentRequest()->isXmlHttpRequest();
+    if (!$full_width_block && !$is_layout_builder && $is_qualified_node && !$is_ajax) {
       // This is the first block in this region and we want to highlight it.
       if (!empty($variables['content']['#theme_wrappers']['container'])) {
         $variables['content']['#theme_wrappers']['container']['#attributes']['class'][] = 'content-width';
@@ -245,6 +246,9 @@ function common_design_subtheme_preprocess_block(&$variables) {
       }
       $variables['content']['#full_width'] = TRUE;
       $variables['attributes']['class'][] = 'block-highlighted';
+      // Don't show the admin links for the first block as this gives issues
+      // with the styling after using the reload admin link.
+      unset($variables['icons']);
     }
     $processed_regions[$region] = TRUE;
   }

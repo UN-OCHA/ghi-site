@@ -737,7 +737,11 @@ abstract class HPCBlockBase extends BlockBase implements HPCPluginInterface, Con
         if (method_exists($this, 'alterEndpointQuery')) {
           $this->alterEndpointQuery($source_key, $query_handler);
         }
-        $endpoints[] = $query_handler->getFullEndpointUrl();
+        $endpoint_url = $query_handler->getFullEndpointUrl();
+        if (str_contains($endpoint_url, '{') || str_contains($endpoint_url, '}')) {
+          continue;
+        }
+        $endpoints[] = $endpoint_url;
       }
     }
     return $endpoints;

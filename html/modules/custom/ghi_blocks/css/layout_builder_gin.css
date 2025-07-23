@@ -16,7 +16,9 @@ input[type="checkbox"][disabled="disabled"]:not(:checked) {
 }
 
 #layout-builder .block-content,
-#layout-builder .block-content * {
+#layout-builder .block-content *,
+#layout-builder .block-links,
+#layout-builder .block-links * {
   pointer-events: none !important;
 }
 
