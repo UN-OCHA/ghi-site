@@ -164,5 +164,16 @@
         }
       }
     }
+
+    &.block-links--admin-icons:not(.block-links--download-links) .block-links--inner {
+      justify-content: end;
+    }
+  }
+
+  &.ghi-block-links {
+    & > div.block-links {
+      margin-top: 1rem;
+      border-top: 0;
+    }
   }
 }
