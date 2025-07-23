@@ -25,7 +25,9 @@ use Drupal\ghi_plans\ApiObjects\Plan as ApiObjectsPlan;
 use Drupal\ghi_plans\ApiObjects\PlanEntityInterface;
 use Drupal\ghi_plans\Entity\Plan;
 use Drupal\ghi_plans\Helpers\AttachmentHelper;
+use Drupal\ghi_sections\Entity\SectionNodeInterface;
 use Drupal\ghi_subpages\Entity\LogframeSubpage;
+use Drupal\ghi_subpages\Entity\SubpageNodeInterface;
 use Drupal\hpc_api\Query\EndpointQuery;
 use Drupal\hpc_common\Helpers\BlockHelper;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -786,7 +788,7 @@ class PlanEntityLogframe extends GHIBlockBase implements MultiStepFormBlockInter
       'base_object' => $this->getCurrentBaseObject(),
       'context_node' => $page_node,
       'entities' => $plan_entities,
-      'entity_types' => $this->logframeManager->getEntityTypesFromPlanObject($plan_object),
+      'entity_types' => $plan_object ? $this->logframeManager->getEntityTypesFromPlanObject($plan_object) : [],
       'attachment_prototypes' => $this->getAttachmentPrototypes(),
       'used_attachment_prototypes' => $this->getUsedAttachmentPrototypeIds(),
     ];
@@ -890,6 +892,17 @@ class PlanEntityLogframe extends GHIBlockBase implements MultiStepFormBlockInter
   public function getConfigErrors() {
     $conf = $this->getBlockConfig();
     $errors = [];
+    $plan_object = $this->getCurrentPlanObject();
+    if (!$plan_object) {
+      if (!$this->getCurrentBaseEntity() instanceof SectionNodeInterface && !$this->getCurrentBaseEntity() instanceof SubpageNodeInterface) {
+        $errors[] = $this->t('No plan object available on the target page. Check if the necessary data objects have been added.');
+      }
+      else {
+        $errors[] = $this->t('No plan object available on the target page.');
+      }
+      return $errors;
+    }
+
     $configured_entities = array_filter($conf['entities']['entity_ids'] ?? []);
     $available_entities = $this->getPlanEntities($conf['entities']['entity_ref_code']);
 

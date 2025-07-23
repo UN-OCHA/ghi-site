@@ -284,6 +284,10 @@ class AttachmentData extends ConfigurationContainerItemPluginBase {
 
     /** @var \Drupal\ghi_plans\Entity\Plan $plan */
     $plan = $this->getContextValue('plan_object');
+    if (!$plan) {
+      // Nothing we can do here if no data object is available.
+      return;
+    }
     if ($original_attachment && $plan && $original_attachment->getPlanId() != $plan->getSourceId()) {
       // Unset the configured selected attachment if the plan changed.
       $attachment_id = NULL;
