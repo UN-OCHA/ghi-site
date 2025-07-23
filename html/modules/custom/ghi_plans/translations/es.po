@@ -106,3 +106,18 @@ msgstr "Los límites y nombres mostrados, así como las designaciones utilizadas
 
 msgid "There was no plan in this year."
 msgstr "Este año no hubo plan."
+
+msgid "Show data"
+msgstr "Mostrar datos"
+
+msgid "Hide data"
+msgstr "Ocultar datos"
+
+msgid "No data"
+msgstr "Sin datos"
+
+msgid "There is no caseload or indicator available"
+msgstr "No hay ningun número de casos o indicador disponible"
+
+msgid "Population data"
+msgstr "Datos de población"

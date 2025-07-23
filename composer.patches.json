@@ -9,7 +9,8 @@
       "Issue #2755791: Ajax error ajax.$form.ajaxSubmit() is not a function": "https://www.drupal.org/files/issues/2023-08-07/drupal-ajax-error-2755791-18_0.patch",
       "Issue #3001188: Make it possible to add relationships to layout builder": "./patches/3001188-make-it-possible-to-add-relationships-to-layout-builder.patch",
       "Issue #2329253: Allow the ChangedItem to skip updating the entity's changed timestamp when synchronizing (f.e. when migrating)": "https://www.drupal.org/files/issues/2024-07-30/2329253-10.x.patch",
-      "Issue #?? (maybe #2837833): 'Required contexts without a value": "./patches/missing-context-value-in-layout-builder-admin.patch"
+      "Issue #?? (maybe #2837833): 'Required contexts without a value": "./patches/missing-context-value-in-layout-builder-admin.patch",
+      "Issue #2190333: Make #group FAPI / render feature work on all form/render #types out of the box": "https://www.drupal.org/files/issues/2023-09-04/drupal-core_form-api_groups_0.patch"
     },
     "drupal/flat_taxonomy": {
       "Issue #3427628: Hide 'Add child' link from entity operations": "https://www.drupal.org/files/issues/2024-03-13/3427628-hide-add-child-link-2.patch"
@@ -46,6 +47,9 @@
     },
     "drupal/view_unpublished": {
       "Issue #2958568: Add a search api processor for view unpublished": "./patches/2958568-view-unpublished-search-api-access-18.patch"
+    },
+    "drupal/warmer": {
+      "Issue #3273547: No way to disable cron warming": "./patches/3273547.mr.patch"
     },
     "drupal/webp": {
       "Issue #3325808: Webp Image not generated for styles using original image.": "https://git.drupalcode.org/project/webp/-/merge_requests/35.patch",

@@ -1476,6 +1476,27 @@ class DataAttachment extends AttachmentBase implements DataAttachmentInterface {
   }
 
   /**
+   * Check if the given field index represents cummulative reach data.
+   *
+   * This can either be if the index repesents a cummulative reach field
+   * directly, or if the field is a calculated field with a cummulative reach
+   * field as its source.
+   *
+   * @param int $index
+   *   A metric index.
+   *
+   * @return bool
+   *   TRUE if the given field index represents data coming from a cummulative
+   *   reach field, FALSE otherwise.
+   */
+  public function isCummulativeReachField($index) {
+    $field = $this->getFieldByIndex($index);
+    $cumulative_reach_field = $field ? $this->isCumulativeReachFieldType($field->type) : FALSE;
+    $cumulative_reach_source = $field ? $this->isCalculatedMeasurementIndex($index) && $this->isCumulativeReachFieldType($field->source) : FALSE;
+    return $cumulative_reach_field || $cumulative_reach_source;
+  }
+
+  /**
    * Get the tooltip for a rendered data point of this attachment.
    *
    * @param array $conf
@@ -1494,11 +1515,8 @@ class DataAttachment extends AttachmentBase implements DataAttachmentInterface {
     // See if this is a measurement and if we can get a formatted monitoring
     // period for this data point.
     $monitoring_period_id = $conf['data_points'][0]['monitoring_period'] ?? NULL;
-    $field = $this->getFieldByIndex($index);
     $format_string = NULL;
-    $cumulative_reach_field = $field ? $this->isCumulativeReachFieldType($field->type) : FALSE;
-    $cumulative_reach_source = $field ? $this->isCalculatedMeasurementIndex($index) && $this->isCumulativeReachFieldType($field->source) : FALSE;
-    if ($cumulative_reach_field || $cumulative_reach_source) {
+    if ($this->isCummulativeReachField($index)) {
       $format_string = '@data_range_cumulative';
       if ($monitoring_period_id == 'latest') {
         $monitoring_period_id = $this->getLastNonEmptyReportingPeriod($index)?->id() ?? $monitoring_period_id;

@@ -48,7 +48,7 @@ function ghi_content_deploy_queue_related_articles_block_configuration_update(&$
     // using the plugin in it's current version.
     $plugin_id = 'related_articles';
     $queue_id = 'ghi_blocks_plugin_configuration_update';
-    /** @var \Drupal\ghi_blocks\Helpers\NodeQueue $node_queue */
+    /** @var \Drupal\ghi_blocks\Services\NodeQueue $node_queue */
     $node_queue = \Drupal::service('ghi_blocks.node_queue');
     $queue = $node_queue->queueNodesForPlugin($plugin_id, $queue_id);
     $sandbox['#finished'] = 0;
@@ -71,7 +71,7 @@ function ghi_content_deploy_queue_related_articles_block_configuration_update(&$
   if ($sandbox['#finished'] == 1) {
     // Also queue the revisions for updating, but that can be handled later by
     // cron.
-    /** @var \Drupal\ghi_blocks\Helpers\NodeQueue $node_queue */
+    /** @var \Drupal\ghi_blocks\Services\NodeQueue $node_queue */
     $node_queue = \Drupal::service('ghi_blocks.node_queue');
     $node_queue->queueNodeRevisionsForPlugin($sandbox['plugin_id'], $sandbox['queue_id']);
   }
