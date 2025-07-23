@@ -6,6 +6,7 @@ use Drupal\Component\Utility\Html;
 use Drupal\Component\Utility\Unicode;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Security\TrustedCallbackInterface;
+use Drupal\ghi_base_objects\Helpers\BaseObjectHelper;
 use Drupal\ghi_blocks\Interfaces\ConfigValidationInterface;
 use Drupal\ghi_blocks\Interfaces\ConfigurableTableBlockInterface;
 use Drupal\ghi_blocks\Interfaces\ConfigurationUpdateInterface;
@@ -30,6 +31,7 @@ use Drupal\ghi_subpages\Entity\LogframeSubpage;
 use Drupal\ghi_subpages\Entity\SubpageNodeInterface;
 use Drupal\hpc_api\Query\EndpointQuery;
 use Drupal\hpc_common\Helpers\BlockHelper;
+use Drupal\hpc_downloads\Interfaces\HPCDownloadExcelMultipleInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -68,7 +70,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  *  }
  * )
  */
-class PlanEntityLogframe extends GHIBlockBase implements MultiStepFormBlockInterface, ConfigurableTableBlockInterface, OverrideDefaultTitleBlockInterface, CustomLinkBlockInterface, TrustedCallbackInterface, ConfigValidationInterface, ConfigurationUpdateInterface {
+class PlanEntityLogframe extends GHIBlockBase implements MultiStepFormBlockInterface, ConfigurableTableBlockInterface, OverrideDefaultTitleBlockInterface, CustomLinkBlockInterface, TrustedCallbackInterface, ConfigValidationInterface, ConfigurationUpdateInterface, HPCDownloadExcelMultipleInterface {
 
   use ConfigurationContainerTrait;
   use AttachmentTableTrait;
@@ -177,7 +179,7 @@ class PlanEntityLogframe extends GHIBlockBase implements MultiStepFormBlockInter
     $rendered_items = [];
     foreach ($entities as $entity) {
       if ($this->isConfigurationPreview() || !$lazy_load) {
-        $tables = $this->buildTables($entity, $conf['tables']);
+        $tables = $this->buildTablesContainer($entity, $conf['tables']);
       }
       else {
         $tables = [
@@ -242,6 +244,124 @@ class PlanEntityLogframe extends GHIBlockBase implements MultiStepFormBlockInter
       $build['links'][] = $link->toRenderable();
     }
     return $build;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function buildDownloadData() {
+    $data = [];
+
+    // Get the entities to render.
+    $entities = $this->getRenderableEntities();
+    if (empty($entities)) {
+      return;
+    }
+
+    // Get the config.
+    $conf = $this->getBlockConfig();
+
+    // Sort the entities.
+    $this->sortPlanEntities($entities, $conf['entities']);
+
+    // Build the sheet for the logical framework.
+    $logframe_sheet_label = (string) $this->t('Logical framework');
+    $data[$logframe_sheet_label] = [];
+    $logical_framework = [
+      'header' => [],
+      'rows' => [],
+    ];
+
+    foreach ($entities as $entity) {
+      $parents = $entity instanceof PlanEntity ? $this->getEntityAlignments($entity) : [];
+
+      if (empty($logical_framework['header'])) {
+        foreach (array_reverse($parents) as $parent) {
+          if ($parent->getParentId()) {
+            $logical_framework['header'][] = (string) $this->t('Cluster abbreviation');
+            $logical_framework['header'][] = (string) $this->t('Cluster name');
+          }
+          $logical_framework['header'][] = (string) $this->t('@ref_code code', [
+            '@ref_code' => $parent->ref_code,
+          ]);
+          $logical_framework['header'][] = (string) $this->t('@ref_code description', [
+            '@ref_code' => $parent->ref_code,
+          ]);
+        }
+        $logical_framework['header'][] = (string) $this->t('@ref_code code', [
+          '@ref_code' => $conf['entities']['entity_ref_code'],
+        ]);
+        $logical_framework['header'][] = (string) $this->t('@ref_code description', [
+          '@ref_code' => $conf['entities']['entity_ref_code'],
+        ]);
+      }
+    }
+
+    foreach ($entities as $entity) {
+      $tables = $this->buildTables($entity, $conf['tables']);
+      foreach ($tables as $key => $table) {
+        if (!array_key_exists($key, $data)) {
+          $additional_header = [
+            (string) $this->t('Entity description'),
+          ];
+          $data[$key] = [
+            'header' => array_merge($additional_header, $table['#header']),
+            'rows' => [],
+          ];
+        }
+        $entity_rows = array_map(function ($row) use ($entity) {
+          return array_merge([
+            $entity->getDescription(),
+          ], $row['data'] ?? $row);
+        }, $table['#rows']);
+        $data[$key]['rows'] = array_merge($data[$key]['rows'], $entity_rows);
+      }
+
+      $logical_framework_row = [];
+      $parents = $entity instanceof PlanEntity ? $this->getEntityAlignments($entity) : [];
+      foreach (array_reverse($parents) as $parent) {
+        if ($parent->getParentId()) {
+          /** @var \Drupal\ghi_plans\Entity\GoverningEntity $cluster */
+          $cluster = BaseObjectHelper::getBaseObjectFromOriginalId($parent->getParentId(), 'governing_entity');
+          $governing_entity = $cluster->getSourceObject();
+          $logical_framework_row[] = $governing_entity->getCustomName('custom_id');
+          $logical_framework_row[] = $governing_entity->getName();
+        }
+        $logical_framework_row[] = $this->getPlanEntityId($parent, $conf['entities']);
+        $logical_framework_row[] = $parent->getDescription();
+      }
+
+      $logical_framework_row[] = $this->getPlanEntityId($entity, $conf['entities']);
+      $logical_framework_row[] = $entity->getDescription();
+
+      $logical_framework['rows'][] = $logical_framework_row;
+      $data[$logframe_sheet_label] = $logical_framework;
+    }
+    return $data;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function preprocess(&$variables) {
+    parent::preprocess($variables);
+    if (empty($variables['download_links'])) {
+      return;
+    }
+    // Move the download link into a different position.
+    $variables['content']['links'] = $variables['content']['links'] ?? [];
+    $download_links = array_map(function ($link) {
+      /** @var \Drupal\Core\Url $url */
+      $url = $link['#link']['#url'];
+      $attributes = $url->getOption('attributes');
+      $attributes['class'][] = 'cd-button';
+      $url->setOption('attributes', $attributes);
+      $link['#link']['#title'] = $this->t('Download');
+      return $link['#link'];
+    }, $variables['download_links']);
+    $variables['content']['links'] = array_merge($download_links, $variables['content']['links']);
+
+    unset($variables['download_links']);
   }
 
   /**
@@ -312,14 +432,31 @@ class PlanEntityLogframe extends GHIBlockBase implements MultiStepFormBlockInter
       if (!$table || empty($table['#rows'])) {
         continue;
       }
-      $tables[] = $table;
+      $attachment_prototype = $attachment_prototypes[$item_type->get('attachment_prototype')];
+      $tables[$attachment_prototype->getName()] = $table;
     }
+    return $tables;
+  }
+
+  /**
+   * Get the entity attachment tables in a container.
+   *
+   * @param \Drupal\ghi_plans\ApiObjects\PlanEntityInterface $entity
+   *   The plan entity.
+   * @param array $conf
+   *   The entity configuration.
+   *
+   * @return array
+   *   A render array with the entity attachment tables.
+   */
+  public function buildTablesContainer(PlanEntityInterface $entity, array $conf) {
+    $tables = $this->buildTables($entity, $conf);
     if (empty($tables)) {
       return $tables;
     }
     return [
       '#type' => 'container',
-      'tables' => $tables,
+      'tables' => array_values($tables),
     ];
   }
 
@@ -345,7 +482,7 @@ class PlanEntityLogframe extends GHIBlockBase implements MultiStepFormBlockInter
       return [];
     }
     $entities = $block_instance->getRenderableEntities();
-    $tables = $block_instance->buildTables($entities[$entity_id], $block_instance->getBlockConfig()['tables']);
+    $tables = $block_instance->buildTablesContainer($entities[$entity_id], $block_instance->getBlockConfig()['tables']);
 
     // Reset the static caches to prevent memory issues. Lazy load callbacks
     // are part of the same main thread that renders the page. Given that there
