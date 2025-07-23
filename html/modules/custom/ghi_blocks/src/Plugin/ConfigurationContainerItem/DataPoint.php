@@ -131,11 +131,13 @@ class DataPoint extends ConfigurationContainerItemPluginBase {
     $config = $this->getPluginConfiguration();
     $build = $attachment->formatValue($data_point_conf);
     $data_point_index = $data_point_conf['data_points'][0]['index'] ?? NULL;
+    $use_calculation_method = $data_point_conf['data_points'][0]['use_calculation_method'] ?? FALSE;
     if (is_int($data_point_index) && !empty($config['disaggregation_modal']) && $this->canShowDisaggregatedData($attachment, $data_point_conf)) {
       $link_url = Url::fromRoute('ghi_plans.modal_content.dissaggregation', [
         'attachment' => $attachment->id(),
         'metric' => $data_point_index,
         'reporting_period' => $build['#reporting_period'] ?: 'latest',
+        'use_calculation_method' => (int) $use_calculation_method,
       ]);
       $link_url->setOptions([
         'attributes' => [

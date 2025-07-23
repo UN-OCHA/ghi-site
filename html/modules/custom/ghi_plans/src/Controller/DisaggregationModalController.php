@@ -41,7 +41,7 @@ class DisaggregationModalController extends ControllerBase {
   /**
    * Get the title for the modal.
    */
-  private function modalTitle(DataAttachment $attachment, $metric, $reporting_period_id) {
+  private function modalTitle(DataAttachment $attachment, $metric, $reporting_period_id, $use_calculation_method) {
     $metrics = $attachment->getMetricFields();
     $entity = $attachment->getSourceEntity();
     $icon = $entity instanceof GoverningEntity ? $entity->icon : NULL;
@@ -50,7 +50,7 @@ class DisaggregationModalController extends ControllerBase {
     $formatted_period = NULL;
     if ($attachment->isMeasurementField($metrics[$metric]) && $reporting_period = $attachment->getReportingPeriod($reporting_period_id)) {
       $formatted_period = new FormattableMarkup('<span class="title-additional-info">@formatted_period</span>', [
-        '@formatted_period' => match ($attachment->isCummulativeReachField($metric)) {
+        '@formatted_period' => match ($attachment->isCummulativeReachField($metric) || $use_calculation_method) {
           TRUE => $reporting_period->format('Monitoring period: @data_range_cumulative'),
           FALSE => $reporting_period->format('Monitoring period @period_number: @date_range'),
         },
@@ -69,16 +69,19 @@ class DisaggregationModalController extends ControllerBase {
    *   The index of the metric item.
    * @param int $reporting_period
    *   The reporting period id for which to retrieve the data.
+   * @param bool $use_calculation_method
+   *   Whether the metric is configured to use the calculation method.
    *
    * @return array
    *   A render array.
    */
-  public function loadDisaggregationModalData(DataAttachment $attachment, $metric, $reporting_period) {
+  public function loadDisaggregationModalData(DataAttachment $attachment, $metric, $reporting_period, $use_calculation_method) {
     $cid = implode('-', [
       __FUNCTION__,
       $attachment->id(),
       $metric,
       $reporting_period,
+      $use_calculation_method,
     ]);
     $cache = $this->cache();
     $cached_build = $cache->get($cid);
@@ -94,7 +97,7 @@ class DisaggregationModalController extends ControllerBase {
       '#attached' => [
         'library' => ['ghi_blocks/modal'],
         'drupalSettings' => [
-          'ghi_modal_title' => $this->modalTitle($attachment, $metric, $reporting_period),
+          'ghi_modal_title' => $this->modalTitle($attachment, $metric, $reporting_period, $use_calculation_method),
         ],
       ],
       'content' => $build,
