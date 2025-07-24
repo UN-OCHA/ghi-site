@@ -85,16 +85,22 @@ class ImportBlockForm extends ConfigureBlockFormBase {
         if (!$component = $form_state->get('layout_builder__component')) {
           $component = new SectionComponent($this->uuidGenerator->generate(), $region, $plugin_config);
           $plugin = $component->getPlugin();
+          $configuration = $component->toArray()['configuration'];
+
+          if ($plugin instanceof GHIBlockBase) {
+            $plugin->alterImportedConfiguration($configuration);
+          }
           if ($plugin instanceof GHIBlockBase && $plugin instanceof ConfigValidationInterface) {
             /** @var \Drupal\Core\Entity\ContentEntityInterface $entity */
             $entity = $section_storage->getContextValue('entity');
             $entity_type = $entity->getEntityType();
             $entity_type_label = $entity_type->hasKey('bundle') ? $entity->type->entity->label() : $entity_type->getLabel();
+            $plugin->setConfiguration($configuration);
             $plugin->setContext('entity', EntityContext::fromEntity($entity, $entity_type_label));
             $plugin->fixConfigErrors();
             $configuration = $plugin->getConfiguration();
-            $component->setConfiguration($configuration);
           }
+          $component->setConfiguration($configuration);
           $section_storage->getSection($delta)->appendComponent($component);
           $form_state->set('layout_builder__component', $component);
         }
