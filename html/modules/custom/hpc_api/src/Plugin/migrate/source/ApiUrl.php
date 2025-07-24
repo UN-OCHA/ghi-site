@@ -3,6 +3,7 @@
 namespace Drupal\hpc_api\Plugin\migrate\source;
 
 use Drupal\migrate\Plugin\MigrationInterface;
+use Drupal\migrate_plus\DataParserPluginManager;
 use Drupal\migrate_plus\Plugin\migrate\source\Url;
 
 /**
@@ -24,7 +25,7 @@ class ApiUrl extends Url {
   /**
    * {@inheritdoc}
    */
-  public function __construct(array $configuration, $plugin_id, $plugin_definition, MigrationInterface $migration) {
+  public function __construct(array $configuration, $plugin_id, $plugin_definition, MigrationInterface $migration, protected DataParserPluginManager $parserPluginManager) {
     $source_configuration = $migration->getSourceConfiguration();
     $cache_base_time = $source_configuration['cache_base_time'] ?? NULL;
     $configuration['cache_base_time'] = $cache_base_time;
@@ -39,7 +40,7 @@ class ApiUrl extends Url {
       $configuration['urls'][] = $query_handler->getFullEndpointUrl();
       $configuration['auth_headers'] = $query_handler->getAuthHeaders();
     }
-    parent::__construct($configuration, $plugin_id, $plugin_definition, $migration);
+    parent::__construct($configuration, $plugin_id, $plugin_definition, $migration, $parserPluginManager);
   }
 
 }
