@@ -147,6 +147,13 @@ abstract class GHIBlockBase extends HPCBlockBase {
   protected $formSubmitter;
 
   /**
+   * The user account service.
+   *
+   * @var \Drupal\Core\Session\AccountInterface
+   */
+  protected $currentUser;
+
+  /**
    * Retrieves a configuration object.
    *
    * @param string $name
@@ -177,6 +184,7 @@ abstract class GHIBlockBase extends HPCBlockBase {
     $instance->controllerResolver = $container->get('controller_resolver');
     $instance->routeMatch = $container->get('current_route_match');
     $instance->formSubmitter = $container->get('form_submitter');
+    $instance->currentUser = $container->get('current_user');
 
     $instance->getContexts();
 
@@ -566,6 +574,32 @@ abstract class GHIBlockBase extends HPCBlockBase {
   }
 
   /**
+   * Check if a block can be removed from the section storage.
+   *
+   * @return bool
+   *   TRUE if the block can be removed, FALSE otherwise.
+   */
+  public function canBeRemoved() {
+    return TRUE;
+  }
+
+  /**
+   * Alter configuration before it get's imported.
+   */
+  public function alterImportedConfiguration(array &$configuration) {
+    // Add information about the user and date of the import.
+    $configuration['imported'] = [
+      'user' => $this->currentUser->id(),
+      'date' => date('Y-m-d H:i:s'),
+    ];
+  }
+
+  /**
+   * Alter configuration before it get's exported.
+   */
+  public function alterExportedConfiguration(array &$configuration) {}
+
+  /**
    * See if this block needs to configure the data object it works with.
    *
    * @return bool
@@ -668,11 +702,12 @@ abstract class GHIBlockBase extends HPCBlockBase {
         $options[$bundle][$object->id()] = (string) ($object instanceof BaseObjectChildInterface ? $object->labelWithParent() : $object->label());
       }
     }
+    $current_base_object_type = $this->getCurrentBaseObject()?->type?->entity?->label();
     $form['data_object'] = [
       '#type' => 'select',
       '#title' => $this->t('Data object'),
       '#options' => $options,
-      '#default_value' => $this->getSelectedDataObjectId(),
+      '#default_value' => $this->getSelectedDataObjectId() ?? array_key_last($options[$current_base_object_type] ?? []),
       '#access' => count($options) > 0,
     ];
     return $form;

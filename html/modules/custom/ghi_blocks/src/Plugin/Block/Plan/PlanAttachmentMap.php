@@ -19,6 +19,8 @@ use Drupal\ghi_plans\ApiObjects\Attachments\AttachmentInterface;
 use Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment;
 use Drupal\ghi_plans\Traits\AttachmentFilterTrait;
 use Drupal\ghi_plans\Traits\PlanReportingPeriodTrait;
+use Drupal\ghi_sections\Entity\SectionNodeInterface;
+use Drupal\ghi_subpages\Entity\SubpageNodeInterface;
 use Drupal\hpc_downloads\Interfaces\HPCDownloadPNGInterface;
 
 /**
@@ -843,7 +845,11 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
    *   An array of plan entity objects.
    */
   private function getAvailableEntities() {
-    $plan_id = $this->getCurrentPlanObject()->getSourceId();
+    $plan_object = $this->getCurrentPlanObject();
+    if (!$plan_object) {
+      return [];
+    }
+    $plan_id = $plan_object->getSourceId();
 
     /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\PlanBasicQuery $query_handler */
     $query_handler = $this->endpointQueryManager->createInstance('plan_basic_query');
@@ -879,9 +885,13 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
    *   An array of attachment objects.
    */
   private function getAvailableAttachments() {
+    $plan_object = $this->getCurrentPlanObject();
+    if (!$plan_object) {
+      return [];
+    }
     /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\PlanEntitiesQuery $query_handler */
     $query_handler = $this->endpointQueryManager->createInstance('plan_entities_query');
-    $query_handler->setPlaceholder('plan_id', $this->getCurrentPlanObject()->getSourceId());
+    $query_handler->setPlaceholder('plan_id', $plan_object->getSourceId());
     return $query_handler->getDataAttachments($this->getCurrentBaseObject());
   }
 
@@ -890,6 +900,16 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
    */
   public function getConfigErrors() {
     $errors = [];
+    $plan_object = $this->getCurrentPlanObject();
+    if (!$plan_object) {
+      if (!$this->getCurrentBaseEntity() instanceof SectionNodeInterface && !$this->getCurrentBaseEntity() instanceof SubpageNodeInterface) {
+        $errors[] = $this->t('No plan object available on the target page. Check if the necessary data objects have been added.');
+      }
+      else {
+        $errors[] = $this->t('No plan object available on the target page.');
+      }
+      return $errors;
+    }
     $configured_entities = $this->getConfiguredEntities();
     if (!empty($configured_entities)) {
       $available_entities = $this->getAvailableEntities();
@@ -960,6 +980,11 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
       // Just unset the default attachment, so that the rendering can decide
       // which one to use.
       $conf['map']['common']['default_attachment'] = NULL;
+    }
+
+    // Update the selected monitoring periods if necessary.
+    if (empty($configured_attachments) || reset($configured_attachments)->getPlanId() != $this->getCurrentPlanId()) {
+      $conf['map']['appearance']['circle']['monitoring_period'] = ['latest' => 'latest'];
     }
 
     $this->setBlockConfig($conf);

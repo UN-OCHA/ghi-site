@@ -151,6 +151,10 @@ class BlockHandler implements ContainerInjectionInterface {
       ];
     }
 
+    if ($plugin instanceof GHIBlockBase && !$plugin->canBeRemoved()) {
+      unset($links['layout_builder_block_remove']);
+    }
+
     $links['layout_builder_block_hide'] = [
       'route_name' => 'ghi_blocks.hide_block',
       'route_parameters' => $route_parameters,

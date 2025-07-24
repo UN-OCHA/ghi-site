@@ -11,6 +11,8 @@ use Drupal\hpc_common\Helpers\StringHelper;
  */
 class Plan extends BaseObject implements PlanEntityInterface {
 
+  const ENTITY_REF_CODE = 'PL';
+
   /**
    * Map the raw data.
    *
@@ -63,6 +65,13 @@ class Plan extends BaseObject implements PlanEntityInterface {
    * {@inheritdoc}
    */
   public function getCustomName($type) {
+    return $this->getPlanTypeAbbreviation();
+  }
+
+  /**
+   * Get the abbreviation of the plan type.
+   */
+  public function getPlanTypeAbbreviation() {
     if ($plan_type = $this->getEntity()?->getPlanType()) {
       return $plan_type->getAbbreviation();
     }
@@ -80,7 +89,7 @@ class Plan extends BaseObject implements PlanEntityInterface {
    * {@inheritdoc}
    */
   public function getEntityTypeRefCode() {
-    return 'PL';
+    return self::ENTITY_REF_CODE;
   }
 
   /**

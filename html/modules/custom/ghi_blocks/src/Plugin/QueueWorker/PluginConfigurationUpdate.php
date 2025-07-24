@@ -123,7 +123,7 @@ final class PluginConfigurationUpdate extends QueueWorkerBase implements Contain
 
     if ($changed) {
       $entity->get(OverridesSectionStorage::FIELD_NAME)->setValue($sections);
-      if ($entity instanceof RevisionableInterface) {
+      if ($entity instanceof RevisionableInterface && $entity->getEntityType()->hasKey('revision')) {
         $entity->setNewRevision(FALSE);
       }
       if ($entity instanceof SynchronizableInterface) {
