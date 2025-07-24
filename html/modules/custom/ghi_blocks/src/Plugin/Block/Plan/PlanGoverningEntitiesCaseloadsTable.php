@@ -15,6 +15,8 @@ use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
 use Drupal\ghi_blocks\Traits\AttachmentTableTrait;
 use Drupal\ghi_blocks\Traits\ConfigValidationTrait;
 use Drupal\ghi_form_elements\Traits\ConfigurationContainerTrait;
+use Drupal\ghi_sections\Entity\SectionNodeInterface;
+use Drupal\ghi_subpages\Entity\SubpageNodeInterface;
 use Drupal\hpc_downloads\Interfaces\HPCDownloadExcelInterface;
 use Drupal\hpc_downloads\Interfaces\HPCDownloadPNGInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -562,9 +564,21 @@ class PlanGoverningEntitiesCaseloadsTable extends GHIBlockBase implements Config
    * {@inheritdoc}
    */
   public function getConfigErrors() {
+    $errors = [];
+
+    $plan_object = $this->getCurrentPlanObject();
+    if (!$plan_object) {
+      if (!$this->getCurrentBaseEntity() instanceof SectionNodeInterface && !$this->getCurrentBaseEntity() instanceof SubpageNodeInterface) {
+        $errors[] = $this->t('No plan object available on the target page. Check if the necessary data objects have been added.');
+      }
+      else {
+        $errors[] = $this->t('No plan object available on the target page.');
+      }
+      return $errors;
+    }
+
     $prototype = $this->getAttachmentPrototype();
     $prototype_options = $this->getUniquePrototypeOptions();
-    $errors = [];
     if (!$prototype && (empty($prototype_options) || count($prototype_options) > 1)) {
       $errors[] = $this->t('Attachment prototype: Invalid prototype or multiple prototypes available in the new plan context');
     }

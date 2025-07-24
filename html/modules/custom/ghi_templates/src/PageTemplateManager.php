@@ -140,9 +140,21 @@ class PageTemplateManager implements ContainerInjectionInterface {
       ]);
     }
 
+    $delta = 0;
+    $section = $section_storage->getSection($delta);
+
     // Clear the current storage.
-    if ($overwrite) {
-      $section_storage->removeAllSections();
+    if ($overwrite && $section->getComponents()) {
+      foreach ($section->getComponents() as $component) {
+        $plugin = $component->getPlugin();
+        if ($plugin instanceof GHIBlockBase && !$plugin->canBeRemoved()) {
+          // Don't remove components that could not have been removed manually
+          // via the UI. In this case, the paragraph is locked, so it can't be
+          // removed.
+          continue;
+        }
+        $section->removeComponent($component->getUuid());
+      }
     }
 
     // Now setup each section according to the imported config.
@@ -158,37 +170,23 @@ class PageTemplateManager implements ContainerInjectionInterface {
         // Set a new UUID to prevent UUID collisions.
         $component_config['uuid'] = $this->uuid->generate();
         $component = SectionComponent::fromArray($component_config);
-        $plugin = $component->getPlugin();
 
-        $definition = $plugin->getPluginDefinition();
-        $context_mapping = [
-          'context_mapping' => array_intersect_key([
-            'node' => 'layout_builder.entity',
-          ], $definition['context_definitions']),
-        ];
-        // And make sure that base objects are mapped too.
-        $base_objects = BaseObjectHelper::getBaseObjectsFromNode($entity) ?? [];
-        foreach ($base_objects as $_base_object) {
-          $contexts = [
-            EntityContext::fromEntity($_base_object),
-          ];
-          foreach ($definition['context_definitions'] as $context_key => $context_definition) {
-            $matching_contexts = $this->contextHandler->getMatchingContexts($contexts, $context_definition);
-            if (empty($matching_contexts)) {
-              continue;
-            }
-            $context_mapping['context_mapping'][$context_key] = $_base_object->getUniqueIdentifier();
-          }
-        }
-        $configuration = $context_mapping + $component->get('configuration');
-        $component->setConfiguration($configuration);
+        // Make sure that context objects are updated too.
+        $this->updateComponentContext($component, $entity);
+
+        // Fix configuration issues if possible.
         $plugin = $component->getPlugin();
+        $configuration = $component->toArray()['configuration'];
+        if ($plugin instanceof GHIBlockBase) {
+          $plugin->alterImportedConfiguration($configuration);
+        }
         if ($fix_element_configuration && $plugin instanceof GHIBlockBase && $plugin instanceof ConfigValidationInterface) {
           $plugin->setContext('entity', EntityContext::fromEntity($entity, $entity->type->entity->label()));
+          $plugin->setConfiguration($configuration);
           $plugin->fixConfigErrors();
-          $configuration = $context_mapping + $plugin->getConfiguration();
-          $component->setConfiguration($configuration);
+          $configuration = $plugin->getConfiguration();
         }
+        $component->setConfiguration($configuration);
         $components[$component->getUuid()] = $component->toArray();
       }
       if ($overwrite || empty($section_storage->getSections())) {
@@ -204,6 +202,78 @@ class PageTemplateManager implements ContainerInjectionInterface {
       }
     }
     return $section_storage;
+  }
+
+  /**
+   * Update the contexts for the component.
+   *
+   * @param \Drupal\layout_builder\SectionComponent $component
+   *   The section component.
+   * @param \Drupal\Core\Entity\EntityInterface $entity
+   *   The entity associated with the section storage.
+   */
+  private function updateComponentContext(SectionComponent $component, EntityInterface $entity) {
+    $plugin = $component->getPlugin();
+    $definition = $plugin->getPluginDefinition();
+
+    $configuration = [
+      'context_mapping' => array_intersect_key([
+        'node' => 'layout_builder.entity',
+      ], $definition['context_definitions']),
+    ] + $component->get('configuration');
+    $component->setConfiguration($configuration);
+
+    if (!$plugin instanceof GHIBlockBase) {
+      return;
+    }
+
+    // Get hold of the base object storage.
+    $base_object_storage = $this->entityTypeManager->getStorage('base_object');
+
+    $base_objects = BaseObjectHelper::getBaseObjectsFromNode($entity) ?? [];
+    foreach ($base_objects as $_base_object) {
+      $contexts = [
+        EntityContext::fromEntity($_base_object),
+      ];
+      foreach ($definition['context_definitions'] as $context_key => $context_definition) {
+        $matching_contexts = $this->contextHandler->getMatchingContexts($contexts, $context_definition);
+        if (empty($matching_contexts)) {
+          continue;
+        }
+        $configuration['context_mapping'][$context_key] = $_base_object->getUniqueIdentifier();
+      }
+    }
+
+    if (array_key_exists(GHIBlockBase::CONTEXTS_FORM_KEY, $configuration)) {
+      $context = &$configuration[GHIBlockBase::CONTEXTS_FORM_KEY];
+      $context['context_mapping'] = $configuration['context_mapping'];
+
+      if (!empty($context['data_object']) && $base_object = $base_object_storage->load($context['data_object'])) {
+        // Also map the configured data object.
+        /** @var \Drupal\ghi_base_objects\Entity\BaseObjectInterface $base_object */
+        $base_object_identifier = $base_object->getUniqueIdentifier();
+        foreach ($context['context_mapping'] as $context_key => $unique_identifier) {
+          if (!str_contains($unique_identifier, '--')) {
+            continue;
+          }
+          [$bundle, $original_id] = explode('--', $unique_identifier);
+          if (!str_starts_with($base_object_identifier, $bundle . '--')) {
+            continue;
+          }
+          $base_object_new = BaseObjectHelper::getBaseObjectFromOriginalId($original_id, $bundle);
+          if (!$base_object_new) {
+            continue;
+          }
+          $context['data_object'] = $base_object_new->id();
+        }
+      }
+
+      if (array_key_exists(GHIBlockBase::CONTEXTS_FORM_KEY, $configuration['hpc'])) {
+        $configuration['hpc'][GHIBlockBase::CONTEXTS_FORM_KEY] = $context;
+      }
+    }
+
+    $component->setConfiguration($configuration);
   }
 
   /**
@@ -234,6 +304,10 @@ class PageTemplateManager implements ContainerInjectionInterface {
         return $a['weight'] <=> $b['weight'];
       });
       foreach ($config_export['page_config'][$delta]['components'] as &$component) {
+        $plugin = $section->getComponent($component['uuid'])?->getPlugin();
+        if ($plugin instanceof GHIBlockBase) {
+          $plugin->alterExportedConfiguration($component['configuration']);
+        }
         unset($component['configuration']['uuid']);
         unset($component['configuration']['context_mapping']);
         unset($component['configuration']['data_sources']);

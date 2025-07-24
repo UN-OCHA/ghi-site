@@ -382,6 +382,13 @@ class Paragraph extends ContentBlockBase implements OptionalTitleBlockInterface,
   }
 
   /**
+   * {@inheritdoc}
+   */
+  public function canBeRemoved() {
+    return !$this->lockArticle();
+  }
+
+  /**
    * Select article form.
    */
   public function articleSelectForm(array $form, FormStateInterface $form_state) {
@@ -515,7 +522,7 @@ class Paragraph extends ContentBlockBase implements OptionalTitleBlockInterface,
    *   TRUE if the article is locked, FALSE otherwise.
    */
   public function lockArticle() {
-    return $this->getArticle() && !empty($this->configuration['lock_article']);
+    return $this->getArticle() && !empty($this->configuration['lock_article']) && empty($this->configuration['imported']);
   }
 
   /**
@@ -835,6 +842,28 @@ class Paragraph extends ContentBlockBase implements OptionalTitleBlockInterface,
       $twig_service->enableDebug();
     }
     return $html;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function alterImportedConfiguration(array &$configuration) {
+    parent::alterImportedConfiguration($configuration);
+
+    // Imported config should not have any lock information.
+    unset($configuration['lock_article']);
+    unset($configuration['sync']);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function alterExportedConfiguration(array &$configuration) {
+    parent::alterExportedConfiguration($configuration);
+
+    // Exported config should not have any lock information.
+    unset($configuration['lock_article']);
+    unset($configuration['sync']);
   }
 
 }
