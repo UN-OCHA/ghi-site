@@ -1,14 +1,11 @@
 .item-list--entity-logframe {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 2rem;
 }
 .item-list--entity-logframe + .cd-button,
 .item-list--entity-logframe + .link-wrapper {
   margin-top: 1rem;
-}
-.item-list--entity-logframe > .item-wrapper {
-  border-left: 4px solid var(--ghi-yellow);
 }
 .item-list--entity-logframe > .item-wrapper > .entity-wrapper {
   display: flex;
@@ -19,7 +16,7 @@
 }
 .item-list--entity-logframe > .item-wrapper .entity-wrapper--inner {
   display: flex;
-  gap: 2rem;
+  gap: 3rem;
   justify-content: space-between;
   margin-left: 1rem;
 }
@@ -29,72 +26,80 @@
   padding: 0;
 }
 .item-list--entity-logframe > .item-wrapper .entity-wrapper--inner p.label {
+  position: relative;
   flex-grow: 0;
   white-space: nowrap;
-  font-size: var(--cd-font-size--2xlarge);
+  font-size: var(--cd-font-size--large);
   font-weight: bold;
 }
-
-.item-list--entity-logframe
-  > .item-wrapper
-  .entity-wrapper--inner
-  p.description {
-  flex-grow: 1;
-  font-size: var(--cd-font-size--default);
+.item-list--entity-logframe > .item-wrapper .entity-wrapper--inner p.label::after {
+  position: absolute;
+  top: -10%;
+  right: -1.5rem;
+  height: 120%;
+  content: "";
+  border-right: 4px solid var(--ghi-yellow);
 }
 
-.entity-type--plan
-  .item-list--entity-logframe
-  > .item-wrapper
-  .entity-wrapper--inner,
-.entity-type--governingentity
-  .item-list--entity-logframe
-  > .item-wrapper
-  .entity-wrapper--inner {
+.item-list--entity-logframe > .item-wrapper .entity-wrapper--inner p.description {
+  position: relative;
+  flex-grow: 1;
+  font-size: var(--cd-font-size--base);
+}
+
+.entity-type--plan .item-list--entity-logframe > .item-wrapper .entity-wrapper--inner,
+.entity-type--governingentity .item-list--entity-logframe > .item-wrapper .entity-wrapper--inner {
   flex-direction: column;
   gap: 0;
 }
-.entity-type--plan
-  .item-list--entity-logframe
-  > .item-wrapper
-  .entity-wrapper--inner
-  p,
-.entity-type--governingentity
-  .item-list--entity-logframe
-  > .item-wrapper
-  .entity-wrapper--inner
-  p {
+.entity-type--plan .item-list--entity-logframe > .item-wrapper .entity-wrapper--inner p,
+.entity-type--governingentity .item-list--entity-logframe > .item-wrapper .entity-wrapper--inner p {
   align-self: flex-start;
 }
 
-.item-list--entity-logframe > .item-wrapper .entity-wrapper span.table-toggle {
+.item-list--entity-logframe > .item-wrapper .entity-wrapper span.table-toggle,
+.item-list--entity-logframe > .item-wrapper .entity-wrapper span.table-no-data {
   flex-grow: 0;
   align-self: center;
   width: fit-content;
   margin-right: 1rem;
   padding: 0.5rem;
   cursor: pointer;
+  user-select: none;
+  transition: transform 0.25s linear;
+  transition-duration: 0.25s !important;
+  transform: rotate(0deg);
   border-radius: 50%;
   background-color: var(--brand-grey);
+  will-change: transform;
 }
 
-.item-list--entity-logframe
-  > .item-wrapper
-  > .entity-wrapper
-  span.table-toggle {
+.item-list--entity-logframe > .item-wrapper .entity-wrapper span.table-toggle.open {
+  transform: rotate(180deg);
+}
+
+.item-list--entity-logframe > .item-wrapper > .entity-wrapper span.table-toggle,
+.item-list--entity-logframe > .item-wrapper > .entity-wrapper span.table-no-data {
   visibility: hidden;
+}
+.item-list--entity-logframe > .item-wrapper .entity-wrapper span.table-no-data {
+  display: none;
+}
+.item-list--entity-logframe > .item-wrapper .entity-wrapper.no-tables.no-alignment span.table-no-data {
+  display: block;
+  visibility: visible;
 }
 
 .item-list--entity-logframe > .item-wrapper > .attachment-tables-wrapper {
   display: none;
   padding: 2rem 1rem 2rem 2rem;
+  border-left: 4px solid var(--ghi-yellow);
 }
 
-.item-list--entity-logframe
-  > .item-wrapper
-  > .attachment-tables-wrapper
-  table
-  thead
-  th:first-child {
+.item-list--entity-logframe > .item-wrapper > .attachment-tables-wrapper table thead th:first-child {
   width: 100%;
+}
+
+.item-list--entity-logframe > .item-wrapper .empty-message {
+  font-size: var(--cd-font-size--small);
 }

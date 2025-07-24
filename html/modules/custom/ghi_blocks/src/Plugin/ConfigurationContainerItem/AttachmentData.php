@@ -252,6 +252,10 @@ class AttachmentData extends ConfigurationContainerItemPluginBase {
 
     /** @var \Drupal\ghi_plans\Entity\Plan $plan */
     $plan = $this->getContextValue('plan_object');
+
+    /** @var \Drupal\ghi_base_objects\Entity\BaseObjectInterface $base_object */
+    $base_object = $this->getContextValue('base_object');
+
     if (!$attachment) {
       $errors[] = $this->t('No attachment configured');
     }
@@ -261,6 +265,10 @@ class AttachmentData extends ConfigurationContainerItemPluginBase {
     elseif ($attachment->getPlanId() != $plan->getSourceId()) {
       $errors[] = $this->t('Configured attachment is not available in the context of the current plan');
     }
+    elseif ($base_object && $attachment->getSourceEntity()->id() != $base_object->getSourceId()) {
+      $errors[] = $this->t('Configured attachment is not available in the context of the current base object');
+    }
+
     return $errors;
   }
 
@@ -276,6 +284,10 @@ class AttachmentData extends ConfigurationContainerItemPluginBase {
 
     /** @var \Drupal\ghi_plans\Entity\Plan $plan */
     $plan = $this->getContextValue('plan_object');
+    if (!$plan) {
+      // Nothing we can do here if no data object is available.
+      return;
+    }
     if ($original_attachment && $plan && $original_attachment->getPlanId() != $plan->getSourceId()) {
       // Unset the configured selected attachment if the plan changed.
       $attachment_id = NULL;
@@ -307,6 +319,14 @@ class AttachmentData extends ConfigurationContainerItemPluginBase {
         $data_points[0]['index'] = AttachmentMatcher::matchDataPointOnAttachments($data_points[0]['index'], $original_attachment, $new_attachment);
         if ($data_point_conf['processing'] != 'single') {
           $data_points[1]['index'] = AttachmentMatcher::matchDataPointOnAttachments($data_points[1]['index'], $original_attachment, $new_attachment);
+        }
+
+        if ($plan && $original_attachment->getPlanId() != $plan->getSourceId()) {
+          // Reset the monitoring periods to latest if the template is applied
+          // in a new plan context, before any previously selected values won't
+          // be valid anymore in the plan context.
+          $data_points[0]['monitoring_period'] = 'latest';
+          $data_points[1]['monitoring_period'] = 'latest';
         }
       }
     }

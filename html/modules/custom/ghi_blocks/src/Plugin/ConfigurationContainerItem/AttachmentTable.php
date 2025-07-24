@@ -312,9 +312,13 @@ class AttachmentTable extends ConfigurationContainerItemPluginBase implements Co
    */
   public function getAllowedItemTypes() {
     $prototype = $this->getAttachmentPrototype();
+    $default_label = $prototype?->getName() ?? NULL;
+    if ($prototype?->getType() == 'caseload' && $plan_object = $this->getBlockContext()['plan_object']) {
+      $default_label = $this->t('Population data', [], ['langcode' => $plan_object->getPlanLanguage() ?? 'en']);
+    }
     $item_types = [
       'attachment_label' => [
-        'default_label' => $prototype?->getName() ?? NULL,
+        'default_label' => $default_label,
       ],
       'attachment_unit' => [],
       'data_point' => [

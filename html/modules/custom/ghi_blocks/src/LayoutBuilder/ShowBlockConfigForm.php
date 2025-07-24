@@ -40,6 +40,9 @@ class ShowBlockConfigForm extends FormBase {
     ]);
 
     $plugin_configuration = $plugin->getConfiguration();
+    if ($plugin instanceof GHIBlockBase) {
+      $plugin->alterExportedConfiguration($plugin_configuration);
+    }
     unset($plugin_configuration['uuid']);
     unset($plugin_configuration['context_mapping']);
     unset($plugin_configuration['data_sources']);

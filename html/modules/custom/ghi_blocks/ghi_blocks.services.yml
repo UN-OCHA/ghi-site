@@ -24,3 +24,6 @@ services:
   ghi_blocks.node_queue:
     class: Drupal\ghi_blocks\Services\NodeQueue
     arguments: ['@entity_type.manager', '@database', '@queue']
+  ghi_blocks.page_template_queue:
+    class: Drupal\ghi_blocks\Services\PageTemplateQueue
+    arguments: ['@entity_type.manager', '@database', '@queue']

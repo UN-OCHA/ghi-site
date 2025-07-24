@@ -2,6 +2,7 @@
 
 namespace Drupal\ghi_plans\Controller;
 
+use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Render\Markup;
 use Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment;
@@ -44,16 +45,19 @@ class DisaggregationModalController extends ControllerBase {
     $metrics = $attachment->getMetricFields();
     $entity = $attachment->getSourceEntity();
     $icon = $entity instanceof GoverningEntity ? $entity->icon : NULL;
-    $title = '';
-    if ($icon && $icon_embed = $this->iconQuery->getIconEmbedCode($icon)) {
-      $title = $icon_embed;
-    }
-    $title .= $entity->getName() . ' | ' . $metrics[$metric];
+    $icon_embed = $icon ? $this->iconQuery->getIconEmbedCode($icon) : NULL;
 
+    $formatted_period = NULL;
     if ($attachment->isMeasurementField($metrics[$metric]) && $reporting_period = $attachment->getReportingPeriod($reporting_period_id)) {
-      $title .= $reporting_period->format('<span class="title-additional-info">Monitoring period @period_number: @date_range</span>');
+      $formatted_period = new FormattableMarkup('<span class="title-additional-info">@formatted_period</span>', [
+        '@formatted_period' => match ($attachment->isCummulativeReachField($metric)) {
+          TRUE => $reporting_period->format('Monitoring period: @data_range_cumulative'),
+          FALSE => $reporting_period->format('Monitoring period @period_number: @date_range'),
+        },
+      ]);
     }
-    return Markup::create($title);
+
+    return Markup::create($icon_embed . $entity->getName() . ' | ' . $metrics[$metric] . $formatted_period);
   }
 
   /**
