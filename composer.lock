@@ -118,16 +118,16 @@
         },
         {
             "name": "aws/aws-sdk-php",
-            "version": "3.351.0",
+            "version": "3.351.5",
             "source": {
                 "type": "git",
                 "url": "https://github.com/aws/aws-sdk-php.git",
-                "reference": "a7b6ed6936317dc112531ec6f6119418e0575464"
+                "reference": "2f00efa2544d158ea366c1e1174097ef330ec883"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/aws/aws-sdk-php/zipball/a7b6ed6936317dc112531ec6f6119418e0575464",
-                "reference": "a7b6ed6936317dc112531ec6f6119418e0575464",
+                "url": "https://api.github.com/repos/aws/aws-sdk-php/zipball/2f00efa2544d158ea366c1e1174097ef330ec883",
+                "reference": "2f00efa2544d158ea366c1e1174097ef330ec883",
                 "shasum": ""
             },
             "require": {
@@ -209,9 +209,9 @@
             "support": {
                 "forum": "https://github.com/aws/aws-sdk-php/discussions",
                 "issues": "https://github.com/aws/aws-sdk-php/issues",
-                "source": "https://github.com/aws/aws-sdk-php/tree/3.351.0"
+                "source": "https://github.com/aws/aws-sdk-php/tree/3.351.5"
             },
-            "time": "2025-07-16T15:14:44+00:00"
+            "time": "2025-07-23T18:04:16+00:00"
         },
         {
             "name": "chi-teck/drupal-code-generator",
@@ -8935,22 +8935,22 @@
         },
         {
             "name": "maennchen/zipstream-php",
-            "version": "3.1.2",
+            "version": "3.2.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/maennchen/ZipStream-PHP.git",
-                "reference": "aeadcf5c412332eb426c0f9b4485f6accba2a99f"
+                "reference": "9712d8fa4cdf9240380b01eb4be55ad8dcf71416"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/maennchen/ZipStream-PHP/zipball/aeadcf5c412332eb426c0f9b4485f6accba2a99f",
-                "reference": "aeadcf5c412332eb426c0f9b4485f6accba2a99f",
+                "url": "https://api.github.com/repos/maennchen/ZipStream-PHP/zipball/9712d8fa4cdf9240380b01eb4be55ad8dcf71416",
+                "reference": "9712d8fa4cdf9240380b01eb4be55ad8dcf71416",
                 "shasum": ""
             },
             "require": {
                 "ext-mbstring": "*",
                 "ext-zlib": "*",
-                "php-64bit": "^8.2"
+                "php-64bit": "^8.3"
             },
             "require-dev": {
                 "brianium/paratest": "^7.7",
@@ -8959,7 +8959,7 @@
                 "guzzlehttp/guzzle": "^7.5",
                 "mikey179/vfsstream": "^1.6",
                 "php-coveralls/php-coveralls": "^2.5",
-                "phpunit/phpunit": "^11.0",
+                "phpunit/phpunit": "^12.0",
                 "vimeo/psalm": "^6.0"
             },
             "suggest": {
@@ -9001,7 +9001,7 @@
             ],
             "support": {
                 "issues": "https://github.com/maennchen/ZipStream-PHP/issues",
-                "source": "https://github.com/maennchen/ZipStream-PHP/tree/3.1.2"
+                "source": "https://github.com/maennchen/ZipStream-PHP/tree/3.2.0"
             },
             "funding": [
                 {
@@ -9009,7 +9009,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2025-01-27T12:07:53+00:00"
+            "time": "2025-07-17T11:15:13+00:00"
         },
         {
             "name": "markbaker/complex",
@@ -10612,16 +10612,16 @@
         },
         {
             "name": "phpoffice/phpspreadsheet",
-            "version": "1.29.11",
+            "version": "1.29.12",
             "source": {
                 "type": "git",
                 "url": "https://github.com/PHPOffice/PhpSpreadsheet.git",
-                "reference": "05b6c4378ddf3e81b460ea645c42b46432c0db25"
+                "reference": "7c06eed662cce7ecab88f6f9f7626b443f5285df"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/PHPOffice/PhpSpreadsheet/zipball/05b6c4378ddf3e81b460ea645c42b46432c0db25",
-                "reference": "05b6c4378ddf3e81b460ea645c42b46432c0db25",
+                "url": "https://api.github.com/repos/PHPOffice/PhpSpreadsheet/zipball/7c06eed662cce7ecab88f6f9f7626b443f5285df",
+                "reference": "7c06eed662cce7ecab88f6f9f7626b443f5285df",
                 "shasum": ""
             },
             "require": {
@@ -10712,9 +10712,9 @@
             ],
             "support": {
                 "issues": "https://github.com/PHPOffice/PhpSpreadsheet/issues",
-                "source": "https://github.com/PHPOffice/PhpSpreadsheet/tree/1.29.11"
+                "source": "https://github.com/PHPOffice/PhpSpreadsheet/tree/1.29.12"
             },
-            "time": "2025-06-23T01:22:06+00:00"
+            "time": "2025-07-23T04:40:30+00:00"
         },
         {
             "name": "phpowermove/docblock",
@@ -14394,16 +14394,16 @@
         },
         {
             "name": "unocha/ocha_snap",
-            "version": "v8.9.2",
+            "version": "v8.10.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/UN-OCHA/ocha_snap.git",
-                "reference": "b6e8e02eb8ed53d953b4fb710bb263294e89c15a"
+                "reference": "f33345694bb1fb8ee12242956b8b5abbf3d1b1d4"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/UN-OCHA/ocha_snap/zipball/b6e8e02eb8ed53d953b4fb710bb263294e89c15a",
-                "reference": "b6e8e02eb8ed53d953b4fb710bb263294e89c15a",
+                "url": "https://api.github.com/repos/UN-OCHA/ocha_snap/zipball/f33345694bb1fb8ee12242956b8b5abbf3d1b1d4",
+                "reference": "f33345694bb1fb8ee12242956b8b5abbf3d1b1d4",
                 "shasum": ""
             },
             "require": {
@@ -14424,9 +14424,9 @@
             ],
             "support": {
                 "issues": "https://github.com/UN-OCHA/ocha_snap/issues",
-                "source": "https://github.com/UN-OCHA/ocha_snap/tree/v8.9.2"
+                "source": "https://github.com/UN-OCHA/ocha_snap/tree/v8.10.0"
             },
-            "time": "2025-02-26T18:38:19+00:00"
+            "time": "2025-07-18T04:34:09+00:00"
         },
         {
             "name": "vipnytt/sitemapparser",
@@ -15795,7 +15795,7 @@
             "extra": {
                 "drupal": {
                     "version": "5.4.0",
-                    "datestamp": "1751916158",
+                    "datestamp": "1752755621",
                     "security-coverage": {
                         "status": "covered",
                         "message": "Covered by Drupal's security advisory policy"
@@ -17909,16 +17909,16 @@
         },
         {
             "name": "phpstan/phpstan",
-            "version": "1.12.27",
+            "version": "1.12.28",
             "source": {
                 "type": "git",
                 "url": "https://github.com/phpstan/phpstan.git",
-                "reference": "3a6e423c076ab39dfedc307e2ac627ef579db162"
+                "reference": "fcf8b71aeab4e1a1131d1783cef97b23a51b87a9"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/phpstan/phpstan/zipball/3a6e423c076ab39dfedc307e2ac627ef579db162",
-                "reference": "3a6e423c076ab39dfedc307e2ac627ef579db162",
+                "url": "https://api.github.com/repos/phpstan/phpstan/zipball/fcf8b71aeab4e1a1131d1783cef97b23a51b87a9",
+                "reference": "fcf8b71aeab4e1a1131d1783cef97b23a51b87a9",
                 "shasum": ""
             },
             "require": {
@@ -17963,7 +17963,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2025-05-21T20:51:45+00:00"
+            "time": "2025-07-17T17:15:39+00:00"
         },
         {
             "name": "phpstan/phpstan-deprecation-rules",
