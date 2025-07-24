@@ -6,10 +6,8 @@ use Drupal\Component\Utility\Html;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\Markup;
 use Drupal\Core\Security\TrustedCallbackInterface;
-use Drupal\ghi_blocks\Interfaces\ConfigValidationInterface;
 use Drupal\ghi_blocks\Interfaces\MultiStepFormBlockInterface;
 use Drupal\ghi_blocks\Interfaces\OptionalTitleBlockInterface;
-use Drupal\ghi_blocks\Traits\ConfigValidationTrait;
 use Drupal\ghi_content\Entity\Article;
 use Drupal\ghi_content\RemoteContent\RemoteArticleInterface;
 use Drupal\ghi_content\RemoteContent\RemoteParagraphInterface;
@@ -37,10 +35,9 @@ use Drupal\hpc_common\Helpers\ThemeHelper;
  *  }
  * )
  */
-class Paragraph extends ContentBlockBase implements OptionalTitleBlockInterface, MultiStepFormBlockInterface, ConfigValidationInterface, TrustedCallbackInterface {
+class Paragraph extends ContentBlockBase implements OptionalTitleBlockInterface, MultiStepFormBlockInterface, TrustedCallbackInterface {
 
   use CustomLinkTrait;
-  use ConfigValidationTrait;
 
   /**
    * The CSS class used for promoted paragraphs. This comes from the NCMS.
@@ -525,7 +522,7 @@ class Paragraph extends ContentBlockBase implements OptionalTitleBlockInterface,
    *   TRUE if the article is locked, FALSE otherwise.
    */
   public function lockArticle() {
-    return $this->getArticle() && !empty($this->configuration['lock_article']);
+    return $this->getArticle() && !empty($this->configuration['lock_article']) && empty($this->configuration['imported']);
   }
 
   /**
@@ -850,23 +847,23 @@ class Paragraph extends ContentBlockBase implements OptionalTitleBlockInterface,
   /**
    * {@inheritdoc}
    */
-  public function getConfigErrors() {
-    // We don't expect any errors. But we must implement this method due to
-    // ConfigValidationInterface, that we need to remove the lock state in
-    // ::fixConfigErrors().
-    return [];
+  public function alterImportedConfiguration(array &$configuration) {
+    parent::alterImportedConfiguration($configuration);
+
+    // Imported config should not have any lock information.
+    unset($configuration['lock_article']);
+    unset($configuration['sync']);
   }
 
   /**
    * {@inheritdoc}
    */
-  public function fixConfigErrors() {
-    // As this is only called during (a) manual imports of a block config to
-    // add to a page, or (b) when importing an entire page config or applying a
-    // page template, we want to unset the lock state, so that paragraphs that
-    // are added this way can also be removed again.
-    unset($this->configuration['lock_article']);
-    unset($this->configuration['sync']);
+  public function alterExportedConfiguration(array &$configuration) {
+    parent::alterExportedConfiguration($configuration);
+
+    // Exported config should not have any lock information.
+    unset($configuration['lock_article']);
+    unset($configuration['sync']);
   }
 
 }

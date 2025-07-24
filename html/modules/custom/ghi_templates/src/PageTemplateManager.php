@@ -176,12 +176,17 @@ class PageTemplateManager implements ContainerInjectionInterface {
 
         // Fix configuration issues if possible.
         $plugin = $component->getPlugin();
+        $configuration = $component->toArray()['configuration'];
+        if ($plugin instanceof GHIBlockBase) {
+          $plugin->alterImportedConfiguration($configuration);
+        }
         if ($fix_element_configuration && $plugin instanceof GHIBlockBase && $plugin instanceof ConfigValidationInterface) {
           $plugin->setContext('entity', EntityContext::fromEntity($entity, $entity->type->entity->label()));
+          $plugin->setConfiguration($configuration);
           $plugin->fixConfigErrors();
           $configuration = $plugin->getConfiguration();
-          $component->setConfiguration($configuration);
         }
+        $component->setConfiguration($configuration);
         $components[$component->getUuid()] = $component->toArray();
       }
       if ($overwrite || empty($section_storage->getSections())) {
@@ -299,6 +304,10 @@ class PageTemplateManager implements ContainerInjectionInterface {
         return $a['weight'] <=> $b['weight'];
       });
       foreach ($config_export['page_config'][$delta]['components'] as &$component) {
+        $plugin = $section->getComponent($component['uuid'])?->getPlugin();
+        if ($plugin instanceof GHIBlockBase) {
+          $plugin->alterExportedConfiguration($component['configuration']);
+        }
         unset($component['configuration']['uuid']);
         unset($component['configuration']['context_mapping']);
         unset($component['configuration']['data_sources']);
