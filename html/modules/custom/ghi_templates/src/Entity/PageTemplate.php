@@ -14,6 +14,7 @@ use Drupal\Core\Render\Markup;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\ghi_base_objects\Entity\BaseObjectChildInterface;
+use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
 use Drupal\layout_builder\LayoutEntityHelperTrait;
 use Drupal\layout_builder\Plugin\SectionStorage\OverridesSectionStorage;
 use Drupal\layout_builder\Section;
@@ -123,6 +124,9 @@ class PageTemplate extends ContentEntityBase implements PageTemplateInterface {
           }
         }
         $configuration = $context_mapping + $component->get('configuration');
+        if ($plugin instanceof GHIBlockBase) {
+          $plugin->alterImportedConfiguration($configuration);
+        }
         $component->setConfiguration($configuration);
         $components[$component->getUuid()] = $component->toArray();
       }
