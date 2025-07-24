@@ -7,7 +7,6 @@ use Drupal\hpc_api\Helpers\ApiEntityHelper;
 use Drupal\hpc_api\Helpers\QueryHelper;
 use Drupal\hpc_api\Query\EndpointQuery;
 use Drupal\migrate\MigrateException;
-use Drupal\migrate_plus\DataFetcherPluginBase;
 use Drupal\migrate_plus\Plugin\migrate_plus\data_fetcher\Http;
 use GuzzleHttp\Exception\RequestException;
 use Psr\Http\Message\ResponseInterface;
@@ -41,14 +40,27 @@ class ApiHttp extends Http implements ContainerFactoryPluginInterface {
    *
    * @var \Drupal\hpc_api\Query\EndpointQuery
    */
-  private $endpointQuery;
+  protected $endpointQuery;
 
   /**
-   * If the request should be paged or not.
-   *
-   * @var bool
+   * {@inheritdoc}
    */
-  private $paged;
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition): self {
+    /** @var \Drupal\hpc_api\Plugin\migrate_plus\data_fetcher\ApiHttp $instance */
+    $instance = parent::create($container, $configuration, $plugin_id, $plugin_definition);
+    $instance->endpointQuery = $container->get('hpc_api.endpoint_query');
+    return $instance;
+  }
+
+  /**
+   * If the response is paged ot not.
+   *
+   * @return bool
+   *   TRUE if the response is paged, FALSE otherwise.
+   */
+  private function isPaged() {
+    return !empty($this->configuration['paged']);
+  }
 
   /**
    * If the HPC endpoint uses the new or the old structure.
@@ -57,56 +69,32 @@ class ApiHttp extends Http implements ContainerFactoryPluginInterface {
    * level data property, while the old structure uses an additonal "results"
    * sproperty.
    *
-   * @var bool
+   * @return bool
+   *   TRUE if the new structure is used, FALSE otherwise.
    */
-  private $newStructure;
-
-  /**
-   * Optional filters to apply to the source data.
-   *
-   * Currently only supports a 'start_year' key.
-   *
-   * @var array
-   */
-  private $filter;
-
-  /**
-   * Optional entities process logic to apply to the source data.
-   *
-   * @var array
-   */
-  private $processEntities;
-
-  /**
-   * Cache prefix for local files.
-   *
-   * @var string
-   */
-  private $cachePrefix;
-
-  /**
-   * {@inheritdoc}
-   */
-  public function __construct(array $configuration, $plugin_id, $plugin_definition, EndpointQuery $endpoint_query) {
-    $this->endpointQuery = $endpoint_query;
-    $this->paged = !empty($configuration['paged']);
-    $this->newStructure = !empty($configuration['new_structure']);
-    $this->filter = !empty($configuration['filter']) ? $configuration['filter'] : NULL;
-    $this->processEntities = !empty($configuration['process_entities']) ? $configuration['process_entities'] : NULL;
-    $this->cachePrefix = $configuration['cache_prefix'] ?? NULL;
-    parent::__construct($configuration, $plugin_id, $plugin_definition);
+  private function isNewStructure() {
+    return !empty($this->configuration['new_structure']);
   }
 
   /**
-   * {@inheritdoc}
+   * Get the type of entity to process if set.
+   *
+   * @return string
+   *   The type of process to apply, either "governing" or "plan".
    */
-  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition): DataFetcherPluginBase {
-    return new static(
-      $configuration,
-      $plugin_id,
-      $plugin_definition,
-      $container->get('hpc_api.endpoint_query')
-    );
+  private function getProcessEntitiesType() {
+    return !empty($this->configuration['process_entities']) ? $this->configuration['process_entities'] : NULL;
+  }
+
+  /**
+   * Get the cache prefix for local files.
+   *
+   * @return string
+   *   The cache prefix to use.
+   */
+  private function getCachePrefix() {
+    $prefix = $this->configuration['cache_prefix'] ?? NULL;
+    return $prefix ? $prefix . '__' : '';
   }
 
   /**
@@ -159,7 +147,7 @@ class ApiHttp extends Http implements ContainerFactoryPluginInterface {
     $_url = str_replace('?', '_', $_url);
     $_url = str_replace('&', '_', $_url);
     $file_name = $_url . '.json';
-    return rtrim(QueryHelper::IMPORT_DIR, '/') . '/' . ($this->cachePrefix ? $this->cachePrefix . '__' : '') . $file_name;
+    return rtrim(QueryHelper::IMPORT_DIR, '/') . '/' . $this->getCachePrefix() . $file_name;
   }
 
   /**
@@ -168,7 +156,7 @@ class ApiHttp extends Http implements ContainerFactoryPluginInterface {
   private function downloadSource($url) {
     $import_file = $this->getImportFileName($url);
     // Rebuild the source file.
-    if ($this->paged) {
+    if ($this->isPaged()) {
       // Get the data from the paged source in multiple calls.
       $data = [];
       $page = 0;
@@ -182,7 +170,7 @@ class ApiHttp extends Http implements ContainerFactoryPluginInterface {
           return;
         }
 
-        if (!$this->newStructure) {
+        if (!$this->isNewStructure()) {
           if (!count($body)) {
             // No more data, leave the loop.
             break;
@@ -210,7 +198,7 @@ class ApiHttp extends Http implements ContainerFactoryPluginInterface {
       if (!$body) {
         return;
       }
-      if (!$this->newStructure) {
+      if (!$this->isNewStructure()) {
         $data = $body['data'];
       }
       else {
@@ -218,8 +206,8 @@ class ApiHttp extends Http implements ContainerFactoryPluginInterface {
       }
     }
 
-    if (!empty($this->processEntities)) {
-      $data = $this->processEntities($data, $this->processEntities);
+    if ($process_type = $this->getProcessEntitiesType()) {
+      $data = $this->processEntities($data, $process_type);
     }
 
     // Write the data to the filesystem.
