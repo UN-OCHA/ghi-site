@@ -272,35 +272,71 @@ class PlanEntityLogframe extends GHIBlockBase implements MultiStepFormBlockInter
       'rows' => [],
     ];
 
+    // Build the header for the logframe sheet, based on the parents.
     foreach ($entities as $entity) {
       $parents = $entity instanceof PlanEntity ? $this->getEntityAlignments($entity) : [];
 
       if (empty($logical_framework['header'])) {
-        foreach (array_reverse($parents) as $parent) {
-          if ($parent->getParentId()) {
-            $logical_framework['header'][] = (string) $this->t('Cluster abbreviation');
-            $logical_framework['header'][] = (string) $this->t('Cluster name');
+        $header = [];
+        foreach ($parents as $parent) {
+          $parent_ref_code = $parent->ref_code;
+          if (array_key_exists($parent_ref_code, $header)) {
+            continue;
           }
-          $logical_framework['header'][] = (string) $this->t('@ref_code code', [
+          if ($parent->getParentId()) {
+            $header[] = (string) $this->t('Cluster abbreviation');
+            $header[] = (string) $this->t('Cluster name');
+          }
+          $header[$parent_ref_code] = (string) $this->t('@ref_code code', [
             '@ref_code' => $parent->ref_code,
           ]);
-          $logical_framework['header'][] = (string) $this->t('@ref_code description', [
+          $header[$parent_ref_code . '_description'] = (string) $this->t('@ref_code description', [
             '@ref_code' => $parent->ref_code,
           ]);
         }
-        $logical_framework['header'][] = (string) $this->t('@ref_code code', [
+        $header[] = (string) $this->t('@ref_code code', [
           '@ref_code' => $conf['entities']['entity_ref_code'],
         ]);
-        $logical_framework['header'][] = (string) $this->t('@ref_code description', [
+        $header[] = (string) $this->t('@ref_code description', [
           '@ref_code' => $conf['entities']['entity_ref_code'],
         ]);
+        $logical_framework['header'] = array_values($header);
       }
     }
 
+    // Build the content for the logframe sheet.
+    foreach ($entities as $entity) {
+      $parents = $entity instanceof PlanEntity ? $this->getEntityAlignments($entity) : [];
+      $alignment_paths = $this->getEntityAlignmentsPaths($entity);
+      foreach ($alignment_paths as $parent_ids) {
+        $logical_framework_row = [];
+        foreach ($parent_ids as $parent_id) {
+          $parent = $parents[$parent_id];
+          if ($parent->getParentId()) {
+            /** @var \Drupal\ghi_plans\Entity\GoverningEntity $cluster */
+            $cluster = BaseObjectHelper::getBaseObjectFromOriginalId($parent->getParentId(), 'governing_entity');
+            $governing_entity = $cluster->getSourceObject();
+            $logical_framework_row[] = $governing_entity->getCustomName('custom_id');
+            $logical_framework_row[] = $governing_entity->getName();
+          }
+          $logical_framework_row[] = $this->getPlanEntityId($parent, $conf['entities']);
+          $logical_framework_row[] = $parent->getDescription();
+        }
+        $logical_framework_row[] = $this->getPlanEntityId($entity, $conf['entities']);
+        $logical_framework_row[] = $entity->getDescription();
+        $logical_framework['rows'][] = $logical_framework_row;
+      }
+
+    }
+    $data[$logframe_sheet_label] = $logical_framework;
+
+    // Build the actual data tables if applicable, one for each configured
+    // table.
     foreach ($entities as $entity) {
       $tables = $this->buildTables($entity, $conf['tables']);
       foreach ($tables as $key => $table) {
         if (!array_key_exists($key, $data)) {
+          // Add additional table columns at the beginning of each table.
           $additional_header = [
             (string) $this->t('Entity description'),
           ];
@@ -316,26 +352,6 @@ class PlanEntityLogframe extends GHIBlockBase implements MultiStepFormBlockInter
         }, $table['#rows']);
         $data[$key]['rows'] = array_merge($data[$key]['rows'], $entity_rows);
       }
-
-      $logical_framework_row = [];
-      $parents = $entity instanceof PlanEntity ? $this->getEntityAlignments($entity) : [];
-      foreach (array_reverse($parents) as $parent) {
-        if ($parent->getParentId()) {
-          /** @var \Drupal\ghi_plans\Entity\GoverningEntity $cluster */
-          $cluster = BaseObjectHelper::getBaseObjectFromOriginalId($parent->getParentId(), 'governing_entity');
-          $governing_entity = $cluster->getSourceObject();
-          $logical_framework_row[] = $governing_entity->getCustomName('custom_id');
-          $logical_framework_row[] = $governing_entity->getName();
-        }
-        $logical_framework_row[] = $this->getPlanEntityId($parent, $conf['entities']);
-        $logical_framework_row[] = $parent->getDescription();
-      }
-
-      $logical_framework_row[] = $this->getPlanEntityId($entity, $conf['entities']);
-      $logical_framework_row[] = $entity->getDescription();
-
-      $logical_framework['rows'][] = $logical_framework_row;
-      $data[$logframe_sheet_label] = $logical_framework;
     }
     return $data;
   }

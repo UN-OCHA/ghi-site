@@ -148,16 +148,51 @@ trait AttachmentTableTrait {
    *   The plan entity.
    *
    * @return \Drupal\ghi_plans\ApiObjects\Entities\PlanEntity[]
-   *   The parent entities.
+   *   The parent entities keyed by their entity ids.
    */
   private function getEntityAlignments(PlanEntity $entity): array {
     $parents = $entity->getPlanEntityParents();
     if (!empty($parents)) {
       foreach ($parents as $parent) {
-        $parents = array_filter(array_merge($parents, $parent->getPlanEntityParents()));
+        $parents = $parent->getPlanEntityParents() + $parents;
+        ksort($parents);
       }
     }
     return $parents;
+  }
+
+  /**
+   * Get all possible path of the entity alignments leading up to entity.
+   *
+   * Combination logic taken from https://gist.github.com/cecilemuller/4688876.
+   *
+   * @param \Drupal\ghi_plans\ApiObjects\Entities\PlanEntity $entity
+   *   The plan entity.
+   *
+   * @return \Drupal\ghi_plans\ApiObjects\Entities\int[]
+   *   An array of alignment paths. Each array value is an array of parent
+   *   entity ids keyed by their ref code, assuring that for each path there is
+   *   only a single entity per ref code.
+   */
+  private function getEntityAlignmentsPaths(PlanEntity $entity): array {
+    $alignments = $this->getEntityAlignments($entity);
+    $alignments_grouped = [];
+    foreach ($alignments as $parent) {
+      $alignments_grouped[$parent->ref_code] = $alignments_grouped[$parent->ref_code] ?? [];
+      $alignments_grouped[$parent->ref_code][$parent->id()] = $parent->id();
+    }
+
+    $paths = [[]];
+    foreach ($alignments_grouped as $ref_code => $entity_ids) {
+      $tmp = [];
+      foreach ($paths as $result_item) {
+        foreach ($entity_ids as $entity_id) {
+          $tmp[] = array_merge($result_item, [$ref_code => $entity_id]);
+        }
+      }
+      $paths = $tmp;
+    }
+    return $paths;
   }
 
   /**
