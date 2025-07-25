@@ -104,7 +104,7 @@ class PlanEntity extends EntityObjectBase {
    * Get the plan entity parents.
    *
    * @return \Drupal\ghi_plans\ApiObjects\Entities\PlanEntity[]
-   *   The plan entity parents.
+   *   The plan entity parents keyed by their entity ids.
    */
   public function getPlanEntityParents() {
     $entity = $this->getRawData();
@@ -119,9 +119,11 @@ class PlanEntity extends EntityObjectBase {
     if (!property_exists($first_ref, 'planEntityIds') || empty($first_ref->planEntityIds)) {
       return [];
     }
-    return array_filter(array_map(function ($entity_id) {
-      return PlanEntityHelper::getPlanEntity($entity_id, $this->getPlanVersionArgument());
-    }, $first_ref->planEntityIds));
+    $parents = [];
+    foreach ($first_ref->planEntityIds as $entity_id) {
+      $parents[$entity_id] = PlanEntityHelper::getPlanEntity($entity_id, $this->getPlanVersionArgument());
+    }
+    return array_filter($parents);
   }
 
   /**
