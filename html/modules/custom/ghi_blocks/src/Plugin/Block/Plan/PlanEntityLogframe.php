@@ -6,7 +6,6 @@ use Drupal\Component\Utility\Html;
 use Drupal\Component\Utility\Unicode;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Security\TrustedCallbackInterface;
-use Drupal\ghi_base_objects\Helpers\BaseObjectHelper;
 use Drupal\ghi_blocks\Interfaces\ConfigValidationInterface;
 use Drupal\ghi_blocks\Interfaces\ConfigurableTableBlockInterface;
 use Drupal\ghi_blocks\Interfaces\ConfigurationUpdateInterface;
@@ -264,7 +263,7 @@ class PlanEntityLogframe extends GHIBlockBase implements MultiStepFormBlockInter
     // Sort the entities.
     $this->sortPlanEntities($entities, $conf['entities']);
 
-    // Build the sheet for the logical framework.
+    // Prepare the sheet for the logical framework.
     $logframe_sheet_label = (string) $this->t('Logical framework');
     $data[$logframe_sheet_label] = [];
     $logical_framework = [
@@ -272,9 +271,23 @@ class PlanEntityLogframe extends GHIBlockBase implements MultiStepFormBlockInter
       'rows' => [],
     ];
 
+    // Collect the entity parents once, the cluster associations, both for the
+    // alignments in general and also on an per-entity/per-parent basis.
+    $entity_parents = [];
+    $entity_clusters = [];
+    $entity_cluster_alignments = [];
+    foreach ($entities as $entity) {
+      $entity_parents[$entity->id()] = $entity instanceof PlanEntity ? $this->getEntityAlignments($entity) : [];
+      $entity_cluster_alignments[$entity->id()] = $entity instanceof PlanEntity ? $entity->getParentGoverningEntity(TRUE) : NULL;
+      $entity_clusters[$entity->id()] = $entity instanceof PlanEntity ? $entity->getParentGoverningEntity() : NULL;
+      foreach ($entity_parents[$entity->id()] as $parent) {
+        $entity_clusters[$parent->id()] = $parent instanceof PlanEntity ? $parent->getParentGoverningEntity() : NULL;
+      }
+    }
+
     // Build the header for the logframe sheet, based on the parents.
     foreach ($entities as $entity) {
-      $parents = $entity instanceof PlanEntity ? $this->getEntityAlignments($entity) : [];
+      $parents = $entity_parents[$entity->id()];
 
       if (empty($logical_framework['header'])) {
         $header = [];
@@ -283,7 +296,7 @@ class PlanEntityLogframe extends GHIBlockBase implements MultiStepFormBlockInter
           if (array_key_exists($parent_ref_code, $header)) {
             continue;
           }
-          if ($parent->getParentId()) {
+          if (!empty($entity_clusters[$parent->id()])) {
             $header[] = (string) $this->t('Cluster abbreviation');
             $header[] = (string) $this->t('Cluster name');
           }
@@ -294,6 +307,12 @@ class PlanEntityLogframe extends GHIBlockBase implements MultiStepFormBlockInter
             '@ref_code' => $parent->ref_code,
           ]);
         }
+
+        if (!empty($entity_clusters[$entity->id()])) {
+          $header[] = (string) $this->t('Cluster abbreviation');
+          $header[] = (string) $this->t('Cluster name');
+        }
+
         $header[] = (string) $this->t('@ref_code code', [
           '@ref_code' => $conf['entities']['entity_ref_code'],
         ]);
@@ -306,22 +325,27 @@ class PlanEntityLogframe extends GHIBlockBase implements MultiStepFormBlockInter
 
     // Build the content for the logframe sheet.
     foreach ($entities as $entity) {
-      $parents = $entity instanceof PlanEntity ? $this->getEntityAlignments($entity) : [];
+      $parents = $entity_parents[$entity->id()];
       $alignment_paths = $this->getEntityAlignmentsPaths($entity);
       foreach ($alignment_paths as $parent_ids) {
         $logical_framework_row = [];
         foreach ($parent_ids as $parent_id) {
           $parent = $parents[$parent_id];
-          if ($parent->getParentId()) {
-            /** @var \Drupal\ghi_plans\Entity\GoverningEntity $cluster */
-            $cluster = BaseObjectHelper::getBaseObjectFromOriginalId($parent->getParentId(), 'governing_entity');
-            $governing_entity = $cluster->getSourceObject();
+          if (!empty($entity_clusters[$parent->id()])) {
+            $governing_entity = $entity_clusters[$parent->id()];
             $logical_framework_row[] = $governing_entity->getCustomName('custom_id');
             $logical_framework_row[] = $governing_entity->getName();
           }
           $logical_framework_row[] = $this->getPlanEntityId($parent, $conf['entities']);
           $logical_framework_row[] = $parent->getDescription();
         }
+
+        if (!empty($entity_clusters[$entity->id()])) {
+          $governing_entity = $entity_clusters[$entity->id()];
+          $logical_framework_row[] = $governing_entity->getCustomName('custom_id');
+          $logical_framework_row[] = $governing_entity->getName();
+        }
+
         $logical_framework_row[] = $this->getPlanEntityId($entity, $conf['entities']);
         $logical_framework_row[] = $entity->getDescription();
         $logical_framework['rows'][] = $logical_framework_row;
@@ -340,15 +364,31 @@ class PlanEntityLogframe extends GHIBlockBase implements MultiStepFormBlockInter
           $additional_header = [
             (string) $this->t('Entity description'),
           ];
+          if (!empty($entity_cluster_alignments[$entity->id()])) {
+            $additional_header[] = (string) $this->t('Cluster name');
+          }
+          $additional_header[] = (string) $this->t('Indicator customRef');
+          $table['#header'] = array_filter($table['#header'], function ($cell) {
+            return $cell['data-column-type'] != 'chart';
+          });
           $data[$key] = [
             'header' => array_merge($additional_header, $table['#header']),
             'rows' => [],
           ];
         }
-        $entity_rows = array_map(function ($row) use ($entity) {
-          return array_merge([
+        $entity_rows = array_map(function ($row) use ($entity, $entity_cluster_alignments) {
+          $additional_columns = [
             $entity->getDescription(),
-          ], $row['data'] ?? $row);
+          ];
+          if (!empty($entity_cluster_alignments[$entity->id()])) {
+            $additional_columns[] = $entity_cluster_alignments[$entity->id()]->getEntityName();
+          }
+          $additional_columns[] = $row['data-attachment-custom-id'];
+          $row = array_merge($additional_columns, $row['data'] ?? $row);
+          $row = array_filter($row, function ($cell) {
+            return !is_array($cell) || $cell['data-column-type'] != 'chart';
+          });
+          return $row;
         }, $table['#rows']);
         $data[$key]['rows'] = array_merge($data[$key]['rows'], $entity_rows);
       }
@@ -438,9 +478,9 @@ class PlanEntityLogframe extends GHIBlockBase implements MultiStepFormBlockInter
     $context['attachments'] = $attachments;
     $context['plan_entity'] = $entity;
 
-    foreach ($conf['attachment_tables'] as $table) {
+    foreach ($conf['attachment_tables'] as $table_configuration) {
       /** @var \Drupal\ghi_form_elements\ConfigurationContainerItemPluginInterface $item_type */
-      $item_type = $this->getItemTypePluginForColumn($table, $context);
+      $item_type = $this->getItemTypePluginForColumn($table_configuration, $context);
       if (!array_key_exists($item_type->get('attachment_prototype'), $attachment_prototypes)) {
         continue;
       }
