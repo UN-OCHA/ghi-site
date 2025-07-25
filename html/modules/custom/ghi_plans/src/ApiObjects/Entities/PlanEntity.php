@@ -210,16 +210,24 @@ class PlanEntity extends EntityObjectBase {
   /**
    * Get the parent governing entity.
    *
-   * @return \Drupal\ghi_plans\ApiObjects\Entities\GoverningEntity
-   *   The parent governing entity if found.
+   * @return \Drupal\ghi_plans\ApiObjects\Entities\GoverningEntity|null
+   *   The parent governing entity if found or NULL otherwise.
    */
-  private function getParentGoverningEntity() {
-    $entity_id = $this->governing_entity_parent_id ?? NULL;
-    if (!$entity_id) {
+  public function getParentGoverningEntity($recursion = FALSE) {
+    if ($entity_id = $this->governing_entity_parent_id ?? NULL) {
+      $entity = PlanEntityHelper::getGoverningEntity($entity_id, $this->getPlanVersionArgument());
+      return $entity instanceof GoverningEntity ? $entity : NULL;
+    }
+    if (!$recursion) {
       return NULL;
     }
-    $entity = PlanEntityHelper::getGoverningEntity($entity_id, $this->getPlanVersionArgument());
-    return $entity instanceof GoverningEntity ? $entity : NULL;
+    // Also look at the parents if requested.
+    $parents = $this->getPlanEntityParents();
+    foreach ($parents as $parent) {
+      if ($entity = $parent->getParentGoverningEntity()) {
+        return $entity;
+      }
+    }
   }
 
   /**

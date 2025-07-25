@@ -102,6 +102,7 @@ class AttachmentTable extends ConfigurationContainerItemPluginBase implements Co
       $rows[] = [
         'data' => $row,
         'data-attachment-id' => $attachment->id(),
+        'data-attachment-custom-id' => $attachment->getTitle(),
       ];
     }
     return [
