@@ -152,6 +152,13 @@ class DataAttachment extends AttachmentBase implements DataAttachmentInterface {
   }
 
   /**
+   * {@inheritdoc}
+   */
+  public function getCustomIdWithRefCode() {
+    return $this->custom_id_prefixed_refcode;
+  }
+
+  /**
    * Get the type of attachment.
    *
    * @return string
