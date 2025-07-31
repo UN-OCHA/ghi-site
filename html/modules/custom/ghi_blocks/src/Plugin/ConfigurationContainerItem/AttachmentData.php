@@ -309,11 +309,11 @@ class AttachmentData extends ConfigurationContainerItemPluginBase {
       if ($caseload_id && $original_attachment->getType() == 'caseload' && array_key_exists($caseload_id, $filtered_attachments)) {
         $attachment_id = $caseload_id;
       }
-      elseif (count($filtered_attachments) == 1) {
+      elseif (count($filtered_attachments) >= 1) {
         $attachment_id = array_key_first($filtered_attachments);
       }
 
-      if (!empty($attachment_id)) {
+      if (!empty($attachment_id) && array_key_exists($attachment_id, $filtered_attachments)) {
         // Lets see if we can assure that the data points are properly
         // translated if needed.
         $new_attachment = $filtered_attachments[$attachment_id];
