@@ -3,6 +3,7 @@
 namespace Drupal\ghi_plans\Plugin\EndpointQuery;
 
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
+use Drupal\ghi_plans\ApiObjects\AttachmentPrototype\AttachmentPrototype;
 use Drupal\ghi_plans\Helpers\AttachmentHelper;
 use Drupal\ghi_plans\Traits\PlanVersionArgument;
 use Drupal\hpc_api\Query\EndpointQueryBase;
@@ -93,6 +94,23 @@ class AttachmentQuery extends EndpointQueryBase implements ContainerFactoryPlugi
       return NULL;
     }
     return $data;
+  }
+
+  /**
+   * Get the prototype for an attachment.
+   *
+   * @param int $attachment_id
+   *   The attachment id.
+   *
+   * @return \Drupal\ghi_plans\ApiObjects\AttachmentPrototype\AttachmentPrototype|null
+   *   An attachment prototype object or NULL.
+   */
+  public function getPrototype($attachment_id) {
+    $data = $this->getData([
+      'attachment_id' => $attachment_id,
+    ]);
+    $prototype = $data?->attachmentPrototype;
+    return $prototype ? new AttachmentPrototype($prototype) : NULL;
   }
 
 }

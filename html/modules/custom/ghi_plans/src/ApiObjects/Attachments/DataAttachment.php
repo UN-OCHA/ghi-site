@@ -1189,12 +1189,27 @@ class DataAttachment extends AttachmentBase implements DataAttachmentInterface {
    *   An attachment prototype object.
    */
   protected function fetchPrototypeForAttachment($attachment) {
+    // First see if we can extract the attachment from the plan. This is better
+    // for performance when we need to do this for multiple attachments
+    // belonging to the same plan (which is the usual case) because the
+    // requests are cached.
     /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\PlanAttachmentPrototypeQuery $query_handler */
     $query_handler = $this->getEndpointQueryManager()->createInstance('plan_attachment_prototype_query');
     if (!$query_handler) {
       return NULL;
     }
-    return $query_handler->getPrototypeByPlanAndId($attachment->planId, $attachment->attachmentPrototypeId);
+    if ($prototype = $query_handler->getPrototypeByPlanAndId($attachment->planId, $attachment->attachmentPrototypeId)) {
+      return $prototype;
+    }
+
+    // If that didn't work, we query the full attachment data to extract the
+    // prototype from there.
+    /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\AttachmentQuery $query_handler */
+    $query_handler = $this->getEndpointQueryManager()->createInstance('attachment_query');
+    if (!$query_handler) {
+      return NULL;
+    }
+    return $query_handler->getPrototype($attachment->id);
   }
 
   /**
