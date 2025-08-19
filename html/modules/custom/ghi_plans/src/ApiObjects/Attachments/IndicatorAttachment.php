@@ -70,7 +70,7 @@ class IndicatorAttachment extends DataAttachment {
   /**
    * {@inheritdoc}
    */
-  protected function getTooltip($conf) {
+  public function getTooltip($conf) {
     $tooltip = parent::getTooltip($conf);
 
     // Get the last published monitoring period based on the selected periods
