@@ -1551,7 +1551,7 @@ class DataAttachment extends AttachmentBase implements DataAttachmentInterface {
    * @return array|null
    *   Either a build array for the tooltip, or NULL.
    */
-  protected function getTooltip($conf) {
+  public function getTooltip($conf) {
     $index = $conf['data_points'][0]['index'];
     $value = $this->getSingleValue($index, NULL, $conf['data_points'][0]);
     if ($this->isNullValue($value)) {
@@ -1655,8 +1655,9 @@ class DataAttachment extends AttachmentBase implements DataAttachmentInterface {
     // percentage displays.
     if ($this->isNullValue($value) && $conf['formatting'] != 'percent') {
       $t_options = ['langcode' => $this->getPlanLanguage()];
+      $value = $this->isPendingDataEntry() ? $this->t('Pending', [], $t_options) : $this->t('No data', [], $t_options);
       return [
-        '#markup' => $this->isPendingDataEntry() ? $this->t('Pending', [], $t_options) : $this->t('No data', [], $t_options),
+        '#markup' => (string) $value,
       ];
     }
 

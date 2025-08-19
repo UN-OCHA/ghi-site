@@ -47,6 +47,9 @@ trait AttachmentTableTrait {
   /**
    * Get the attachment prototype to use for the current block instance.
    *
+   * @param \Drupal\ghi_plans\ApiObjects\Attachments\AttachmentInterface[] $attachments
+   *   The attachments from which to extract the prototype.
+   *
    * @return \Drupal\ghi_plans\ApiObjects\AttachmentPrototype\AttachmentPrototype|null
    *   The attachment prototype object.
    */
