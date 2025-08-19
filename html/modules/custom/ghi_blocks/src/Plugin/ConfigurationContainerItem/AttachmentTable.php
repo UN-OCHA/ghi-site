@@ -12,6 +12,7 @@ use Drupal\ghi_form_elements\Traits\ConfigurationContainerItemCustomActionTrait;
 use Drupal\ghi_form_elements\Traits\ConfigurationContainerTrait;
 use Drupal\ghi_plans\ApiObjects\AttachmentPrototype\AttachmentPrototype;
 use Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment;
+use Drupal\ghi_plans\ApiObjects\Attachments\IndicatorAttachment;
 use Drupal\ghi_plans\ApiObjects\PlanEntityInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -103,6 +104,7 @@ class AttachmentTable extends ConfigurationContainerItemPluginBase implements Co
         'data' => $row,
         'data-attachment-id' => $attachment->id(),
         'data-attachment-custom-id' => $attachment->getTitle(),
+        'data-attachment-calculation-method' => $attachment instanceof IndicatorAttachment ? $attachment->getCalculationMethod() : NULL,
       ];
     }
     return [
@@ -112,6 +114,7 @@ class AttachmentTable extends ConfigurationContainerItemPluginBase implements Co
       '#sortable' => TRUE,
       '#progress_groups' => TRUE,
       '#empty' => $this->t('No data found for this table.'),
+      '#prototype' => $this->getAttachmentPrototype(),
     ];
   }
 

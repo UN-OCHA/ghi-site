@@ -29,6 +29,7 @@ use Drupal\ghi_sections\Entity\SectionNodeInterface;
 use Drupal\ghi_subpages\Entity\LogframeSubpage;
 use Drupal\ghi_subpages\Entity\SubpageNodeInterface;
 use Drupal\hpc_api\Query\EndpointQuery;
+use Drupal\hpc_common\Helpers\ArrayHelper;
 use Drupal\hpc_common\Helpers\BlockHelper;
 use Drupal\hpc_downloads\Interfaces\HPCDownloadExcelMultipleInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -271,6 +272,16 @@ class PlanEntityLogframe extends GHIBlockBase implements MultiStepFormBlockInter
       'rows' => [],
     ];
 
+    $plan = $this->getCurrentPlanObject();
+    $t_options = ['langcode' => $plan->getPlanLanguage()];
+    $cluster_label_map = [
+      Plan::CLUSTER_TYPE_CLUSTER => $this->t('Cluster', [], $t_options),
+      Plan::CLUSTER_TYPE_SECTOR => $this->t('Sector', [], $t_options),
+    ];
+    $cluster_args = [
+      '@cluster_label' => $cluster_label_map[$plan->getPlanClusterType()],
+    ];
+
     // Collect the entity parents once, the cluster associations, both for the
     // alignments in general and also on an per-entity/per-parent basis.
     $entity_parents = [];
@@ -297,28 +308,28 @@ class PlanEntityLogframe extends GHIBlockBase implements MultiStepFormBlockInter
             continue;
           }
           if (!empty($entity_clusters[$parent->id()])) {
-            $header[] = (string) $this->t('Cluster abbreviation');
-            $header[] = (string) $this->t('Cluster name');
+            $header[] = (string) $this->t('@cluster_label abbreviation', $cluster_args, $t_options);
+            $header[] = (string) $this->t('@cluster_label name', $cluster_args, $t_options);
           }
           $header[$parent_ref_code] = (string) $this->t('@ref_code code', [
             '@ref_code' => $parent->ref_code,
-          ]);
+          ], $t_options);
           $header[$parent_ref_code . '_description'] = (string) $this->t('@ref_code description', [
             '@ref_code' => $parent->ref_code,
-          ]);
+          ], $t_options);
         }
 
         if (!empty($entity_clusters[$entity->id()])) {
-          $header[] = (string) $this->t('Cluster abbreviation');
-          $header[] = (string) $this->t('Cluster name');
+          $header[] = (string) $this->t('@cluster_label abbreviation', $cluster_args, $t_options);
+          $header[] = (string) $this->t('@cluster_label name', $cluster_args, $t_options);
         }
 
         $header[] = (string) $this->t('@ref_code code', [
           '@ref_code' => $conf['entities']['entity_ref_code'],
-        ]);
+        ], $t_options);
         $header[] = (string) $this->t('@ref_code description', [
           '@ref_code' => $conf['entities']['entity_ref_code'],
-        ]);
+        ], $t_options);
         $logical_framework['header'] = array_values($header);
       }
     }
@@ -359,18 +370,26 @@ class PlanEntityLogframe extends GHIBlockBase implements MultiStepFormBlockInter
     foreach ($entities as $entity) {
       $tables = $this->buildTables($entity, $conf['tables']);
       foreach ($tables as $key => $table) {
+        /** @var \Drupal\ghi_plans\ApiObjects\AttachmentPrototype\AttachmentPrototype $prototype */
+        $prototype = $table['#prototype'];
         if (!array_key_exists($key, $data)) {
           // Add additional table columns at the beginning of each table.
           $additional_header = [
-            (string) $this->t('Entity description'),
+            (string) $this->t('Entity description', [], $t_options),
           ];
           if (!empty($entity_cluster_alignments[$entity->id()])) {
-            $additional_header[] = (string) $this->t('Cluster name');
+            $additional_header[] = (string) $this->t('@cluster_label name', $cluster_args, $t_options);
           }
-          $additional_header[] = (string) $this->t('Indicator customRef');
-          $table['#header'] = array_filter($table['#header'], function ($cell) {
-            return $cell['data-column-type'] != 'chart';
+          // Get the type name either from the prototype or from the first data
+          // column of type "name".
+          $name_columns = array_filter($table['#header'], function ($cell) {
+            return $cell['data-column-type'] == 'name';
           });
+          $entity_type_name = $prototype->getTypeLabel() ?? ($name_columns[0]['data'] ?? '');
+          $additional_header[] = trim((string) $this->t('@entity_type_name customRef', [
+            '@entity_type_name' => $entity_type_name,
+          ], $t_options));
+
           $data[$key] = [
             'header' => array_merge($additional_header, $table['#header']),
             'rows' => [],
@@ -383,17 +402,144 @@ class PlanEntityLogframe extends GHIBlockBase implements MultiStepFormBlockInter
           if (!empty($entity_cluster_alignments[$entity->id()])) {
             $additional_columns[] = $entity_cluster_alignments[$entity->id()]->getEntityName();
           }
+
           $additional_columns[] = $row['data-attachment-custom-id'];
-          $row = array_merge($additional_columns, $row['data'] ?? $row);
-          $row = array_filter($row, function ($cell) {
-            return !is_array($cell) || $cell['data-column-type'] != 'chart';
-          });
+          $row['data'] = array_merge($additional_columns, $row['data'] ?? $row);
+
           return $row;
         }, $table['#rows']);
         $data[$key]['rows'] = array_merge($data[$key]['rows'], $entity_rows);
+
+        if ($prototype?->isIndicator()) {
+          // Indicators should include a column with the calculation method.
+          $this->addCalculationMethodColumnToExcelData($data[$key], $t_options);
+        }
       }
     }
+    foreach (array_keys($data) as $key) {
+      if (in_array($key, [$logframe_sheet_label])) {
+        continue;
+      }
+      $this->processSparklineChartInExcelData($data[$key], $t_options);
+    }
     return $data;
+  }
+
+  /**
+   * Add a calculation method column to the excel data.
+   *
+   * @param array $data
+   *   The table data array with the keys 'header' and 'rows'.
+   * @param array $t_options
+   *   An array of options for the translation service.
+   */
+  private function addCalculationMethodColumnToExcelData(&$data, $t_options) {
+    $header = &$data['header'];
+    $rows = &$data['rows'];
+
+    // Find the position of the unit column if it's present.
+    $unit_columns = array_filter($header, function ($cell) {
+      return is_array($cell) && $cell['data-column-type'] == 'unit';
+    });
+    $unit_column_pos = array_keys($unit_columns)[0] ?? NULL;
+    if ($unit_column_pos === NULL) {
+      return;
+    }
+
+    // Add the column to the header after the unit column if not done yet.
+    $column_label = (string) $this->t('Calculation method', [], $t_options);
+    if (!in_array($column_label, $header) && $unit_column_pos !== NULL) {
+      $header = ArrayHelper::insertItem($header, $unit_column_pos + 1, $column_label);
+    }
+    // Add the value for the new column to each row.
+    foreach ($rows as &$row) {
+      if (count($header) == count($row['data'])) {
+        continue;
+      }
+      $row['data'] = ArrayHelper::insertItem($row['data'], $unit_column_pos + 1, $row['data-attachment-calculation-method']);
+    }
+  }
+
+  /**
+   * Process columns of type sparkline chart in the excel data.
+   *
+   * We want to turn the single-column representation of a spark line chart
+   * into a set of monitoring period columns.
+   *
+   * @param array $data
+   *   The table data array with the keys 'header' and 'rows'.
+   * @param array $t_options
+   *   An array of options for the translation service.
+   */
+  private function processSparklineChartInExcelData(&$data, $t_options) {
+    $header = &$data['header'];
+    $rows = &$data['rows'];
+
+    // Find the position of the chart columns if present.
+    $chart_columns = array_filter($header, function ($cell) {
+      return is_array($cell) && $cell['data-column-type'] == 'chart';
+    });
+    $col_offset = 0;
+
+    // For each chart, adjust the headers and rows.
+    foreach (array_keys($chart_columns) as $chart_column_pos) {
+      $original_col_index = $col_offset + $chart_column_pos;
+
+      // Load a single attachment, just so we can use it to format the
+      // monitoring periods.
+      $attachment_id = $rows[0]['data-attachment-id'];
+      /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\AttachmentQuery $query */
+      $query = $this->getQueryHandler('attachment');
+      $attachment = $query->getAttachment($attachment_id);
+      if (!$attachment instanceof DataAttachment) {
+        continue;
+      }
+
+      // Get all reporting period ids from all rows. We might have to handle
+      // the case that not all chart data points have values for all the
+      // monitoring periods.
+      $reporting_period_ids = [];
+      foreach ($rows as $row) {
+        $reporting_period_ids = array_unique(array_merge($reporting_period_ids, $row['data'][$chart_column_pos]['data']['#reporting_period_ids'] ?? []));
+      }
+      $original_label = $header[$original_col_index]['data'];
+
+      // Iterate over all unique monitoring periods.
+      foreach ($reporting_period_ids as $reporting_period_id) {
+        // Get the original label of the chart column.
+        $column_label = $attachment->formatMonitoringPeriod('text', $reporting_period_id, $original_label . ': @date_range');
+        // Add a new column for the current monitoring period.
+        if (!in_array($column_label, $header)) {
+          $header = ArrayHelper::insertItem($header, $col_offset + $chart_column_pos + 1, $column_label);
+        }
+        // Iterate over all rows to add a column for the current monitoring
+        // period.
+        foreach ($rows as &$row) {
+          if (count($header) == count($row['data'])) {
+            continue;
+          }
+          $reporting_period_value = $row['data'][$original_col_index]['data']['#data'][$reporting_period_id] ?? NULL;
+          $col_value = [
+            'data-value' => $reporting_period_value,
+            'data-raw-value' => $reporting_period_value,
+            'data-sort-type' => 'numeric',
+            'data-column-type' => 'amount',
+            'data-content' => $column_label,
+          ];
+          $row['data'] = ArrayHelper::insertItem($row['data'], $col_offset + $chart_column_pos + 1, $col_value);
+        }
+        $col_offset++;
+      }
+
+      // Remove the column holding the original single-column value, as we
+      // don't need that anymore.
+      unset($header[$original_col_index]);
+      $header = array_values($header);
+      foreach ($rows as &$row) {
+        unset($row['data'][$original_col_index]);
+        $row['data'] = array_values($row['data']);
+      }
+    }
   }
 
   /**
