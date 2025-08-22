@@ -3,6 +3,7 @@ langcode: en
 status: true
 dependencies:
   module:
+    - ocha_entraid
     - system
 _core:
   default_config_hash: j5zLMOdJBqC0bMvSdth5UebkprJB8g_2FXHqhfpJzow
@@ -12,3 +13,4 @@ weight: -10
 is_admin: false
 permissions:
   - 'access content'
+  - 'access ocha entraid direct login'
