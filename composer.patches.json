@@ -42,6 +42,12 @@
     "drupal/seckit": {
       "Issue #2844205: Provide hook_seckit_options_alter() D8": "./patches/2844205.mr.patch"
     },
+    "drupal/openid_connect": {
+        "Handle case if user is in blocked state after SSO Authorization": "./patches/openid_connect-3390668-6.patch"
+    },
+    "drupal/openid_connect_windows_aad": {
+        "Failed to get authentication tokens for Windows Azure AD": "./patches/openid_connect_windows_aad-3346603-5.patch"
+    },
     "drupal/config_default_image": {
       "Issue #2921908: Provide a 2nd formatter \"Responsive image or default image\"": "https://www.drupal.org/files/issues/2022-11-21/config_default_image-2921908-7.patch"
     },
