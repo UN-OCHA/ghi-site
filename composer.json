@@ -147,6 +147,7 @@
         "phpoffice/phpspreadsheet": "^1.19",
         "unocha/common_design": "^9",
         "unocha/d3-sparkline": "^2.1",
+        "unocha/ocha_entraid": "^1.1",
         "unocha/ocha_monitoring": "^1.0",
         "unocha/ocha_snap": "^8.3"
     },
