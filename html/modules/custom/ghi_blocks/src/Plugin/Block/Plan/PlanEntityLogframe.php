@@ -550,15 +550,18 @@ class PlanEntityLogframe extends GHIBlockBase implements MultiStepFormBlockInter
     if (empty($variables['download_links'])) {
       return;
     }
+    $t_args = [
+      'langcode' => $this->getCurrentPlanObject()->getPlanLanguage() ?? 'en',
+    ];
     // Move the download link into a different position.
     $variables['content']['links'] = $variables['content']['links'] ?? [];
-    $download_links = array_map(function ($link) {
+    $download_links = array_map(function ($link) use ($t_args) {
       /** @var \Drupal\Core\Url $url */
       $url = $link['#link']['#url'];
       $attributes = $url->getOption('attributes');
       $attributes['class'][] = 'cd-button';
       $url->setOption('attributes', $attributes);
-      $link['#link']['#title'] = $this->t('Download');
+      $link['#link']['#title'] = $this->t('Download', [], $t_args);
       return $link['#link'];
     }, $variables['download_links']);
     $variables['content']['links'] = array_merge($download_links, $variables['content']['links']);
