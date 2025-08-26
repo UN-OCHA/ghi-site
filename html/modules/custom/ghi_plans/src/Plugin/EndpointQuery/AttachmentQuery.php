@@ -16,7 +16,6 @@ use Drupal\hpc_api\Query\EndpointQueryBase;
  *   label = @Translation("Attachment query"),
  *   endpoint = {
  *     "public" = "public/attachment/{attachment_id}",
- *     "authenticated" = "attachment/{attachment_id}",
  *     "version" = "v2",
  *     "query" = {
  *       "version" = "current",

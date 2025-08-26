@@ -15,7 +15,6 @@ use Drupal\hpc_api\Query\EndpointQueryBase;
  *   label = @Translation("Measurement query"),
  *   endpoint = {
  *     "public" = "public/attachment/{attachment_id}",
- *     "authenticated" = "measurement",
  *     "version" = "v2",
  *     "query" = {
  *       "version" = "current",
