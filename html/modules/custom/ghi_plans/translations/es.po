@@ -121,3 +121,6 @@ msgstr "No hay ningun número de casos o indicador disponible"
 
 msgid "Population data"
 msgstr "Datos de población"
+
+msgid "Downloads"
+msgstr "Descargas"

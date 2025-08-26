@@ -451,10 +451,12 @@ abstract class GHIBlockBase extends HPCBlockBase {
     $download_links = !empty($build['#download_links']) ? $build['#download_links'] : [];
     if ($this instanceof HPCDownloadPluginInterface && !empty($plugin_configuration['uuid'])) {
       $download_types = $this->getAvailableDownloadTypes();
+      $langcode = $this->getCurrentPlanObject()?->getPlanLanguage() ?? 'en';
+      $t_args = ['langcode' => $langcode];
       if (!empty($download_types) && $this->getDownloadSource()) {
         /** @var \Drupal\hpc_downloads\DownloadDialog\DownloadDialogPlugin $download_dialog */
         $download_dialog = \Drupal::service('hpc_downloads.download_dialog_plugin');
-        $download_links[] = $download_dialog->buildDialogLink($this, $this->t('Downloads'));
+        $download_links[] = $download_dialog->buildDialogLink($this, $this->t('Downloads', [], $t_args), NULL, $langcode);
       }
     }
 
