@@ -184,6 +184,17 @@ class DataPoint extends ConfigurationContainerItemPluginBase {
   }
 
   /**
+   * {@inheritdoc}
+   */
+  public function getSortableValue() {
+    $value = $this->getValue();
+    if ($this->getColumnType() == 'percentage') {
+      return $value * 100;
+    }
+    return $value;
+  }
+
+  /**
    * Whether the given attachment can show disaggregated data.
    *
    * @param \Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment $attachment
