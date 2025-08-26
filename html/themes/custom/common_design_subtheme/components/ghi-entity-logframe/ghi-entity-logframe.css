@@ -7,6 +7,19 @@
 .item-list--entity-logframe + .link-wrapper {
   margin-top: 1rem;
 }
+.item-list--entity-logframe + .link-wrapper a.link--download-dialog {
+  position: relative;
+  padding-right: 2.5rem;
+}
+.item-list--entity-logframe + .link-wrapper a.link--download-dialog::after {
+  position: absolute;
+  top: calc(50% - 10px);
+  right: 1rem;
+  padding: 10px;
+  content: "";
+  background: url("https://fonts.gstatic.com/s/i/short-term/release/materialsymbolsoutlined/download/default/20px.svg")
+    no-repeat;
+}
 .item-list--entity-logframe > .item-wrapper > .entity-wrapper {
   display: flex;
   gap: 2rem;
