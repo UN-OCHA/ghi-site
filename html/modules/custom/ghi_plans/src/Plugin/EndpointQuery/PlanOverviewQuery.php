@@ -14,7 +14,6 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  *   label = @Translation("Plan overview query"),
  *   endpoint = {
  *     "public" = "public/plan/overview/{year}",
- *     "authenticated" = "plan/overview/{year}",
  *     "version" = "v2"
  *   }
  * )
