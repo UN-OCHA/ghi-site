@@ -15,7 +15,6 @@ use Drupal\hpc_api\Query\EndpointQueryBase;
  *   label = @Translation("Plan basic query"),
  *   endpoint = {
  *     "public" = "public/plan/{plan_id}",
- *     "authenticated" = "plan/{plan_id}",
  *     "version" = "v2",
  *     "query" = {
  *       "version" = "current",
