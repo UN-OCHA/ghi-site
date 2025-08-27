@@ -336,6 +336,16 @@
     }
 
     /**
+     * Check if the current map is a choropleth map.
+     *
+     * @returns {Boolean}
+     *   TRUE if it's an choropleth map, FALSE otherwise.
+     */
+    isChoroplethMap = function () {
+      return this.getMapId().indexOf('plan-operational-presence-map') === 0;
+    }
+
+    /**
      * Check if the maps should show country outlines when available.
      *
      * @returns {Boolean}
@@ -350,6 +360,8 @@
      *
      * @param {Boolean} filter_by_admin_level
      *   Whether to filter by the current admin level.
+     * @param {Boolean} filter_empty
+     *   Whether to filter empty locations.
      *
      * @return {Array}
      *   An array of location data objects.
@@ -438,6 +450,7 @@
     }
 
     /**
+     * Filter out empty locations.
      *
      * @param {Array} locations
      *   An array of location data objects.
@@ -445,7 +458,10 @@
      *   An array of location data objects.
      */
     filterEmptyLocations = function (locations) {
-      if (!this.isOverviewMap()) {
+      if (this.isChoroplethMap()) {
+        locations = locations.filter((object) => object.object_count > 0);
+      }
+      else if (!this.isOverviewMap()) {
         locations = locations.filter((object) => object.total > 0);
       }
       return locations;
