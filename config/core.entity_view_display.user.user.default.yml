@@ -5,6 +5,7 @@ dependencies:
   config:
     - field.field.user.user.field_team
   module:
+    - hpc_common
     - layout_builder
     - layout_builder_ipe
     - layout_builder_restrictions
@@ -13,8 +14,62 @@ third_party_settings:
   layout_builder_ipe:
     enabled: false
   layout_builder:
-    enabled: false
+    enabled: true
     allow_custom: false
+    sections:
+      -
+        layout_id: layout_twocol_section
+        layout_settings:
+          label: 'User content'
+          context_mapping: {  }
+          column_widths: 67-33
+        components:
+          fb866bd3-bcf3-45c2-90bf-5dc7faaaed59:
+            uuid: fb866bd3-bcf3-45c2-90bf-5dc7faaaed59
+            region: first
+            configuration:
+              id: 'extra_field_block:user:user:member_for'
+              label: 'Member for'
+              label_display: '0'
+              provider: layout_builder
+              context_mapping:
+                entity: '@user.current_user_context:current_user'
+              formatter:
+                settings: {  }
+                third_party_settings: {  }
+            weight: 0
+            additional: {  }
+          2bf6b1f0-2abf-442a-a318-f38d9f0399c3:
+            uuid: 2bf6b1f0-2abf-442a-a318-f38d9f0399c3
+            region: first
+            configuration:
+              id: 'field_block:user:user:field_team'
+              label: Team
+              label_display: '0'
+              provider: layout_builder
+              context_mapping:
+                entity: '@user.current_user_context:current_user'
+                view_mode: view_mode
+              formatter:
+                type: entity_reference_label
+                label: inline
+                settings:
+                  link: false
+                third_party_settings: {  }
+            weight: 1
+            additional: {  }
+          00387bc3-ad8b-40bf-94d3-ef358b0c904c:
+            uuid: 00387bc3-ad8b-40bf-94d3-ef358b0c904c
+            region: second
+            configuration:
+              id: hid_session_information
+              label: 'HID Session Information'
+              label_display: visible
+              provider: hpc_common
+              context_mapping: {  }
+            weight: 0
+            additional: {  }
+        third_party_settings: {  }
   layout_builder_restrictions:
     allowed_block_categories: {  }
     entity_view_mode_restriction:
