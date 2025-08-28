@@ -13,6 +13,7 @@ use Drupal\ghi_blocks\Interfaces\CustomLinkBlockInterface;
 use Drupal\ghi_blocks\Interfaces\MultiStepFormBlockInterface;
 use Drupal\ghi_blocks\Interfaces\OverrideDefaultTitleBlockInterface;
 use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
+use Drupal\ghi_blocks\Plugin\ConfigurationContainerItem\AttachmentTable;
 use Drupal\ghi_blocks\Traits\AttachmentTableTrait;
 use Drupal\ghi_blocks\Traits\ConfigValidationTrait;
 use Drupal\ghi_form_elements\Helpers\FormElementHelper;
@@ -365,6 +366,9 @@ class PlanEntityLogframe extends GHIBlockBase implements MultiStepFormBlockInter
     }
     $data[$logframe_sheet_label] = $logical_framework;
 
+    // Collect the table names for deduplication.
+    $table_names = [];
+
     // Build the actual data tables if applicable, one for each configured
     // table.
     foreach ($entities as $entity) {
@@ -372,6 +376,8 @@ class PlanEntityLogframe extends GHIBlockBase implements MultiStepFormBlockInter
       foreach ($tables as $key => $table) {
         /** @var \Drupal\ghi_plans\ApiObjects\AttachmentPrototype\AttachmentPrototype $prototype */
         $prototype = $table['#prototype'];
+        $table_names[$prototype->id()] = $table['#download_label'];
+
         if (!array_key_exists($key, $data)) {
           // Add additional table columns at the beginning of each table.
           $additional_header = [
@@ -385,7 +391,7 @@ class PlanEntityLogframe extends GHIBlockBase implements MultiStepFormBlockInter
           $name_columns = array_filter($table['#header'], function ($cell) {
             return $cell['data-column-type'] == 'name';
           });
-          $entity_type_name = $prototype->getTypeLabel() ?? ($name_columns[0]['data'] ?? '');
+          $entity_type_name = $name_columns[0]['data'] ?? $prototype->getName();
           $additional_header[] = trim((string) $this->t('@entity_type_name customRef', [
             '@entity_type_name' => $entity_type_name,
           ], $t_options));
@@ -416,6 +422,15 @@ class PlanEntityLogframe extends GHIBlockBase implements MultiStepFormBlockInter
         }
       }
     }
+
+    // Deduplicate the table names just in case.
+    $table_names = ArrayHelper::deduplicateStrings($table_names);
+    // And replace the data keys.
+    foreach ($table_names as $prototype_id => $table_name) {
+      $data[$table_name] = $data[$prototype_id];
+      unset($data[$prototype_id]);
+    }
+
     foreach (array_keys($data) as $key) {
       if (in_array($key, [$logframe_sheet_label])) {
         continue;
@@ -630,6 +645,9 @@ class PlanEntityLogframe extends GHIBlockBase implements MultiStepFormBlockInter
     foreach ($conf['attachment_tables'] as $table_configuration) {
       /** @var \Drupal\ghi_form_elements\ConfigurationContainerItemPluginInterface $item_type */
       $item_type = $this->getItemTypePluginForColumn($table_configuration, $context);
+      if (!$item_type instanceof AttachmentTable) {
+        continue;
+      }
       if (!array_key_exists($item_type->get('attachment_prototype'), $attachment_prototypes)) {
         continue;
       }
@@ -638,7 +656,7 @@ class PlanEntityLogframe extends GHIBlockBase implements MultiStepFormBlockInter
         continue;
       }
       $attachment_prototype = $attachment_prototypes[$item_type->get('attachment_prototype')];
-      $tables[$attachment_prototype->getName()] = $table;
+      $tables[$attachment_prototype->id()] = $table;
     }
     return $tables;
   }
