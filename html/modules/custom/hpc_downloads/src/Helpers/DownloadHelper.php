@@ -32,7 +32,13 @@ class DownloadHelper {
    *   A render array for a link.
    */
   public static function getDownloadIcon($uri) {
-    return Link::fromTextAndUrl(self::getDownloadIconMarkup(), Url::fromUri($uri))->toRenderable();
+    $uri = Url::fromUri($uri);
+    if ($uri->isExternal()) {
+      $attributes = $uri->getOption('attributes') ?? [];
+      $attributes['target'] = '_blank';
+      $uri->setOption('attributes', $attributes);
+    }
+    return Link::fromTextAndUrl(self::getDownloadIconMarkup(), $uri)->toRenderable();
   }
 
   /**
