@@ -24,6 +24,19 @@
   }
 }
 
+.gho-heading--title-wrapper {
+  display: flex;
+  gap: 1rem;
+  align-items: baseline;
+  margin: 0;
+}
+
+.gho-heading--title-wrapper .gho-field-icon img {
+  display: block;
+  width: auto;
+  height: var(--cd-font-size--medium-large);
+}
+
 .gho-heading__pre-title {
   display: block;
   margin-bottom: 0.5rem;
@@ -34,9 +47,7 @@
 }
 
 .gho-heading__title {
-  display: block;
-  margin: 0;
-  color: var(--cd-black);
-  font-size: 2.25rem;
+  color: var(--cd-default-text-color);
+  font-size: var(--cd-font-size--medium-large);
   font-weight: 700;
 }

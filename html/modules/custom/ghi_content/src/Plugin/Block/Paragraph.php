@@ -196,6 +196,11 @@ class Paragraph extends ContentBlockBase implements OptionalTitleBlockInterface,
     // Make sure to update the rendered string.
     $rendered = trim(Html::serialize($dom));
 
+    if ($preview) {
+      $block_attributes['class'][] = 'content-width';
+      $wrapper_attributes['class'][] = 'content-width';
+    }
+
     if ($internal_preview) {
       // Make sure we have gho specific classes available during internal
       // previews, e.g. in the paragraph selection form.
