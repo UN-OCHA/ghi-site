@@ -1,0 +1,27 @@
+.item-list ul.geojson-directory-listing {
+  margin: 0;
+}
+.item-list ul.geojson-directory-listing li {
+  list-style: none !important;
+  padding: 0.5rem 0px 0.5rem 2rem;
+  margin: 0;
+  white-space: nowrap;
+  background-image: url(../assets/file.png);
+  background-repeat: no-repeat;
+  background-position: left center;
+  background-size: 1.5rem;
+}
+.item-list ul.geojson-directory-listing li.directory {
+  background-image: url(../assets/folder.png);
+  background-position: left 0.5rem;
+}
+.item-list ul.geojson-directory-listing li.directory.expanded {
+  background-image: url(../assets/folder_open.png);
+}
+.item-list ul.geojson-directory-listing li.directory .item-list ul {
+  margin-inline: 0;
+  display: none;
+}
+.item-list ul.geojson-directory-listing li.directory.expanded .item-list ul {
+  display: block;
+}

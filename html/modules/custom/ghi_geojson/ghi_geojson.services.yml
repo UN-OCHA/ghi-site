@@ -1,0 +1,4 @@
+services:
+  geojson:
+    class: Drupal\ghi_geojson\GeoJson
+    arguments: ['@file_system']
