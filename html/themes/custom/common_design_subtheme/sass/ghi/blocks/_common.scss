@@ -15,7 +15,6 @@
   line-height: 1.5;
 
   &.ghi-block-paragraph {
-    overflow: hidden;
     margin-top: 2.5rem;
   }
 
@@ -24,6 +23,11 @@
   }
   &.paragraph--gho-text .gho-text__text > p {
     page-break-inside: avoid !important;
+  }
+
+  &.layout-builder-block.paragraph--gho-heading .gho-heading,
+  &[data-block-preview].paragraph--gho-heading .gho-heading {
+    margin-top: 0;
   }
 
   #main-content.has-subpage-title
