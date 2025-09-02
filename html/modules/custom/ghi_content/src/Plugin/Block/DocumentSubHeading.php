@@ -43,6 +43,11 @@ class DocumentSubHeading extends GHIBlockBase {
         '#type' => 'html_tag',
         '#tag' => 'h3',
         '#value' => Markup::create($subheading),
+        '#attributes' => [
+          'class' => [
+            'cd-block-title',
+          ],
+        ],
       ],
     ];
   }
