@@ -116,6 +116,8 @@ gho-achievement:
   css:
     theme:
       components/gho-achievement/gho-achievement.css: {}
+  dependencies:
+    - common_design_subtheme/gho-icon-field
 gho-achievement-list:
   css:
     theme:
@@ -168,6 +170,12 @@ gho-heading:
   css:
     theme:
       components/gho-heading/gho-heading.css: {}
+  dependencies:
+    - common_design_subtheme/gho-icon-field
+gho-icon-field:
+  css:
+    theme:
+      components/gho-icon-field/gho-icon-field.css: {}
 gho-image-with-text:
   css:
     theme:

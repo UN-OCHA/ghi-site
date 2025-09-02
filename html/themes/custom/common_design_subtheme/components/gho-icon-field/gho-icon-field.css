@@ -1,0 +1,6 @@
+.gho-field-icon img.icon {
+  width: 2rem;
+  height: 100%;
+  filter: invert(27%) sepia(9%) saturate(0%) hue-rotate(188deg) brightness(93%)
+    contrast(80%);
+}
