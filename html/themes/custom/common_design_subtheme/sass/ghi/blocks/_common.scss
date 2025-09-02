@@ -25,6 +25,11 @@
     page-break-inside: avoid !important;
   }
 
+  &.layout-builder-block.paragraph--gho-heading .gho-heading,
+  &[data-block-preview].paragraph--gho-heading .gho-heading {
+    margin-top: 0;
+  }
+
   #main-content.has-subpage-title
     .layout__region
     &:first-child:not(.block-plan-entity-logframe),
@@ -36,6 +41,9 @@
     padding-top: 0;
   }
 
+  .cd-block-title {
+    font-size: var(--cd-font-size--medium-large);
+  }
   .cd-block-title a.anchor {
     position: relative;
     top: -2rem;
