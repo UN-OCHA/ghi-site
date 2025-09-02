@@ -1,0 +1,6 @@
+geojson_admin:
+  css:
+    component:
+      css/geojson_admin.css: {}
+  js:
+    js/geojson_admin.js: {}

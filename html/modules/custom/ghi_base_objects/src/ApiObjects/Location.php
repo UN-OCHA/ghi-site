@@ -3,13 +3,12 @@
 namespace Drupal\ghi_base_objects\ApiObjects;
 
 use Drupal\Core\Cache\Cache;
+use Drupal\ghi_geojson\GeoJsonLocationInterface;
 
 /**
  * Abstraction class for API location objects.
  */
-class Location extends BaseObject {
-
-  const GEO_JSON_DIR = 'public://geojson';
+class Location extends BaseObject implements GeoJsonLocationInterface {
 
   /**
    * The parent country.
@@ -37,10 +36,7 @@ class Location extends BaseObject {
   }
 
   /**
-   * Get a UUID for this location.
-   *
-   * @return string
-   *   A string representing a UUID.
+   * {@inheritdoc}
    */
   public function getUuid() {
     return md5(implode('_', [
@@ -71,30 +67,21 @@ class Location extends BaseObject {
   }
 
   /**
-   * Get the iso3 code.
-   *
-   * @return string|null
-   *   The iso3 code or NULL if not found.
+   * {@inheritdoc}
    */
   public function getIso3() {
     return $this->isCountry() ? $this->iso3 : $this->getParentCountry()?->getIso3();
   }
 
   /**
-   * Get the admin level.
-   *
-   * @return int
-   *   The admin level.
+   * {@inheritdoc}
    */
   public function getAdminLevel() {
     return $this->admin_level;
   }
 
   /**
-   * Get the pcode.
-   *
-   * @return string
-   *   The pcode.
+   * {@inheritdoc}
    */
   public function getPcode() {
     return $this->pcode;
@@ -161,17 +148,13 @@ class Location extends BaseObject {
    *   TRUE if a geojson file is there, FALSE otherwise.
    */
   public function hasGeoJsonFile() {
-    return $this->getGeoJsonSourceFilePath() !== NULL;
+    return $this->geojson()->getGeoJsonSourceFilePath($this) !== NULL;
   }
 
   /**
-   * Get the version to use for the geojson shapefiles.
-   *
-   * @return int|string
-   *   Returns the year component of the valid_on date for expired locations,
-   *   or the string 'current'.
+   * {@inheritdoc}
    */
-  private function getGeoJsonVersion() {
+  public function getGeoJsonVersion() {
     $version = 'current';
     if ($this->valid_on && $this->status == 'expired') {
       $version = date('Y', $this->valid_on);
@@ -180,108 +163,11 @@ class Location extends BaseObject {
   }
 
   /**
-   * Get the path to the geojson shape file for the location.
-   *
-   * @param string $version
-   *   The version to retrieve.
-   * @param bool $minified
-   *   Whether a minified file should be retrieved.
-   *
-   * @return string|null
-   *   The path to the locally stored file inside our module directory. Or NULL
-   *   if the file can't be found.
-   */
-  public function getGeoJsonSourceFilePath($version = NULL, $minified = TRUE) {
-    if (!$this->getIso3()) {
-      return NULL;
-    }
-    $version = $version ?? $this->getGeoJsonVersion();
-    $directory = self::moduleHandler()->getModule('ghi_base_objects')->getPath() . '/assets/geojson/' . $this->getIso3();
-    if ($version != 'current') {
-      $directories = glob($directory . '/[0-9][0-9][0-9][0-9]', GLOB_ONLYDIR);
-      $directory_years = array_map(function ($dirname) {
-        return basename($dirname);
-      }, $directories);
-      $versions = array_filter($directory_years, function ($directory_year) use ($version) {
-        return (int) $directory_year >= (int) $version;
-      });
-      rsort($versions, SORT_NUMERIC);
-      $version = reset($versions) ?: 'current';
-    }
-
-    // The source file for countries comes from a local asset.
-    $filepath = $this->buildGeoJsonSourceFilePath($version, $minified);
-    if (!$filepath) {
-      return NULL;
-    }
-
-    $filepath_asset = $directory . '/' . $filepath;
-    if (!file_exists($filepath_asset)) {
-      // If the file is not found, try the non-minified version once.
-      return $minified ? $this->getGeoJsonSourceFilePath($version, FALSE) : NULL;
-    }
-    return $filepath_asset;
-  }
-
-  /**
-   * Build the path to the geojson source files inside this modules directory.
-   *
-   * @param string $version
-   *   The version to retrieve.
-   * @param bool $minified
-   *   Whether a minified file should be retrieved.
-   *
-   * @return string
-   *   A path relative to the this modules geojson asset file directory in
-   *   [MODULE_PATH]/assets/geojson.
-   */
-  private function buildGeoJsonSourceFilePath($version = NULL, $minified = TRUE) {
-    if (!$this->getIso3()) {
-      return NULL;
-    }
-    $version = $version ?? $this->getGeoJsonVersion();
-    $path_parts = [
-      $version,
-    ];
-    if ($this->isCountry()) {
-      // Country shape files are directly in the root level.
-      $path_parts[] = $this->getIso3() . '_0' . ($minified ? '.min' : '') . '.geojson';
-    }
-    elseif (!empty($this->getAdminLevel()) && !empty($this->getPcode())) {
-      // Admin 1+ shape files are inside a level specific subdirectory.
-      $path_parts[] = 'adm' . $this->getAdminLevel();
-      // And they are simply named like their pcode.
-      $path_parts[] = $this->getPcode() . ($minified ? '.min' : '') . '.geojson';
-    }
-    else {
-      return NULL;
-    }
-    return implode('/', $path_parts);
-  }
-
-  /**
-   * Get the path to the geojson file inside the public file directory.
-   *
-   * This checks if a geojson file for this location is present in the source,
-   * and if so, it makes sure to copy it over to the public file system.
-   *
-   * @return string
-   *   The path to the geojson file inside the public file directory.
-   */
-  public function getGeoJsonPublicFilePath() {
-    $public_filepath = self::GEO_JSON_DIR . '/' . $this->getUuid() . '.geojson';
-    if (!file_exists($public_filepath) && $filepath = $this->getGeoJsonSourceFilePath()) {
-      copy($filepath, $public_filepath);
-    }
-    return file_exists($public_filepath) ? $public_filepath : NULL;
-  }
-
-  /**
    * {@inheritdoc}
    */
   public function toArray() {
     $array = parent::toArray();
-    $geojson_public_path = $this->getGeoJsonPublicFilePath();
+    $geojson_public_path = $this->geojson()->getGeoJsonPublicFilePath($this);
     $array['filepath'] = $geojson_public_path ? $this->fileUrlGenerator()->generate($geojson_public_path)->toString() : NULL;
     return $array;
   }
@@ -311,6 +197,16 @@ class Location extends BaseObject {
    */
   public function getCacheTags() {
     return Cache::mergeTags($this->cacheTags, [$this->getUuid()]);
+  }
+
+  /**
+   * Get the geojson service.
+   *
+   * @return \Drupal\ghi_geojson\GeoJson
+   *   The geojson service.
+   */
+  public static function geojson() {
+    return \Drupal::service('geojson');
   }
 
   /**
