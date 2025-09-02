@@ -33,10 +33,6 @@
     }
   }
   table {
-    thead tr th:first-child,
-    tbody tr td:first-child {
-      padding-left: 0 !important;
-    }
     tbody {
       td[data-column="name"] {
         .cell-wrapper-inner {
@@ -81,6 +77,12 @@
         &.fts-plan-link {
           text-decoration: none;
         }
+      }
+    }
+    @include tablet {
+      thead tr th:first-child,
+      tbody tr td:first-child {
+        padding-left: 0 !important;
       }
     }
   }
