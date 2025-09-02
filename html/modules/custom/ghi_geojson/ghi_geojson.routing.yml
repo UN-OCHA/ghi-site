@@ -1,0 +1,35 @@
+hpc_api.reports.files.geojson:
+  path: '/admin/reports/hpc-api-files/geojson'
+  defaults:
+    _controller: '\Drupal\ghi_geojson\Controller\GeoJsonFileReportController::buildListPage'
+    _title: 'GeoJSON files'
+  requirements:
+    _permission: 'administer site configuration'
+  options:
+    _admin_route: TRUE
+ghi_geojson.geojson_sources:
+  path: '/admin/config/ghi/geojson'
+  defaults:
+    _controller: '\Drupal\ghi_geojson\Controller\GeoJsonSourcesController::buildSourcesPage'
+    _title: 'GeoJSON source files'
+  requirements:
+    _permission: 'administer site configuration'
+  options:
+    _admin_route: TRUE
+ghi_geojson.geojson_sources.directory_listing:
+  path: '/admin/config/ghi/geojson/list/{iso3}/{version}'
+  defaults:
+    _controller: '\Drupal\ghi_geojson\Controller\GeoJsonSourcesController::directoryListing'
+    _title_callback: '\Drupal\ghi_geojson\Controller\GeoJsonSourcesController::directoryTitle'
+  requirements:
+    _permission: 'administer site configuration'
+  options:
+    _admin_route: TRUE
+ghi_geojson.geojson_sources.download_archive:
+  path: '/admin/config/ghi/geojson/download/{iso3}/{version}'
+  defaults:
+    _controller: '\Drupal\ghi_geojson\Controller\GeoJsonSourcesController::directoryDownload'
+  requirements:
+    _permission: 'administer site configuration'
+  options:
+    _admin_route: TRUE

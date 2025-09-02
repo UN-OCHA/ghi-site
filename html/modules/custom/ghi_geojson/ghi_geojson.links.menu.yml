@@ -1,0 +1,10 @@
+ghi_geojson.geojson_sources:
+  title: 'GeoJSON'
+  route_name: ghi_geojson.geojson_sources
+  description: 'Manage GeoJSON sources'
+  parent: system.admin_config_ghi
+geojson_files_report:
+  title: GeoJSON files
+  description: 'List the currently imported GeoJSON files.'
+  route_name: hpc_api.reports.files.geojson
+  parent: hpc_api.files_report

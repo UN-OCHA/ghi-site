@@ -26,13 +26,3 @@ entity.base_objects.migrate:
       base_object_type:
         type: entity:base_object_type
     _admin_route: TRUE
-
-hpc_api.reports.files.geojson:
-  path: '/admin/reports/hpc-api-files/geojson'
-  defaults:
-    _controller: '\Drupal\ghi_base_objects\Controller\GeoJsonFileReportController::buildListPage'
-    _title: 'GeoJSON files'
-  requirements:
-    _permission: 'administer site configuration'
-  options:
-    _admin_route: TRUE

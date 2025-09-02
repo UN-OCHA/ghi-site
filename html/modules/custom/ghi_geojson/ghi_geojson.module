@@ -1,0 +1,12 @@
+<?php
+
+use Drupal\ghi_geojson\GeoJson;
+
+/**
+ * Implements hook_cache_flush().
+ *
+ * Clean up import files.
+ */
+function ghi_geojson_cache_flush() {
+  hpc_api_clear_directory(GeoJson::GEOJSON_DIR, '/.*\.geojson/');
+}

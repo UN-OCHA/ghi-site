@@ -6,7 +6,9 @@
  */
 
 use Drupal\Core\Url;
+use Drupal\ghi_geojson\GeoJson;
 use Drupal\menu_link_content\Entity\MenuLinkContent;
+use Symfony\Component\Filesystem\Filesystem;
 
 /**
  * Update links in the admin menu.
@@ -34,4 +36,14 @@ function ghi_base_objects_deploy_base_object_bundles_admin_menu_2() {
       'weight' => $weight,
     ])->save();
   }
+}
+
+/**
+ * Copy geojson source files into public file directory.
+ */
+function ghi_base_objects_deploy_copy_geojson_source_files() {
+  $fileSystem = new Filesystem();
+  $source_dir = \Drupal::moduleHandler()->getModule('ghi_base_objects')->getPath() . '/assets/geojson/';
+  $target_dir = GeoJson::GEOJSON_SOURCE_DIR;
+  $fileSystem->mirror($source_dir, $target_dir);
 }
