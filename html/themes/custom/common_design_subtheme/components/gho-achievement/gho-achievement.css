@@ -13,9 +13,9 @@
   margin-bottom: 1rem;
 }
 
-.gho-achievement__icon img {
+.gho-achievement__icon img.icon {
   width: auto;
-  height: 100%;
+  height: 3rem;
   filter: invert(27%) sepia(9%) saturate(0%) hue-rotate(188deg) brightness(93%)
     contrast(80%);
 }
@@ -26,6 +26,8 @@
 }
 
 .gho-achievement__summary {
+  flex-grow: 1;
+  flex-shrink: 0;
   /* Since we changed the flex order, margin collapse doesn't occur between this
   element and the previous Title element. Remove margin manually */
   margin-top: 0;
@@ -33,12 +35,12 @@
   /* Since we absolutely position the sources to line them up, apply some extra
   padding to the summaries so that the longest summary still has a nice-looking
   gap between the summary and the source. */
-  margin-bottom: 2.5rem;
+  margin-bottom: 1rem;
   font-size: var(--cd-font-size--small);
 }
 
 .gho-achievement__source {
-  position: absolute;
-  bottom: 2rem;
+  position: relative;
+  bottom: 0;
   font-size: var(--cd-font-size--tiny);
 }
