@@ -4,6 +4,8 @@ namespace Drupal\ghi_geojson;
 
 use Drupal\Core\File\FileSystemInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
+use Symfony\Component\Filesystem\Exception\IOException;
+use Symfony\Component\Filesystem\Filesystem;
 
 class GeoJson {
 
@@ -19,6 +21,13 @@ class GeoJson {
   public $fileSystem;
 
   /**
+   * File system service.
+   *
+   * @var \Symfony\Component\Filesystem\Filesystem
+   */
+  public $symfonyFileSystem;
+
+  /**
    * Construct the GEOJson service.
    *
    * @param \Drupal\Core\File\FileSystemInterface $file_system
@@ -26,6 +35,7 @@ class GeoJson {
    */
   public function __construct(FileSystemInterface $file_system) {
     $this->fileSystem = $file_system;
+    $this->symfonyFileSystem = new Filesystem();
   }
 
   /**
@@ -137,6 +147,51 @@ class GeoJson {
   }
 
   /**
+   * Get the source directory for the given iso3 and version.
+   *
+   * @param string $iso3
+   *   The iso3 code for which to lookup the source directory.
+   * @param mixed $version
+   *   The version to lookup the source directory.
+   *
+   * @return string
+   *   The path to the source directory.
+   */
+  public function getSourceDirectoryPath($iso3, $version) {
+    return self::GEOJSON_SOURCE_DIR . '/' . $iso3 . '/' . $version;
+  }
+
+  /**
+   * Get all ISO codes that are supported.
+   *
+   * @return string[]
+   *   An array of iso3 codes.
+   */
+  public function getIsoCodes(): array {
+    $directories = $this->getFiles(GeoJson::GEOJSON_SOURCE_DIR);
+    return array_values(array_map(function ($directory) {
+      return $directory->filename;
+    }, $directories));
+  }
+
+  /**
+   * Get all available versions for the given country.
+   *
+   * @param string $iso3
+   *   The iso3 code for which to lookup the versions.
+   *
+   * @return array
+   *   An array of versions.
+   */
+  public function getVersionsForIsoCode($iso3): array {
+    $version_directories = $this->getFiles(GeoJson::GEOJSON_SOURCE_DIR . '/' . $iso3);
+    $versions = array_map(function ($version_directory) {
+      return $version_directory->filename;
+    }, $version_directories);
+    return array_values(array_reverse($versions));
+  }
+
+  /**
    * Get the files inside the given directory.
    *
    * @param string $directory
@@ -239,6 +294,47 @@ class GeoJson {
       return FALSE;
     }
     return $zip_path;
+  }
+
+  public function saveUploadArchive(string $iso3, string $version, $filepath) {
+    $zip = new \ZipArchive();
+    $zip->open($filepath);
+    if (!$zip->open($filepath) === TRUE) {
+      return FALSE;
+    }
+    $status = $zip->extractTo(self::GEOJSON_SOURCE_DIR . '/' . $iso3 . '/' . $version);
+    $status = $status && $zip->close();
+    return $status;
+  }
+
+  public function renameArchiveVersion(string $iso3, string $version, string $new_version) {
+    $origin = self::GEOJSON_SOURCE_DIR . '/' . $iso3 . '/' . $version;
+    $target = self::GEOJSON_SOURCE_DIR . '/' . $iso3 . '/' . $new_version;
+    try {
+      $this->symfonyFileSystem->rename($origin, $target);
+    }
+    catch (IOException $e) {
+      return FALSE;
+    }
+    return TRUE;
+  }
+
+  /**
+   * Delete a country version directory.
+   *
+   * @param string $iso3
+   *   The ISO3 code for the country to be deleted.
+   * @param string $version
+   *   The version to be deleted.
+   *
+   * @return bool
+   *   The result of the delete operation.
+   */
+  public function deleteVersion(string $iso3, string $version): bool {
+    if ($version == 'current') {
+      throw new \Exception(sprintf('Current GeoJSON versions cannot be deleted (country: %s)', $iso3));
+    }
+    return $this->fileSystem->deleteRecursive($this->getSourceDirectoryPath($iso3, $version));
   }
 
 }
