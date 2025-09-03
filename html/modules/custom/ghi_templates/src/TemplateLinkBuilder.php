@@ -22,7 +22,7 @@ class TemplateLinkBuilder {
   use LayoutEntityHelperTrait;
 
   /**
-   * The layout builder ipe config object.
+   * The layout builder modal config object.
    *
    * @var \Drupal\Core\Config\Config
    */

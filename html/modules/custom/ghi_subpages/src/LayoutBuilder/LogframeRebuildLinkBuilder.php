@@ -18,7 +18,7 @@ class LogframeRebuildLinkBuilder {
   use StringTranslationTrait;
 
   /**
-   * The layout builder ipe config object.
+   * The layout builder modal config object.
    *
    * @var \Drupal\Core\Config\Config
    */

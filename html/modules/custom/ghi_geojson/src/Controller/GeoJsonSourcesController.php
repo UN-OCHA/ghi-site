@@ -3,6 +3,7 @@
 namespace Drupal\ghi_geojson\Controller;
 
 use Drupal\Component\Render\MarkupInterface;
+use Drupal\Component\Serialization\Json;
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Url;
 use Drupal\ghi_geojson\GeoJson;
@@ -37,6 +38,13 @@ class GeoJsonSourcesController extends ControllerBase {
   public $geojson;
 
   /**
+   * The layout builder modal config object.
+   *
+   * @var \Drupal\Core\Config\Config
+   */
+  protected $modalConfig;
+
+  /**
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container): GeoJsonSourcesController {
@@ -45,7 +53,30 @@ class GeoJsonSourcesController extends ControllerBase {
     $instance->fileSystem = $container->get('file_system');
     $instance->fileUrlGenerator = $container->get('file_url_generator');
     $instance->geojson = $container->get('geojson');
+    $instance->modalConfig = $container->get('config.factory')->get('layout_builder_modal.settings');
     return $instance;
+  }
+
+  /**
+   * Controller callback for the sources page.
+   *
+   * @return array
+   *    A render array with the page content.
+   */
+  public function sourcesPage(): array {
+    $table = [
+      '#type' => 'table',
+      '#header' => [
+        $this->t('Country code'),
+        $this->t('Version'),
+        $this->t('adm1'),
+        $this->t('adm2'),
+        $this->t('adm3'),
+        $this->t('Operations'),
+      ],
+      '#rows' => $this->buildRows(),
+    ];
+    return $table;
   }
 
   /**
@@ -142,6 +173,24 @@ class GeoJsonSourcesController extends ControllerBase {
   }
 
   /**
+   * Delete a country version directory.
+   *
+   * @param string $iso3
+   *   The ISO3 code for the country to be deleted.
+   * @param string $version
+   *   The version to be deleted.
+   *
+   * @return bool
+   *   The result of the delete operation.
+   */
+  public function deleteVersion(string $iso3, string $version): bool {
+    if ($version == 'current') {
+      throw new \Exception(sprintf('Current GeoJSON versions cannot be deleted (country: %s)', $iso3));
+    }
+    return $this->fileSystem->deleteRecursive($this->geojson->getSourceDirectoryPath($iso3, $version));
+  }
+
+  /**
    * Build all links to a file.
    *
    * This adds additional links for the minified version of the same file.
@@ -186,25 +235,6 @@ class GeoJsonSourcesController extends ControllerBase {
   }
 
   /**
-   * {@inheritdoc}
-   */
-  public function buildSourcesPage(): array {
-    $table = [
-      '#type' => 'table',
-      '#header' => [
-        $this->t('Country code'),
-        $this->t('Version'),
-        $this->t('adm1'),
-        $this->t('adm2'),
-        $this->t('adm3'),
-        $this->t('Operations'),
-      ],
-      '#rows' => $this->buildRows(),
-    ];
-    return $table;
-  }
-
-  /**
    * Build the rows for the sources tables.
    *
    * @return array
@@ -216,6 +246,44 @@ class GeoJsonSourcesController extends ControllerBase {
     foreach ($directories as $directory) {
       $versions = $this->geojson->getFiles($directory->uri);
       foreach (array_reverse($versions) as $version) {
+        $operation_links = [];
+        $operation_links['inspect'] = [
+          'title' => $this->t('Inspect'),
+          'url' => Url::fromRoute('ghi_geojson.geojson_sources.directory_listing', [
+            'iso3' => $directory->filename,
+            'version' => $version->filename,
+          ]),
+        ];
+        $operation_links['download'] = [
+          'title' => $this->t('Download archive'),
+          'url' => Url::fromRoute('ghi_geojson.geojson_sources.download_archive', [
+            'iso3' => $directory->filename,
+            'version' => $version->filename,
+          ]),
+        ];
+        if ($version->filename != 'current') {
+          $operation_links['delete'] = [
+            'title' => $this->t('Delete version'),
+            'url' => Url::fromRoute('ghi_geojson.geojson_sources.delete', [
+              'iso3' => $directory->filename,
+              'version' => $version->filename,
+            ]),
+            'attributes' => [
+              'class' => [
+                'use-ajax',
+              ],
+              'data-dialog-type' => 'dialog',
+              'data-dialog-options' => Json::encode([
+                'width' => $this->modalConfig->get('modal_width'),
+                'height' => $this->modalConfig->get('modal_height'),
+                'target' => 'layout-builder-modal',
+                'autoResize' => $this->modalConfig->get('modal_autoresize'),
+                'modal' => TRUE,
+              ]),
+            ],
+          ];
+        }
+
         $row = [
           $directory->filename,
           [
@@ -234,22 +302,7 @@ class GeoJsonSourcesController extends ControllerBase {
           [
             'data' => [
               '#type' => 'dropbutton',
-              '#links' => [
-                'inspect' => [
-                  'title' => $this->t('Inspect'),
-                  'url' => Url::fromRoute('ghi_geojson.geojson_sources.directory_listing', [
-                    'iso3' => $directory->filename,
-                    'version' => $version->filename,
-                  ]),
-                ],
-                'download' => [
-                  'title' => $this->t('Download archive'),
-                  'url' => Url::fromRoute('ghi_geojson.geojson_sources.download_archive', [
-                    'iso3' => $directory->filename,
-                    'version' => $version->filename,
-                  ]),
-                ],
-              ],
+              '#links' => $operation_links,
             ],
           ],
         ];

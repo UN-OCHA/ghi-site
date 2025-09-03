@@ -42,8 +42,8 @@ function ghi_base_objects_deploy_base_object_bundles_admin_menu_2() {
  * Copy geojson source files into public file directory.
  */
 function ghi_base_objects_deploy_copy_geojson_source_files() {
-  $fileSystem = new Filesystem();
+  $file_system = new Filesystem();
   $source_dir = \Drupal::moduleHandler()->getModule('ghi_base_objects')->getPath() . '/assets/geojson/';
   $target_dir = GeoJson::GEOJSON_SOURCE_DIR;
-  $fileSystem->mirror($source_dir, $target_dir);
+  $file_system->mirror($source_dir, $target_dir);
 }

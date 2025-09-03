@@ -10,14 +10,14 @@ hpc_api.reports.files.geojson:
 ghi_geojson.geojson_sources:
   path: '/admin/config/ghi/geojson'
   defaults:
-    _controller: '\Drupal\ghi_geojson\Controller\GeoJsonSourcesController::buildSourcesPage'
+    _controller: '\Drupal\ghi_geojson\Controller\GeoJsonSourcesController::sourcesPage'
     _title: 'GeoJSON source files'
   requirements:
     _permission: 'administer site configuration'
   options:
     _admin_route: TRUE
 ghi_geojson.geojson_sources.directory_listing:
-  path: '/admin/config/ghi/geojson/list/{iso3}/{version}'
+  path: '/admin/config/ghi/geojson/{iso3}/{version}/list'
   defaults:
     _controller: '\Drupal\ghi_geojson\Controller\GeoJsonSourcesController::directoryListing'
     _title_callback: '\Drupal\ghi_geojson\Controller\GeoJsonSourcesController::directoryTitle'
@@ -26,9 +26,27 @@ ghi_geojson.geojson_sources.directory_listing:
   options:
     _admin_route: TRUE
 ghi_geojson.geojson_sources.download_archive:
-  path: '/admin/config/ghi/geojson/download/{iso3}/{version}'
+  path: '/admin/config/ghi/geojson/{iso3}/{version}/download'
   defaults:
     _controller: '\Drupal\ghi_geojson\Controller\GeoJsonSourcesController::directoryDownload'
+  requirements:
+    _permission: 'administer site configuration'
+  options:
+    _admin_route: TRUE
+ghi_geojson.geojson_sources.delete:
+  path: '/admin/config/ghi/geojson/{iso3}/{version}/delete'
+  defaults:
+    _form: '\Drupal\ghi_geojson\Form\DeleteConfirmForm'
+  requirements:
+    _permission: 'administer site configuration'
+    _custom_access: '\Drupal\ghi_geojson\Form\DeleteConfirmForm::access'
+  options:
+    _admin_route: TRUE
+ghi_geojson.geojson_sources.upload:
+  path: '/admin/config/ghi/geojson/upload'
+  defaults:
+    _title: 'Upload GeoJson set'
+    _form: '\Drupal\ghi_geojson\Form\GeoJsonUploadForm'
   requirements:
     _permission: 'administer site configuration'
   options:
