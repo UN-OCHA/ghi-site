@@ -20,7 +20,7 @@ where:
 export GEOJSON_DIRECTORY="${PROJECT_ROOT}/.docksal/commands/geojson-commands"
 export TEMPORARY_DIRECTORY="${GEOJSON_DIRECTORY}/tmp"
 export GEOJSON_SOURCE_COUNTRIES_JSON="${TEMPORARY_DIRECTORY}/countries.json"
-export GEOJSON_STORAGE_DIRECTORY_RELATIVE="/html/modules/custom/ghi_base_objects/assets/geojson"
+export GEOJSON_STORAGE_DIRECTORY_RELATIVE="/html/sites/default/files/geojson_sources"
 export GEOJSON_STORAGE_DIRECTORY="${PROJECT_ROOT}${GEOJSON_STORAGE_DIRECTORY_RELATIVE}"
 
 export URL_ADM0="https://gis.unocha.org/server/rest/services/COD/GBL_COD_Admin0/FeatureServer/0/query"

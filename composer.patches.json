@@ -10,7 +10,8 @@
       "Issue #3001188: Make it possible to add relationships to layout builder": "./patches/3001188-make-it-possible-to-add-relationships-to-layout-builder.patch",
       "Issue #2329253: Allow the ChangedItem to skip updating the entity's changed timestamp when synchronizing (f.e. when migrating)": "https://www.drupal.org/files/issues/2024-07-30/2329253-10.x.patch",
       "Issue #?? (maybe #2837833): 'Required contexts without a value": "./patches/missing-context-value-in-layout-builder-admin.patch",
-      "Issue #2190333: Make #group FAPI / render feature work on all form/render #types out of the box": "https://www.drupal.org/files/issues/2023-09-04/drupal-core_form-api_groups_0.patch"
+      "Issue #2190333: Make #group FAPI / render feature work on all form/render #types out of the box": "https://www.drupal.org/files/issues/2023-09-04/drupal-core_form-api_groups_0.patch",
+      "Issue #2585169: Unable to alter local actions prior to rendering": "https://www.drupal.org/files/issues/2024-12-19/2585169-63-10.4.x.patch"
     },
     "drupal/geofield_map": {
       "Issue #3479680: Hide marker button when the map position is reset": "https://git.drupalcode.org/project/geofield_map/-/merge_requests/22.patch"
