@@ -156,16 +156,6 @@ function hpc_common_theme($existing, $type, $theme, $path) {
       ],
       'template' => 'hpc-popover',
     ] + $common,
-    'hpc_hid_session_information' => [
-      'variables' => [
-        'description' => NULL,
-        'user_id' => NULL,
-        'id_message' => NULL,
-        'token' => NULL,
-        'token_message' => NULL,
-      ],
-      'template' => 'hpc-hid-session-information',
-    ],
     'hpc_icon' => [
       'variables' => [
         'icon' => NULL,

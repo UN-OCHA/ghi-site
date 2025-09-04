@@ -58,7 +58,6 @@ dependencies:
     - path
     - publishcontent
     - role_delegation
-    - social_api
     - system
     - taxonomy
     - toolbar
@@ -94,9 +93,6 @@ permissions:
   - 'administer page templates'
   - 'administer pages'
   - 'administer section cache'
-  - 'administer social api authentication'
-  - 'administer social api autoposting'
-  - 'administer social api widgets'
   - 'administer teams'
   - 'administer users'
   - 'assign all roles'

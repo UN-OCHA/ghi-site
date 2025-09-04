@@ -225,9 +225,6 @@ abstract class RemoteSourceBaseHpcContentModule extends RemoteSourceBase {
     if ($basic_auth = $this->getRemoteBasicAuth()) {
       $headers['Authorization'] = 'Basic ' . base64_encode($basic_auth['user'] . ':' . $basic_auth['pass']);
     }
-    if ($hid_user_id = $this->hidUserData->getId()) {
-      $headers['hid-user'] = $hid_user_id;
-    }
 
     $cookies = ['access_key' => $this->getRemoteAccessKey()];
     $jar = CookieJar::fromArray($cookies, parse_url($this->getRemoteBaseUrl(), PHP_URL_HOST));
