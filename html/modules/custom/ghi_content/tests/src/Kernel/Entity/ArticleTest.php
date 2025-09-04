@@ -67,12 +67,6 @@ class ArticleTest extends KernelTestBase {
     $this->installSchema('node', ['node_access']);
     $this->installConfig(['system', 'node', 'taxonomy', 'field', 'pathauto']);
 
-    $hid_user_data = $this->createMock('\Drupal\hpc_common\Hid\HidUserData');
-
-    $container = \Drupal::getContainer();
-    $container->set('hpc_common.hid_user_data', $hid_user_data);
-    \Drupal::setContainer($container);
-
     $this->createArticleContentType();
     $this->createDocumentContentType();
 
