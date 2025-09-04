@@ -12,9 +12,6 @@
       "Issue #?? (maybe #2837833): 'Required contexts without a value": "./patches/missing-context-value-in-layout-builder-admin.patch",
       "Issue #2190333: Make #group FAPI / render feature work on all form/render #types out of the box": "https://www.drupal.org/files/issues/2023-09-04/drupal-core_form-api_groups_0.patch"
     },
-    "drupal/flat_taxonomy": {
-      "Issue #3427628: Hide 'Add child' link from entity operations": "https://www.drupal.org/files/issues/2024-03-13/3427628-hide-add-child-link-2.patch"
-    },
     "drupal/geofield_map": {
       "Issue #3479680: Hide marker button when the map position is reset": "https://git.drupalcode.org/project/geofield_map/-/merge_requests/22.patch"
     },
