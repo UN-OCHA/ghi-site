@@ -77,7 +77,6 @@ class AttachmentData extends ConfigurationContainerItemPluginBase {
     $attachment_select_mode = empty($attachment) || $triggered_by_change_request;
 
     if (!$attachment_select_mode) {
-      $form_state->set('attachment', $attachment_select);
       $element['attachment_summary'] = [
         '#markup' => Markup::create('<strong>' . $this->t('Selected attachment: %attachment', ['%attachment' => $attachment->composed_reference]) . '</strong>'),
       ];
@@ -257,7 +256,7 @@ class AttachmentData extends ConfigurationContainerItemPluginBase {
     $base_object = $this->getContextValue('base_object');
 
     /** @var \Drupal\ghi_plans\ApiObjects\PlanEntityInterface $source_entity */
-    $source_entity = $attachment->getSourceEntity();
+    $source_entity = $attachment?->getSourceEntity();
 
     if (!$attachment) {
       $errors[] = $this->t('No attachment configured');
@@ -309,7 +308,10 @@ class AttachmentData extends ConfigurationContainerItemPluginBase {
       if ($caseload_id && $original_attachment->getType() == 'caseload' && array_key_exists($caseload_id, $filtered_attachments)) {
         $attachment_id = $caseload_id;
       }
-      elseif (count($filtered_attachments) >= 1) {
+      elseif (count($filtered_attachments) == 1) {
+        // If there is only a single caseload available after doing the
+        // matching, we take it. If there are multiple, we will bail out on
+        // purpose to prevent misconfigurations that might be hard to spot.
         $attachment_id = array_key_first($filtered_attachments);
       }
 
