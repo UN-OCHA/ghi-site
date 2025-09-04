@@ -130,9 +130,17 @@ class MonitoringPeriod extends Select {
    *   An array of options for the monitoring periods.
    */
   public static function getReportingPeriodOptions($plan_id) {
-    $monitoring_periods = self::getPlanReportingPeriods($plan_id, TRUE);
+    $monitoring_periods = self::getPlanReportingPeriods($plan_id);
     return array_map(function ($period) {
-      return $period->format('#@period_number: @date_range');
+      if ($period->isPublished()) {
+        return $period->format('#@period_number: @date_range');
+      }
+      elseif ($period->isOpen()) {
+        return $period->format('#@period_number: @date_range (open but unpublished)');
+      }
+      else {
+        return $period->format('#@period_number: @date_range (unpublished)');
+      }
     }, $monitoring_periods);
   }
 

@@ -5,11 +5,15 @@ namespace Drupal\ghi_plans\ApiObjects;
 use Drupal\Component\Render\FormattableMarkup;
 use Drupal\ghi_base_objects\ApiObjects\BaseObject;
 use Drupal\ghi_base_objects\Helpers\BaseObjectHelper;
+use Drupal\ghi_plans\Entity\Plan;
+use Drupal\ghi_plans\Traits\PlanReportingPeriodTrait;
 
 /**
  * Abstraction class for API plan reporting period objects.
  */
 class PlanReportingPeriod extends BaseObject {
+
+  use PlanReportingPeriodTrait;
 
   const FORMAT_DATE = 'j M Y';
   const FORMAT_DATE_SHORT = 'j M';
@@ -20,13 +24,13 @@ class PlanReportingPeriod extends BaseObject {
    * @return object
    *   An object with the mapped data.
    */
-  protected function map() {
+  protected function map(): object {
     $data = $this->getRawData();
-
     return (object) [
       'id' => $data->id,
       'plan_id' => $data->planId,
       'period_number' => $data->periodNumber,
+      'measurements_generated' => $data->measurementsGenerated,
       'start_date' => $data->startDate,
       'end_date' => $data->endDate,
     ];
@@ -39,7 +43,7 @@ class PlanReportingPeriod extends BaseObject {
    * @return int
    *   The plan ID if any can be found.
    */
-  public function getPlanId() {
+  public function getPlanId(): int {
     return $this->plan_id;
   }
 
@@ -49,7 +53,7 @@ class PlanReportingPeriod extends BaseObject {
    * @return string
    *   The start date as a date string in the format "2024-07-01".
    */
-  public function getStartDate() {
+  public function getStartDate(): string {
     return $this->start_date;
   }
 
@@ -59,7 +63,7 @@ class PlanReportingPeriod extends BaseObject {
    * @return string
    *   The end date as a date string in the format "2024-07-01".
    */
-  public function getEndDate() {
+  public function getEndDate(): string {
     return $this->end_date;
   }
 
@@ -69,17 +73,38 @@ class PlanReportingPeriod extends BaseObject {
    * @return int
    *   The period number of the reporting period.
    */
-  public function getPeriodNumber() {
+  public function getPeriodNumber(): int {
     return $this->period_number;
+  }
+
+  /**
+   * Check if the reporting period has been opened for data entry.
+   *
+   * @return bool
+   *   TRUE if the it's open, FALSE otherwise.
+   */
+  public function isOpen(): bool {
+    return $this->measurements_generated;
+  }
+
+  /**
+   * Check if the reporting period has been published.
+   *
+   * @return bool
+   *   TRUE if the it's published, FALSE otherwise.
+   */
+  public function isPublished(): bool {
+    $last_published_period = self::getLatestPublishedReportingPeriod($this->getPlanId());
+    return is_int($last_published_period) && $this->id() <= $last_published_period;
   }
 
   /**
    * Get the plan start date.
    *
-   * @return string
+   * @return string|null
    *   The end date as a date string in the format "2024-07-01".
    */
-  public function getPlanStartDate() {
+  public function getPlanStartDate(): ?string {
     return $this->getPlanObject()?->getPlanStartDate() ?? NULL;
   }
 
@@ -92,7 +117,7 @@ class PlanReportingPeriod extends BaseObject {
    * @return string
    *   The start date as a formatted string.
    */
-  public function formatStartDate($format = NULL) {
+  public function formatStartDate(?string $format = NULL): string {
     $date = $this->getDateTimeObject($this->getStartDate());
     return $date->format($format ?? self::FORMAT_DATE);
   }
@@ -106,7 +131,7 @@ class PlanReportingPeriod extends BaseObject {
    * @return string
    *   The end date as a formatted string.
    */
-  public function formatEndDate($format = NULL) {
+  public function formatEndDate(?string $format = NULL): string {
     $date = $this->getDateTimeObject($this->getEndDate());
     return $date->format($format ?? self::FORMAT_DATE);
   }
@@ -117,7 +142,7 @@ class PlanReportingPeriod extends BaseObject {
    * @return string
    *   The date range as a formatted string.
    */
-  public function formatDateRange() {
+  public function formatDateRange(): string {
     $start_date = $this->formatStartDate();
     $end_date = $this->formatEndDate();
     if ($this->formatStartDate('Y') == $this->formatEndDate('Y')) {
@@ -134,7 +159,7 @@ class PlanReportingPeriod extends BaseObject {
    * @return string
    *   The cumulative date range as a formatted string.
    */
-  public function formatCumulativeDateRange() {
+  public function formatCumulativeDateRange(): string {
     $start = $this->getDateTimeObject($this->getPlanStartDate() ?? $this->getStartDate());
     $start_date = $start->format($format ?? self::FORMAT_DATE);
     $end_date = $this->formatEndDate();
@@ -153,7 +178,7 @@ class PlanReportingPeriod extends BaseObject {
    * @return string
    *   A formatted string representing the reporting period.
    */
-  public function format($format_string = NULL) {
+  public function format(?string $format_string = NULL): string {
     $format_string = $format_string ?? '#@period_number: @date_range';
     $args = [
       '@period_number' => $this->getPeriodNumber(),
@@ -173,7 +198,7 @@ class PlanReportingPeriod extends BaseObject {
    * @return \DateTime
    *   The datetime object for the given string date.
    */
-  private function getDateTimeObject($date) {
+  private function getDateTimeObject(string $date): \DateTime {
     $timezone = $this->getTimezone();
     return new \DateTime($date, $timezone);
   }
@@ -184,8 +209,9 @@ class PlanReportingPeriod extends BaseObject {
    * @return \Drupal\ghi_plans\Entity\Plan|null
    *   The plan base object or NULL.
    */
-  private function getPlanObject() {
-    return BaseObjectHelper::getBaseObjectFromOriginalId($this->getPlanId(), 'plan');
+  private function getPlanObject(): ?Plan {
+    $base_object = BaseObjectHelper::getBaseObjectFromOriginalId($this->getPlanId(), 'plan');
+    return $base_object instanceof Plan ? $base_object : NULL;
   }
 
   /**
@@ -194,7 +220,7 @@ class PlanReportingPeriod extends BaseObject {
    * @return \DateTimeZone
    *   The timezone to use.
    */
-  private function getTimezone() {
+  private function getTimezone(): \DateTimeZone {
     // We want to handle all times as UTC, because that's what we get from the
     // API.
     return new \DateTimeZone('UTC');
