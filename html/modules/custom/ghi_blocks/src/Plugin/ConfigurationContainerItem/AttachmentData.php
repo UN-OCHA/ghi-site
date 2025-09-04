@@ -7,6 +7,7 @@ use Drupal\Core\Render\Markup;
 use Drupal\ghi_blocks\Helpers\AttachmentMatcher;
 use Drupal\ghi_blocks\Traits\PlanFootnoteTrait;
 use Drupal\ghi_form_elements\ConfigurationContainerItemPluginBase;
+use Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment;
 use Drupal\ghi_plans\Entity\Plan;
 use Drupal\ghi_plans\Traits\AttachmentFilterTrait;
 use Drupal\hpc_common\Helpers\StringHelper;
@@ -63,7 +64,8 @@ class AttachmentData extends ConfigurationContainerItemPluginBase {
     if (!empty($attachment_select['attachment_id'])) {
       $attachment_id = is_array($attachment_select['attachment_id']) ? reset($attachment_select['attachment_id']) : $attachment_select['attachment_id'];
       $attachment = $this->attachmentQuery->getAttachment($attachment_id);
-      $attachment_select['attachment_id'] = $attachment_id;
+      $attachment = empty($this->validateAttachment($attachment)) ? $attachment : NULL;
+      $attachment_select['attachment_id'] = $attachment?->id();
     }
 
     if (!$attachment && $trigger == 'submit_attachment') {
@@ -193,7 +195,7 @@ class AttachmentData extends ConfigurationContainerItemPluginBase {
    */
   public function getValue() {
     $attachment = $this->getAttachmentObject();
-    return $attachment ? $attachment->getValue($this->get(['data_point'])) : NULL;
+    return $attachment?->getValue($this->get(['data_point']));
   }
 
   /**
@@ -204,7 +206,6 @@ class AttachmentData extends ConfigurationContainerItemPluginBase {
     if (!$attachment) {
       return NULL;
     }
-
     $data_point_conf = $this->get('data_point');
     $build = $attachment->formatValue($data_point_conf);
 
@@ -228,7 +229,7 @@ class AttachmentData extends ConfigurationContainerItemPluginBase {
    * @return \Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment|null
    *   The attachment object.
    */
-  private function getAttachmentObject() {
+  private function getAttachmentObject($validate = TRUE): ?DataAttachment {
     $attachment_id = $this->get(['attachment', 'attachment_id']);
     if (!$attachment_id) {
       return NULL;
@@ -239,24 +240,29 @@ class AttachmentData extends ConfigurationContainerItemPluginBase {
     if (!$attachment) {
       return NULL;
     }
+    if ($validate && !empty($this->validateAttachment($attachment))) {
+      return NULL;
+    }
     return $attachment;
   }
 
   /**
-   * {@inheritdoc}
+   * Validate the given attachment.
+   *
+   * @param \Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment $attachment
+   *   The attachment to validate.
+   *
+   * @return array
+   *   An array with validation errors.
    */
-  public function getConfigurationErrors() {
+  private function validateAttachment(DataAttachment $attachment): array {
     $errors = [];
-    $attachment = $this->getAttachmentObject();
 
     /** @var \Drupal\ghi_plans\Entity\Plan $plan */
     $plan = $this->getContextValue('plan_object');
 
     /** @var \Drupal\ghi_base_objects\Entity\BaseObjectInterface $base_object */
     $base_object = $this->getContextValue('base_object');
-
-    /** @var \Drupal\ghi_plans\ApiObjects\PlanEntityInterface $source_entity */
-    $source_entity = $attachment?->getSourceEntity();
 
     if (!$attachment) {
       $errors[] = $this->t('No attachment configured');
@@ -267,11 +273,20 @@ class AttachmentData extends ConfigurationContainerItemPluginBase {
     elseif ($attachment->getPlanId() != $plan->getSourceId()) {
       $errors[] = $this->t('Configured attachment is not available in the context of the current plan');
     }
-    elseif ($base_object && $source_entity && $source_entity->id() != $base_object->getSourceId()) {
+    elseif ($base_object && !$attachment->belongsToBaseObject($base_object)) {
       $errors[] = $this->t('Configured attachment is not available in the context of the current base object');
     }
 
     return $errors;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getConfigurationErrors() {
+    $attachment = $this->getAttachmentObject(FALSE);
+
+    return $this->validateAttachment($attachment);
   }
 
   /**
@@ -282,7 +297,7 @@ class AttachmentData extends ConfigurationContainerItemPluginBase {
     $attachment_id = &$this->config['attachment']['attachment_id'];
 
     // Original attachment is the attachment object with id $attachment_id.
-    $original_attachment = $this->getAttachmentObject();
+    $original_attachment = $this->getAttachmentObject(FALSE);
 
     /** @var \Drupal\ghi_plans\Entity\Plan $plan */
     $plan = $this->getContextValue('plan_object');
