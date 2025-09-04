@@ -10,7 +10,6 @@ use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\ghi_content\ContentManager\ArticleManager;
 use Drupal\ghi_content\RemoteContent\RemoteParagraphInterface;
 use Drupal\ghi_content\RemoteSourceLazyIterator;
-use Drupal\hpc_common\Hid\HidUserData;
 use GuzzleHttp\ClientInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\RequestStack;
@@ -45,13 +44,6 @@ abstract class RemoteSourceBase extends PluginBase implements RemoteSourceInterf
   protected $configFactory;
 
   /**
-   * The HID user data service.
-   *
-   * @var \Drupal\hpc_common\Hid\HidUserData
-   */
-  protected $hidUserData;
-
-  /**
    * The article manager.
    *
    * @var \Drupal\ghi_content\ContentManager\ArticleManager
@@ -79,12 +71,11 @@ abstract class RemoteSourceBase extends PluginBase implements RemoteSourceInterf
   /**
    * Constructs a new remote source object.
    */
-  public function __construct(array $configuration, $plugin_id, $plugin_definition, ClientInterface $http_client, RequestStack $request, ConfigFactoryInterface $config_factory, HidUserData $hid_user_data, ArticleManager $article_manager) {
+  public function __construct(array $configuration, $plugin_id, $plugin_definition, ClientInterface $http_client, RequestStack $request, ConfigFactoryInterface $config_factory, ArticleManager $article_manager) {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
     $this->httpClient = $http_client;
     $this->request = $request;
     $this->configFactory = $config_factory;
-    $this->hidUserData = $hid_user_data;
     $this->articleManager = $article_manager;
 
     // Set some flags.
@@ -107,7 +98,6 @@ abstract class RemoteSourceBase extends PluginBase implements RemoteSourceInterf
       $container->get('http_client'),
       $container->get('request_stack'),
       $container->get('config.factory'),
-      $container->get('hpc_common.hid_user_data'),
       $container->get('ghi_content.manager.article'),
     );
   }

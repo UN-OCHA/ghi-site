@@ -6,8 +6,6 @@ services:
       - HPC_API_USER
       - HPC_API_PASS
       - HPC_API_KEY
-      - HID_CLIENT_ID
-      - HID_CLIENT_SECRET
       - CM_KEY
       - MAPBOX_TOKEN
       - COMPOSER_MEMORY_LIMIT=-1

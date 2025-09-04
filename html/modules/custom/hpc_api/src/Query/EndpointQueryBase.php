@@ -9,7 +9,6 @@ use Drupal\Core\DependencyInjection\DependencySerializationTrait;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Session\AccountProxyInterface;
 use Drupal\hpc_api\Traits\SimpleCacheTrait;
-use Drupal\hpc_common\Hid\HidUserData;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -35,13 +34,6 @@ abstract class EndpointQueryBase extends PluginBase implements EndpointQueryPlug
   protected $user;
 
   /**
-   * The HID user data service.
-   *
-   * @var \Drupal\hpc_common\Hid\HidUserData
-   */
-  protected $hidUserData;
-
-  /**
    * Flag set if an authenticated endpoint is used.
    *
    * @var bool
@@ -65,12 +57,11 @@ abstract class EndpointQueryBase extends PluginBase implements EndpointQueryPlug
   /**
    * {@inheritdoc}
    */
-  public function __construct(array $configuration, $plugin_id, $plugin_definition, EndpointQuery $endpoint_query, AccountProxyInterface $user, HidUserData $hid_user_data, CacheBackendInterface $cache) {
+  public function __construct(array $configuration, $plugin_id, $plugin_definition, EndpointQuery $endpoint_query, AccountProxyInterface $user, CacheBackendInterface $cache) {
     parent::__construct($configuration, $plugin_id, $plugin_definition, $endpoint_query);
 
     $this->endpointQuery = clone $endpoint_query;
     $this->user = $user;
-    $this->hidUserData = $hid_user_data;
     $this->cache = $cache;
     $this->cacheTags = [];
 
@@ -80,7 +71,6 @@ abstract class EndpointQueryBase extends PluginBase implements EndpointQueryPlug
     $endpoint_version = $plugin_definition['endpoint']['version'] ?? 'v2';
     $endpoint_query_args = $plugin_definition['endpoint']['query'] ?? [];
 
-    $this->isAutenticatedEndpoint = $endpoint_authenticated && $this->user->isAuthenticated() && $this->getHidAccessToken();
     $endpoint_url = $this->isAutenticatedEndpoint ? $endpoint_authenticated : $endpoint_public;
     $auth_method = EndpointQuery::AUTH_METHOD_BASIC;
     if ($endpoint_api_key) {
@@ -106,7 +96,6 @@ abstract class EndpointQueryBase extends PluginBase implements EndpointQueryPlug
       $plugin_definition,
       $container->get('hpc_api.endpoint_query'),
       $container->get('current_user'),
-      $container->get('hpc_common.hid_user_data'),
       $container->get('cache.data')
     );
   }
@@ -126,16 +115,6 @@ abstract class EndpointQueryBase extends PluginBase implements EndpointQueryPlug
   }
 
   /**
-   * Get the HID access token for the user.
-   *
-   * @return string|null
-   *   The HID access token if available.
-   */
-  private function getHidAccessToken() {
-    return $this->hidUserData->getAccessToken($this->user);
-  }
-
-  /**
    * {@inheritdoc}
    */
   public function getData(array $placeholders = [], array $query_args = []) {
@@ -147,13 +126,6 @@ abstract class EndpointQueryBase extends PluginBase implements EndpointQueryPlug
       'auth_method' => $this->endpointQuery->getAuthMethod(),
     ];
 
-    if ($this->isAutenticatedEndpoint) {
-      $hid_access_token = $this->getHidAccessToken();
-      if ($hid_access_token) {
-        $this->endpointQuery->setAuthHeader('Bearer ' . $hid_access_token);
-        $cache_args['user'] = $this->hidUserData->getId();
-      }
-    }
     // Cache the result in memory.
     $cache_key = $this->getCacheKey($cache_args);
     if ($data = $this->cache($cache_key)) {
