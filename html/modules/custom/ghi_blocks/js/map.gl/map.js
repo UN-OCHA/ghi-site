@@ -125,10 +125,14 @@
      *   A locations array.
      * @param {Callable} callback
      *   A callback function.
+     * @param {ghi.state} state
+     *   The state object.
      */
-    loadFeaturesAsync: function (locations, callback, state) {
+    loadFeaturesAsync: function (locations, callback, state = null) {
       let self = this;
-      self.showThrobber(state);
+      if (state !== null) {
+        self.showThrobber(state);
+      }
       let filepaths = locations.map((d) => d.filepath).filter((d) => d !== null);
       // Trigger loading of the geojson files.
       locations.map(item => this.getGeoJSON(item)).filter(d => d);
@@ -147,7 +151,9 @@
         if (storage_filtered.length == 0 || storage_filtered.length == filepaths.length) {
           clearInterval(intervall);
           callback(Object.values(storage));
-          self.hideThrobber(state);
+          if (state !== null) {
+            self.hideThrobber(state);
+          }
         }
       }, 500);
     },
