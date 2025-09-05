@@ -347,8 +347,25 @@ abstract class ConfigurationContainerItemPluginBase extends PluginBase implement
    *   the given default.
    */
   public function getSubmittedValue(array $element, FormStateInterface $form_state, $value_key, $default_value = NULL) {
+    // Get the value parents and the correct form state.
     $value_parents = array_merge($element['#parents'], (array) $value_key);
     $_form_state = $form_state instanceof SubformStateInterface ? $form_state->getCompleteFormState() : $form_state;
+
+    // See if this was triggered by clicking the cancel button.
+    // @todo This is at best a dirty work-around for the problem, that the form
+    // values are submitted even when clicking the cancel button.
+    $trigger_name = $_form_state->getUserInput()['_triggering_element_name'] ?? NULL;
+    $cancel_button = $trigger_name == 'item-config-cancel';
+
+    if ($cancel_button) {
+      // If this is a cancel action, reset submitted value and stored value for
+      // this key and return the value from config or the default value.
+      $_form_state->set($value_key, NULL);
+      $_form_state->setValue($value_parents, NULL);
+      return $this->get($value_key) ?: $default_value;
+    }
+
+    // Use the submitted values only if this was not a cancel action.
     $submitted = $_form_state->getValue($value_parents);
     $stored = $_form_state->get($value_key) ?: NULL;
     $value = $submitted ?: ($stored ?: $this->get($value_key));
@@ -356,7 +373,7 @@ abstract class ConfigurationContainerItemPluginBase extends PluginBase implement
   }
 
   /**
-   * Get a submitted value from the form state.
+   * Get a submitted options value from the form state.
    *
    * @param array $element
    *   The element array.
