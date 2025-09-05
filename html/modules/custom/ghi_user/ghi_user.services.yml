@@ -1,4 +1,10 @@
 services:
+  ghi_user.direct_login:
+    class: Drupal\ghi_user\EventSubscriber\RouteSubscriber
+    arguments:
+      - '@module_handler'
+    tags:
+      - { name: event_subscriber }
   ghi_user.logout_redirect:
     class: Drupal\ghi_user\LogoutRedirect
     arguments: ['@request_stack', '@path.matcher', '@entity_type.manager', '@config.factory']

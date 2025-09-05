@@ -13,7 +13,6 @@ use Drupal\hpc_api\Query\EndpointQueryBase;
  *   label = @Translation("Plan attachment prototype query"),
  *   endpoint = {
  *     "public" = "public/plan/{plan_id}/attachment-prototype",
- *     "authenticated" = "plan/{plan_id}/attachment-prototype",
  *     "version" = "v2"
  *   }
  * )
