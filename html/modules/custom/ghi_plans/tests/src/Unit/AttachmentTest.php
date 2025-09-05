@@ -635,6 +635,7 @@ class AttachmentTest extends ApiObjectTestBase {
       return new PlanReportingPeriod((object) [
         'id' => $id,
         'planId' => 1188,
+        'measurementsGenerated' => TRUE,
         'periodNumber' => $period_number,
         'startDate' => '2024-0' . $period_number . '-01',
         'endDate' => '2024-0' . $period_number . '-30',
