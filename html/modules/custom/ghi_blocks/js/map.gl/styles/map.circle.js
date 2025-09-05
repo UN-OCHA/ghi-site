@@ -117,6 +117,9 @@
           self.renderLocations();
           this.updateActiveFeatures();
         });
+
+        // Preload all geojson files asynchronously.
+        state.getMapController().loadFeaturesAsync(state.getLocations(false, false), () => {}, state);
       });
     }
 
