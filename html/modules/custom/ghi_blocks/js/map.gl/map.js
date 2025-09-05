@@ -126,8 +126,9 @@
      * @param {Callable} callback
      *   A callback function.
      */
-    loadFeaturesAsync: function (locations, callback) {
+    loadFeaturesAsync: function (locations, callback, state) {
       let self = this;
+      self.showThrobber(state);
       let filepaths = locations.map((d) => d.filepath).filter((d) => d !== null);
       // Trigger loading of the geojson files.
       locations.map(item => this.getGeoJSON(item)).filter(d => d);
@@ -145,8 +146,29 @@
         if (Object.values(storage).filter((d) => d !== null).length == filepaths.length) {
           clearInterval(intervall);
           callback(Object.values(storage));
+          self.hideThrobber(state);
         }
       }, 500);
+    },
+
+    /**
+     * Show the throbber.
+     *
+     * @param {ghi.mapState} state
+     *   The map state.
+     */
+    showThrobber: function (state) {
+      state.throbber?.show();
+    },
+
+    /**
+     * Hide the throbber.
+     *
+     * @param {ghi.mapState} state
+     *   The map state.
+     */
+    hideThrobber: function (state) {
+      state.throbber?.hide();
     },
 
     /**
