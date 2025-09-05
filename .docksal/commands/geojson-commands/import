@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-## Create a report about the available geojson files.
+## Import new geojson files from the OCHA GIS service.
 ##
 ## Usage: fin geojson import [-h]
 ##

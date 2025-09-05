@@ -1,0 +1,4 @@
+geojson_files_report:
+  route_name: hpc_api.reports.files.geojson
+  base_route: hpc_api.reports.files.data_source
+  title: 'GeoJSON files'

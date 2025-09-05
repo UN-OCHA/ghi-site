@@ -1,0 +1,17 @@
+geojson_download_archive_local_action:
+  route_name: ghi_geojson.geojson_sources.download_archive
+  title: 'Download archive'
+  class: '\Drupal\ghi_geojson\Plugin\Menu\LocalAction\DownloadLocalAction'
+  appears_on:
+    - ghi_geojson.geojson_sources.directory_listing
+geojson_delete_version_local_action:
+  route_name: ghi_geojson.geojson_sources.delete
+  title: 'Delete'
+  class: '\Drupal\ghi_geojson\Plugin\Menu\LocalAction\DeleteLocalAction'
+  appears_on:
+    - ghi_geojson.geojson_sources.directory_listing
+geojson_upload:
+  route_name: ghi_geojson.geojson_sources.upload
+  title: 'Upload archive'
+  appears_on:
+    - ghi_geojson.geojson_sources

@@ -257,7 +257,7 @@ class AttachmentData extends ConfigurationContainerItemPluginBase {
     $base_object = $this->getContextValue('base_object');
 
     /** @var \Drupal\ghi_plans\ApiObjects\PlanEntityInterface $source_entity */
-    $source_entity = $attachment->getSourceEntity();
+    $source_entity = $attachment?->getSourceEntity();
 
     if (!$attachment) {
       $errors[] = $this->t('No attachment configured');

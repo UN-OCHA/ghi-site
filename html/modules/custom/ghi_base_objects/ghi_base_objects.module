@@ -11,7 +11,6 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Plugin\Context\EntityContext;
 use Drupal\Core\Render\Element;
 use Drupal\Core\Routing\RouteMatchInterface;
-use Drupal\ghi_base_objects\ApiObjects\Location;
 use Drupal\ghi_base_objects\Entity\BaseObject;
 use Drupal\ghi_base_objects\Helpers\BaseObjectHelper;
 use Drupal\hpc_api\Query\EndpointQuery;
@@ -37,15 +36,6 @@ function ghi_base_objects_help($route_name, RouteMatchInterface $route_match) {
 
     default:
   }
-}
-
-/**
- * Implements hook_cache_flush().
- *
- * Clean up import files.
- */
-function ghi_base_objects_cache_flush() {
-  hpc_api_clear_directory(Location::GEO_JSON_DIR, '/.*\.geojson/');
 }
 
 /**
