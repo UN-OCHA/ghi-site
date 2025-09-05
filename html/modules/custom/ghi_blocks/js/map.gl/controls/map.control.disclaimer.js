@@ -19,6 +19,8 @@
      *
      * @param {ghi.mapState} state
      *   The map state object.
+     * @param {string} text
+     *   The disclaimer text.
      */
     constructor (state, text) {
       this.state = state;
