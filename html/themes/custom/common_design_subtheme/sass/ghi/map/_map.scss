@@ -7,6 +7,19 @@
     border-radius: 4px;
   }
 
+  .map-throbber--wrapper {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    display: block;
+    width: 2rem;
+    height: 2rem;
+  }
+
+  &.map-wrapper-plan-operational-presence-map .map-throbber--wrapper {
+    top: 3.25rem;
+  }
+
   .map-sidebar--wrapper {
     width: auto;
     font-size: var(--cd-font-size--base);
