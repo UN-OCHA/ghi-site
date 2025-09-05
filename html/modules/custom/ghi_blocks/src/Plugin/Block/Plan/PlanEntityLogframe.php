@@ -381,7 +381,9 @@ class PlanEntityLogframe extends GHIBlockBase implements MultiStepFormBlockInter
         if (!array_key_exists($key, $data)) {
           // Add additional table columns at the beginning of each table.
           $additional_header = [
-            (string) $this->t('Entity description', [], $t_options),
+            (string) $this->t('@ref_code description', [
+              '@ref_code' => $conf['entities']['entity_ref_code'],
+            ], $t_options),
           ];
           if (!empty($entity_cluster_alignments[$entity->id()])) {
             $additional_header[] = (string) $this->t('@cluster_label name', $cluster_args, $t_options);
