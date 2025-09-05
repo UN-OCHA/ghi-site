@@ -17,10 +17,12 @@ use Drupal\hpc_downloads\Ajax\DownloadObserverCommand;
 use Drupal\hpc_downloads\Ajax\DownloadStatusUpdateCommand;
 use Drupal\hpc_downloads\DownloadDialog\DownloadDialogPlugin;
 use Drupal\hpc_downloads\DownloadDialog\DownloadDialogViews;
+use Drupal\hpc_downloads\DownloadMethods\Excel;
 use Drupal\hpc_downloads\DownloadRecord;
 use Drupal\hpc_downloads\DownloadSource\ViewsSource;
 use Drupal\hpc_downloads\Interfaces\HPCBatchedDownloadExcelInterface;
 use Drupal\hpc_downloads\Interfaces\HPCDownloadExcelInterface;
+use Drupal\hpc_downloads\Interfaces\HPCDownloadExcelMultipleInterface;
 use Drupal\hpc_downloads\Interfaces\HPCDownloadPDFInterface;
 use Drupal\hpc_downloads\Interfaces\HPCDownloadPluginInterface;
 use Drupal\hpc_downloads\Interfaces\HPCDownloadSourceInterface;
@@ -441,9 +443,27 @@ class DownloadController extends ControllerBase {
     $download_method = $download_source->getDownloadMethod();
     if ($options['download_source'] == 'views_executable' || $this->isExcelDownload($plugin, $download_type)) {
       // Excel download.
-      $data = $download_source->getData();
-      $meta_data = $download_source->getMetaData();
-      $status = $download_method::createDownloadFileFromSingleTable($record, $data, $meta_data);
+      if ($plugin instanceof HPCDownloadExcelMultipleInterface) {
+        $data = $download_source->getData();
+        $meta_data = $download_source->getMetaData();
+        $header = [
+          Excel::sanitizeSheetTitle('Meta data') => [],
+        ];
+        $sheets = [
+          Excel::sanitizeSheetTitle('Meta data') => $meta_data,
+        ];
+        foreach ($data as $label => $table) {
+          $header[Excel::sanitizeSheetTitle($label)] = array_values($table['header']);
+          $sheets[Excel::sanitizeSheetTitle($label)] = array_values($table['rows']);
+        }
+        $file_data = ['header' => $header, 'rows' => $sheets];
+        $status = Excel::createDownloadFile($record, $file_data);
+      }
+      else {
+        $data = $download_source->getData();
+        $meta_data = $download_source->getMetaData();
+        $status = $download_method::createDownloadFileFromSingleTable($record, $data, $meta_data);
+      }
     }
     else {
       // PDF or PNG download.

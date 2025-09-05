@@ -12,6 +12,7 @@ use Drupal\ghi_form_elements\Traits\ConfigurationContainerItemCustomActionTrait;
 use Drupal\ghi_form_elements\Traits\ConfigurationContainerTrait;
 use Drupal\ghi_plans\ApiObjects\AttachmentPrototype\AttachmentPrototype;
 use Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment;
+use Drupal\ghi_plans\ApiObjects\Attachments\IndicatorAttachment;
 use Drupal\ghi_plans\ApiObjects\PlanEntityInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -60,7 +61,8 @@ class AttachmentTable extends ConfigurationContainerItemPluginBase implements Co
   public function getRenderArray() {
     /** @var \Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment[] $attachments */
     $attachments = $this->getContextValue('attachments');
-    $prototype_id = $this->get('attachment_prototype');
+    $prototype = $this->getAttachmentPrototype();
+    $prototype_id = $prototype->id();
 
     // Filter to only selected attachments if configured.
     $attachment_ids = array_filter($this->getConfig()['attachment_form']['attachment_ids'] ?? []);
@@ -102,6 +104,8 @@ class AttachmentTable extends ConfigurationContainerItemPluginBase implements Co
       $rows[] = [
         'data' => $row,
         'data-attachment-id' => $attachment->id(),
+        'data-attachment-custom-id' => $attachment->getTitle(),
+        'data-attachment-calculation-method' => $attachment instanceof IndicatorAttachment ? $attachment->getCalculationMethod() : NULL,
       ];
     }
     return [
@@ -111,6 +115,8 @@ class AttachmentTable extends ConfigurationContainerItemPluginBase implements Co
       '#sortable' => TRUE,
       '#progress_groups' => TRUE,
       '#empty' => $this->t('No data found for this table.'),
+      '#prototype' => $prototype,
+      '#download_label' => $this->getDownloadLabel() ?? $prototype->getTypeLabel(),
     ];
   }
 
@@ -167,8 +173,15 @@ class AttachmentTable extends ConfigurationContainerItemPluginBase implements Co
         '#disabled' => !empty($table_columns) && $prototype,
       ];
       if (!empty($table_columns) && $prototype) {
-        $element['attachment_prototype']['#description'] .= ' ' . $this->t('The attachment prototype cannot be changed anymore because the table has already been configured');
+        $element['attachment_prototype']['#description'] .= ' ' . $this->t('The attachment prototype cannot be changed anymore because the table has already been configured.');
       }
+      $element['download_label'] = [
+        '#type' => 'textfield',
+        '#title' => $this->t('Download label'),
+        '#description' => $this->t('Enter a label for the table. This is currently only used as a name for Excel worksheet when the table data is downloaded. Leave empty to use the name of the attachment prototype as set in the data backend.'),
+        '#placeholder' => $prototype?->getName(),
+        '#default_value' => $this->getDownloadLabel(),
+      ];
     }
 
     return $element;
@@ -455,25 +468,40 @@ class AttachmentTable extends ConfigurationContainerItemPluginBase implements Co
   /**
    * Callback for the "label" preview of the item list.
    *
-   * @return mixed
+   * @return string
    *   The value to show in the configuration container list view under
    *   "prototype".
    */
   public function getLabel() {
     $prototype = $this->getAttachmentPrototype();
-    return $prototype ? $prototype->getName() : $this->t('Invalid prototype');
+    $label = $prototype ? $prototype->getName() : $this->t('Invalid prototype');
+    $download_label = $this->getDownloadLabel();
+    if (!empty($download_label)) {
+      $label .= ' (' . $download_label . ')';
+    }
+    return $label;
+  }
+
+  /**
+   * Get the download label for the table.
+   *
+   * @return string|null
+   *   The download label or NULL if empty.
+   */
+  public function getDownloadLabel() {
+    return $this->get('download_label') ?: NULL;
   }
 
   /**
    * Callback for the "prototype" preview of the item list.
    *
-   * @return mixed
+   * @return string|null
    *   The value to show in the configuration container list view under
    *   "prototype".
    */
   public function getPrototype() {
     $prototype = $this->getAttachmentPrototype();
-    return $prototype ? $prototype->getName() : NULL;
+    return $prototype ? $prototype->getTypeLabel() : NULL;
   }
 
   /**

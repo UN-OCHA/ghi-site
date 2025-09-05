@@ -85,8 +85,7 @@ class GHIBlockTest extends BlockKernelTestBase {
     $this->assertFalse($context_form['data_object']['#access']);
 
     $admin_icons = $plugin->getAdminIcons();
-    $this->assertCount(1, $admin_icons);
-    $this->assertArrayHasKey('configuration', $admin_icons);
+    $this->assertCount(0, $admin_icons);
 
     $metadata = $plugin->buildMetaData();
     $this->assertCount(4, $metadata);

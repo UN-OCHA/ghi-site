@@ -115,6 +115,10 @@
             left: 0;
             padding: 10px;
             content: "";
+            /* The icon is actually black, but we want to show it as grey #4d4d4d. Using
+              https://codepen.io/sosuke/pen/Pjoqqp to create a filter that makes the
+              icon appear in that color. */
+            filter: invert(22%) sepia(21%) saturate(0%) hue-rotate(165deg) brightness(112%) contrast(83%);
             background: url("https://fonts.gstatic.com/s/i/short-term/release/materialsymbolsoutlined/download/default/20px.svg")
               no-repeat;
           }
@@ -163,6 +167,17 @@
           }
         }
       }
+    }
+
+    &.block-links--admin-icons:not(.block-links--download-links) .block-links--inner {
+      justify-content: end;
+    }
+  }
+
+  &.ghi-block-links {
+    & > div.block-links {
+      margin-top: 1rem;
+      border-top: 0;
     }
   }
 }

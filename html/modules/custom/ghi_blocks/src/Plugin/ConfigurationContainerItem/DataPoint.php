@@ -170,6 +170,31 @@ class DataPoint extends ConfigurationContainerItemPluginBase {
   }
 
   /**
+   * {@inheritdoc}
+   */
+  public function getTableCell() {
+    $cell = parent::getTableCell();
+    $attachment = $this->getAttachmentObject();
+    $data_point_conf = $this->getDataPointConfig();
+    if ($attachment && $data_point_conf) {
+      $tooltip = $attachment->getTooltip($data_point_conf);
+      $cell['export_commentary'] = $tooltip['monitoring_period']['#tooltip'] ?? NULL;
+    }
+    return $cell;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getSortableValue() {
+    $value = $this->getValue();
+    if ($this->getColumnType() == 'percentage') {
+      return $value * 100;
+    }
+    return $value;
+  }
+
+  /**
    * Whether the given attachment can show disaggregated data.
    *
    * @param \Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment $attachment

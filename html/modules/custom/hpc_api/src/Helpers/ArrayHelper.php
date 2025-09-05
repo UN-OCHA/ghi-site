@@ -371,6 +371,29 @@ class ArrayHelper {
   }
 
   /**
+   * Insert an item at the specified position.
+   *
+   * This only works with arrays that use numerical indexes and the resulting
+   * array will be re-indexed from 0.
+   *
+   * @param array $array
+   *   The array that should be modified.
+   * @param int $pos
+   *   The position where to add the new item.
+   * @param mixed $value
+   *   The value to be inserted.
+   *
+   * @return array
+   *   The resulting array.
+   */
+  public static function insertItem(array $array, $pos, $value): array {
+    $first_part = array_slice(array_values($array), 0, $pos, TRUE);
+    $last_part = array_slice(array_values($array), $pos, count($array) - $pos, TRUE);
+    $array = array_merge($first_part, [$value], $last_part);
+    return array_values($array);
+  }
+
+  /**
    * Combine two arrays by summing up by the specified sub key.
    *
    * @param array $array

@@ -2,20 +2,26 @@
 
 namespace Drupal\ghi_blocks\Controller;
 
-use Drupal\Component\Utility\Html;
+use Drupal\Component\Plugin\Exception\ContextException;
 use Drupal\Core\Ajax\AjaxResponse;
 use Drupal\Core\Ajax\OpenModalDialogCommand;
 use Drupal\Core\Ajax\ReplaceCommand;
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
+use Drupal\Core\Plugin\Context\EntityContext;
+use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
 use Drupal\hpc_common\Helpers\BlockHelper;
+use Drupal\layout_builder\Event\SectionComponentBuildRenderArrayEvent;
+use Drupal\layout_builder\LayoutBuilderEvents;
+use Drupal\layout_builder\LayoutEntityHelperTrait;
 use Symfony\Component\DependencyInjection\ContainerInterface;
-use Symfony\Component\HttpFoundation\RequestStack;
 
 /**
  * Controller class for ajax interactions on blocks in GHI.
  */
 class AjaxBlockController extends ControllerBase implements ContainerInjectionInterface {
+
+  use LayoutEntityHelperTrait;
 
   /**
    * The current request.
@@ -25,19 +31,20 @@ class AjaxBlockController extends ControllerBase implements ContainerInjectionIn
   protected $currentRequest;
 
   /**
-   * {@inheritdoc}
+   * The event dispatcher.
+   *
+   * @var \Symfony\Contracts\EventDispatcher\EventDispatcherInterface
    */
-  public function __construct(RequestStack $request_stack) {
-    $this->currentRequest = $request_stack->getCurrentRequest();
-  }
+  protected $eventDispatcher;
 
   /**
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container) {
-    return new static(
-      $container->get('request_stack'),
-    );
+    $instance = new static();
+    $instance->currentRequest = $container->get('request_stack')->getCurrentRequest();
+    $instance->eventDispatcher = $container->get('event_dispatcher');
+    return $instance;
   }
 
   /**
@@ -60,8 +67,49 @@ class AjaxBlockController extends ControllerBase implements ContainerInjectionIn
     if (!$block_instance) {
       return $this->sendErrorResponse();
     }
-    $build = $block_instance->build();
-    $selector = '.block-' . Html::getClass($block_instance->getPluginId()) . ' > .block-content';
+
+    $node = $block_instance->getPageNode();
+    $contexts = $block_instance->getContexts();
+    $contexts['layout_builder.entity'] = EntityContext::fromEntity($node);
+
+    // Try to find the section component to which the block belongs. If that
+    // works, we can use the SectionComponentBuildRenderArrayEvent to have the
+    // content build, instead of calling ::build directly on the block plugin.
+    // This will assure that all process hooks are called as for the original
+    // build of the block, thus containing all admin links too.
+    $sections = $this->getEntitySections($node);
+    $section_component = NULL;
+    foreach ($sections as $section) {
+      foreach ($section->getComponents() as $component) {
+        $plugin = $component->getPlugin();
+        if (!$plugin instanceof GHIBlockBase) {
+          continue;
+        }
+        $plugin_uuid = $plugin->getUuid() ?? $component->getUuid();
+        if ($plugin_uuid != $block_uuid) {
+          continue;
+        }
+        $section_component = $component;
+      }
+    }
+
+    $build = NULL;
+    if ($section_component) {
+      try {
+        $event = new SectionComponentBuildRenderArrayEvent($section_component, $contexts, FALSE);
+        $this->eventDispatcher->dispatch($event, LayoutBuilderEvents::SECTION_COMPONENT_BUILD_RENDER_ARRAY);
+        $build = $event->getBuild();
+      }
+      catch (ContextException $e) {
+        // Just fail silently.
+      }
+    }
+    if (!$build) {
+      // This is our fallback.
+      $build = $block_instance->build();
+    }
+
+    $selector = '.ghi-block-' . $block_instance->getUuid();
     $ajax_response = new AjaxResponse();
     $ajax_response->addCommand(new ReplaceCommand($selector, $build));
     return $ajax_response;

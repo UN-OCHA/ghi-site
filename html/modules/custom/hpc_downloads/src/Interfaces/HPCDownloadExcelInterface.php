@@ -3,7 +3,7 @@
 namespace Drupal\hpc_downloads\Interfaces;
 
 /**
- * Interface declaration for batched excel downloads.
+ * Interface declaration for excel downloads.
  */
 interface HPCDownloadExcelInterface extends HPCDownloadPluginInterface {
 

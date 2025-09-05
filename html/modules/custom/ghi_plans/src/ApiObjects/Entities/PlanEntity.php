@@ -104,7 +104,7 @@ class PlanEntity extends EntityObjectBase {
    * Get the plan entity parents.
    *
    * @return \Drupal\ghi_plans\ApiObjects\Entities\PlanEntity[]
-   *   The plan entity parents.
+   *   The plan entity parents keyed by their entity ids.
    */
   public function getPlanEntityParents() {
     $entity = $this->getRawData();
@@ -119,9 +119,11 @@ class PlanEntity extends EntityObjectBase {
     if (!property_exists($first_ref, 'planEntityIds') || empty($first_ref->planEntityIds)) {
       return [];
     }
-    return array_filter(array_map(function ($entity_id) {
-      return PlanEntityHelper::getPlanEntity($entity_id, $this->getPlanVersionArgument());
-    }, $first_ref->planEntityIds));
+    $parents = [];
+    foreach ($first_ref->planEntityIds as $entity_id) {
+      $parents[$entity_id] = PlanEntityHelper::getPlanEntity($entity_id, $this->getPlanVersionArgument());
+    }
+    return array_filter($parents);
   }
 
   /**
@@ -208,16 +210,24 @@ class PlanEntity extends EntityObjectBase {
   /**
    * Get the parent governing entity.
    *
-   * @return \Drupal\ghi_plans\ApiObjects\Entities\GoverningEntity
-   *   The parent governing entity if found.
+   * @return \Drupal\ghi_plans\ApiObjects\Entities\GoverningEntity|null
+   *   The parent governing entity if found or NULL otherwise.
    */
-  private function getParentGoverningEntity() {
-    $entity_id = $this->governing_entity_parent_id ?? NULL;
-    if (!$entity_id) {
+  public function getParentGoverningEntity($recursion = FALSE) {
+    if ($entity_id = $this->governing_entity_parent_id ?? NULL) {
+      $entity = PlanEntityHelper::getGoverningEntity($entity_id, $this->getPlanVersionArgument());
+      return $entity instanceof GoverningEntity ? $entity : NULL;
+    }
+    if (!$recursion) {
       return NULL;
     }
-    $entity = PlanEntityHelper::getGoverningEntity($entity_id, $this->getPlanVersionArgument());
-    return $entity instanceof GoverningEntity ? $entity : NULL;
+    // Also look at the parents if requested.
+    $parents = $this->getPlanEntityParents();
+    foreach ($parents as $parent) {
+      if ($entity = $parent->getParentGoverningEntity()) {
+        return $entity;
+      }
+    }
   }
 
   /**

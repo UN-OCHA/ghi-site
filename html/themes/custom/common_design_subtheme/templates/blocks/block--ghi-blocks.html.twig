@@ -35,9 +35,19 @@
   ]
 %}
 
+{%
+  set block_link_attributes = create_attribute({
+    'class': [
+      'block-links',
+      download_links ? 'block-links--download-links',
+      icons ? 'block-links--admin-icons',
+    ]
+  })
+%}
+
 {{ attach_library('common_design/cd-block-title') }}
 
-<div{{ attributes.addClass(classes) }}>
+<div {{ attributes.addClass(classes) }}>
   {% if snap_png_header %}
     {{ snap_png_header }}
   {% endif %}
@@ -54,8 +64,8 @@
     {{ comment }}
   {% endif %}
 
-  {% if download_links %}
-    <div class="block-links">
+  {% if download_links or icons %}
+    <div {{ block_link_attributes }}>
       <div class="block-links--inner {% if full_width %}content-width{% endif %}">
         {% if download_links %}
           <div class="block-download-links">
