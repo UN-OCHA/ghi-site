@@ -143,7 +143,8 @@
           }, {});
         // Check if all files have finished loading (either a string or false,
         // but not null).
-        if (Object.values(storage).filter((d) => d !== null).length == filepaths.length) {
+        let storage_filtered = Object.values(storage).filter((d) => d !== null);
+        if (storage_filtered.length == 0 || storage_filtered.length == filepaths.length) {
           clearInterval(intervall);
           callback(Object.values(storage));
           self.hideThrobber(state);
