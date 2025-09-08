@@ -1,0 +1,8 @@
+view ghi geojson files:
+  title: 'View GHI GeoJSON files'
+  description: 'Allows to view GeoJSON versions.'
+  restrict access: true
+administer ghi geojson files:
+  title: 'Administer GHI GeoJSON files'
+  description: 'Allows to view, delete and upload GeoJSON versions.'
+  restrict access: true

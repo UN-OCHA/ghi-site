@@ -45,6 +45,7 @@ dependencies:
     - ghi_blocks
     - ghi_content
     - ghi_embargoed_access
+    - ghi_geojson
     - ghi_sections
     - ghi_teams
     - ghi_templates
@@ -299,6 +300,7 @@ permissions:
   - 'view any unpublished presence content'
   - 'view any unpublished progress content'
   - 'view any unpublished section content'
+  - 'view ghi geojson files'
   - 'view media'
   - 'view own unpublished content'
   - 'view own unpublished media'

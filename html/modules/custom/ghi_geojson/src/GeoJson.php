@@ -2,12 +2,15 @@
 
 namespace Drupal\ghi_geojson;
 
+use Drupal\Core\Cache\Cache;
 use Drupal\Core\File\FileSystemInterface;
-use Symfony\Component\DependencyInjection\ContainerInterface;
+use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Symfony\Component\Filesystem\Exception\IOException;
 use Symfony\Component\Filesystem\Filesystem;
 
 class GeoJson {
+
+  use StringTranslationTrait;
 
   const GEOJSON_SOURCE_DIR = 'public://geojson_sources';
   const GEOJSON_DIR = 'public://geojson';
@@ -80,7 +83,7 @@ class GeoJson {
     $version = $version ?? $location->getGeoJsonVersion();
     $source_directory = self::GEOJSON_SOURCE_DIR . '/' . $iso3;
     if ($version != 'current') {
-      $directories = $this->getFiles($source_directory, '^/[0-9][0-9][0-9][0-9]/$');
+      $directories = $this->getFiles($source_directory, '/^[0-9][0-9][0-9][0-9]$/');
       $directory_years = array_map(function ($directory) {
         return $directory->filename;
       }, $directories);
@@ -296,18 +299,163 @@ class GeoJson {
     return $zip_path;
   }
 
-  public function saveUploadArchive(string $iso3, string $version, $filepath) {
+  /**
+   * Save an uploaded geojson version archive.
+   *
+   * @param string $iso3
+   *   The country code.
+   * @param string $version
+   *   The version.
+   * @param string $filepath
+   *   The path of the uploaded file.
+   *
+   * @return bool
+   *   TRUE on success, FALSE on failure.
+   */
+  public function saveUploadArchive(string $iso3, string $version, string $filepath): bool {
     $zip = new \ZipArchive();
-    $zip->open($filepath);
     if (!$zip->open($filepath) === TRUE) {
       return FALSE;
     }
-    $status = $zip->extractTo(self::GEOJSON_SOURCE_DIR . '/' . $iso3 . '/' . $version);
-    $status = $status && $zip->close();
+    $status = $this->extractZipArchive($zip, self::GEOJSON_SOURCE_DIR . '/' . $iso3 . '/' . $version, $iso3);
+    $zip->close();
+    Cache::invalidateTags($this->getCacheTags($iso3, $version));
     return $status;
   }
 
-  public function renameArchiveVersion(string $iso3, string $version, string $new_version) {
+  /**
+   * Validate an archive file for the given country iso.
+   *
+   * @param string $filepath
+   *   The filepath of the file to validate.
+   * @param string $iso3
+   *   The country code.
+   *
+   * @return array
+   *   An array of errors if any.
+   */
+  public function validateArchiveFile(string $filepath, string $iso3): array {
+    $temp_name = 'geojson-validate-' . $this->fileSystem->basename($filepath);
+    $errors = [];
+    $zip = new \ZipArchive();
+    $status = $zip->open($filepath);
+    if ($status !== TRUE) {
+      $errors[] = (string) $this->t('Unable to open the archive file.');
+      return $errors;
+    }
+    $temp_dir = 'temporary://' . $temp_name;
+
+    $status = $this->extractZipArchive($zip, $temp_dir, $iso3, $errors);
+    if ($status !== TRUE) {
+      return $errors;
+    }
+    // Check for expected filenames.
+    $files = $this->getFiles($temp_dir);
+    $filenames = array_map(function ($file) {
+      return $file->filename;
+    }, $files);
+    $allowed = $this->getExpectedFilenamesForArchive($iso3);
+    $unsupported_files = array_diff($filenames, $allowed);
+    if (!empty($unsupported_files)) {
+      $errors[] = (string) $this->t('There are unsupported files in the archive: @unsupported_files', [
+        '@unsupported_files' => implode(', ', $unsupported_files),
+      ]);
+    }
+
+    $zip->close();
+    return $errors;
+  }
+
+  /**
+   * Extract the given zip archive.
+   *
+   * This is mainly used to do some sanity checks on the files to be extracted
+   * and to support both archives having the geojson files in the root as well
+   * as having the geojson files inside a subdirectory.
+   *
+   * @param \ZipArchive $zip
+   *   The archive to extract.
+   * @param string $base_dir
+   *   The basedir where to extrac the files.
+   * @param string $iso3
+   *   The country code.
+   * @param array|null $errors
+   *   Optional array to collect errors.
+   *
+   * @return bool
+   *   TRUE if extraction was successful, FALSE otherwise.
+   */
+  private function extractZipArchive(\ZipArchive $zip, string $base_dir, string $iso3, ?array &$errors = []): bool {
+    $country_shapefile_name = $iso3 . '_0.geojson';
+    $country_shapefile_index = $zip->locateName($country_shapefile_name, \ZipArchive::FL_NODIR);
+    if ($country_shapefile_index === FALSE) {
+      // The main country shape file has not been found.
+      $errors[] = (string) $this->t('The main country shapefile @filename is missing', [
+        '@filename' => $country_shapefile_name,
+      ]);
+      return FALSE;
+    }
+    $country_shapefile = $zip->getNameIndex($country_shapefile_index);
+
+    // See if this is inside a subfolder.
+    $directories = explode('/', $country_shapefile);
+    array_pop($directories);
+    if (count($directories) > 1) {
+      // Multiple nested subdirectories are not supported.
+      $errors[] = (string) $this->t('Multiple levels of directory hierarchy in the archive file are not supported');
+      return FALSE;
+    }
+    $strip_path_components = reset($directories);
+
+    for( $i = 0; $i < $zip->numFiles; $i++ ){
+      $original_filename = $zip->getNameIndex($i);
+      $filename = $strip_path_components ? str_replace($strip_path_components . '/', '', $original_filename) : $original_filename;
+      if (empty($filename) || !preg_match('/^([adm\d\/|' . $iso3 . ']).*\.geojson$/', $filename)) {
+        continue;
+      }
+      $base_dir = trim($base_dir, '/') . '/';
+      $zip->extractTo($base_dir, $original_filename);
+
+      if ($strip_path_components) {
+        $original_filepath = $base_dir . $original_filename;
+        $target_filepath = $base_dir . $filename;
+        $target_dir = $this->fileSystem->dirname($target_filepath);
+        if (!is_dir($target_dir)) {
+          $this->fileSystem->mkdir($target_dir, NULL, TRUE);
+        }
+        $this->fileSystem->move($original_filepath, $target_filepath);
+      }
+    }
+    if ($strip_path_components) {
+      $this->fileSystem->deleteRecursive($base_dir . $strip_path_components);
+    }
+    return TRUE;
+  }
+
+  private function getExpectedFilenamesForArchive(string $iso3): array {
+    return [
+      $iso3 . '_0.geojson',
+      $iso3 . '_0.min.geojson',
+      'adm1',
+      'adm2',
+      'adm3',
+    ];
+  }
+
+  /**
+   * Rename a geojson version directory.
+   *
+   * @param string $iso3
+   *   The country code.
+   * @param string $version
+   *   The existing version.
+   * @param string $new_version
+   *   The new version.
+   *
+   * @return bool
+   *   TRUE on success, FALSE on failure.
+   */
+  public function renameVersion(string $iso3, string $version, string $new_version): bool {
     $origin = self::GEOJSON_SOURCE_DIR . '/' . $iso3 . '/' . $version;
     $target = self::GEOJSON_SOURCE_DIR . '/' . $iso3 . '/' . $new_version;
     try {
@@ -316,6 +464,7 @@ class GeoJson {
     catch (IOException $e) {
       return FALSE;
     }
+    Cache::invalidateTags($this->getCacheTags($iso3, $version));
     return TRUE;
   }
 
@@ -335,6 +484,24 @@ class GeoJson {
       throw new \Exception(sprintf('Current GeoJSON versions cannot be deleted (country: %s)', $iso3));
     }
     return $this->fileSystem->deleteRecursive($this->getSourceDirectoryPath($iso3, $version));
+  }
+
+  /**
+   * Get the cache tags for an iso code and verions (optional)
+   *
+   * @param string $iso3
+   *   The country code.
+   * @param string|null $version
+   *   Optional geojson version.
+   *
+   * @return array
+   *   An array of cache tags.
+   */
+  public function getCacheTags(string $iso3, ?string $version = NULL): array {
+    return Cache::buildTags('ghi_geojson', array_filter([
+      'geojson-' . $iso3,
+      $version ? 'geojson-' . $iso3 . '-' . $version : NULL,
+    ]));
   }
 
 }
