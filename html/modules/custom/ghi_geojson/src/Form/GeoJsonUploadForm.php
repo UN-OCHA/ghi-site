@@ -8,6 +8,7 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Link;
 use Drupal\Core\Url;
 use Drupal\ghi_form_elements\Form\WizardBase;
+use InvalidArgumentException;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -42,8 +43,9 @@ class GeoJsonUploadForm extends WizardBase {
   /**
    * {@inheritdoc}
    */
-  public function buildForm(array $form, FormStateInterface $form_state) {
+  public function buildForm(array $form, FormStateInterface $form_state, ?string $iso3 = NULL) {
     $form = parent::buildForm($form, $form_state);
+    $iso_codes = $this->geojson->getIsoCodes();
 
     // Define our steps.
     $steps = [
@@ -52,7 +54,15 @@ class GeoJsonUploadForm extends WizardBase {
       'upload',
     ];
     // Find out in which step we currently are.
-    $step = $form_state->get('step') ?: array_key_first($steps);
+    $initial_step = array_key_first($steps);
+    if ($iso3 !== NULL) {
+      if (!in_array($iso3, $iso_codes)) {
+        throw new InvalidArgumentException('Invalid argument ' . $iso3 . ' geojson upload form.');
+      }
+      $initial_step++;
+      $form_state->setValue('iso3', $iso3);
+    }
+    $step = $form_state->get('step') ?: $initial_step;
     $action = self::getActionFromFormState($form_state);
 
     // Do the step navigation.
@@ -64,8 +74,7 @@ class GeoJsonUploadForm extends WizardBase {
     }
     $form_state->set('step', $step);
 
-    $iso_codes = $this->geojson->getIsoCodes();
-    $iso3 = $form_state->getValue('iso3');
+    $iso3 = $iso3 ?: $form_state->getValue('iso3');
     $versions = $iso3 ? $this->geojson->getVersionsForIsoCode($iso3) : [];
     $replace_version = $form_state->getValue(['replace_options', 'version']) ?: reset($versions);
     $archive_version_options = $iso3 ? $this->getVersionOptions($iso3, $replace_version) : [];
@@ -175,13 +184,14 @@ class GeoJsonUploadForm extends WizardBase {
       '#description' => $this->t('The archive must be a zip file following a specific structure. If you are unsure, download an existing GeoJSON version and use that as a reference.'),
       '#disabled' => $step > array_flip($steps)['upload'],
       '#access' => $step >= array_flip($steps)['upload'],
+      '#required' => TRUE,
     ];
 
     $form['actions'] = [
       '#type' => 'actions',
     ];
 
-    if ($step > 0) {
+    if ($step > $initial_step) {
       $form['actions']['back'] = [
         '#type' => 'button',
         '#value' => $this->t('Back'),
@@ -225,14 +235,21 @@ class GeoJsonUploadForm extends WizardBase {
    * {@inheritdoc}
    */
   public function validateForm(array &$form, FormStateInterface $form_state) {
+    $iso3 = $form_state->getValue('iso3');
     $files = $this->getRequest()->files->get('files', []);
     if (!empty($files['upload'])) {
       $file_upload = $files['upload'];
-      if ($file_upload->isValid()) {
-        $form_state->setValue('upload', $file_upload->getRealPath());
+      if (!$file_upload->isValid()) {
+        $form_state->setErrorByName('upload', $this->t('The file could not be uploaded.'));
+      }
+      elseif ($errors = $this->geojson->validateArchiveFile($file_upload->getRealPath(), $iso3)) {
+        // Validate the content of the archive.
+        $form_state->setErrorByName('upload', $this->t('The uploaded file did not pass validation. The following issues have been found: @errors', [
+          '@errors' => implode(', ', $errors),
+        ]));
       }
       else {
-        $form_state->setErrorByName('upload', $this->t('The file could not be uploaded.'));
+        $form_state->setValue('upload', $file_upload->getRealPath());
       }
     }
   }
@@ -254,7 +271,7 @@ class GeoJsonUploadForm extends WizardBase {
         // But first we want to archive the version that is to be replaced.
         // Renaming is sufficient.
         $archive_version = $replace_options['archive_version'];
-        $status = $this->geojson->renameArchiveVersion($iso3, $version, $archive_version);
+        $status = $this->geojson->renameVersion($iso3, $version, $archive_version);
         if ($status) {
           $this->messenger()->addStatus($this->t('The GeoJSON version <em>@version</em> for <em>@iso3</em> has been archived as version <em>@archive_version</em>.', [
             '@iso3' => $iso3,

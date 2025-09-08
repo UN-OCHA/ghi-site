@@ -242,26 +242,28 @@ class GeoJsonSourcesController extends ControllerBase {
    */
   public function buildRows(): array {
     $rows = [];
-    $directories = $this->geojson->getFiles(GeoJson::GEOJSON_SOURCE_DIR);
+    $directories = $this->geojson->getFiles(GeoJson::GEOJSON_SOURCE_DIR, '/^[A-Z][A-Z][A-Z]$/');
     foreach ($directories as $directory) {
       $versions = $this->geojson->getFiles($directory->uri);
       foreach (array_reverse($versions) as $version) {
+        $url_args = [
+          'iso3' => $directory->filename,
+          'version' => $version->filename,
+        ];
+        $inspect_url = Url::fromRoute('ghi_geojson.geojson_sources.directory_listing', $url_args);
+        $download_url = Url::fromRoute('ghi_geojson.geojson_sources.download_archive', $url_args);
+        $delete_url = Url::fromRoute('ghi_geojson.geojson_sources.delete', $url_args);
+
         $operation_links = [];
         $operation_links['inspect'] = [
           'title' => $this->t('Inspect'),
-          'url' => Url::fromRoute('ghi_geojson.geojson_sources.directory_listing', [
-            'iso3' => $directory->filename,
-            'version' => $version->filename,
-          ]),
+          'url' => $inspect_url,
         ];
         $operation_links['download'] = [
           'title' => $this->t('Download archive'),
-          'url' => Url::fromRoute('ghi_geojson.geojson_sources.download_archive', [
-            'iso3' => $directory->filename,
-            'version' => $version->filename,
-          ]),
+          'url' => $download_url,
         ];
-        if ($version->filename != 'current') {
+        if ($delete_url->access() && $version->filename != 'current') {
           $operation_links['delete'] = [
             'title' => $this->t('Delete version'),
             'url' => Url::fromRoute('ghi_geojson.geojson_sources.delete', [
@@ -290,10 +292,7 @@ class GeoJsonSourcesController extends ControllerBase {
             'data' => [
               '#type' => 'link',
               '#title' => $version->filename,
-              '#url' => Url::fromRoute('ghi_geojson.geojson_sources.directory_listing', [
-                'iso3' => $directory->filename,
-                'version' => $version->filename,
-              ]),
+              '#url' => Url::fromRoute('ghi_geojson.geojson_sources.directory_listing', $url_args),
             ],
           ],
           $this->geojson->getFileCount($version->uri . '/adm1', ['.min.geojson']),

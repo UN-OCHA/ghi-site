@@ -1,5 +1,6 @@
 <?php
 
+use Drupal\Core\Cache\Cache;
 use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Link;
 use Drupal\ghi_geojson\GeoJson;
@@ -45,6 +46,7 @@ function ghi_geojson_local_actions_render_alter(&$links, $route_appears) {
   if (count($versions) <= 1) {
     return;
   }
+  $cache_tags = $geojson->getCacheTags($iso3);
   $other_version_links = [];
   foreach ($versions as $version) {
     if ($version == $current_version) {
@@ -54,6 +56,7 @@ function ghi_geojson_local_actions_render_alter(&$links, $route_appears) {
       'iso3' => $iso3,
       'version' => $version,
     ])->toRenderable();
+    $cache_tags = Cache::mergeTags($cache_tags, $geojson->getCacheTags($iso3, $version));
   }
 
   $links['other_versions'] = [
@@ -73,6 +76,9 @@ function ghi_geojson_local_actions_render_alter(&$links, $route_appears) {
       '#theme' => 'item_list',
       '#items' => array_values($other_version_links),
       '#gin_lb_theme_suggestions' => FALSE,
+    ],
+    '#cache' => [
+      'tags' => $cache_tags,
     ],
   ];
 }
