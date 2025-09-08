@@ -64,7 +64,7 @@ class AttachmentData extends ConfigurationContainerItemPluginBase {
     if (!empty($attachment_select['attachment_id'])) {
       $attachment_id = is_array($attachment_select['attachment_id']) ? reset($attachment_select['attachment_id']) : $attachment_select['attachment_id'];
       $attachment = $this->attachmentQuery->getAttachment($attachment_id);
-      $attachment = empty($this->validateAttachment($attachment)) ? $attachment : NULL;
+      $attachment = $attachment && empty($this->validateAttachment($attachment)) ? $attachment : NULL;
       $attachment_select['attachment_id'] = $attachment?->id();
     }
 
@@ -264,17 +264,14 @@ class AttachmentData extends ConfigurationContainerItemPluginBase {
     /** @var \Drupal\ghi_base_objects\Entity\BaseObjectInterface $base_object */
     $base_object = $this->getContextValue('base_object');
 
-    if (!$attachment) {
-      $errors[] = $this->t('No attachment configured');
-    }
-    elseif (!$plan) {
-      $errors[] = $this->t('No plan available');
+    if (!$plan) {
+      $errors[] = (string) $this->t('No plan available');
     }
     elseif ($attachment->getPlanId() != $plan->getSourceId()) {
-      $errors[] = $this->t('Configured attachment is not available in the context of the current plan');
+      $errors[] = (string) $this->t('Configured attachment is not available in the context of the current plan');
     }
     elseif ($base_object && !$attachment->belongsToBaseObject($base_object)) {
-      $errors[] = $this->t('Configured attachment is not available in the context of the current base object');
+      $errors[] = (string) $this->t('Configured attachment is not available in the context of the current base object');
     }
 
     return $errors;
@@ -284,7 +281,16 @@ class AttachmentData extends ConfigurationContainerItemPluginBase {
    * {@inheritdoc}
    */
   public function getConfigurationErrors() {
+    $errors = [];
     $attachment = $this->getAttachmentObject(FALSE);
+
+    if (!$attachment) {
+      $errors[] = (string) $this->t('No attachment configured');
+    }
+
+    if (!empty($errors)) {
+      return $errors;
+    }
 
     return $this->validateAttachment($attachment);
   }
