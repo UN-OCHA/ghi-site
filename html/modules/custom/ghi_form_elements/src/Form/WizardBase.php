@@ -52,7 +52,7 @@ abstract class WizardBase extends FormBase {
   public function buildForm(array $form, FormStateInterface $form_state) {
     self::prepareAjaxForm($form, $form_state);
     $this->ajaxWrapperId = self::getWrapperId($form);
-    $form['#prefix'] = '<div id="' . $this->ajaxWrapperId . '">';
+    $form['#prefix'] = '<div id="' . $this->ajaxWrapperId . '" class="block-system-main-block">';
     $form['#suffix'] = '</div>';
     return $form;
   }

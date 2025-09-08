@@ -24,18 +24,18 @@ class GeoJsonSourcesController extends ControllerBase {
   public $fileSystem;
 
   /**
-   * File URL generator.
-   *
-   * @var \Drupal\Core\File\FileUrlGeneratorInterface
-   */
-  public $fileUrlGenerator;
-
-  /**
    * GeoJSON service.
    *
    * @var \Drupal\ghi_geojson\GeoJson
    */
   public $geojson;
+
+  /**
+   * GeoJSON service.
+   *
+   * @var \Drupal\ghi_geojson\GeoJsonDirectoryManager
+   */
+  public $geojsonDirectoryManager;
 
   /**
    * The layout builder modal config object.
@@ -51,8 +51,8 @@ class GeoJsonSourcesController extends ControllerBase {
     /** @var \ Drupal\ghi_geojson\Controller\GeoJsonSourcesController $instance */
     $instance = new static();
     $instance->fileSystem = $container->get('file_system');
-    $instance->fileUrlGenerator = $container->get('file_url_generator');
     $instance->geojson = $container->get('geojson');
+    $instance->geojsonDirectoryManager = $container->get('geojson.directory_manager');
     $instance->modalConfig = $container->get('config.factory')->get('layout_builder_modal.settings');
     return $instance;
   }
@@ -109,44 +109,7 @@ class GeoJsonSourcesController extends ControllerBase {
    *   A render array with the page content.
    */
   public function directoryListing(string $iso3, string $version): array {
-    $items = [];
-    $scan_options = [
-      'nomask' => '/.min.geojson$/',
-    ];
-    $entries = $this->geojson->getFiles(GeoJson::GEOJSON_SOURCE_DIR . '/' . $iso3 . '/' . $version, NULL, $scan_options);
-
-    foreach ($entries as $entry) {
-      $files = is_dir($entry->uri) ? $this->geojson->getFiles($entry->uri, NULL, $scan_options) : NULL;
-
-      if (is_file($entry->uri)) {
-        $item = $this->buildFileLinks($entry);
-      }
-
-      if (is_dir($entry->uri)) {
-        $item = [
-          '#markup' => $entry->filename . ' (' . count($files) . ' files)',
-          '#wrapper_attributes' => [
-            'class' => ['directory'],
-          ],
-          'children' => [],
-        ];
-        foreach ($files as $file) {
-          $item['children'][] = $this->buildFileLinks($file);
-        }
-      }
-      $items[] = $item;
-    }
-    $build = [
-      '#theme' => 'item_list',
-      '#items' => $items,
-      '#attributes' => [
-        'class' => ['geojson-directory-listing'],
-      ],
-      '#attached' => [
-        'library' => ['ghi_geojson/geojson_admin'],
-      ],
-    ];
-    return $build;
+    return $this->geojsonDirectoryManager->buildDirectoryListing(GeoJson::GEOJSON_SOURCE_DIR . '/' . $iso3 . '/' . $version);
   }
 
   /**
@@ -188,50 +151,6 @@ class GeoJsonSourcesController extends ControllerBase {
       throw new \Exception(sprintf('Current GeoJSON versions cannot be deleted (country: %s)', $iso3));
     }
     return $this->fileSystem->deleteRecursive($this->geojson->getSourceDirectoryPath($iso3, $version));
-  }
-
-  /**
-   * Build all links to a file.
-   *
-   * This adds additional links for the minified version of the same file.
-   *
-   * @param object $file
-   *   Object as returned from FileSystem::scanDirectory().
-   *
-   * @return array
-   *   A render array for a link.
-   */
-  public function buildFileLinks(object $file): array {
-    $links = [];
-    $links[] = $this->buildFileLink($file);
-    $minified_file = str_replace('.geojson', '.min.geojson', $file->uri);
-    if (file_exists($minified_file)) {
-      $links[] = ['#markup' => '&nbsp;/&nbsp;'];
-      $links[] = $this->buildFileLink((object) [
-        'uri' => $minified_file,
-        'filename' => $this->fileSystem->basename($minified_file),
-      ]);
-    }
-    return $links;
-  }
-
-  /**
-   * Build a link to a file.
-   *
-   * @param object $file
-   *   Object as returned from FileSystem::scanDirectory().
-   * @param string|null $title
-   *   An optional title.
-   *
-   * @return array
-   *   A render array for a link.
-   */
-  public function buildFileLink(object $file, ?string $title = NULL): array {
-    return [
-      '#type' => 'link',
-      '#title' => $title ?? $file->filename,
-      '#url' => $this->fileUrlGenerator->generate($file->uri),
-    ];
   }
 
   /**

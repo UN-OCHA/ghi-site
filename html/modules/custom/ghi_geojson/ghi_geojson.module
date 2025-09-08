@@ -3,6 +3,7 @@
 use Drupal\Core\Cache\Cache;
 use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Link;
+use Drupal\Core\Url;
 use Drupal\ghi_geojson\GeoJson;
 
 /**
@@ -52,10 +53,14 @@ function ghi_geojson_local_actions_render_alter(&$links, $route_appears) {
     if ($version == $current_version) {
       continue;
     }
-    $other_version_links[$version] = Link::createFromRoute($version, 'ghi_geojson.geojson_sources.directory_listing', [
+    $url = Url::fromRoute('ghi_geojson.geojson_sources.directory_listing', [
       'iso3' => $iso3,
       'version' => $version,
-    ])->toRenderable();
+    ]) ;
+    if (!$url || !$url->access()) {
+      continue;
+    }
+    $other_version_links[$version] = Link::fromTextAndUrl($version, $url)->toRenderable();
     $cache_tags = Cache::mergeTags($cache_tags, $geojson->getCacheTags($iso3, $version));
   }
 

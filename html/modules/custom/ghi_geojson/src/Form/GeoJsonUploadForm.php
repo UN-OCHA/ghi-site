@@ -10,6 +10,7 @@ use Drupal\Core\Url;
 use Drupal\ghi_form_elements\Form\WizardBase;
 use InvalidArgumentException;
 use Symfony\Component\DependencyInjection\ContainerInterface;
+use Symfony\Component\HttpFoundation\File\UploadedFile;
 
 /**
  * Provides a form for adding new geojson versions.
@@ -24,12 +25,20 @@ class GeoJsonUploadForm extends WizardBase {
   public $geojson;
 
   /**
+   * GeoJSON service.
+   *
+   * @var \Drupal\ghi_geojson\GeoJsonDirectoryManager
+   */
+  public $geojsonDirectoryManager;
+
+  /**
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container) {
     /** @var \Drupal\ghi_geojson\Form\GeoJsonUploadForm $instance */
     $instance = new static();
     $instance->geojson = $container->get('geojson');
+    $instance->geojsonDirectoryManager = $container->get('geojson.directory_manager');
     return $instance;
   }
 
@@ -212,7 +221,7 @@ class GeoJsonUploadForm extends WizardBase {
       $form['actions']['next'] = [
         '#type' => 'button',
         '#button_type' => 'primary',
-        '#value' => $this->t('Next'),
+        '#value' => $step < array_flip($steps)['upload'] ? $this->t('Next') : $this->t('Upload'),
         '#ajax' => [
           'event' => 'click',
           'callback' => [static::class, 'updateAjax'],
@@ -238,6 +247,7 @@ class GeoJsonUploadForm extends WizardBase {
     $iso3 = $form_state->getValue('iso3');
     $files = $this->getRequest()->files->get('files', []);
     if (!empty($files['upload'])) {
+      /** @var \Symfony\Component\HttpFoundation\File\UploadedFile $file_upload */
       $file_upload = $files['upload'];
       if (!$file_upload->isValid()) {
         $form_state->setErrorByName('upload', $this->t('The file could not be uploaded.'));
