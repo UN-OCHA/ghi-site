@@ -313,12 +313,7 @@ class GeoJson {
    *   TRUE on success, FALSE on failure.
    */
   public function saveUploadArchive(string $iso3, string $version, string $filepath): bool {
-    $zip = new \ZipArchive();
-    if (!$zip->open($filepath) === TRUE) {
-      return FALSE;
-    }
-    $status = $this->extractZipArchive($zip, self::GEOJSON_SOURCE_DIR . '/' . $iso3 . '/' . $version, $iso3);
-    $zip->close();
+    $status = $this->extractUploadFile($filepath, self::GEOJSON_SOURCE_DIR . '/' . $iso3 . '/' . $version, $iso3);
     Cache::invalidateTags($this->getCacheTags($iso3, $version));
     return $status;
   }
@@ -335,17 +330,10 @@ class GeoJson {
    *   An array of errors if any.
    */
   public function validateArchiveFile(string $filepath, string $iso3): array {
-    $temp_name = 'geojson-validate-' . $this->fileSystem->basename($filepath);
     $errors = [];
-    $zip = new \ZipArchive();
-    $status = $zip->open($filepath);
-    if ($status !== TRUE) {
-      $errors[] = (string) $this->t('Unable to open the archive file.');
-      return $errors;
-    }
+    $temp_name = 'geojson-validate-' . $this->fileSystem->basename($filepath);
     $temp_dir = 'temporary://' . $temp_name;
-
-    $status = $this->extractZipArchive($zip, $temp_dir, $iso3, $errors);
+    $status = $this->extractUploadFile($filepath, $temp_dir, $iso3, $errors);
     if ($status !== TRUE) {
       return $errors;
     }
@@ -361,9 +349,33 @@ class GeoJson {
         '@unsupported_files' => implode(', ', $unsupported_files),
       ]);
     }
-
-    $zip->close();
     return $errors;
+  }
+
+  /**
+   * Extract an uploaded file.
+   *
+   * @param string $filepath
+   *   The source filepath of the uploaded file.
+   * @param string $target
+   *   The target directory.
+   * @param string $iso3
+   *   The country code for file filtering of the extracted files.
+   * @param array|null $errors
+   *   Optional array to collect errors.
+   *
+   * @return bool
+   *   TRUE on success, FALSE otherwise.
+   */
+  public function extractUploadFile(string $filepath, string $target, string $iso3, ?array &$errors = []): bool {
+    $zip = new \ZipArchive();
+    if ($zip->open($filepath) !== TRUE) {
+      $errors[] = (string) $this->t('Unable to open the archive file.');
+      return FALSE;
+    }
+    $status = $this->extractZipArchive($zip, $target, $iso3, $errors);
+    $zip->close();
+    return $status;
   }
 
   /**
@@ -432,6 +444,15 @@ class GeoJson {
     return TRUE;
   }
 
+  /**
+   * Get the file/directory names that we expect in an archive.
+   *
+   * @param string $iso3
+   *   The country code.
+   *
+   * @return string[]
+   *   An array of file names.
+   */
   private function getExpectedFilenamesForArchive(string $iso3): array {
     return [
       $iso3 . '_0.geojson',
