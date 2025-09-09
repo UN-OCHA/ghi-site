@@ -6,7 +6,7 @@ use Drupal\Core\File\FileSystemInterface;
 use Drupal\Core\File\FileUrlGeneratorInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 
-class GeoJsonDirectoryManager {
+class GeoJsonDirectoryList {
 
   use StringTranslationTrait;
 

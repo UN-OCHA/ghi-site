@@ -2,15 +2,12 @@
 
 namespace Drupal\ghi_geojson\Form;
 
-use Drupal\Core\Form\ConfigFormBase;
-use Drupal\Core\Form\FormBase;
+use Drupal\Core\File\FileExists;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\Core\Link;
 use Drupal\Core\Url;
 use Drupal\ghi_form_elements\Form\WizardBase;
 use InvalidArgumentException;
 use Symfony\Component\DependencyInjection\ContainerInterface;
-use Symfony\Component\HttpFoundation\File\UploadedFile;
 
 /**
  * Provides a form for adding new geojson versions.
@@ -27,9 +24,9 @@ class GeoJsonUploadForm extends WizardBase {
   /**
    * GeoJSON service.
    *
-   * @var \Drupal\ghi_geojson\GeoJsonDirectoryManager
+   * @var \Drupal\ghi_geojson\GeoJsonDirectoryList
    */
-  public $geojsonDirectoryManager;
+  public $geojsonDirectoryList;
 
   /**
    * {@inheritdoc}
@@ -38,7 +35,7 @@ class GeoJsonUploadForm extends WizardBase {
     /** @var \Drupal\ghi_geojson\Form\GeoJsonUploadForm $instance */
     $instance = new static();
     $instance->geojson = $container->get('geojson');
-    $instance->geojsonDirectoryManager = $container->get('geojson.directory_manager');
+    $instance->geojsonDirectoryList = $container->get('geojson.directory_list');
     return $instance;
   }
 
@@ -61,6 +58,7 @@ class GeoJsonUploadForm extends WizardBase {
       'country',
       'action',
       'upload',
+      'validate',
     ];
     // Find out in which step we currently are.
     $initial_step = array_key_first($steps);
@@ -170,7 +168,6 @@ class GeoJsonUploadForm extends WizardBase {
 
     $form['new_versions_options'] = [
       '#type' => 'fieldset',
-      // '#title' => $this->t('Replace options'),
       '#tree' => TRUE,
       '#states' => [
         'visible' => [
@@ -187,41 +184,105 @@ class GeoJsonUploadForm extends WizardBase {
       '#default_value' => $form_state->getValue(['new_versions_options', 'version'], NULL),
     ];
 
+    /** @var \Drupal\file\Entity\File $upload_file */
+    $upload = $form_state->get('upload') ?: NULL;
+    $upload_file = $form_state->get('upload_file') ?: NULL;
     $form['upload'] = [
       '#type' => 'file',
       '#title' => $this->t('Archive'),
-      '#description' => $this->t('The archive must be a zip file following a specific structure. If you are unsure, download an existing GeoJSON version and use that as a reference.'),
+      '#description' => $this->t('The archive must be a zip file following a specific structure. If you are unsure, download an existing GeoJSON version and use that as a reference.<br />Only expected files and directories will be extracted from the archive: @expected_files', [
+        '@expected_files' => implode(', ', $this->geojson->getExpectedFilenamesForCountry($iso3)),
+      ]),
       '#disabled' => $step > array_flip($steps)['upload'],
       '#access' => $step >= array_flip($steps)['upload'],
       '#required' => TRUE,
     ];
+    $errors = $upload_file ? $this->geojson->validateArchiveFile($upload_file, $iso3) : [];
+
+    $form['validate'] = [
+      '#type' => 'container',
+      '#disabled' => $step > array_flip($steps)['validate'],
+      '#access' => $step >= array_flip($steps)['validate'],
+      '#attributes' => [
+        'class' => [
+          'form-item__label',
+        ],
+      ],
+      'summary' => [
+        '#type' => 'html_tag',
+        '#tag' => 'p',
+        '#value' => $this->t('Uploaded file: @filename', [
+          '@filename' => $upload_file?->getFilename(),
+        ]),
+      ],
+      'result' => [
+        'summary' => [
+          '#type' => 'html_tag',
+          '#tag' => 'p',
+          '#value' => empty($errors) ? $this->t('The uploaded file passed validation.') : $this->t('The uploaded file failed validation with the following errors'),
+          '#attributes' => [
+            'class' => [
+              'form-item__description',
+            ],
+          ],
+        ],
+        'errors' => [
+          '#theme' => 'item_list',
+          '#items' => $errors,
+          '#attributes' => [
+            'class' => array_filter([
+              'form-item',
+              !empty($errors) ? 'form-item__error-message' : NULL,
+            ]),
+          ],
+          '#access' => !empty($errors),
+        ],
+      ],
+    ];
+
+    if ($upload_file) {
+      $preview_dir = 'temporary://geojson-preview-' . md5($upload_file->getFilename());
+      $preview_extracted = $this->geojson->extractUploadFile($upload_file, $preview_dir, $iso3);
+      $form['validate']['preview_container'] = [
+        '#type' => 'fieldset',
+        '#title' => $this->t('Preview'),
+      ];
+      $directory_listing = $preview_extracted ? $this->geojsonDirectoryList->buildDirectoryListing($preview_dir, FALSE) : [];
+      $form['validate']['preview_container']['preview'] = !empty($directory_listing['#items']) ? $directory_listing : [
+        [
+          '#markup' => $this->t('No files to be extracted'),
+        ],
+      ];
+    }
 
     $form['actions'] = [
       '#type' => 'actions',
     ];
 
-    if ($step > $initial_step) {
-      $form['actions']['back'] = [
-        '#type' => 'button',
-        '#value' => $this->t('Back'),
-        '#limit_validation_errors' => array_filter([
-          $step > 0 ? ['iso3'] : NULL,
-          $step > array_flip($steps)['action'] ? ['replace_options'] : NULL,
-          $step > array_flip($steps)['action'] ? ['replace'] : NULL,
-        ]),
-        '#ajax' => [
-          'event' => 'click',
-          'callback' => [static::class, 'updateAjax'],
-          'wrapper' => $this->ajaxWrapperId,
-        ],
-      ];
-    }
+    $form['actions']['back'] = [
+      '#type' => 'button',
+      '#value' => $this->t('Back'),
+      '#disabled' => $step <= $initial_step,
+      '#limit_validation_errors' => array_filter([
+        $step > 0 ? ['iso3'] : NULL,
+        $step > array_flip($steps)['action'] ? ['new_versions_options'] : NULL,
+        $step > array_flip($steps)['action'] ? ['replace_options'] : NULL,
+        $step > array_flip($steps)['action'] ? ['replace'] : NULL,
+        $step > array_flip($steps)['upload'] ? ['upload'] : NULL,
+        $step > array_flip($steps)['validate'] ? ['validate'] : NULL,
+      ]),
+      '#ajax' => [
+        'event' => 'click',
+        'callback' => [static::class, 'updateAjax'],
+        'wrapper' => $this->ajaxWrapperId,
+      ],
+    ];
 
     if ($step < count($steps) - 1) {
       $form['actions']['next'] = [
         '#type' => 'button',
         '#button_type' => 'primary',
-        '#value' => $step < array_flip($steps)['upload'] ? $this->t('Next') : $this->t('Upload'),
+        '#value' => $step < array_flip($steps)['upload'] ? $this->t('Next') : $this->t('Upload file'),
         '#ajax' => [
           'event' => 'click',
           'callback' => [static::class, 'updateAjax'],
@@ -233,7 +294,8 @@ class GeoJsonUploadForm extends WizardBase {
       $form['actions']['submit'] = [
         '#type' => 'submit',
         '#button_type' => 'primary',
-        '#value' => $this->t('Process upload'),
+        '#value' => $this->t('Import file'),
+        '#disabled' => !empty($errors),
       ];
     }
 
@@ -244,23 +306,11 @@ class GeoJsonUploadForm extends WizardBase {
    * {@inheritdoc}
    */
   public function validateForm(array &$form, FormStateInterface $form_state) {
-    $iso3 = $form_state->getValue('iso3');
-    $files = $this->getRequest()->files->get('files', []);
-    if (!empty($files['upload'])) {
-      /** @var \Symfony\Component\HttpFoundation\File\UploadedFile $file_upload */
-      $file_upload = $files['upload'];
-      if (!$file_upload->isValid()) {
-        $form_state->setErrorByName('upload', $this->t('The file could not be uploaded.'));
-      }
-      elseif ($errors = $this->geojson->validateArchiveFile($file_upload->getRealPath(), $iso3)) {
-        // Validate the content of the archive.
-        $form_state->setErrorByName('upload', $this->t('The uploaded file did not pass validation. The following issues have been found: @errors', [
-          '@errors' => implode(', ', $errors),
-        ]));
-      }
-      else {
-        $form_state->setValue('upload', $file_upload->getRealPath());
-      }
+    $upload = $form_state->getValue('upload');
+    if ($upload) {
+      $file = file_save_upload('upload', ['FileExtension' => ['extensions' => 'zip']], FALSE, NULL, FileExists::Replace);
+      $file = is_array($file) ? reset($file) : $file;
+      $form_state->set('upload_file', $file);
     }
   }
 
@@ -272,7 +322,12 @@ class GeoJsonUploadForm extends WizardBase {
     $replace = $form_state->getValue('replace');
     $replace_options = $form_state->getValue('replace_options');
     $new_versions_options = $form_state->getValue('new_versions_options');
-    $upload_file = $form_state->getValue('upload');
+    /** @var \Drupal\file\Entity\File $upload_file */
+    $upload_file = $form_state->get('upload_file') ?: NULL;
+    if (!$upload_file) {
+      // Bail out if we don't have a file at this point.
+      return;
+    }
     $status = FALSE;
     if ($replace) {
       // We want to replace a version.
@@ -295,27 +350,25 @@ class GeoJsonUploadForm extends WizardBase {
             '@version' => $version,
             '@archive_version' => $archive_version,
           ]));
-          $status = FALSE;
         }
+      }
+      else {
+        $status = TRUE;
       }
       if ($status) {
         $status = $this->geojson->saveUploadArchive($iso3, $version, $upload_file);
-        $this->messenger()->addStatus($this->t('The GeoJSON archive has been successfully uploaded as version <em>@version</em>.', [
-          '@version' => $version,
-        ]));
       }
     }
     else {
       // We want to add a new version without replacing one.
       $version = $new_versions_options['version'];
       $status = $this->geojson->saveUploadArchive($iso3, $version, $upload_file);
-      if ($status) {
-        $this->messenger()->addStatus($this->t('The GeoJSON archive has been successfully uploaded as version <em>@version</em>.', [
-          '@version' => $version,
-        ]));
-      }
     }
+
     if ($status) {
+      $this->messenger()->addStatus($this->t('The GeoJSON archive has been successfully uploaded as version <em>@version</em>.', [
+        '@version' => $version,
+      ]));
       $form_state->setRedirectUrl(Url::fromRoute('ghi_geojson.geojson_sources.directory_listing', [
         'iso3' => $iso3,
         'version' => $version,
