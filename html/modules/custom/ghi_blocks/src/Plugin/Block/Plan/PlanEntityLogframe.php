@@ -285,86 +285,18 @@ class PlanEntityLogframe extends GHIBlockBase implements MultiStepFormBlockInter
 
     // Collect the entity parents once, the cluster associations, both for the
     // alignments in general and also on an per-entity/per-parent basis.
-    $entity_parents = [];
-    $entity_clusters = [];
     $entity_cluster_alignments = [];
     foreach ($entities as $entity) {
-      $entity_parents[$entity->id()] = $entity instanceof PlanEntity ? $this->getEntityAlignments($entity) : [];
       $entity_cluster_alignments[$entity->id()] = $entity instanceof PlanEntity ? $entity->getParentGoverningEntity(TRUE) : NULL;
-      $entity_clusters[$entity->id()] = $entity instanceof PlanEntity ? $entity->getParentGoverningEntity() : NULL;
-      foreach ($entity_parents[$entity->id()] as $parent) {
-        $entity_clusters[$parent->id()] = $parent instanceof PlanEntity ? $parent->getParentGoverningEntity() : NULL;
-      }
     }
 
-    // Build the header for the logframe sheet, based on the parents.
-    foreach ($entities as $entity) {
-      $parents = $entity_parents[$entity->id()];
-
-      if (empty($logical_framework['header'])) {
-        $header = [];
-        foreach ($parents as $parent) {
-          $parent_ref_code = $parent->ref_code;
-          if (array_key_exists($parent_ref_code, $header)) {
-            continue;
-          }
-          if (!empty($entity_clusters[$parent->id()])) {
-            $header[] = (string) $this->t('@cluster_label abbreviation', $cluster_args, $t_options);
-            $header[] = (string) $this->t('@cluster_label name', $cluster_args, $t_options);
-          }
-          $header[$parent_ref_code] = (string) $this->t('@ref_code code', [
-            '@ref_code' => $parent->ref_code,
-          ], $t_options);
-          $header[$parent_ref_code . '_description'] = (string) $this->t('@ref_code description', [
-            '@ref_code' => $parent->ref_code,
-          ], $t_options);
-        }
-
-        if (!empty($entity_clusters[$entity->id()])) {
-          $header[] = (string) $this->t('@cluster_label abbreviation', $cluster_args, $t_options);
-          $header[] = (string) $this->t('@cluster_label name', $cluster_args, $t_options);
-        }
-
-        $header[] = (string) $this->t('@ref_code code', [
-          '@ref_code' => $conf['entities']['entity_ref_code'],
-        ], $t_options);
-        $header[] = (string) $this->t('@ref_code description', [
-          '@ref_code' => $conf['entities']['entity_ref_code'],
-        ], $t_options);
-        $logical_framework['header'] = array_values($header);
-      }
+    // Build the header for the logframe sheet.
+    if ($logical_framework = $this->buildLogicalFrameworkExcelsheet($entities, $cluster_args, $t_options)) {
+      $data[$logframe_sheet_label] = $logical_framework;
     }
-
-    // Build the content for the logframe sheet.
-    foreach ($entities as $entity) {
-      $parents = $entity_parents[$entity->id()];
-      $alignment_paths = $this->getEntityAlignmentsPaths($entity);
-      foreach ($alignment_paths as $parent_ids) {
-        $logical_framework_row = [];
-        foreach ($parent_ids as $parent_id) {
-          $parent = $parents[$parent_id];
-          if (!empty($entity_clusters[$parent->id()])) {
-            $governing_entity = $entity_clusters[$parent->id()];
-            $logical_framework_row[] = $governing_entity->getCustomName('custom_id');
-            $logical_framework_row[] = $governing_entity->getName();
-          }
-          $logical_framework_row[] = $this->getPlanEntityId($parent, $conf['entities']);
-          $logical_framework_row[] = $parent->getDescription();
-        }
-
-        if (!empty($entity_clusters[$entity->id()])) {
-          $governing_entity = $entity_clusters[$entity->id()];
-          $logical_framework_row[] = $governing_entity->getCustomName('custom_id');
-          $logical_framework_row[] = $governing_entity->getName();
-        }
-
-        $logical_framework_row[] = $this->getPlanEntityId($entity, $conf['entities']);
-        $logical_framework_row[] = $entity->getDescription();
-        $logical_framework['rows'][] = $logical_framework_row;
-      }
-
+    else {
+      unset($data[$logframe_sheet_label]);
     }
-    $data[$logframe_sheet_label] = $logical_framework;
 
     // Collect the table names for deduplication.
     $table_names = [];
@@ -440,6 +372,38 @@ class PlanEntityLogframe extends GHIBlockBase implements MultiStepFormBlockInter
       $this->processSparklineChartInExcelData($data[$key], $t_options);
     }
     return $data;
+  }
+
+  /**
+   * Check if there is download data for this element.
+   *
+   * @return bool
+   *   TRUE if there is something to download, FALSE otherwise.
+   */
+  private function hasDownloadData(): bool {
+    $conf = $this->getBlockConfig();
+    if (empty($conf['entities']['entity_ref_code'])) {
+      return FALSE;
+    }
+
+    $entities = $this->getRenderableEntities();
+    if (empty($entities)) {
+      return FALSE;
+    }
+
+    if ($this->buildLogicalFrameworkExcelsheet($entities)) {
+      return TRUE;
+    }
+
+    foreach ($entities as $entity) {
+      $tables = $this->buildTables($entity, $conf['tables']);
+      foreach ($tables as $table) {
+        if (!empty($table['#rows'])) {
+          return TRUE;
+        }
+      }
+    }
+    return FALSE;
   }
 
   /**
@@ -570,18 +534,21 @@ class PlanEntityLogframe extends GHIBlockBase implements MultiStepFormBlockInter
     $t_args = [
       'langcode' => $this->getCurrentPlanObject()->getPlanLanguage() ?? 'en',
     ];
-    // Move the download link into a different position.
-    $variables['content']['links'] = $variables['content']['links'] ?? [];
-    $download_links = array_map(function ($link) use ($t_args) {
-      /** @var \Drupal\Core\Url $url */
-      $url = $link['#link']['#url'];
-      $attributes = $url->getOption('attributes');
-      $attributes['class'][] = 'cd-button';
-      $url->setOption('attributes', $attributes);
-      $link['#link']['#title'] = $this->t('Download', [], $t_args);
-      return $link['#link'];
-    }, $variables['download_links']);
-    $variables['content']['links'] = array_merge($download_links, $variables['content']['links']);
+
+    if ($this->hasDownloadData()) {
+      // Move the download link into a different position.
+      $variables['content']['links'] = $variables['content']['links'] ?? [];
+      $download_links = array_map(function ($link) use ($t_args) {
+        /** @var \Drupal\Core\Url $url */
+        $url = $link['#link']['#url'];
+        $attributes = $url->getOption('attributes');
+        $attributes['class'][] = 'cd-button';
+        $url->setOption('attributes', $attributes);
+        $link['#link']['#title'] = $this->t('Download', [], $t_args);
+        return $link['#link'];
+      }, $variables['download_links']);
+      $variables['content']['links'] = array_merge($download_links, $variables['content']['links']);
+    }
 
     unset($variables['download_links']);
   }
@@ -618,6 +585,106 @@ class PlanEntityLogframe extends GHIBlockBase implements MultiStepFormBlockInter
   private function getPlanEntityDescription(PlanEntityInterface $entity, array $conf, $truncate_description = FALSE) {
     $description = $entity->getDescription();
     return $truncate_description ? Unicode::truncate($description, 120, TRUE, TRUE) : $description;
+  }
+
+  /**
+   * Build the worksheet data for the logical framework.
+   *
+   * @param array $entities
+   *   The entities to include.
+   * @param array $cluster_args
+   *   An optional array of arguments for translated strings.
+   * @param array $t_options
+   *   An optional array of options for translated strings.
+   *
+   * @return array|null
+   *   Either NULL, if no logframe can be build, or an array to be used for
+   *   Excel exports.
+   */
+  private function buildLogicalFrameworkExcelsheet(array $entities, ?array $cluster_args = [], ?array $t_options = []): ?array {
+    $conf = $this->getBlockConfig();
+
+    $entity_parents = [];
+    $entity_clusters = [];
+    foreach ($entities as $entity) {
+      $entity_parents[$entity->id()] = $entity instanceof PlanEntity ? $this->getEntityAlignments($entity) : [];
+      $entity_clusters[$entity->id()] = $entity instanceof PlanEntity ? $entity->getParentGoverningEntity() : NULL;
+      foreach ($entity_parents[$entity->id()] as $parent) {
+        $entity_clusters[$parent->id()] = $parent instanceof PlanEntity ? $parent->getParentGoverningEntity() : NULL;
+      }
+    }
+    if (empty(array_filter($entity_parents))) {
+      return NULL;
+    }
+
+    $logical_framework = [];
+    foreach ($entities as $entity) {
+      $parents = $entity_parents[$entity->id()];
+
+      if (empty($logical_framework['header'])) {
+        $header = [];
+        foreach ($parents as $parent) {
+          $parent_ref_code = $parent->ref_code;
+          if (array_key_exists($parent_ref_code, $header)) {
+            continue;
+          }
+          if (!empty($entity_clusters[$parent->id()])) {
+            $header[] = (string) $this->t('@cluster_label abbreviation', $cluster_args, $t_options);
+            $header[] = (string) $this->t('@cluster_label name', $cluster_args, $t_options);
+          }
+          $header[$parent_ref_code] = (string) $this->t('@ref_code code', [
+            '@ref_code' => $parent->ref_code,
+          ], $t_options);
+          $header[$parent_ref_code . '_description'] = (string) $this->t('@ref_code description', [
+            '@ref_code' => $parent->ref_code,
+          ], $t_options);
+        }
+
+        if (!empty($entity_clusters[$entity->id()])) {
+          $header[] = (string) $this->t('@cluster_label abbreviation', $cluster_args, $t_options);
+          $header[] = (string) $this->t('@cluster_label name', $cluster_args, $t_options);
+        }
+
+        $header[] = (string) $this->t('@ref_code code', [
+          '@ref_code' => $conf['entities']['entity_ref_code'],
+        ], $t_options);
+        $header[] = (string) $this->t('@ref_code description', [
+          '@ref_code' => $conf['entities']['entity_ref_code'],
+        ], $t_options);
+        $logical_framework['header'] = array_values($header);
+      }
+    }
+
+    // Build the content for the logframe sheet.
+    foreach ($entities as $entity) {
+      $parents = $entity_parents[$entity->id()];
+      $alignment_paths = $this->getEntityAlignmentsPaths($entity);
+      foreach ($alignment_paths as $parent_ids) {
+        $logical_framework_row = [];
+        foreach ($parent_ids as $parent_id) {
+          $parent = $parents[$parent_id];
+          if (!empty($entity_clusters[$parent->id()])) {
+            $governing_entity = $entity_clusters[$parent->id()];
+            $logical_framework_row[] = $governing_entity->getCustomName('custom_id');
+            $logical_framework_row[] = $governing_entity->getName();
+          }
+          $logical_framework_row[] = $this->getPlanEntityId($parent, $conf['entities']);
+          $logical_framework_row[] = $parent->getDescription();
+        }
+
+        if (!empty($entity_clusters[$entity->id()])) {
+          $governing_entity = $entity_clusters[$entity->id()];
+          $logical_framework_row[] = $governing_entity->getCustomName('custom_id');
+          $logical_framework_row[] = $governing_entity->getName();
+        }
+
+        $logical_framework_row[] = $this->getPlanEntityId($entity, $conf['entities']);
+        $logical_framework_row[] = $entity->getDescription();
+        $logical_framework['rows'][] = $logical_framework_row;
+      }
+
+    }
+    return $logical_framework;
   }
 
   /**
