@@ -2,6 +2,6 @@ services:
   geojson:
     class: Drupal\ghi_geojson\GeoJson
     arguments: ['@file_system']
-  geojson.directory_manager:
-    class: Drupal\ghi_geojson\GeoJsonDirectoryManager
+  geojson.directory_list:
+    class: Drupal\ghi_geojson\GeoJsonDirectoryList
     arguments: ['@geojson', '@file_system', '@file_url_generator']

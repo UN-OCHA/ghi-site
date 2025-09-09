@@ -31,11 +31,11 @@ class GeoJsonSourcesController extends ControllerBase {
   public $geojson;
 
   /**
-   * GeoJSON service.
+   * GeoJSON directory list service.
    *
-   * @var \Drupal\ghi_geojson\GeoJsonDirectoryManager
+   * @var \Drupal\ghi_geojson\GeoJsonDirectoryList
    */
-  public $geojsonDirectoryManager;
+  public $geojsonDirectoryList;
 
   /**
    * The layout builder modal config object.
@@ -52,7 +52,7 @@ class GeoJsonSourcesController extends ControllerBase {
     $instance = new static();
     $instance->fileSystem = $container->get('file_system');
     $instance->geojson = $container->get('geojson');
-    $instance->geojsonDirectoryManager = $container->get('geojson.directory_manager');
+    $instance->geojsonDirectoryList = $container->get('geojson.directory_list');
     $instance->modalConfig = $container->get('config.factory')->get('layout_builder_modal.settings');
     return $instance;
   }
@@ -109,7 +109,7 @@ class GeoJsonSourcesController extends ControllerBase {
    *   A render array with the page content.
    */
   public function directoryListing(string $iso3, string $version): array {
-    return $this->geojsonDirectoryManager->buildDirectoryListing(GeoJson::GEOJSON_SOURCE_DIR . '/' . $iso3 . '/' . $version);
+    return $this->geojsonDirectoryList->buildDirectoryListing(GeoJson::GEOJSON_SOURCE_DIR . '/' . $iso3 . '/' . $version);
   }
 
   /**
