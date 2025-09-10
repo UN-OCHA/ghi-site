@@ -71,6 +71,13 @@ map.gl.interactive_legend:
   dependencies:
     - core/jquery
 
+map.gl.throbber:
+  js:
+    js/map.gl/map.throbber.js: {}
+  dependencies:
+    - core/jquery
+    - ghi_blocks/throbber
+
 map.gl.control.admin_level:
   js:
     js/map.gl/controls/map.control.admin_level.js: {}
@@ -106,6 +113,7 @@ map.gl:
     - ghi_blocks/map.gl.state
     - ghi_blocks/map.gl.sidebar
     - ghi_blocks/map.gl.interactive_legend
+    - ghi_blocks/map.gl.throbber
     - ghi_blocks/map.gl.control.admin_level
     - ghi_blocks/map.gl.control.disclaimer
     - ghi_blocks/map.gl.control.search

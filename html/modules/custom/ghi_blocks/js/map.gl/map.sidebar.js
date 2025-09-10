@@ -7,7 +7,7 @@
   }
 
   /**
-   * Define the map state class.
+   * Define the map sidebar class.
    */
   window.ghi.sidebar = class {
 

@@ -132,4 +132,45 @@ class ArrayHelperTest extends UnitTestCase {
     $this->assertSame($expected, $array);
   }
 
+  /**
+   * Data provider for testDeduplicateStrings.
+   */
+  public function deduplicateStringsDataProvider() {
+    $cases = [
+      [
+        'input' => [],
+        'expected' => [],
+      ],
+      [
+        'input' => [
+          'One',
+          'One',
+          'Two',
+          'Two',
+          'Two',
+          'Three',
+        ],
+        'expected' => [
+          'One',
+          'One 2',
+          'Two',
+          'Two 2',
+          'Two 3',
+          'Three',
+        ],
+      ],
+    ];
+    return $cases;
+  }
+
+  /**
+   * Test deduplicateStrings function.
+   *
+   * @group ArrayHelper
+   * @dataProvider deduplicateStringsDataProvider
+   */
+  public function testDeduplicateStrings($input, $expected) {
+    $this->assertSame($expected, ArrayHelper::deduplicateStrings($input));
+  }
+
 }

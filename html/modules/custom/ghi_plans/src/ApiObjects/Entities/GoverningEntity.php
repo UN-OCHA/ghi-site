@@ -9,6 +9,8 @@ use Drupal\ghi_plans\Helpers\PlanEntityHelper;
  */
 class GoverningEntity extends EntityObjectBase {
 
+  const ENTITY_REF_CODE = 'CL';
+
   /**
    * {@inheritdoc}
    */

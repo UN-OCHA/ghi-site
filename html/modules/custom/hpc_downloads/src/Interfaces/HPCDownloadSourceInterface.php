@@ -32,6 +32,9 @@ interface HPCDownloadSourceInterface {
 
   /**
    * Get the download method to be used for a download source.
+   *
+   * @return string
+   *   The namespaced class name of the download method.
    */
   public function getDownloadMethod();
 

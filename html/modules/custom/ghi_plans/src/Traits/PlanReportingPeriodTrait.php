@@ -48,9 +48,9 @@ trait PlanReportingPeriodTrait {
     }
     $query->setPlaceholder('plan_id', $plan_id);
     $periods = $query->getReportingPeriods();
-    if ($limit_to_published && $last_published_period = self::getLatestPublishedReportingPeriod($plan_id)) {
-      $periods = array_filter($periods, function ($period) use ($last_published_period) {
-        return $period->id() <= $last_published_period;
+    if ($limit_to_published) {
+      $periods = array_filter($periods, function ($period) {
+        return $period->isPublished();
       });
     }
     return $periods;

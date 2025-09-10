@@ -5,6 +5,8 @@ namespace Drupal\ghi_plans\ApiObjects\Attachments;
 use Drupal\Component\Serialization\Yaml;
 use Drupal\Core\Cache\Cache;
 use Drupal\Core\Cache\CacheableMetadata;
+use Drupal\ghi_base_objects\Entity\BaseObjectChildInterface;
+use Drupal\ghi_base_objects\Entity\BaseObjectInterface;
 use Drupal\ghi_base_objects\Helpers\BaseObjectHelper;
 use Drupal\ghi_plans\ApiObjects\AttachmentPrototype\AttachmentPrototype;
 use Drupal\ghi_plans\ApiObjects\Measurements\Measurement;
@@ -150,6 +152,13 @@ class DataAttachment extends AttachmentBase implements DataAttachmentInterface {
   }
 
   /**
+   * {@inheritdoc}
+   */
+  public function getCustomIdWithRefCode() {
+    return $this->custom_id_prefixed_refcode;
+  }
+
+  /**
    * Get the type of attachment.
    *
    * @return string
@@ -174,6 +183,28 @@ class DataAttachment extends AttachmentBase implements DataAttachmentInterface {
       $this->sourceEntity = $entityQuery->getEntity($this->source->entity_type, $this->source->entity_id);
     }
     return $this->sourceEntity;
+  }
+
+  /**
+   * See if the attachment belongs to the given base object.
+   *
+   * @param \Drupal\ghi_base_objects\Entity\BaseObjectInterface $base_object
+   *   The base object to check.
+   *
+   * @return bool
+   *   TRUE if the attachment belongs to the base object, FALSE otherwise.
+   */
+  public function belongsToBaseObject(BaseObjectInterface $base_object) {
+    /** @var \Drupal\ghi_plans\ApiObjects\PlanEntityInterface $source_entity */
+    $source_entity = $this->getSourceEntity();
+    if ($source_entity && $source_entity->id() == $base_object->getSourceId()) {
+      return TRUE;
+    }
+    $parent_base_object = $base_object instanceof BaseObjectChildInterface ? $base_object->getParentBaseObject() : NULL;
+    if ($source_entity && $parent_base_object && $source_entity->id() == $parent_base_object->getSourceId()) {
+      return TRUE;
+    }
+    return FALSE;
   }
 
   /**
@@ -1520,7 +1551,7 @@ class DataAttachment extends AttachmentBase implements DataAttachmentInterface {
    * @return array|null
    *   Either a build array for the tooltip, or NULL.
    */
-  protected function getTooltip($conf) {
+  public function getTooltip($conf) {
     $index = $conf['data_points'][0]['index'];
     $value = $this->getSingleValue($index, NULL, $conf['data_points'][0]);
     if ($this->isNullValue($value)) {
@@ -1624,8 +1655,9 @@ class DataAttachment extends AttachmentBase implements DataAttachmentInterface {
     // percentage displays.
     if ($this->isNullValue($value) && $conf['formatting'] != 'percent') {
       $t_options = ['langcode' => $this->getPlanLanguage()];
+      $value = $this->isPendingDataEntry() ? $this->t('Pending', [], $t_options) : $this->t('No data', [], $t_options);
       return [
-        '#markup' => $this->isPendingDataEntry() ? $this->t('Pending', [], $t_options) : $this->t('No data', [], $t_options),
+        '#markup' => (string) $value,
       ];
     }
 

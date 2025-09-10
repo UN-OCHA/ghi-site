@@ -6,7 +6,6 @@
  */
 
 use Drupal\Component\Serialization\Json;
-use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\Markup;
@@ -16,7 +15,6 @@ use Drupal\ghi_blocks\Controller\LayoutBuilderBlockController;
 use Drupal\ghi_blocks\Helpers\GlobalSettingsHelper;
 use Drupal\ghi_blocks\Interfaces\DeprecatedBlockInterface;
 use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
-use Drupal\hpc_common\Helpers\UserHelper;
 use Drupal\layout_builder\OverridesSectionStorageInterface;
 use Drupal\layout_builder\Plugin\Block\InlineBlock;
 use Drupal\layout_builder\Plugin\SectionStorage\OverridesSectionStorage;
@@ -306,42 +304,14 @@ function ghi_blocks_gin_lb_add_suggestions_alter(&$add_suggestions, $variables, 
  * Implements hook_preprocess_block().
  */
 function ghi_blocks_preprocess_block(&$variables) {
-  $block_manager = \Drupal::service('plugin.manager.block');
-  /** @var \Drupal\ghi_blocks\Plugin\Block\GHIBlockBase $block */
-  $block = $block_manager->createInstance($variables['plugin_id'], $variables['configuration']);
+  $block = $variables['elements']['content']['#block_instance'] ?? NULL;
   if (!$block instanceof GHIBlockBase) {
+    // This would have been set in GHIBlockBase::build(). If it's not set, then
+    // this is not a block we want to process.
     return;
   }
 
-  if ($variables['label'] == '<none>') {
-    $variables['label'] = $block->label();
-  }
-
-  // Provide a support for block download links.
-  if (!empty($variables['content']['#download_links'])) {
-    $variables['download_links'] = $variables['content']['#download_links'];
-    unset($variables['content']['#download_links']);
-  }
-
-  if (UserHelper::isAdministrator() && array_key_exists('#block_instance', $variables['elements']['content'])) {
-    $icons = $block->getAdminIcons();
-    $variables['icons'] = array_values($icons);
-    if (array_key_exists('api_url', $icons)) {
-      $variables['attributes']['class'][] = 'has-api-url-tooltip';
-    }
-  }
-
-  // Add the block settings library, so that block actions get stored in the
-  // URL and can be reset when deep linking or reloading.
-  $variables['#attached']['library'][] = 'ghi_blocks/block.settings';
-
-  // This is necessary to make sure that cache metadata from the block
-  // correctly bubbles up the chain.
-  // @see https://drupal.stackexchange.com/a/225569/8881
-  $content = $variables['content'];
-  CacheableMetadata::createFromRenderArray($variables)
-    ->merge(CacheableMetadata::createFromRenderArray($content))
-    ->applyTo($variables);
+  $block->preprocess($variables);
 }
 
 /**
