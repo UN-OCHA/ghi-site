@@ -72,7 +72,7 @@ class DownloadReportController extends ControllerBase {
     if (!empty($import_files)) {
       // Order by descending creation time.
       usort($import_files, function ($a, $b) {
-        return filectime($this->getRealPath($a->uri)) < filectime($this->getRealPath($b->uri));
+        return filectime($this->getRealPath($b->uri)) - filectime($this->getRealPath($a->uri));
       });
       foreach ($import_files as $file) {
         $filepath = $this->getRealPath($file->uri);
@@ -80,7 +80,7 @@ class DownloadReportController extends ControllerBase {
         $download_record = DownloadRecord::loadRecord(['file_path' => $file->uri]);
 
         $row = [];
-        $row[] = Link::fromTextAndUrl($filename, Url::fromUri($this->fileUrlGenerator->generate($file->uri)));
+        $row[] = Link::fromTextAndUrl($filename, $this->fileUrlGenerator->generate($file->uri));
         $row[] = date('d.m.Y H:i:s', filectime($filepath));
         $row[] = ByteSizeMarkup::create(filesize($filepath));
         $row[] = $download_record ? $this->t('Yes') : $this->t('No');

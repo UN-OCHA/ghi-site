@@ -34,6 +34,7 @@
       this.animationDuration = 500;
       this.legend = null;
       this.sidebar = null;
+      this.throbber = null,
       this.options = options;
       this.disabled = false;
       this.variantId = null;
@@ -53,6 +54,9 @@
     setup = function (options) {
       // Init the legend.
       this.setLegend(new ghi.interactiveLegend(this));
+
+      // Init the legend.
+      this.setThrobber(new ghi.throbber(this));
 
       // Render what we have.
       this.updateMap();
@@ -163,6 +167,16 @@
      */
     setSidebar = function (sidebar) {
       this.sidebar = sidebar;
+    }
+
+    /**
+     * Set the legend handler.
+     *
+     * @param {Object} legend
+     *   The legend handler.
+     */
+    setThrobber = function (throbber) {
+      this.throbber = throbber;
     }
 
     /**

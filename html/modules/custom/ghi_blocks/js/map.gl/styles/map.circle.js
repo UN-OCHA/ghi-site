@@ -117,6 +117,9 @@
           self.renderLocations();
           this.updateActiveFeatures();
         });
+
+        // Preload all geojson files asynchronously.
+        state.getMapController().loadFeaturesAsync(state.getLocations(false, false), () => {}, state);
       });
     }
 
@@ -423,7 +426,7 @@
       let locations = Object.values(state.getData().geojson ?? {});
       state.getMapController().loadFeaturesAsync(locations, (features) => {
         self.updateMapData(geojson_source_id, features);
-      });
+      }, state);
     }
 
     /**
@@ -484,7 +487,7 @@
       // non-blocking.
       state.getMapController().loadFeaturesAsync(state.getLocations(true, false), (features) => {
         self.updateMapData(geojson_source_id, features);
-      });
+      }, state);
     }
 
     /**

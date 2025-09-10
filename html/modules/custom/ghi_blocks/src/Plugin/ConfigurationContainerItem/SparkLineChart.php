@@ -288,6 +288,7 @@ class SparkLineChart extends ConfigurationContainerItemPluginBase {
     return [
       '#theme' => 'hpc_sparkline',
       '#data' => $data,
+      '#reporting_period_ids' => array_keys($data),
       '#baseline_value' => $show_baseline ? $baseline_value : NULL,
       '#tooltips' => $tooltips,
     ];

@@ -104,15 +104,21 @@
         return;
       }
 
-      // Update the data.
-      let features = this.buildFeatures();
-      let data = this.state.buildFeatureCollection(features);
-      this.state.getMap().getSource(this.sourceId).setData(data);
+      this.state.throbber?.show();
 
-      // Also update the data for the point features used for the labels.
-      let label_features = this.buildLabelFeatures();
-      let label_data = this.state.buildFeatureCollection(label_features);
-      this.state.getMap().getSource(this.areaLabelSourceId).setData(label_data);
+      setTimeout(() => {
+        // Update the data.
+        let features = this.buildFeatures();
+        let data = this.state.buildFeatureCollection(features);
+        this.state.getMap().getSource(this.sourceId).setData(data);
+
+        // Also update the data for the point features used for the labels.
+        let label_features = this.buildLabelFeatures();
+        let label_data = this.state.buildFeatureCollection(label_features);
+        this.state.getMap().getSource(this.areaLabelSourceId).setData(label_data);
+
+        this.state.throbber?.hide();
+      });
     }
 
     /**

@@ -7,6 +7,7 @@ use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Plugin\Context\Context;
 use Drupal\Core\Plugin\Context\ContextDefinition;
+use Drupal\ghi_subpages\Entity\SubpageNodeInterface;
 use Drupal\hpc_api\Query\EndpointQueryPluginInterface;
 use Drupal\hpc_common\Helpers\ContextHelper;
 use Drupal\hpc_common\Helpers\RequestHelper;
@@ -470,8 +471,15 @@ abstract class HPCBlockBase extends BlockBase implements HPCPluginInterface, Con
   public function setPageTitle($page_parameters = NULL) {
     $page_parameters = $this->getAllAvailablePageParameters($page_parameters);
 
-    if (!empty($page_parameters['node'])) {
-      $this->pageTitle = $page_parameters['node']->getTitle();
+    if (!empty($page_parameters['node']) && $node = $page_parameters['node']) {
+      $this->pageTitle = $node->getTitle();
+      if ($node instanceof SubpageNodeInterface) {
+        $parent = $node->getParentBaseNode();
+        $this->pageTitle = implode(' | ', [
+          $node->getTitle(),
+          $parent->getTitle(),
+        ]);
+      }
     }
     elseif (!empty($page_parameters['_page_manager_page_variant'])) {
       $variant_plugin = $page_parameters['_page_manager_page_variant']->getVariantPlugin();
@@ -737,7 +745,11 @@ abstract class HPCBlockBase extends BlockBase implements HPCPluginInterface, Con
         if (method_exists($this, 'alterEndpointQuery')) {
           $this->alterEndpointQuery($source_key, $query_handler);
         }
-        $endpoints[] = $query_handler->getFullEndpointUrl();
+        $endpoint_url = $query_handler->getFullEndpointUrl();
+        if (str_contains($endpoint_url, '{') || str_contains($endpoint_url, '}')) {
+          continue;
+        }
+        $endpoints[] = $endpoint_url;
       }
     }
     return $endpoints;

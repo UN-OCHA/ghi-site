@@ -28,8 +28,10 @@ class DownloadDialogPlugin {
    * @param string $title
    *   An optional title string with the title of the download dialog modal.
    *   If no title is given, a default one will be used.
+   * @param string $langcode
+   *   The language to use for translations.
    */
-  public function buildDialogLink(HPCDownloadPluginInterface $plugin, $text = NULL, $title = NULL) {
+  public function buildDialogLink(HPCDownloadPluginInterface $plugin, $text = NULL, $title = NULL, $langcode = 'en') {
 
     $download_source = $plugin->getDownloadSource();
     if (!$download_source) {
@@ -46,7 +48,7 @@ class DownloadDialogPlugin {
     $classes[] = 'link--download-dialog';
 
     $link_options = $download_source->getDialogOptions();
-    $dialog_title = !empty($title) ? $title : $this->t('Downloads');
+    $dialog_title = !empty($title) ? $title : $this->t('Downloads', [], ['langcode' => $langcode]);
 
     $link_url = Url::fromRoute('hpc_downloads.download_dialog', ['download_source_type' => $download_source->getType()]);
     $link_url->setOptions([

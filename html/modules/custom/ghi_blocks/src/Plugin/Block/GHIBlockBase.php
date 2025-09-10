@@ -11,6 +11,7 @@ use Drupal\Component\Utility\NestedArray;
 use Drupal\Core\Ajax\AjaxResponse;
 use Drupal\Core\Ajax\ReplaceCommand;
 use Drupal\Core\Cache\Cache;
+use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Form\FormStateInterface;
@@ -29,6 +30,7 @@ use Drupal\ghi_blocks\Interfaces\MultiStepFormBlockInterface;
 use Drupal\ghi_blocks\Interfaces\OptionalTitleBlockInterface;
 use Drupal\ghi_blocks\Interfaces\OverrideDefaultTitleBlockInterface;
 use Drupal\ghi_blocks\Traits\VerticalTabsTrait;
+use Drupal\ghi_homepage\Entity\Homepage;
 use Drupal\ghi_plan_clusters\Entity\PlanCluster;
 use Drupal\ghi_plans\Entity\Plan;
 use Drupal\ghi_sections\Entity\SectionNodeInterface;
@@ -36,6 +38,7 @@ use Drupal\ghi_subpages\Entity\SubpageNodeInterface;
 use Drupal\hpc_api\Helpers\ProfileHelper;
 use Drupal\hpc_common\Helpers\ArrayHelper;
 use Drupal\hpc_common\Helpers\BlockHelper;
+use Drupal\hpc_common\Helpers\UserHelper;
 use Drupal\hpc_common\Plugin\HPCBlockBase;
 use Drupal\hpc_downloads\DownloadSource\BlockSource;
 use Drupal\hpc_downloads\Interfaces\HPCDownloadExcelInterface;
@@ -448,10 +451,12 @@ abstract class GHIBlockBase extends HPCBlockBase {
     $download_links = !empty($build['#download_links']) ? $build['#download_links'] : [];
     if ($this instanceof HPCDownloadPluginInterface && !empty($plugin_configuration['uuid'])) {
       $download_types = $this->getAvailableDownloadTypes();
+      $langcode = $this->getCurrentPlanObject()?->getPlanLanguage() ?? 'en';
+      $t_args = ['langcode' => $langcode];
       if (!empty($download_types) && $this->getDownloadSource()) {
         /** @var \Drupal\hpc_downloads\DownloadDialog\DownloadDialogPlugin $download_dialog */
         $download_dialog = \Drupal::service('hpc_downloads.download_dialog_plugin');
-        $download_links[] = $download_dialog->buildDialogLink($this, $this->t('Downloads'));
+        $download_links[] = $download_dialog->buildDialogLink($this, $this->t('Downloads', [], $t_args), NULL, $langcode);
       }
     }
 
@@ -470,6 +475,46 @@ abstract class GHIBlockBase extends HPCBlockBase {
       'tags' => Cache::mergeTags($this->getCacheTags(), $build_content['#cache']['tags'] ?? []),
     ];
     return $build;
+  }
+
+  /**
+   * Preprocess the variables for the block template.
+   *
+   * @param array $variables
+   *   An array of variables for the block template.
+   *
+   * @see hook_preprocess_block
+   */
+  public function preprocess(&$variables) {
+    if ($variables['label'] == '<none>') {
+      $variables['label'] = $this->label();
+    }
+
+    // Provide a support for block download links.
+    if (!empty($variables['content']['#download_links'])) {
+      $variables['download_links'] = $variables['content']['#download_links'];
+      unset($variables['content']['#download_links']);
+    }
+
+    if (UserHelper::isAdministrator()) {
+      $icons = $this->getAdminIcons();
+      $variables['icons'] = array_values($icons);
+      if (array_key_exists('api_url', $icons)) {
+        $variables['attributes']['class'][] = 'has-api-url-tooltip';
+      }
+    }
+
+    // Add the block settings library, so that block actions get stored in the
+    // URL and can be reset when deep linking or reloading.
+    $variables['#attached']['library'][] = 'ghi_blocks/block.settings';
+
+    // This is necessary to make sure that cache metadata from the block
+    // correctly bubbles up the chain.
+    // @see https://drupal.stackexchange.com/a/225569/8881
+    $content = $variables['content'];
+    CacheableMetadata::createFromRenderArray($variables)
+      ->merge(CacheableMetadata::createFromRenderArray($content))
+      ->applyTo($variables);
   }
 
   /**
@@ -2079,7 +2124,6 @@ abstract class GHIBlockBase extends HPCBlockBase {
       $this->t('Source'),
       Url::fromUserInput($this->getCurrentUri(), [
         'absolute' => TRUE,
-        'query' => !empty($options['query']) ? $options['query'] : [],
       ]),
     ];
     return $meta_data;
@@ -2093,6 +2137,13 @@ abstract class GHIBlockBase extends HPCBlockBase {
    */
   public function getAdminIcons() {
     $icons = [];
+    if ($this->isPreview()) {
+      return $icons;
+    }
+    if (!$this->getPageNode() || $this->getPageNode() instanceof Homepage) {
+      // Don't show the icons on the homepage.
+      return $icons;
+    }
     $endpoint_urls = $this->getFullEndpointUrls();
     if (!empty($endpoint_urls)) {
       $icons['api_url'] = [
