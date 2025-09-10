@@ -121,4 +121,25 @@ class ArrayHelper extends ApiArrayHelper {
     $array = array_filter($array);
   }
 
+  /**
+   * Deduplicate an array of strings by appending number suffixes.
+   *
+   * @param array $array
+   *   The input array.
+   *
+   * @return array
+   *   The deduplicated array.
+   */
+  public static function deduplicateStrings(array $array) {
+    $names_used = [];
+    foreach ($array as &$name) {
+      $names_used[$name] = $names_used[$name] ?? 0;
+      $names_used[$name]++;
+      if ($names_used[$name] > 1) {
+        $name .= ' ' . $names_used[$name];
+      }
+    }
+    return $array;
+  }
+
 }

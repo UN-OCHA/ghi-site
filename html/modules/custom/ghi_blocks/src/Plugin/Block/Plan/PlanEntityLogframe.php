@@ -13,6 +13,7 @@ use Drupal\ghi_blocks\Interfaces\CustomLinkBlockInterface;
 use Drupal\ghi_blocks\Interfaces\MultiStepFormBlockInterface;
 use Drupal\ghi_blocks\Interfaces\OverrideDefaultTitleBlockInterface;
 use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
+use Drupal\ghi_blocks\Plugin\ConfigurationContainerItem\AttachmentTable;
 use Drupal\ghi_blocks\Traits\AttachmentTableTrait;
 use Drupal\ghi_blocks\Traits\ConfigValidationTrait;
 use Drupal\ghi_form_elements\Helpers\FormElementHelper;
@@ -29,7 +30,9 @@ use Drupal\ghi_sections\Entity\SectionNodeInterface;
 use Drupal\ghi_subpages\Entity\LogframeSubpage;
 use Drupal\ghi_subpages\Entity\SubpageNodeInterface;
 use Drupal\hpc_api\Query\EndpointQuery;
+use Drupal\hpc_common\Helpers\ArrayHelper;
 use Drupal\hpc_common\Helpers\BlockHelper;
+use Drupal\hpc_downloads\Interfaces\HPCDownloadExcelMultipleInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -68,7 +71,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  *  }
  * )
  */
-class PlanEntityLogframe extends GHIBlockBase implements MultiStepFormBlockInterface, ConfigurableTableBlockInterface, OverrideDefaultTitleBlockInterface, CustomLinkBlockInterface, TrustedCallbackInterface, ConfigValidationInterface, ConfigurationUpdateInterface {
+class PlanEntityLogframe extends GHIBlockBase implements MultiStepFormBlockInterface, ConfigurableTableBlockInterface, OverrideDefaultTitleBlockInterface, CustomLinkBlockInterface, TrustedCallbackInterface, ConfigValidationInterface, ConfigurationUpdateInterface, HPCDownloadExcelMultipleInterface {
 
   use ConfigurationContainerTrait;
   use AttachmentTableTrait;
@@ -177,7 +180,7 @@ class PlanEntityLogframe extends GHIBlockBase implements MultiStepFormBlockInter
     $rendered_items = [];
     foreach ($entities as $entity) {
       if ($this->isConfigurationPreview() || !$lazy_load) {
-        $tables = $this->buildTables($entity, $conf['tables']);
+        $tables = $this->buildTablesContainer($entity, $conf['tables']);
       }
       else {
         $tables = [
@@ -245,6 +248,312 @@ class PlanEntityLogframe extends GHIBlockBase implements MultiStepFormBlockInter
   }
 
   /**
+   * {@inheritdoc}
+   */
+  public function buildDownloadData() {
+    $data = [];
+
+    // Get the entities to render.
+    $entities = $this->getRenderableEntities();
+    if (empty($entities)) {
+      return;
+    }
+
+    // Get the config.
+    $conf = $this->getBlockConfig();
+
+    // Sort the entities.
+    $this->sortPlanEntities($entities, $conf['entities']);
+
+    // Prepare the sheet for the logical framework.
+    $logframe_sheet_label = (string) $this->t('Logical framework');
+    $data[$logframe_sheet_label] = [];
+    $logical_framework = [
+      'header' => [],
+      'rows' => [],
+    ];
+
+    $plan = $this->getCurrentPlanObject();
+    $t_options = ['langcode' => $plan->getPlanLanguage()];
+    $cluster_label_map = [
+      Plan::CLUSTER_TYPE_CLUSTER => $this->t('Cluster', [], $t_options),
+      Plan::CLUSTER_TYPE_SECTOR => $this->t('Sector', [], $t_options),
+    ];
+    $cluster_args = [
+      '@cluster_label' => $cluster_label_map[$plan->getPlanClusterType()],
+    ];
+
+    // Collect the entity parents once, the cluster associations, both for the
+    // alignments in general and also on an per-entity/per-parent basis.
+    $entity_cluster_alignments = [];
+    foreach ($entities as $entity) {
+      $entity_cluster_alignments[$entity->id()] = $entity instanceof PlanEntity ? $entity->getParentGoverningEntity(TRUE) : NULL;
+    }
+
+    // Build the header for the logframe sheet.
+    if ($logical_framework = $this->buildLogicalFrameworkExcelsheet($entities, $cluster_args, $t_options)) {
+      $data[$logframe_sheet_label] = $logical_framework;
+    }
+    else {
+      unset($data[$logframe_sheet_label]);
+    }
+
+    // Collect the table names for deduplication.
+    $table_names = [];
+
+    // Build the actual data tables if applicable, one for each configured
+    // table.
+    foreach ($entities as $entity) {
+      $tables = $this->buildTables($entity, $conf['tables']);
+      foreach ($tables as $key => $table) {
+        /** @var \Drupal\ghi_plans\ApiObjects\AttachmentPrototype\AttachmentPrototype $prototype */
+        $prototype = $table['#prototype'];
+        $table_names[$prototype->id()] = $table['#download_label'];
+
+        if (!array_key_exists($key, $data)) {
+          // Add additional table columns at the beginning of each table.
+          $additional_header = [
+            (string) $this->t('@ref_code description', [
+              '@ref_code' => $conf['entities']['entity_ref_code'],
+            ], $t_options),
+          ];
+          if (!empty($entity_cluster_alignments[$entity->id()])) {
+            $additional_header[] = (string) $this->t('@cluster_label name', $cluster_args, $t_options);
+          }
+          // Get the type name either from the prototype or from the first data
+          // column of type "name".
+          $name_columns = array_filter($table['#header'], function ($cell) {
+            return $cell['data-column-type'] == 'name';
+          });
+          $entity_type_name = $name_columns[0]['data'] ?? $prototype->getName();
+          $additional_header[] = trim((string) $this->t('@entity_type_name customRef', [
+            '@entity_type_name' => $entity_type_name,
+          ], $t_options));
+
+          $data[$key] = [
+            'header' => array_merge($additional_header, $table['#header']),
+            'rows' => [],
+          ];
+        }
+        $entity_rows = array_map(function ($row) use ($entity, $entity_cluster_alignments) {
+          $additional_columns = [
+            $entity->getDescription(),
+          ];
+          if (!empty($entity_cluster_alignments[$entity->id()])) {
+            $additional_columns[] = $entity_cluster_alignments[$entity->id()]->getEntityName();
+          }
+
+          $additional_columns[] = $row['data-attachment-custom-id'];
+          $row['data'] = array_merge($additional_columns, $row['data'] ?? $row);
+
+          return $row;
+        }, $table['#rows']);
+        $data[$key]['rows'] = array_merge($data[$key]['rows'], $entity_rows);
+
+        if ($prototype?->isIndicator()) {
+          // Indicators should include a column with the calculation method.
+          $this->addCalculationMethodColumnToExcelData($data[$key], $t_options);
+        }
+      }
+    }
+
+    // Deduplicate the table names just in case.
+    $table_names = ArrayHelper::deduplicateStrings($table_names);
+    // And replace the data keys.
+    foreach ($table_names as $prototype_id => $table_name) {
+      $data[$table_name] = $data[$prototype_id];
+      unset($data[$prototype_id]);
+    }
+
+    foreach (array_keys($data) as $key) {
+      if (in_array($key, [$logframe_sheet_label])) {
+        continue;
+      }
+      $this->processSparklineChartInExcelData($data[$key], $t_options);
+    }
+    return $data;
+  }
+
+  /**
+   * Check if there is download data for this element.
+   *
+   * @return bool
+   *   TRUE if there is something to download, FALSE otherwise.
+   */
+  private function hasDownloadData(): bool {
+    $conf = $this->getBlockConfig();
+    if (empty($conf['entities']['entity_ref_code'])) {
+      return FALSE;
+    }
+
+    $entities = $this->getRenderableEntities();
+    if (empty($entities)) {
+      return FALSE;
+    }
+
+    if ($this->buildLogicalFrameworkExcelsheet($entities)) {
+      return TRUE;
+    }
+
+    foreach ($entities as $entity) {
+      $tables = $this->buildTables($entity, $conf['tables']);
+      foreach ($tables as $table) {
+        if (!empty($table['#rows'])) {
+          return TRUE;
+        }
+      }
+    }
+    return FALSE;
+  }
+
+  /**
+   * Add a calculation method column to the excel data.
+   *
+   * @param array $data
+   *   The table data array with the keys 'header' and 'rows'.
+   * @param array $t_options
+   *   An array of options for the translation service.
+   */
+  private function addCalculationMethodColumnToExcelData(&$data, $t_options) {
+    $header = &$data['header'];
+    $rows = &$data['rows'];
+
+    // Find the position of the unit column if it's present.
+    $unit_columns = array_filter($header, function ($cell) {
+      return is_array($cell) && $cell['data-column-type'] == 'unit';
+    });
+    $unit_column_pos = array_keys($unit_columns)[0] ?? NULL;
+    if ($unit_column_pos === NULL) {
+      return;
+    }
+
+    // Add the column to the header after the unit column if not done yet.
+    $column_label = (string) $this->t('Calculation method', [], $t_options);
+    if (!in_array($column_label, $header) && $unit_column_pos !== NULL) {
+      $header = ArrayHelper::insertItem($header, $unit_column_pos + 1, $column_label);
+    }
+    // Add the value for the new column to each row.
+    foreach ($rows as &$row) {
+      if (count($header) == count($row['data'])) {
+        continue;
+      }
+      $row['data'] = ArrayHelper::insertItem($row['data'], $unit_column_pos + 1, $row['data-attachment-calculation-method']);
+    }
+  }
+
+  /**
+   * Process columns of type sparkline chart in the excel data.
+   *
+   * We want to turn the single-column representation of a spark line chart
+   * into a set of monitoring period columns.
+   *
+   * @param array $data
+   *   The table data array with the keys 'header' and 'rows'.
+   * @param array $t_options
+   *   An array of options for the translation service.
+   */
+  private function processSparklineChartInExcelData(&$data, $t_options) {
+    $header = &$data['header'];
+    $rows = &$data['rows'];
+
+    // Find the position of the chart columns if present.
+    $chart_columns = array_filter($header, function ($cell) {
+      return is_array($cell) && $cell['data-column-type'] == 'chart';
+    });
+    $col_offset = 0;
+
+    // For each chart, adjust the headers and rows.
+    foreach (array_keys($chart_columns) as $chart_column_pos) {
+      $original_col_index = $col_offset + $chart_column_pos;
+
+      // Load a single attachment, just so we can use it to format the
+      // monitoring periods.
+      $attachment_id = $rows[0]['data-attachment-id'];
+      /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\AttachmentQuery $query */
+      $query = $this->getQueryHandler('attachment');
+      $attachment = $query->getAttachment($attachment_id);
+      if (!$attachment instanceof DataAttachment) {
+        continue;
+      }
+
+      // Get all reporting period ids from all rows. We might have to handle
+      // the case that not all chart data points have values for all the
+      // monitoring periods.
+      $reporting_period_ids = [];
+      foreach ($rows as $row) {
+        $reporting_period_ids = array_unique(array_merge($reporting_period_ids, $row['data'][$chart_column_pos]['data']['#reporting_period_ids'] ?? []));
+      }
+      $original_label = $header[$original_col_index]['data'];
+
+      // Iterate over all unique monitoring periods.
+      foreach ($reporting_period_ids as $reporting_period_id) {
+        // Get the original label of the chart column.
+        $column_label = $attachment->formatMonitoringPeriod('text', $reporting_period_id, $original_label . ': @date_range');
+        // Add a new column for the current monitoring period.
+        if (!in_array($column_label, $header)) {
+          $header = ArrayHelper::insertItem($header, $col_offset + $chart_column_pos + 1, $column_label);
+        }
+        // Iterate over all rows to add a column for the current monitoring
+        // period.
+        foreach ($rows as &$row) {
+          if (count($header) == count($row['data'])) {
+            continue;
+          }
+          $reporting_period_value = $row['data'][$original_col_index]['data']['#data'][$reporting_period_id] ?? NULL;
+          $col_value = [
+            'data-value' => $reporting_period_value,
+            'data-raw-value' => $reporting_period_value,
+            'data-sort-type' => 'numeric',
+            'data-column-type' => 'amount',
+            'data-content' => $column_label,
+          ];
+          $row['data'] = ArrayHelper::insertItem($row['data'], $col_offset + $chart_column_pos + 1, $col_value);
+        }
+        $col_offset++;
+      }
+
+      // Remove the column holding the original single-column value, as we
+      // don't need that anymore.
+      unset($header[$original_col_index]);
+      $header = array_values($header);
+      foreach ($rows as &$row) {
+        unset($row['data'][$original_col_index]);
+        $row['data'] = array_values($row['data']);
+      }
+    }
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function preprocess(&$variables) {
+    parent::preprocess($variables);
+    if (empty($variables['download_links'])) {
+      return;
+    }
+    $t_args = [
+      'langcode' => $this->getCurrentPlanObject()->getPlanLanguage() ?? 'en',
+    ];
+
+    if ($this->hasDownloadData()) {
+      // Move the download link into a different position.
+      $variables['content']['links'] = $variables['content']['links'] ?? [];
+      $download_links = array_map(function ($link) use ($t_args) {
+        /** @var \Drupal\Core\Url $url */
+        $url = $link['#link']['#url'];
+        $attributes = $url->getOption('attributes');
+        $attributes['class'][] = 'cd-button';
+        $url->setOption('attributes', $attributes);
+        $link['#link']['#title'] = $this->t('Download', [], $t_args);
+        return $link['#link'];
+      }, $variables['download_links']);
+      $variables['content']['links'] = array_merge($download_links, $variables['content']['links']);
+    }
+
+    unset($variables['download_links']);
+  }
+
+  /**
    * Get the formatted plan entity id according to the configuration.
    *
    * @param \Drupal\ghi_plans\ApiObjects\PlanEntityInterface $entity
@@ -279,6 +588,106 @@ class PlanEntityLogframe extends GHIBlockBase implements MultiStepFormBlockInter
   }
 
   /**
+   * Build the worksheet data for the logical framework.
+   *
+   * @param array $entities
+   *   The entities to include.
+   * @param array $cluster_args
+   *   An optional array of arguments for translated strings.
+   * @param array $t_options
+   *   An optional array of options for translated strings.
+   *
+   * @return array|null
+   *   Either NULL, if no logframe can be build, or an array to be used for
+   *   Excel exports.
+   */
+  private function buildLogicalFrameworkExcelsheet(array $entities, ?array $cluster_args = [], ?array $t_options = []): ?array {
+    $conf = $this->getBlockConfig();
+
+    $entity_parents = [];
+    $entity_clusters = [];
+    foreach ($entities as $entity) {
+      $entity_parents[$entity->id()] = $entity instanceof PlanEntity ? $this->getEntityAlignments($entity) : [];
+      $entity_clusters[$entity->id()] = $entity instanceof PlanEntity ? $entity->getParentGoverningEntity() : NULL;
+      foreach ($entity_parents[$entity->id()] as $parent) {
+        $entity_clusters[$parent->id()] = $parent instanceof PlanEntity ? $parent->getParentGoverningEntity() : NULL;
+      }
+    }
+    if (empty(array_filter($entity_parents))) {
+      return NULL;
+    }
+
+    $logical_framework = [];
+    foreach ($entities as $entity) {
+      $parents = $entity_parents[$entity->id()];
+
+      if (empty($logical_framework['header'])) {
+        $header = [];
+        foreach ($parents as $parent) {
+          $parent_ref_code = $parent->ref_code;
+          if (array_key_exists($parent_ref_code, $header)) {
+            continue;
+          }
+          if (!empty($entity_clusters[$parent->id()])) {
+            $header[] = (string) $this->t('@cluster_label abbreviation', $cluster_args, $t_options);
+            $header[] = (string) $this->t('@cluster_label name', $cluster_args, $t_options);
+          }
+          $header[$parent_ref_code] = (string) $this->t('@ref_code code', [
+            '@ref_code' => $parent->ref_code,
+          ], $t_options);
+          $header[$parent_ref_code . '_description'] = (string) $this->t('@ref_code description', [
+            '@ref_code' => $parent->ref_code,
+          ], $t_options);
+        }
+
+        if (!empty($entity_clusters[$entity->id()])) {
+          $header[] = (string) $this->t('@cluster_label abbreviation', $cluster_args, $t_options);
+          $header[] = (string) $this->t('@cluster_label name', $cluster_args, $t_options);
+        }
+
+        $header[] = (string) $this->t('@ref_code code', [
+          '@ref_code' => $conf['entities']['entity_ref_code'],
+        ], $t_options);
+        $header[] = (string) $this->t('@ref_code description', [
+          '@ref_code' => $conf['entities']['entity_ref_code'],
+        ], $t_options);
+        $logical_framework['header'] = array_values($header);
+      }
+    }
+
+    // Build the content for the logframe sheet.
+    foreach ($entities as $entity) {
+      $parents = $entity_parents[$entity->id()];
+      $alignment_paths = $this->getEntityAlignmentsPaths($entity);
+      foreach ($alignment_paths as $parent_ids) {
+        $logical_framework_row = [];
+        foreach ($parent_ids as $parent_id) {
+          $parent = $parents[$parent_id];
+          if (!empty($entity_clusters[$parent->id()])) {
+            $governing_entity = $entity_clusters[$parent->id()];
+            $logical_framework_row[] = $governing_entity->getCustomName('custom_id');
+            $logical_framework_row[] = $governing_entity->getName();
+          }
+          $logical_framework_row[] = $this->getPlanEntityId($parent, $conf['entities']);
+          $logical_framework_row[] = $parent->getDescription();
+        }
+
+        if (!empty($entity_clusters[$entity->id()])) {
+          $governing_entity = $entity_clusters[$entity->id()];
+          $logical_framework_row[] = $governing_entity->getCustomName('custom_id');
+          $logical_framework_row[] = $governing_entity->getName();
+        }
+
+        $logical_framework_row[] = $this->getPlanEntityId($entity, $conf['entities']);
+        $logical_framework_row[] = $entity->getDescription();
+        $logical_framework['rows'][] = $logical_framework_row;
+      }
+
+    }
+    return $logical_framework;
+  }
+
+  /**
    * Get the entity attachment tables according to the configuration.
    *
    * @param \Drupal\ghi_plans\ApiObjects\PlanEntityInterface $entity
@@ -302,9 +711,12 @@ class PlanEntityLogframe extends GHIBlockBase implements MultiStepFormBlockInter
     $context['attachments'] = $attachments;
     $context['plan_entity'] = $entity;
 
-    foreach ($conf['attachment_tables'] as $table) {
+    foreach ($conf['attachment_tables'] as $table_configuration) {
       /** @var \Drupal\ghi_form_elements\ConfigurationContainerItemPluginInterface $item_type */
-      $item_type = $this->getItemTypePluginForColumn($table, $context);
+      $item_type = $this->getItemTypePluginForColumn($table_configuration, $context);
+      if (!$item_type instanceof AttachmentTable) {
+        continue;
+      }
       if (!array_key_exists($item_type->get('attachment_prototype'), $attachment_prototypes)) {
         continue;
       }
@@ -312,14 +724,31 @@ class PlanEntityLogframe extends GHIBlockBase implements MultiStepFormBlockInter
       if (!$table || empty($table['#rows'])) {
         continue;
       }
-      $tables[] = $table;
+      $attachment_prototype = $attachment_prototypes[$item_type->get('attachment_prototype')];
+      $tables[$attachment_prototype->id()] = $table;
     }
+    return $tables;
+  }
+
+  /**
+   * Get the entity attachment tables in a container.
+   *
+   * @param \Drupal\ghi_plans\ApiObjects\PlanEntityInterface $entity
+   *   The plan entity.
+   * @param array $conf
+   *   The entity configuration.
+   *
+   * @return array
+   *   A render array with the entity attachment tables.
+   */
+  public function buildTablesContainer(PlanEntityInterface $entity, array $conf) {
+    $tables = $this->buildTables($entity, $conf);
     if (empty($tables)) {
       return $tables;
     }
     return [
       '#type' => 'container',
-      'tables' => $tables,
+      'tables' => array_values($tables),
     ];
   }
 
@@ -345,7 +774,7 @@ class PlanEntityLogframe extends GHIBlockBase implements MultiStepFormBlockInter
       return [];
     }
     $entities = $block_instance->getRenderableEntities();
-    $tables = $block_instance->buildTables($entities[$entity_id], $block_instance->getBlockConfig()['tables']);
+    $tables = $block_instance->buildTablesContainer($entities[$entity_id], $block_instance->getBlockConfig()['tables']);
 
     // Reset the static caches to prevent memory issues. Lazy load callbacks
     // are part of the same main thread that renders the page. Given that there
