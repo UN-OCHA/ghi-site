@@ -150,7 +150,9 @@
         let storage_filtered = Object.values(storage).filter((d) => d !== null);
         if (storage_filtered.length == 0 || storage_filtered.length == filepaths.length) {
           clearInterval(intervall);
-          callback(Object.values(storage));
+          if (storage_filtered.length > 0) {
+            callback(storage_filtered);
+          }
           if (state !== null) {
             self.hideThrobber(state);
           }
