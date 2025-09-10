@@ -1,9 +1,17 @@
 .ui-dialog {
   z-index: z-index(ui-dialog, 1);
+  font-family: var(--cd-font--roboto) !important;
+
+  .ui-dialog-titlebar {
+    height: auto !important;
+  }
 
   .ui-dialog-title {
-    margin-top: 0 !important;
+    display: inline-block;
+    margin: 0 !important;
     margin-bottom: 0 !important;
+    font-size: 1rem !important;
+    font-weight: normal !important;
 
     .cluster-icon {
       display: inline-block;
@@ -22,6 +30,9 @@
     color: inherit !important;
   }
 
+  &.download-dialog .ui-dialog-titlebar-close {
+    width: 0.75rem;
+  }
   &.download-dialog .ui-dialog-content {
     overflow: inherit !important;
   }
