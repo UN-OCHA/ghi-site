@@ -567,7 +567,15 @@ abstract class GHIBlockBase extends HPCBlockBase {
   }
 
   /**
-   * {@inheritdoc}
+   * Get a default value from the given form state.
+   *
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   The current state of the form.
+   * @param array|string $key
+   *   Either a single key or an array of keys pointing to the desired value.
+   *
+   * @return mixed|null
+   *   The requested value
    */
   public function getDefaultFormValueFromFormState(FormStateInterface $form_state, $key) {
     // Extract the form values.
@@ -592,6 +600,9 @@ abstract class GHIBlockBase extends HPCBlockBase {
 
     /** @var \Drupal\ghi_blocks\Plugin\Block\GHIBlockBase $block */
     $block = $form_state->get('block');
+    if (!$block) {
+      return NULL;
+    }
     $config = $block->getBlockConfig();
 
     $settings_key = $key;
