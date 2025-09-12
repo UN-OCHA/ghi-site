@@ -280,7 +280,11 @@ class GeoJson {
     }
 
     // Add each file to the zip container.
-    foreach ($this->getFiles(self::GEOJSON_SOURCE_DIR . '/' . $iso3 . '/' . $version) as $file) {
+    $source_dir = self::GEOJSON_SOURCE_DIR . '/' . $iso3 . '/' . $version;
+    if (!is_dir($source_dir)) {
+      return FALSE;
+    }
+    foreach ($this->getFiles($source_dir) as $file) {
       if (is_file($file->uri)) {
         $zip->addFile($file_system->realpath($file->uri), $file->filename);
       }
