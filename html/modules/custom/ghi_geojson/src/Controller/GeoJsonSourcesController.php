@@ -105,11 +105,15 @@ class GeoJsonSourcesController extends ControllerBase {
    * @param string $version
    *   The version to be viewed.
    *
-   * @return array
-   *   A render array with the page content.
+   * @return array|\Symfony\Component\HttpFoundation\Response
+   *   A render array with the page content or a response object.
    */
-  public function directoryListing(string $iso3, string $version): array {
-    return $this->geojsonDirectoryList->buildDirectoryListing(GeoJson::GEOJSON_SOURCE_DIR . '/' . $iso3 . '/' . $version);
+  public function directoryListing(string $iso3, string $version): array|Response {
+    $directory = GeoJson::GEOJSON_SOURCE_DIR . '/' . $iso3 . '/' . $version;
+    if (!is_dir($directory)) {
+      return new Response('There was an error', 400);
+    }
+    return $this->geojsonDirectoryList->buildDirectoryListing($directory);
   }
 
   /**
