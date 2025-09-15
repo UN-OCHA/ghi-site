@@ -47,6 +47,13 @@ class Location extends BaseObject implements GeoJsonLocationInterface {
   }
 
   /**
+   * {@inheritdoc}
+   */
+  public function getName() {
+    return $this->location_name;
+  }
+
+  /**
    * Set the parent country for a location.
    *
    * @param \Drupal\ghi_base_objects\ApiObjects\Location $country

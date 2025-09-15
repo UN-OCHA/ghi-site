@@ -98,10 +98,8 @@ class PlanOverviewPlan extends BaseObject {
    *   The plan type object if found.
    */
   private function getTypeObject() {
-    if (!is_object($this->getRawData()->planType)) {
-      return NULL;
-    }
-    return $this->getRawData()->planType;
+    $plan_type = $this->getRawData()->planType ?? NULL;
+    return is_object($plan_type) ? $plan_type : NULL;
   }
 
   /**
@@ -154,7 +152,8 @@ class PlanOverviewPlan extends BaseObject {
     if ($plan_type = $this->getPlanType()) {
       return $plan_type->getAbbreviation();
     }
-    return StringHelper::getAbbreviation($this->getTypeName(TRUE));
+    $type_name = $this->getTypeName(TRUE);
+    return $type_name ? StringHelper::getAbbreviation($type_name) : NULL;
   }
 
   /**
@@ -163,14 +162,17 @@ class PlanOverviewPlan extends BaseObject {
    * This is the numerical order based on the current plan type term order,
    * that should be used to sort plans belonging to the same focus location.
    *
-   * @return int
+   * @return int|null
    *   The order number according to the manually selected sort order of the
    *   plan type term objects.
    */
   public function getTypeOrder() {
     $plan_type = $this->getPlanType();
+    if (!$plan_type) {
+      return NULL;
+    }
     $type_order = $this->getAvailablePlanTypes();
-    return array_flip($type_order)[$plan_type->label()];
+    return array_flip($type_order)[$plan_type->label()] ?? NULL;
   }
 
   /**
