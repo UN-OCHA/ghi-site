@@ -2,20 +2,15 @@
 
 namespace Drupal\ghi_content\Form;
 
-use Drupal\Core\Entity\EntityFieldManagerInterface;
-use Drupal\Core\Entity\EntityTypeManagerInterface;
-use Drupal\Core\Extension\ModuleHandlerInterface;
-use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\Core\Session\AccountProxyInterface;
-use Drupal\ghi_content\RemoteSource\RemoteSourceManager;
+use Drupal\ghi_form_elements\Form\WizardBase;
 use Drupal\ghi_form_elements\Traits\AjaxElementTrait;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Provides a wizard form for creating article nodes.
  */
-abstract class ContentWizardBase extends FormBase {
+abstract class ContentWizardBase extends WizardBase {
 
   use AjaxElementTrait;
 
@@ -34,20 +29,6 @@ abstract class ContentWizardBase extends FormBase {
   protected $entityFieldManager;
 
   /**
-   * The current user.
-   *
-   * @var \Drupal\Core\Extension\ModuleHandlerInterface
-   */
-  protected $moduleHandler;
-
-  /**
-   * The current user.
-   *
-   * @var \Drupal\Core\Session\AccountProxyInterface
-   */
-  protected $currentUser;
-
-  /**
    * The attachment query.
    *
    * @var \Drupal\ghi_content\RemoteSource\RemoteSourceManager
@@ -55,27 +36,22 @@ abstract class ContentWizardBase extends FormBase {
   public $remoteSourceManager;
 
   /**
-   * Constructs a document create form.
+   * The wrapper id for ajax.
+   *
+   * @var string
    */
-  public function __construct(EntityTypeManagerInterface $entity_type_manager, EntityFieldManagerInterface $entity_field_manager, ModuleHandlerInterface $module_handler, AccountProxyInterface $user, RemoteSourceManager $remote_source_manager) {
-    $this->entityTypeManager = $entity_type_manager;
-    $this->entityFieldManager = $entity_field_manager;
-    $this->moduleHandler = $module_handler;
-    $this->currentUser = $user;
-    $this->remoteSourceManager = $remote_source_manager;
-  }
+  protected $ajaxWrapperId;
 
   /**
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container) {
-    return new static(
-      $container->get('entity_type.manager'),
-      $container->get('entity_field.manager'),
-      $container->get('module_handler'),
-      $container->get('current_user'),
-      $container->get('plugin.manager.remote_source'),
-    );
+    /** @var \Drupal\ghi_content\Form\ContentWizardBase $instance */
+    $instance = parent::create($container);
+    $instance->entityTypeManager = $container->get('entity_type.manager');
+    $instance->entityFieldManager = $container->get('entity_field.manager');
+    $instance->remoteSourceManager = $container->get('plugin.manager.remote_source');
+    return $instance;
   }
 
   /**

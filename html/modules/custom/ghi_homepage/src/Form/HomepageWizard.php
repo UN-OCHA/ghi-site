@@ -3,14 +3,14 @@
 namespace Drupal\ghi_homepage\Form;
 
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\ghi_form_elements\Form\WizardBase;
+use Drupal\ghi_form_elements\Form\NodeWizardBase;
 use Drupal\ghi_homepage\Entity\Homepage;
 use Drupal\node\NodeInterface;
 
 /**
  * Provides a wizard form for creating homepage nodes.
  */
-class HomepageWizard extends WizardBase {
+class HomepageWizard extends NodeWizardBase {
 
   /**
    * {@inheritdoc}

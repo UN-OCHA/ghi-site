@@ -3,7 +3,7 @@
 namespace Drupal\ghi_sections\Form;
 
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\ghi_form_elements\Form\WizardBase;
+use Drupal\ghi_form_elements\Form\NodeWizardBase;
 use Drupal\ghi_sections\Entity\Section;
 use Drupal\node\NodeInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -11,7 +11,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 /**
  * Provides a wizard form for creating section nodes.
  */
-class SectionWizard extends WizardBase {
+class SectionWizard extends NodeWizardBase {
 
   /**
    * The section manager.
