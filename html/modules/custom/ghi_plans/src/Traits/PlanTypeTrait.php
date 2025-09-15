@@ -26,6 +26,9 @@ trait PlanTypeTrait {
   public function sortPlansByPlanType(array &$plans, $use_shortname = FALSE) {
     // Sort everything first by plan type, then by plan name.
     $type_order = $this->getAvailablePlanTypeEntities();
+    if (empty($type_order)) {
+      return;
+    }
 
     $grouped_plans = [];
     foreach ($type_order as $plan_type) {
