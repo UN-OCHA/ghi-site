@@ -60,7 +60,7 @@ class SectionNavigationForm extends FormBase {
   protected $moduleHandler;
 
   /**
-   * The layout builder ipe config object.
+   * The layout builder modal config object.
    *
    * @var \Drupal\Core\Config\Config
    */
