@@ -10,7 +10,8 @@
       "Issue #3001188: Make it possible to add relationships to layout builder": "./patches/3001188-make-it-possible-to-add-relationships-to-layout-builder.patch",
       "Issue #2329253: Allow the ChangedItem to skip updating the entity's changed timestamp when synchronizing (f.e. when migrating)": "https://www.drupal.org/files/issues/2024-07-30/2329253-10.x.patch",
       "Issue #?? (maybe #2837833): 'Required contexts without a value": "./patches/missing-context-value-in-layout-builder-admin.patch",
-      "Issue #2190333: Make #group FAPI / render feature work on all form/render #types out of the box": "https://www.drupal.org/files/issues/2023-09-04/drupal-core_form-api_groups_0.patch"
+      "Issue #2190333: Make #group FAPI / render feature work on all form/render #types out of the box": "https://www.drupal.org/files/issues/2023-09-04/drupal-core_form-api_groups_0.patch",
+      "Issue #2585169: Unable to alter local actions prior to rendering": "https://www.drupal.org/files/issues/2024-12-19/2585169-63-10.4.x.patch"
     },
     "drupal/geofield_map": {
       "Issue #3479680: Hide marker button when the map position is reset": "https://git.drupalcode.org/project/geofield_map/-/merge_requests/22.patch"
@@ -31,7 +32,8 @@
       "Issue #3176661: Allow to edit page title when using Layout Builder variant": "https://www.drupal.org/files/issues/2022-11-15/page_manager-lb-title-3176661-15.patch"
     },
     "drupal/publishcontent": {
-      "Issue #2820867: Bulk operations actions skip 'publishcontent' defined permissions": "https://www.drupal.org/files/issues/2024-10-14/permissions-for-bulk-operations-2820867-9.patch"
+      "Issue #2820867: Bulk operations actions skip 'publishcontent' defined permissions": "https://www.drupal.org/files/issues/2024-10-14/permissions-for-bulk-operations-2820867-9.patch",
+      "Issue #3545863: Fix PHP 8.4 implicit nullable deprecation": "./patches/publishcontent-3545863.patch"
     },
     "drupal/seckit": {
       "Issue #2844205: Provide hook_seckit_options_alter() D8": "./patches/2844205.mr.patch"

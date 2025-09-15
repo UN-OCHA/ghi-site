@@ -39,10 +39,7 @@ class DocumentWizard extends ContentWizardBase {
    * {@inheritdoc}
    */
   public function buildForm(array $form, FormStateInterface $form_state, ?NodeInterface $node = NULL) {
-    self::prepareAjaxForm($form, $form_state);
-    $wrapper_id = self::getWrapperId($form);
-    $form['#prefix'] = '<div id="' . $wrapper_id . '">';
-    $form['#suffix'] = '</div>';
+    $form = parent::buildForm($form, $form_state);
 
     /** @var \Drupal\node\Entity\NodeType $node_type */
     $node_type = $this->entityTypeManager->getStorage('node_type')->load(DocumentManager::DOCUMENT_BUNDLE);
@@ -151,7 +148,7 @@ class DocumentWizard extends ContentWizardBase {
         '#ajax' => [
           'event' => 'click',
           'callback' => [static::class, 'updateAjax'],
-          'wrapper' => $wrapper_id,
+          'wrapper' => $this->ajaxWrapperId,
         ],
       ];
     }
@@ -164,7 +161,7 @@ class DocumentWizard extends ContentWizardBase {
         '#ajax' => [
           'event' => 'click',
           'callback' => [static::class, 'updateAjax'],
-          'wrapper' => $wrapper_id,
+          'wrapper' => $this->ajaxWrapperId,
         ],
       ];
     }

@@ -1,0 +1,89 @@
+<?php
+
+use Drupal\Core\Cache\Cache;
+use Drupal\Core\Cache\CacheableMetadata;
+use Drupal\Core\Link;
+use Drupal\Core\Url;
+use Drupal\ghi_geojson\GeoJson;
+
+/**
+ * Implements hook_cache_flush().
+ *
+ * Clean up import files.
+ */
+function ghi_geojson_cache_flush() {
+  hpc_api_clear_directory(GeoJson::GEOJSON_DIR, '/.*\.geojson/');
+}
+
+/**
+ * Implements hook_gin_ignore_sticky_form_actions_alter().
+ */
+function ghi_geojson_gin_ignore_sticky_form_actions_alter(&$form_ids) {
+  $form_ids[] = 'ghi_geojson_upload_form';
+  $form_ids[] = 'ghi_geojson_delete_confirm_form';
+}
+
+/**
+ * Implements hook_local_actions_render_alter().
+ *
+ * @see https://www.drupal.org/project/drupal/issues/2585169
+ */
+function ghi_geojson_local_actions_render_alter(&$links, $route_appears) {
+  /** @var \Drupal\Core\Url $download_url */
+  $download_url = $links['geojson_download_archive_local_action']['#link']['url'] ?? NULL;
+  if (!$download_url) {
+    return;
+  }
+  $route_parameters = $download_url->getRouteParameters();
+  $iso3 = $route_parameters['iso3'] ?? NULL;
+  $current_version = $route_parameters['version'] ?? NULL;
+  if (!$iso3 || !$current_version) {
+    return;
+  }
+
+  /** @var \Drupal\ghi_geojson\geojson $geojson */
+  $geojson = \Drupal::service(('geojson'));
+  $versions = $geojson->getVersionsForIsoCode($iso3);
+  if (count($versions) <= 1) {
+    return;
+  }
+  $cache_tags = $geojson->getCacheTags($iso3);
+  $other_version_links = [];
+  foreach ($versions as $version) {
+    if ($version == $current_version) {
+      continue;
+    }
+    $url = Url::fromRoute('ghi_geojson.geojson_sources.directory_listing', [
+      'iso3' => $iso3,
+      'version' => $version,
+    ]) ;
+    if (!$url || !$url->access()) {
+      continue;
+    }
+    $other_version_links[$version] = Link::fromTextAndUrl($version, $url)->toRenderable();
+    $cache_tags = Cache::mergeTags($cache_tags, $geojson->getCacheTags($iso3, $version));
+  }
+
+  $links['other_versions'] = [
+    '#type' => 'container',
+    '#prefix' => '<li class="local-actions__item dropdown">',
+    '#suffix' => '</li>',
+    '#attributes' => [
+      'class' => [
+        'button',
+        'button--action',
+      ],
+    ],
+    'label' => [
+      '#markup' => $current_version,
+    ],
+    'item_list' => [
+      '#theme' => 'item_list',
+      '#items' => array_values($other_version_links),
+      '#gin_lb_theme_suggestions' => FALSE,
+    ],
+    '#cache' => [
+      'tags' => $cache_tags,
+    ],
+  ];
+}

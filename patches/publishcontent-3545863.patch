@@ -1,0 +1,33 @@
+diff --git a/src/Plugin/Menu/LocalTask/PublishContentLocalTask.php b/src/Plugin/Menu/LocalTask/PublishContentLocalTask.php
+index 01e600725fd418ba1427bde1f60bb6e399113905..e6f11c5384d080aaeea006d872fecfefa7261737 100644
+--- a/src/Plugin/Menu/LocalTask/PublishContentLocalTask.php
++++ b/src/Plugin/Menu/LocalTask/PublishContentLocalTask.php
+@@ -58,7 +58,7 @@ class PublishContentLocalTask extends LocalTaskDefault implements ContainerFacto
+   /**
+    * {@inheritdoc}
+    */
+-  public function getTitle(Request $request = NULL) {
++  public function getTitle(?Request $request = NULL) {
+     $langcode = $this->languageManager->getCurrentLanguage(LanguageInterface::TYPE_CONTENT)->getId();
+     /** @var \Drupal\node\NodeInterface $node */
+     $node = $this->nodeStorage->load($this->routeMatch->getRawParameter('node'));
+diff --git a/src/PublishContentPermissions.php b/src/PublishContentPermissions.php
+index 22e7ac437591540148e6680e8d1715159d8b5cee..5e39de19fe9ccb578a1b881a4a6ab57fd11f9919 100644
+--- a/src/PublishContentPermissions.php
++++ b/src/PublishContentPermissions.php
+@@ -29,13 +29,13 @@ class PublishContentPermissions {
+    *
+    * @param string $pattern
+    *   The pattern for FormattableMarkup.
+-   * @param array $arguments
++   * @param array|null $arguments
+    *   The argument for FormattableMarkup.
+    *
+    * @return string
+    *   The name of the permission.
+    */
+-  public static function getPermission($pattern, array $arguments = NULL) {
++  public static function getPermission($pattern, ?array $arguments = NULL) {
+     return (new FormattableMarkup($pattern, $arguments))->__toString();
+   }
+ 

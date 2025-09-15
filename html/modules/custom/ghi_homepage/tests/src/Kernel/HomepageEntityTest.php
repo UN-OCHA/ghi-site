@@ -1,0 +1,71 @@
+<?php
+
+namespace Drupal\Tests\ghi_homepage\Kernel;
+
+use Drupal\KernelTests\KernelTestBase;
+use Drupal\Tests\ghi_base_objects\Traits\FieldTestTrait;
+use Drupal\ghi_homepage\Entity\Homepage;
+use Drupal\node\Entity\Node;
+use Drupal\node\Entity\NodeType;
+
+/**
+ * Tests the creation and validation of homepage nodes.
+ *
+ * @group ghi_homepage
+ */
+class HomepageEntityTest extends KernelTestBase {
+
+  use FieldTestTrait;
+
+  /**
+   * Modules to enable.
+   *
+   * @var array
+   */
+  protected static $modules = [
+    'system',
+    'user',
+    'node',
+    'field',
+    'text',
+    'filter',
+    'token',
+    'path_alias',
+    'pathauto',
+    'ghi_homepage',
+  ];
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function setUp(): void {
+    parent::setUp();
+
+    $this->installEntitySchema('user');
+    $this->installEntitySchema('node');
+    $this->installSchema('system', 'sequences');
+    $this->installSchema('node', ['node_access']);
+    $this->installConfig(['system', 'node', 'field', 'pathauto']);
+
+    NodeType::create(['type' => Homepage::BUNDLE])->save();
+    $this->createField('node', Homepage::BUNDLE, 'integer', 'field_year', 'Year');
+  }
+
+  /**
+   * Test that bundle class is properply recognised and works.
+   */
+  public function testBundleClass() {
+    // Create a homepage for 2023.
+    $homepage = Node::create([
+      'type' => Homepage::BUNDLE,
+      'title' => '2023',
+      'field_year' => 2023,
+    ]);
+    $homepage->save();
+    $this->assertInstanceOf(Homepage::class, $homepage);
+    $this->assertEquals(2023, $homepage->getYear());
+    $this->assertFALSE($homepage->access('view', NULL, FALSE));
+    $this->assertFALSE($homepage->access('update', NULL, FALSE));
+  }
+
+}
