@@ -519,7 +519,6 @@ class PlanOverviewMap extends GHIBlockBase {
       'style' => 'circle',
       'search_enabled' => FALSE,
       'disclaimer' => NULL,
-      'plan_select' => [],
     ];
   }
 

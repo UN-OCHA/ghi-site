@@ -20,8 +20,8 @@ trait PlanFootnoteTrait {
    *   An object with footnotes for the plan, or NULL.
    */
   public function getFootnotesForPlanBaseobject(BaseObjectInterface $plan) {
-    $field = $plan->get('field_footnotes');
-    if ($field->isEmpty()) {
+    $field = $plan->hasField('field_footnotes') ? $plan->get('field_footnotes') : NULL;
+    if (!$field || $field->isEmpty()) {
       return NULL;
     }
     $field_definition = $field->getFieldDefinition();
