@@ -279,4 +279,14 @@ class ArticleTest extends KernelTestBase {
     $this->assertTrue($article->needsReview());
   }
 
+  /**
+   * Tests Document::getDataLayerDocumentProperties().
+   */
+  public function testGetDataLayerDocumentProperties() {
+    $article = $this->createArticle();
+    $data_layer_properties = $article->getDataLayerDocumentProperties();
+    $this->assertIsArray($data_layer_properties);
+    $this->assertCount(0, $data_layer_properties);
+  }
+
 }
