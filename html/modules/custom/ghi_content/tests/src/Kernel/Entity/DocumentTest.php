@@ -164,6 +164,20 @@ class DocumentTest extends KernelTestBase {
   }
 
   /**
+   * Tests Document::getDataLayerDocumentProperties().
+   */
+  public function testGetDataLayerDocumentProperties() {
+    $document = $this->createDocument([
+      'title' => 'Random document title',
+    ]);
+    $data_layer_properties = $document->getDataLayerDocumentProperties();
+    $this->assertIsArray($data_layer_properties);
+    $this->assertEquals([
+      'documentTitle' => 'Random document title',
+    ], $data_layer_properties);
+  }
+
+  /**
    * Tests Document::hasArticle().
    */
   public function testHasArticle() {
