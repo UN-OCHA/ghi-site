@@ -215,10 +215,12 @@ class ImportManager implements ContainerInjectionInterface {
     if (!$node->hasField($field_name)) {
       return FALSE;
     }
+    /** @var \Drupal\file\Plugin\Field\FieldType\FileFieldItemList $file_field */
+    $file_field = $node->get($field_name);
     $message = NULL;
     $image_url = $content->getImageUri();
     /** @var \Drupal\file\FileInterface $local_file */
-    $local_file = !$node->get($field_name)->isEmpty() ? $this->entityTypeManager->getStorage('file')->load($node->get($field_name)->target_id) : NULL;
+    $local_file = !$file_field->isEmpty() ? $this->entityTypeManager->getStorage('file')->load($file_field->target_id) : NULL;
     if (!empty($image_url)) {
       $caption = $content->getImageCaptionPlain();
 
@@ -229,7 +231,7 @@ class ImportManager implements ContainerInjectionInterface {
 
       // Get the remote and local file size.
       $file_size_remote = $content->getSource()->getFileSize($image_url);
-      // Use PHPs built-in filesize instead of File::getFielSize because like
+      // Use PHPs built-in filesize instead of File::getFileSize because like
       // that we check if the file is actually there.
       $file_size_local = $local_file ? @filesize($local_file->getFileUri()) : NULL;
       if ($file_size_remote == $file_size_local) {
@@ -241,8 +243,8 @@ class ImportManager implements ContainerInjectionInterface {
       $data = $content->getSource()->getFileContent($image_url);
       if (!empty($data)) {
         $file = $this->fileRepository->writeData($data, ArticleManager::IMAGE_DIRECTORY . '/' . $image_name, FileSystem::EXISTS_REPLACE);
-        $update = !$node->get($field_name)->isEmpty();
-        $node->get($field_name)->setValue([
+        $update = !$file_field->isEmpty();
+        $file_field->setValue([
           'target_id' => $file->id(),
           'alt' => $caption ? Unicode::truncate($caption, 512, TRUE, TRUE) : $node->getTitle(),
           'title' => NULL,
@@ -251,14 +253,17 @@ class ImportManager implements ContainerInjectionInterface {
       }
       else {
         $message = $this->t('Error retrieving image');
-        $node->get($field_name)->setValue(NULL);
+        $file_field->setValue(NULL);
       }
     }
     else {
-      if (!$node->get($field_name)->isEmpty()) {
+      if ($local_file) {
         $message = $this->t('Removed image');
+        // Cleanup existing but removed image.
+        $local_file->setTemporary();
+        $local_file->save();
       }
-      $node->get($field_name)->setValue(NULL);
+      $file_field->setValue(NULL);
     }
 
     if ($messenger !== NULL && $message) {
