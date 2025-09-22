@@ -23,6 +23,7 @@ body.toolbar-horizontal .gin-secondary-toolbar,
 .layout-builder-ipe-actions {
   // Make this higher than the z-index of everything else.
   z-index: 1002 !important;
+  gap: 0;
 }
 
 body.toolbar-horizontal #toolbar-administration {
