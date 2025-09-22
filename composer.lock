@@ -4840,10 +4840,18 @@
             "source": {
                 "type": "git",
                 "url": "https://git.drupalcode.org/project/layout_builder_ipe.git",
-                "reference": "1e7c9e5b04802d35e3a4caedb623ba561c898f7d"
+                "reference": "43893a82bb2f83839135a73d8f1b7df42da54d84"
             },
             "require": {
                 "drupal/core": "^9.5 || ^10 || ^11"
+            },
+            "require-dev": {
+                "drupal/gin_lb": "^1.0@RC",
+                "drupal/page_manager": "^4.0@RC"
+            },
+            "suggest": {
+                "drupal/gin_lb": "This module brings the gin admin theme to the layout builder.",
+                "drupal/page_manager": "It supports the creation of new pages, and allows placing blocks within that page."
             },
             "type": "drupal-module",
             "extra": {
@@ -4851,8 +4859,8 @@
                     "dev-1.0.x": "1.0.x-dev"
                 },
                 "drupal": {
-                    "version": "1.0.0-beta10+2-dev",
-                    "datestamp": "1732785890",
+                    "version": "1.0.0-beta10+3-dev",
+                    "datestamp": "1758488970",
                     "security-coverage": {
                         "status": "not-covered",
                         "message": "Project has not opted into security advisory coverage!"
@@ -4869,7 +4877,7 @@
                     "homepage": "https://www.drupal.org/user/202211"
                 }
             ],
-            "description": "Provides frontend In-Place-Editing for Layout Builder, similar to what Panels IPE used to do.",
+            "description": "The Layout Builder IPE module provides frontend In-Place-Editing (IPE) for Layout Builder, similar to what Panels IPE used to do in Drupal 7.",
             "homepage": "https://www.drupal.org/project/layout_builder_ipe",
             "support": {
                 "source": "https://git.drupalcode.org/project/layout_builder_ipe"

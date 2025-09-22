@@ -9,7 +9,6 @@ use Drupal\Component\Serialization\Json;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\Markup;
-use Drupal\Core\Url;
 use Drupal\ghi_blocks\Controller\BaseObjectReferenceController;
 use Drupal\ghi_blocks\Controller\LayoutBuilderBlockController;
 use Drupal\ghi_blocks\Helpers\GlobalSettingsHelper;
@@ -555,47 +554,27 @@ function ghi_blocks_layout_builder_ipe_links_alter(array &$links, SectionStorage
   if (!$layout_tempstore_repository->has($section_storage)) {
     return;
   }
-
-  $modal_settings = [
-    'target' => 'layout-builder-modal',
-    'modal' => TRUE,
-    'width' => 650,
-    'height' => 'auto',
-    'autoResize' => TRUE,
-  ];
   $customize_link = $links['customize'];
-  $route_name = 'layout_builder.' . $section_storage->getPluginId() . '.' . $entity->getEntityTypeId() . '.discard_changes';
-  if (empty(\Drupal::service('router.route_provider')->getRoutesByNames([$route_name]))) {
-    return;
-  }
+  $discard_link = $links['discard'] ?? NULL;
   $links['customize'] = [
     '#type' => 'dropbutton',
-    '#links' => [
+    '#links' => array_filter([
       'customize' => [
         'title' => $customize_link->getText(),
         'url' => $customize_link->getUrl(),
         'attributes' => $customize_link->getUrl()->getOption('attributes'),
       ],
-      'discard' => [
-        'title' => t('Discard changes'),
-        'url' => Url::fromRoute($route_name, [
-          $entity->getEntityTypeId() => $entity->id(),
-        ], [
-          'attributes' => [
-            'class' => ['use-ajax'],
-            'data-dialog-type' => 'dialog',
-            'data-dialog-options' => Json::encode($modal_settings),
-          ],
-          'query' => [
-            'current_path' => Url::fromRoute('<current>')->toString(),
-          ],
-        ]),
-      ],
-    ],
+      'discard' => $discard_link ? [
+        'title' => $discard_link->getText(),
+        'url' => $discard_link->getUrl(),
+        'attributes' => $discard_link->getUrl()->getOption('attributes'),
+      ] : NULL,
+    ]),
     '#attached' => [
       'library' => ['ghi_blocks/ipe.links'],
     ],
   ];
+  unset($links['discard']);
 }
 
 /**

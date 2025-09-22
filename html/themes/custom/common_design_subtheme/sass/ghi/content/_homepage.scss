@@ -14,6 +14,15 @@ body.path-frontpage #main-content {
       padding-top: 0;
     }
   }
+
+  #layout-builder-ipe-wrapper
+    > div
+    > .layout.layout--onecol
+    > .layout__region--content
+    > .ghi-block-generic-link-carousel {
+    margin-top: 0;
+    padding-top: 0;
+  }
 }
 .ghi-block-global-homepages {
   & .title-wrapper > .cd-block-title {

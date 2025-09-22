@@ -47,13 +47,13 @@ function ghi_geojson_requirements($phase) {
     $requirements['ghi_base_objects_geojson_sources']['title'] = t('Locations: GeoJSON sources directory');
     $requirements['ghi_base_objects_geojson_sources']['value'] = t('The directory for local storage of GeoJSON data exists and is writable.');
     $requirements['ghi_base_objects_geojson_sources']['severity'] = REQUIREMENT_OK;
-    hpc_api_directory_requirements(Location::GEOJSON_SOURCE_DIR, $requirements['ghi_base_objects_geojson_sources']);
+    hpc_api_directory_requirements(GeoJson::GEOJSON_SOURCE_DIR, $requirements['ghi_base_objects_geojson_sources']);
 
     // Setup the geojson directory.
     $requirements['ghi_base_objects_geojson']['title'] = t('Locations: GeoJSON directory');
     $requirements['ghi_base_objects_geojson']['value'] = t('The directory for local storage of GeoJSON data exists and is writable.');
     $requirements['ghi_base_objects_geojson']['severity'] = REQUIREMENT_OK;
-    hpc_api_directory_requirements(Location::GEOJSON_DIR, $requirements['ghi_base_objects_geojson']);
+    hpc_api_directory_requirements(GeoJson::GEOJSON_DIR, $requirements['ghi_base_objects_geojson']);
   }
   return $requirements;
 }
