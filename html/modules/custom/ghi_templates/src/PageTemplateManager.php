@@ -16,7 +16,6 @@ use Drupal\ghi_templates\Entity\PageTemplateInterface;
 use Drupal\hpc_common\Helpers\ArrayHelper;
 use Drupal\layout_builder\LayoutEntityHelperTrait;
 use Drupal\layout_builder\Plugin\SectionStorage\DefaultsSectionStorage;
-use Drupal\layout_builder\Section;
 use Drupal\layout_builder\SectionComponent;
 use Drupal\layout_builder\SectionStorageInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -132,16 +131,18 @@ class PageTemplateManager implements ContainerInjectionInterface {
    *   The update section storage.
    */
   public function buildSectionStorageFromPageConfig(SectionStorageInterface $section_storage, EntityInterface $entity, array $page_config, bool $overwrite, array $selected_elements = [], $fix_element_configuration = TRUE) {
+
+    $delta = 0;
+    $section = $section_storage->getSection($delta);
+
     // First, make sure we have an overridden section storage.
     if ($section_storage instanceof DefaultsSectionStorage) {
       // Overide the section storage in the tempstore.
       $section_storage = $this->sectionStorageManager()->load('overrides', [
         'entity' => EntityContext::fromEntity($entity),
       ]);
+      $section_storage->appendSection($section);
     }
-
-    $delta = 0;
-    $section = $section_storage->getSection($delta);
 
     // Clear the current storage.
     if ($overwrite && $section->getComponents()) {
@@ -189,16 +190,9 @@ class PageTemplateManager implements ContainerInjectionInterface {
         $component->setConfiguration($configuration);
         $components[$component->getUuid()] = $component->toArray();
       }
-      if ($overwrite || empty($section_storage->getSections())) {
-        $section_config['components'] = $components;
-        $section = Section::fromArray($section_config);
-        $section_storage->appendSection($section);
-      }
-      else {
-        $section = $section_storage->getSection(0);
-        foreach ($components as $component) {
-          $section->appendComponent(SectionComponent::fromArray($component));
-        }
+      $section = $section_storage->getSection(0);
+      foreach ($components as $component) {
+        $section->appendComponent(SectionComponent::fromArray($component));
       }
     }
     return $section_storage;
