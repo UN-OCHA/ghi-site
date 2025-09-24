@@ -128,62 +128,70 @@
     }
 
     @include max-width(lg) {
+      height: auto;
       margin: 0;
       padding: 0;
 
-      ul.menu li.menu-item .menu-link-contentmain .mega-menu {
+      ul.menu li.menu-item {
 
-        .cd-block-title {
-          margin-bottom: 0;
+        &.cd-nav__menu-item--level-1 [data-cd-hidden] {
+          border-bottom: 0;
         }
 
-        .vertical-tabs {
-          margin: 0;
-          border: 0;
+        .menu-link-contentmain .mega-menu {
 
-          & > ul {
-            float: none;
-            width: auto;
+          .cd-block-title {
+            margin-bottom: 0;
+          }
+
+          .vertical-tabs {
             margin: 0;
             border: 0;
 
-            & > li {
-              display: none;
+            & > ul {
+              float: none;
+              width: auto;
+              margin: 0;
+              border: 0;
+
+              & > li {
+                display: none;
+              }
             }
-          }
 
-          & > .vertical-tabs__panes {
-            & > details.vertical-tabs__pane {
-              display: block !important;
-              padding: 0;
+            & > .vertical-tabs__panes {
+              & > details.vertical-tabs__pane {
+                display: block !important;
+                padding: 0;
 
-              & > summary {
-                display: block;
-                padding: 0.5rem 30px;
+                & > summary {
+                  display: block;
+                  padding: 0.5rem 30px;
 
-                &::after {
-                  position: relative;
-                  top: .2rem;
-                  content: "keyboard_arrow_down";
-                  color: var(--ghi-primary-button-color);
-                  font-family: 'Material Icons';
+                  &::after {
+                    position: relative;
+                    top: .2rem;
+                    content: "keyboard_arrow_down";
+                    color: var(--ghi-primary-button-color);
+                    font-family: 'Material Icons';
+                  }
                 }
-              }
 
-              &[open] {
-                margin-bottom: 1rem;
-                & > summary::after {
-                  content: "keyboard_arrow_up";
+                &[open] {
+                  margin-bottom: 1rem;
+                  & > summary::after {
+                    content: "keyboard_arrow_up";
+                  }
                 }
-              }
 
-              & > summary:hover {
-                cursor: pointer;
-                background: var(--ghi-primary-background-color);
-              }
+                & > summary:hover {
+                  cursor: pointer;
+                  background: var(--ghi-primary-background-color);
+                }
 
-              ul {
-                margin-top: 0.5rem;
+                & > ul {
+                  margin-top: 0.5rem;
+                }
               }
             }
           }
