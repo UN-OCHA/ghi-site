@@ -1,0 +1,16 @@
+ghi_menu.settings:
+  type: config_object
+  label: 'GHI Menu settings'
+  mapping:
+    enabled_menus:
+      type: sequence
+      label: 'Enabled menus'
+      orderby: value
+      constraints:
+        FullyValidatable: ~
+      sequence:
+        type: string
+        label: 'Menu'
+        constraints:
+          ConfigExists:
+            prefix: 'system.menu.'

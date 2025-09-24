@@ -103,4 +103,5 @@ $settings['config_exclude_modules'] = [
   'views_ui',
   'upgrade_status',
   'stage_file_proxy',
+  'config_inspector',
 ];
