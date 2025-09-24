@@ -130,6 +130,66 @@
     @include max-width(lg) {
       margin: 0;
       padding: 0;
+
+      ul.menu li.menu-item .menu-link-contentmain .mega-menu {
+
+        .cd-block-title {
+          margin-bottom: 0;
+        }
+
+        .vertical-tabs {
+          margin: 0;
+          border: 0;
+
+          & > ul {
+            float: none;
+            width: auto;
+            margin: 0;
+            border: 0;
+
+            & > li {
+              display: none;
+            }
+          }
+
+          & > .vertical-tabs__panes {
+            & > details.vertical-tabs__pane {
+              display: block !important;
+              padding: 0;
+
+              & > summary {
+                display: block;
+                padding: 0.5rem 30px;
+                margin-bottom: 0.5rem;
+
+                &::after {
+                  position: relative;
+                  top: .2rem;
+                  content: "keyboard_arrow_down";
+                  color: var(--ghi-primary-button-color);
+                  font-family: 'Material Icons';
+                }
+              }
+
+              &[open] {
+                margin-bottom: 1rem;
+                & > summary::after {
+                  content: "keyboard_arrow_up";
+                }
+              }
+
+              & > summary:hover {
+                cursor: pointer;
+                background: var(--ghi-primary-background-color);
+              }
+
+              &[slot] ul {
+                display: block !important;
+              }
+            }
+          }
+        }
+      }
     }
 
     @include desktop {
