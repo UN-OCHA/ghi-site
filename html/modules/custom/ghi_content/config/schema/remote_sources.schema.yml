@@ -1,0 +1,42 @@
+ghi_content.remote_sources:
+  type: sequence
+  label: 'Remote sources'
+  sequence:
+    type: ghi_content.remote_sources.*
+    constraints:
+      ValidKeys: '<infer>'
+
+ghi_content.remote_sources.*:
+  type: mapping
+  label: 'Remote source'
+  mapping:
+    base_url:
+      type: string
+      label: 'Base URL'
+      constraints:
+        NotNull: []
+    endpoint:
+      type: string
+      label: 'Endpoint'
+      constraints:
+        NotNull: []
+    access_key:
+      type: string
+      label: 'Access Key'
+      constraints:
+        NotBlank:
+          allowNull: true
+    basic_auth:
+      type: mapping
+      label: 'Basic Auth'
+      mapping:
+        user:
+          type: string
+          label: 'Username'
+          constraints:
+            PrimitiveType: []
+        pass:
+          type: string
+          label: 'Password'
+          constraints:
+            PrimitiveType: []
