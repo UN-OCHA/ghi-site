@@ -160,7 +160,6 @@
               & > summary {
                 display: block;
                 padding: 0.5rem 30px;
-                margin-bottom: 0.5rem;
 
                 &::after {
                   position: relative;
@@ -183,8 +182,8 @@
                 background: var(--ghi-primary-background-color);
               }
 
-              &[slot] ul {
-                display: block !important;
+              ul {
+                margin-top: 0.5rem;
               }
             }
           }
