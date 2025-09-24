@@ -16,7 +16,7 @@ class SectionWizard extends NodeWizardBase {
   /**
    * The section manager.
    *
-   * @var \Drupal\ghi_sections\Import\SectionManager
+   * @var \Drupal\ghi_sections\SectionManager
    */
   protected $sectionManager;
 

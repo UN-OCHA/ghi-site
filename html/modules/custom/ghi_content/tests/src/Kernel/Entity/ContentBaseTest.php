@@ -503,4 +503,13 @@ class ContentBaseTest extends KernelTestBase {
     $this->assertCount(2, $metadata);
   }
 
+  /**
+   * Test protection state and access.
+   */
+  public function testProtection() {
+    $article = Article::create();
+    $this->assertFalse($article->isProtected());
+    $this->assertTrue($article->protectedAccess());
+  }
+
 }

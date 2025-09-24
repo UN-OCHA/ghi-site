@@ -2,7 +2,6 @@
 
 namespace Drupal\ghi_embargoed_access\Plugin\Action;
 
-use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Action\ActionBase;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Session\AccountInterface;
@@ -50,10 +49,7 @@ class ProtectContent extends ActionBase implements ContainerFactoryPluginInterfa
    * {@inheritdoc}
    */
   public function access($object, ?AccountInterface $account = NULL, $return_as_object = FALSE) {
-    /** @var \Drupal\Core\Access\AccessResultInterface $result */
-    $result = $object->access('update', $account, TRUE);
-    $result->andIf(AccessResult::allowedIf($account->hasPermission('administer protected pages configuration')));
-    return $return_as_object ? $result : $result->isAllowed();
+    return $object->access('update', $account, $return_as_object);
   }
 
 }

@@ -88,6 +88,8 @@ trait HomepageBlockTrait {
     else {
       $current_year = $this->getPageArgument('year');
     }
+    $current_year = $current_year ?: reset($years);
+
     $options = [];
     foreach ($years as $year) {
       $is_active = $year == $current_year;
