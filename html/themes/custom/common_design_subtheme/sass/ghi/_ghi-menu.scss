@@ -56,7 +56,7 @@
           summary {
             padding: 1rem 30px;
             list-style-type: disclosure-open;
-            font-size: var(--cd-font-size--default);
+            font-size: var(--cd-font-size--small);
             font-weight: bold;
 
             .summary {
@@ -134,6 +134,9 @@
 
       ul.menu li.menu-item {
 
+        &.cd-nav__menu-item--level-1 > button {
+          font-size: var(--cd-font-size--base);
+        }
         &.cd-nav__menu-item--level-1 [data-cd-hidden] {
           border-bottom: 0;
         }
