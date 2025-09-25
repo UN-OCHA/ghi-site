@@ -5,6 +5,8 @@
  * Contains hook implementations for the GHI user module.
  */
 
+use Drupal\Core\Form\FormStateInterface;
+
 /**
  * Implements hook_link_alter().
  *
@@ -25,6 +27,14 @@ function ghi_user_link_alter(&$variables) {
   if ($redirect_url) {
     $variables['options']['query']['destination'] = $redirect_url->toString();
   }
+}
+
+/**
+ * Implements hook_form_FORM_ID_alter().
+ */
+function ghi_user_form_user_login_form_alter(&$form, FormStateInterface $form_state) {
+  $login_form_alter = \Drupal::service('ghi_user.login_form_alter');
+  $login_form_alter->alterLoginForm($form, $form_state);
 }
 
 /**

@@ -142,6 +142,9 @@ module:
   seckit: 0
   settings_tray: 0
   smugmug_api: 0
+  social_api: 0
+  social_auth: 0
+  social_auth_google: 0
   sophron: 0
   stringoverrides: 0
   subpathauto: 0
