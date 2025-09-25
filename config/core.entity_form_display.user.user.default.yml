@@ -5,7 +5,6 @@ dependencies:
   config:
     - field.field.user.user.field_team
   module:
-    - path
     - user
 id: user.user.default
 targetEntityType: user
@@ -23,21 +22,13 @@ content:
     region: content
     settings: {  }
     third_party_settings: {  }
-  language:
-    weight: 2
-    region: content
-    settings: {  }
-    third_party_settings: {  }
-  path:
-    type: path
-    weight: 4
-    region: content
-    settings: {  }
-    third_party_settings: {  }
   timezone:
-    weight: 3
+    weight: 2
     region: content
     settings: {  }
     third_party_settings: {  }
 hidden:
   langcode: true
+  language: true
+  path: true
+  social_auth: true

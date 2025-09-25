@@ -8,7 +8,9 @@ use Drupal\Core\Block\BlockManagerInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Link;
+use Drupal\Core\Render\Element;
 use Drupal\Core\Routing\RedirectDestinationTrait;
+use Drupal\Core\Session\AccountProxyInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 
 /**
@@ -16,7 +18,7 @@ use Drupal\Core\StringTranslation\StringTranslationTrait;
  *
  * @package Drupal\ghi_user\Form
  */
-class LoginFormAlter {
+class UserFormAlter {
 
   use RedirectDestinationTrait;
   use StringTranslationTrait;
@@ -26,21 +28,29 @@ class LoginFormAlter {
    *
    * @var \Drupal\Core\Extension\ModuleHandlerInterface
    */
-  protected $moduleHandler;
+  protected ModuleHandlerInterface $moduleHandler;
 
   /**
    * The block manager service.
    *
    * @var \Drupal\Core\Block\BlockManagerInterface
    */
-  protected $blockManager;
+  protected BlockManagerInterface $blockManager;
 
   /**
-   * Constructs a document manager.
+   * The current Drupal user.
+   *
+   * @var \Drupal\Core\Session\AccountProxyInterface
    */
-  public function __construct(ModuleHandlerInterface $module_handler, BlockManagerInterface $block_manager) {
+  protected AccountProxyInterface $currentUser;
+
+  /**
+   * Constructs this form alter service class.
+   */
+  public function __construct(ModuleHandlerInterface $module_handler, BlockManagerInterface $block_manager, AccountProxyInterface $curent_user) {
     $this->moduleHandler = $module_handler;
     $this->blockManager = $block_manager;
+    $this->currentUser = $curent_user;
   }
 
   /**
@@ -151,6 +161,76 @@ class LoginFormAlter {
       }
     }
     $form['login'] = $build;
+  }
+
+  /**
+   * Alter the login form.
+   *
+   * @param array $form
+   *   The form array.
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   The form state object.
+   */
+  public function alterEditForm(&$form, FormStateInterface $form_state) {
+    if ($this->currentUser->hasPermission('administer users')) {
+      // Administrator should see all fields.
+      return;
+    }
+    /** @var \Drupal\user\UserInterface $user */
+    $user = $form_state->getFormObject()->getEntity();
+
+    // For non-administrators we provide a customized display of the form where
+    // most of the fields are disabled but still shown for information purposes.
+    // See common_design_subtheme/scss/ghi/user/_edit.scss for the styling.
+    $form['#attributes']['class'][] = 'content-width';
+    $form['account_data'] = [
+      '#type' => 'fieldset',
+      '#title' => $this->t('Account data'),
+      '#collapsible' => FALSE,
+      '#attributes' => [
+        'class' => ['account-data'],
+      ],
+    ];
+    $form['account_data']['username'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('Username'),
+      '#default_value' => $user->label(),
+      '#disabled' => TRUE,
+      '#description' => $this->t('The username is used internally and cannot be changed.'),
+    ];
+    $form['account_data']['mail'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('Email'),
+      '#default_value' => $user->getEmail(),
+      '#disabled' => TRUE,
+      '#description' => $this->t('The email address is used internally and cannot be changed.'),
+    ];
+    $form['account_data']['team'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('Team'),
+      '#default_value' => $user->get('field_team')->target_id?->entity?->label() ?? $this->t('None'),
+      '#disabled' => TRUE,
+      '#description' => $this->t('The team can only be changed by an administrator.'),
+    ];
+    $form['timezone']['#type'] = 'fieldset';
+    $form['timezone']['#collapsible'] = FALSE;
+    $form['timezone']['#attributes']['class'][] = 'account-data';
+
+    // Whitelist elements to show.
+    $keep_children = [
+      'account_data',
+      'timezone',
+      'form_build_id',
+      'form_token',
+      'form_id',
+      'actions',
+      'footer',
+    ];
+    foreach (Element::children($form) as $key) {
+      if (!in_array($key, $keep_children)) {
+        $form[$key]['#access'] = FALSE;
+      }
+    }
   }
 
 }
