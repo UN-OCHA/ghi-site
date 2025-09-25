@@ -4,6 +4,7 @@ global-styling:
       css/styles.css: {}
   js:
     js/common.js: {}
+    js/site-menu.js: {}
     js/login_destination.js: {}
   dependencies:
     - core/jquery
