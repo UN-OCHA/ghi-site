@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "b879c429dae8b6aea4882af836ed7578",
+    "content-hash": "cc47afe8ffa03e7b82a33b217e2c79de",
     "packages": [
         {
             "name": "asm89/stack-cors",
@@ -7092,20 +7092,20 @@
         },
         {
             "name": "drupal/social_api",
-            "version": "3.1.0",
+            "version": "4.0.2",
             "source": {
                 "type": "git",
                 "url": "https://git.drupalcode.org/project/social_api.git",
-                "reference": "3.1.0"
+                "reference": "4.0.2"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://ftp.drupal.org/files/projects/social_api-3.1.0.zip",
-                "reference": "3.1.0",
-                "shasum": "ceb8b35f718657a8f3d67d2e9a8384d4b35687ea"
+                "url": "https://ftp.drupal.org/files/projects/social_api-4.0.2.zip",
+                "reference": "4.0.2",
+                "shasum": "8da084f0262080b2dfbbaa0ffb72cc386c6221dc"
             },
             "require": {
-                "drupal/core": "^9.1 || ^10",
+                "drupal/core": "^9.5 || ^10 || ^11",
                 "ext-openssl": "*",
                 "league/oauth2-client": "^2.0"
             },
@@ -7116,8 +7116,8 @@
             "type": "drupal-module",
             "extra": {
                 "drupal": {
-                    "version": "3.1.0",
-                    "datestamp": "1660188487",
+                    "version": "4.0.2",
+                    "datestamp": "1725453406",
                     "security-coverage": {
                         "status": "covered",
                         "message": "Covered by Drupal's security advisory policy"
@@ -7169,30 +7169,32 @@
         },
         {
             "name": "drupal/social_auth",
-            "version": "3.1.0",
+            "version": "4.1.2",
             "source": {
                 "type": "git",
                 "url": "https://git.drupalcode.org/project/social_auth.git",
-                "reference": "3.1.0"
+                "reference": "4.1.2"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://ftp.drupal.org/files/projects/social_auth-3.1.0.zip",
-                "reference": "3.1.0",
-                "shasum": "9225e99d2a482ca82bb7faeefd2eb92867bf0f1a"
+                "url": "https://ftp.drupal.org/files/projects/social_auth-4.1.2.zip",
+                "reference": "4.1.2",
+                "shasum": "84dca21b4bce83ef9a1e6887d507f15829f9b6bc"
             },
             "require": {
-                "drupal/core": "^9.3 || ^10",
-                "drupal/social_api": "^3"
+                "drupal/core": "^9.5 || ^10 || ^11",
+                "drupal/social_api": "^4.0",
+                "php": ">=8.1"
             },
             "require-dev": {
-                "drupal/coder": "^8.3"
+                "drupal/coder": "^8.3",
+                "phpcompatibility/php-compatibility": "^9.3"
             },
             "type": "drupal-module",
             "extra": {
                 "drupal": {
-                    "version": "3.1.0",
-                    "datestamp": "1660225275",
+                    "version": "4.1.2",
+                    "datestamp": "1731637091",
                     "security-coverage": {
                         "status": "covered",
                         "message": "Covered by Drupal's security advisory policy"
@@ -7234,34 +7236,100 @@
                 "Drupal"
             ],
             "support": {
-                "source": "http://cgit.drupalcode.org/social_auth",
+                "source": "https://git.drupalcode.org/project/social_auth",
                 "issues": "https://www.drupal.org/project/issues/social_auth"
             }
         },
         {
-            "name": "drupal/social_auth_hid",
-            "version": "3.2.0",
+            "name": "drupal/social_auth_google",
+            "version": "4.0.3",
             "source": {
                 "type": "git",
-                "url": "https://git.drupalcode.org/project/social_auth_hid.git",
-                "reference": "8.x-3.2"
+                "url": "https://git.drupalcode.org/project/social_auth_google.git",
+                "reference": "4.0.3"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://ftp.drupal.org/files/projects/social_auth_hid-8.x-3.2.zip",
-                "reference": "8.x-3.2",
-                "shasum": "6506fb35d8cc4a9abad88217c32af8ff12ad4b11"
+                "url": "https://ftp.drupal.org/files/projects/social_auth_google-4.0.3.zip",
+                "reference": "4.0.3",
+                "shasum": "83df4179f3dd86e6e7168864ed108c240d010c4c"
+            },
+            "require": {
+                "drupal/core": "^9.5 || ^10 || ^11",
+                "drupal/social_auth": "^4.1",
+                "league/oauth2-google": "^4.0",
+                "php": ">=8.1"
+            },
+            "require-dev": {
+                "drupal/coder": "^8.3",
+                "phpcompatibility/php-compatibility": "^9.3"
+            },
+            "type": "drupal-module",
+            "extra": {
+                "drupal": {
+                    "version": "4.0.3",
+                    "datestamp": "1725460103",
+                    "security-coverage": {
+                        "status": "covered",
+                        "message": "Covered by Drupal's security advisory policy"
+                    }
+                }
+            },
+            "notification-url": "https://packages.drupal.org/8/downloads",
+            "license": [
+                "GPL-2.0-or-later"
+            ],
+            "authors": [
+                {
+                    "name": "Getulio Valentin Sánchez (gvso)",
+                    "homepage": "https://www.drupal.org/user/3101285",
+                    "email": "valentin2507@gmail.com"
+                },
+                {
+                    "name": "Himanshu Dixit (himanshu-dixit)",
+                    "homepage": "https://www.drupal.org/user/3513954",
+                    "email": "hudixt@gmail.com"
+                },
+                {
+                    "name": "Christopher C. Wells (wells)",
+                    "homepage": "https://www.drupal.org/user/2452278",
+                    "email": "drupal.org@chris-wells.net"
+                }
+            ],
+            "description": "Social Auth integration for Google.",
+            "homepage": "https://www.drupal.org/project/social_auth_google",
+            "keywords": [
+                "Drupal"
+            ],
+            "support": {
+                "source": "https://git.drupalcode.org/project/social_auth_google",
+                "issues": "https://www.drupal.org/project/issues/social_auth_google"
+            }
+        },
+        {
+            "name": "drupal/social_auth_hid",
+            "version": "4.0.0",
+            "source": {
+                "type": "git",
+                "url": "https://git.drupalcode.org/project/social_auth_hid.git",
+                "reference": "8.x-4.0"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://ftp.drupal.org/files/projects/social_auth_hid-8.x-4.0.zip",
+                "reference": "8.x-4.0",
+                "shasum": "c4c9bcfd327f5ca7165f00d8d4098aedda51a2c6"
             },
             "require": {
                 "drupal/core": "^9 || ^10",
-                "drupal/social_auth": "^3.0",
+                "drupal/social_auth": "^4.0",
                 "un-ocha/oauth2-hid": "^1.0.2"
             },
             "type": "drupal-module",
             "extra": {
                 "drupal": {
-                    "version": "8.x-3.2",
-                    "datestamp": "1653898962",
+                    "version": "8.x-4.0",
+                    "datestamp": "1695109966",
                     "security-coverage": {
                         "status": "covered",
                         "message": "Covered by Drupal's security advisory policy"
@@ -9336,6 +9404,61 @@
                 "source": "https://github.com/thephpleague/oauth2-client/tree/2.8.1"
             },
             "time": "2025-02-26T04:37:30+00:00"
+        },
+        {
+            "name": "league/oauth2-google",
+            "version": "4.0.1",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/thephpleague/oauth2-google.git",
+                "reference": "1b01ba18ba31b29e88771e3e0979e5c91d4afe76"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/thephpleague/oauth2-google/zipball/1b01ba18ba31b29e88771e3e0979e5c91d4afe76",
+                "reference": "1b01ba18ba31b29e88771e3e0979e5c91d4afe76",
+                "shasum": ""
+            },
+            "require": {
+                "league/oauth2-client": "^2.0",
+                "php": "^7.3 || ^8.0"
+            },
+            "require-dev": {
+                "eloquent/phony-phpunit": "^6.0 || ^7.1",
+                "phpunit/phpunit": "^8.0 || ^9.0",
+                "squizlabs/php_codesniffer": "^3.0"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "League\\OAuth2\\Client\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Woody Gilk",
+                    "email": "hello@shadowhand.com",
+                    "homepage": "https://shadowhand.com"
+                }
+            ],
+            "description": "Google OAuth 2.0 Client Provider for The PHP League OAuth2-Client",
+            "keywords": [
+                "Authentication",
+                "authorization",
+                "client",
+                "google",
+                "oauth",
+                "oauth2"
+            ],
+            "support": {
+                "issues": "https://github.com/thephpleague/oauth2-google/issues",
+                "source": "https://github.com/thephpleague/oauth2-google/tree/4.0.1"
+            },
+            "time": "2023-03-17T15:20:52+00:00"
         },
         {
             "name": "maennchen/zipstream-php",

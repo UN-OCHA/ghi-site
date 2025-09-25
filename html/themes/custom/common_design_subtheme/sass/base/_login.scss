@@ -1,0 +1,32 @@
+.site-login {
+  margin-top: 3rem;
+
+  .login-link {
+    margin-top: 0;
+    border-radius: 5px;
+    font-size: var(--cd-font-size--base);
+    font-weight: bold;
+
+    &::before {
+      position: relative;
+      top: 1px;
+      left: 0;
+      display: inline-block;
+      width: 1rem;
+      height: 1rem;
+      margin-right: 0.5rem;
+    }
+
+    &.login-link--un::before {
+      content: url("/themes/custom/common_design_subtheme/img/logos/ocha-logo-blue.svg");
+      filter: var(--ghi-filter-grey--dark);
+    }
+    &.login-link--google::before {
+      content: url("/themes/custom/common_design_subtheme/img/logos/google.svg");
+    }
+  }
+
+  .site-login-other {
+    margin-top: 2rem;
+  }
+}
