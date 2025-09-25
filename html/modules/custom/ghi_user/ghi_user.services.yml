@@ -1,4 +1,7 @@
 services:
+  ghi_user.user_form_alter:
+    class: Drupal\ghi_user\Form\UserFormAlter
+    arguments: ['@module_handler', '@plugin.manager.block', '@current_user']
   ghi_user.logout_redirect:
     class: Drupal\ghi_user\LogoutRedirect
     arguments: ['@request_stack', '@path.matcher', '@entity_type.manager', '@config.factory']
