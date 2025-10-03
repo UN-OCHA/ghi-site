@@ -895,12 +895,23 @@
      *   The current style instance.
      */
     handleFeatureClick = function (e, self) {
-      let feature = self.state.getFeatureFromEvent(e, self.adminAreaLayerId) ?? self.state.getFeatureFromEvent(e);
+      let feature = null;
+      if (!self.state.isOverviewMap()) {
+        // For non-overview maps, we look first at the geojson layer, then at
+        // the normal feature layer.
+        feature = self.state.getFeatureFromEvent(e, self.adminAreaLayerId) ?? self.state.getFeatureFromEvent(e);
+      }
+      else {
+        // For overview maps, we only look at the normal feature layer.
+        feature = self.state.getFeatureFromEvent(e);
+      }
       if (!feature || self.isHidden(feature)) {
         return;
       }
-      let object_id = feature.properties.object_id;
-      let object = self.state.getLocationById(object_id);
+      let object = self.state.getLocationFromFeature(feature);
+      if (!object) {
+        return;
+      }
       self.showSidebarForObject(object);
     }
 
