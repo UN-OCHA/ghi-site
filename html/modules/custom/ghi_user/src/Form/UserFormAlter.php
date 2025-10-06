@@ -172,10 +172,13 @@ class UserFormAlter {
    *   The form state object.
    */
   public function alterEditForm(&$form, FormStateInterface $form_state) {
+    $form['account']['pass']['#access'] = FALSE;
+
     if ($this->currentUser->hasPermission('administer users')) {
       // Administrator should see all fields.
       return;
     }
+
     /** @var \Drupal\user\UserInterface $user */
     $user = $form_state->getFormObject()->getEntity();
 
@@ -208,7 +211,7 @@ class UserFormAlter {
     $form['account_data']['team'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Team'),
-      '#default_value' => $user->get('field_team')->target_id?->entity?->label() ?? $this->t('None'),
+      '#default_value' => $user->get('field_team')->entity?->label() ?? $this->t('None'),
       '#disabled' => TRUE,
       '#description' => $this->t('The team can only be changed by an administrator.'),
     ];
