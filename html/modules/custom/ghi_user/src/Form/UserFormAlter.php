@@ -172,7 +172,11 @@ class UserFormAlter {
    *   The form state object.
    */
   public function alterEditForm(&$form, FormStateInterface $form_state) {
+    // Disable password fields.
     $form['account']['pass']['#access'] = FALSE;
+    $form['account']['current_pass']['#access'] = FALSE;
+    // Don't require password for changing the mail address.
+    $form_state->set('user_pass_reset', 1);
 
     if ($this->currentUser->hasPermission('administer users')) {
       // Administrator should see all fields.
