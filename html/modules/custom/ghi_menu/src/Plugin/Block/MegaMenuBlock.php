@@ -18,7 +18,7 @@ use Drupal\menu_link_content\Plugin\Menu\MenuLinkContent;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
- * Provides a 'SectionsByTerm' block.
+ * Provides a 'MegaMenuBlock' block.
  *
  * @Block(
  *  id = "mega_menu_block",
@@ -163,7 +163,11 @@ class MegaMenuBlock extends BlockBase implements ContainerFactoryPluginInterface
       ],
       '#parents' => ['tabs'],
       '#attached' => [
-        'drupalSettings' => ['widthBreakpoint' => 1024],
+        // Set the width breakpoint which is used by vertical-tabs.js to
+        // determine the min width for vertical tabs to render their markup.
+        // We use this to have the same markup on all screen sizes so that we
+        // can apply consistent styling even when the window size is changed.
+        'drupalSettings' => ['widthBreakpoint' => 1],
         'library' => [
           'ghi_menu/mega_menu',
         ],

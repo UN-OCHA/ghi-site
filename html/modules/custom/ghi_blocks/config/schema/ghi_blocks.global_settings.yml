@@ -1,0 +1,49 @@
+ghi_blocks.global_settings:
+  type: sequence
+  label: 'Year settings'
+  orderby: key
+  sequence:
+    type: mapping
+    mapping:
+      sort_by_plan_type:
+        type: boolean
+        label: 'Sort by plan type'
+      plan_short_names:
+        type: boolean
+        label: 'Show plan short names'
+      plan_included_in_gho_tooltip:
+        type: boolean
+        label: 'Show a tooltip for plans included in the GHO'
+      plan_type_icons:
+        type: boolean
+        label: 'Show plan type icons'
+      use_latest_plan_data:
+        type: boolean
+        label: 'Use the latest plan data'
+      funding:
+        type: boolean
+        label: 'Show funding'
+      requirements:
+        type: boolean
+        label: 'Show requirements'
+      coverage:
+        type: boolean
+        label: 'Show coverage'
+      caseload_expected_reach:
+        type: boolean
+        label: 'Show expected reach'
+      caseload_expected_reached:
+        type: boolean
+        label: 'Show expected reached'
+      caseload_latest_reach:
+        type: boolean
+        label: 'Show latest reach'
+      caseload_reached:
+        type: boolean
+        label: 'Show reached'
+      plan_status:
+        type: boolean
+        label: 'Show the plan status'
+      plan_downloads:
+        type: boolean
+        label: 'Show the download'

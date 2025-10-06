@@ -5,24 +5,54 @@ hpc_api.settings:
     url:
       type: string
       label: 'The API url'
+      constraints:
+        NotNull: []
     default_api_version:
       type: string
       label: 'The default API version as a string (v1, v2, ..)'
+      constraints:
+        Regex:
+          pattern: '/^v\d$/'
+          match: true
+          message: 'Version string must be the letter "v" followed by a single digit.'
     auth_username:
-      type: boolean
+      type: string
       label: 'A basic auth username'
+      nullable: true
+      constraints:
+        NotBlank:
+          allowNull: true
     auth_password:
       type: string
       label: 'A basic auth password'
+      nullable: true
+      constraints:
+        NotBlank:
+          allowNull: true
+    api_key:
+      type: string
+      label: 'An API key'
+      nullable: true
+      constraints:
+        NotBlank:
+          allowNull: true
     public_base_path:
       type: string
       label: 'The base path for public AI requests'
+      constraints:
+        NotNull: []
     timeout:
       type: integer
       label: 'The timeout for API requests'
+      constraints:
+        Range:
+          min: 0
     cache_lifetime:
       type: integer
       label: 'The cache lifetime'
+      constraints:
+        Range:
+          min: 0
     use_gzip_compression:
       type: boolean
       label: 'Whether to use gzip compression for API requests'

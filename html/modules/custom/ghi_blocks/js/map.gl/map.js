@@ -100,7 +100,7 @@
             }
             feature.id = Number(location.location_id);
             feature.properties = {
-              object_id: location.location_id,
+              object_id: location.object_id ?? location.location_id,
               location_id: location.location_id,
               location_name: location.location_name,
             };

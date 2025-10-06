@@ -5,18 +5,42 @@ hpc_downloads.settings:
     logo_pdf:
       type: string
       label: 'Logo id for PDF'
+      nullable: true
+      constraints:
+        NotBlank:
+          allowNull: true
     logo_path:
       type: string
       label: 'Path to the logo'
+      nullable: true
+      constraints:
+        NotBlank:
+          allowNull: true
     logo_path_xls:
       type: string
       label: 'Path to the logo for Excel exports'
+      nullable: true
+      constraints:
+        NotBlank:
+          allowNull: true
     download_lifetime:
       type: integer
       label: 'The lifetime of a generated download file'
+      nullable: true
+      constraints:
+        NotBlank:
+          allowNull: true
+        Range:
+          min: 0
     excel_segment_size:
       type: integer
       label: 'The number of rows generated for each segment'
+      nullable: true
+      constraints:
+        NotBlank:
+          allowNull: true
+        Range:
+          min: 0
     excel_footnotes_as_data_validation_message:
       type: boolean
       label: 'Include footnotes via the data validation prompt'

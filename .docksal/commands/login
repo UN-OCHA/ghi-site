@@ -2,14 +2,15 @@
 
 ## Login into the site.
 ##
-## Usage: fin login [-h] [-u UID]
+## Usage: fin login [-h] [-u UID|-n name]
 ##
 
-usage="$(basename "$0") [-h] [-u UID]
+usage="$(basename "$0") [-h] [-u UID|-n name]
 
 where:
-    -h  show this help text
-    -u|---uid  the UID to use for login"
+    -h          show this help text
+    -u|---uid   the UID to use for login
+    -n|---name  the name to use for login"
 
 # Login as user 1 by default.
 USER_ID=1
@@ -17,7 +18,22 @@ USER_ID=1
 while [ "$1" != "" ]; do
   case $1 in
     -u | --uid )          shift
-                          USER_ID=$1
+                          USER_ID=$(fin drush user:information --uid=$1 --format=string --fields=uid)
+                          STATUS=$?
+                          if [[ $STATUS -eq 1 ]]; then
+                            echo "No user found with the id ${1}"
+                            exit 1
+                          fi
+                          USER_ID=${USER_ID//[$'\t\r\n']}
+                          ;;
+    -n | --name )         shift
+                          USER_ID=$(fin drush user:information $1 --format=string --fields=uid)
+                          STATUS=$?
+                          if [[ $STATUS -eq 1 ]]; then
+                            echo "No user found for the name ${1}"
+                            exit 1
+                          fi
+                          USER_ID=${USER_ID//[$'\t\r\n']}
                           ;;
     -h | --help )         echo "$usage"
                           exit
@@ -29,4 +45,6 @@ while [ "$1" != "" ]; do
 done
 
 URL=$(fin drush uli --uid ${USER_ID})
-fin utils/open-link -i $URL
+if [[ $URL =~ ^"http" ]]; then
+  fin utils/open-link -i $URL
+fi

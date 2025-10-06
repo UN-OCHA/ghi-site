@@ -5,6 +5,8 @@ ghi_base_objects.base_object_type.*:
     id:
       type: string
       label: 'ID'
+      constraints:
+        NotNull: []
     label:
       type: label
       label: 'Label'
@@ -13,3 +15,5 @@ ghi_base_objects.base_object_type.*:
       label: 'Has year'
     uuid:
       type: string
+      constraints:
+        Uuid: []
