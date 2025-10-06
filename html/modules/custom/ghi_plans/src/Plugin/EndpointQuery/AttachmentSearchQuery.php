@@ -19,7 +19,6 @@ use Drupal\hpc_api\Query\EndpointQueryBase;
  *   label = @Translation("Attachment search query"),
  *   endpoint = {
  *     "public" = "public/attachment",
- *     "authenticated" = "attachment",
  *     "version" = "v2",
  *     "query" = {
  *       "version" = "current",

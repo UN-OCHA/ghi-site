@@ -144,7 +144,7 @@ function ghi_teams_menu_local_actions_alter(&$local_actions) {
  */
 function ghi_teams_form_user_form_alter(&$form, FormStateInterface $form_state) {
   $user = \Drupal::currentUser();
-  $form['field_team']['#access'] = $user->hasPermission('administer teams');
+  $form['field_team']['#disabled'] = !$user->hasPermission('administer teams');
 }
 
 /**

@@ -16,7 +16,6 @@ use Drupal\hpc_api\Query\EndpointQueryBase;
  *   label = @Translation("Entity query"),
  *   endpoint = {
  *     "public" = "public/{entity_type}/{entity_id}",
- *     "authenticated" = "{entity_type}/{entity_id}",
  *     "version" = "v2"
  *   }
  * )

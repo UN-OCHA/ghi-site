@@ -44,6 +44,9 @@ function ghi_base_objects_deploy_base_object_bundles_admin_menu_2() {
 function ghi_base_objects_deploy_copy_geojson_source_files() {
   $file_system = new Filesystem();
   $source_dir = \Drupal::moduleHandler()->getModule('ghi_base_objects')->getPath() . '/assets/geojson/';
+  if (!is_dir($source_dir)) {
+    return;
+  }
   $target_dir = GeoJson::GEOJSON_SOURCE_DIR;
   $file_system->mirror($source_dir, $target_dir);
 }

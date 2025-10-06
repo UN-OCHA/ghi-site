@@ -1,0 +1,34 @@
+form.user-form {
+  margin-bottom: 5rem;
+
+  fieldset.account-data {
+
+    & > legend {
+        border-bottom: 4px solid var(--cd-primary-color);
+      }
+
+    & > .fieldset-wrapper {
+      max-width: 40rem;
+      margin-top: 1rem;
+
+      & > div.form-item {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: anchor-center;
+        justify-content: space-between;
+        margin-top: 1rem;
+        padding: 0;
+        border-bottom: 0;
+
+        & > input[disabled="disabled"] {
+          color: var(--ghi-grey--dark);
+          background: var(--ghi-default-background-color);
+        }
+
+        & > .description {
+          flex-grow: 1;
+        }
+      }
+    }
+  }
+}

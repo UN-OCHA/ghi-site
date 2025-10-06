@@ -18,6 +18,3 @@ services:
     arguments: ['@context.repository']
     tags:
       - { name: 'event_subscriber' }
-  hpc_common.hid_user_data:
-    class: Drupal\hpc_common\Hid\HidUserData
-    arguments: ['@request_stack', '@entity_type.manager', '@current_user']
