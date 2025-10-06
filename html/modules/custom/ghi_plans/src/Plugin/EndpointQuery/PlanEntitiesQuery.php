@@ -23,8 +23,6 @@ use Drupal\hpc_api\Query\EndpointQueryBase;
  *   label = @Translation("Plan entities query"),
  *   endpoint = {
  *     "public" = "public/plan/{plan_id}",
- *     "authenticated" = "plan/{plan_id}",
- *     "api_key" = "plan/{plan_id}",
  *     "version" = "v2",
  *     "query" = {
  *       "content" = "entities",
