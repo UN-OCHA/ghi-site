@@ -1,0 +1,5 @@
+ghi_blocks.queue_pages_with_invalid_layout_defitions:
+  route_name: ghi_blocks.queue_merging.invalid_layout_definitions
+  title: Queue all invalid pages for fixing
+  appears_on:
+    - ghi_blocks.reports.invalid_layout_definitions

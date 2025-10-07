@@ -1,4 +1,6 @@
 services:
+  ghi_blocks.layout_section_manager:
+    class: Drupal\ghi_blocks\LayoutBuilder\LayoutSectionManager
   ghi_blocks.layout_builder_edit_page.selection_criteria_argument:
     class: Drupal\ghi_blocks\LayoutBuilder\SelectionCriteriaArgument
     arguments: ['@current_route_match', '@request_stack']
