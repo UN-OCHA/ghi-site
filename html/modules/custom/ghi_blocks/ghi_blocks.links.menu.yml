@@ -31,6 +31,11 @@ ghi_blocks.config.table.settings:
   description: 'Configure table settings'
   parent: system.admin_config_ghi
 
+ghi_blocks.reports.invalid_layout_definitions:
+  title: 'Invalid layout definitions'
+  route_name: ghi_blocks.reports.invalid_layout_definitions
+  description: 'List pages with invalid layout definitions'
+  parent: system.admin_reports
 ghi_blocks.reports.broken_revisions:
   title: 'Broken revisions'
   route_name: ghi_blocks.reports.broken_revisions
