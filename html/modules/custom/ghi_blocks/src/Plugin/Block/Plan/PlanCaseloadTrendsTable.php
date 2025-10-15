@@ -114,7 +114,7 @@ class PlanCaseloadTrendsTable extends GHIBlockBase implements OverrideDefaultTit
         [
           $this->getPluginId(),
           $this->getUuid(),
-          $this->getCurrentUri(),
+          $this->getPageNode()?->toUrl()?->toString() ?? $this->getCurrentUri(),
         ],
       ],
       '#create_placeholder' => TRUE,
