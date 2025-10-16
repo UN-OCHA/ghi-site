@@ -195,7 +195,7 @@ class PlanEntityLogframe extends GHIBlockBase implements MultiStepFormBlockInter
           ],
           '#create_placeholder' => TRUE,
           '#cache' => [
-            'context' => ['url.path'],
+            'context' => $this->getCacheContexts(),
           ],
         ];
       }
