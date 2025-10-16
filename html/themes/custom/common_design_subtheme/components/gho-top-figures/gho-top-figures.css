@@ -36,10 +36,13 @@
   color: inherit;
 }
 .gho-top-figures .gho-figure--needs-related .gho-figure__value {
-  color: #0074b7;
+  color: #009edb;
+}
+.gho-top-figures .gho-figure--targeted .gho-figure__value {
+  color: #f58220;
 }
 .gho-top-figures .gho-figure--emphasized .gho-figure__value {
-  color: #eb1d48;
+  color: #ed1847;
 }
 
 @media (min-width: 576px) {
