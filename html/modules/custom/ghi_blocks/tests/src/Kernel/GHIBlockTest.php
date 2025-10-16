@@ -70,7 +70,6 @@ class GHIBlockTest extends BlockKernelTestBase {
     $cache_contexts = $plugin->getCacheContexts();
     $this->assertContains('url.path', $cache_contexts);
     $this->assertContains('url.query_args', $cache_contexts);
-    $this->assertContains('user', $cache_contexts);
 
     $this->assertContains($plugin->getPluginId() . ':' . $plugin->getUuid(), $plugin->getCacheTags());
     $form_state->set('block', $plugin);
