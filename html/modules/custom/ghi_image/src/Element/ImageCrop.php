@@ -61,6 +61,7 @@ class ImageCrop extends ImageWidgetCropImageCrop {
   public static function processCrop(array &$element, FormStateInterface $form_state, array &$complete_form) {
     /** @var \Drupal\file\Entity\File $file */
     $file = $element['#file'];
+    $is_svg = str_contains($file->getMimeType(), 'svg');
     if (!empty($file) && preg_match('/image/', $file->getMimeType())) {
       $crop_type_list = $element['#crop_type_list'];
       // Display all crop types if none is selected.
@@ -120,7 +121,7 @@ class ImageCrop extends ImageWidgetCropImageCrop {
             '#type' => 'details',
             '#title' => $title,
             '#group' => $list_id,
-            '#attributes' => [
+            '#attributes' => !$is_svg ? [
               'data-drupal-iwc' => 'type',
               'data-drupal-iwc-id' => $type,
               'data-drupal-iwc-ratio' => $ratio,
@@ -130,7 +131,7 @@ class ImageCrop extends ImageWidgetCropImageCrop {
               'data-drupal-iwc-hard-limit' => Json::encode($crop_type->getHardLimit()),
               'data-drupal-iwc-original-width' => ($file instanceof FileEntity) ? $file->getMetadata('width') : ($local_file_exists ? getimagesize($file_uri)[0] : NULL),
               'data-drupal-iwc-original-height' => ($file instanceof FileEntity) ? $file->getMetadata('height') : ($local_file_exists ? getimagesize($file_uri)[1] : NULL),
-            ],
+            ] : [],
           ];
 
           // Generation of html List with image & crop information.
@@ -141,7 +142,7 @@ class ImageCrop extends ImageWidgetCropImageCrop {
             '#weight' => -10,
           ];
 
-          $element['crop_wrapper'][$type]['crop_container']['image'] = [
+          $element['crop_wrapper'][$type]['crop_container']['image'] = !$is_svg ? [
             '#theme' => 'imagecache_external',
             '#style_name' => $element['#crop_preview_image_style'],
             '#attributes' => [
@@ -150,6 +151,9 @@ class ImageCrop extends ImageWidgetCropImageCrop {
             ],
             '#uri' => $file_uri,
             '#weight' => -10,
+          ] : [
+            '#theme' => 'image',
+            '#uri' => $file_uri,
           ];
 
           $element['crop_wrapper'][$type]['crop_container']['reset'] = [
@@ -160,7 +164,16 @@ class ImageCrop extends ImageWidgetCropImageCrop {
               'data-drupal-iwc' => 'reset',
             ],
             '#weight' => -10,
+            '#access' => !$is_svg,
           ];
+
+          if ($is_svg) {
+            $element['crop_wrapper'][$type]['crop_container']['disabled'] = [
+              '#type' => 'html_tag',
+              '#tag' => 'p',
+              '#value' => t('Cropping is disabled for SVG images'),
+            ];
+          }
 
           // Generation of html List with image & crop information.
           $element['crop_wrapper'][$type]['crop_container']['values'] = [
