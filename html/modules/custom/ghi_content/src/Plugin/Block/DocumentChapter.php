@@ -87,6 +87,9 @@ class DocumentChapter extends ContentBlockBase implements MultiStepFormBlockInte
         'tags' => $cache_tags,
         'contexts' => ['url.path'],
       ],
+      '#attributes' => [
+        'class' => [],
+      ],
     ];
 
     $tabs = [
@@ -127,9 +130,10 @@ class DocumentChapter extends ContentBlockBase implements MultiStepFormBlockInte
       ];
     }
     if ($document_node->isProtected()) {
-      $build['#attributes'] = [
-        'class' => ['protected'],
-      ];
+      $build['#attributes']['class'][] = 'protected';
+      if (!$document_node->protectedAccess()) {
+        $build['#attributes']['class'][] = 'protected-no-access';
+      }
     }
     return $build;
   }
