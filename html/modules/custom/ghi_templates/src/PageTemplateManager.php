@@ -145,16 +145,27 @@ class PageTemplateManager implements ContainerInjectionInterface {
     }
 
     // Clear the current storage.
-    if ($overwrite && $section->getComponents()) {
-      foreach ($section->getComponents() as $component) {
-        $plugin = $component->getPlugin();
-        if ($plugin instanceof GHIBlockBase && !$plugin->canBeRemoved()) {
-          // Don't remove components that could not have been removed manually
-          // via the UI. In this case, the paragraph is locked, so it can't be
-          // removed.
+    if ($overwrite && $section_storage->getSections()) {
+      $_section_keys = array_keys($section_storage->getSections());
+      rsort($_section_keys);
+      foreach ($_section_keys as $_delta) {
+        if ($_delta > $delta) {
+          // We only want a single section, so we remove anthing with a delta
+          // higher than 0.
+          $section_storage->removeSection($_delta);
           continue;
         }
-        $section->removeComponent($component->getUuid());
+        $_section = $section_storage->getSection($_delta);
+        foreach ($_section->getComponents() as $component) {
+          $plugin = $component->getPlugin();
+          if ($plugin instanceof GHIBlockBase && !$plugin->canBeRemoved()) {
+            // Don't remove components that could not have been removed manually
+            // via the UI. In this case, the paragraph is locked, so it can't be
+            // removed.
+            continue;
+          }
+          $_section->removeComponent($component->getUuid());
+        }
       }
     }
 
@@ -190,7 +201,7 @@ class PageTemplateManager implements ContainerInjectionInterface {
         $component->setConfiguration($configuration);
         $components[$component->getUuid()] = $component->toArray();
       }
-      $section = $section_storage->getSection(0);
+      $section = $section_storage->getSection($delta);
       foreach ($components as $component) {
         $section->appendComponent(SectionComponent::fromArray($component));
       }

@@ -114,21 +114,18 @@ class PlanCaseloadTrendsTable extends GHIBlockBase implements OverrideDefaultTit
         [
           $this->getPluginId(),
           $this->getUuid(),
-          $this->getCurrentUri(),
+          $this->getPageNode()?->toUrl()?->toString() ?? $this->getCurrentUri(),
         ],
       ],
       '#create_placeholder' => TRUE,
       '#cache' => [
         // Cache this per url and query to also capture the block settings.
-        'context' => [
-          'url.query_args',
-          'url.path',
-        ],
+        'context' => $this->getCacheContexts(),
         'tags' => $this->getCacheTags(),
         'max' => $this->getCacheMaxAge(),
         // Adding these cache keys here will trigger autoplaceholdering.
         'keys' => [
-          \Drupal::request()->getPathInfo(),
+          $this->getPageNode()?->toUrl()?->toString() ?? $this->getCurrentUri(),
           \Drupal::request()->query->get('bs'),
         ],
       ],

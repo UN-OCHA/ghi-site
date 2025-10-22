@@ -189,13 +189,13 @@ class PlanEntityLogframe extends GHIBlockBase implements MultiStepFormBlockInter
             [
               $this->getPluginId(),
               $this->getUuid(),
-              $this->getCurrentUri(),
+              $this->getPageNode()?->toUrl()?->toString() ?? $this->getCurrentUri(),
               $entity->id(),
             ],
           ],
           '#create_placeholder' => TRUE,
           '#cache' => [
-            'context' => ['url.path'],
+            'context' => $this->getCacheContexts(),
           ],
         ];
       }

@@ -155,6 +155,33 @@ ghi_blocks.node.page_elements:
   requirements:
     _custom_access: '\Drupal\ghi_blocks\Controller\PageElementsController::access'
 
+ghi_blocks.reports.invalid_layout_definitions:
+  path: '/admin/reports/invalid-layout-definitions'
+  defaults:
+    _controller: '\Drupal\ghi_blocks\Controller\InvalidLayoutReportController::list'
+    _title: 'Pages with invalid layout definitions'
+  requirements:
+    _permission: 'administer ghi global config'
+ghi_blocks.queue_merging.invalid_layout_definitions:
+  path: '/admin/reports/invalid-layout-definitions/queue-for-merging'
+  defaults:
+    _controller: '\Drupal\ghi_blocks\Controller\InvalidLayoutReportController::queueForMerging'
+    _title: 'Queue invalid pages for merging of the sections'
+  requirements:
+    _permission: 'administer ghi global config'
+ghi_blocks.node.merging_sections:
+  path: '/node/{node}/merge-sections'
+  defaults:
+    _controller: '\Drupal\ghi_blocks\Controller\InvalidLayoutReportController::mergeSections'
+    _title: 'Merge layout sections into one'
+  options:
+    parameters:
+      node:
+        type: entity:node
+    _admin_route: TRUE
+  requirements:
+    _permission: 'administer ghi global config'
+
 ghi_blocks.reports.broken_revisions:
   path: '/admin/reports/broken-revisions'
   defaults:
