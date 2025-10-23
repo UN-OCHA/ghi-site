@@ -35,7 +35,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\RequestStack;
 
 /**
- * Base manager service class..
+ * Base manager service class.
  */
 abstract class BaseContentManager implements ContainerInjectionInterface {
 
