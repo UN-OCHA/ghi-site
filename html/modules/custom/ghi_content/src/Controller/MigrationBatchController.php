@@ -48,7 +48,6 @@ class MigrationBatchController {
       foreach ($source_iterator as $item) {
         $source_id_values[] = array_intersect_key($item, $source_keys);
       }
-
       $context['finished'] = 0;
       $context['sandbox'] = [];
       $context['sandbox']['total'] = count($nodes);
@@ -58,7 +57,7 @@ class MigrationBatchController {
       $context['results'][$migration->id()] = [];
     }
 
-    if (!empty($context['sandbox']['nodes'])) {
+    if (!empty($context['sandbox']['nodes']) && !empty($context['sandbox']['source_ids'])) {
       $node = array_shift($context['sandbox']['nodes']);
       // Let us only do the following when the full imports are run.
       if ($node instanceof ContentBase && empty($source_tags)) {
