@@ -122,7 +122,7 @@ abstract class HPCViewsQueryBase extends SearchApiQuery implements HPCDownloadVi
   }
 
   /**
-   * Log the endpoint URL used for the current view..
+   * Log the endpoint URL used for the current view.
    *
    * @param array $args
    *   An array of arguments to pass on to the endpoint.
