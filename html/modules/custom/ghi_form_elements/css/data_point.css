@@ -24,3 +24,8 @@
 .form-type--data_point select {
   width: auto;
 }
+
+.form-type--data_point .form-type--select.form-disabled {
+  opacity: 0.5;
+  pointer-events: none;
+}
