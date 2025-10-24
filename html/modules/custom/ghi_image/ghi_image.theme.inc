@@ -14,6 +14,9 @@ use Drupal\Core\Url;
 function ghi_image_preprocess_ghi_image(&$variables) {
   $style = $variables['style'] ?? NULL;
   $responsive_image_style = $variables['responsive_image_style'] ?? NULL;
+  if (str_ends_with($variables['url'], '.svg')) {
+    $responsive_image_style = NULL;
+  }
   $theme = $responsive_image_style ? 'responsive_image' : 'image';
 
   // For external urls we want to use imagecache_external.
