@@ -774,6 +774,9 @@ class PlanEntityLogframe extends GHIBlockBase implements MultiStepFormBlockInter
       return [];
     }
     $entities = $block_instance->getRenderableEntities();
+    if (!array_key_exists($entity_id, $entities)) {
+      return [];
+    }
     $tables = $block_instance->buildTablesContainer($entities[$entity_id], $block_instance->getBlockConfig()['tables']);
 
     // Reset the static caches to prevent memory issues. Lazy load callbacks
