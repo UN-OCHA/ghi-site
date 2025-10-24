@@ -241,7 +241,7 @@ class FundingData extends ConfigurationContainerItemPluginBase {
 
     $rendered = $this->buildRenderArray($theme_function, $this->getValue($data_type_key, $scale, $cluster_restrict), [
       'scale' => $scale,
-      'decimal_format' => $plan_object->getDecimalFormat(),
+      'decimal_format' => $plan_object?->getDecimalFormat(),
     ] + $theme_options);
 
     // See if we need to add a footnote.
@@ -255,7 +255,7 @@ class FundingData extends ConfigurationContainerItemPluginBase {
     $fts_tooltip = NULL;
     if ($this->needsFtsLink()) {
       $link_icon = ThemeHelper::themeFtsIcon();
-      $fts_link = $this->needsFtsLink() ? self::buildFtsLink($link_icon, $this->getContextValue('plan_object'), $data_type['fts_link_target'], $this->getContextValue('base_object')) : NULL;
+      $fts_link = $this->needsFtsLink() && $plan_object ? self::buildFtsLink($link_icon, $plan_object, $data_type['fts_link_target'], $this->getContextValue('base_object')) : NULL;
       $fts_tooltip = $fts_link ? [
         '#theme' => 'hpc_tooltip',
         '#tooltip' => $this->t('View this data in FTS', [], ['langcode' => $plan_object?->getPlanLanguage()]),
