@@ -2,18 +2,20 @@
 
 ## Login into the site.
 ##
-## Usage: fin login [-h] [-u UID|-n name]
+## Usage: fin login [-h] [-u UID|-n name|]
 ##
 
 usage="$(basename "$0") [-h] [-u UID|-n name]
 
 where:
-    -h          show this help text
-    -u|---uid   the UID to use for login
-    -n|---name  the name to use for login"
+    -h              show this help text
+    -u|---uid       the UID to use for login
+    -n|---name      the name to use for login
+    -s|---show-url  show the login url"
 
 # Login as user 1 by default.
 USER_ID=1
+SHOW_URL=0
 
 while [ "$1" != "" ]; do
   case $1 in
@@ -35,6 +37,8 @@ while [ "$1" != "" ]; do
                           fi
                           USER_ID=${USER_ID//[$'\t\r\n']}
                           ;;
+    -s | --show-url )     SHOW_URL=1
+                          ;;
     -h | --help )         echo "$usage"
                           exit
                           ;;
@@ -46,5 +50,9 @@ done
 
 URL=$(fin drush uli --uid ${USER_ID})
 if [[ $URL =~ ^"http" ]]; then
-  fin utils/open-link -i $URL
+  if [[ $SHOW_URL -eq 1 ]]; then
+    echo $URL
+  else
+    fin utils/open-link -i $URL
+  fi
 fi

@@ -12,3 +12,4 @@ dependencies:
   - hpc_api:hpc_api
   - ghi_plans:ghi_plans
   - active_tags:active_tags
+  - form_options_attributes:form_options_attributes

@@ -106,7 +106,27 @@ abstract class ConfigurationContainerItemPluginBase extends PluginBase implement
   /**
    * {@inheritdoc}
    */
-  public function submitForm(array $values, $mode) {}
+  public function buildCustomActionForm($element, FormStateInterface $form_state) {
+    self::setElementParents($element);
+
+    $this->wrapperId = Html::getClass(implode('-', array_merge($element['#array_parents'], [
+      $this->getPluginId(),
+      'container-wrapper',
+    ])));
+    $element['#prefix'] = '<div id="' . $this->wrapperId . '">';
+    $element['#suffix'] = '</div>';
+    return $element;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function massageValues(array &$values): void {}
+
+  /**
+   * {@inheritdoc}
+   */
+  public function submitForm(array $values, $mode): void {}
 
   /**
    * {@inheritdoc}
@@ -337,7 +357,7 @@ abstract class ConfigurationContainerItemPluginBase extends PluginBase implement
    *   The element array.
    * @param \Drupal\Core\Form\FormStateInterface $form_state
    *   The form state object.
-   * @param string $value_key
+   * @param array|string $value_key
    *   The value to retrieve.
    * @param mixed $default_value
    *   The default value to use.
@@ -362,14 +382,14 @@ abstract class ConfigurationContainerItemPluginBase extends PluginBase implement
       // this key and return the value from config or the default value.
       $_form_state->set($value_key, NULL);
       $_form_state->setValue($value_parents, NULL);
-      return $this->get($value_key) ?: $default_value;
+      return $this->get($value_key) ?? $default_value;
     }
 
     // Use the submitted values only if this was not a cancel action.
     $submitted = $_form_state->getValue($value_parents);
     $stored = $_form_state->get($value_key) ?: NULL;
-    $value = $submitted ?: ($stored ?: $this->get($value_key));
-    return $value ?: $default_value;
+    $value = $submitted ?? ($stored ?? $this->get($value_key));
+    return $value ?? $default_value;
   }
 
   /**

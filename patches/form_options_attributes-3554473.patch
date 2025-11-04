@@ -1,0 +1,50 @@
+From cd60c992b0b28601d22c54d1c3c8d187f734b8c1 Mon Sep 17 00:00:00 2001
+From: berliner <berliner@users.noreply.github.com>
+Date: Sun, 26 Oct 2025 22:25:03 +0100
+Subject: [PATCH] Issue #3554473: Fix file name suggestion for select form
+ elements
+
+---
+ form_options_attributes.module                              | 6 +++---
+ ....html.twig => select--form-options-attributes.html.twig} | 0
+ 2 files changed, 3 insertions(+), 3 deletions(-)
+ rename templates/{form-options-attributes--select--options-attributes.html.twig => select--form-options-attributes.html.twig} (100%)
+
+diff --git a/form_options_attributes.module b/form_options_attributes.module
+index 0d01df0..c10d16a 100644
+--- a/form_options_attributes.module
++++ b/form_options_attributes.module
+@@ -14,7 +14,7 @@ use Drupal\Core\Render\Element;
+  */
+ function form_options_attributes_theme() {
+   return [
+-    'form_options_attributes__select__options_attributes' => [
++    'select__form_options_attributes' => [
+-      'render element' => 'elements',
++      'render element' => 'element',
+       'base hook' => 'select',
+     ],
+@@ -26,7 +26,7 @@ function form_options_attributes_theme() {
+  */
+ function form_options_attributes_theme_suggestions_select_alter(array &$suggestions, array $variables) {
+   if (!empty($variables['element']['#options_attributes'])) {
+-    array_push($suggestions, 'form_options_attributes__select__options_attributes');
++    array_push($suggestions, 'select__form_options_attributes');
+   }
+ }
+
+@@ -41,7 +41,7 @@ function form_options_attributes_element_info_alter(array &$info) {
+ /**
+  * Prepares variables for select element templates.
+  */
+-function form_options_attributes_preprocess_form_options_attributes__select__options_attributes(&$variables) {
++function form_options_attributes_preprocess_select__form_options_attributes(&$variables) {
+   $element = $variables['element'];
+   Element::setAttributes($element, ['id', 'name', 'size']);
+   RenderElementBase::setAttributes($element, $variables['attributes']['class']);
+diff --git a/templates/form-options-attributes--select--options-attributes.html.twig b/templates/select--form-options-attributes.html.twig
+similarity index 100%
+rename from templates/form-options-attributes--select--options-attributes.html.twig
+rename to templates/select--form-options-attributes.html.twig
+--
+GitLab

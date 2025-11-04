@@ -45,6 +45,7 @@ module:
   file_mdm_font: 0
   filter: 0
   flat_taxonomy: 0
+  form_options_attributes: 0
   fpa: 0
   geofield: 0
   geofield_map: 0

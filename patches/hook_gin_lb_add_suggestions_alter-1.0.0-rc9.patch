@@ -29,10 +29,10 @@ index 2db241a..075d1ac 100644
   * @} End of "addtogroup hooks".
   */
 diff --git a/gin_lb.module b/gin_lb.module
-index 0322466..6da3c0d 100644
+index b8bad90..fed9c48 100644
 --- a/gin_lb.module
 +++ b/gin_lb.module
-@@ -231,6 +231,17 @@ function gin_lb_theme(): array {
+@@ -253,6 +253,17 @@ function gin_lb_theme(): array {
    return $instance->themes();
  }
  
@@ -51,7 +51,7 @@ index 0322466..6da3c0d 100644
   * Implements hook_theme_suggestions_alter().
   */
 diff --git a/src/HookHandler/ThemeSuggestionsAlter.php b/src/HookHandler/ThemeSuggestionsAlter.php
-index e43e4ce..185d8cb 100644
+index e43e4ce..84679ea 100644
 --- a/src/HookHandler/ThemeSuggestionsAlter.php
 +++ b/src/HookHandler/ThemeSuggestionsAlter.php
 @@ -5,6 +5,7 @@ declare(strict_types=1);
@@ -106,7 +106,7 @@ index e43e4ce..185d8cb 100644
        $container->get('current_route_match'),
        $container->get('request_stack'),
        $container->get('gin_lb.context_validator')
-@@ -125,7 +138,10 @@ class ThemeSuggestionsAlter implements ContainerInjectionInterface {
+@@ -125,7 +138,11 @@ class ThemeSuggestionsAlter implements ContainerInjectionInterface {
        $suggestions[] = $hook . '__gin_lb';
      }
  
@@ -114,7 +114,8 @@ index e43e4ce..185d8cb 100644
 +    $has_suggestions = $this->hasSuggestions($variables, $hook);
 +    $this->moduleHandler->alter('gin_lb_add_suggestions', $has_suggestions, $variables, $hook);
 +
-+    if (isset($variables['element']['#gin_lb_form']) || $has_suggestions) {
++    $is_gin_lb_form_element = $variables['element']['#gin_lb_form'] ?? NULL;
++    if ($is_gin_lb_form_element || $has_suggestions) {
        // Fix form element suggestions when they are not implemented in the
        // theme.
        if (empty($suggestions) && !empty($variables['theme_hook_original'])) {
