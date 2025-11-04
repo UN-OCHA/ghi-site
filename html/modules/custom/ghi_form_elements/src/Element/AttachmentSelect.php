@@ -236,7 +236,7 @@ class AttachmentSelect extends FormElementBase {
       /** @var \Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment $attachment */
       $entities_in_selection[$attachment->source->entity_id] = TRUE;
       $attachment_options[$attachment->id] = [
-        'id' => $attachment->id,
+        'id' => $attachment->id(),
         'composed_reference' => $attachment->composed_reference,
         'type' => $attachment->type,
         'prototype' => $attachment->prototype->name,

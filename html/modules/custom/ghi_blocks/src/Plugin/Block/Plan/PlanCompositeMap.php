@@ -15,6 +15,7 @@ use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
 use Drupal\ghi_blocks\Traits\BlockCommentTrait;
 use Drupal\ghi_blocks\Traits\ConfigValidationTrait;
 use Drupal\ghi_blocks\Traits\GlobalMapTrait;
+use Drupal\ghi_form_elements\Traits\ConfigurationContainerTrait;
 use Drupal\ghi_plans\ApiObjects\Attachments\AttachmentInterface;
 use Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment;
 use Drupal\ghi_plans\Traits\AttachmentFilterTrait;
@@ -24,11 +25,11 @@ use Drupal\ghi_subpages\Entity\SubpageNodeInterface;
 use Drupal\hpc_downloads\Interfaces\HPCDownloadPNGInterface;
 
 /**
- * Provides a 'PlanAttachmentMap' block.
+ * Provides a 'PlanCompositeMap' block.
  *
  * @Block(
- *  id = "plan_attachment_map",
- *  admin_label = @Translation("Attachment Map"),
+ *  id = "plan_composite_map",
+ *  admin_label = @Translation("Composite Map"),
  *  category = @Translation("Plan elements"),
  *  data_sources = {
  *    "entities" = "plan_entities_query",
@@ -47,39 +48,39 @@ use Drupal\hpc_downloads\Interfaces\HPCDownloadPNGInterface;
  *      "title" = @Translation("Attachments"),
  *      "callback" = "attachmentsForm"
  *    },
- *    "map" = {
- *      "title" = @Translation("Map"),
- *      "callback" = "mapForm",
+ *    "maps" = {
+ *      "title" = @Translation("Maps"),
+ *      "callback" = "mapsForm"
+ *    },
+ *    "common" = {
+ *      "title" = @Translation("Common"),
+ *      "callback" = "commonForm",
  *      "base_form" = TRUE
  *    }
  *  }
  * )
  */
-class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterface, OverrideDefaultTitleBlockInterface, HPCDownloadPNGInterface, ConfigValidationInterface {
+class PlanCompositeMap extends GHIBlockBase implements MultiStepFormBlockInterface, OverrideDefaultTitleBlockInterface, HPCDownloadPNGInterface, ConfigValidationInterface {
 
   use PlanReportingPeriodTrait;
   use BlockCommentTrait;
   use GlobalMapTrait;
   use ConfigValidationTrait;
   use AttachmentFilterTrait;
-
-  const STYLE_CIRCLE = 'circle';
+  use ConfigurationContainerTrait;
 
   /**
    * {@inheritdoc}
    */
   public function buildContent() {
-    $attachment = $this->getDefaultAttachment();
-    if (!$attachment || !$this->attachmentCanBeMapped($attachment)) {
-      // Nothing to show.
-      return NULL;
-    }
 
     $conf = $this->getBlockConfig();
-    $style = self::STYLE_CIRCLE;
-    $chart_id = Html::getUniqueId('plan-attachment-map--' . $style);
+    if (empty($conf['maps']['maps'])) {
+      // Nothing configured.
+      return NULL;
+    }
+    $chart_id = Html::getUniqueId('plan-composite-map');
     $map = $this->buildMap();
-
     $outline_country = NULL;
     $focus_country = $this->getCurrentPlanObject()->getFocusCountry();
     if ($focus_country) {
@@ -100,14 +101,11 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
       // given settings into the existing ones.
       'json' => !empty($map['data']) ? $map['data'] : NULL,
       'id' => $chart_id,
-      'disclaimer' => $conf['map']['common']['disclaimer'] ?: $this->getDefaultMapDisclaimer($this->getCurrentPlanObject()->getPlanLanguage()),
-      'pcodes_enabled' => $conf['map']['common']['pcodes_enabled'] ?? TRUE,
-      'label_min_zoom' => (int) ($conf['map']['common']['label_min_zoom'] ?? 6),
-      'style' => $style,
+      'disclaimer' => $conf['common']['disclaimer'] ?: $this->getDefaultMapDisclaimer($this->getCurrentPlanObject()->getPlanLanguage()),
+      'pcodes_enabled' => $conf['common']['pcodes_enabled'] ?? TRUE,
+      'label_min_zoom' => (int) ($conf['common']['label_min_zoom'] ?? 6),
       'outline_country' => $outline_country,
     ] + $map['settings'];
-
-    $attachment_switcher = $this->getAttachmentSwitcher();
 
     $build = [
       '#full_width' => FALSE,
@@ -116,13 +114,12 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
       '#theme' => 'plan_attachment_map',
       '#chart_id' => $chart_id,
       '#map_tabs' => $map['tabs'] ?? NULL,
-      '#map_type' => $style,
-      '#attachment_switcher' => $attachment_switcher,
-      '#legend' => FALSE,
+      '#map_type' => 'composite',
+      '#legend' => TRUE,
       '#attached' => [
         'library' => ['ghi_blocks/map.gl.plan'],
         'drupalSettings' => [
-          'plan_attachment_map' => [
+          'plan_composite_map' => [
             $chart_id => $map_settings,
           ],
         ],
@@ -131,7 +128,7 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
         'tags' => Cache::mergeTags($this->getCurrentBaseObject()->getCacheTags(), $this->getMapConfigCacheTags()),
       ],
     ];
-    $comment = $this->buildBlockCommentRenderArray($conf['map']['common']['comment'] ?? NULL);
+    $comment = $this->buildBlockCommentRenderArray($conf['map']['comment'] ?? NULL);
     if ($comment) {
       $comment['#attributes']['class'][] = 'content-width';
       $build['comment'] = $comment;
@@ -164,7 +161,13 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
    * Map builder for circle maps.
    */
   private function buildMap() {
-    $map = [
+    $conf = $this->getBlockConfig();
+    $maps = $this->getConfiguredItems($conf['maps']['maps'] ?? NULL) ?? [];
+    if (empty($maps)) {
+      return NULL;
+    }
+
+    $build = [
       'data' => [],
       'tabs' => [
         '#theme' => 'item_list',
@@ -174,83 +177,89 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
       'settings' => [],
     ];
 
-    $attachment = $this->getDefaultAttachment();
-    $plan_base_object = $attachment->getPlanObject();
-    $plan_id = $plan_base_object->getSourceId();
-    $reporting_periods = $this->getPlanReportingPeriods($plan_id);
-    $reporting_periods_rendered = array_map(function ($reporting_period) {
-      return $reporting_period->format('Monitoring period #@period_number: @date_range');
-    }, $reporting_periods);
-    $reporting_period_id = $this->getCurrentReportingPeriod($plan_id);
-    $configured_reporting_periods = $this->getConfiguredReportingPeriods($plan_id);
+    // @codingStandardsIgnoreStart
+    // $plan_base_object = $this->getCurrentPlanObject();
+    // $plan_id = $plan_base_object->getSourceId();
+    // $reporting_periods = $this->getPlanReportingPeriods($plan_id);
+    // $reporting_periods_rendered = array_map(function ($reporting_period) {
+    //   return $reporting_period->format('Monitoring period #@period_number: @date_range');
+    // }, $reporting_periods);
+    // @codingStandardsIgnoreEnd
 
-    $disaggregated_data = $attachment->getDisaggregatedData($reporting_period_id);
-    foreach ($disaggregated_data as $metric_index => $metric_item) {
-      if ($attachment->metricItemIsEmpty($metric_item)) {
+    $context = $this->getBlockContext();
+    foreach ($maps as $map) {
+      /** @var \Drupal\ghi_blocks\Plugin\ConfigurationContainerItem\CompositeMap $item_type */
+      $item_type = $this->getItemTypePluginForColumn($map, $context);
+      $map_data = $item_type->buildMapData();
+      if (empty($map_data)) {
         continue;
       }
-      $metric_label = $this->getMetricLabel($metric_index);
-      $metric_type = strtolower($metric_item['metric']->type);
-      $metric_map_key = $metric_type . '-' . $metric_index;
-      $metric_map_data = $this->prepareMetricItemMapData($metric_index, $metric_item, $reporting_period_id ? $reporting_periods[$reporting_period_id] : NULL);
-      $map['data'][$metric_map_key] = [
-        'label' => $metric_label,
-        'metric' => $metric_item['metric'],
-        'unit_type' => $metric_item['unit_type'],
-        'locations' => array_values($metric_map_data['location_data']),
-        'modal_contents' => $metric_map_data['modal_contents'],
-        'variants' => [],
-      ];
-      CacheableMetadata::createFromObject($attachment)->applyTo($map);
-    }
-
-    if (empty($map['data'])) {
-      // No data, no widget.
-      return $map;
-    }
-
-    // If more than one monitoring periods have been selected, add a a variant
-    // drop-down.
-    if (count($configured_reporting_periods) > 1) {
-      $disaggregated_data_multiple_periods = $attachment->getDisaggregatedDataMultiple($configured_reporting_periods, FALSE, FALSE);
-      if (!empty($disaggregated_data_multiple_periods)) {
-        foreach ($disaggregated_data_multiple_periods as $period_data) {
-          /** @var \Drupal\ghi_plans\ApiObjects\PlanReportingPeriod $reporting_period */
-          $reporting_period = $period_data['reporting_period'];
-          foreach ($period_data['disaggregated_data'] as $metric_index => $metric_item) {
-            $metric_type = strtolower($metric_item['metric']->type);
-            $metric_map_key = $metric_type . '-' . $metric_index;
-            if (empty($map['data'][$metric_map_key])) {
-              continue;
-            }
-            if ($attachment->metricItemIsEmpty($metric_item)) {
-              continue;
-            }
-            if (!empty($map['data'][$metric_map_key]['variants'][$reporting_period->id()])) {
-              continue;
-            }
-            if (!$attachment->isMeasurementField($metric_item['metric']->name->en)) {
-              continue;
-            }
-            $metric_map_data = $this->prepareMetricItemMapData($metric_index, $metric_item, $reporting_period);
-            $map['data'][$metric_map_key]['variants'][$reporting_period->id()] = [
-              'label' => $reporting_periods_rendered[$reporting_period->id()],
-              'tab_label' => $reporting_period->getPeriodNumber(),
-              'locations' => $metric_map_data['location_data'],
-              'modal_contents' => $metric_map_data['modal_contents'],
-            ];
-            CacheableMetadata::createFromObject($attachment)->applyTo($map);
-          }
-        }
+      $build['data'][$item_type->getId()] = $map_data;
+      foreach ($item_type->getAttachments() as $attachment) {
+        CacheableMetadata::createFromObject($attachment)->applyTo($build);
       }
     }
+
+    if (empty($build['data'])) {
+      // No data, no widget.
+      return $build;
+    }
+
+    // @codingStandardsIgnoreStart
+    // // If more than one monitoring periods have been selected, add a a variant
+    // // drop-down.
+    // if (count($configured_reporting_periods) > 1) {
+    //   $disaggregated_data_multiple_periods = $attachment->getDisaggregatedDataMultiple($configured_reporting_periods, FALSE, FALSE);
+    //   if (!empty($disaggregated_data_multiple_periods)) {
+    //     foreach ($disaggregated_data_multiple_periods as $period_data) {
+    //       /** @var \Drupal\ghi_plans\ApiObjects\PlanReportingPeriod $reporting_period */
+    //       $reporting_period = $period_data['reporting_period'];
+
+    //       foreach ($maps as $map) {
+    //         /** @var \Drupal\ghi_blocks\Plugin\ConfigurationContainerItem\CompositeMapDataset $item_type */
+    //         $item_type = $this->getItemTypePluginForColumn($map, $context);
+    //         $full_pie_metric_index = $item_type->getFullPieIndex();
+    //         $full_pie_metric_item = $disaggregated_data[$full_pie_metric_index];
+
+    //         $map_id = $item_type->getId();
+    //         if (empty($build['data'][$map_id])) {
+    //           continue;
+    //         }
+    //         if ($attachment->metricItemIsEmpty($full_pie_metric_item)) {
+    //           continue;
+    //         }
+    //         if (!empty($build['data'][$map_id]['variants'][$reporting_period->id()])) {
+    //           continue;
+    //         }
+    //         if (!$attachment->isMeasurementField($full_pie_metric_item['metric']->name->en)) {
+    //           continue;
+    //         }
+
+    //         $polygon_metric_index = $item_type->getPolygonIndex();
+    //         $slices_metric_indexes = $item_type->getSliceIndexes();
+
+    //         $build['data'][$map_id]['variants'][$reporting_period->id()] = [
+    //           'label' => $reporting_periods_rendered[$reporting_period->id()],
+    //           'tab_label' => $reporting_period->getPeriodNumber(),
+    //           'full_pie' => $this->buildMapDataForMetricIndex($disaggregated_data, $full_pie_metric_index, $reporting_period),
+    //           'polygon' => $this->buildMapDataForMetricIndex($disaggregated_data, $polygon_metric_index, $reporting_period),
+    //           'slices' => !empty($slices_metric_indexes) ? array_map(function ($slice_index) use ($disaggregated_data, $reporting_period) {
+    //             return $this->buildMapDataForMetricIndex($disaggregated_data, $slice_index, $reporting_period);
+    //           }, $slices_metric_indexes) : NULL,
+    //         ];
+    //         CacheableMetadata::createFromObject($attachment)->applyTo($build);
+    //       }
+    //     }
+    //   }
+    // }
+    // @codingStandardsIgnoreEnd
 
     // Calculate the grouped sizes, so that the circle sizes are relative to a
     // common max value on all available map tabs.
-    $this->calculateGroupedSizes($map['data']);
+    $this->calculateGroupedSizes($build['data']);
 
     // Build the map tabs.
-    foreach ($map['data'] as $key => $item) {
+    foreach ($build['data'] as $key => $item) {
       // Display a variant drop-down for measurement metrics if variants are
       // present and if there this more than 1.
       if (!empty($item['variants']) && count($item['variants']) > 1 && $attachment->isMeasurementField($item['metric']->name->en)) {
@@ -269,7 +278,7 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
           ];
         }
         $first_variant = reset($item['variants']);
-        $map['tabs']['#items'][] = [
+        $build['tabs']['#items'][] = [
           [
             '#type' => 'html_tag',
             '#tag' => 'a',
@@ -291,7 +300,7 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
       }
       else {
         // Otherwise just display a tab link.
-        $map['tabs']['#items'][] = [
+        $build['tabs']['#items'][] = [
           [
             '#type' => 'html_tag',
             '#tag' => 'a',
@@ -308,8 +317,39 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
       }
     }
 
-    return $map;
+    return $build;
   }
+
+  // @codingStandardsIgnoreStart
+  // /**
+  //  * Build the map data for the given metric index.
+  //  *
+  //  * @param array $disaggregated_data
+  //  *   The disaggregated data.
+  //  * @param int $metric_index
+  //  *   The index of the metric.
+  //  * @param object $reporting_period
+  //  *   The reporting period object.
+  //  * @param bool $is_base_data
+  //  *   Whether this should be marked as the base data.
+  //  *
+  //  * @return array
+  //  *   An array with map data for the given metric.
+  //  */
+  // private function buildMapDataForMetricIndex($disaggregated_data, $metric_index, $reporting_period, $is_base_data = FALSE) {
+  //   $metric_item = $disaggregated_data[$metric_index] ?? NULL;
+  //   if (!$metric_item) {
+  //     return NULL;
+  //   }
+  //   return [
+  //     'is_base_data' => $is_base_data,
+  //     'metric_index' => $metric_index,
+  //     'metric' => $metric_item['metric'],
+  //     'unit_type' => $metric_item['unit_type'],
+  //     'monitoring_period' => $reporting_period && $metric_item['is_measurement'] ? $reporting_period->format('Monitoring period #@period_number<br>@date_range') : NULL,
+  //   ];
+  // }
+  // @codingStandardsIgnoreEnd
 
   /**
    * Calculate the grouped size of each location item based.
@@ -320,12 +360,14 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
   private function calculateGroupedSizes(&$data) {
     $ranges = ['min' => 0, 'max' => 0];
     foreach ($data as $tab_data) {
-      $tab_min = array_reduce($tab_data['locations'], function ($carry, $item) {
-        $value = is_numeric($item['total']) ? $item['total'] : 0;
+      $metric_index = $tab_data['full_pie']['metric_index'];
+      $attachment_id = $tab_data['full_pie']['attachment']['id'];
+      $tab_min = array_reduce($tab_data['locations'], function ($carry, $item) use ($metric_index, $attachment_id) {
+        $value = is_numeric($item['metrics'][$attachment_id][$metric_index]) ? $item['metrics'][$attachment_id][$metric_index] : 0;
         return $carry > $value ? $value : $carry;
       }, 0);
-      $tab_max = array_reduce($tab_data['locations'], function ($carry, $item) {
-        $value = is_numeric($item['total']) ? $item['total'] : 0;
+      $tab_max = array_reduce($tab_data['locations'], function ($carry, $item) use ($metric_index, $attachment_id) {
+        $value = is_numeric($item['metrics'][$attachment_id][$metric_index]) ? $item['metrics'][$attachment_id][$metric_index] : 0;
         return $carry < $value ? $value : $carry;
       }, 0);
 
@@ -334,9 +376,11 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
     }
 
     foreach ($data as &$item) {
+      $metric_index = $item['full_pie']['metric_index'];
+      $attachment_id = $tab_data['full_pie']['attachment']['id'];
       foreach ($item['locations'] as &$location) {
         $max = $ranges['max'];
-        $relative_size = ($max > 0 ? 10 / $max * $location['total'] : 1) * 4;
+        $relative_size = ($max > 0 ? 10 / $max * $location['metrics'][$attachment_id][$metric_index] : 1) * 4;
         $location['radius_factor'] = $relative_size > 1 ? $relative_size : 1;
       }
     }
@@ -370,75 +414,6 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
   }
 
   /**
-   * Get the metric label for the given index.
-   *
-   * @param int $metric_index
-   *   The index of the metric item in the attachments field list.
-   *
-   * @return string
-   *   The label of the metric.
-   */
-  private function getMetricLabel($metric_index) {
-    $conf = $this->getBlockConfig();
-    $attachment = $this->getDefaultAttachment();
-    $field = $attachment->getMetricFields()[$metric_index];
-    $metric_label = $field;
-    if (!empty($conf['map']['metric_labels']) && !empty($conf['map']['metric_labels'][$metric_index])) {
-      $metric_label = $conf['map']['metric_labels'][$metric_index];
-    }
-    return $metric_label;
-  }
-
-  /**
-   * Prepare the data for full metric item, that includes locations and modals.
-   */
-  private function prepareMetricItemMapData($metric_index, $metric_item, $reporting_period = NULL) {
-    $locations = $metric_item['locations'];
-    $metric_label = $this->getMetricLabel($metric_index);
-
-    $location_data = [];
-    $modal_contents = [];
-
-    foreach ($locations as $key => $location) {
-      if (empty($location['map_data'])) {
-        continue;
-      }
-      $location_data[$key] = $location['map_data'];
-
-      $location['categories'] = array_filter($location['categories'], function ($category) {
-        return $category['data'] !== NULL;
-      });
-      // The rendering is fully done in the client, to save execution time on
-      // plans with a huge number of locations.
-      // See Drupal.hpc_map.planModalContent().
-      $modal_contents[(string) $location['id']] = [
-        'object_id' => $location['id'],
-        'location_id' => $location['id'],
-        'title' => $location['name'],
-        'admin_level' => $location['map_data']['admin_level'],
-        'pcode' => $location['map_data']['pcode'],
-        'total' => $location['total'],
-        'metric_label' => $metric_label,
-        // The categories key is what makes this renderable in the client by
-        // map.js.
-        'categories' => array_map(function ($category) {
-          return (object) [
-            'name' => $category['name'],
-            'value' => $category['data'],
-          ];
-        }, $location['categories']),
-
-      ];
-    }
-
-    return [
-      'location_data' => $location_data,
-      'modal_contents' => $modal_contents,
-      'monitoring_period' => $reporting_period && $metric_item['is_measurement'] ? $reporting_period->format('Monitoring period #@period_number<br>@date_range') : NULL,
-    ];
-  }
-
-  /**
    * Get the reporting periods to show in the map.
    *
    * @param int $plan_id
@@ -449,9 +424,7 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
    *   none) or ids.
    */
   private function getConfiguredReportingPeriods(int $plan_id) {
-    $conf = $this->getBlockConfig();
-    $style = self::STYLE_CIRCLE;
-    $monitoring_periods = $conf['map']['appearance'][$style]['monitoring_period'];
+    $monitoring_periods = ['latest' => 'latest'];
     $monitoring_periods = is_object($monitoring_periods) ? $monitoring_periods->monitoring_period : $monitoring_periods;
     $configured_reporting_periods = array_filter($monitoring_periods);
     if (empty($configured_reporting_periods)) {
@@ -496,21 +469,14 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
           ],
         ],
       ],
-      'map' => [
-        'appearance' => [
-          'style' => self::STYLE_CIRCLE,
-          self::STYLE_CIRCLE => [
-            'monitoring_period' => ['latest' => 'latest'],
-          ],
-        ],
-        'common' => [
-          'default_attachment' => NULL,
-          'disclaimer' => NULL,
-          'pcodes_enabled' => FALSE,
-          'label_min_zoom' => 6,
-          'comment' => NULL,
-        ],
-        'metric_labels' => [],
+      'maps' => [
+        'maps' => [],
+      ],
+      'common' => [
+        'disclaimer' => NULL,
+        'pcodes_enabled' => FALSE,
+        'label_min_zoom' => 6,
+        'comment' => NULL,
       ],
     ];
   }
@@ -532,14 +498,14 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
     if (empty($this->getSelectedAttachments())) {
       return 'attachments';
     }
-    return 'map';
+    return 'maps';
   }
 
   /**
    * {@inheritdoc}
    */
   public function getTitleSubform() {
-    return 'map';
+    return 'common';
   }
 
   /**
@@ -553,7 +519,7 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
       '#attachment_options' => [
         'attachment_prototypes' => TRUE,
       ],
-      '#next_step' => 'map',
+      '#next_step' => 'maps',
       '#container_wrapper' => $this->getContainerWrapper(),
       '#disagg_warning' => TRUE,
     ];
@@ -563,116 +529,63 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
   /**
    * {@inheritdoc}
    */
-  public function mapForm(array $form, FormStateInterface $form_state) {
-    $attachments = $this->getSelectedAttachments();
-    $attachment = reset($attachments);
-    $form['tabs'] = [
-      '#type' => 'vertical_tabs',
+  public function mapsForm(array $form, FormStateInterface $form_state) {
+    $form['maps'] = [
+      '#type' => 'configuration_container',
+      '#title' => $this->t('Configured datasets'),
+      '#title_display' => 'invisible',
+      '#edit_label' => $this->t('Edit'),
+      '#item_type_label' => $this->t('Map'),
+      '#default_value' => $this->getDefaultFormValueFromFormState($form_state, 'maps'),
+      '#allowed_item_types' => $this->getAllowedItemTypes(),
+      '#preview' => [
+        'columns' => [
+          'label' => $this->t('Label'),
+          'attachment_summary' => $this->t('Attachment(s)'),
+        ],
+      ],
+      '#element_context' => $this->getBlockContext(),
     ];
-    $form['appearance'] = [
-      '#type' => 'details',
-      '#title' => $this->t('Data'),
-      '#tree' => TRUE,
-      '#group' => 'tabs',
-    ];
+    return $form;
+  }
 
-    $form['appearance'][self::STYLE_CIRCLE] = [
-      '#type' => 'container',
-      '#tree' => TRUE,
-    ];
-    $form['appearance'][self::STYLE_CIRCLE]['monitoring_period'] = [
-      '#type' => 'monitoring_periods',
-      '#title' => $this->t('Monitoring period'),
-      '#description' => $this->t('The monitoring period that should be used for data displayed in the map. If you select multiple monitoring periods, these will be made available as a drop-down on each measurement metric. Note that depending on the available data per attachment, some monitoring periods will be hidden if there is not enough data for a display in the map.'),
-      '#plan_id' => $this->getCurrentPlanId(),
-      '#default_value' => $this->getDefaultFormValueFromFormState($form_state, [
-        'appearance',
-        self::STYLE_CIRCLE,
-        'monitoring_period',
-      ]),
-      '#include_none' => TRUE,
-    ];
-
-    $form['common'] = [
-      '#type' => 'details',
-      '#title' => $this->t('Map features'),
-      '#tree' => TRUE,
-      '#group' => 'tabs',
-    ];
-
-    $attachment_options = array_map(function ($attachment) {
-      return $attachment->getTitle();
-    }, $attachments);
-    $form['common']['default_attachment'] = [
-      '#type' => 'select',
-      '#title' => $this->t('Default attachment'),
-      '#description' => $this->t('Please select the attachment that will show by default. If multiple attachments are available to this widget, then the user can select to see data for the other attachments by using a drop-down selector.'),
-      '#options' => $attachment_options,
-      '#default_value' => $this->getDefaultFormValueFromFormState($form_state, [
-        'common',
-        'default_attachment',
-      ]) ?? array_key_first($attachment_options),
-      '#access' => count($attachments) > 1,
-    ];
-
-    $form['common']['disclaimer'] = [
+  /**
+   * {@inheritdoc}
+   */
+  public function commonForm(array $form, FormStateInterface $form_state) {
+    $form['disclaimer'] = [
       '#type' => 'textarea',
       '#title' => $this->t('Map disclaimer'),
       '#description' => $this->t('You can override the default map disclaimer for this widget.'),
       '#rows' => 4,
       '#default_value' => $this->getDefaultFormValueFromFormState($form_state, [
-        'common',
         'disclaimer',
       ]) ?? '',
     ];
 
-    $form['common']['pcodes_enabled'] = [
+    $form['pcodes_enabled'] = [
       '#type' => 'checkbox',
       '#title' => $this->t('Enable pcodes'),
       '#description' => $this->t('If checked, the map will list pcodes alongside location names and enable pcodes for the location filtering.'),
       '#default_value' => $this->getDefaultFormValueFromFormState($form_state, [
-        'common',
         'pcodes_enabled',
       ]) ?? FALSE,
     ];
 
-    $form['common']['label_min_zoom'] = [
+    $form['label_min_zoom'] = [
       '#type' => 'number',
       '#title' => $this->t('Minimum zoom for labels'),
       '#description' => $this->t('Specifiy at which zoom level the admin area labels become visible. Setting this to <em>0</em> will show them at any zoom level. Default is <em>6</em>.'),
       '#min' => 0,
       '#max' => 9,
       '#default_value' => $this->getDefaultFormValueFromFormState($form_state, [
-        'common',
         'label_min_zoom',
       ]) ?? 0,
     ];
 
-    $form['common']['comment'] = $this->buildBlockCommentFormElement($this->getDefaultFormValueFromFormState($form_state, [
-      'common',
+    $form['comment'] = $this->buildBlockCommentFormElement($this->getDefaultFormValueFromFormState($form_state, [
       'comment',
     ]));
-
-    // Allow element-wide override of metric item labels.
-    $form['metric_labels'] = [
-      '#type' => 'details',
-      '#title' => $this->t('Metric labels'),
-      '#tree' => TRUE,
-      '#group' => 'tabs',
-    ];
-    foreach ($attachment->getMetricFields() as $metric_index => $metric_label) {
-      $form['metric_labels'][$metric_index] = [
-        '#type' => 'textfield',
-        '#title' => $this->t('Label for @type metrics', ['@type' => $metric_label]),
-        '#description' => $this->t('You can override the label for this metric. Leave empty to use the default: <em>@default_label</em>.', [
-          '@default_label' => $metric_label,
-        ]),
-        '#default_value' => $this->getDefaultFormValueFromFormState($form_state, [
-          'metric_labels',
-          $metric_index,
-        ]),
-      ];
-    }
 
     return $form;
   }
@@ -708,43 +621,6 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
   }
 
   /**
-   * Get the default attachment to show on initial widget rendering.
-   *
-   * @return \Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment
-   *   An attachment object.
-   */
-  private function getDefaultAttachment() {
-    $default_attachment = &drupal_static(__FUNCTION__, NULL);
-    if ($default_attachment === NULL) {
-      $conf = $this->getBlockConfig();
-      $requested_attachment_id = $this->requestStack->getCurrentRequest()->request->get('attachment_id') ?? NULL;
-      $default_attachment_id = $conf['map']['common']['default_attachment'] ?? NULL;
-      $attachments = $this->getSelectedAttachments();
-      $attachment = NULL;
-      if ($requested_attachment_id && !empty($attachments[$requested_attachment_id])) {
-        $attachment = $attachments[$requested_attachment_id];
-      }
-      elseif ($default_attachment_id && !empty($attachments[$default_attachment_id])) {
-        $attachment = $attachments[$default_attachment_id];
-      }
-      elseif (count($attachments)) {
-        $attachment = reset($attachments);
-      }
-      $default_attachment = $attachment;
-      if (!$attachment instanceof DataAttachment) {
-        $default_attachment = FALSE;
-      }
-      elseif (!$this->attachmentCanBeMapped($attachment)) {
-        $default_attachment = FALSE;
-      }
-      elseif ($attachment->getPlanId() != $this->getCurrentPlanId()) {
-        $default_attachment = FALSE;
-      }
-    }
-    return $default_attachment;
-  }
-
-  /**
    * Get all attachment objects for the current block instance.
    *
    * @return \Drupal\ghi_plans\ApiObjects\Attachments\DataAttachments[]
@@ -763,53 +639,6 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
   }
 
   /**
-   * Get the attachment switcher.
-   *
-   * @return array|null
-   *   A render array for the attachment switcher or NULL if not applicable.
-   */
-  private function getAttachmentSwitcher() {
-    // Get the attachments.
-    $attachments = $this->getSelectedAttachments();
-    if (count($attachments) <= 1) {
-      return NULL;
-    }
-    $attachment_options = array_map(function ($attachment) {
-      return $attachment->getDescription();
-    }, $attachments);
-    $current_attachment = $this->getDefaultAttachment();
-    return [
-      '#type' => 'container',
-      [
-        '#theme' => 'ajax_switcher',
-        '#element_key' => 'attachment_id',
-        '#options' => $attachment_options,
-        '#default_value' => $current_attachment?->id(),
-        '#wrapper_id' => Html::getId('block-' . $this->getUuid()),
-        '#plugin_id' => $this->getPluginId(),
-        '#block_uuid' => $this->getUuid(),
-        '#uri' => $this->getCurrentUri(),
-      ],
-    ];
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function getBlockConfig() {
-    $config = parent::getBlockConfig();
-    if (empty($config['map']['appearance'][self::STYLE_CIRCLE]['monitoring_period'])) {
-      return $config;
-    }
-    // There is a very limited set of plans that has an object as the default
-    // value. We correct that here.
-    if (is_object($config['map']['appearance'][self::STYLE_CIRCLE]['monitoring_period'])) {
-      $config['map']['appearance'][self::STYLE_CIRCLE]['monitoring_period'] = $config['map']['appearance'][self::STYLE_CIRCLE]['monitoring_period']->monitoring_period;
-    }
-    return $config;
-  }
-
-  /**
    * Get the custom context for this block.
    *
    * @return array
@@ -823,6 +652,7 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
       'base_object' => $this->getCurrentBaseObject(),
       'context_node' => $page_node,
       'attachment_prototype' => $this->getAttachmentPrototype(),
+      'attachment_ids' => array_keys($this->getSelectedAttachments()),
     ];
   }
 
@@ -892,6 +722,16 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
     $query_handler = $this->endpointQueryManager->createInstance('plan_entities_query');
     $query_handler->setPlaceholder('plan_id', $plan_object->getSourceId());
     return $query_handler->getDataAttachments($this->getCurrentBaseObject());
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getAllowedItemTypes() {
+    $item_types = [
+      'composite_map' => [],
+    ];
+    return $item_types;
   }
 
   /**
@@ -970,20 +810,6 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
           }
         }
       }
-    }
-
-    // Check the configured default attachment.
-    $default_attachment = $conf['map']['common']['default_attachment'] ?? NULL;
-    $attachment_ids = $conf['attachments']['entity_attachments']['attachments']['attachment_id'] ?? [];
-    if ($default_attachment && !array_key_exists($default_attachment, $attachment_ids)) {
-      // Just unset the default attachment, so that the rendering can decide
-      // which one to use.
-      $conf['map']['common']['default_attachment'] = NULL;
-    }
-
-    // Update the selected monitoring periods if necessary.
-    if (empty($configured_attachments) || reset($configured_attachments)->getPlanId() != $this->getCurrentPlanId()) {
-      $conf['map']['appearance'][self::STYLE_CIRCLE]['monitoring_period'] = ['latest' => 'latest'];
     }
 
     $this->setBlockConfig($conf);

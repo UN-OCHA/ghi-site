@@ -1,0 +1,17 @@
+.mapboxgl-canvas-container div.donut {
+  z-index: 0;
+  cursor: pointer;
+}
+.mapboxgl-canvas-container div.donut.hover,
+.mapboxgl-canvas-container div.donut.focus {
+  z-index: 1;
+}
+.mapboxgl-canvas-container div.donut.hover > svg > circle {
+  stroke-width: 2px;
+  stroke: var(--cd-primary-color);
+}
+.mapboxgl-canvas-container div.donut.focus > svg > circle {
+  outline: 3px solid var(--cd-primary-color);
+  border-radius: 50%;
+  outline-offset: -2px;
+}

@@ -283,7 +283,7 @@ class Link extends ConfigurationContainerItemPluginBase {
   /**
    * {@inheritdoc}
    */
-  public function submitForm(array $values, $mode) {
+  public function submitForm(array $values, $mode): void {
     if (!in_array($mode, ['add_item', 'edit_item'])) {
       return;
     }

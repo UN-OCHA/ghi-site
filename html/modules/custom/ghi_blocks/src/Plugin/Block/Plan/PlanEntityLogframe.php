@@ -836,7 +836,7 @@ class PlanEntityLogframe extends GHIBlockBase implements MultiStepFormBlockInter
    */
   public function entitiesForm(array $form, FormStateInterface $form_state) {
     $entity_ref_code_options = $this->getEntityRefCodeOptions();
-    $wrapper_id = Html::getId('form-wrapper-ghi-block-config');
+    $wrapper_id = $this->getContainerWrapper();
     $ajax_parents = array_merge($form['#array_parents']);
     array_pop($ajax_parents);
 

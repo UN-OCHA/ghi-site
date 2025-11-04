@@ -2,7 +2,7 @@
 
 ## Login into the site.
 ##
-## Usage: fin login [-h] [-u UID|-n name]
+## Usage: fin login [-h] [-u UID|-n name|]
 ##
 
 usage="$(basename "$0") [-h] [-u UID|-n name]

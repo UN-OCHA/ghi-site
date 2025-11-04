@@ -90,13 +90,13 @@
   position: relative;
 }
 .ghi-glb-form > :not([data-block-preview]) table.ghi-table tbody tr.draggable td:first-child {
-  padding-left: 2rem;
+  padding-left: 3rem;
 }
 .ghi-glb-form > :not([data-block-preview]) table.ghi-table tbody tr.draggable td:first-child a.tabledrag-handle {
   float: none;
   position: absolute;
   top: calc(50% - 12px);
-  left: 0.5rem;
+  left: 1.7rem;
   height: 37px;
 }
 .ghi-glb-form > :not([data-block-preview]) table.ghi-table tbody tr.draggable td:first-child a.tabledrag-handle .handle {

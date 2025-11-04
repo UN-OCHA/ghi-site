@@ -20,9 +20,8 @@
      * @param {ghi.mapState} state
      *   The map state object.
      */
-    constructor (state, text) {
+    constructor (state) {
       this.state = state;
-      this.disclaimerText = text;
     }
 
     /**
@@ -36,7 +35,7 @@
      *   A control position, one of the values valid in addControl.
      */
     getDefaultPosition = function () {
-      return 'bottom-left';
+      return this.state.getOptions().legend_position ?? 'bottom-left';
     }
 
     /**
@@ -56,12 +55,24 @@
     onAdd = function (map) {
       this._map = map;
       this._container = document.createElement('div');
-      this._container.className = 'mapboxgl-ctrl mapboxgl-ctrl-group disclaimer';
-
-      let text = document.createElement('span');
-      text.innerHTML = this.disclaimerText;
-      this._container.appendChild(text);
+      this._container.className = 'mapboxgl-ctrl mapboxgl-ctrl-group legend';
+      let $legend_container = $('<div>');
+      $legend_container.addClass('map-legend');
+      this._container.appendChild($legend_container[0]);
+      this.update($legend_container);
       return this._container;
+    }
+
+    /**
+     * Update the legend.
+     */
+    update = function ($legend_container = null) {
+      let updateCallback = 'updateLegend';
+      let style = this.state.getMapStyle();
+      if (typeof style != 'object' || !style.hasOwnProperty(updateCallback) || typeof style[updateCallback] != 'function') {
+        return;
+      }
+      style[updateCallback]($legend_container);
     }
 
     /**

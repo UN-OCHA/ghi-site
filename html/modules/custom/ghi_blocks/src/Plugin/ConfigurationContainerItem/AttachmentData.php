@@ -8,6 +8,7 @@ use Drupal\ghi_blocks\Helpers\AttachmentMatcher;
 use Drupal\ghi_blocks\Traits\PlanFootnoteTrait;
 use Drupal\ghi_form_elements\ConfigurationContainerItemPluginBase;
 use Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment;
+use Drupal\ghi_plans\ApiObjects\Attachments\DataAttachmentInterface;
 use Drupal\ghi_plans\Entity\Plan;
 use Drupal\ghi_plans\Traits\AttachmentFilterTrait;
 use Drupal\hpc_common\Helpers\StringHelper;
@@ -226,10 +227,10 @@ class AttachmentData extends ConfigurationContainerItemPluginBase {
   /**
    * Get the attachment object for this item.
    *
-   * @return \Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment|null
+   * @return \Drupal\ghi_plans\ApiObjects\Attachments\DataAttachmentInterface|null
    *   The attachment object.
    */
-  private function getAttachmentObject($validate = TRUE): ?DataAttachment {
+  private function getAttachmentObject($validate = TRUE): ?DataAttachmentInterface {
     $attachment_id = $this->get(['attachment', 'attachment_id']);
     if (!$attachment_id) {
       return NULL;

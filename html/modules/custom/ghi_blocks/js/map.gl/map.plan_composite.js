@@ -1,17 +1,17 @@
 (function ($) {
 
   // Attach behaviors.
-  Drupal.behaviors.planOperationalPresenceMap = {
+  Drupal.behaviors.planCompositeMap = {
     attach: function(context, settings) {
       if (!ghi || !ghi.mapbox || !ghi.map) {
         return;
       }
-      if (!settings.plan_operational_presence_map || !Object.keys(settings.plan_operational_presence_map).length) {
+      if (!settings.plan_composite_map || !Object.keys(settings.plan_composite_map).length) {
         return;
       }
-      let map_keys = Object.keys(settings.plan_operational_presence_map);
+      let map_keys = Object.keys(settings.plan_composite_map);
       for (i of map_keys) {
-        var map_config = settings.plan_operational_presence_map[i];
+        var map_config = settings.plan_composite_map[i];
         if (!map_config.id || typeof map_config.json == 'undefined') {
           continue;
         }
@@ -19,17 +19,17 @@
           continue;
         }
         var options = {
-          style: 'choropleth',
+          style: 'composite',
           admin_level_selector: true,
-          legend_position: 'top-right',
           search_enabled: true,
           search_options: {
             placeholder: Drupal.t('Filter by location name'),
             empty_message: Drupal.t('Be sure to enter a location name within the current response plan.'),
           },
+          pcodes_enabled: map_config.pcodes_enabled ?? false,
+          label_min_zoom: map_config.label_min_zoom ?? 0,
         };
-        if (typeof map_config.pcodes_enabled != 'undefined') {
-          options.pcodes_enabled = map_config.pcodes_enabled;
+        if (options.pcodes_enabled) {
           options.search_options.placeholder = Drupal.t('Filter by location name or pcode');
           options.search_options.search_button_title = Drupal.t('Filter by location name or pcode');
           options.search_options.empty_message = Drupal.t('Be sure to enter a location name or pcode within the current response plan.');

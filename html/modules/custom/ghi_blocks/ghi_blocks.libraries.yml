@@ -57,66 +57,32 @@ mapbox_gl:
     component:
       https://api.mapbox.com/mapbox-gl-js/v3.8.0/mapbox-gl.css: {}
 
-map.gl.sidebar:
-  js:
-    js/map.gl/map.sidebar.js: {}
-  dependencies:
-    - core/jquery
-    - core/once
-    - ghi_blocks/theme
-
-map.gl.interactive_legend:
-  js:
-    js/map.gl/map.interactive_legend.js: {}
-  dependencies:
-    - core/jquery
-
-map.gl.throbber:
-  js:
-    js/map.gl/map.throbber.js: {}
-  dependencies:
-    - core/jquery
-    - ghi_blocks/throbber
-
-map.gl.control.admin_level:
-  js:
-    js/map.gl/controls/map.control.admin_level.js: {}
-  dependencies:
-    - core/jquery
-
-map.gl.control.disclaimer:
-  js:
-    js/map.gl/controls/map.control.disclaimer.js: {}
-
-map.gl.control.search:
-  js:
-    js/map.gl/controls/map.control.search.js: {}
-  dependencies:
-    - core/jquery
-
-map.gl.state:
-  js:
-    js/map.gl/map.state.js: {}
-  dependencies:
-    - core/jquery
-
 map.gl:
   js:
     js/map.gl/map.mapbox.js: {}
+    js/map.gl/controls/map.control.admin_level.js: {}
+    js/map.gl/controls/map.control.legend.js: {}
+    js/map.gl/controls/map.control.search.js: {}
+    js/map.gl/controls/map.interactive_legend.js: {}
+    js/map.gl/map.sidebar.js: {}
+    js/map.gl/map.throbber.js: {}
     js/map.gl/styles/map.circle.js: {}
+    js/map.gl/styles/map.composite.js: {}
     js/map.gl/styles/map.choropleth.js: {}
+    js/map.gl/map.state.js: {}
     js/map.gl/map.js: {}
+  css:
+    component:
+      css/map.css: {}
   dependencies:
     - core/jquery
+    - core/once
+    - hpc_common/tooltip
     - ghi_blocks/mapbox_gl
-    - ghi_blocks/turf
-    - ghi_blocks/map.gl.state
     - ghi_blocks/map.gl.sidebar
-    - ghi_blocks/map.gl.interactive_legend
-    - ghi_blocks/map.gl.throbber
-    - ghi_blocks/map.gl.control.admin_level
-    - ghi_blocks/map.gl.control.disclaimer
-    - ghi_blocks/map.gl.control.search
+    - ghi_blocks/throbber
+    - ghi_blocks/theme
+    - ghi_blocks/turf
 
 map.gl.plan_overview:
   js:
@@ -127,6 +93,7 @@ map.gl.plan_overview:
 map.gl.plan:
   js:
     js/map.gl/map.plan_attachment.js: {}
+    js/map.gl/map.plan_composite.js: {}
   dependencies:
     - ghi_blocks/map.gl
 
@@ -147,6 +114,11 @@ block_config.links:
   css:
     component:
       css/block-config/links.css: {}
+
+block_config.composite_map:
+  css:
+    component:
+      css/block-config/composite_map.css: {}
 
 ipe.links:
   css:

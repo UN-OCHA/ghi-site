@@ -13,11 +13,14 @@
       "Issue #2190333: Make #group FAPI / render feature work on all form/render #types out of the box": "https://www.drupal.org/files/issues/2023-09-04/drupal-core_form-api_groups_0.patch",
       "Issue #2585169: Unable to alter local actions prior to rendering": "https://www.drupal.org/files/issues/2024-12-19/2585169-63-10.4.x.patch"
     },
+    "drupal/form_options_attributes": {
+      "Issue #3554473 + 3554586: Invalid file name suggestions (select)": "./patches/form_options_attributes-3554473.patch"
+    },
     "drupal/geofield_map": {
       "Issue #3479680: Hide marker button when the map position is reset": "https://git.drupalcode.org/project/geofield_map/-/merge_requests/22.patch"
     },
     "drupal/gin_lb": {
-      "Issue #??: Add alter hook for template suggestions trigger": "./patches/hook_gin_lb_add_suggestions_alter-1.0.0-rc8.patch"
+      "Issue #??: Add alter hook for template suggestions trigger": "./patches/hook_gin_lb_add_suggestions_alter-1.0.0-rc9.patch"
     },
     "drupal/gin_toolbar": {
       "Issue #3121440: Add option for node local tasks in toolbar": "https://www.drupal.org/files/issues/2023-10-20/3121440-49.patch"

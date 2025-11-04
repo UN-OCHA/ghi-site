@@ -417,15 +417,30 @@ class ConfigurationContainer extends FormElementBase {
           $items[$index]['config'][$custom_action] = $values[$custom_action];
         }
 
+        $new_mode = 'list';
+
         // Let the item type react to it's submitted values.
         if ($id && $item = self::getItemById($items, $id)) {
           $item_type = self::getItemTypeInstance($item, $element);
           $item_type->submitForm($values['plugin_config'] ?? [], $mode);
+
+          // Support a wizard like flow, moving from the initial add/edit to a
+          // custom action if the plugin wants that.
+          if (in_array($mode, ['edit_item', 'add_item']) && $item_type instanceof ConfigurationContainerItemCustomActionsInterface) {
+            $submit_redirect_custom_action = $element['item_config']['plugin_config']['#submit_redirect_custom_action'] ?? NULL;
+            if ($submit_redirect_custom_action && $item_type->isValidAction($submit_redirect_custom_action)) {
+              $new_mode = 'custom_action';
+              self::set($element, $form_state, 'mode', 'custom_action');
+              self::set($element, $form_state, 'custom_action', $submit_redirect_custom_action);
+              self::set($element, $form_state, 'edit_item', $id);
+            }
+          }
         }
 
         // Switch to list mode.
-        $new_mode = 'list';
-        self::set($element, $form_state, 'current_item_type', NULL);
+        if ($new_mode == 'list') {
+          self::set($element, $form_state, 'current_item_type', NULL);
+        }
         break;
 
       case 'remove_filter':
@@ -1352,9 +1367,17 @@ class ConfigurationContainer extends FormElementBase {
     $item = self::getItemById($items, $id);
     $item_key = self::getItemIndexById($items, $id);
     $item_type = self::getItemTypeInstance($item, $element);
+    if (!$item_type instanceof ConfigurationContainerItemCustomActionsInterface) {
+      return;
+    }
+    $custom_actions = $item_type->getCustomActions();
+    if (empty($custom_actions[$custom_action])) {
+      return;
+    }
 
     $element['custom_config'] = [
       '#type' => 'container',
+      '#default_value' => $item_type->getConfig()[$custom_action] ?? NULL,
       'parent_actions' => [
         '#type' => 'container',
         '#attributes' => [
@@ -1381,6 +1404,7 @@ class ConfigurationContainer extends FormElementBase {
       ];
       $element['custom_config'][$custom_action] = [
         '#type' => 'container',
+        '#default_value' => $item_type->getConfig()[$custom_action] ?? NULL,
         '#parents' => array_merge($element['#parents'], [
           'custom_config',
           $custom_action,
@@ -1389,6 +1413,7 @@ class ConfigurationContainer extends FormElementBase {
           'custom_config',
           $custom_action,
         ]),
+        '#item_id' => $id,
       ];
 
       $config = $items[$item_key]['config'][$custom_action] ?? [];
@@ -1398,7 +1423,9 @@ class ConfigurationContainer extends FormElementBase {
 
     $element['custom_config']['parent_actions']['submit_item'] = [
       '#type' => 'submit',
-      '#value' => t('Save'),
+      '#value' => t('Update @custom_action', [
+        '@custom_action' => $custom_actions[$custom_action],
+      ]),
       '#name' => 'custom-config-submit',
       '#ajax' => [
         'event' => 'click',

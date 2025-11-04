@@ -1,8 +1,13 @@
 (function ($) {
 
+  /**
+   * Style plugin for choropleth maps.
+   */
+
   'use strict';
 
   const root_styles = getComputedStyle(document.documentElement);
+  const MAX_RANGES = 6;
 
   if (!window.ghi) {
     window.ghi = {};
@@ -42,7 +47,7 @@
           color: '#026CB6',
           dashArray: '',
         },
-        colors: this.interpolateColors("rgb(255, 255, 255)", this.convertToRGB(root_styles.getPropertyValue('--ghi-widget-color--dark')), 6),
+        colors: map.interpolateColors("rgb(255, 255, 255)", map.convertToRGB(root_styles.getPropertyValue('--ghi-widget-color--dark')), MAX_RANGES + 1),
       };
     }
 
@@ -141,7 +146,7 @@
      */
     buildFeatures = function () {
       let state = this.state;
-      let geojson_features = state.getLocations().map(item => state.getMapController().getGeoJSON(item, (feature, location) => {
+      let geojson_features = state.getLocations(true, false).map(item => state.getMapController().getGeoJSON(item, (feature, location) => {
         feature.properties.object_count = location.object_count;
         feature.properties.admin_level = location.admin_level;
         feature.properties.sort_order = -1 * location.object_count;
@@ -171,16 +176,18 @@
      *   The fill layer feature.
      */
     buildFillLayer = function () {
+      let color_steps = this.map.getFillColors(this.getDataRanges(), this.config.colors).flat();
+      color_steps.shift();
       return {
         'id': this.featureLayerId,
         'type': 'fill',
         'source': this.sourceId, // reference the data source
         'layout': {},
         'paint': {
-          'fill-color': {
-            'property': 'object_count',
-            'stops': this.getFillColors(),
-          },
+          'fill-color': [
+            'step',
+            ['get', 'object_count'],
+          ].concat(color_steps),
           'fill-opacity': [
             'case',
             ['==', ['get', 'object_count'], 0],
@@ -241,7 +248,7 @@
       let map = state.getMap();
 
       let label_source_id = this.areaLabelSourceId;
-      let backgroundLayer = state.getBackgroundLayer(map);
+      let backgroundLayer = state.getBackgroundLayer();
 
       // We need to add a new point data set to which the labels can be
       // attached. Otherwise we would end up with duplicated labels on higher
@@ -254,27 +261,11 @@
         'id': label_source_id,
         'type': 'symbol',
         'source': label_source_id,
-        'layout': {
-          'symbol-sort-key': ['get', 'sort_order'],
+        'layout': Object.assign({}, state.getCommonTextProperties().layout, {
           'text-field': ['get', 'location_name'],
-          'text-font': backgroundLayer.layout['text-font'],
-          'text-letter-spacing': backgroundLayer.layout['text-letter-spacing'],
-          'text-size': [
-            'interpolate',
-            ['linear'],
-            ['zoom'],
-            3,
-            8,
-            7,
-            20
-          ],
           'text-anchor': 'center',
-        },
-        'paint': {
-          'text-color': 'black',
-          'text-halo-color': backgroundLayer.paint['text-halo-color'],
-          'text-halo-width': 0.5,
-        },
+        }),
+        'paint': state.getCommonTextProperties().paint,
       });
     }
 
@@ -334,19 +325,19 @@
         if (!feature) {
           return;
         }
-        map.getCanvas().style.cursor = 'pointer';
         state.hoverFeature(feature);
         state.showTooltip(this.getTooltipContent(state.getLocationFromFeature(feature)));
       });
 
       map.on('mousemove', layer_id, (e) => {
         let feature = state.getFeatureFromEvent(e);
-        if (!feature) {
+        if (!feature && state.getHoveredLocation()) {
+          // Disable hover.
+          state.resetHover();
           return;
         }
-        if (!state.isHovered(feature)) {
+        if (feature && !state.isHovered(feature)) {
           // Update the hover if changed.
-          map.getCanvas().style.cursor = 'pointer';
           state.hoverFeature(feature);
           state.showTooltip(this.getTooltipContent(state.getLocationFromFeature(feature)));
         }
@@ -359,38 +350,11 @@
     }
 
     /**
-     * Create or update the legend items.
+     * Update the legend items.
      */
-    updateLegend = function() {
-      let state = this.state;
-      let ranges = this.getDataRanges();
-      let $legend_container = state.getContainer().find('.map-legend');
-      var $legend = $('<ul>');
-      let colors = this.config.colors;
-      for (i in ranges) {
-        let index = parseInt(i, 10);
-        if (index == 0) {
-          // Do not show the 0-range in the legend.
-          continue;
-        }
-        let next_index = parseInt(i, 10) + 1;
-        let min = ranges[index];
-        var text = '';
-        if (index == ranges.length - 1) {
-          text = '≥ ' + min.toString();
-        }
-        else {
-          let max = (ranges[next_index] - 1);
-          text = min != max ? min.toString() + ' - ' + max.toString() : min.toString();
-        }
-        var $legend_item = $('<li>');
-        var $legend_marker = $('<span>')
-          .addClass('legend-marker')
-          .css('background-color', colors[index]);
-        $legend_item.append($legend_marker);
-        $legend_item.append(text);
-        $legend.append($legend_item);
-      }
+    updateLegend = function($legend_container = null) {
+      $legend_container = $legend_container ?? this.state.getContainer().find('div.map-legend');
+      var $legend = this.state.createRangeLegend(this.getDataRanges(), this.config.colors);
       $legend_container.html($legend);
     }
 
@@ -424,21 +388,6 @@
     }
 
     /**
-     * Get the fill colors.
-     *
-     * @returns {Array}
-     *  An array relating a stop point in the data with a color to use.
-     */
-    getFillColors = function() {
-      let ranges = this.getDataRanges();
-      let colors = [];
-      for (i in ranges) {
-        colors.push([ranges[i], this.config.colors[i]]);
-      }
-      return colors;
-    }
-
-    /**
      * Get the data ranges for the current set of locations.
      *
      * @returns {Array}
@@ -446,42 +395,10 @@
      */
     getDataRanges = function() {
       let state = this.state;
-      let object_counts = state.getLocations().filter(function(d) {
+      let object_counts = state.getLocations(false, false).filter(function(d) {
         return d.admin_level == state.getAdminLevel();
       }).map(d => d.object_count);
-      let max_count = Math.max.apply(Math, object_counts);
-      let range_count = Math.min(5, max_count);
-
-      // We have 4 steps between 0 and the max count.
-      let range_step = max_count > 4 ? Math.floor((max_count - 1) / range_count + 1) : 1;
-
-      // The first range is always 0.
-      var ranges = [0];
-
-      // Then we have 4 ranges that are build equally distributed based on the
-      // range step.
-      for (var i = 0; i < range_count - 1; i++) {
-        ranges.push(i * range_step + 1);
-      }
-
-      // And then add the highest bucket. Adjust the displayed max count so that
-      // not only a single area falls into this bucket.
-      var max_count_display = max_count;
-      let max_steps = [1000, 500, 200, 100, 50, 20, 15, 10, 5, 1];
-      for (var i = 0; i < max_steps.length; i++) {
-        if (max_count > max_steps[i]) {
-          max_count_display = Math.floor(max_count / max_steps[i]) * max_steps[i];
-          // Extra check for plausibility. If the max_step-based max_count is
-          // lower than the highest value of the last bucket, correct that.
-          let last_bucket_max = ranges[ranges.length - 1] + range_step;
-          if (max_count_display < last_bucket_max) {
-            max_count_display = (max_count > 100 && max_count - last_bucket_max < 10) ? max_count - 10 : last_bucket_max;
-          }
-          break;
-        }
-      }
-      ranges.push(max_count_display);
-      return ranges;
+      return this.map.getDataRanges(object_counts, MAX_RANGES);
     }
 
     /**
@@ -492,84 +409,6 @@
      */
     getTooltipContent = function (object) {
       return object.location_name + ' (' + object.object_count + ')';
-    }
-
-    /**
-     * Convert a color string to RGB.
-     *
-     * @param {String} color_string_hex
-     *   The color string in hey notation.
-     *
-     * @returns {String}
-     *   The color in RGB notation.
-     */
-    convertToRGB = function(color_string_hex) {
-      color_string_hex = color_string_hex.trim().replace('#', '');
-      if (color_string_hex.length != 6){
-        throw "Only six-digit hex colors are allowed.";
-      }
-      var aRgbHex = color_string_hex.match(/.{1,2}/g);
-      var aRgb = [
-        parseInt(aRgbHex[0], 16),
-        parseInt(aRgbHex[1], 16),
-        parseInt(aRgbHex[2], 16)
-      ];
-      return 'rgb(' + aRgb.join(',') + ')';
-  }
-
-    /**
-     * Interpolate both given colors.
-     *
-     * Color interpolation boldly copied and adapted from
-     * https://graphicdesign.stackexchange.com/a/83867
-     *
-     * @param {String} color1
-     *   The first color.
-     * @param {String} color2
-     *   The second color.
-     * @param {Number} factor
-     *   @todo What is this?
-     *
-     * @returns {Array}
-     *   An interpolated color.
-     */
-    interpolateColor = function(color1, color2, factor = null) {
-      if (factor === null) {
-        factor = 0.5;
-      }
-      var result = color1.slice();
-      for (var i = 0; i < 3; i++) {
-        result[i] = Math.round(result[i] + factor * (color2[i] - color1[i]));
-      }
-      return result;
-    };
-
-    /**
-     * Interpolate both colors in the given amount if steps.
-     *
-     * @param {String} color1
-     *   The first color.
-     * @param {String} color2
-     *   The second color.
-     * @param {Number} steps
-     *   The amount of steps.
-     *
-     * @returns {Array}
-     *   An array of the interpolated colors.
-     */
-    interpolateColors = function(color1, color2, steps) {
-      var stepFactor = 1 / (steps - 1),
-          interpolatedColorArray = [];
-
-      color1 = color1.match(/\d+/g).map(Number);
-      color2 = color2.match(/\d+/g).map(Number);
-
-      for (var i = 0; i < steps; i++) {
-        let rgb = this.interpolateColor(color1, color2, stepFactor * i);
-        interpolatedColorArray.push("#" + ((1 << 24) + (rgb[0] << 16) + (rgb[1] << 8) + rgb[2]).toString(16).slice(1));
-      }
-
-      return interpolatedColorArray;
     }
 
   }

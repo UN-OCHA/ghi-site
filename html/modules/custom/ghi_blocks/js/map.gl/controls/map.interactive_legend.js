@@ -30,7 +30,62 @@
       });
     }
 
-    setup = function () {
+    /**
+     * Optionally provide a default position for this control.
+     *
+     * If this method is implemented and Map#addControl is called without the
+     * position parameter, the value returned by getDefaultPosition will be
+     * used as the control's position.
+     *
+     * @returns {String}
+     *   A control position, one of the values valid in addControl.
+     */
+    getDefaultPosition = function () {
+      return 'bottom-left';
+    }
+
+    /**
+     * Register a control on the map.
+     *
+     * Give it a chance to register event listeners and resources. This method
+     * is called by Map#addControl internally.
+     *
+     * @param {Object} map
+     *   The mapbox object.
+     *
+     * @returns {Element}
+     *   The control's container element. This should be created by the control
+     *   and returned by onAdd without being attached to the DOM: the map will
+     *   insert the control's element into the DOM as necessary.
+     */
+    onAdd = function (map) {
+      this._map = map;
+      this._container = document.createElement('div');
+      this._container.className = 'mapboxgl-ctrl mapboxgl-ctrl-group legend';
+      let $legend_container = $('<div>');
+      $legend_container.addClass('map-legend');
+      this._container.appendChild($legend_container[0]);
+      this.update($legend_container);
+      return this._container;
+    }
+
+    /**
+     * Update the legend.
+     */
+    update = function ($legend_container = null) {
+      let updateCallback = 'updateLegend';
+      let style = this.state.getMapStyle();
+      if (typeof style != 'object' || !style.hasOwnProperty(updateCallback) || typeof style[updateCallback] != 'function') {
+        return;
+      }
+      style[updateCallback]($legend_container);
+      this.attachBehaviors();
+    }
+
+    /**
+     * Attach the interactive behaviors.
+     */
+    attachBehaviors = function () {
       let self = this;
       let state = this.state;
       let options = state.getOptions();
@@ -41,13 +96,13 @@
         return;
       }
       // Add an interactive legend.
-      let $items = state.getContainer().find('.map-legend ul li.legend-item');
+      let $items = $(this._container).find('.map-legend ul li.legend-item');
       if (this.hiddenTypes.length > 0) {
         this.hiddenTypes.forEach(function (type) {
           self.disableLegendItem(type);
         });
       }
-      state.getContainer().find('.map-legend ul').addClass('interactive-legend');
+      $(this._container).find('.map-legend ul').addClass('interactive-legend');
       $items.on('click', function (event) {
         state.sidebar?.hide();
 
@@ -87,7 +142,7 @@
      *   An array of strings.
      */
     getDataTypes = function () {
-      return this.state.getContainer().find('.map-legend ul .legend-item[data-type]').toArray().map((item) => {
+      return $(this._container).find('.map-legend ul .legend-item[data-type]').toArray().map((item) => {
         return $(item).attr('data-type');
       });
     }
@@ -110,10 +165,8 @@
      * Disable the given legend item type.
      */
     disableLegendItem = function (dataType) {
-      let map_id = this.state.getMapId();
-      $('#' + map_id + '-legend ul li.legend-item[data-type="' + dataType + '"').attr('disabled', true);
-      $('#' + map_id + '-legend ul li.legend-item[data-type="' + dataType + '"]').css('opacity', '0.4');
-      // $('#' + map_id + ' .map-svg > [legend-type="' + dataType + '"]').css('display', 'none');
+      $(this._container).find('ul li.legend-item[data-type="' + dataType + '"]').attr('disabled', true);
+      $(this._container).find('ul  li.legend-item[data-type="' + dataType + '"]').css('opacity', '0.4');
       if (this.hiddenTypes.indexOf(dataType) == -1) {
         this.hiddenTypes.push(dataType);
       }
@@ -124,10 +177,8 @@
      * Enable the given legend item type.
      */
     enableLegendItem = function (dataType) {
-      let map_id = this.state.getMapId();
-      $('#' + map_id + '-legend ul li.legend-item[data-type="' + dataType + '"').attr('disabled', false);
-      $('#' + map_id + '-legend ul li.legend-item[data-type="' + dataType + '"]').css('opacity', '1');
-      // $('#' + map_id + ' .map-svg > [legend-type="' + dataType + '"]').css('display', 'inline');
+      $(this._container).find('ul  li.legend-item[data-type="' + dataType + '"]').attr('disabled', false);
+      $(this._container).find('ul  li.legend-item[data-type="' + dataType + '"]').css('opacity', '1');
       this.hiddenTypes = this.hiddenTypes.filter(function(type) { return dataType != type });
       this.setHiddenState(dataType, false);
     }

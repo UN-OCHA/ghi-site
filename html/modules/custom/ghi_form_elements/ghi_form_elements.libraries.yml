@@ -67,6 +67,11 @@ entity_preview_select:
     - core/sortable
     - common_design_subtheme/ghi-grid
 
+map_dataset:
+  css:
+    component:
+      css/map_dataset.css: {}
+
 markup_select:
   css:
     component:

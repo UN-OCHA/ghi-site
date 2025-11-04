@@ -2,6 +2,8 @@
 
 namespace Drupal\ghi_plans\Traits;
 
+use Drupal\ghi_plans\ApiObjects\PlanReportingPeriod;
+
 /**
  * Trait to help with retrieving reporting periods for a plan.
  */
@@ -38,7 +40,7 @@ trait PlanReportingPeriodTrait {
    *   Whether to limit the reporting periods to the ones that are published.
    *
    * @return \Drupal\ghi_plans\ApiObjects\PlanReportingPeriod[]
-   *   An array of monitoring period objects.
+   *   An array of monitoring period objects sorted in ascending order.
    */
   public static function getPlanReportingPeriods($plan_id, $limit_to_published = FALSE) {
     /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\PlanReportingPeriodsQuery $query */
@@ -46,13 +48,17 @@ trait PlanReportingPeriodTrait {
     if (!$query) {
       return [];
     }
-    $query->setPlaceholder('plan_id', $plan_id);
-    $periods = $query->getReportingPeriods();
+    $periods = $query->getReportingPeriods($plan_id);
     if ($limit_to_published) {
-      $periods = array_filter($periods, function ($period) {
+      $periods = array_filter($periods, function (PlanReportingPeriod $period): bool {
         return $period->isPublished();
       });
     }
+    $period_keys = array_keys($periods);
+    usort($periods, function (PlanReportingPeriod $a, PlanReportingPeriod $b) {
+      return $a->getPeriodNumber() <=> $b->getPeriodNumber();
+    });
+    $periods = array_combine($period_keys, $periods);
     return $periods;
   }
 

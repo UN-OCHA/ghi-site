@@ -28,14 +28,15 @@ class PlanReportingPeriodsQuery extends EndpointQueryBase {
    *   An array of reporting periods, keyed by period id and sorted by period
    *   number.
    */
-  public function getReportingPeriods() {
-    $cache_key = $this->getCacheKey($this->getPlaceholders());
+  public function getReportingPeriods($plan_id) {
+    $placeholders = ['plan_id' => $plan_id];
+    $cache_key = $this->getCacheKey($placeholders);
     $periods = $this->getCache($cache_key);
     if ($periods) {
       return $periods;
     }
 
-    $data = $this->getData();
+    $data = $this->getData($placeholders);
     if (!$data) {
       return [];
     }
@@ -51,11 +52,16 @@ class PlanReportingPeriodsQuery extends EndpointQueryBase {
   /**
    * Get a specific reporting period for a plan.
    *
-   * @return \Drupal\ghi_plans\ApiObjects\PlanReportingPeriod
-   *   The reporting period.
+   * @param int $plan_id
+   *   The plan id.
+   * @param int $id
+   *   The reporting period id.
+   *
+   * @return \Drupal\ghi_plans\ApiObjects\PlanReportingPeriod|null
+   *   The reporting period or NULL.
    */
-  public function getReportingPeriod($id) {
-    $periods = $this->getReportingPeriods();
+  public function getReportingPeriod($plan_id, $id): PlanReportingPeriod|null {
+    $periods = $this->getReportingPeriods($plan_id);
     return $periods[$id] ?? NULL;
   }
 
