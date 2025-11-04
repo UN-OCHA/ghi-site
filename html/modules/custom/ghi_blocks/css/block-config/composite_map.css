@@ -1,0 +1,8 @@
+[data-drupal-selector="edit-maps-maps-custom-config-dataset-form"] > div {
+  display: flex;
+  gap: 0 1rem;
+  flex-wrap: wrap;
+}
+[data-drupal-selector="edit-maps-maps-custom-config-dataset-form"] > div > div {
+  max-width: 22rem;
+}

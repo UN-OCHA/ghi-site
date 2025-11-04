@@ -87,6 +87,7 @@
         "drupal/entity_browser_table": "^1.4",
         "drupal/field_group": "^3.1",
         "drupal/flat_taxonomy": "^2.0",
+        "drupal/form_options_attributes": "^2.1",
         "drupal/fpa": "^4.0.0",
         "drupal/geocoder": "^4.25",
         "drupal/geofield_map": "^11.0",

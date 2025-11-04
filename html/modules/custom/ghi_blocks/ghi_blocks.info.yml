@@ -24,3 +24,4 @@ dependencies:
   - maxlength:maxlength
   - gin_lb:gin_lb
   - queue_ui:queue_ui
+  - form_options_attributes:form_options_attributes

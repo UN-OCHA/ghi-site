@@ -89,18 +89,6 @@
     }
   }
 
-  .plan-attachment-map-wrapper {
-    .map-tabs--inner {
-      // overflow-x: auto;
-      max-width: calc(100vw - 2* var(--cd-container-padding));
-
-      ul {
-        width: fit-content;
-        margin: 0 1rem;
-      }
-    }
-  }
-
   &.has-attachment-switcher {
     .map-tabs,
     .download-link-wrapper {

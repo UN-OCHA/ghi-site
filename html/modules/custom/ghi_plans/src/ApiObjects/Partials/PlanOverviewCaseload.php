@@ -4,6 +4,7 @@ namespace Drupal\ghi_plans\ApiObjects\Partials;
 
 use Drupal\ghi_base_objects\ApiObjects\BaseObject;
 use Drupal\ghi_plans\ApiObjects\Attachments\CaseloadAttachmentInterface;
+use Drupal\ghi_plans\Traits\PartialCaseloadTrait;
 
 /**
  * Abstraction class for a plan partial object.
@@ -13,6 +14,8 @@ use Drupal\ghi_plans\ApiObjects\Attachments\CaseloadAttachmentInterface;
  * and abstracted data access.
  */
 class PlanOverviewCaseload extends BaseObject implements CaseloadAttachmentInterface {
+
+  use PartialCaseloadTrait;
 
   /**
    * {@inheritdoc}
@@ -40,43 +43,22 @@ class PlanOverviewCaseload extends BaseObject implements CaseloadAttachmentInter
   /**
    * {@inheritdoc}
    */
-  public function getTitle() {
-    return NULL;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function getDescription() {
-    return NULL;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function getCustomId() {
+  public function getCustomId(): string {
     return $this->custom_id;
   }
 
   /**
    * {@inheritdoc}
    */
-  public function getOriginalFields() {
+  public function getOriginalFields(): array {
     return $this->original_fields;
   }
 
   /**
    * {@inheritdoc}
    */
-  public function getOriginalFieldTypes() {
+  public function getOriginalFieldTypes(): array {
     return $this->original_field_types;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function getPlanId() {
-    return NULL;
   }
 
 }

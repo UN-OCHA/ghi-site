@@ -2,6 +2,8 @@
 
   'use strict';
 
+  const root_styles = getComputedStyle(document.documentElement);
+
   if (!window.ghi) {
     window.ghi = {};
   }
@@ -33,6 +35,7 @@
       this.style = null;
       this.animationDuration = 500;
       this.legend = null;
+      this.interactiveLegend = null;
       this.sidebar = null;
       this.throbber = null,
       this.options = options;
@@ -52,10 +55,8 @@
     }
 
     setup = function (options) {
-      // Init the legend.
-      this.setLegend(new ghi.interactiveLegend(this));
 
-      // Init the legend.
+      // Init the throbber.
       this.setThrobber(new ghi.throbber(this));
 
       // Render what we have.
@@ -71,6 +72,16 @@
       if (this.canSelectAdminLevel()) {
         this.adminLevelControl = new ghi.adminLevelControl(this);
         this.getMap().addControl(this.adminLevelControl);
+      }
+
+      // Init the legend.
+      if (!this.getOptions().interactive_legend) {
+        this.legend = new ghi.legendControl(this);
+        this.getMap().addControl(this.legend);
+      }
+      else {
+        this.interactiveLegend = new ghi.interactiveLegend(this);
+        this.getMap().addControl(this.interactiveLegend);
       }
 
       // Add search box.
@@ -115,6 +126,9 @@
         if (options.style === 'circle') {
           this.style = new ghi.circleMap(this.getMapController(), this, options, config);
         }
+        if (options.style === 'composite') {
+          this.style = new ghi.compositeMap(this.getMapController(), this, options, config);
+        }
         if (options.style === 'choropleth') {
           this.style = new ghi.choroplethMap(this.getMapController(), this, options, config);
         }
@@ -150,16 +164,6 @@
     }
 
     /**
-     * Set the legend handler.
-     *
-     * @param {Object} legend
-     *   The legend handler.
-     */
-    setLegend = function (legend) {
-      this.legend = legend;
-    }
-
-    /**
      * Set the sidebar handler.
      *
      * @param {Object} sidebar
@@ -170,10 +174,10 @@
     }
 
     /**
-     * Set the legend handler.
+     * Set the throbber handler.
      *
-     * @param {Object} legend
-     *   The legend handler.
+     * @param {Object} throbber
+     *   The throbber handler.
      */
     setThrobber = function (throbber) {
       this.throbber = throbber;
@@ -205,14 +209,14 @@
      * @return {Object}
      *   A data object.
      */
-    getData = function () {
+    getData = function (tab = null) {
       if (!this.hasMapTabs()) {
         return this.data;
       }
       if (this.currentIndex === null) {
         this.setCurrentIndex();
       }
-      return this.getDataForIndex(this.currentIndex);
+      return this.getDataForIndex(tab ?? this.currentIndex);
     }
 
     /**
@@ -229,6 +233,34 @@
     }
 
     /**
+     * Get the base data for a map.
+     */
+    getBaseData = function (tab = null) {
+      let data = this.getData(tab);
+      if (data.hasOwnProperty('locations')) {
+        return data;
+      }
+      for (let i in data) {
+        if (typeof data[i] != 'object') {
+          continue;
+        }
+        if (!data[i].hasOwnProperty('locations') || !data[i].hasOwnProperty('is_base_data') || !data[i].is_base_data) {
+          continue;
+        }
+        return data[i];
+      }
+      return null;
+    }
+
+    /**
+     * Get the base locations for a map.
+     */
+    getBaseLocations = function (tab = null) {
+      let data = this.getBaseData(tab);
+      return data.locations ?? null;
+    }
+
+    /**
      * Get all location data, across all map tabs.
      *
      * @returns {Object}
@@ -239,8 +271,9 @@
         return this.data;
       }
       let data = {};
-      Object.values(this.data).forEach((tab) => {
-        Object.values(tab.locations).forEach((d) => {
+      Object.keys(this.data).forEach((tab) => {
+        let locations = this.getBaseLocations(tab);
+        Object.values(locations).forEach((d) => {
           data[d.object_id] = d;
         });
       });
@@ -331,8 +364,7 @@
      *   An array of sequential numbers for the admin level.
      */
     getAdminLevelOptions = function () {
-      let data = this.getData();
-      let locations = typeof data.locations != 'undefined' ? data.locations : [];
+      let locations = this.filterEmptyLocations(this.getBaseLocations() ?? []);
       let locations_admin_level = locations.map(function (item) { return item.admin_level; });
       // Create an array with unique values. Sort it, because the order of the
       // locations is not guaranteed to be in the order of their admin level.
@@ -381,9 +413,25 @@
      *   An array of location data objects.
      */
     getLocations = function (filter_by_admin_level = true, filter_empty = true) {
-      let data = this.getData();
-      let locations = typeof data.locations != 'undefined' ? data.locations : [];
+      let locations = this.getBaseLocations() ?? [];
+      return this.processLocations(locations, filter_by_admin_level, filter_empty);
+    }
 
+    /**
+     * Process an array of location data objects.
+     *
+     * @param {Array} locations
+     *   The locations to process.
+     * @param {Boolean} filter_by_admin_level
+     *   Whether to filter by the current admin level.
+     * @param {Boolean} filter_empty
+     *   Whether to filter empty locations.
+     *
+     * @return {Array}
+     *   An array of processed location data objects.
+     */
+    processLocations = function (locations, filter_by_admin_level = true, filter_empty = true, properties = null) {
+      let data = this.getData();
       let index = this.getCurrentIndex();
       let variant_id = this.getVariantId();
       if (variant_id && this.hasVariant(this.getCurrentIndex(), variant_id)) {
@@ -407,11 +455,19 @@
       locations = locations.map(function (d) {
         d.index = index;
         d.variant_id = variant_id;
+        if (properties) {
+          Object.assign(d, properties);
+        }
         return d;
       });
 
-      if (filter_empty) {
-        locations = this.filterEmptyLocations(locations);
+      if (filter_empty !== false) {
+        if (typeof filter_empty == 'function') {
+          locations = filter_empty(locations);
+        }
+        else {
+          locations = this.filterEmptyLocations(locations);
+        }
       }
 
       return locations;
@@ -427,11 +483,7 @@
      *   A map object with locations keyed by their object id.
      */
     getLocationsKeyed = function (filter_by_admin_level = true) {
-      let locations = {};
-      for (let location of this.getLocations(filter_by_admin_level)) {
-        locations[location.object_id] = location;
-      }
-      return locations;
+      return this.getMapController().keyArray(this.getLocations(filter_by_admin_level, false), 'object_id');
     }
 
     /**
@@ -473,10 +525,10 @@
      */
     filterEmptyLocations = function (locations) {
       if (this.isChoroplethMap()) {
-        locations = locations.filter((object) => object.object_count > 0);
+        return locations.filter((object) => object.object_count > 0);
       }
       else if (!this.isOverviewMap()) {
-        locations = locations.filter((object) => object.total > 0);
+        return locations.filter((object) => object.total > 0);
       }
       return locations;
     }
@@ -583,6 +635,7 @@
 
       // Set the new index.
       this.setCurrentIndex(index);
+      this.resetHover();
 
       // Check if the variant needs to be changed too.
       if (new_tab) {
@@ -700,7 +753,7 @@
       if (!object.hasOwnProperty('plan_type')) {
         return true;
       }
-      return this.legend?.isHiddenType(object.plan_type) ? false : true;
+      return this.interactiveLegend?.isHiddenType(object.plan_type) ? false : true;
     }
 
     /**
@@ -718,27 +771,22 @@
       let self = this;
       let map = this.getMap();
       layer_id = layer_id ?? this.style.getFeatureLayerId();
-      let is_circle_style = layer_id === this.style.getFeatureLayerId() && this.options.style == 'circle';
       let features = e.features?.length ? e.features : map.queryRenderedFeatures(e.point, {layers: [layer_id]});
       if (!features.length) {
         // No features found.
         return;
       }
-
       // Filter out all features that are not inside the bounding box for circles.
-      if (is_circle_style) {
-        // Process features and calculate the distance to the event point.
-        features = features.map((d) => {
-          d.properties.distance = self.calculateDistanceFromFeature(e, d);
-          return d;
-        }).filter((d) => d.properties.distance !== null && d.properties.distance <= d.properties.radius + 2);
+      // Process features and calculate the distance to the event point.
+      features = features.map((d) => {
+        d.properties.distance = d.layer.type == 'circle' ? self.calculateDistanceFromFeature(e, d) : null;
+        return d;
+      }).filter((d) => d.properties.distance === null || d.properties.distance <= d.properties.radius + 2);
 
-        // Sort by ascending distance.
-        features.sort(function(a, b) {
-          return a.properties.distance - b.properties.distance;
-        });
-      }
-
+      // Sort by ascending distance.
+      features.sort(function(a, b) {
+        return a.properties.distance - b.properties.distance;
+      });
       return features.length ? features[0] : null;
     }
 
@@ -823,19 +871,35 @@
      * @param {String} source_id
      *   The id of the source.
      * @param {Object} filter
-     *   An optional filter object.
+     *   An optional filter object. This also supports filtering for a feature
+     *   state under the states property.
      *
      * @returns {Array}
      *   An array of feature objects.
      */
     querySourceFeatures = function (layer_id, source_id, filter = null, unique = true) {
+      let self = this;
       let options = {
         sourceLayer: layer_id,
       };
+      // See if we want to filter for feature states too.
+      let states = filter?.states ?? null;
       if (filter !== null) {
+        delete filter.states;
+      }
+      // Add the remaining filters to the options.
+      if (filter !== null && Object.entries(filter).length > 0) {
         options.filter = filter;
       }
+      // Get the matching features.
       let features = this.getMap().querySourceFeatures(source_id, options);
+      // If states filter has been given, filter out the features matching the
+      // filter.
+      if (states !== null && typeof states == 'object') {
+        for (const [key, value] of Object.entries(states)) {
+          features = features.filter((feature) => self.getFeatureState(feature.id, key) === value);
+        }
+      }
       return unique ? this.getUniqueFeatures(features, typeof unique == 'boolean' ? 'object_id' : unique) : features;
     }
 
@@ -907,8 +971,9 @@
         });
       }
       else {
-        let geojson_source_id = source_id + '-geojson';
-        let geojson_feature = this.getFeatureById(id, geojson_source_id, geojson_source_id);
+        let geojson_source_id = this.style.adminAreaSourceId ?? source_id + '-geojson';
+        let geojson_layer_id = this.style.adminAreaLayerId ?? source_id + '-geojson';
+        let geojson_feature = this.getFeatureById(id, geojson_layer_id, geojson_source_id);
         if (geojson_feature) {
           map.setFeatureState(
             { source: geojson_source_id, id: geojson_feature.id },
@@ -947,8 +1012,8 @@
       let layer_id = feature.layer.id;
       if (hover_state === true && this.hoveredLocation !== null && !this.isHovered(feature)) {
         // Disable hover on previous feature.
-        Object.keys(this.hoveredLocation.layers).forEach((layer_id) => {
-          this.setFeatureState(this.hoveredLocation.layers[layer_id], 'hover', false, feature.source);
+        Object.keys(this.hoveredLocation.layers).forEach((_layer_id) => {
+          this.setFeatureState(this.hoveredLocation.layers[_layer_id], 'hover', false, feature.source);
         });
       }
       // Update the cursor.
@@ -974,13 +1039,13 @@
 
       this.setFeatureState(feature.id, 'hover', hover_state, feature.source);
       if (this.hoveredLocation === null) {
-        this.getCanvasContainer().trigger('reset-focus', [feature]);
+        this.getCanvasContainer().trigger('reset-hover', [feature]);
       }
       else if (!this.hoveredLocation.layers.hasOwnProperty(layer_id)) {
-        this.getCanvasContainer().trigger('reset-focus', [feature]);
+        this.getCanvasContainer().trigger('reset-hover', [feature]);
       }
       else {
-        this.getCanvasContainer().trigger('focus-focus', [feature]);
+        this.getCanvasContainer().trigger('hover-feature', [feature]);
       }
     }
 
@@ -1038,9 +1103,19 @@
           this.setFeatureState(this.hoveredLocation.layers[layer_id], 'hover', false);
         });
       }
+      for (let layer of this.map.getStyle().layers) {
+        if (!layer.hasOwnProperty('source')) {
+          continue;
+        }
+        let features = this.querySourceFeatures(layer.id, layer.source, {'states': {'hover': true}});
+        for (let feature of features) {
+          this.setFeatureState(feature.id, 'hover', false);
+        }
+      }
       this.hoveredLocation = null;
       this.hideTooltip();
-      this.getCanvasContainer().trigger('reset-focus');
+      this.getCanvasContainer().trigger('reset-hover');
+      this.getMap().getCanvas().style.cursor = '';
     }
 
     /**
@@ -1249,6 +1324,9 @@
     /**
      * Build the source feature.
      *
+     * @param {Object}
+     *   The data object, usually a feature collection.
+     *
      * @returns {Object}
      *   The source feature.
      */
@@ -1267,6 +1345,10 @@
      *   The HTML string of the content to show.
      */
     showTooltip = function (content) {
+      if (!content) {
+        this.hideTooltip();
+        return;
+      }
       if (!this.getContainer().parent().find('.tooltip').length) {
         let tooltip = document.createElement('div');
         tooltip.className = 'tooltip';
@@ -1375,7 +1457,7 @@
         return;
       }
       let map = this.getMap();
-      let backgroundLayer = this.getBackgroundLayer(map);
+      let backgroundLayer = this.getBackgroundLayer();
 
       let rule = ['!=', ['get', 'en_short'], country_label];
       let filters = map.getFilter(backgroundLayer.id);
@@ -1422,13 +1504,41 @@
     }
 
     /**
+     * Get the common text properties for layout and paint.
+     */
+    getCommonTextProperties = function () {
+      let backgroundLayer = this.getBackgroundLayer();
+      return {
+        'layout': {
+          'symbol-sort-key': ['get', 'sort_order'],
+          'text-font': backgroundLayer.layout['text-font'],
+          'text-letter-spacing': backgroundLayer.layout['text-letter-spacing'],
+          'text-size': [
+            'interpolate',
+            ['linear'],
+            ['zoom'],
+            3,
+            8,
+            7,
+            20
+          ],
+        },
+        'paint': {
+          'text-color': root_styles.getPropertyValue('--ghi-map-admin-area-label-color'),
+          'text-halo-color': backgroundLayer.paint['text-halo-color'],
+          'text-halo-width': 0.5,
+        }
+      }
+    }
+
+    /**
      * Update the label layer.
      */
     updateLabelLayer = function (label_layer_id) {
       let map = this.getMap();
 
       let backgroundFeatures = [];
-      let backgroundLayer = this.getBackgroundLayer(map);
+      let backgroundLayer = this.getBackgroundLayer();
       if (backgroundLayer) {
         backgroundFeatures = map.querySourceFeatures(backgroundLayer.source, {
           sourceLayer: backgroundLayer['source-layer'],
@@ -1458,18 +1568,20 @@
      *
      * @param {Number} duration
      *   Optional: The duration to use for animations.
+     * @param {Boolean} full_reload
+     *   Whether a full reload should happen.
      */
-    updateMap = function (duration = null) {
+    updateMap = function (duration = null, full_reload = false) {
       let style = this.getMapStyle();
       if (!style) {
         return;
       }
       // Render what we have.
-      style.renderLocations(duration);
+      style.renderLocations(duration, full_reload);
 
-      // Add the legend.
-      style.updateLegend();
-      this.legend?.setup();
+      // Update the legend.
+      this.legend?.update();
+      this.interactiveLegend?.update();
     }
 
     /**
@@ -1480,8 +1592,47 @@
      * @param {Array} features
      *   An array of features to set as the data for the given source.
      */
-    updateMapData = function(source_id, features, properties = null) {
+    updateMapData = function (source_id, features, properties = null) {
       this.getMap().getSource(source_id).setData(this.buildFeatureCollection(features, properties));
+    }
+
+    /**
+     * Create a range based legend.
+     * @param {Object} ranges
+     *   The ranges to be used.
+     * @param {Object} colors
+     *   The colors to be used.
+     *
+     * @returns {Object}
+     *   A jQuery node object.
+     */
+    createRangeLegend = function (ranges, colors) {
+      var $legend = $('<ul>');
+      for (i in ranges) {
+        let index = parseInt(i, 10);
+        if (index == 0) {
+          // Do not show the 0-range in the legend.
+          continue;
+        }
+        let next_index = parseInt(i, 10) + 1;
+        let min = ranges[index];
+        var text = '';
+        if (index == ranges.length - 1) {
+          text = '≥ ' + Drupal.theme('number', min);
+        }
+        else {
+          let max = (ranges[next_index] - 1);
+          text = min != max ? Drupal.theme('number', min) + ' - ' + Drupal.theme('number', max) : Drupal.theme('number', min);
+        }
+        var $legend_item = $('<li>');
+        var $legend_marker = $('<span>')
+          .addClass('legend-marker')
+          .css('background-color', colors[index]);
+        $legend_item.append($legend_marker);
+        $legend_item.append(text);
+        $legend.append($legend_item);
+      }
+      return $legend;
     }
 
     /**
