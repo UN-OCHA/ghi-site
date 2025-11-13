@@ -22,7 +22,7 @@ abstract class DownloadSourceBase implements HPCDownloadSourceInterface {
   protected $plugin;
 
   /**
-   * The plugin for a download source..
+   * The plugin for a download source.
    *
    * @var string
    */

@@ -16,6 +16,7 @@ use GuzzleHttp\Exception\ClientException;
 use GuzzleHttp\Exception\GuzzleException;
 use GuzzleHttp\Exception\ServerException;
 use GuzzleHttp\RequestOptions;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
@@ -24,6 +25,27 @@ use Symfony\Component\HttpFoundation\Response;
 abstract class RemoteSourceBaseHpcContentModule extends RemoteSourceBase {
 
   use SimpleCacheTrait;
+
+  /**
+   * Log identifier for log information relating to the Content Module.
+   */
+  const LOG_ID = 'hpc_content';
+
+  /**
+   * The logger factory service.
+   *
+   * @var \Drupal\Core\Logger\LoggerChannelFactoryInterface
+   */
+  protected $loggerFactory;
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
+    $instance = parent::create($container, $configuration, $plugin_id, $plugin_definition);
+    $instance->loggerFactory = $container->get('logger.factory');
+    return $instance;
+  }
 
   /**
    * Fetch data from a query.
@@ -248,15 +270,18 @@ abstract class RemoteSourceBaseHpcContentModule extends RemoteSourceBase {
       $result = $this->httpClient->post($this->getRemoteEndpointUrl(), $post_args);
     }
     catch (ClientException $e) {
+      $this->logError($e->getMessage());
       $response->setCode($e->getCode());
       return $response;
     }
     catch (ServerException $e) {
+      $this->logError($e->getMessage());
       $response->setCode($e->getCode());
       return $response;
     }
     catch (\Exception $e) {
-      // Just fail silently.
+      $this->logError($e->getMessage());
+      // Just fail silently and log errors.
     }
 
     if (!$result || $result->getStatusCode() !== Response::HTTP_OK) {
@@ -267,6 +292,16 @@ abstract class RemoteSourceBaseHpcContentModule extends RemoteSourceBase {
       $body_data = json_decode((string) $result->getBody());
       $response_data = is_object($body_data) && property_exists($body_data, 'data') ? $body_data->data : NULL;
       $response_errors = is_object($body_data) && property_exists($body_data, 'errors') ? $body_data->errors : NULL;
+
+      // Log errors.
+      if (!empty($response_errors) && is_array($response_errors)) {
+        foreach ($response_errors as $response_error) {
+          if (property_exists($response_error, 'message') && is_string($response_error->message)) {
+            $this->logError($response_error->message);
+          }
+        }
+      }
+
       if (empty($response_data) && !empty($response_errors)) {
         // This is an error that resulted in the response data to be completely
         // empty. There are also errors that still serve data. We handle these
@@ -279,7 +314,8 @@ abstract class RemoteSourceBaseHpcContentModule extends RemoteSourceBase {
       $response->setData($response_data);
     }
     catch (\Exception $e) {
-      // Just catch it for the moment.
+      // Just catch it for the moment and log errors.
+      $this->logError($e->getMessage());
     }
     // Store the response in the cache.
     $this->cache($cache_key, $response, FALSE, NULL, $cache_tags);
@@ -604,6 +640,18 @@ abstract class RemoteSourceBaseHpcContentModule extends RemoteSourceBase {
       'forceUpdate',
     ];
     return (array) $this->fetchData($type, ['id' => $id], $fields);
+  }
+
+  /**
+   * Log an error.
+   *
+   * @param string|\Stringable $message
+   *   The message to log.
+   * @param array $context
+   *   Optional: Additional context information.
+   */
+  private function logError(string|\Stringable $message, array $context = []): void {
+    $this->loggerFactory->get(self::LOG_ID)->error($message, $context);
   }
 
 }

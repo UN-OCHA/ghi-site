@@ -234,7 +234,7 @@ class CropManager {
   public function processCropSubmit($file_uri, $crop_type_name, $form_values) {
     $flush_styles = FALSE;
 
-    $properties = $form_values['crop_wrapper'][$crop_type_name]['crop_container']['values'];
+    $properties = $form_values['crop_wrapper'][$crop_type_name]['crop_container']['values'] ?? NULL;
     if (empty($properties)) {
       return;
     }

@@ -59,7 +59,7 @@ class RequestHelper {
   }
 
   /**
-   * Get the current route arguments..
+   * Get the current route arguments.
    *
    * @return array
    *   An array of parameters.
