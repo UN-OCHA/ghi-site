@@ -101,6 +101,13 @@ abstract class HPCBlockBase extends BlockBase implements HPCPluginInterface, Con
   protected $endpointQueryManager;
 
   /**
+   * The manager class for fabric query plugins.
+   *
+   * @var \Drupal\hpc_api\Query\FabricQueryManager
+   */
+  protected $fabricQueryManager;
+
+  /**
    * The entity type manager.
    *
    * @var \Drupal\Core\Entity\EntityTypeManagerInterface
@@ -139,6 +146,7 @@ abstract class HPCBlockBase extends BlockBase implements HPCPluginInterface, Con
     $instance->requestStack = $container->get('request_stack');
     $instance->router = $container->get('router.no_access_checks');
     $instance->endpointQueryManager = $container->get('plugin.manager.endpoint_query_manager');
+    $instance->fabricQueryManager = $container->get('plugin.manager.fabric_query_manager');
     $instance->entityTypeManager = $container->get('entity_type.manager');
     $instance->entityFieldManager = $container->get('entity_field.manager');
     $instance->fileSystem = $container->get('file_system');
@@ -636,19 +644,24 @@ abstract class HPCBlockBase extends BlockBase implements HPCPluginInterface, Con
     if (!empty($this->queryHandlers[$source_key])) {
       return $this->queryHandlers[$source_key];
     }
-    $configuration = $this->getPluginDefinition();
-    if (empty($configuration['data_sources'])) {
+    $sources = $this->getPluginDefinition()['data_sources'] ?? NULL;
+    if (!$sources || empty($sources[$source_key]) || !is_scalar($sources[$source_key])) {
       return NULL;
     }
 
-    $sources = $configuration['data_sources'];
-    $definition = !empty($sources[$source_key]) ? $sources[$source_key] : NULL;
-    if (!$definition || !is_scalar($definition) || !$this->endpointQueryManager->hasDefinition($definition)) {
+    $plugin_id = $sources[$source_key];
+    if ($this->fabricQueryManager->hasDefinition($plugin_id)) {
+      // Use fabric query if available.
+      return $this->fabricQueryManager->createInstance($plugin_id);
+    }
+
+    // Otherwise check the deprecated endpoint query plugins.
+    if (!$this->endpointQueryManager->hasDefinition($plugin_id)) {
       return NULL;
     }
 
     /** @var \Drupal\hpc_api\Query\EndpointQueryPluginInterface $query_handler */
-    $query_handler = $this->endpointQueryManager->createInstance($definition);
+    $query_handler = $this->endpointQueryManager->createInstance($plugin_id);
 
     // Get the available context values and use them as placeholder values for
     // the query.
@@ -739,7 +752,7 @@ abstract class HPCBlockBase extends BlockBase implements HPCPluginInterface, Con
     if (!empty($source_keys)) {
       foreach ($source_keys as $source_key) {
         $query_handler = $this->getQueryHandler($source_key);
-        if (!$query_handler) {
+        if (!$query_handler instanceof EndpointQueryPluginInterface) {
           continue;
         }
         if (method_exists($this, 'alterEndpointQuery')) {

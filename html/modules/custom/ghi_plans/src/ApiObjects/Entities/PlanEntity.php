@@ -3,15 +3,12 @@
 namespace Drupal\ghi_plans\ApiObjects\Entities;
 
 use Drupal\ghi_plans\Helpers\PlanEntityHelper;
-use Drupal\ghi_plans\Traits\PlanVersionArgument;
 use Drupal\hpc_api\Helpers\ApiEntityHelper;
 
 /**
  * Abstraction class for API plan entity objects.
  */
 class PlanEntity extends EntityObjectBase {
-
-  use PlanVersionArgument;
 
   /**
    * {@inheritdoc}
@@ -121,7 +118,7 @@ class PlanEntity extends EntityObjectBase {
     }
     $parents = [];
     foreach ($first_ref->planEntityIds as $entity_id) {
-      $parents[$entity_id] = PlanEntityHelper::getPlanEntity($entity_id, $this->getPlanVersionArgument());
+      $parents[$entity_id] = PlanEntityHelper::getPlanEntity($entity_id);
     }
     return array_filter($parents);
   }
@@ -215,7 +212,7 @@ class PlanEntity extends EntityObjectBase {
    */
   public function getParentGoverningEntity($recursion = FALSE) {
     if ($entity_id = $this->governing_entity_parent_id ?? NULL) {
-      $entity = PlanEntityHelper::getGoverningEntity($entity_id, $this->getPlanVersionArgument());
+      $entity = PlanEntityHelper::getGoverningEntity($entity_id);
       return $entity instanceof GoverningEntity ? $entity : NULL;
     }
     if (!$recursion) {
@@ -228,16 +225,6 @@ class PlanEntity extends EntityObjectBase {
         return $entity;
       }
     }
-  }
-
-  /**
-   * Get the version argument to use for this entity.
-   *
-   * @return string
-   *   The version argument as a string.
-   */
-  private function getPlanVersionArgument() {
-    return $this->getPlanVersionArgumentForPlanId($this->getPlanId());
   }
 
 }
