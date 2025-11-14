@@ -112,10 +112,10 @@ class Plan extends BaseObject implements BaseObjectMetaDataInterface, BaseObject
       return NULL;
     }
     return new Country((object) [
-      'id' => $focus_country?->getSourceId() ?? $default_country->id(),
-      'name' => $focus_country?->label() ?? $default_country->getName(),
-      'latitude' => $lat_lng[0],
-      'longitude' => $lat_lng[1],
+      'Id' => $focus_country?->getSourceId() ?? $default_country->id(),
+      'Name' => $focus_country?->label() ?? $default_country->getName(),
+      'Latitude' => $lat_lng[0],
+      'Longitude' => $lat_lng[1],
     ]);
   }
 

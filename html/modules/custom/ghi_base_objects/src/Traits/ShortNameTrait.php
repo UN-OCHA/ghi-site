@@ -23,7 +23,7 @@ trait ShortNameTrait {
    * @return string
    *   The shortname for the base object.
    */
-  public function getShortName(BaseObjectInterface $base_object, $include_type = FALSE, $include_year = FALSE) {
+  public function getShortName(BaseObjectInterface $base_object, $include_type = FALSE, $include_year = FALSE): ?string {
     $shortname = $base_object->getShortName();
     if (!$shortname) {
       return NULL;

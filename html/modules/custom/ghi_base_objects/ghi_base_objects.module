@@ -13,14 +13,8 @@ use Drupal\Core\Render\Element;
 use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\ghi_base_objects\Entity\BaseObject;
 use Drupal\ghi_base_objects\Helpers\BaseObjectHelper;
-use Drupal\hpc_api\Query\EndpointQuery;
-use Drupal\hpc_common\Helpers\ArrayHelper;
 use Drupal\hpc_common\Helpers\RequestHelper;
 use Drupal\layout_builder\SectionStorageInterface;
-use Drupal\migrate\MigrateSkipRowException;
-use Drupal\migrate\Plugin\MigrateSourceInterface;
-use Drupal\migrate\Plugin\MigrationInterface;
-use Drupal\migrate\Row;
 
 /**
  * Implements hook_help().
@@ -157,140 +151,6 @@ function ghi_base_objects_form_taxonomy_overview_terms_alter(&$form, FormStateIn
       ]);
     }
   }
-}
-
-/**
- * Implements hook_migrate_MIGRATE_ID_prepare_row().
- */
-function ghi_base_objects_migrate_plan_prepare_row(Row $row, MigrateSourceInterface $source, MigrationInterface $migration) {
-  $raw_data = (object) $row->getSource()['raw'];
-
-  /** @var \Drupal\hpc_api\Query\EndpointQuery $query */
-  $query = \Drupal::service('hpc_api.endpoint_query');
-
-  $has_published_version = FALSE;
-  $published_version = NULL;
-
-  // Fetching plan data with version=current for plans without a published
-  // version, will result in an empty planVersion property, which will result
-  // in us not being able to fetch the plan name. So we fetch current version
-  // data whenever possible, and if not possible, we fetch the unpublished
-  // version data, but set the plan node to unpublished in Drupal.
-  $plan_tags = $raw_data->planTags;
-
-  if (!empty($plan_tags)) {
-    $published_versions = array_filter($plan_tags, function ($version) {
-      return $version['public'] == TRUE;
-    });
-    if (!empty($published_versions)) {
-      // There can be multiple public plan tags, we want the one with the
-      // highest number.
-      ArrayHelper::sortArray($published_versions, 'name', EndpointQuery::SORT_DESC, SORT_STRING);
-    }
-    $published_version = !empty($published_versions) ? reset($published_versions) : NULL;
-    $has_published_version = $published_version !== NULL;
-  }
-
-  $query->setArguments([
-    'endpoint' => 'plan/' . $raw_data->id,
-    'api_version' => 'v2',
-    'auth_method' => EndpointQuery::AUTH_METHOD_API_KEY,
-  ]);
-  if ($has_published_version) {
-    // If we have plan version tags, let's fetch the most current one.
-    $query->setEndpointArgument('version', 'current');
-  }
-  $plan_data = $query->getData();
-  if (!$plan_data) {
-    throw new MigrateSkipRowException();
-  }
-
-  $start_date = !empty($plan_data->planVersion->startDate) ? date('Y-m-d', strtotime($plan_data->planVersion->startDate)) : NULL;
-  $end_date = !empty($plan_data->planVersion->endDate) ? date('Y-m-d', strtotime($plan_data->planVersion->endDate)) : NULL;
-  $document_published_date = !empty($plan_data->planVersion->pdfPublishDate) ? date('Y-m-d', strtotime($plan_data->planVersion->pdfPublishDate)) : NULL;
-
-  $row->setSourceProperty('version_tag', $published_version ? $published_version['name'] : NULL);
-  $row->setSourceProperty('released', !empty($plan_data->isReleased) ? $plan_data->isReleased : FALSE);
-  $row->setSourceProperty('is_part_of_gho', !empty($plan_data->planVersion->isPartOfGHO) ? $plan_data->planVersion->isPartOfGHO : FALSE);
-  $row->setSourceProperty('name', !empty($plan_data->planVersion->name) ? $plan_data->planVersion->name : NULL);
-  $row->setSourceProperty('short_name', !empty($plan_data->planVersion->shortName) ? $plan_data->planVersion->shortName : NULL);
-  $row->setSourceProperty('subtitle', !empty($plan_data->planVersion->subtitle) ? $plan_data->planVersion->subtitle : NULL);
-  $row->setSourceProperty('comments', !empty($plan_data->planVersion->comments) ? $plan_data->planVersion->comments : NULL);
-  $row->setSourceProperty('language', !empty($plan_data->planVersion->planLanguage) ? $plan_data->planVersion->planLanguage : NULL);
-  $row->setSourceProperty('plan_cluster_type', !empty($plan_data->planVersion->planClusterType) ? $plan_data->planVersion->planClusterType : NULL);
-  $row->setSourceProperty('plan_date_start', $start_date);
-  $row->setSourceProperty('plan_date_end', $end_date);
-  $row->setSourceProperty('document_published_on', $document_published_date);
-
-  // Parse the categories to retrieve the categories.
-  if (!empty($plan_data->categories)) {
-    // Plan type.
-    $plan_types = array_filter($plan_data->categories, function ($item) {
-      return $item->group == 'planType';
-    });
-    if (!empty($plan_types)) {
-      // There should really be only one.
-      $plan_type = reset($plan_types);
-      $row->setSourceProperty('plan_type_id', $plan_type->id);
-    }
-
-    // Plan costing.
-    $plan_costing = array_filter($plan_data->categories, function ($item) {
-      return $item->group == 'planCosting';
-    });
-    if (!empty($plan_costing)) {
-      // There should really be only one.
-      $plan_costing = reset($plan_costing);
-      $row->setSourceProperty('plan_costing_id', $plan_costing->id);
-    }
-  }
-
-  // Country references.
-  if (!empty($raw_data->locations)) {
-    $countries = array_filter($raw_data->locations, function ($location) {
-      return $location['adminLevel'] == 0;
-    });
-    $row->setSourceProperty('countries', !empty($countries) ? $countries : []);
-  }
-  $row->setSourceProperty('focus_country_id', $plan_data->focusCountry?->id ?? NULL);
-
-  // Country references.
-  if (!empty($plan_data->planVersion->coordinatingOrganizations)) {
-    $plan_coordinator = array_map(function ($organization) {
-      return $organization->abbreviation;
-    }, $plan_data->planVersion->coordinatingOrganizations);
-    $row->setSourceProperty('plan_coordinator', $plan_coordinator);
-  }
-
-  // Then get the year.
-  if (!empty($plan_data->years)) {
-    // There should really be only one.
-    $year = reset($plan_data->years);
-    $row->setSourceProperty('plan_year', $year->year);
-  }
-
-  unset($plan_data);
-}
-
-/**
- * Implements hook_migrate_prepare_row().
- */
-function ghi_base_objects_migrate_prepare_row(Row $row, MigrateSourceInterface $source, MigrationInterface $migration) {
-  if (!in_array($migration->id(), ['plan_entity', 'governing_entity'])) {
-    return;
-  }
-
-  $raw_data = (object) $row->getSource()['raw'];
-  $plan_object = BaseObjectHelper::getBaseObjectFromOriginalId($raw_data->plan_id, 'plan');
-  if (!$plan_object) {
-    // No associated plan node found.
-    throw new MigrateSkipRowException();
-  }
-
-  if (empty($raw_data->name) && !empty($raw_data->description)) {
-    $row->setSourceProperty('name', Unicode::truncate($raw_data->description, 255, TRUE, TRUE));
-  }
-
 }
 
 /**

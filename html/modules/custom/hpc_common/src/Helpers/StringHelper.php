@@ -35,8 +35,14 @@ class StringHelper {
 
   /**
    * Get an abbreviation for a string.
+   *
+   * @param string $string
+   *   The string to create an abbreviation for.
+   *
+   * @return string
+   *   The original string if it contains no spaces, or the abbreviated string.
    */
-  public static function getAbbreviation($string) {
+  public static function getAbbreviation(string $string): string {
     if (strpos($string, ' ') === FALSE) {
       return $string;
     }

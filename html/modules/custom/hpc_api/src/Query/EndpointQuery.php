@@ -270,6 +270,9 @@ class EndpointQuery {
    * Replace placeholders with values in an endpoint.
    */
   public function substitutePlaceholders($string) {
+    if (empty($string)) {
+      return $string;
+    }
     $placeholders = $this->getPlaceholders();
     if (!empty($placeholders)) {
       // Replace placeholders with actual values.

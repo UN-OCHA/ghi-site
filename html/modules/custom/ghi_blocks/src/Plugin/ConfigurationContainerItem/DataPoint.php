@@ -230,7 +230,7 @@ class DataPoint extends ConfigurationContainerItemPluginBase {
    * Get the currently configured data point configuration.
    *
    * @return array|null
-   *   An array containing the data point configuration or null if no
+   *   An array containing the data point configuration or NULL if no
    *   configuration is set.
    */
   public function getDataPointConfig() {

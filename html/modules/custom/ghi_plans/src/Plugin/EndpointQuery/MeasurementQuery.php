@@ -4,7 +4,6 @@ namespace Drupal\ghi_plans\Plugin\EndpointQuery;
 
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment;
-use Drupal\ghi_plans\Traits\PlanVersionArgument;
 use Drupal\hpc_api\Query\EndpointQueryBase;
 
 /**
@@ -24,8 +23,6 @@ use Drupal\hpc_api\Query\EndpointQueryBase;
  * )
  */
 class MeasurementQuery extends EndpointQueryBase implements ContainerFactoryPluginInterface {
-
-  use PlanVersionArgument;
 
   /**
    * Get the unprocessed measurements for the given attachment.
@@ -49,17 +46,8 @@ class MeasurementQuery extends EndpointQueryBase implements ContainerFactoryPlug
         'plan_id:' . $plan_id,
       ]);
     }
-    if ($this->isAutenticatedEndpoint) {
-      if ($plan_id) {
-        $endpoint_args['version'] = $this->getPlanVersionArgumentForPlanId($plan_id);
-      }
-      $data = $this->getData([], ['attachmentId' => $attachment->id()] + $endpoint_args);
-      return $data;
-    }
-    else {
-      $data = $this->getData(['attachment_id' => $attachment->id()], $endpoint_args);
-      return $data->measurements ?? [];
-    }
+    $data = $this->getData(['attachment_id' => $attachment->id()], $endpoint_args);
+    return $data->measurements ?? [];
   }
 
 }

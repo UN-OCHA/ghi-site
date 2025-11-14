@@ -1,0 +1,34 @@
+fabric_graphql.settings:
+  type: config_object
+  label: 'Fabric GraphQL settings'
+  mapping:
+    workspace_id:
+      type: string
+      label: 'The workspace id'
+      constraints:
+        NotNull: []
+    endpoint_id:
+      type: string
+      label: 'The endpoint id'
+      constraints:
+        NotNull: []
+    host:
+      type: string
+      label: 'The Fabric host id'
+      constraints:
+        NotNull: []
+    tenant_id:
+      type: string
+      label: 'The tenant id'
+      constraints:
+        NotNull: []
+    client_id:
+      type: string
+      label: 'The client id'
+      constraints:
+        NotNull: []
+    client_secret:
+      type: string
+      label: 'The client secret'
+      constraints:
+        NotNull: []

@@ -178,9 +178,17 @@ class DataAttachment extends AttachmentBase implements DataAttachmentInterface {
     if (empty($this->source->entity_type) || empty($this->source->entity_id)) {
       return NULL;
     }
-    if (empty($this->sourceEntity) && $entityQuery = $this->getEndpointQueryManager()->createInstance('entity_query')) {
-      /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\EntityQuery $entityQuery */
-      $this->sourceEntity = $entityQuery->getEntity($this->source->entity_type, $this->source->entity_id);
+    if (empty($this->sourceEntity)) {
+      if ($this->source->entity_type === 'plan') {
+        /** @var \Drupal\ghi_plans\Plugin\FabricQuery\PlanQuery $plan_query */
+        $plan_query = $this->getFabricQueryManager()->createInstance('plan');
+        $this->sourceEntity = $plan_query->getPlan($this->source->entity_id);
+      }
+      else {
+        /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\EntityQuery $entityQuery */
+        $entity_query = $this->getEndpointQueryManager()->createInstance('entity_query');
+        $this->sourceEntity = $entity_query->getEntity($this->source->entity_type, $this->source->entity_id);
+      }
     }
     return $this->sourceEntity;
   }
@@ -1275,6 +1283,16 @@ class DataAttachment extends AttachmentBase implements DataAttachmentInterface {
    */
   private static function getEndpointQueryManager() {
     return \Drupal::service('plugin.manager.endpoint_query_manager');
+  }
+
+  /**
+   * Get the fabric query manager.
+   *
+   * @return \Drupal\hpc_api\Query\FabricQueryManager
+   *   The fabric query manager service.
+   */
+  private static function getFabricQueryManager() {
+    return \Drupal::service('plugin.manager.fabric_query_manager');
   }
 
   /**

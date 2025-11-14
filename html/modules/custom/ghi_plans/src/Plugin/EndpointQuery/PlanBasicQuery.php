@@ -4,7 +4,6 @@ namespace Drupal\ghi_plans\Plugin\EndpointQuery;
 
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\ghi_plans\ApiObjects\Plan;
-use Drupal\ghi_plans\Traits\PlanVersionArgument;
 use Drupal\hpc_api\Query\EndpointQueryBase;
 
 /**
@@ -25,7 +24,6 @@ use Drupal\hpc_api\Query\EndpointQueryBase;
  */
 class PlanBasicQuery extends EndpointQueryBase {
 
-  use PlanVersionArgument;
   use StringTranslationTrait;
 
   /**
@@ -38,15 +36,12 @@ class PlanBasicQuery extends EndpointQueryBase {
    *   An API plan object.
    */
   public function getBaseData($plan_id) {
-    $cache_key = $this->getCacheKey([
-      'plan_id' => $plan_id,
-      'authenticated' => $this->isAutenticatedEndpoint,
-    ]);
+    $cache_key = $this->getCacheKey(['plan_id' => $plan_id]);
     $base_data = $this->getCache($cache_key);
     if ($base_data !== NULL) {
       return $base_data;
     }
-    $data = $this->getData(['plan_id' => $plan_id], ['version' => $this->getPlanVersionArgumentForPlanId($plan_id)]);
+    $data = $this->getData(['plan_id' => $plan_id]);
     $base_data = !empty($data) ? new Plan($data) : FALSE;
     $this->setCache($cache_key, $base_data);
     return $base_data;

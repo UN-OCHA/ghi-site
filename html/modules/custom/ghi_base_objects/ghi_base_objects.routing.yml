@@ -1,7 +1,7 @@
 base_objects.multiple_delete_confirm:
   path: '/admin/content/base-object/delete'
   defaults:
-    _form: '\Drupal\ghi_base_objects\Form\DeleteMultiple'
+    _form: '\Drupal\ghi_base_objects\Form\BaseObjectDeleteMultipleForm'
     entity_type_id: 'base_object'
   requirements:
     _entity_delete_multiple_access: 'base_object'
@@ -9,7 +9,7 @@ base_objects.multiple_delete_confirm:
 entity.base_objects.delete_multiple_form:
   path: '/admin/content/base-object/delete'
   defaults:
-    _form: '\Drupal\ghi_base_objects\Form\DeleteMultiple'
+    _form: '\Drupal\ghi_base_objects\Form\BaseObjectDeleteMultipleForm'
     entity_type_id: 'base_object'
   requirements:
     _entity_delete_multiple_access: 'base_object'
