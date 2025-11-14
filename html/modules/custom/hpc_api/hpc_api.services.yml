@@ -15,3 +15,6 @@ services:
       - { name: event_subscriber }
     calls:
       - [setDebugLogger, ['@?debug_tools.log']]
+  hpc_api.fabric_graphql:
+    class: Drupal\hpc_api\Query\FabricGraphQl
+    arguments: ['@config.factory', '@event_dispatcher', '@logger.factory', '@page_cache_kill_switch', '@http_client']
