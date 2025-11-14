@@ -44,7 +44,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  *  category = @Translation("Plan elements"),
  *  data_sources = {
  *    "entities" = "plan_entities_query",
- *    "entity" = "entity_query",
+ *    "plan" = "plan",
  *    "attachment" = "attachment_query",
  *    "attachment_search" = "attachment_search_query",
  *    "attachment_prototype" = "plan_attachment_prototype_query",
@@ -1098,9 +1098,9 @@ class PlanEntityLogframe extends GHIBlockBase implements MultiStepFormBlockInter
     $context_object = $this->getCurrentBaseObject();
 
     if ($entity_ref_code == ApiObjectsPlan::ENTITY_REF_CODE && $context_object instanceof Plan) {
-      /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\EntityQuery $query */
-      $query = $this->getQueryHandler('entity');
-      $plan_data = $query->getEntity('plan', $context_object->getSourceId());
+      /** @var \Drupal\ghi_plans\Plugin\FabricQuery\PlanQuery $query */
+      $query = $this->getQueryHandler('plan');
+      $plan_data = $query->getPlan($context_object->getSourceId());
       return $plan_data ? [
         $plan_data->id() => $plan_data,
       ] : [];

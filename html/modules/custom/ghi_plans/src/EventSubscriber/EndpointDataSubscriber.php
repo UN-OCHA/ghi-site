@@ -3,8 +3,10 @@
 namespace Drupal\ghi_plans\EventSubscriber;
 
 use Drupal\ghi_plans\ApiObjects\Attachments\DataAttachmentInterface;
+use Drupal\ghi_plans\ApiObjects\Plan;
 use Drupal\hpc_api\Event\EndpointDataEvent;
 use Drupal\hpc_api\Query\EndpointQueryManager;
+use Drupal\hpc_api\Query\FabricQueryManager;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
 /**
@@ -22,16 +24,16 @@ class EndpointDataSubscriber implements EventSubscriberInterface {
   /**
    * The plan query.
    *
-   * @var \Drupal\ghi_plans\Plugin\EndpointQuery\PlanBasicQuery
+   * @var \Drupal\ghi_plans\Plugin\FabricQuery\PlanQuery
    */
   public $planQuery;
 
   /**
    * Constructs a new endpoint data event listener.
    */
-  public function __construct(EndpointQueryManager $endpoint_query_manager) {
+  public function __construct(EndpointQueryManager $endpoint_query_manager, FabricQueryManager $fabric_query_manager) {
     $this->attachmentQuery = $endpoint_query_manager->createInstance('attachment_query');
-    $this->planQuery = $endpoint_query_manager->createInstance('plan_basic_query');
+    $this->planQuery = $fabric_query_manager->createInstance('plan');
   }
 
   /**
@@ -75,8 +77,8 @@ class EndpointDataSubscriber implements EventSubscriberInterface {
       if (!$plan_id) {
         return;
       }
-      $plan = $this->planQuery->getBaseData($plan_id);
-      if (!$plan) {
+      $plan = $this->planQuery->getPlan($plan_id);
+      if (!$plan instanceof Plan) {
         return;
       }
       $last_period_id = $plan->getLastPublishedReportingPeriodId();

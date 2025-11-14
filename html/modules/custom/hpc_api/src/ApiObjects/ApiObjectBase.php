@@ -22,14 +22,14 @@ abstract class ApiObjectBase implements ApiObjectInterface, CacheableDependencyI
    *
    * @var object
    */
-  private $data;
+  protected $data;
 
   /**
    * The mapped data for an object from the HPC API.
    *
    * @var object
    */
-  private $map;
+  protected $map;
 
   /**
    * {@inheritdoc}

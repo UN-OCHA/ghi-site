@@ -21,6 +21,7 @@ use Drupal\ghi_plans\Entity\Plan;
 use Drupal\ghi_sections\Entity\SectionNodeInterface;
 use Drupal\ghi_subpages\Entity\LogframeSubpage;
 use Drupal\hpc_api\Query\EndpointQueryManager;
+use Drupal\hpc_api\Query\FabricQueryManager;
 use Drupal\layout_builder\LayoutEntityHelperTrait;
 use Drupal\layout_builder\LayoutTempstoreRepositoryInterface;
 use Drupal\layout_builder\Plugin\SectionStorage\DefaultsSectionStorage;
@@ -66,6 +67,13 @@ class LogframeManager implements ContainerInjectionInterface {
   protected $endpointQueryManager;
 
   /**
+   * The manager class for fabric query plugins.
+   *
+   * @var \Drupal\hpc_api\Query\FabricQueryManager
+   */
+  protected $fabricQueryManager;
+
+  /**
    * The plugin context handler.
    *
    * @var \Drupal\Core\Plugin\Context\ContextHandlerInterface
@@ -82,10 +90,11 @@ class LogframeManager implements ContainerInjectionInterface {
   /**
    * Public constructor.
    */
-  public function __construct(BlockManagerInterface $block_manager, UuidInterface $uuid, EndpointQueryManager $endpoint_query_manager, ContextHandlerInterface $context_handler, LayoutTempstoreRepositoryInterface $layout_tempstore_repository) {
+  public function __construct(BlockManagerInterface $block_manager, UuidInterface $uuid, EndpointQueryManager $endpoint_query_manager, FabricQueryManager $fabric_query_manager, ContextHandlerInterface $context_handler, LayoutTempstoreRepositoryInterface $layout_tempstore_repository) {
     $this->blockManager = $block_manager;
     $this->uuidGenerator = $uuid;
     $this->endpointQueryManager = $endpoint_query_manager;
+    $this->fabricQueryManager = $fabric_query_manager;
     $this->contextHandler = $context_handler;
     $this->layoutTempstoreRepository = $layout_tempstore_repository;
   }
@@ -97,6 +106,7 @@ class LogframeManager implements ContainerInjectionInterface {
     return new static(
       $container->get('plugin.manager.block'),
       $container->get('uuid'),
+      $container->get('plugin.manager.endpoint_query_manager'),
       $container->get('plugin.manager.endpoint_query_manager'),
       $container->get('context.handler'),
       $container->get('layout_builder.tempstore_repository'),
@@ -713,12 +723,11 @@ class LogframeManager implements ContainerInjectionInterface {
     $entities = [];
     $base_object = $section->getBaseObject();
     if ($base_object instanceof Plan && $ref_code == ApiObjectsPlan::ENTITY_REF_CODE) {
-      /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\EntityQuery $query */
-      $query = $this->endpointQueryManager->createInstance('entity_query');
-      $plan_data = $query->getEntity('plan', $base_object->getSourceId());
-      if ($plan_data) {
+      /** @var \Drupal\ghi_plans\Plugin\FabricQuery\PlanQuery $query */
+      $query = $this->fabricQueryManager->createInstance('plan');
+      if ($plan = $query->getPlan($base_object->getSourceId())) {
         $entities = [
-          $plan_data->id() => $plan_data,
+          $plan->id() => $plan,
         ];
       }
     }

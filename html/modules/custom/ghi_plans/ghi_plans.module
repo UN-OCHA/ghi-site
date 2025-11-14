@@ -5,13 +5,19 @@
  * Contains hook implementations for the GHI Plans module.
  */
 
+use Drupal\Component\Utility\Unicode;
 use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\Element;
+use Drupal\ghi_base_objects\ApiObjects\Country;
 use Drupal\ghi_base_objects\Helpers\BaseObjectHelper;
 use Drupal\ghi_plans\Entity\GoverningEntity;
 use Drupal\ghi_plans\Entity\Plan;
 use Drupal\ghi_plans\Entity\PlanType;
+use Drupal\migrate\MigrateSkipRowException;
+use Drupal\migrate\Plugin\MigrateSourceInterface;
+use Drupal\migrate\Plugin\MigrationInterface;
+use Drupal\migrate\Row;
 
 /**
  * Implements hook_entity_bundle_info_alter().
@@ -162,4 +168,83 @@ function ghi_plans_form_base_object_plan_edit_form_alter(&$form, FormStateInterf
       '#required' => $form[$element_key]['widget']['#required'],
     ];
   }
+}
+
+/**
+ * Implements hook_migrate_MIGRATE_ID_prepare_row().
+ */
+function ghi_plans_migrate_plan_prepare_row(Row $row, MigrateSourceInterface $source, MigrationInterface $migration) {
+  $raw_data = (object) $row->getSource()['raw'];
+  $plan_id = $raw_data->HpcId;
+
+  /** @var \Drupal\hpc_api\Query\FabricQueryManager $query_manager */
+  $query_manager = \Drupal::service('plugin.manager.fabric_query_manager');
+  /** @var \Drupal\ghi_plans\Plugin\FabricQuery\PlanQuery $plan_query */
+  $plan_query = $query_manager->createInstance('plan');
+
+  $plan = $plan_query->getPlan($plan_id);
+  if (!$plan) {
+    throw new MigrateSkipRowException();
+  }
+
+  $row->setSourceProperty('released', $plan->isReleased());
+  $row->setSourceProperty('is_part_of_gho', $plan->isPartOfGho());
+  $row->setSourceProperty('name', $plan->getName());
+  $row->setSourceProperty('short_name', $plan->getShortName());
+  $row->setSourceProperty('subtitle', $plan->getSubtitle());
+  $row->setSourceProperty('comments', $plan->getDescription());
+  $row->setSourceProperty('language', $plan->getLanguageCode());
+  $row->setSourceProperty('plan_cluster_type', $plan->getPlanClusterType());
+  $row->setSourceProperty('plan_date_start', $plan->getStartDate());
+  $row->setSourceProperty('plan_date_end', $plan->getEndDate());
+  $row->setSourceProperty('document_published_on', $plan->getDocumentPublishedDate());
+
+  $row->setSourceProperty('plan_type_id', $plan->getPlanType()?->id());
+  $row->setSourceProperty('plan_costing_id', $plan->getPlanCostingType()?->id());
+
+  $row->setSourceProperty('plan_year', $plan->getYear());
+
+  $row->setSourceProperty('countries', array_map(fn(Country $country): array => $country->toArray(), $plan->getCountries()));
+  $row->setSourceProperty('focus_country_id', $plan->getFocusCountry()?->id());
+
+  // @codingStandardsIgnoreStart
+  // Country references.
+  // if (!empty($raw_data->locations)) {
+  //   $countries = array_filter($raw_data->locations, function ($location) {
+  //     return $location['adminLevel'] == 0;
+  //   });
+  //   $row->setSourceProperty('countries', !empty($countries) ? $countries : []);
+  // }
+  // $row->setSourceProperty('focus_country_id', $plan->focusCountry?->id ?? NULL);
+
+  // // Plan coordinator.
+  // if (!empty($plan->planVersion->coordinatingOrganizations)) {
+  //   $plan_coordinator = array_map(function ($organization) {
+  //     return $organization->abbreviation;
+  //   }, $plan->planVersion->coordinatingOrganizations);
+  //   $row->setSourceProperty('plan_coordinator', $plan_coordinator);
+  // }
+  // @codingStandardsIgnoreEnd
+  unset($plan);
+}
+
+/**
+ * Implements hook_migrate_prepare_row().
+ */
+function ghi_plans_migrate_prepare_row(Row $row, MigrateSourceInterface $source, MigrationInterface $migration) {
+  if (!in_array($migration->id(), ['plan_entity', 'governing_entity'])) {
+    return;
+  }
+
+  $raw_data = (object) $row->getSource()['raw'];
+  $plan_object = BaseObjectHelper::getBaseObjectFromOriginalId($raw_data->plan_id, 'plan');
+  if (!$plan_object) {
+    // No associated plan node found.
+    throw new MigrateSkipRowException();
+  }
+
+  if (empty($raw_data->name) && !empty($raw_data->description)) {
+    $row->setSourceProperty('name', Unicode::truncate($raw_data->description, 255, TRUE, TRUE));
+  }
+
 }

@@ -4,7 +4,6 @@ namespace Drupal\ghi_plans\Plugin\EndpointQuery;
 
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\ghi_plans\ApiObjects\Organization;
-use Drupal\ghi_plans\Traits\PlanVersionArgument;
 use Drupal\hpc_api\Query\EndpointQueryBase;
 
 /**
@@ -21,7 +20,6 @@ use Drupal\hpc_api\Query\EndpointQueryBase;
  */
 class OrganizationQuery extends EndpointQueryBase {
 
-  use PlanVersionArgument;
   use StringTranslationTrait;
 
   /**

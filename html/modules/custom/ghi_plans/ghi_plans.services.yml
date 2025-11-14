@@ -10,6 +10,6 @@ services:
     lazy: true
   ghi_plans.endpoint_data_subscriber:
     class: Drupal\ghi_plans\EventSubscriber\EndpointDataSubscriber
-    arguments: ['@plugin.manager.endpoint_query_manager']
+    arguments: ['@plugin.manager.endpoint_query_manager', '@plugin.manager.fabric_query_manager']
     tags:
       - { name: event_subscriber }

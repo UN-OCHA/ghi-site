@@ -851,10 +851,10 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
     }
     $plan_id = $plan_object->getSourceId();
 
-    /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\PlanBasicQuery $query_handler */
-    $query_handler = $this->endpointQueryManager->createInstance('plan_basic_query');
+    /** @var \Drupal\ghi_plans\Plugin\FabricQuery\Plan $query_handler */
+    $query_handler = $this->fabricQueryManager->createInstance('plan');
     $plan_entities = [
-      $plan_id => $query_handler->getBaseData($plan_id),
+      $plan_id => $query_handler->getPlan($plan_id),
     ];
 
     /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\PlanEntitiesQuery $query_handler */

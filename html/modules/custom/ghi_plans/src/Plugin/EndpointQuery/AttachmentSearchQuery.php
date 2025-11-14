@@ -2,13 +2,11 @@
 
 namespace Drupal\ghi_plans\Plugin\EndpointQuery;
 
-use Drupal\ghi_plans\ApiObjects\Entities\EntityObjectInterface;
 use Drupal\ghi_plans\ApiObjects\Entities\GoverningEntity;
 use Drupal\ghi_plans\ApiObjects\Entities\PlanEntity;
 use Drupal\ghi_plans\ApiObjects\Plan;
 use Drupal\ghi_plans\Helpers\AttachmentHelper;
 use Drupal\ghi_plans\Traits\AttachmentFilterTrait;
-use Drupal\ghi_plans\Traits\PlanVersionArgument;
 use Drupal\hpc_api\Query\EndpointQueryBase;
 
 /**
@@ -30,18 +28,6 @@ use Drupal\hpc_api\Query\EndpointQueryBase;
 class AttachmentSearchQuery extends EndpointQueryBase {
 
   use AttachmentFilterTrait;
-  use PlanVersionArgument;
-
-  /**
-   * {@inheritdoc}
-   */
-  public function getData(array $placeholders = [], array $query_args = []) {
-    $this->endpointQuery->setPlaceholders($placeholders);
-    if ($plan_id = $this->getPlaceholder('plan_id')) {
-      $query_args['version'] = $this->getPlanVersionArgumentForPlanId($plan_id);
-    }
-    return parent::getData($placeholders, $query_args);
-  }
 
   /**
    * Get attachments by id.
@@ -100,17 +86,10 @@ class AttachmentSearchQuery extends EndpointQueryBase {
     $object_ids = (array) $object_ids;
     sort($object_ids);
 
-    if ($object_type == 'plan' && count($object_ids) == 1 && $version === NULL) {
-      // Use the correct plan version argument.
-      $version = $this->getPlanVersionArgumentForPlanId(reset($object_ids));
-    }
-
-    $version = $version ?? 'current';
-
     $cache_key = $this->getCacheKey([
       'object_type' => $object_type,
       'object_ids' => $object_ids,
-      'version' => $version,
+      'version' => 'current',
     ] + (array) $filter);
     $attachments = $this->getCache($cache_key);
     if ($attachments) {
@@ -160,7 +139,6 @@ class AttachmentSearchQuery extends EndpointQueryBase {
     ];
     foreach ($entities as $entity) {
       if ($entity instanceof Plan) {
-        $version = $this->getPlanVersionArgumentForPlanId($entity->id);
         $entity_ids['plan'][] = $entity->id;
       }
       if ($entity instanceof PlanEntity) {
@@ -168,9 +146,6 @@ class AttachmentSearchQuery extends EndpointQueryBase {
       }
       if ($entity instanceof GoverningEntity) {
         $entity_ids['governing_entity'][] = $entity->id;
-      }
-      if ($entity instanceof EntityObjectInterface && $plan_id = $entity->getPlanId()) {
-        $version = $this->getPlanVersionArgumentForPlanId($plan_id);
       }
     }
 

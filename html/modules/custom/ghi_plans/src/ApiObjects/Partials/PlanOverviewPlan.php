@@ -445,7 +445,13 @@ class PlanOverviewPlan extends BaseObject {
       return $countries;
     }
     foreach ($this->getRawData()->countries as $country) {
-      $countries[$country->id] = new Country($country);
+      $countries[$country->id] = new Country((object) [
+        'Id' => $country->id,
+        'Name' => $country->name,
+        'ISO3' => $country->iso3,
+        'Latitude' => $country->latitude,
+        'Longitude' => $country->longitude,
+      ]);
     }
     return $countries;
   }
