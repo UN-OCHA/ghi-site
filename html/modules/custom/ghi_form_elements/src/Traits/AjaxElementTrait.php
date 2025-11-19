@@ -55,7 +55,7 @@ trait AjaxElementTrait {
   protected static function setElementParents(array $element) {
     // Put the root path to this element into the form storage, to have it
     // easily available to update the full element after an ajax action.
-    self::$elementParentsFormKey = array_key_exists('#array_parents', $element) ? $element['#array_parents'] : [];
+    self::$elementParentsFormKey = $element['#array_parents'] ?? [];
   }
 
   /**

@@ -43,6 +43,27 @@ interface ConfigurationContainerItemPluginInterface extends PluginInspectionInte
   public function buildForm(array $element, FormStateInterface $form_state);
 
   /**
+   * Builds the associated form.
+   *
+   * @param array $element
+   *   An associative array containing the initial structure of the subform.
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   The current state of the form.
+   *
+   * @return array
+   *   Form array
+   */
+  public function buildCustomActionForm(array $element, FormStateInterface $form_state);
+
+  /**
+   * Allow to reformat the submitted values.
+   *
+   * @param array $values
+   *   The submitted values as an array.
+   */
+  public function massageValues(array &$values): void;
+
+  /**
    * React on submission of the config form.
    *
    * @param array $values
@@ -50,7 +71,7 @@ interface ConfigurationContainerItemPluginInterface extends PluginInspectionInte
    * @param string $mode
    *   A string identifier for the current edit context.
    */
-  public function submitForm(array $values, $mode);
+  public function submitForm(array $values, $mode): void;
 
   /**
    * Check if this plugin allows new items to be added.

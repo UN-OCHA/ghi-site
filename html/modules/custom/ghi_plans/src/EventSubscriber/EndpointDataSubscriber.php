@@ -53,7 +53,7 @@ class EndpointDataSubscriber implements EventSubscriberInterface {
     $attachment_ids = &drupal_static(__FUNCTION__, []);
     $query = $event->getQuery();
     $data = $event->getData();
-    if ($query->getEndpoint() == 'attachment/{attachment_id}' && !empty($data->measurements)) {
+    if (str_contains($query->getEndpoint(), 'attachment/{attachment_id}') && !empty($data->measurements)) {
       $arguments = $query->getEndpointArguments() + $query->getPlaceholders();
       if (!empty($arguments['reporting_period']) && $arguments['reporting_period'] == 'all') {
         return;

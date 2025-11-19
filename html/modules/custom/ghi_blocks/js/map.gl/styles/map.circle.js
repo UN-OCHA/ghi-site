@@ -1,5 +1,9 @@
 (function ($) {
 
+  /**
+   * Style plugin for circle maps.
+   */
+
   'use strict';
 
   const root_styles = getComputedStyle(document.documentElement);
@@ -35,7 +39,7 @@
         colors: [
           root_styles.getPropertyValue('--ghi-default-text-color'), // Data points with data.
           root_styles.getPropertyValue('--ghi-default-border-color'), // Data points without data.
-          root_styles.getPropertyValue('--ghi-primary-color'), // Highlights.
+          root_styles.getPropertyValue('--cd-primary-color'), // Highlights.
         ],
         plan_type_colors: {
           'hrp': root_styles.getPropertyValue('--ghi-plan-type-hrp'),
@@ -167,20 +171,8 @@
      *   The source feature.
      */
     buildSource = function () {
-      let data = this.buildData(this.buildLocationFeatures());
+      let data = this.state.buildFeatureCollection(this.buildLocationFeatures());
       return this.state.buildGeoJsonSource(data);
-    }
-
-    /**
-     * Build the data object for a list of features.
-     *
-     * This is useful whenever we want to call setData() on a source object.
-     *
-     * @returns {Object}
-     *   The geojson data object for the source.
-     */
-    buildData = function (features) {
-      return this.state.buildFeatureCollection(features);
     }
 
     /**
@@ -498,7 +490,7 @@
       let map = state.getMap();
 
       let label_source_id = this.sourceId + '-labels';
-      let backgroundLayer = state.getBackgroundLayer(map);
+      let backgroundLayer = state.getBackgroundLayer();
       let options = state.getOptions();
 
       map.on('styleimagemissing', (e) => {
@@ -532,11 +524,8 @@
         'type': 'symbol',
         'source': this.sourceId,
         'minzoom': options.label_min_zoom ?? 0,
-        'layout': {
-          'symbol-sort-key': ['get', 'sort_order'],
+        'layout': Object.assign({}, state.getCommonTextProperties().layout, {
           'text-field': ['get', 'object_name'],
-          'text-font': backgroundLayer.layout['text-font'],
-          'text-letter-spacing': backgroundLayer.layout['text-letter-spacing'],
           'text-size': ['*', ['get', 'font_size'], 5],
           'text-variable-anchor': [
             'top',
@@ -554,12 +543,8 @@
             ['get', 'label_offset'],
           ],
           'text-justify': 'auto',
-        },
-        'paint': {
-          'text-color': backgroundLayer.paint['text-color'],
-          'text-halo-color': backgroundLayer.paint['text-halo-color'],
-          'text-halo-width': backgroundLayer.paint['text-halo-width'],
-        }
+        }),
+        'paint': state.getCommonTextProperties().paint,
       });
       // Add a layer with blocking symbols that overlap the circles, so that
       // these can be used by mapbox for collision detection. Otherwhise the
@@ -589,13 +574,12 @@
     }
 
     /**
-     * Create or update the legend items.
+     * Update the legend items.
      */
-    updateLegend = function() {
-      let state = this.state;
+    updateLegend = function($legend_container = null) {
       let colors = this.config.plan_type_colors;
-      let options = state.getOptions();
-      let $legend_container = state.getContainer().find('.map-legend');
+      let options = this.state.getOptions();
+      $legend_container = $legend_container ?? this.state.getContainer().find('div.map-legend');
       let $legend = $('<ul>');
 
       // Remove old legend items.
@@ -607,6 +591,10 @@
           'label': options.legend[legend_key],
           'type': legend_key,
         });
+      }
+
+      if (legend_items.length == 0) {
+        return;
       }
 
       // Set the legend caption.

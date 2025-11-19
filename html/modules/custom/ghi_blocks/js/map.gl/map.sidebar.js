@@ -89,10 +89,9 @@
      */
     buildSidebar = function(object, build) {
       let state = this.state;
-      let data = state.getData();
+      let data = state.getBaseData();
       let object_id = parseInt(object.object_id);
-
-      var location_data = object.modal_content ?? data.modal_contents[object_id];
+      var location_data = object.modal_content ?? (data.modal_contents ? data.modal_contents[object_id] : object);
       let variant_id = state.getVariantId();
       if (variant_id && state.hasVariant(state.getCurrentIndex(), variant_id)) {
         location_data = data.variants[variant_id].modal_contents[object_id];

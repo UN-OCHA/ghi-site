@@ -19,6 +19,7 @@
           continue;
         }
         var options = {
+          style: 'circle',
           admin_level_selector: true,
           search_enabled: true,
           search_options: {
@@ -32,10 +33,6 @@
           options.search_options.placeholder = Drupal.t('Filter by location name or pcode');
           options.search_options.search_button_title = Drupal.t('Filter by location name or pcode');
           options.search_options.empty_message = Drupal.t('Be sure to enter a location name or pcode within the current response plan.');
-        }
-        if (typeof map_config.style != 'undefined') {
-          options.style = map_config.style;
-          options.style_config = map_config.style_config;
         }
         if (typeof map_config.outline_country != 'undefined') {
           options.outline_country = map_config.outline_country;
