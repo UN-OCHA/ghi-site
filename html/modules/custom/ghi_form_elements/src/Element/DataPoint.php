@@ -81,6 +81,10 @@ class DataPoint extends FormElementBase {
    * @todo Check if this is actually needed.
    */
   public static function elementSubmit(array &$element, FormStateInterface $form_state, array $form) {
+    $processing_key = array_merge($element['#parents'], ['processing']);
+    $form_state->setValue($processing_key, $form_state->getValue($processing_key) ?: 'single');
+    $calculation_key = array_merge($element['#parents'], ['calculation']);
+    $form_state->setValue($calculation_key, $form_state->getValue($calculation_key) ?: 'percentage');
     $form_state->setRebuild(TRUE);
   }
 
@@ -88,8 +92,10 @@ class DataPoint extends FormElementBase {
    * {@inheritdoc}
    */
   public static function valueCallback(&$element, $input, FormStateInterface $form_state) {
-    if ($input !== NULL) {
+    if ($input !== NULL && !empty($input)) {
       // Make sure input is returned as normal during item configuration.
+      $input['processing'] = $input['processing'] ?: 'single';
+      $input['calculation'] = $input['calculation'] ?: 'percentage';
       return $input;
     }
     return NULL;
@@ -132,45 +138,7 @@ class DataPoint extends FormElementBase {
       'widget' => !empty($values['widget']) ? $values['widget'] : 'none',
     ];
 
-    $element['processing_wrapper'] = [
-      '#type' => 'container',
-      '#attributes' => [
-        'class' => ['data-point-wrapper'],
-      ],
-      '#tree' => FALSE,
-    ];
-    $element['processing_wrapper']['processing'] = [
-      '#type' => 'select',
-      '#title' => t('Type'),
-      '#options' => DataAttachment::getProcessingOptions(),
-      '#default_value' => $defaults['processing'],
-      '#parents' => array_merge($element['#parents'], ['processing']),
-      '#ajax' => [
-        'event' => 'change',
-        'callback' => [static::class, 'updateAjax'],
-        'wrapper' => $wrapper_id,
-      ],
-    ];
-
     $processing_selector = FormElementHelper::getStateSelector($element, ['processing']);
-    $element['processing_wrapper']['calculation'] = [
-      '#type' => 'select',
-      '#title' => t('Calculation'),
-      '#options' => DataAttachment::getCalculationOptions(),
-      '#default_value' => $defaults['calculation'],
-      '#parents' => array_merge($element['#parents'], ['calculation']),
-      '#states' => [
-        'visible' => [
-          'select[name="' . $processing_selector . '"]' => ['value' => 'calculated'],
-        ],
-      ],
-      '#ajax' => [
-        'event' => 'change',
-        'callback' => [static::class, 'updateAjax'],
-        'wrapper' => $wrapper_id,
-      ],
-    ];
-
     $data_point_options = self::getDataPointOptions($element);
 
     $element['data_points'] = [
@@ -182,17 +150,53 @@ class DataPoint extends FormElementBase {
     $element['data_points'][0] = [
       '#type' => 'container',
     ];
+    $element['data_points']['processing_wrapper'] = [
+      '#type' => 'container',
+      '#attributes' => [
+        'class' => ['data-point-wrapper'],
+      ],
+      '#tree' => FALSE,
+    ];
+    $element['data_points']['processing_wrapper']['processing'] = [
+      '#type' => 'checkbox',
+      '#title' => t('Calculate'),
+      '#default_value' => $defaults['processing'] ?: 'single',
+      '#return_value' => 'calculated',
+      '#parents' => array_merge($element['#parents'], ['processing']),
+      '#ajax' => [
+        'event' => 'change',
+        'callback' => [static::class, 'updateAjax'],
+        'wrapper' => $wrapper_id,
+      ],
+    ];
+    $element['data_points']['processing_wrapper']['calculation'] = [
+      '#type' => 'select',
+      '#title' => t('Calculation'),
+      '#options' => DataAttachment::getCalculationOptions(),
+      '#default_value' => $defaults['calculation'] ?: 'percentage',
+      '#parents' => array_merge($element['#parents'], ['calculation']),
+      '#states' => [
+        'disabled' => [
+          'input[name="' . $processing_selector . '"]' => ['checked' => FALSE],
+        ],
+      ],
+      '#ajax' => [
+        'event' => 'change',
+        'callback' => [static::class, 'updateAjax'],
+        'wrapper' => $wrapper_id,
+      ],
+    ];
     $element['data_points'][1] = [
       '#type' => 'container',
       '#states' => [
         'visible' => [
-          'select[name="' . $processing_selector . '"]' => ['value' => 'calculated'],
+          'input[name="' . $processing_selector . '"]' => ['checked' => TRUE],
         ],
       ],
     ];
     $element['data_points'][0]['index'] = [
       '#type' => 'select',
-      '#title' => $defaults['processing'] == 'single' ? t('Data point') : t('Data point #1'),
+      '#title' => $defaults['processing'] != 'calculated' ? t('Data point') : t('Data point #1'),
       '#options' => $data_point_options,
       '#default_value' => $defaults['data_points'][0]['index'] ?? NULL,
       '#ajax' => [
@@ -266,6 +270,7 @@ class DataPoint extends FormElementBase {
         $element['data_points'][0]['use_calculation_method']['#attributes']['checked'] = 'checked';
       }
     }
+
     $element['data_points'][1]['index'] = [
       '#type' => 'select',
       '#title' => t('Data point #2'),
@@ -297,7 +302,7 @@ class DataPoint extends FormElementBase {
         ],
         '#states' => [
           'visible' => [
-            'select[name="' . $processing_selector . '"]' => ['value' => 'calculated'],
+            'input[name="' . $processing_selector . '"]' => ['checked' => TRUE],
             'select[name="' . $data_point_selector_1 . '"]' => array_map(function ($value) {
               return ['value' => $value];
             }, array_keys($measurement_fields)),
@@ -317,7 +322,7 @@ class DataPoint extends FormElementBase {
         ],
         '#states' => [
           'visible' => [
-            'select[name="' . $processing_selector . '"]' => ['value' => 'calculated'],
+            'input[name="' . $processing_selector . '"]' => ['checked' => TRUE],
             'select[name="' . $data_point_selector_1 . '"]' => array_map(function ($value) {
               return ['value' => $value];
             }, array_keys($measurement_fields)),
