@@ -99,6 +99,7 @@ abstract class PlanBlockKernelTestBase extends BlockKernelTestBase {
     ]);
     $this->createField('base_object', 'plan', 'string', 'field_plan_version_argument', 'Plan version');
     $this->createField('base_object', 'plan', 'string', 'field_footnotes', 'Footnotes');
+    $this->createField('base_object', 'plan', 'boolean', 'field_released', 'Is released');
   }
 
   /**
@@ -129,6 +130,11 @@ abstract class PlanBlockKernelTestBase extends BlockKernelTestBase {
       $plan_type = $this->createTerm(Vocabulary::load('plan_type'));
       $values['field_plan_type'] = [
         'target_id' => $plan_type->id(),
+      ];
+    }
+    if (empty($values['field_released'])) {
+      $values['field_released'] = [
+        'value' => 1,
       ];
     }
     $plan = $this->createBaseObject($values);

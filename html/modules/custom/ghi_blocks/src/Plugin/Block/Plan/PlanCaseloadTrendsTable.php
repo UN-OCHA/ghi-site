@@ -496,7 +496,7 @@ class PlanCaseloadTrendsTable extends GHIBlockBase implements OverrideDefaultTit
     });
     // Filter out restricted plans.
     $related_plans = array_filter($related_plans, function (Plan $plan) {
-      return !$plan->isRestricted();
+      return $plan->isReleased() && !$plan->isRestricted();
     });
     // Initially sort by descending year.
     uasort($related_plans, function ($a, $b) {
