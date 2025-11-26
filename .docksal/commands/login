@@ -10,10 +10,12 @@ usage="$(basename "$0") [-h] [-u UID|-n name]
 where:
     -h          show this help text
     -u|---uid   the UID to use for login
-    -n|---name  the name to use for login"
+    -n|---name  the name to use for login
+    -s|---show  show the link instead of opening it directly"
 
 # Login as user 1 by default.
 USER_ID=1
+OPEN_LINK=1
 
 while [ "$1" != "" ]; do
   case $1 in
@@ -35,6 +37,8 @@ while [ "$1" != "" ]; do
                           fi
                           USER_ID=${USER_ID//[$'\t\r\n']}
                           ;;
+    -s | --show )         OPEN_LINK=0
+                          ;;
     -h | --help )         echo "$usage"
                           exit
                           ;;
@@ -46,5 +50,12 @@ done
 
 URL=$(fin drush uli --uid ${USER_ID})
 if [[ $URL =~ ^"http" ]]; then
-  fin utils/open-link -i $URL
+  if [[ $OPEN_LINK -eq 1 ]]; then
+    fin utils/open-link -i $URL
+  else
+    echo ${URL}
+  fi
+else
+  echo "Can't generate login url"
+  echo ${URL}
 fi

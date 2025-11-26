@@ -86,3 +86,6 @@ drush sset system.maintenance_mode 0 -y
 
 echo "Clear cache"
 drush cr
+
+echo "Enable dev modules"
+drush en dblog debug_tools stage_file_proxy -y
