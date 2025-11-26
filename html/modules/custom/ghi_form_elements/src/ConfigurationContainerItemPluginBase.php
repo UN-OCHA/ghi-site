@@ -195,6 +195,7 @@ abstract class ConfigurationContainerItemPluginBase extends PluginBase implement
       'data-raw-value' => $this->getSortableValue(),
       'data-sort-type' => $this::SORT_TYPE,
       'data-column-type' => $this->getColumnType(),
+      'data-progress-group' => $this->getProgressGroup(),
       'data-content' => $this->getLabel(),
       'class' => $this->getClasses(),
       'export_value' => $this->getSortableValue(),
@@ -213,6 +214,19 @@ abstract class ConfigurationContainerItemPluginBase extends PluginBase implement
    */
   public function getColumnType() {
     return static::ITEM_TYPE;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getProgressGroup() {
+    // By default we only want to show the progress indicator for columns of
+    // type percentage or coverage. If a table needs to show them for more
+    // columns, this has to be done wherever the table is assembled.
+    if (in_array($this->getColumnType(), ['percentage', 'coverage'])) {
+      return 'coverage';
+    }
+    return NULL;
   }
 
   /**
