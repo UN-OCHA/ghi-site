@@ -52,7 +52,7 @@ services:
 
   # Solr
   solr:
-    image: arm64v8/solr:8
+    image: arm64v8/solr:9
     extends:
       file: ${HOME}/.docksal/stacks/services.yml
       service: solr

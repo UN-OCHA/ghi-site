@@ -151,17 +151,11 @@ class PlanGoverningEntitiesTable extends GHIBlockBase implements ConfigurableTab
         /** @var \Drupal\ghi_form_elements\ConfigurationContainerItemPluginInterface $item_type */
         $item_type = $this->getItemTypePluginForColumn($column, $context);
 
-        $progress_group = NULL;
-        if ($item_type->getColumnType() == 'percentage') {
-          $progress_group = 'coverage';
-        }
-        elseif ($item_type->getColumnType() == 'amount') {
-          $progress_group = 'amount-' . $key;
-        }
-
         // Then add the value to the row.
         $cell = $item_type->getTableCell();
-        $cell['data-progress-group'] = $progress_group;
+        if ($item_type->getColumnType() == 'amount') {
+          $cell['data-progress-group'] = 'amount-' . $key;
+        }
         $row[] = $cell;
 
         // Update the skip row flag. Make it lazy, only check the item type if

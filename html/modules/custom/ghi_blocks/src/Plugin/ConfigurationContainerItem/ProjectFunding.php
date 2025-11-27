@@ -156,6 +156,13 @@ class ProjectFunding extends ConfigurationContainerItemPluginBase {
   /**
    * {@inheritdoc}
    */
+  public function getProgressGroup() {
+    return $this->get('data_type');
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function getClasses() {
     $classes = parent::getClasses();
     $classes[] = Html::getClass($this->getPluginId() . '--' . $this->get('data_type'));

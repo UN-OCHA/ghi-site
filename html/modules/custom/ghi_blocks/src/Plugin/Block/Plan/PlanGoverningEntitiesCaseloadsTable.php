@@ -250,14 +250,6 @@ class PlanGoverningEntitiesCaseloadsTable extends GHIBlockBase implements Config
         return FALSE;
       }
 
-      $progress_group = NULL;
-      if ($item_type->getColumnType() == 'percentage') {
-        $progress_group = 'percentage';
-      }
-      elseif ($item_type->getColumnType() == 'amount') {
-        $progress_group = 'amount-' . $key;
-      }
-
       if ($grouped_attachments && $item_type->getPluginId() == 'entity_name') {
         // For grouped attachments, we want to replace the entity name with the
         // attachment desciption.
@@ -276,7 +268,9 @@ class PlanGoverningEntitiesCaseloadsTable extends GHIBlockBase implements Config
       else {
         // Then add the value to the row.
         $cell = $item_type->getTableCell();
-        $cell['data-progress-group'] = $progress_group;
+        if ($item_type->getColumnType() == 'amount') {
+          $cell['data-progress-group'] = 'amount-' . $key;
+        }
         $row[] = $cell;
       }
     }

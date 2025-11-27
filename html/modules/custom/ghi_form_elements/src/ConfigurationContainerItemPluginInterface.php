@@ -122,6 +122,14 @@ interface ConfigurationContainerItemPluginInterface extends PluginInspectionInte
   public function getColumnType();
 
   /**
+   * Get the progress group.
+   *
+   * @return string
+   *   The progress group as a string.
+   */
+  public function getProgressGroup();
+
+  /**
    * Get the classes of an item.
    *
    * @return string[]

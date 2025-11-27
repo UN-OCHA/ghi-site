@@ -7,7 +7,6 @@ use Drupal\ghi_blocks\Interfaces\ConfigurableTableBlockInterface;
 use Drupal\ghi_blocks\Interfaces\MultiStepFormBlockInterface;
 use Drupal\ghi_blocks\Interfaces\OverrideDefaultTitleBlockInterface;
 use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
-use Drupal\ghi_blocks\Plugin\ConfigurationContainerItem\ProjectFunding;
 use Drupal\ghi_blocks\Traits\OrganizationsBlockTrait;
 use Drupal\ghi_blocks\Traits\TableSoftLimitTrait;
 use Drupal\ghi_form_elements\Traits\ConfigurationContainerTrait;
@@ -105,14 +104,8 @@ class PlanOrganizationsTable extends GHIBlockBase implements ConfigurableTableBl
         /** @var \Drupal\ghi_form_elements\ConfigurationContainerItemPluginInterface $item_type */
         $item_type = $this->getItemTypePluginForColumn($column, $context);
 
-        $progress_group = NULL;
-        if ($item_type instanceof ProjectFunding) {
-          $progress_group = $item_type->get('data_type') == 'coverage' ? 'percentage' : $item_type->get('data_type');
-        }
-
         // Then add the value to the row.
         $cell = $item_type->getTableCell();
-        $cell['data-progress-group'] = $progress_group;
         $row[] = $cell;
 
         // Update the skip row flag. Make it lazy, only check the item type if

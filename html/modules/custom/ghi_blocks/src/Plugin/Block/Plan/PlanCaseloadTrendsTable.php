@@ -282,8 +282,8 @@ class PlanCaseloadTrendsTable extends GHIBlockBase implements OverrideDefaultTit
         'target_percent' => [
           'data' => $this->buildRenderArray('hpc_percent', $item['target_percent'] ?? FALSE, $theme_options),
           'data-raw-value' => $item['target_percent'] ?? 0,
-          'data-column-type' => 'amount',
-          'data-progress-group' => 'target_percent',
+          'data-column-type' => 'percentage',
+          'data-progress-group' => 'coverage',
           'export_value' => $item['target_percent'],
         ],
         'reached' => [
@@ -296,8 +296,8 @@ class PlanCaseloadTrendsTable extends GHIBlockBase implements OverrideDefaultTit
         'reached_percent' => [
           'data' => $this->buildRenderArray('hpc_percent', $item['reached_percent'] ?? FALSE, $theme_options),
           'data-raw-value' => $item['reached_percent'] ?? 0,
-          'data-column-type' => 'amount',
-          'data-progress-group' => 'reached_percent',
+          'data-column-type' => 'percentage',
+          'data-progress-group' => 'coverage',
           'export_value' => $item['reached_percent'],
         ],
         'requirements' => [
@@ -496,7 +496,7 @@ class PlanCaseloadTrendsTable extends GHIBlockBase implements OverrideDefaultTit
     });
     // Filter out restricted plans.
     $related_plans = array_filter($related_plans, function (Plan $plan) {
-      return !$plan->isRestricted();
+      return $plan->isReleased() && !$plan->isRestricted();
     });
     // Initially sort by descending year.
     uasort($related_plans, function ($a, $b) {

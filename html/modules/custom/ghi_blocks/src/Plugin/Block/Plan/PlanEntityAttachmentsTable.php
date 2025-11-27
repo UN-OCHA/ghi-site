@@ -214,7 +214,6 @@ class PlanEntityAttachmentsTable extends GHIBlockBase implements ConfigurableTab
 
         // Then add the value to the row.
         $cell = $item_type->getTableCell();
-        $cell['data-progress-group'] = $item_type->getColumnType() == 'percentage' ? 'percentage' : NULL;
         $row[] = $cell;
 
         // Update the skip row flag. Make it lazy, only check the item type if

@@ -128,7 +128,7 @@
         "drupal/seckit": "^2.0",
         "drupal/smugmug_api": "^2.0",
         "drupal/social_auth_google": "^4",
-        "drupal/social_auth_hid": "^4",
+        "drupal/social_auth_hid": "^5.0",
         "drupal/stage_file_proxy": "^3",
         "drupal/stringoverrides": "^1.8",
         "drupal/subpathauto": "^1.3",
