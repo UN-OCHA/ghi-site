@@ -163,7 +163,7 @@ class PlanQuery extends FabricQueryBase {
     if ($this->planTypes !== NULL) {
       return;
     }
-    $items = $this->getCategoryItems(self::PLAN_TYPE_CATEGORY_NAME);
+    $items = $this->getCategoryItems(self::CATEGORY_NAME_PLAN_TYPE);
     $this->planTypes = array_map(fn($item): PlanType => new PlanType($item), $items);
   }
 
@@ -174,7 +174,7 @@ class PlanQuery extends FabricQueryBase {
     if ($this->planCostingTypes !== NULL) {
       return;
     }
-    $items = $this->getCategoryItems(self::PLAN_COSTING_TYPE_CATEGORY_NAME);
+    $items = $this->getCategoryItems(self::CATEGORY_NAME_PLAN_COSTING);
     $this->planCostingTypes = array_map(fn($item): PlanCostingType => new PlanCostingType($item), $items);
   }
 
