@@ -39,14 +39,14 @@ abstract class BaseObject extends ApiObjectBase implements BaseObjectInterface {
   /**
    * {@inheritdoc}
    */
-  public function getName() {
+  public function getName(): ?string {
     return $this->name ?? ($this->getRawData()->name ?? NULL);
   }
 
   /**
    * {@inheritdoc}
    */
-  public function getShortName(): string {
+  public function getShortName(): ?string {
     if ($entity = $this->getEntity()) {
       // Let's see if this object has a shortname.
       if ($shortname = $entity->getShortName()) {
