@@ -8,19 +8,19 @@ use Drupal\hpc_api\Attribute\FabricQuery;
 use Drupal\hpc_api\Query\FabricQueryBase;
 
 /**
- * Plugin implementation of the 'plan_type_import' fabric query.
+ * Plugin implementation of the 'plan_costing_import' fabric query.
  */
 #[FabricQuery(
-  id: 'plan_type_import',
-  label: new TranslatableMarkup('Plan type import query'),
+  id: 'plan_costing_import',
+  label: new TranslatableMarkup('Plan costing import query'),
 )]
-class PlanTypeImportQuery extends FabricQueryBase implements ImportQueryInterface {
+class PlanCostingImportQuery extends FabricQueryBase implements ImportQueryInterface {
 
   /**
    * {@inheritdoc}
    */
   public function getSourceData() {
-    return $this->getCategoryItems(self::CATEGORY_NAME_PLAN_TYPE);
+    return $this->getCategoryItems(self::CATEGORY_NAME_PLAN_COSTING);
   }
 
 }
