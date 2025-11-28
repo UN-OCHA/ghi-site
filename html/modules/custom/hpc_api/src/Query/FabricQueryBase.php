@@ -21,6 +21,13 @@ abstract class FabricQueryBase extends PluginBase implements FabricQueryPluginIn
   use SimpleCacheTrait;
   use DependencySerializationTrait;
 
+  const ENTITY_TYPE_NAME_CATEGORY = 'Category';
+  const ENTITY_TYPE_NAME_PERIOD = 'Period';
+  const ENTITY_TYPE_NAME_PLAN = 'Plan';
+  const PLAN_TYPE_CATEGORY_NAME = 'PlanType';
+  const PLAN_COSTING_TYPE_CATEGORY_NAME = 'PlanCosting';
+  const PERIOD_ENTITY_TYPE_NAME = 'Period';
+
   /**
    * The endpoint query service.
    *
@@ -213,14 +220,16 @@ abstract class FabricQueryBase extends PluginBase implements FabricQueryPluginIn
     $payload = "
       {
         categories (filter: {
-          Id: {
+          CategoryTypeId: {
             eq: {$category->id()}
           }
       }) {
           items {
             Id
+            HpcId
             Name
             Description
+            Code
           }
         }
       }";

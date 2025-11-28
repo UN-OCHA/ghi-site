@@ -166,7 +166,7 @@ class FabricQuery {
    * @return string|null
    *   An access token or NULL.
    */
-  public function getAccessToken(): string|null {
+  public function getAccessToken(): ?string {
     $config = $this->configFactory->get('fabric_graphql.settings');
     $tenant_id = $config->get('tenant_id');
     $client_id = $config->get('client_id');

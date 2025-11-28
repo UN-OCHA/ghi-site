@@ -19,13 +19,6 @@ use Drupal\hpc_api\Query\FabricQueryBase;
 )]
 class PlanQuery extends FabricQueryBase {
 
-  const ENTITY_TYPE_NAME_CATEGORY = 'Category';
-  const ENTITY_TYPE_NAME_PERIOD = 'Period';
-  const ENTITY_TYPE_NAME_PLAN = 'Plan';
-  const PLAN_TYPE_ENTITY_TYPE_NAME = 'PlanType';
-  const PLAN_COSTING_TYPE_ENTITY_TYPE_NAME = 'PlanCosting';
-  const PERIOD_ENTITY_TYPE_NAME = 'Period';
-
   /**
    * The plan types.
    *
@@ -170,7 +163,7 @@ class PlanQuery extends FabricQueryBase {
     if ($this->planTypes !== NULL) {
       return;
     }
-    $items = $this->getCategoryItems(self::PLAN_TYPE_ENTITY_TYPE_NAME);
+    $items = $this->getCategoryItems(self::PLAN_TYPE_CATEGORY_NAME);
     $this->planTypes = array_map(fn($item): PlanType => new PlanType($item), $items);
   }
 
@@ -181,7 +174,7 @@ class PlanQuery extends FabricQueryBase {
     if ($this->planCostingTypes !== NULL) {
       return;
     }
-    $items = $this->getCategoryItems(self::PLAN_COSTING_TYPE_ENTITY_TYPE_NAME);
+    $items = $this->getCategoryItems(self::PLAN_COSTING_TYPE_CATEGORY_NAME);
     $this->planCostingTypes = array_map(fn($item): PlanCostingType => new PlanCostingType($item), $items);
   }
 
