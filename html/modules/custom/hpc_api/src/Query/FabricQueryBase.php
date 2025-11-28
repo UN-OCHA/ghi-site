@@ -21,12 +21,19 @@ abstract class FabricQueryBase extends PluginBase implements FabricQueryPluginIn
   use SimpleCacheTrait;
   use DependencySerializationTrait;
 
+  /**
+   * Entity types in Fabric.
+   */
   const ENTITY_TYPE_NAME_CATEGORY = 'Category';
   const ENTITY_TYPE_NAME_PERIOD = 'Period';
   const ENTITY_TYPE_NAME_PLAN = 'Plan';
-  const PLAN_TYPE_CATEGORY_NAME = 'PlanType';
-  const PLAN_COSTING_TYPE_CATEGORY_NAME = 'PlanCosting';
-  const PERIOD_ENTITY_TYPE_NAME = 'Period';
+
+  /**
+   * Category types in Fabric.
+   */
+  const CATEGORY_NAME_ORGANISATION_TYPE = 'OrganizationType';
+  const CATEGORY_NAME_PLAN_TYPE = 'PlanType';
+  const CATEGORY_NAME_PLAN_COSTING = 'PlanCosting';
 
   /**
    * The endpoint query service.
