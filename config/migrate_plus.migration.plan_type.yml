@@ -10,31 +10,30 @@ class: null
 field_plugin_method: null
 cck_plugin_method: null
 migration_tags:
-  - 'HPC API'
-migration_group: hpc_api_data
-label: 'Plan type categories from the HPC API'
+  - 'HPC Fabric'
+migration_group: hpc_fabric_api
+label: 'Plan type categories from the Fabric API'
 source:
-  endpoints:
-    -
-      endpoint: fts/category/planType
-  item_selector: data
+  track_changes: true
+  fabric_query:
+    plugin: plan_type_import
   fields:
     -
       name: original_id
       label: 'Unique term ID'
-      selector: id
+      selector: HpcId
     -
       name: name
       label: Name
-      selector: name
+      selector: Name
     -
       name: description
       label: Description
-      selector: description
+      selector: Description
     -
       name: code
       label: 'The code to be used as abbreviation'
-      selector: code
+      selector: Code
   ids:
     original_id:
       type: integer

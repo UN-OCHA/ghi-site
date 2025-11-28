@@ -72,8 +72,16 @@ process:
   field_is_part_of_gho: is_part_of_gho
   field_language: language
   field_plan_cluster_type: plan_cluster_type
-  field_plan_date_range/value: plan_date_start
-  field_plan_date_range/end_value: plan_date_end
+  field_plan_date_range/value:
+    plugin: skip_on_empty
+    method: row
+    source: plan_date_start
+    message: 'Plan start date is missing'
+  field_plan_date_range/end_value:
+    plugin: skip_on_empty
+    method: row
+    source: plan_date_end
+    message: 'Plan emd date is missing'
   field_document_published_on: document_published_on
   field_plan_coordinator: plan_coordinator
 destination:

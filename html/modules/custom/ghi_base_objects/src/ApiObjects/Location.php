@@ -49,7 +49,7 @@ class Location extends BaseObject implements GeoJsonLocationInterface {
   /**
    * {@inheritdoc}
    */
-  public function getName() {
+  public function getName(): ?string {
     return $this->location_name;
   }
 
