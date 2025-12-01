@@ -22,7 +22,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  *  admin_label = @Translation("Entity Types"),
  *  category = @Translation("Plan elements"),
  *  data_sources = {
- *    "entities" = "plan_entities_query"
+ *    "entities" = "hpc_api:plan_entities_query"
  *  },
  *  context_definitions = {
  *    "node" = @ContextDefinition("entity:node", label = @Translation("Node")),

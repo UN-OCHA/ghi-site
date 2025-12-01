@@ -33,10 +33,10 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  *  admin_label = @Translation("Operational Presence Map"),
  *  category = @Translation("Plan elements"),
  *  data_sources = {
- *    "entities" = "plan_entities_query",
- *    "project_search" = "plan_project_search_query",
- *    "attachment_search" = "attachment_search_query",
- *    "locations" = "locations_query",
+ *    "entities" = "hpc_api:plan_entities_query",
+ *    "project_search" = "hpc_api:plan_project_search_query",
+ *    "attachment_search" = "hpc_api:attachment_search_query",
+ *    "locations" = "hpc_api:locations_query",
  *  },
  *  default_title = @Translation("Operations by admin area"),
  *  context_definitions = {

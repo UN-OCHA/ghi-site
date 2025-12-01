@@ -27,9 +27,9 @@ use Drupal\hpc_downloads\Helpers\DownloadHelper;
  *  admin_label = @Translation("Plan overview map"),
  *  category = @Translation("Global"),
  *  data_sources = {
- *    "plans" = "plan_overview_query",
- *    "locations" = "locations_query",
- *    "countries" = "country_query",
+ *    "plans" = "hpc_api:plan_overview_query",
+ *    "locations" = "hpc_api:locations_query",
+ *    "countries" = "hpc_api:country_query",
  *  },
  *  context_definitions = {
  *    "node" = @ContextDefinition("entity:node", label = @Translation("Node"), required = FALSE),

@@ -18,7 +18,6 @@ class Plan extends BaseObject implements PlanEntityInterface {
 
   const GRAPHQL_ITEMS = "
     Id
-    HpcId
     Name
     ShortName
     PlanSubTitle

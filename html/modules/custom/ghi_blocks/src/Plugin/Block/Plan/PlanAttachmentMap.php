@@ -31,10 +31,10 @@ use Drupal\hpc_downloads\Interfaces\HPCDownloadPNGInterface;
  *  admin_label = @Translation("Attachment Map"),
  *  category = @Translation("Plan elements"),
  *  data_sources = {
- *    "entities" = "plan_entities_query",
- *    "attachment" = "attachment_query",
- *    "attachment_search" = "attachment_search_query",
- *    "locations" = "locations_query",
+ *    "entities" = "hpc_api:plan_entities_query",
+ *    "attachment" = "hpc_api:attachment_query",
+ *    "attachment_search" = "hpc_api:attachment_search_query",
+ *    "locations" = "hpc_api:locations_query",
  *  },
  *  default_title = @Translation("Data by location"),
  *  context_definitions = {

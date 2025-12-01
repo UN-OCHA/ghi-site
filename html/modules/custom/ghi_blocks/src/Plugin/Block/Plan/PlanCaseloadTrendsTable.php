@@ -26,8 +26,8 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  *  category = @Translation("Plan elements"),
  *  default_title = @Translation("Evolution of the humanitarian response"),
  *  data_sources = {
- *    "attachment_search" = "attachment_search_query",
- *    "plan_funding" = "plan_funding_summary_query",
+ *    "attachment_search" = "hpc_api:attachment_search_query",
+ *    "plan_funding" = "hpc_api:plan_funding_summary_query",
  *  },
  *  context_definitions = {
  *    "node" = @ContextDefinition("entity:node", label = @Translation("Node")),

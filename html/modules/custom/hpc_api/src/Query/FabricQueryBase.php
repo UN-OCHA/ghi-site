@@ -86,7 +86,6 @@ abstract class FabricQueryBase extends PluginBase implements FabricQueryPluginIn
     $instance->fabricQuery = $container->get('hpc_api.fabric_query');
     $instance->user = $container->get('current_user');
     $instance->cache = $container->get('cache.data');
-
     return $instance;
   }
 
@@ -230,10 +229,10 @@ abstract class FabricQueryBase extends PluginBase implements FabricQueryPluginIn
           CategoryTypeId: {
             eq: {$category->id()}
           }
-      }) {
+        }) {
           items {
             Id
-            HpcId
+            ParentId
             Name
             Description
             Code
