@@ -68,6 +68,11 @@
       // Init the sidebar.
       this.setSidebar(new ghi.sidebar(this));
 
+      // Add search box.
+      if (this.canSearch()) {
+        this.getMap().addControl(new ghi.searchControl(this, this.getSearchOptions()));
+      }
+
       // Add admin level control.
       if (this.canSelectAdminLevel()) {
         this.adminLevelControl = new ghi.adminLevelControl(this);
@@ -82,11 +87,6 @@
       else {
         this.interactiveLegend = new ghi.interactiveLegend(this);
         this.getMap().addControl(this.interactiveLegend);
-      }
-
-      // Add search box.
-      if (this.canSearch()) {
-        this.getMap().addControl(new ghi.searchControl(this, this.getSearchOptions()));
       }
 
       // Add disclaimer.

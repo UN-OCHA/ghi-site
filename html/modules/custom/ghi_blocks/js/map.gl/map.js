@@ -279,6 +279,24 @@
     },
 
     /**
+     * Get the fill color for a specifiec value.
+     *
+     * @param {Array} ranges
+     *   An array with ranges.
+     *
+     * @returns {String}
+     *  A color code as a string.
+     */
+    getFillColor: function(ranges, colors, value) {
+      for (i in ranges) {
+        if (value <= ranges[i]) {
+          return i > 0 ? colors[i - 1] : colors[i];
+        }
+      }
+      return colors.at(-1);
+    },
+
+    /**
      * Get the data ranges for the current set of locations.
      *
      * @param {Array} values

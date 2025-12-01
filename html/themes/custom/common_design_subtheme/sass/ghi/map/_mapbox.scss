@@ -31,24 +31,49 @@
   }
 
   .mapboxgl-ctrl.admin-level-select {
-    display: flex;
+    position: absolute;
+    top: 4.5rem;
+    border: 0 !important;
+    background-color: transparent;
 
-    button {
-      border-radius: 0;
-      background-color: var(--cd-grey--light);
-      font-size: 1rem;
-      font-weight: 500;
+    .label {
+      margin-bottom: 0.2rem;
+      font-weight: bold;
+    }
+    .button-container {
+      display: flex;
+      width: fit-content;
+      border: 1px solid var(--ghi-default-border-color-background);
+      border-radius: 4px;
+      background-color: white;
 
-      &.active {
-        background-color: var(--cd-white);
-      }
-      &.disabled {
-        cursor: default;
-        opacity: 0.2;
-      }
-      & + button {
-        border-top: 0;
-        border-left: 1px solid #ddd;
+      button {
+        border-radius: 0;
+        background-color: var(--cd-grey--light);
+        font-size: 1rem;
+        font-weight: 500;
+
+        &:first-child {
+          border-top-left-radius: 4px !important;
+          border-bottom-left-radius: 4px !important;
+        }
+
+        &:last-child {
+          border-top-right-radius: 4px !important;
+          border-bottom-right-radius: 4px !important;
+        }
+
+        &.active {
+          background-color: var(--cd-white);
+        }
+        &.disabled {
+          cursor: default;
+          opacity: 0.2;
+        }
+        & + button {
+          border-top: 0;
+          border-left: 1px solid #ddd;
+        }
       }
     }
   }

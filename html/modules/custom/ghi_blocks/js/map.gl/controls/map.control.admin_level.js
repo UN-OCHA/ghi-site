@@ -35,7 +35,7 @@
      *   A control position, one of the values valid in addControl.
      */
     getDefaultPosition = function () {
-      return 'bottom-left';
+      return 'top-left';
     }
 
     /**
@@ -69,7 +69,13 @@
         return this._container;
       }
 
+      let label = document.createElement('div');
+      label.className = 'label';
+      label.innerHTML = Drupal.t('Select admin level');
+
       // Add one button per admin level.
+      let buttons = document.createElement('div');
+      buttons.className = 'button-container';
       for (let value = 1; value <= admin_level_max; value++) {
         let button = document.createElement('button');
         button.innerHTML = value;
@@ -87,10 +93,14 @@
           button.setAttribute('tabindex', 0);
         }
         button.addEventListener('click', (e) => this.changeAdminLevel(e));
-        this._container.appendChild(button);
+        buttons.appendChild(button);
       }
+
+      this._container.appendChild(label);
+      this._container.appendChild(buttons);
+
       // Add a tooltip to the control.
-      tippy($(this._container).get(0), {
+      tippy($(this._container).find('.button-container').get(0), {
         content: Drupal.t('Select Admin Level View'),
       });
 

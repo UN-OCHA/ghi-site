@@ -724,7 +724,6 @@
      * Update the legend items.
      */
     updateLegend = function($legend_container = null) {
-      let self = this;
       let data = this.state.getData().full_pie;
       let options = this.state.getOptions();
       $legend_container = $legend_container ?? this.state.getContainer().find('div.map-legend');
@@ -1168,35 +1167,54 @@
       let state = this.state;
       let tooltip = object.hasOwnProperty('tooltip') ? object.tooltip : null;
       if (tooltip === null) {
-        tooltip = '<b>Location:</b> ' + object.location_name;
+        let tooltip_items = [];
+        tooltip_items.push({
+          label: Drupal.t('Location'),
+          value: object.location_name,
+        })
 
         // Add values for the polygon.
         let polygonData = this.getPolygonData();
         if (polygonData) {
-          let polygon_data = polygonData;
-          tooltip += '<br /><b>' + polygonData.metric_label + ':</b> ' + Drupal.theme('number', object.metrics[polygon_data.attachment.id][polygon_data.metric_index]);
+          let polygon_value = object.metrics[polygonData.attachment.id][polygonData.metric_index];
+          let fill_color = this.map.getFillColor(this.getDataRanges(), this.config.polygon_colors, polygon_value);
+          tooltip_items.push({
+            label: polygonData.metric_label,
+            value: Drupal.theme('number', polygon_value),
+            icon: '<span class="legend-marker" style="background-color: ' + fill_color + '">',
+          });
         }
 
         // Add values for the full pie.
         if (typeof state.getData().hasOwnProperty('full_pie')) {
-          tooltip += '<br /><b>' + state.getData().full_pie.metric_label + ':</b> ' + Drupal.theme('number', object.total);
+          tooltip_items.push({
+            label: state.getData().full_pie.metric_label,
+            value: Drupal.theme('number', object.total),
+            icon: this.createLegendIcon(1, this.config.colors['full_pie']).outerHTML,
+          });
         }
 
         // Add values for the slices.
-        let slices = this.getSliceData();
-        for (const slice of slices) {
+        for (const [i, slice] of Object.entries(this.getSliceData())) {
           let sliceValue = null;
           if (object.metrics[slice.attachment.id][slice.metric_index] !== null) {
             sliceValue = Drupal.theme('number', object.metrics[slice.attachment.id][slice.metric_index]);
           }
-          tooltip += '<br /><b>' + slice.metric_label + ':</b> ' + (sliceValue ?? Drupal.t('No data'));
+          tooltip_items.push({
+            label: slice.metric_label,
+            value: sliceValue ?? Drupal.t('No data'),
+            icon: this.createLegendIcon(1, this.config.colors['slices'][i]).outerHTML,
+          });
+        }
+
+        // Put everything together.
+        tooltip = '';
+        for (let tooltip_item of tooltip_items) {
+          let icon = (tooltip_item.icon ? '<div class="legend-icon">' + tooltip_item.icon + '</div>' : '');
+          tooltip += '<li>' + icon + '<b>' + tooltip_item.label + ':</b> ' + tooltip_item.value + '</li>';
         }
       }
-      let index = state.getCurrentIndex();
-      if (object.hasOwnProperty('tooltip_values') && object.tooltip_values.hasOwnProperty(index) && object.hasOwnProperty(index)) {
-        tooltip += '<br />' + object.tooltip_values[index].label + ': ' + object.tooltip_values[index]['value'];
-      }
-      return tooltip;
+      return '<ul class="map-tooltip-list">' + tooltip + '</ul>';
     }
 
     /**
