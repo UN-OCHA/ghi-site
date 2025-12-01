@@ -563,8 +563,23 @@
           'source': geojson_source_id,
           'layout': {},
           'paint': {
-            'line-color': root_styles.getPropertyValue('--ghi-grey'),
+            'line-color': [
+              'case',
+              ['boolean', ['feature-state', 'hover'], false],
+              root_styles.getPropertyValue('--ghi-grey--dark'), // 1 opacity when hovering.
+              ['boolean', ['feature-state', 'focus'], false],
+              root_styles.getPropertyValue('--ghi-grey--dark'),  // 1 opacity when focused.
+              root_styles.getPropertyValue('--ghi-grey'), // default color.
+            ],
             'line-width': 1,
+            'line-offset': [
+              'case',
+              ['boolean', ['feature-state', 'hover'], false],
+              1,  // 1 when hovering.
+              ['boolean', ['feature-state', 'focus'], false],
+              1,  // 1 when focused.
+              0 // Default offset.
+            ],
             'line-opacity': 0.5,
           }
         });
