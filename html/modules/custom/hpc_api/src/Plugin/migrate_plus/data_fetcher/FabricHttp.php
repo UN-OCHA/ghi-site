@@ -3,7 +3,7 @@
 namespace Drupal\hpc_api\Plugin\migrate_plus\data_fetcher;
 
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
-use Drupal\ghi_plans\Plugin\FabricQuery\Interfaces\ImportQueryInterface;
+use Drupal\hpc_api\Query\ImportQueryInterface;
 use Drupal\migrate\MigrateException;
 use Drupal\migrate_plus\Plugin\migrate_plus\data_fetcher\Http;
 use GuzzleHttp\Exception\RequestException;
@@ -80,7 +80,7 @@ class FabricHttp extends Http implements ContainerFactoryPluginInterface {
       }
       $source_data = $query_handler->getSourceData();
       if (empty($source_data)) {
-        throw new MigrateException('No response at.');
+        throw new MigrateException('Source data is empty.');
       }
     }
     catch (RequestException $e) {

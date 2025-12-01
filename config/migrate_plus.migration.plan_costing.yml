@@ -20,7 +20,7 @@ source:
     -
       name: original_id
       label: 'Unique term ID'
-      selector: HpcId
+      selector: Id
     -
       name: name
       label: Name

@@ -29,9 +29,9 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  *  admin_label = @Translation("Governing Entities Caseloads Table"),
  *  category = @Translation("Plan elements"),
  *  data_sources = {
- *    "entities" = "plan_entities_query",
- *    "attachment_search" = "attachment_search_query",
- *    "attachment_prototype" = "plan_attachment_prototype_query",
+ *    "entities" = "hpc_api:plan_entities_query",
+ *    "attachment_search" = "hpc_api:attachment_search_query",
+ *    "attachment_prototype" = "hpc_api:plan_attachment_prototype_query",
  *  },
  *  default_title = @Translation("Cluster caseloads"),
  *  context_definitions = {

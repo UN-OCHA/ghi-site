@@ -1,6 +1,6 @@
 <?php
 
-namespace Drupal\ghi_plans\Plugin\FabricQuery\Interfaces;
+namespace Drupal\hpc_api\Query;
 
 /**
  * Base class for import query plugins.

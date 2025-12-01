@@ -29,11 +29,11 @@ use Drupal\hpc_downloads\Interfaces\HPCDownloadPNGInterface;
  *  admin_label = @Translation("Entity Attachments Table"),
  *  category = @Translation("Plan elements"),
  *  data_sources = {
- *    "entities" = "plan_entities_query",
- *    "entity" = "entity_query",
- *    "attachment" = "attachment_query",
- *    "attachment_search" = "attachment_search_query",
- *    "attachment_prototype" = "plan_attachment_prototype_query",
+ *    "entities" = "hpc_api:plan_entities_query",
+ *    "entity" = "hpc_api:entity_query",
+ *    "attachment" = "hpc_api:attachment_query",
+ *    "attachment_search" = "hpc_api:attachment_search_query",
+ *    "attachment_prototype" = "hpc_api:plan_attachment_prototype_query",
  *  },
  *  default_title = @Translation("Indicator overview"),
  *  context_definitions = {
