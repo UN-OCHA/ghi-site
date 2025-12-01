@@ -3,8 +3,9 @@
 namespace Drupal\hpc_api\Plugin\migrate\source;
 
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
-use Drupal\ghi_plans\Plugin\FabricQuery\Interfaces\ImportQueryInterface;
 use Drupal\hpc_api\Query\FabricQueryManager;
+use Drupal\hpc_api\Query\ImportQueryInterface;
+use Drupal\migrate\MigrateException;
 use Drupal\migrate\Plugin\MigrationInterface;
 use Drupal\migrate_plus\DataParserPluginInterface;
 use Drupal\migrate_plus\DataParserPluginManager;
@@ -50,16 +51,18 @@ class FabricGraphQl extends SourcePluginExtension implements ContainerFactoryPlu
     $configuration['cache_base_time'] = $cache_base_time;
     $configuration['cache_prefix'] = $migration->id();
 
+    $query_handler = NULL;
     $query = $configuration['fabric_query'];
     try {
       $query_handler = $this->fabricQueryManager->createInstance($query['plugin']);
-      if ($query_handler instanceof ImportQueryInterface) {
-        $this->fabricQuery = $query;
-      }
     }
     catch (\Exception $e) {
       // Invalid plugin, fail silently.
     }
+    if (!$query_handler instanceof ImportQueryInterface) {
+      throw new MigrateException('Invalid fabric query plugin.');
+    }
+    $this->fabricQuery = $query;
     parent::__construct($configuration, $plugin_id, $plugin_definition, $migration);
   }
 

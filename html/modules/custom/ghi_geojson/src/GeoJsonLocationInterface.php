@@ -2,6 +2,9 @@
 
 namespace Drupal\ghi_geojson;
 
+/**
+ * Interface class for location objects with geosjon data.
+ */
 interface GeoJsonLocationInterface {
 
   /**

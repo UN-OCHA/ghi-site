@@ -1,12 +1,12 @@
 <?php
 
-namespace Drupal\ghi_plans\Plugin\FabricQuery\Import;
+namespace Drupal\ghi_base_objects\Plugin\FabricQuery\Import;
 
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\ghi_base_objects\ApiObjects\Country;
-use Drupal\ghi_plans\Plugin\FabricQuery\Interfaces\ImportQueryInterface;
 use Drupal\hpc_api\Attribute\FabricQuery;
 use Drupal\hpc_api\Query\FabricQueryBase;
+use Drupal\hpc_api\Query\ImportQueryInterface;
 
 /**
  * Plugin implementation of the 'country_import' fabric query.

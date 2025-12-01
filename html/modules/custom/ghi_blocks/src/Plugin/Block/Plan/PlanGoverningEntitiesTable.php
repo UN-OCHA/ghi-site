@@ -25,8 +25,8 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  *  admin_label = @Translation("Governing Entities Overview Table"),
  *  category = @Translation("Plan elements"),
  *  data_sources = {
- *    "entities" = "plan_entities_query",
- *    "cluster_summary" = "plan_funding_cluster_query",
+ *    "entities" = "hpc_api:plan_entities_query",
+ *    "cluster_summary" = "hpc_api:plan_funding_cluster_query",
  *  },
  *  default_title = @Translation("Cluster overview"),
  *  context_definitions = {

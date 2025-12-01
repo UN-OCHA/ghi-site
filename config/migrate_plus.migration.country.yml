@@ -22,7 +22,7 @@ source:
     -
       name: original_id
       label: 'Unique plan ID'
-      selector: HpcId
+      selector: Id
     -
       name: name
       label: 'Name of the country'

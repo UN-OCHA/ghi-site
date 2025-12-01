@@ -32,7 +32,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  *  admin_label = @Translation("Plan table"),
  *  category = @Translation("Global"),
  *  data_sources = {
- *    "plans" = "plan_overview_query",
+ *    "plans" = "hpc_api:plan_overview_query",
  *  },
  *  context_definitions = {
  *    "node" = @ContextDefinition("entity:node", label = @Translation("Node"), required = FALSE),

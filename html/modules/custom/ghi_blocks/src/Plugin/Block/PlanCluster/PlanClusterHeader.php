@@ -15,8 +15,8 @@ use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
  *  admin_label = @Translation("Plan Cluster Header"),
  *  category = @Translation("Plan cluster elements"),
  *  data_sources = {
- *    "entities" = "plan_entities_query",
- *    "attachment" = "attachment_query",
+ *    "entities" = "hpc_api:plan_entities_query",
+ *    "attachment" = "hpc_api:attachment_query",
  *  },
  *  title = FALSE,
  *  context_definitions = {

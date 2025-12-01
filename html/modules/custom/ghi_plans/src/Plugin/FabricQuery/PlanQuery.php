@@ -4,6 +4,7 @@ namespace Drupal\ghi_plans\Plugin\FabricQuery;
 
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\ghi_base_objects\ApiObjects\Country;
+use Drupal\ghi_base_objects\Plugin\FabricQuery\CountryQuery;
 use Drupal\ghi_plans\ApiObjects\Plan;
 use Drupal\hpc_api\ApiObjects\Types\PlanCostingType;
 use Drupal\hpc_api\ApiObjects\Types\PlanType;
@@ -32,13 +33,6 @@ class PlanQuery extends FabricQueryBase {
    * @var \Drupal\hpc_api\ApiObjects\Types\PlanCostingType[]|null
    */
   protected $planCostingTypes = NULL;
-
-  /**
-   * The countries.
-   *
-   * @var \Drupal\ghi_base_objects\ApiObjects\Country[]|null
-   */
-  protected $countries = NULL;
 
   /**
    * Get a plan by its id.
@@ -179,32 +173,6 @@ class PlanQuery extends FabricQueryBase {
   }
 
   /**
-   * Retrieve the plan years from the API.
-   */
-  protected function fetchCountries(): void {
-    if ($this->countries !== NULL) {
-      return;
-    }
-    $payload = "
-      {
-        locations (filter: { AdminLevel: { eq: 0 } }) {
-          items {
-            Id
-            Name
-            ISO3
-            Latitude
-            Longitude
-          }
-        }
-      }";
-    $data = $this->fabricQuery->query($payload);
-    $items = $data->locations->items;
-    $ids = array_map(fn($item) => $item->Id, $items);
-    $items = array_combine($ids, $items);
-    $this->countries = array_map(fn($item): Country => new Country($item), $items);
-  }
-
-  /**
    * Lookup a country by name.
    *
    * @param string $name
@@ -214,13 +182,8 @@ class PlanQuery extends FabricQueryBase {
    *   The country object or NULL.
    */
   protected function lookupCountry(string $name): ?Country {
-    $this->fetchCountries();
-    foreach ($this->countries as $country) {
-      if ($country->getName() == $name) {
-        return $country;
-      }
-    }
-    return NULL;
+    return $this->countryQuery()->getCountryByName($name);
+
   }
 
   /**
@@ -287,6 +250,18 @@ class PlanQuery extends FabricQueryBase {
       }
     }
     return NULL;
+  }
+
+  /**
+   * Get the country query.
+   *
+   * @return \Drupal\ghi_base_objects\Plugin\FabricQuery\CountryQuery
+   *   The country query.
+   */
+  public static function countryQuery(): CountryQuery {
+    /** @var \Drupal\hpc_api\Query\FabricQueryManager $fabric_query_manager */
+    $fabric_query_manager = \Drupal::service('plugin.manager.fabric_query_manager');
+    return $fabric_query_manager->createInstance('country');
   }
 
 }

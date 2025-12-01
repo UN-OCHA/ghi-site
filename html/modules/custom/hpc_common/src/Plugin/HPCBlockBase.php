@@ -649,42 +649,40 @@ abstract class HPCBlockBase extends BlockBase implements HPCPluginInterface, Con
       return NULL;
     }
 
-    $plugin_id = $sources[$source_key];
-    if ($this->fabricQueryManager->hasDefinition($plugin_id)) {
-      // Use fabric query if available.
-      return $this->fabricQueryManager->createInstance($plugin_id);
+    [$source_api, $plugin_id] = explode(':', $sources[$source_key]);
+
+    $query_handler = NULL;
+    if ($source_api == 'fabric' && $this->fabricQueryManager->hasDefinition($plugin_id)) {
+      $query_handler = $this->fabricQueryManager->createInstance($plugin_id);
     }
+    elseif ($source_api == 'hpc_api' && $this->endpointQueryManager->hasDefinition($plugin_id)) {
+      // Otherwise check the deprecated endpoint query plugins.
+      /** @var \Drupal\hpc_api\Query\EndpointQueryPluginInterface $query_handler */
+      $query_handler = $this->endpointQueryManager->createInstance($plugin_id);
 
-    // Otherwise check the deprecated endpoint query plugins.
-    if (!$this->endpointQueryManager->hasDefinition($plugin_id)) {
-      return NULL;
-    }
-
-    /** @var \Drupal\hpc_api\Query\EndpointQueryPluginInterface $query_handler */
-    $query_handler = $this->endpointQueryManager->createInstance($plugin_id);
-
-    // Get the available context values and use them as placeholder values for
-    // the query.
-    foreach ($this->getContexts() as $context_key => $context) {
-      /** @var \Drupal\Core\Plugin\Context\Context $context */
-      if ($context_key == 'node' || strpos($context_key, '--') || !$context->hasContextValue()) {
-        continue;
-      }
-      $context_value = $context->getContextValue();
-      if (is_scalar($context_value)) {
-        // Arguments like "year".
-        $query_handler->setPlaceholder($context_key, $context->getContextValue());
-      }
-      elseif ($context_value instanceof ContentEntityInterface && $context_value->hasField('field_original_id')) {
-        // Arguments like "plan_id".
-        $original_id = $context_value->get('field_original_id')->value;
-        if ($original_id && is_scalar($original_id)) {
-          $query_handler->setPlaceholder($context_key . '_id', $original_id);
+      // Get the available context values and use them as placeholder values for
+      // the query.
+      foreach ($this->getContexts() as $context_key => $context) {
+        /** @var \Drupal\Core\Plugin\Context\Context $context */
+        if ($context_key == 'node' || strpos($context_key, '--') || !$context->hasContextValue()) {
+          continue;
         }
-        if ($context_value->hasField('field_plan')) {
-          $plan_id = $context_value->get('field_plan')->entity->get('field_original_id')->value ?? NULL;
-          if ($plan_id) {
-            $query_handler->setPlaceholder('plan_id', $plan_id);
+        $context_value = $context->getContextValue();
+        if (is_scalar($context_value)) {
+          // Arguments like "year".
+          $query_handler->setPlaceholder($context_key, $context->getContextValue());
+        }
+        elseif ($context_value instanceof ContentEntityInterface && $context_value->hasField('field_original_id')) {
+          // Arguments like "plan_id".
+          $original_id = $context_value->get('field_original_id')->value;
+          if ($original_id && is_scalar($original_id)) {
+            $query_handler->setPlaceholder($context_key . '_id', $original_id);
+          }
+          if ($context_value->hasField('field_plan')) {
+            $plan_id = $context_value->get('field_plan')->entity->get('field_original_id')->value ?? NULL;
+            if ($plan_id) {
+              $query_handler->setPlaceholder('plan_id', $plan_id);
+            }
           }
         }
       }

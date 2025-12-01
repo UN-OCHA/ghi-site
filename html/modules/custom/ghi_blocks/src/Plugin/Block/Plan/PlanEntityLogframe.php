@@ -43,11 +43,11 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  *  admin_label = @Translation("Entity Logframe"),
  *  category = @Translation("Plan elements"),
  *  data_sources = {
- *    "entities" = "plan_entities_query",
- *    "plan" = "plan",
- *    "attachment" = "attachment_query",
- *    "attachment_search" = "attachment_search_query",
- *    "attachment_prototype" = "plan_attachment_prototype_query",
+ *    "entities" = "hpc_api:plan_entities_query",
+ *    "plan" = "fabric_query:plan",
+ *    "attachment" = "hpc_api:attachment_query",
+ *    "attachment_search" = "hpc_api:attachment_search_query",
+ *    "attachment_prototype" = "hpc_api:plan_attachment_prototype_query",
  *  },
  *  context_definitions = {
  *    "node" = @ContextDefinition("entity:node", label = @Translation("Node")),
@@ -1100,9 +1100,9 @@ class PlanEntityLogframe extends GHIBlockBase implements MultiStepFormBlockInter
     if ($entity_ref_code == ApiObjectsPlan::ENTITY_REF_CODE && $context_object instanceof Plan) {
       /** @var \Drupal\ghi_plans\Plugin\FabricQuery\PlanQuery $query */
       $query = $this->getQueryHandler('plan');
-      $plan_data = $query->getPlan($context_object->getSourceId());
-      return $plan_data ? [
-        $plan_data->id() => $plan_data,
+      $plan = $query->getPlan($context_object->getSourceId());
+      return $plan ? [
+        $plan->id() => $plan,
       ] : [];
     }
 
