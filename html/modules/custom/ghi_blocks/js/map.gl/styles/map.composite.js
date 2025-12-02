@@ -68,6 +68,11 @@
           4: "#0074B7",
           5: "#002E6E",
         },
+        admin_area_colors: {
+          'focus': '#FFE691',
+          'hover': '#FFF6D7',
+          'default': '#FFFFFF',
+        },
         attrs: {
           'stroke': '#fff',
           'cursor': 'pointer',
@@ -295,7 +300,6 @@
       const newMarkers = {};
       let self = this;
       let state = this.state;
-      let slices = this.getSliceData();
 
       // Sort features by descending totals.
       features.sort(((a, b) => a.properties.total > b.properties.total ? -1 : 1));
@@ -317,7 +321,7 @@
         }
         if (!marker || force_update) {
           marker = this.markers[id] = new mapboxgl.Marker({
-            element: this.createDonutChart(feature, slices),
+            element: this.createDonutChartForFeature(feature),
             offset: offset,
           }).setLngLat(coordinates);
         }
@@ -364,10 +368,29 @@
      * @returns {Node}
      *  A DOM node object.
      */
-    createDonutChart = function (feature, slices) {
+    createDonutChartForFeature = function (feature) {
       const object_id = feature.properties.object_id;
+      const object = this.state.getLocationById(object_id);
+      return this.createDonutChart(object, feature.properties.radius);
+    }
+
+    /**
+     * Create a donut chart.
+     *
+     * @param {Object} object
+     *   The location object.
+     * @param {Number} r
+     *   The radius.
+     * @param {String} border_color
+     *   The color to use for the outer donut border.
+     *
+     * @returns {Node}
+     *  A DOM node object.
+     */
+    createDonutChart = function (object, r, border_color = null) {
       const colors = this.config.colors.slices;
-      const r = feature.properties.radius;
+      const color_full_pie = this.config.colors.full_pie;
+      const slices = this.getSliceData();
       const r0 = 0;
       const w = (r * 2) + 4;
 
@@ -379,33 +402,72 @@
       }
 
       // Create the donut container.
-      let html = `<div class="donut donut-${object_id}"><svg width="${w}" height="${w}" viewbox="-2 -2 ${w} ${w}">`;
+      let html = `<div class="donut donut-${object.object_id}"><svg width="${w}" height="${w}" viewbox="-2 -2 ${w} ${w}">`;
 
       // Add the full segement.
-      html += `<circle cx="${r}" cy="${r}" r="${r}" fill="${feature.properties.color}" />`;
+      html += `<circle class="full-pie" cx="${r}" cy="${r}" r="${r}" fill="${color_full_pie}" />`;
+
+      // Create a circle to use as a border.
+      border_color = border_color ?? this.config.colors['border'];
+      html += `<circle class="full-pie-outline" cx="${r}" cy="${r}" r="${r}" fill="transparent" stroke="${border_color}" stroke-width="1" />`;
 
       // Create one segment per slice, each segments start at 0 because the
       // data should be overlayed.
       let i = 0;
       let max = 0;
       for (const slice of slices) {
-        let slice_total = feature.properties.metrics[slice.attachment.id][slice.metric_index];
+        let slice_total = object.metrics[slice.attachment.id][slice.metric_index];
         if (slice_total > 0) {
-          let slice_size = slice_total < feature.properties.total ? slice_total / feature.properties.total : 1;
+          let slice_size = slice_total < object.total ? slice_total / object.total : 1;
           html += this.createDonutSegment(0, slice_size, r, r0, 'slice-' + i, colors[i], patterns[i] ?? null);
           max = Math.max(max, slice_size);
         }
         i++;
       }
 
-      // Create a circle to use as a border.
-      let border_color = this.config.colors['border'];
-      html += `<circle cx="${r}" cy="${r}" r="${r}" fill="transparent" stroke="${border_color}" stroke-width="1" />`;
       html += `</svg></div>`;
 
       const el = document.createElement('div');
       el.innerHTML = html;
       return el.firstChild;
+    }
+
+    /**
+     * Create a polygon chart.
+     *
+     * @param {Object} object
+     *   The location object.
+     * @param {String} border_color
+     *   The color to use for the outer donut border.
+     *
+     * @returns {Node}
+     *  A DOM node object.
+     */
+    createAdminAreaOutline = function (object, border_color) {
+      let polygonData = this.getPolygonData();
+      let polygon_value = polygonData ? object.metrics[polygonData.attachment.id][polygonData.metric_index] : null;
+      let fill_color = polygon_value ? this.map.getFillColor(this.getDataRanges(), this.config.polygon_colors, polygon_value) : this.config.admin_area_colors.focus;
+      let geojson = this.map.getGeoJSON(object);
+      if (!geojson) {
+        return;
+      }
+      const width = 160
+      const height = 120
+      const projection = d3.geoIdentity()
+        .reflectY(true) // SVG co-ordinate system is the opposite way up, so we need to flip it.
+        .fitSize([width, height], geojson); // Scale to fit our SVG dimensions.
+
+      const path = d3.geoPath(projection);
+      const paths = geojson.geometry.geometries.map((d) => {
+        return `<path d="${path(d)}" />`;
+      });
+
+      let polygon_chart = document.createElement('div');
+      polygon_chart.className = 'admin-area-outline';
+      polygon_chart.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" fill="${fill_color}" stroke="${border_color}" stroke-width="1">
+        ${paths.join('')}
+      </svg>`;
+      return polygon_chart;
     }
 
     /**
@@ -604,10 +666,10 @@
           'fill-color': [
             'case',
             ['boolean', ['feature-state', 'hover'], false],
-            '#FFF6D7', // Color when hovered.
+            this.config.admin_area_colors.hover,
             ['boolean', ['feature-state', 'focus'], false],
-            '#FFE691', // Color when focused.
-            '#FFF6D7', // Default color.
+            this.config.admin_area_colors.focus,
+            this.config.admin_area_colors.default,
           ],
           'fill-opacity': [
             'case',
@@ -850,40 +912,150 @@
      */
     buildSidebarContent = function(object) {
       let state = this.state;
-      let object_id = parseInt(object.object_id);
-      var location = state.getLocationById(object_id, false);
-
+      // Reload the location object to make sure we have fresh data. This is
+      // important when switching map tabs while the sidebar is open.
+      let location = state.getLocationById(object.object_id);
       if (!location || typeof location.modal_contents == 'undefined') {
         return;
       }
 
+      let polygonData = this.getPolygonData();
       let modal_content = location.modal_contents;
       let modal_items = [];
 
+      const border_color = root_styles.getPropertyValue('--ghi-grey');
+      const border_color_highlight = root_styles.getPropertyValue('--ghi-grey--dark');
+
+      // Create a donut chart to show as a summary on top of the tables.
+      let donut_chart = this.createDonutChart(location, 80, border_color);
+      let admin_area_outline = this.createAdminAreaOutline(location, border_color);
+
+      let modal_visualization = document.createElement('div');
+      modal_visualization.className = 'modal-visualization';
+      if (admin_area_outline) {
+        modal_visualization.appendChild(admin_area_outline);
+      }
+      modal_visualization.appendChild(donut_chart);
+      modal_items.push(modal_visualization.outerHTML);
+
+      // General purpose callback to highlight a section, either the admin area
+      // outline, the donut or a slice in the donut.
+      let highlight_section = function(section_type, $container, status) {
+        if (!section_type) {
+          return;
+        }
+        // Highlight or unhighlight the section headers.
+        if (status) {
+          $container.find('.section:not([data-section-type="' + section_type + '"])').css('opacity', 0.5);
+        }
+        else {
+          $container.find('.section').css('opacity', 1);
+        }
+        if (section_type == 'polygon') {
+          let $admin_area_outline = $container.find('.admin-area-outline');
+          $admin_area_outline.find('path').css('opacity', status ? 0.8 : 1);
+          $admin_area_outline.find('path').css('stroke', status ? border_color_highlight : border_color);
+          $admin_area_outline.find('path').css('stroke-width', status ? 2 : 1);
+        }
+        else {
+          let $donut = $container.find('.donut');
+
+          // Highlight or unhighlight the full donut.
+          let $circle = $donut.find('circle.full-pie-outline');
+          $circle.css('stroke', status ? border_color_highlight : border_color);
+          $circle.css('stroke-width', status ? 2 : 1);
+
+          if (section_type == 'full-pie') {
+            $donut.find('path').css('opacity', status ? 0 : 1);
+          }
+          if (section_type.indexOf('slice-') === 0) {
+            $donut.find('circle.full-pie').css('opacity', status ? 0 : 1);
+            if (status) {
+              $donut.find('path:not(.' + section_type + ')').css('opacity', 0);
+            }
+            else {
+              $donut.find('path').css('opacity', 1);
+            }
+          }
+        }
+      }
+
+      // The event handlers for the sections, donuts and admin area outlines.
+      let section_hover_on = function (e) {
+        let section_type = $(e.currentTarget).parents('.section').attr('data-section-type');
+        highlight_section(section_type, $(e.currentTarget).parents('.modal-content'), true);
+        e.preventDefault();
+      };
+      let section_hover_off = function (e) {
+        let section_type = $(e.currentTarget).parents('.section').attr('data-section-type');
+        highlight_section(section_type, $(e.currentTarget).parents('.modal-content'), false);
+        e.preventDefault();
+      };
+      let admin_area_outline_hover_on = function (e) {
+        highlight_section('polygon', $(e.target).parents('.modal-content'), true);
+      }
+      let admin_area_outline_hover_off = function (e) {
+        highlight_section('polygon', $(e.target).parents('.modal-content'), false);
+      }
+      let donut_hover_on = function (e) {
+        let section_type = $(e.target).is('circle') ? 'full-pie' : $(e.target).attr('class');
+        highlight_section(section_type, $(e.target).parents('.modal-content'), true);
+      }
+      let donut_hover_off = function (e) {
+        let section_type = $(e.target).is('circle') ? 'full-pie' : $(e.target).attr('class');
+        highlight_section(section_type, $(e.target).parents('.modal-content'), false);
+      }
+
+      state.getContainer().off('mouseover.sidebarSection');
+      state.getContainer().off('mouseenter.sidebarSection');
+      state.getContainer().off('mouseout.sidebarSection');
+      state.getContainer().on('mouseenter.sidebarSection', '.map-plan-card-container .section .header', section_hover_on);
+      state.getContainer().on('mouseover.sidebarSection', '.map-plan-card-container .section .header', section_hover_on);
+      state.getContainer().on('mouseout.sidebarSection', '.map-plan-card-container .section .header', section_hover_off);
+
+      state.getContainer().off('mouseover.sidebarAdminAreaOutline');
+      state.getContainer().off('mouseenter.sidebarAdminAreaOutline');
+      state.getContainer().off('mouseout.sidebarAdminAreaOutline');
+      if (polygonData) {
+        state.getContainer().on('mouseenter.sidebarAdminAreaOutline', '.map-plan-card-container .admin-area-outline path', admin_area_outline_hover_on);
+        state.getContainer().on('mouseover.sidebarAdminAreaOutline', '.map-plan-card-container .admin-area-outline path', admin_area_outline_hover_on);
+        state.getContainer().on('mouseout.sidebarAdminAreaOutline', '.map-plan-card-container .admin-area-outline path', admin_area_outline_hover_off);
+      }
+
+      state.getContainer().off('mouseover.sidebarDonut');
+      state.getContainer().off('mouseenter.sidebarDonut');
+      state.getContainer().off('mouseout.sidebarDonut');
+      state.getContainer().on('mouseover.sidebarDonut', '.map-plan-card-container .donut svg circle', donut_hover_on);
+      state.getContainer().on('mouseenter.sidebarDonut', '.map-plan-card-container .donut svg circle', donut_hover_on);
+      state.getContainer().on('mouseover.sidebarDonut', '.map-plan-card-container .donut svg path', donut_hover_on);
+      state.getContainer().on('mouseenter.sidebarDonut', '.map-plan-card-container .donut svg path', donut_hover_on);
+      state.getContainer().on('mouseout.sidebarDonut', '.map-plan-card-container .donut', donut_hover_off);
+
       // Add values for the polygon.
-      let polygonData = this.getPolygonData();
       if (polygonData) {
         let polygon_modal = modal_content[polygonData.attachment.id][polygonData.metric_index];
-        // let fill_color = this.map.getFillColor(this.getDataRanges(), this.config.polygon_colors, polygon_value);
-        modal_items.push(this.buildSidebarContentSection(polygon_modal));
+        modal_items.push(this.buildSidebarContentSection(polygon_modal, 'polygon'));
       }
 
       // Add values for the full pie.
       if (typeof state.getData().hasOwnProperty('full_pie')) {
         let fullPieData = state.getData().full_pie;
         let full_pie_modal = modal_content[fullPieData.attachment.id][fullPieData.metric_index];
-        modal_items.push(this.buildSidebarContentSection(full_pie_modal));
+        modal_items.push(this.buildSidebarContentSection(full_pie_modal, 'full-pie'));
       }
 
       // Add values for the slices.
       for (const [i, slice] of Object.entries(this.getSliceData())) {
         let slice_modal = modal_content[slice.attachment.id][slice.metric_index];
-        modal_items.push(this.buildSidebarContentSection(slice_modal));
+        if (!slice_modal) {
+          continue;
+        }
+        modal_items.push(this.buildSidebarContentSection(slice_modal, 'slice-' + i));
       }
 
       // Attach the expand behavior to the sidebars table headings.
-      this.state.getContainer().off('click.sidebarSection');
-      this.state.getContainer().on('click.sidebarSection', '.map-plan-card-container .section .header', function (e) {
+      state.getContainer().off('click.sidebarSection');
+      state.getContainer().on('click.sidebarSection', '.map-plan-card-container .section .header', function (e) {
         $(e.currentTarget).toggleClass('open');
         $(e.currentTarget).next().slideToggle({
           duration: 300
@@ -899,11 +1071,13 @@
      *
      * @param {Object} data
      *   The data for the section.
+     * @param {String} type
+     *   A type to add to the section.
      *
      * @returns {String}
      *   The HTML for the sidebar content section.
      */
-    buildSidebarContentSection = function (data) {
+    buildSidebarContentSection = function (data, type) {
       let rows = [];
       for (const [name, value] of Object.entries(data.categories)) {
         rows.push([
@@ -913,7 +1087,7 @@
       }
       let table = Drupal.theme('table', [], rows, {'classes': 'plan-attachment-modal-table'});
       return `
-        <div class="section">
+        <div class="section" data-section-type="${type}">
           <div class="header">
             <span>
               <span class="table-toggle material-icons" tabindex="0">keyboard_arrow_down</span>
@@ -992,6 +1166,7 @@
       let feature = state.getFeatureFromEvent(e, layer_id);
       if (feature) {
         state.hoverFeature(feature, false);
+        state.hideTooltip();
       }
       else {
         state.resetHover();

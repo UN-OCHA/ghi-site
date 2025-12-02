@@ -96,6 +96,7 @@ map.gl.plan:
     js/map.gl/map.plan_composite.js: {}
   dependencies:
     - ghi_blocks/map.gl
+    - hpc_common/d3
 
 map.gl.operational_presence:
   js:

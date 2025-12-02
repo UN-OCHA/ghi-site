@@ -293,7 +293,7 @@
           return i > 0 ? colors[i - 1] : colors[i];
         }
       }
-      return colors[colors.length - 1];
+      return colors[Object.keys(colors).length - 1];
     },
 
     /**
