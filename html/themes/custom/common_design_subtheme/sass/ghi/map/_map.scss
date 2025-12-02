@@ -451,6 +451,39 @@
         }
       }
     }
+
+    &.composite .map-plan-card-container .modal-content .section {
+      .header {
+        display: flex;
+        justify-content: space-between;
+        cursor: pointer;
+        font-weight: bold;
+
+        span:first-child {
+          display: flex;
+          align-items: center;
+
+          .table-toggle {
+            font-size: var(--cd-font-size--base);
+          }
+        }
+
+        &.open .table-toggle {
+          transform: rotate(180deg);
+        }
+      }
+      .content {
+        display: none;
+        margin-top: 0.5rem;
+
+        table tr {
+          border-top: 1px solid var(--cd-default-border-color);
+          td:last-child {
+            text-align: right;
+          }
+        }
+      }
+    }
   }
 
   .map-container {

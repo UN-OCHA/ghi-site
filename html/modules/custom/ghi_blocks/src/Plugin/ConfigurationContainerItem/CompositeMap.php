@@ -156,7 +156,6 @@ class CompositeMap extends ConfigurationContainerItemPluginBase implements Confi
       'slices' => array_map(function ($slice) {
         return $this->buildMapDataForItemConfig($slice);
       }, $this->getSlicesConfig() ?? []),
-      'variants' => [],
     ];
 
     return $map_data;
@@ -208,6 +207,31 @@ class CompositeMap extends ConfigurationContainerItemPluginBase implements Confi
   }
 
   /**
+   * Get the modal content for the given location and metric label.
+   *
+   * @param array $location
+   *   An array with location data.
+   * @param string $metric_label
+   *   The label of the metric.
+   *
+   * @return array
+   *   An array with data for rendering the modal content in the client.
+   */
+  private function getModalContent($location, $metric_label) {
+    $location['categories'] = array_filter($location['categories'], function ($category) {
+      return $category['data'] !== NULL;
+    });
+    return [
+      'total' => $location['total'],
+      'metric_label' => $metric_label,
+      // 'categories' => [],
+      'categories' => array_map(function ($category) {
+        return $category['data'];
+      }, $location['categories']),
+    ];
+  }
+
+  /**
    * Build the locations array for the map data.
    *
    * @return array
@@ -254,6 +278,7 @@ class CompositeMap extends ConfigurationContainerItemPluginBase implements Confi
       if (!$metric_item || empty($metric_item['locations'])) {
         continue;
       }
+      $metric_label = ($item['settings']['label'] ?? NULL) ?: $metric_item['metric']->name->en;
       foreach ($metric_item['locations'] as $location_id => $location) {
         if (empty($locations[$location_id])) {
           $locations[$location_id] = $location['map_data'];
@@ -262,6 +287,7 @@ class CompositeMap extends ConfigurationContainerItemPluginBase implements Confi
           $locations[$location_id]['metrics'] = array_fill_keys($attachment_ids, array_fill_keys(array_keys($used_metrics), NULL));
         }
         $locations[$location_id]['metrics'][$attachment_id][$metric_index] = $location['total'];
+        $locations[$location_id]['modal_contents'][$attachment_id][$metric_index] = $this->getModalContent($location, $metric_label);
         unset($locations[$location_id]['total']);
         unset($locations[$location_id]['status']);
         unset($locations[$location_id]['iso3']);

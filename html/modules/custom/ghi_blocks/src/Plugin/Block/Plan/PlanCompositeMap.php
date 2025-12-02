@@ -177,15 +177,6 @@ class PlanCompositeMap extends GHIBlockBase implements MultiStepFormBlockInterfa
       'settings' => [],
     ];
 
-    // @codingStandardsIgnoreStart
-    // $plan_base_object = $this->getCurrentPlanObject();
-    // $plan_id = $plan_base_object->getSourceId();
-    // $reporting_periods = $this->getPlanReportingPeriods($plan_id);
-    // $reporting_periods_rendered = array_map(function ($reporting_period) {
-    //   return $reporting_period->format('Monitoring period #@period_number: @date_range');
-    // }, $reporting_periods);
-    // @codingStandardsIgnoreEnd
-
     $context = $this->getBlockContext();
     foreach ($maps as $map) {
       /** @var \Drupal\ghi_blocks\Plugin\ConfigurationContainerItem\CompositeMap $item_type */
@@ -205,151 +196,31 @@ class PlanCompositeMap extends GHIBlockBase implements MultiStepFormBlockInterfa
       return $build;
     }
 
-    // @codingStandardsIgnoreStart
-    // // If more than one monitoring periods have been selected, add a a variant
-    // // drop-down.
-    // if (count($configured_reporting_periods) > 1) {
-    //   $disaggregated_data_multiple_periods = $attachment->getDisaggregatedDataMultiple($configured_reporting_periods, FALSE, FALSE);
-    //   if (!empty($disaggregated_data_multiple_periods)) {
-    //     foreach ($disaggregated_data_multiple_periods as $period_data) {
-    //       /** @var \Drupal\ghi_plans\ApiObjects\PlanReportingPeriod $reporting_period */
-    //       $reporting_period = $period_data['reporting_period'];
-
-    //       foreach ($maps as $map) {
-    //         /** @var \Drupal\ghi_blocks\Plugin\ConfigurationContainerItem\CompositeMapDataset $item_type */
-    //         $item_type = $this->getItemTypePluginForColumn($map, $context);
-    //         $full_pie_metric_index = $item_type->getFullPieIndex();
-    //         $full_pie_metric_item = $disaggregated_data[$full_pie_metric_index];
-
-    //         $map_id = $item_type->getId();
-    //         if (empty($build['data'][$map_id])) {
-    //           continue;
-    //         }
-    //         if ($attachment->metricItemIsEmpty($full_pie_metric_item)) {
-    //           continue;
-    //         }
-    //         if (!empty($build['data'][$map_id]['variants'][$reporting_period->id()])) {
-    //           continue;
-    //         }
-    //         if (!$attachment->isMeasurementField($full_pie_metric_item['metric']->name->en)) {
-    //           continue;
-    //         }
-
-    //         $polygon_metric_index = $item_type->getPolygonIndex();
-    //         $slices_metric_indexes = $item_type->getSliceIndexes();
-
-    //         $build['data'][$map_id]['variants'][$reporting_period->id()] = [
-    //           'label' => $reporting_periods_rendered[$reporting_period->id()],
-    //           'tab_label' => $reporting_period->getPeriodNumber(),
-    //           'full_pie' => $this->buildMapDataForMetricIndex($disaggregated_data, $full_pie_metric_index, $reporting_period),
-    //           'polygon' => $this->buildMapDataForMetricIndex($disaggregated_data, $polygon_metric_index, $reporting_period),
-    //           'slices' => !empty($slices_metric_indexes) ? array_map(function ($slice_index) use ($disaggregated_data, $reporting_period) {
-    //             return $this->buildMapDataForMetricIndex($disaggregated_data, $slice_index, $reporting_period);
-    //           }, $slices_metric_indexes) : NULL,
-    //         ];
-    //         CacheableMetadata::createFromObject($attachment)->applyTo($build);
-    //       }
-    //     }
-    //   }
-    // }
-    // @codingStandardsIgnoreEnd
-
     // Calculate the grouped sizes, so that the circle sizes are relative to a
     // common max value on all available map tabs.
     $this->calculateGroupedSizes($build['data']);
 
     // Build the map tabs.
     foreach ($build['data'] as $key => $item) {
-      // Display a variant drop-down for measurement metrics if variants are
-      // present and if there this more than 1.
-      if (!empty($item['variants']) && count($item['variants']) > 1 && $attachment->isMeasurementField($item['metric']->name->en)) {
-        $variant_options = [];
-        foreach ($item['variants'] as $variant_id => $variant) {
-          $variant_options[] = [
-            '#type' => 'html_tag',
-            '#tag' => 'a',
-            '#attributes' => [
-              'data-variant-tab-label' => $variant['tab_label'],
-              'data-variant-id' => $variant_id,
-            ],
-            [
-              '#markup' => Markup::create($variant['label']),
-            ],
-          ];
-        }
-        $first_variant = reset($item['variants']);
-        $build['tabs']['#items'][] = [
-          [
-            '#type' => 'html_tag',
-            '#tag' => 'a',
-            '#attributes' => [
-              'href' => '#',
-              'class' => ['map-tab'],
-              'data-map-index' => $key,
-            ],
-            [
-              '#markup' => Markup::create($item['label']),
-            ],
+      // Otherwise just display a tab link.
+      $build['tabs']['#items'][] = [
+        [
+          '#type' => 'html_tag',
+          '#tag' => 'a',
+          '#attributes' => [
+            'href' => '#',
+            'class' => ['map-tab'],
+            'data-map-index' => $key,
           ],
           [
-            '#theme' => 'ghi_dropdown',
-            '#toggle_label' => '#' . $first_variant['tab_label'],
-            '#options' => $variant_options,
+            '#markup' => Markup::create($item['label']),
           ],
-        ];
-      }
-      else {
-        // Otherwise just display a tab link.
-        $build['tabs']['#items'][] = [
-          [
-            '#type' => 'html_tag',
-            '#tag' => 'a',
-            '#attributes' => [
-              'href' => '#',
-              'class' => ['map-tab'],
-              'data-map-index' => $key,
-            ],
-            [
-              '#markup' => Markup::create($item['label']),
-            ],
-          ],
-        ];
-      }
+        ],
+      ];
     }
 
     return $build;
   }
-
-  // @codingStandardsIgnoreStart
-  // /**
-  //  * Build the map data for the given metric index.
-  //  *
-  //  * @param array $disaggregated_data
-  //  *   The disaggregated data.
-  //  * @param int $metric_index
-  //  *   The index of the metric.
-  //  * @param object $reporting_period
-  //  *   The reporting period object.
-  //  * @param bool $is_base_data
-  //  *   Whether this should be marked as the base data.
-  //  *
-  //  * @return array
-  //  *   An array with map data for the given metric.
-  //  */
-  // private function buildMapDataForMetricIndex($disaggregated_data, $metric_index, $reporting_period, $is_base_data = FALSE) {
-  //   $metric_item = $disaggregated_data[$metric_index] ?? NULL;
-  //   if (!$metric_item) {
-  //     return NULL;
-  //   }
-  //   return [
-  //     'is_base_data' => $is_base_data,
-  //     'metric_index' => $metric_index,
-  //     'metric' => $metric_item['metric'],
-  //     'unit_type' => $metric_item['unit_type'],
-  //     'monitoring_period' => $reporting_period && $metric_item['is_measurement'] ? $reporting_period->format('Monitoring period #@period_number<br>@date_range') : NULL,
-  //   ];
-  // }
-  // @codingStandardsIgnoreEnd
 
   /**
    * Calculate the grouped size of each location item based.

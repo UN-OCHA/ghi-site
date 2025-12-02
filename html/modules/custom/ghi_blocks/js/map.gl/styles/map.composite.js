@@ -805,7 +805,6 @@
       let data = state.getData();
       let object_id = parseInt(object.object_id);
 
-
       let monitoring_period = data.full_pie.monitoring_period ?? null;
       let build = {
         // location_data: object,
@@ -851,43 +850,82 @@
      */
     buildSidebarContent = function(object) {
       let state = this.state;
-      var data = state.getData();
-      var object_id = parseInt(object.object_id);
+      let object_id = parseInt(object.object_id);
+      var location = state.getLocationById(object_id, false);
 
-      var base_data = null;
-      let variant_id = state.getVariantId();
-      if (variant_id != null && state.hasVariant(state.getCurrentIndex(), variant_id)) {
-        base_data = data.variants[variant_id];
+      if (!location || typeof location.modal_contents == 'undefined') {
+        return;
       }
-      else if (typeof data.modal_contents != 'undefined' && typeof data.modal_contents[object_id] != 'undefined') {
-        base_data = data;
+
+      let modal_content = location.modal_contents;
+      let modal_items = [];
+
+      // Add values for the polygon.
+      let polygonData = this.getPolygonData();
+      if (polygonData) {
+        let polygon_modal = modal_content[polygonData.attachment.id][polygonData.metric_index];
+        // let fill_color = this.map.getFillColor(this.getDataRanges(), this.config.polygon_colors, polygon_value);
+        modal_items.push(this.buildSidebarContentSection(polygon_modal));
       }
-      let modal_content = base_data ? base_data.modal_contents[object_id] : (object.modal_content ?? null);
-      if (!modal_content) {
-        return false;
+
+      // Add values for the full pie.
+      if (typeof state.getData().hasOwnProperty('full_pie')) {
+        let fullPieData = state.getData().full_pie;
+        let full_pie_modal = modal_content[fullPieData.attachment.id][fullPieData.metric_index];
+        modal_items.push(this.buildSidebarContentSection(full_pie_modal));
       }
-      if (typeof modal_content.table_data != 'undefined') {
-        // Table header and rows are prerendered.
-        var table_data = modal_content.table_data;
-        return Drupal.theme('table', table_data.header, table_data.rows, {'classes': 'plan-attachment-modal-table'});
+
+      // Add values for the slices.
+      for (const [i, slice] of Object.entries(this.getSliceData())) {
+        let slice_modal = modal_content[slice.attachment.id][slice.metric_index];
+        modal_items.push(this.buildSidebarContentSection(slice_modal));
       }
-      if (typeof modal_content.categories != 'undefined') {
-        // Categories need to be rendered as a table here.
-        var table_rows = [
-          [Drupal.t('Total !metric_name', {'!metric_name': modal_content.metric_label}), Drupal.theme('amount', modal_content.total)],
-        ];
-        for (let category of Object.values(modal_content.categories)) {
-          table_rows.push([
-            category.name,
-            Drupal.theme('amount', category.value),
-          ]);
-        }
-        return Drupal.theme('table', [], table_rows, {'classes': 'plan-attachment-modal-table'});
+
+      // Attach the expand behavior to the sidebars table headings.
+      this.state.getContainer().off('click.sidebarSection');
+      this.state.getContainer().on('click.sidebarSection', '.map-plan-card-container .section .header', function (e) {
+        $(e.currentTarget).toggleClass('open');
+        $(e.currentTarget).next().slideToggle({
+          duration: 300
+        });
+        e.preventDefault();
+      });
+
+      return modal_items.join('');
+    }
+
+    /**
+     * Build a section in the sidebar content.
+     *
+     * @param {Object} data
+     *   The data for the section.
+     *
+     * @returns {String}
+     *   The HTML for the sidebar content section.
+     */
+    buildSidebarContentSection = function (data) {
+      let rows = [];
+      for (const [name, value] of Object.entries(data.categories)) {
+        rows.push([
+          name,
+          Drupal.theme('amount', value),
+        ]);
       }
-      if (typeof modal_content.html != 'undefined') {
-        // Full html of the modal is already prepared.
-        return modal_content.html;
-      }
+      let table = Drupal.theme('table', [], rows, {'classes': 'plan-attachment-modal-table'});
+      return `
+        <div class="section">
+          <div class="header">
+            <span>
+              <span class="table-toggle material-icons" tabindex="0">keyboard_arrow_down</span>
+              ${data.metric_label}
+            </span>
+            <span>${Drupal.theme('amount', data.total)}</span>
+          </div>
+          <div class="content">
+            ${table}
+          </div>
+        </div>
+      `
     }
 
     /**
