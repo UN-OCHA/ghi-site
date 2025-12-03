@@ -9,6 +9,12 @@
 
     button {
       border-radius: 0 !important;
+
+      &.mapboxgl-ctrl-zoom-in,
+      &.mapboxgl-ctrl-zoom-out {
+        width: 32px;
+        height: 32px;
+      }
     }
   }
 
@@ -32,31 +38,35 @@
 
   .mapboxgl-ctrl.admin-level-select {
     position: absolute;
-    top: 4.5rem;
-    border: 0 !important;
+    top: 2.25rem;
+    left: 2.75rem;
+    display: flex;
+    align-items: center;
+    border: 1px solid var(--ghi-default-border-color-background);
+    border-radius: 4px;
     background-color: transparent;
 
     .label {
-      margin-bottom: 0.2rem;
+      height: 28px;
+      margin: 0;
+      padding: 0.3rem 0.7rem;
+      border-top-left-radius: 4px;
+      border-bottom-left-radius: 4px;
+      background: white;
       font-weight: bold;
     }
     .button-container {
       display: flex;
       width: fit-content;
-      border: 1px solid var(--ghi-default-border-color-background);
-      border-radius: 4px;
-      background-color: white;
 
       button {
+        height: 28px;
+        border-top: 0;
+        border-left: 1px solid #ddd;
         border-radius: 0;
         background-color: var(--cd-grey--light);
         font-size: 1rem;
         font-weight: 500;
-
-        &:first-child {
-          border-top-left-radius: 4px !important;
-          border-bottom-left-radius: 4px !important;
-        }
 
         &:last-child {
           border-top-right-radius: 4px !important;
@@ -69,10 +79,6 @@
         &.disabled {
           cursor: default;
           opacity: 0.2;
-        }
-        & + button {
-          border-top: 0;
-          border-left: 1px solid #ddd;
         }
       }
     }
@@ -89,12 +95,11 @@
     border: 0;
 
     .search-input-wrapper {
-      border: 1px solid var(--cd-default-border-color);
 
       input.search-input {
         display: block !important;
         width: 12rem;
-        margin: 0.5rem 1rem;
+        margin: .4rem 1rem .4rem 0.7rem;
         padding: 0;
         border: 0;
         font-size: var(--cd-font-size--small);
@@ -106,7 +111,7 @@
       a.search-button,
       a.search-button:hover {
         position: absolute;
-        top: 2px;
+        top: 0;
         right: 0;
         display: block;
         float: left;
@@ -117,7 +122,7 @@
         background-image: url("../img/icons/search.svg");
         background-repeat: no-repeat;
         background-position: center center;
-        background-size: 12px 12px;
+        background-size: 15px 15px;
       }
 
       a.search-cancel {
@@ -127,7 +132,7 @@
         display: none;
         width: 22px;
         height: 22px;
-        margin: 6px 0;
+        margin: 4px 0;
         cursor: pointer;
         text-decoration: none;
         pointer-events: all;
@@ -144,8 +149,11 @@
 
     div.search-results {
       position: absolute;
-      width: 100%;
+      width: calc(100% + 2px);
       height: fit-content;
+      max-height: calc(4px + 20rem);
+      margin-top: -3px;
+      margin-left: -1px;
       border: 1px solid var(--cd-default-border-color);
       border-top: 0;
       background-color: white;
@@ -155,13 +163,13 @@
         overflow-y: auto;
         flex-direction: column;
         max-height: 20rem;
-        margin: 0;
-        margin-block-start: 0;
+        margin-top: 3px;
+        margin-bottom: 0;
         padding: 0;
-        gap: 0.2rem;
+        border-top: 1px solid var(--cd-default-border-color);
 
         li {
-          padding: 0.5rem 1rem;
+              padding: .5rem 1rem .5rem .7rem;
           list-style-type: none;
           cursor: pointer;
           font-size: var(--cd-font-size--small);
@@ -180,8 +188,10 @@
 
     .search-alert {
       position: absolute;
-      width: 100%;
-      padding: 0.5rem 1rem;
+      width: calc(100% + 2px);
+      margin-top: -3px;
+      margin-left: -1px;
+      padding: 0.5rem 0.7rem;
       color: inherit;
       border: 1px solid var(--cd-default-border-color);
       border-top: 0;

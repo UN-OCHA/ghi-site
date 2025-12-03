@@ -955,7 +955,6 @@
           let $admin_area_outline = $container.find('.admin-area-outline');
           $admin_area_outline.find('path').css('opacity', status ? 0.8 : 1);
           $admin_area_outline.find('path').css('stroke', status ? border_color_highlight : border_color);
-          $admin_area_outline.find('path').css('stroke-width', status ? 2 : 1);
         }
         else {
           let $donut = $container.find('.donut');
@@ -963,7 +962,6 @@
           // Highlight or unhighlight the full donut.
           let $circle = $donut.find('circle.full-pie-outline');
           $circle.css('stroke', status ? border_color_highlight : border_color);
-          $circle.css('stroke-width', status ? 2 : 1);
 
           if (section_type == 'full-pie') {
             $donut.find('path').css('opacity', status ? 0 : 1);

@@ -71,7 +71,7 @@
 
       let label = document.createElement('div');
       label.className = 'label';
-      label.innerHTML = Drupal.t('Select admin level');
+      label.innerHTML = Drupal.t('Admin level');
 
       // Add one button per admin level.
       let buttons = document.createElement('div');

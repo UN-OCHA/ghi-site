@@ -458,52 +458,73 @@
       }
     }
 
-    &.composite .map-plan-card-container .modal-content {
-      .modal-visualization {
-        display: flex;
-        align-items: center;
-        justify-content: space-evenly;
-
-        .donut {
-          display: flex;
-          justify-content: center;
-          margin: 1rem 0;
-
-          svg {
-            width: fit-content;
-            height: 7rem;
-          }
-        }
+    &.composite .map-plan-card-container {
+      .modal-header {
+        margin-bottom: 0;
+        padding-bottom: 0;
       }
-
-      .section {
-        .header {
+      .modal-content {
+        .modal-visualization {
           display: flex;
-          justify-content: space-between;
-          cursor: pointer;
-          font-weight: bold;
+          align-items: center;
+          justify-content: center;
+          margin-bottom: 0.2rem;
+          padding: 0.5rem 0;
+          border-bottom: 1px solid var(--hpc-border-color);
 
-          span:first-child {
+          .admin-area-outline {
+            width: 50%;
+            padding: 1rem 1rem 1rem 0;
+            border-right: 1px dotted var(--hpc-border-color);
+          }
+
+          .donut {
             display: flex;
-            align-items: center;
+            justify-content: center;
+            width: 50%;
+            margin: 1rem 0;
+            padding-left: 1rem;
 
-            .table-toggle {
-              font-size: var(--cd-font-size--base);
+            svg {
+              width: fit-content;
+              height: 7rem;
             }
           }
-
-          &.open .table-toggle {
-            transform: rotate(180deg);
-          }
         }
-        .content {
-          display: none;
-          margin-top: 0.5rem;
 
-          table tr {
-            border-top: 1px solid var(--cd-default-border-color);
-            td:last-child {
-              text-align: right;
+        .section {
+          margin-bottom: 0.1rem;
+          padding-bottom: 0.1rem;
+          border-bottom: 1px solid var(--hpc-border-color);
+
+          .header {
+            display: flex;
+            justify-content: space-between;
+            cursor: pointer;
+            font-weight: bold;
+
+            span:first-child {
+              display: flex;
+              align-items: center;
+
+              .table-toggle {
+                font-size: var(--cd-font-size--base);
+              }
+            }
+
+            &.open .table-toggle {
+              transform: rotate(180deg);
+            }
+          }
+          .content {
+            display: none;
+            margin-top: 0.5rem;
+
+            table tr {
+              border-top: 1px solid var(--cd-default-border-color);
+              td:last-child {
+                text-align: right;
+              }
             }
           }
         }
