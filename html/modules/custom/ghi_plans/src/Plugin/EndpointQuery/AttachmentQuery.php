@@ -3,7 +3,7 @@
 namespace Drupal\ghi_plans\Plugin\EndpointQuery;
 
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
-use Drupal\ghi_plans\ApiObjects\AttachmentPrototype\AttachmentPrototype;
+use Drupal\ghi_plans\ApiObjects\Prototypes\AttachmentPrototype;
 use Drupal\ghi_plans\Helpers\AttachmentHelper;
 use Drupal\hpc_api\Query\EndpointQueryBase;
 
@@ -30,32 +30,24 @@ class AttachmentQuery extends EndpointQueryBase implements ContainerFactoryPlugi
    *
    * @param int $attachment_id
    *   The attachment id to query.
-   * @param bool $disaggregated
-   *   Whether to fetch disaggregated data directly.
    * @param string|int $reporting_period
    *   The reporting period for which to load the attachment data.
    *
    * @return \Drupal\ghi_plans\ApiObjects\Attachments\AttachmentInterface
    *   The processed attachment object.
    */
-  public function getAttachment($attachment_id, $disaggregated = FALSE, $reporting_period = 'latest') {
+  public function getAttachment($attachment_id, $reporting_period = 'latest') {
     if (is_string($attachment_id) && strpos($attachment_id, 'group_') === 0) {
       return NULL;
     }
-    if ($disaggregated) {
-      $data = $this->getAttachmentDataWithDisaggregatedData($attachment_id, $reporting_period);
-    }
-    else {
-      $data = $this->getData([
-        'attachment_id' => $attachment_id,
-      ], [
-        'reporting_period' => $reporting_period,
-      ]);
-    }
+    $data = $this->getData([
+      'attachment_id' => $attachment_id,
+    ], [
+      'reporting_period' => $reporting_period,
+    ]);
     if (empty($data)) {
       return NULL;
     }
-
     return AttachmentHelper::processAttachment((object) $data);
   }
 
@@ -87,7 +79,7 @@ class AttachmentQuery extends EndpointQueryBase implements ContainerFactoryPlugi
    * @param int $attachment_id
    *   The attachment id.
    *
-   * @return \Drupal\ghi_plans\ApiObjects\AttachmentPrototype\AttachmentPrototype|null
+   * @return \Drupal\ghi_plans\ApiObjects\Prototypes\AttachmentPrototype|null
    *   An attachment prototype object or NULL.
    */
   public function getPrototype($attachment_id) {

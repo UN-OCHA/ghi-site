@@ -27,9 +27,9 @@ use Drupal\hpc_downloads\Helpers\DownloadHelper;
  *  admin_label = @Translation("Plan overview map"),
  *  category = @Translation("Global"),
  *  data_sources = {
- *    "plans" = "hpc_api:plan_overview_query",
- *    "locations" = "hpc_api:locations_query",
- *    "countries" = "hpc_api:country_query",
+ *    "plans_overview" = "hpc_api:plan_overview_query",
+ *    "plan" = "fabric_query:plan",
+ *    "country" = "fabric_query:country",
  *  },
  *  context_definitions = {
  *    "node" = @ContextDefinition("entity:node", label = @Translation("Node"), required = FALSE),
@@ -144,8 +144,8 @@ class PlanOverviewMap extends GHIBlockBase {
       'use_abbreviation' => FALSE,
     ];
 
-    /** @var \Drupal\ghi_base_objects\Plugin\EndpointQuery\CountryQuery $country_query */
-    $country_query = $this->getQueryHandler('countries');
+    /** @var \Drupal\ghi_base_objects\Plugin\FabricQuery\CountryQuery $country_query */
+    $country_query = $this->getQueryHandler('country');
 
     // Assemble the locations and modal_contents arrays.
     $locations = [];
@@ -216,11 +216,11 @@ class PlanOverviewMap extends GHIBlockBase {
 
       // Build the location object and add it to the location list.
       $locations[$object_id] = [
+        'id' => $location->id(),
+        'name' => $location->getName(),
         'object_id' => $object_id,
         'object_title' => $plan_entity->getShortName(),
         'sort_key' => Html::getUniqueId($location->getName() . '-' . $plan->getTypeOrder()),
-        'location_id' => $location->id(),
-        'location_name' => $location->getName(),
         'highlight_countries' => array_values($highlight_countries),
         'latLng' => $location->getLatLng(),
         'in_need' => $caseload->in_need,
@@ -270,7 +270,7 @@ class PlanOverviewMap extends GHIBlockBase {
     // plans on the same location together.
     $location_plans_sorted = [];
     foreach ($locations as $location) {
-      $location_plans_sorted[$location['location_id']][$location['object_id']] = $location['object_id'];
+      $location_plans_sorted[$location['id']][$location['object_id']] = $location['object_id'];
     }
     $offset_chain = [];
     foreach ($location_plans_sorted as $location_id => $object_ids) {
@@ -281,8 +281,8 @@ class PlanOverviewMap extends GHIBlockBase {
     }
 
     foreach ($locations as &$location) {
-      $location['offset_chain'] = $offset_chain[$location['location_id']];
-      if (count($offset_chain[$location['location_id']]) == 1) {
+      $location['offset_chain'] = $offset_chain[$location['id']];
+      if (count($offset_chain[$location['id']]) == 1) {
         $location['offset_chain'] = [];
       }
       foreach ($location['offset_chain'] as $key => $object_id) {
@@ -316,7 +316,7 @@ class PlanOverviewMap extends GHIBlockBase {
       }
       $country_location = $country_query->getCountry($location_id);
       if ($country_location) {
-        $geojson[$location_id] = $country_location->toArray();
+        $geojson[$location_id] = $country_location->getGeoJsonLocationData();
       }
     }
 
@@ -560,7 +560,7 @@ class PlanOverviewMap extends GHIBlockBase {
    *   Array of plan objects.
    */
   private function getPlans() {
-    $plans = $this->getPlanQuery()->getPlans();
+    $plans = $this->getPlanOverviewQuery()->getPlans();
     if (empty($plans)) {
       return $plans;
     }

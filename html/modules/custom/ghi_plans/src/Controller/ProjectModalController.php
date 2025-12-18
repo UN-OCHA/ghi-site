@@ -7,10 +7,10 @@ use Drupal\Core\Link;
 use Drupal\Core\Render\Markup;
 use Drupal\Core\Url;
 use Drupal\ghi_base_objects\Entity\BaseObjectInterface;
+use Drupal\ghi_plans\ApiObjects\Organization;
 use Drupal\ghi_plans\Entity\GoverningEntity;
 use Drupal\ghi_plans\Entity\Plan;
 use Drupal\ghi_plans\Traits\FtsLinkTrait;
-use Drupal\hpc_api\Query\EndpointQueryManager;
 use Drupal\hpc_common\Helpers\ThemeHelper;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -24,24 +24,25 @@ class ProjectModalController extends ControllerBase {
   /**
    * The endpoint query manager.
    *
+   * @var \Drupal\hpc_api\Query\FabricQueryManager
+   */
+  public $fabricQueryManager;
+
+  /**
+   * The endpoint query manager.
+   *
    * @var \Drupal\hpc_api\Query\EndpointQueryManager
    */
   public $endpointQueryManager;
 
   /**
-   * Public constructor.
-   */
-  public function __construct(EndpointQueryManager $endpoint_query_manager) {
-    $this->endpointQueryManager = $endpoint_query_manager;
-  }
-
-  /**
    * {@inheritdoc}
    */
-  public static function create(ContainerInterface $container) {
-    return new static(
-      $container->get('plugin.manager.endpoint_query_manager'),
-    );
+  public static function create(ContainerInterface $container): ProjectModalController {
+    $instance = new static();
+    $instance->fabricQueryManager = $container->get('plugin.manager.fabric_query_manager');
+    $instance->endpointQueryManager = $container->get('plugin.manager.endpoint_query_manager');
+    return $instance;
   }
 
   /**
@@ -507,10 +508,10 @@ class ProjectModalController extends ControllerBase {
    * @return \Drupal\ghi_plans\ApiObjects\Organization|null
    *   The organization object or NULL.
    */
-  private function getOrganization($organization_id) {
-    /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\OrganizationQuery $organization_query */
-    $organization_query = $this->endpointQueryManager->createInstance('organization_query');
-    return $organization_query->getOrganization($organization_id) ?? NULL;
+  private function getOrganization($organization_id): ?Organization {
+    /** @var \Drupal\ghi_plans\Plugin\FabricQuery\OrganizationQuery $organization_query */
+    $organization_query = $this->fabricQueryManager->createInstance('organization');
+    return $organization_query->getOrganization($organization_id);
   }
 
 }

@@ -4,11 +4,25 @@ namespace Drupal\ghi_base_objects\ApiObjects;
 
 use Drupal\Core\Cache\Cache;
 use Drupal\ghi_geojson\GeoJsonLocationInterface;
+use Drupal\ghi_geojson\Traits\GeoJsonLocationTrait;
 
 /**
  * Abstraction class for API location objects.
  */
 class Location extends BaseObject implements GeoJsonLocationInterface {
+
+  use GeoJsonLocationTrait;
+
+  const GRAPHQL_ITEMS = "
+    Id
+    Name
+    ISO3
+    Pcode
+    Latitude
+    Longitude
+    RecordStatus
+    ActiveUntil
+  ";
 
   /**
    * The parent country.
@@ -23,8 +37,8 @@ class Location extends BaseObject implements GeoJsonLocationInterface {
   protected function map() {
     $data = $this->getRawData();
     return (object) [
-      'location_id' => $data->id,
-      'location_name' => $data->name ?: 'Admin area ' . $data->externalId,
+      'id' => $data->id,
+      'name' => $data->name ?: 'Admin area ' . $data->externalId,
       'admin_level' => $data->adminLevel,
       'pcode' => $data->pcode,
       'iso3' => $data->iso3,
@@ -38,7 +52,7 @@ class Location extends BaseObject implements GeoJsonLocationInterface {
   /**
    * {@inheritdoc}
    */
-  public function getUuid() {
+  public function getUuid(): string {
     return md5(implode('_', [
       $this->id(),
       $this->status,
@@ -50,7 +64,7 @@ class Location extends BaseObject implements GeoJsonLocationInterface {
    * {@inheritdoc}
    */
   public function getName(): ?string {
-    return $this->location_name;
+    return $this->name;
   }
 
   /**
@@ -76,21 +90,21 @@ class Location extends BaseObject implements GeoJsonLocationInterface {
   /**
    * {@inheritdoc}
    */
-  public function getIso3() {
+  public function getIso3(): ?string {
     return $this->isCountry() ? $this->iso3 : $this->getParentCountry()?->getIso3();
   }
 
   /**
    * {@inheritdoc}
    */
-  public function getAdminLevel() {
+  public function getAdminLevel(): int {
     return $this->admin_level;
   }
 
   /**
    * {@inheritdoc}
    */
-  public function getPcode() {
+  public function getPcode(): ?string {
     return $this->pcode;
   }
 
@@ -111,7 +125,7 @@ class Location extends BaseObject implements GeoJsonLocationInterface {
    * @return array
    *   Array with 2 items: [latitude, longitude].
    */
-  public function getLatLng() {
+  public function getLatLng(): array {
     return [
       $this->getLatitude(),
       $this->getLongitude(),
@@ -149,22 +163,12 @@ class Location extends BaseObject implements GeoJsonLocationInterface {
   }
 
   /**
-   * Check if we have a geojson file for this location.
-   *
-   * @return bool
-   *   TRUE if a geojson file is there, FALSE otherwise.
-   */
-  public function hasGeoJsonFile() {
-    return $this->geojson()->getGeoJsonSourceFilePath($this) !== NULL;
-  }
-
-  /**
    * {@inheritdoc}
    */
-  public function getGeoJsonVersion() {
+  public function getGeoJsonVersion(): string {
     $version = 'current';
     if ($this->valid_on && $this->status == 'expired') {
-      $version = date('Y', $this->valid_on);
+      $version = (string) date('Y', $this->valid_on);
     }
     return $version;
   }
@@ -172,11 +176,10 @@ class Location extends BaseObject implements GeoJsonLocationInterface {
   /**
    * {@inheritdoc}
    */
-  public function toArray() {
-    $array = parent::toArray();
-    $geojson_public_path = $this->geojson()->getGeoJsonPublicFilePath($this);
-    $array['filepath'] = $geojson_public_path ? $this->fileUrlGenerator()->generate($geojson_public_path)->toString() : NULL;
-    return $array;
+  public function getGeoJsonLocationData(): array {
+    return $this->toArray() + [
+      'filepath' => $this->getGeoJsonFileUrl($this),
+    ];
   }
 
   /**
@@ -204,36 +207,6 @@ class Location extends BaseObject implements GeoJsonLocationInterface {
    */
   public function getCacheTags() {
     return Cache::mergeTags($this->cacheTags, [$this->getUuid()]);
-  }
-
-  /**
-   * Get the geojson service.
-   *
-   * @return \Drupal\ghi_geojson\GeoJson
-   *   The geojson service.
-   */
-  public static function geojson() {
-    return \Drupal::service('geojson');
-  }
-
-  /**
-   * Get the file url generator service.
-   *
-   * @return \Drupal\Core\File\FileUrlGeneratorInterface
-   *   The file url generator service.
-   */
-  public static function fileUrlGenerator() {
-    return \Drupal::service('file_url_generator');
-  }
-
-  /**
-   * Get the module handler service.
-   *
-   * @return \Drupal\Core\Extension\ModuleHandlerInterface
-   *   The module handler service.
-   */
-  public static function moduleHandler() {
-    return \Drupal::service('module_handler');
   }
 
   /**

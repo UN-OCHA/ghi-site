@@ -7,4 +7,26 @@ namespace Drupal\hpc_api\ApiObjects\Types;
  */
 class EntityType extends BaseType {
 
+  /**
+   * {@inheritdoc}
+   */
+  protected function map() {
+    $data = $this->getRawData();
+    return (object) [
+      'id' => $data->Id,
+      'name' => $data->Name,
+      'label' => $data->Alias ?? NULL,
+    ];
+  }
+
+  /**
+   * Get the label of the type.
+   *
+   * @return string
+   *   The label.
+   */
+  public function getLabel(): string {
+    return $this->label;
+  }
+
 }

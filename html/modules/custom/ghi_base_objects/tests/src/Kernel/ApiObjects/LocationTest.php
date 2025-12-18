@@ -79,8 +79,8 @@ class LocationTest extends BaseObjectKernelTestBase {
     $location = new Location($raw_data);
 
     $this->assertApiObjectBasics($location, 'location', [
-      'location_id',
-      'location_name',
+      'id',
+      'name',
       'admin_level',
       'pcode',
       'iso3',

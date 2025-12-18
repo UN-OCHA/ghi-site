@@ -50,7 +50,8 @@ class AttachmentHelper {
    *   For unsupported attachment types, an Exception is thrown.
    */
   public static function processAttachment(object $attachment) {
-    switch (strtolower($attachment->type)) {
+    $attachment_type = $attachment->type ?? ($attachment->FactType ?? NULL);
+    switch (strtolower($attachment_type)) {
       case 'caseload':
         return new CaseloadAttachment($attachment);
 
@@ -67,7 +68,7 @@ class AttachmentHelper {
         return new ContactAttachment($attachment);
 
       default:
-        throw new InvalidAttachmentTypeException(sprintf('Unknown attachment type: %s', $attachment->type));
+        throw new InvalidAttachmentTypeException(sprintf('Unknown attachment type: %s', $attachment_type));
     }
   }
 

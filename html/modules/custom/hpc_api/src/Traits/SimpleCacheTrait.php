@@ -49,11 +49,13 @@ trait SimpleCacheTrait {
    * @param array $cache_tags
    *   The cache tags to associate with this cache entry. Optional and only
    *   relevant when storing data.
+   * @param array $lifetime
+   *   Override the default site-wide cache lifetime..
    *
    * @return mixed|void
    *   Either the stored data or nothing.
    */
-  public function cache($cache_key, $data = NULL, $reset = FALSE, $cache_base_time = NULL, $cache_tags = []) {
+  public function cache($cache_key, $data = NULL, $reset = FALSE, $cache_base_time = NULL, $cache_tags = [], $lifetime = NULL) {
     $cache_store = &drupal_static(get_called_class() . '::' . __FUNCTION__, []);
 
     if ($data === NULL && $reset === TRUE) {
@@ -78,7 +80,7 @@ trait SimpleCacheTrait {
 
     // Store data in the cache.
     $cache_store[$cache_key] = $data;
-    $expiration_time = self::getRequestTime() + self::getCacheLifetime();
+    $expiration_time = self::getRequestTime() + ($lifetime ?? self::getCacheLifetime());
     self::cacheBackend()->set($cache_key, $data, $expiration_time, $cache_tags);
     return $cache_store[$cache_key];
   }

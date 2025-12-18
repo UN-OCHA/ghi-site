@@ -3,14 +3,15 @@
 namespace Drupal\ghi_base_objects\ApiObjects;
 
 use Drupal\Core\Cache\Cache;
-use Drupal\Core\File\FileUrlGeneratorInterface;
-use Drupal\ghi_geojson\GeoJson;
 use Drupal\ghi_geojson\GeoJsonLocationInterface;
+use Drupal\ghi_geojson\Traits\GeoJsonLocationTrait;
 
 /**
  * Abstraction class for API country objects.
  */
 class Country extends BaseObject implements GeoJsonLocationInterface {
+
+  use GeoJsonLocationTrait;
 
   const GRAPHQL_ITEMS = "
     Id
@@ -41,7 +42,7 @@ class Country extends BaseObject implements GeoJsonLocationInterface {
   /**
    * {@inheritdoc}
    */
-  public function getUuid() {
+  public function getUuid(): string {
     return md5(implode('_', [
       $this->id(),
       $this->status,
@@ -52,7 +53,7 @@ class Country extends BaseObject implements GeoJsonLocationInterface {
   /**
    * {@inheritdoc}
    */
-  public function getIso3(): string {
+  public function getIso3(): ?string {
     return $this->map->iso3;
   }
 
@@ -66,7 +67,7 @@ class Country extends BaseObject implements GeoJsonLocationInterface {
   /**
    * {@inheritdoc}
    */
-  public function getPcode(): string {
+  public function getPcode(): ?string {
     return $this->map->pcode;
   }
 
@@ -81,22 +82,12 @@ class Country extends BaseObject implements GeoJsonLocationInterface {
   }
 
   /**
-   * Check if we have a geojson file for this location.
-   *
-   * @return bool
-   *   TRUE if a geojson file is there, FALSE otherwise.
-   */
-  public function hasGeoJsonFile(): bool {
-    return $this->geojson()->getGeoJsonSourceFilePath($this) !== NULL;
-  }
-
-  /**
    * {@inheritdoc}
    */
-  public function getGeoJsonVersion() {
+  public function getGeoJsonVersion(): string {
     $version = 'current';
     if ($this->valid_on && $this->status == 'expired') {
-      $version = date('Y', $this->valid_on);
+      $version = (string) date('Y', $this->valid_on);
     }
     return $version;
   }
@@ -104,11 +95,10 @@ class Country extends BaseObject implements GeoJsonLocationInterface {
   /**
    * {@inheritdoc}
    */
-  public function toArray(): array {
-    $array = parent::toArray();
-    $geojson_public_path = $this->geojson()->getGeoJsonPublicFilePath($this);
-    $array['filepath'] = $geojson_public_path ? $this->fileUrlGenerator()->generate($geojson_public_path)->toString() : NULL;
-    return $array;
+  public function getGeoJsonLocationData(): array {
+    return $this->toArray() + [
+      'filepath' => $this->getGeoJsonFileUrl($this),
+    ];
   }
 
   /**
@@ -116,26 +106,6 @@ class Country extends BaseObject implements GeoJsonLocationInterface {
    */
   public function getCacheTags(): array {
     return Cache::mergeTags($this->cacheTags, [$this->getUuid()]);
-  }
-
-  /**
-   * Get the geojson service.
-   *
-   * @return \Drupal\ghi_geojson\GeoJson
-   *   The geojson service.
-   */
-  public static function geojson(): GeoJson {
-    return \Drupal::service('geojson');
-  }
-
-  /**
-   * Get the file url generator service.
-   *
-   * @return \Drupal\Core\File\FileUrlGeneratorInterface
-   *   The file url generator service.
-   */
-  public static function fileUrlGenerator(): FileUrlGeneratorInterface {
-    return \Drupal::service('file_url_generator');
   }
 
 }

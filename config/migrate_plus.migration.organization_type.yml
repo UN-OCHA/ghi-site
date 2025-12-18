@@ -14,6 +14,8 @@ migration_tags:
 migration_group: hpc_fabric_api
 label: 'Organization type categories from the Fabric API'
 source:
+  include_raw_data: true
+  track_changes: true
   fabric_query:
     plugin: organization_type_import
   fields:

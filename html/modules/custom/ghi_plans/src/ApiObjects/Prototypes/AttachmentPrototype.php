@@ -1,6 +1,6 @@
 <?php
 
-namespace Drupal\ghi_plans\ApiObjects\AttachmentPrototype;
+namespace Drupal\ghi_plans\ApiObjects\Prototypes;
 
 use Drupal\hpc_api\ApiObjects\ApiObjectBase;
 use Drupal\hpc_common\Helpers\StringHelper;
@@ -9,6 +9,19 @@ use Drupal\hpc_common\Helpers\StringHelper;
  * Abstraction for API attachment prototype objects.
  */
 class AttachmentPrototype extends ApiObjectBase {
+
+  const GRAPHQL_ITEMS = "
+    Id
+    RefCode
+    Type
+    Value
+    PlanId
+    CreatedAt
+    UpdatedAt
+    RecordStatus
+    Source
+    SourceId
+  ";
 
   const DATA_TYPES = [
     'indicator',
@@ -28,10 +41,11 @@ class AttachmentPrototype extends ApiObjectBase {
    * {@inheritdoc}
    */
   protected function map() {
-    $prototype = $this->getRawData();
-    $metric_fields = $prototype->value->metrics ?? [];
-    $measurement_fields = $prototype->value->measureFields ?? [];
-    $calculated_fields = $prototype->value->calculatedFields ?? [];
+    $data = $this->getRawData();
+    $value = json_decode($data->Value ?? '');
+    $metric_fields = $value->metrics ?? [];
+    $measurement_fields = $value->measureFields ?? [];
+    $calculated_fields = $value->calculatedFields ?? [];
     if (count($calculated_fields) == 1 && is_array($calculated_fields[0])) {
       $calculated_fields = reset($calculated_fields);
     }
@@ -42,17 +56,17 @@ class AttachmentPrototype extends ApiObjectBase {
       $calculated_fields,
     );
     return (object) [
-      'id' => $prototype->id,
-      'name' => $prototype->value->name->en,
-      'ref_code' => $prototype->refCode,
-      'type' => strtolower($prototype->type),
+      'id' => $data->Id,
+      'name' => $value->name->en,
+      'ref_code' => $data->RefCode,
+      'type' => strtolower($data->Type),
       'fields' => array_map(function ($item) {
         return $item->name->en;
       }, $all_fields),
       'field_types' => array_map(function ($item) {
         return StringHelper::camelCaseToUnderscoreCase($item->type);
       }, $all_fields ?? []),
-      'entity_ref_codes' => $prototype->value->entities ?? [],
+      'entity_ref_codes' => $value->entities ?? [],
       'metric_fields' => array_map(function ($item) {
         return $item->name->en;
       }, $metric_fields),
@@ -65,7 +79,7 @@ class AttachmentPrototype extends ApiObjectBase {
       'original_fields' => $all_fields,
       'calculation_methods' => array_map(function ($item) {
         return strtolower($item);
-      }, $prototype->value->calculationMethod ?? []),
+      }, $value->calculationMethod ?? []),
     ];
   }
 

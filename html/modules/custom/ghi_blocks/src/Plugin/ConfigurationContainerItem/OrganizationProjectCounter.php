@@ -57,8 +57,8 @@ class OrganizationProjectCounter extends ConfigurationContainerItemPluginBase {
   /**
    * {@inheritdoc}
    */
-  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
-    /** @var \Drupal\ghi_blocks\Plugin\ConfigurationContainerItem\OrganizationProjectCounter $instance */
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition): OrganizationProjectCounter {
+    /** @var self $instance */
     $instance = parent::create($container, $configuration, $plugin_id, $plugin_definition);
     $instance->planEntitiesQuery = $instance->endpointQueryManager->createInstance('plan_entities_query');
     $instance->projectSearchQuery = $instance->endpointQueryManager->createInstance('plan_project_search_query');

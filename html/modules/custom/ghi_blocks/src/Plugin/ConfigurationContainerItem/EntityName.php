@@ -34,8 +34,8 @@ class EntityName extends ConfigurationContainerItemPluginBase {
   /**
    * {@inheritdoc}
    */
-  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
-    /** @var \Drupal\ghi_blocks\Plugin\ConfigurationContainerItem\EntityName $instance */
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition): EntityName {
+    /** @var self $instance */
     $instance = parent::create($container, $configuration, $plugin_id, $plugin_definition);
     $instance->iconQuery = $instance->endpointQueryManager->createInstance('icon_query');
     return $instance;
@@ -63,7 +63,7 @@ class EntityName extends ConfigurationContainerItemPluginBase {
     // This should work for Api entity objects.
     if ($entity instanceof EntityObjectInterface) {
       /** @var \Drupal\ghi_plans\ApiObjects\Entities\EntityObjectInterface $entity */
-      return $entity->getEntityName();
+      return $entity->getDisplayName();
     }
     return $entity->name ?? NULL;
   }

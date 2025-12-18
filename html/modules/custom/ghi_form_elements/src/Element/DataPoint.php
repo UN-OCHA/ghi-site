@@ -105,7 +105,7 @@ class DataPoint extends FormElementBase {
     $attachment = $element['#attachment'];
     /** @var \Drupal\ghi_plans\Entity\Plan $plan_object */
     $plan_object = $element['#plan_object'] ?? NULL;
-    /** @var \Drupal\ghi_plans\ApiObjects\AttachmentPrototype\AttachmentPrototype $attachment_prototype */
+    /** @var \Drupal\ghi_plans\ApiObjects\Prototypes\AttachmentPrototype $attachment_prototype */
     $attachment_prototype = $attachment ? $attachment->prototype : $element['#attachment_prototype'];
     if (empty($attachment) && empty($attachment_prototype)) {
       return $element;

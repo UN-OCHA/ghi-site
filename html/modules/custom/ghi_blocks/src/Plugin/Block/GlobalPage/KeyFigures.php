@@ -19,7 +19,7 @@ use Drupal\hpc_common\Helpers\CommonHelper;
  *  admin_label = @Translation("Key figures"),
  *  category = @Translation("Global"),
  *  data_sources = {
- *    "plans" = "hpc_api:plan_overview_query",
+ *    "plans_overview" = "hpc_api:plan_overview_query",
  *  },
  *  context_definitions = {
  *    "node" = @ContextDefinition("entity:node", label = @Translation("Node"), required = FALSE),
@@ -62,10 +62,10 @@ class KeyFigures extends GHIBlockBase implements MultiStepFormBlockInterface {
       ],
       'expectedReach' => 'Expected reach',
     ];
-    $plan_query = $this->getPlanQuery();
-    $caseload_values = $plan_query->getCaseloadTotalValues($types);
-    $affected_countries = $plan_query->getNumerOfGhoCountries();
-    $gho_plans = count($plan_query->getGhoPlans());
+    $plan_overview_query = $this->getPlanOverviewQuery();
+    $caseload_values = $plan_overview_query->getCaseloadTotalValues($types);
+    $affected_countries = $plan_overview_query->getNumerOfGhoCountries();
+    $gho_plans = count($plan_overview_query->getGhoPlans());
     return [
       'total_funding' => $funding,
       'total_requirements' => $requirements,

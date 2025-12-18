@@ -3,46 +3,67 @@
 namespace Drupal\ghi_plans\ApiObjects\Entities;
 
 use Drupal\ghi_plans\Helpers\PlanEntityHelper;
-use Drupal\hpc_api\Helpers\ApiEntityHelper;
 
 /**
  * Abstraction class for API plan entity objects.
  */
 class PlanEntity extends EntityObjectBase {
 
+  const GRAPHQL_ITEMS = "
+    Id
+    Name
+    Description
+    PlanId
+    EntityTypeId
+    CoordinationEntityId
+    HpcEntityPrototypeId
+    CustomReference
+    ComposedReference
+    SortOrder
+  ";
+
   /**
    * {@inheritdoc}
    */
   protected function map() {
-    $entity = $this->getRawData();
-    $entity_version = $this->getEntityVersion();
-    $prototype = $entity?->entityPrototype;
+    $data = $this->getRawData();
+    $prototype = !empty($data->HpcEntityPrototypeId ?? NULL) ? PlanEntityHelper::getEntityPrototype($data->HpcEntityPrototypeId) : NULL;
 
     return (object) [
-      'id' => $entity?->id,
-      'name' => $prototype ? $prototype->value->name->en->singular : NULL,
-      'singular_name' => $prototype ? $prototype->value->name->en->singular : NULL,
-      'plural_name' => $prototype ? $prototype->value->name->en->plural : NULL,
-      'group_name' => $prototype ? $prototype->value->name->en->plural : NULL,
-      'display_name' => $prototype ? ($prototype->value->name->en->singular . ' ' . $entity_version?->customReference) : NULL,
-      'description' => $entity_version?->value?->description,
-      // Need to cast to array until HPC-6440 is fixed.
-      'support' => !empty($entity_version->value->support) ? (array) $entity_version->value->support : NULL,
-      'ref_code' => $prototype ? $prototype->refCode : NULL,
-      'entity_type' => $prototype ? $prototype->type : NULL,
-      'entity_prototype_id' => $prototype ? $prototype->id : NULL,
-      'order_number' => $prototype ? $prototype->orderNumber : NULL,
+      'id' => $data->Id,
+      'name' => $prototype?->getNameSingular(),
+      'group_name' => $prototype?->getNamePlural(),
+      'display_name' => $prototype?->getNameSingular(),
+      'singular_name' => implode(' ', array_filter([$prototype?->getNameSingular(), $data->CustomReference])),
+      'plural_name' => $prototype?->getNamePlural(),
+      'description' => $data->Name,
+      // @codingStandardsIgnoreStart
+      // @todo Retrieve and store the support information.
+      // 'support' => !empty($_entity_version->value->support) ? (array) $_entity_version->value->support : NULL,
+      // @codingStandardsIgnoreEnd
+      'ref_code' => $prototype?->getRefCode(),
+      'entity_type' => $prototype?->getType(),
+      'entity_prototype_id' => $prototype?->id(),
+      'order_number' => $data->SortOrder ?? $prototype?->getOrderNumber(),
       'parent_id' => $this->getParentId(),
-      'governing_entity_parent_id' => $entity->parentId ?? NULL,
-      'root_parent_id' => $this->getMainLevelParentId(),
-      'custom_reference' => $entity_version?->customReference,
-      'composed_reference' => $this->getComposedReference(),
-      'sort_key' => $prototype ? ($prototype->orderNumber . $entity_version?->customReference) : NULL,
-      'tags' => $entity_version?->tags ?? [],
+      'governing_entity_parent_id' => $data->CoordinationEntityId ?? NULL,
+      'custom_reference' => $data->CustomReference,
+      'composed_reference' => $data->ComposedReference ?: ($prototype?->getRefCode() . $data->CustomReference),
+      'sort_key' => $data->SortOrder ?? (($prototype?->getOrderNumber() ?? '') . ($data->CustomReference) ?? NULL),
 
       // Legacy support.
-      'custom_id' => $entity_version?->customReference,
+      'custom_id' => $data->CustomReference,
     ];
+  }
+
+  /**
+   * Get the governing entity parent of an entity.
+   *
+   * @return int|null
+   *   The id of the governing entity parent.
+   */
+  public function getGoverningEntityParentId(): ?int {
+    return $this->governing_entity_parent_id;
   }
 
   /**
@@ -134,56 +155,10 @@ class PlanEntity extends EntityObjectBase {
   }
 
   /**
-   * Get the main level parent id.
-   *
-   * @return int
-   *   The id of the main parent.
-   */
-  public function getMainLevelParentId() {
-    $entity = $this->getRawData();
-    if (!$entity) {
-      return NULL;
-    }
-    $entity_version = $this->getEntityVersion($entity);
-    if (in_array($entity->entityPrototype->refCode, ApiEntityHelper::MAIN_LEVEL_PLE_REF_CODES) || empty($entity_version->value->support)) {
-      return NULL;
-    }
-    $support = $entity_version?->value?->support;
-    $support = is_array($support) ? reset($support) : $support;
-    $plan_entity_ids = $support?->planEntityIds ?? [];
-    return reset($plan_entity_ids);
-  }
-
-  /**
    * {@inheritdoc}
    */
   public function getEntityVersion() {
-    return $this->getRawData()?->planEntityVersion;
-  }
-
-  /**
-   * Get the composed reference for a plan entity object.
-   *
-   * @return string
-   *   The composed reference string.
-   */
-  protected function getComposedReference() {
-    $entity = $this->getRawData();
-    if (!$entity) {
-      return '';
-    }
-    if (property_exists($entity, 'composedReference')) {
-      return $entity->composedReference;
-    }
-    $prototype = $entity->entityPrototype;
-    return $prototype->refCode . $this->getEntityVersion()->customReference;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function getEntityName() {
-    return $this->display_name;
+    return $this->getRawData()->planEntityVersion ?? NULL;
   }
 
   /**
@@ -210,7 +185,7 @@ class PlanEntity extends EntityObjectBase {
    * @return \Drupal\ghi_plans\ApiObjects\Entities\GoverningEntity|null
    *   The parent governing entity if found or NULL otherwise.
    */
-  public function getParentGoverningEntity($recursion = FALSE) {
+  public function getParentGoverningEntity($recursion = FALSE): ?GoverningEntity {
     if ($entity_id = $this->governing_entity_parent_id ?? NULL) {
       $entity = PlanEntityHelper::getGoverningEntity($entity_id);
       return $entity instanceof GoverningEntity ? $entity : NULL;
@@ -225,6 +200,7 @@ class PlanEntity extends EntityObjectBase {
         return $entity;
       }
     }
+    return NULL;
   }
 
 }

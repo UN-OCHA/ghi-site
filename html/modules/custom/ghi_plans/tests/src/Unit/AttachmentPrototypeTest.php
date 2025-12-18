@@ -2,7 +2,7 @@
 
 namespace Drupal\Tests\ghi_plans\Unit;
 
-use Drupal\ghi_plans\ApiObjects\AttachmentPrototype\AttachmentPrototype;
+use Drupal\ghi_plans\ApiObjects\Prototypes\AttachmentPrototype;
 
 /**
  * Tests for API attachment prototype objects.
@@ -129,7 +129,7 @@ class AttachmentPrototypeTest extends ApiObjectTestBase {
    * @param string $type
    *   The type of the attachment prototype.
    *
-   * @return \Drupal\ghi_plans\ApiObjects\AttachmentPrototype\AttachmentPrototype
+   * @return \Drupal\ghi_plans\ApiObjects\Prototypes\AttachmentPrototype
    *   The attachment prototype object.
    */
   private function getAttachmentPrototypeFromFixture($type) {

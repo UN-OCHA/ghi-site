@@ -70,7 +70,8 @@ class ProjectCounter extends ConfigurationContainerItemPluginBase {
   /**
    * {@inheritdoc}
    */
-  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition): ProjectCounter {
+    /** @var self $instance */
     $instance = parent::create($container, $configuration, $plugin_id, $plugin_definition);
     $instance->planEntitiesQuery = $instance->endpointQueryManager->createInstance('plan_entities_query');
     $instance->projectSearchQuery = $instance->endpointQueryManager->createInstance('plan_project_search_query');

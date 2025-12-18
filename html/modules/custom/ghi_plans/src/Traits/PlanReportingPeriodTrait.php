@@ -67,7 +67,7 @@ trait PlanReportingPeriodTrait {
    * @return int
    *   The id of the latest published reporting period.
    */
-  public static function getLatestPublishedReportingPeriod($plan_id) {
+  public static function getLatestPublishedReportingPeriod(int $plan_id) {
     /** @var \Drupal\ghi_plans\Plugin\FabricQuery\PlanQuery $query */
     $query = self::getFabricQueryManager()->createInstance('plan');
     if (!$query) {

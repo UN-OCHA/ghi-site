@@ -13,7 +13,7 @@ use Drupal\ghi_base_objects\Entity\BaseObjectAwareEntityInterface;
 use Drupal\ghi_base_objects\Helpers\BaseObjectHelper;
 use Drupal\ghi_blocks\Traits\AttachmentTableTrait;
 use Drupal\ghi_plan_clusters\Entity\PlanCluster;
-use Drupal\ghi_plans\ApiObjects\AttachmentPrototype\AttachmentPrototype;
+use Drupal\ghi_plans\ApiObjects\Prototypes\AttachmentPrototype;
 use Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment;
 use Drupal\ghi_plans\ApiObjects\Plan as ApiObjectsPlan;
 use Drupal\ghi_plans\ApiObjects\PlanEntityInterface;
@@ -425,7 +425,7 @@ class LogframeManager implements ContainerInjectionInterface {
   /**
    * Build caseload columns for an attachment prototype.
    *
-   * @param \Drupal\ghi_plans\ApiObjects\AttachmentPrototype\AttachmentPrototype $attachment_prototype
+   * @param \Drupal\ghi_plans\ApiObjects\Prototypes\AttachmentPrototype $attachment_prototype
    *   The attachment prototype.
    * @param \Drupal\ghi_plans\Entity\Plan $plan
    *   The plan object that the attachment prototype belongs to.
@@ -515,7 +515,7 @@ class LogframeManager implements ContainerInjectionInterface {
   /**
    * Build indicator columns for an attachment prototype.
    *
-   * @param \Drupal\ghi_plans\ApiObjects\AttachmentPrototype\AttachmentPrototype $attachment_prototype
+   * @param \Drupal\ghi_plans\ApiObjects\Prototypes\AttachmentPrototype $attachment_prototype
    *   The attachment prototype.
    * @param \Drupal\ghi_plans\Entity\Plan $plan
    *   The plan object that the attachment prototype belongs to.
@@ -662,13 +662,13 @@ class LogframeManager implements ContainerInjectionInterface {
    * @param \Drupal\ghi_plans\Entity\Plan $plan
    *   The plan base object.
    *
-   * @return \Drupal\ghi_plans\ApiObjects\PlanPrototype
+   * @return \Drupal\ghi_plans\ApiObjects\Prototypes\PlanPrototype
    *   The prototype for the plan.
    */
   private function getPlanPrototype(Plan $plan) {
-    /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\PlanPrototypeQuery $prototype_query */
-    $prototype_query = $this->endpointQueryManager->createInstance('plan_prototype_query');
-    return $prototype_query->getPrototype($plan->getSourceId());
+    /** @var \Drupal\ghi_plans\Plugin\FabricQuery\EntityPrototypeQuery $prototype_query */
+    $prototype_query = $this->fabricQueryManager->createInstance('entity_prototype');
+    return $prototype_query->getPlanPrototype($plan->getSourceId());
   }
 
   /**
@@ -691,7 +691,7 @@ class LogframeManager implements ContainerInjectionInterface {
     ];
     foreach ($prototype->getEntityPrototypes() as $entity_prototype) {
       $ref_code = $entity_prototype->getRefCode();
-      $entity_types[$ref_code] = $entity_prototype->getPluralName();
+      $entity_types[$ref_code] = $entity_prototype->getNamePlural();
     }
     if (!empty(self::EXCLUDE_ENTITY_TYPES)) {
       $entity_types = array_diff_key($entity_types, array_flip(self::EXCLUDE_ENTITY_TYPES));
@@ -732,10 +732,9 @@ class LogframeManager implements ContainerInjectionInterface {
       }
     }
 
-    /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\PlanEntitiesQuery $query */
-    $query = $this->endpointQueryManager->createInstance('plan_entities_query');
-    $query->setPlaceholder('plan_id', $base_object->getSourceId());
-    $entities = $entities + ($query->getPlanEntities($base_object, NULL, $filter) ?? []);
+    /** @var \Drupal\ghi_plans\Plugin\FabricQuery\PlanEntityQuery $query */
+    $query = $this->fabricQueryManager->createInstance('plan_entity');
+    $entities = $entities + ($query->getPlanEntities($base_object->getSourceId(), $base_object, NULL, $filter) ?? []);
     // This should give us only PlanEntity objects, but let's make sure.
     $entities = is_array($entities) ? array_filter($entities, function ($entity) {
       return $entity instanceof PlanEntityInterface;
@@ -751,7 +750,7 @@ class LogframeManager implements ContainerInjectionInterface {
    * @param string $ref_code
    *   The entity ref code.
    *
-   * @return \Drupal\ghi_plans\ApiObjects\AttachmentPrototype\AttachmentPrototype[]
+   * @return \Drupal\ghi_plans\ApiObjects\Prototypes\AttachmentPrototype[]
    *   An array of attachment prototypes.
    */
   private function getAttachmentPrototypesForEntityRefCode(LogframeSubpage $node, $ref_code) {
@@ -764,8 +763,8 @@ class LogframeManager implements ContainerInjectionInterface {
     if (!$plan_id) {
       return [];
     }
-    /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\PlanAttachmentPrototypeQuery $query */
-    $query = $this->endpointQueryManager->createInstance('plan_attachment_prototype_query');
+    /** @var \Drupal\ghi_plans\Plugin\FabricQuery\AttachmentPrototypeQuery $query */
+    $query = $this->fabricQueryManager->createInstance('attachment_prototype');
     $attachment_prototypes = $query->getDataPrototypesForPlan($plan_id);
     return $this->filterAttachmentPrototypesByEntityRefCodes($attachment_prototypes, [$ref_code]);
   }

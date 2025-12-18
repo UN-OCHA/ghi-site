@@ -1,11 +1,11 @@
 <?php
 
-namespace Drupal\ghi_plans\ApiObjects;
+namespace Drupal\ghi_plans\ApiObjects\Prototypes;
 
 use Drupal\ghi_base_objects\ApiObjects\BaseObject;
 
 /**
- * Abstraction class for API plan prototype objects.
+ * Abstraction class for plan prototype objects.
  */
 class PlanPrototype extends BaseObject {
 
@@ -17,14 +17,12 @@ class PlanPrototype extends BaseObject {
    */
   protected function map() {
     $data = $this->getRawData();
-
-    $plan_id = reset($data)->planId;
+    $plan_id = reset($data)->PlanId;
     $items = [];
     foreach ($data as $item) {
-      $items[$item->orderNumber] = new EntityPrototype($item);
+      $items[$item->OrderNumber ?? $item->Id] = new EntityPrototype($item);
     }
     ksort($items);
-
     return (object) [
       'plan_id' => $plan_id,
       'items' => $items,
@@ -35,7 +33,7 @@ class PlanPrototype extends BaseObject {
   /**
    * Get the entity prototypes that make up this plan prototype.
    *
-   * @return \Drupal\ghi_plans\ApiObjects\EntityPrototype[]
+   * @return \Drupal\ghi_plans\ApiObjects\Prototypes\EntityPrototype[]
    *   An array of entity prototypes.
    */
   public function getEntityPrototypes() {

@@ -16,7 +16,7 @@ class Plan extends BaseObject implements PlanEntityInterface {
 
   const ENTITY_REF_CODE = 'PL';
 
-  const GRAPHQL_ITEMS = "
+  const GRAPHQL_ITEMS = '
     Id
     Name
     ShortName
@@ -32,8 +32,9 @@ class Plan extends BaseObject implements PlanEntityInterface {
     IsPartOfGHO
     DocumentPublishDate
     Description
+    FocusedLocationName
     period (
-      filter: { PeriodType: { eq: \"Year\" } },
+      filter: { PeriodType: { eq: "Year" } },
       orderBy: { CalendarYear: ASC },
       first: 1
     ) {
@@ -42,16 +43,9 @@ class Plan extends BaseObject implements PlanEntityInterface {
       }
     }
     location {
-      items {
-        Id
-        Name
-        ISO3
-        Latitude
-        Longitude
-      }
+      items { ' . Country::GRAPHQL_ITEMS . ' }
     }
-    FocusedLocationName
-  ";
+  ';
 
   /**
    * Map the raw data.
@@ -65,20 +59,16 @@ class Plan extends BaseObject implements PlanEntityInterface {
   protected function map() {
     $data = $this->getRawData();
     // Make sure we have proper objects for the plan types.
-    /** @var \Drupal\hpc_api\ApiObjects\Types\PlanType[] $plan_types */
-    $plan_types = array_filter($data->PlanTypes ?? [], fn ($item): bool => $item instanceof PlanType);
-    /** @var \Drupal\hpc_api\ApiObjects\Types\PlanClusterType[] $plan_costing_types */
-    $plan_costing_types = array_filter($data->PlanCostingTypes ?? [], fn ($item): bool => $item instanceof PlanCostingType);
     return (object) [
-      'id' => $data->HpcId,
+      'id' => $data->Id,
       'name' => $data->Name,
-      'year' => $data->period->items[0]->CalendarYear ?? NULL,
+      'year' => $data->period?->items[0]->CalendarYear ?? NULL,
       'short_name' => $data->ShortName ?? NULL,
       'subtitle' => $data->PlanSubTitle ?? NULL,
-      'description' => $data->Description ?? NULL,
-      'plan_type' => count($plan_types) ? reset($plan_types)->getName() : NULL,
+      'comments' => $data->Description ?? NULL,
+      'plan_type' => $data->PlanType,
       'plan_cluster_type' => $data->PlanClusterType ?? NULL,
-      'plan_costing_type' => count($plan_costing_types) ? reset($plan_costing_types)->getName() : NULL,
+      'plan_costing_type' => $data->PlanCosting,
       'start_date' => $data->StartDate ? $this->reformatDate($data->StartDate) : NULL,
       'end_date' => $data->EndDate ? $this->reformatDate($data->EndDate) : NULL,
       'document_published_date' => $data->DocumentPublishDate ? $this->reformatDate($data->DocumentPublishDate) : NULL,
@@ -87,31 +77,9 @@ class Plan extends BaseObject implements PlanEntityInterface {
       'is_restricted' => $data->IsRestricted ?? FALSE,
       'is_part_of_gho' => $data->IsPartOfGHO ?? FALSE,
       'langcode' => $data->PlanLanguageCode ?? 'en',
-      'countries' => array_map(fn ($item) => new Country($item), $data->location->items ?? []),
+      'countries' => array_map(fn ($item) => new Country($item), $data->location?->items ?? []),
       'focus_country' => $data->FocusCountry,
     ];
-  }
-
-  /**
-   * Get the graphql query for fetching a plan.
-   *
-   * @param int $plan_id
-   *   The plan id.
-   *
-   * @return string
-   *   The graphql query payload for loading plan data.
-   */
-  public static function getGraphQlQuery(int $plan_id): string {
-    return "
-      {
-        plans (filter:  {
-          HpcId:  {
-            eq: {$plan_id}
-          }
-        }) {
-          items { {${self::GRAPHQL_ITEMS} }
-        }
-      }";
   }
 
   /**
@@ -186,7 +154,14 @@ class Plan extends BaseObject implements PlanEntityInterface {
    * {@inheritdoc}
    */
   public function getDescription(): ?string {
-    return $this->map->description;
+    return $this->getName();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getComments(): ?string {
+    return $this->map->comments;
   }
 
   /**

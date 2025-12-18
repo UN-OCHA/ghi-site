@@ -3,9 +3,7 @@
 namespace Drupal\hpc_api\Controller;
 
 use Drupal\Core\Controller\ControllerBase;
-use Drupal\Core\File\FileSystem;
 use Symfony\Component\DependencyInjection\ContainerInterface;
-use Symfony\Component\HttpFoundation\RequestStack;
 
 /**
  * Controller class for a listing files and a delete callback.
@@ -27,21 +25,13 @@ abstract class BaseFileReportController extends ControllerBase {
   protected $stack;
 
   /**
-   * Public constructor.
-   */
-  public function __construct(FileSystem $file_system, RequestStack $stack) {
-    $this->fileSystem = $file_system;
-    $this->stack = $stack;
-  }
-
-  /**
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container) {
-    return new static(
-      $container->get('file_system'),
-      $container->get('request_stack'),
-    );
+    $instance = new static();
+    $instance->fileSystem = $container->get('file_system');
+    $instance->stack = $container->get('request_stack');
+    return $instance;
   }
 
   /**

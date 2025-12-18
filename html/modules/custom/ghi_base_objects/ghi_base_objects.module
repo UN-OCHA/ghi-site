@@ -12,6 +12,7 @@ use Drupal\Core\Plugin\Context\EntityContext;
 use Drupal\Core\Render\Element;
 use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\ghi_base_objects\Entity\BaseObject;
+use Drupal\ghi_base_objects\Entity\Country;
 use Drupal\ghi_base_objects\Helpers\BaseObjectHelper;
 use Drupal\hpc_common\Helpers\RequestHelper;
 use Drupal\layout_builder\SectionStorageInterface;
@@ -30,6 +31,14 @@ function ghi_base_objects_help($route_name, RouteMatchInterface $route_match) {
 
     default:
   }
+}
+
+/**
+ * Implements hook_entity_bundle_info_alter().
+ */
+function ghi_base_objects_entity_bundle_info_alter(array &$bundles) {
+  $bundles['base_object'][Country::BUNDLE]['class'] = Country::class;
+  $bundles['base_object'][Country::BUNDLE]['label'] = t('Country');
 }
 
 /**

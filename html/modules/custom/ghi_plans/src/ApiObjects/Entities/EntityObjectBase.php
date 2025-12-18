@@ -5,7 +5,6 @@ namespace Drupal\ghi_plans\ApiObjects\Entities;
 use Drupal\ghi_plans\ApiObjects\PlanEntityInterface;
 use Drupal\hpc_api\ApiObjects\ApiObjectBase;
 use Drupal\hpc_api\Helpers\ArrayHelper;
-use Drupal\hpc_api\Query\EndpointQuery;
 
 /**
  * Base class for API entity objects.
@@ -37,6 +36,13 @@ abstract class EntityObjectBase extends ApiObjectBase implements EntityObjectInt
   /**
    * {@inheritdoc}
    */
+  public function getDisplayName() {
+    return $this->display_name;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function getCustomName($type) {
     switch ($type) {
       case 'custom_id':
@@ -53,7 +59,7 @@ abstract class EntityObjectBase extends ApiObjectBase implements EntityObjectInt
   /**
    * {@inheritdoc}
    */
-  public function getDescription() {
+  public function getDescription(): ?string {
     return $this->description;
   }
 
@@ -62,6 +68,13 @@ abstract class EntityObjectBase extends ApiObjectBase implements EntityObjectInt
    */
   public function getEntityTypeRefCode() {
     return $this->ref_code;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getComposedReference() {
+    return $this->composed_reference;
   }
 
   /**
@@ -81,9 +94,9 @@ abstract class EntityObjectBase extends ApiObjectBase implements EntityObjectInt
   /**
    * {@inheritdoc}
    */
-  public function addChild($entity) {
-    $this->children[$entity->id] = $entity;
-    ArrayHelper::sortObjectsByStringProperty($this->children, 'sort_key', EndpointQuery::SORT_ASC);
+  public function addChild(EntityObjectInterface $entity) {
+    $this->children[$entity->id()] = $entity;
+    ArrayHelper::sortObjectsByStringProperty($this->children, 'sort_key');
   }
 
   /**
@@ -113,7 +126,7 @@ abstract class EntityObjectBase extends ApiObjectBase implements EntityObjectInt
    * {@inheritdoc}
    */
   public function getPlanId() {
-    return $this->getRawData()->planId;
+    return $this->getRawData()->plan?->Id ?? NULL;
   }
 
 }

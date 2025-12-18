@@ -2,9 +2,10 @@
 
 namespace Drupal\ghi_plans\Helpers;
 
-use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\ghi_plans\ApiObjects\Entities\PlanEntity;
-use Drupal\ghi_plans\ApiObjects\PlanPrototype;
+use Drupal\ghi_plans\Entity\Plan;
+use Drupal\ghi_plans\Plugin\FabricQuery\EntityPrototypeQuery;
+use Drupal\ghi_plans\Plugin\FabricQuery\PlanEntityQuery;
 use Drupal\hpc_api\Helpers\ApiEntityHelper;
 
 /**
@@ -15,37 +16,30 @@ use Drupal\hpc_api\Helpers\ApiEntityHelper;
 class PlanStructureHelper {
 
   /**
-   * Retrieve the plan entity structure based on the given plan data.
+   * Retrieve the plan entity structure based on the given plan id.
    *
-   * @param object $plan_data
-   *   The full plan data object from the API.
+   * @param int $plan_id
+   *   The plan id.
    *
    * @return \Drupal\ghi_plans\ApiObjects\Entities\EntityObjectInterface[]
    *   An array of API entity objects.
    */
-  public static function getPlanEntityStructure($plan_data) {
+  public static function getPlanEntityStructure(int $plan_id) {
 
-    $plan_entities = PlanEntityHelper::getPlanEntityObjects($plan_data);
-    $governing_entities = PlanEntityHelper::getGoverningEntityObjects($plan_data);
+    $plan_entity_query = self::getPlanEntityQuery();
+    $plan_entities = $plan_entity_query->getPlanEntities($plan_id, NULL, 'plan');
+    $governing_entities = $plan_entity_query->getPlanEntities($plan_id, NULL, 'governing');
 
     $remove_ids = [];
     $ple_structure = [];
     if (!empty($plan_entities)) {
       foreach ($plan_entities as $entity_id => $plan_entity) {
+        /** @var \Drupal\ghi_plans\ApiObjects\Entities\PlanEntity $plan_entity */
         // First see if this PLE is actually a child of a GVE. If so, put it
         // there.
-        if (!empty($plan_entity->parent_id) && !empty($governing_entities[$plan_entity->parent_id])) {
-          $governing_entities[$plan_entity->parent_id]->addChild($plan_entity);
-          $remove_ids[] = $entity_id;
-        }
-        elseif ($plan_entity->root_parent_id) {
-          // This PLE is a child of another main level PLE so we put it in
-          // there.
-          $parent_id = $plan_entity->root_parent_id;
-          if (!array_key_exists($parent_id, $plan_entities)) {
-            $plan_entities[$parent_id] = PlanEntityHelper::getPlanEntity($parent_id);
-          }
-          $plan_entities[$parent_id]->addChild($plan_entity);
+        $governing_entity_id = $plan_entity->getGoverningEntityParentId();
+        if ($governing_entity_id && !empty($governing_entities[$governing_entity_id])) {
+          $governing_entities[$governing_entity_id]->addChild($plan_entity);
           $remove_ids[] = $entity_id;
         }
         elseif (!empty($plan_entity->support[0]->planEntityIds)) {
@@ -55,7 +49,7 @@ class PlanStructureHelper {
               $plan_entities[$ple_id] = PlanEntityHelper::getPlanEntity($ple_id);
             }
             if ($plan_entities[$ple_id] instanceof PlanEntity) {
-              $ple_structure[$plan_entity->id] = $plan_entity;
+              $ple_structure[$plan_entity->id()] = $plan_entity;
             }
             else {
               if (empty($ple_structure[$ple_id])) {
@@ -66,14 +60,14 @@ class PlanStructureHelper {
           }
         }
         else {
-          $ple_structure[$plan_entity->id] = $plan_entity;
+          $ple_structure[$plan_entity->id()] = $plan_entity;
         }
       }
     }
 
     if (!empty($governing_entities)) {
       foreach ($governing_entities as $entity_id => $governing_entity) {
-        $ple_structure[$governing_entity->id] = $governing_entity;
+        $ple_structure[$governing_entity->id()] = $governing_entity;
       }
     }
 
@@ -84,24 +78,30 @@ class PlanStructureHelper {
         }
       }
       foreach ($plan_entities as $entity_id => $plan_entity) {
-        $ple_structure[$plan_entity->id] = $plan_entity;
+        $ple_structure[$plan_entity->id()] = $plan_entity;
       }
     }
     return $ple_structure;
   }
 
   /**
-   * Extract the plan structure form the prototype API data.
+   * Get the entity structure of the given plan.
    *
-   * @param \Drupal\ghi_plans\ApiObjects\PlanPrototype $prototype
-   *   An array of prototypes retrieved from the API.
-   * @param \Drupal\Core\Entity\ContentEntityInterface $plan_object
-   *   The plan object that the prototype belongs too.
+   * @param \Drupal\ghi_plans\Entity\Plan $plan
+   *   The plan entity.
    *
    * @return array
    *   An array describing the plan structure.
    */
-  public static function getPlanStructureFromPrototype(PlanPrototype $prototype, ContentEntityInterface $plan_object) {
+  public static function getPlanStructure(Plan $plan): ?array {
+
+    /** @var \Drupal\ghi_plans\Plugin\FabricQuery\EntityPrototypeQuery $entity_prototype_query */
+    $entity_prototype_query = self::getEntityPrototypeQuery();
+    // Get the prototype data for analysis.
+    $prototype = $entity_prototype_query->getPlanPrototype($plan->getSourceId());
+    if (!$prototype) {
+      return NULL;
+    }
 
     // List of possible PLE types above the first GVE.
     $main_ref_codes = ApiEntityHelper::MAIN_LEVEL_PLE_REF_CODES;
@@ -166,26 +166,45 @@ class PlanStructureHelper {
   /**
    * Build a plan structure for use in GHI.
    *
-   * The plan structure can be customized in RPM and is retrieved via the plan
-   * prototype endpoint. We need to parse the data and abstract it for easier
-   * use.
-   *
-   * @param \Drupal\Core\Entity\ContentEntityInterface $plan_object
+   * @param \Drupal\ghi_plans\Entity\Plan $plan
    *   The plan object.
+   *
+   * @return array
+   *   An array describing the plan structure.
    */
-  public static function getRpmPlanStructure(ContentEntityInterface $plan_object) {
+  public static function getRpmPlanStructure(Plan $plan) {
     $plan_structures = &drupal_static(__FUNCTION__);
-    if (empty($plan_structures[$plan_object->id()])) {
-      /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\PlanPrototypeQuery $plan_prototype_query */
-      $plan_prototype_query = \Drupal::service('plugin.manager.endpoint_query_manager')->createInstance('plan_prototype_query');
-      $prototype = $plan_prototype_query->getPrototype($plan_object->field_original_id->value);
-      if (!$prototype) {
-        return;
-      }
-      $plan_structures[$plan_object->id()] = self::getPlanStructureFromPrototype($prototype, $plan_object);
+    if (empty($plan_structures[$plan->id()])) {
+      $plan_structures[$plan->id()] = self::getPlanStructure($plan);
     }
 
-    return $plan_structures[$plan_object->id()];
+    return $plan_structures[$plan->id()];
+  }
+
+  /**
+   * Get the plan entity query.
+   *
+   * @return \Drupal\ghi_plans\Plugin\FabricQuery\PlanEntityQuery
+   *   The plan entity query.
+   */
+  private static function getPlanEntityQuery(): PlanEntityQuery {
+    /** @var \Drupal\hpc_api\Query\FabricQueryManager $query_manager */
+    $query_manager = \Drupal::service('plugin.manager.fabric_query_manager');
+    /** @var \Drupal\ghi_plans\Plugin\FabricQuery\PlanEntityQuery $query */
+    return $query_manager->createInstance('plan_entity');
+  }
+
+  /**
+   * Get the entity prototype query.
+   *
+   * @return \Drupal\ghi_plans\Plugin\FabricQuery\EntityPrototypeQuery
+   *   The entity prototype query.
+   */
+  private static function getEntityPrototypeQuery(): EntityPrototypeQuery {
+    /** @var \Drupal\hpc_api\Query\FabricQueryManager $query_manager */
+    $query_manager = \Drupal::service('plugin.manager.fabric_query_manager');
+    /** @var \Drupal\ghi_plans\Plugin\FabricQuery\EntityPrototypeQuery $query */
+    return $query_manager->createInstance('entity_prototype');
   }
 
 }

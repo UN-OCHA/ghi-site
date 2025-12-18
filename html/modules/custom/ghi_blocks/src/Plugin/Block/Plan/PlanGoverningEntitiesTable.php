@@ -12,6 +12,7 @@ use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
 use Drupal\ghi_blocks\Traits\ConfigurationItemClusterRestrictTrait;
 use Drupal\ghi_blocks\Traits\TableSoftLimitTrait;
 use Drupal\ghi_form_elements\Traits\ConfigurationContainerTrait;
+use Drupal\ghi_plans\Entity\Plan;
 use Drupal\ghi_plans\Helpers\PlanStructureHelper;
 use Drupal\hpc_downloads\Interfaces\HPCDownloadExcelInterface;
 use Drupal\hpc_downloads\Interfaces\HPCDownloadPNGInterface;
@@ -25,7 +26,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  *  admin_label = @Translation("Governing Entities Overview Table"),
  *  category = @Translation("Plan elements"),
  *  data_sources = {
- *    "entities" = "hpc_api:plan_entities_query",
+ *    "entities" = "fabric_query:plan_entity",
  *    "cluster_summary" = "hpc_api:plan_funding_cluster_query",
  *  },
  *  default_title = @Translation("Cluster overview"),
@@ -127,7 +128,7 @@ class PlanGoverningEntitiesTable extends GHIBlockBase implements ConfigurableTab
 
     // Sort the entites by name.
     usort($entities, function ($a, $b) {
-      return strnatcasecmp($a->getEntityName(), $b->getEntityName());
+      return strnatcasecmp($a->getDisplayName(), $b->getDisplayName());
     });
 
     $rows = [];
@@ -396,9 +397,9 @@ class PlanGoverningEntitiesTable extends GHIBlockBase implements ConfigurableTab
    *   An array of entity objects, aka clusters or NULL.
    */
   private function getEntityObjects() {
-    /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\PlanEntitiesQuery $query */
+    /** @var \Drupal\ghi_plans\Plugin\FabricQuery\PlanEntityQuery $query */
     $query = $this->getQueryHandler('entities');
-    return $query->getPlanEntities($this->getPageNode(), 'governing');
+    return $query->getPlanEntities($this->getCurrentPlanId(), $this->getPageNode(), 'governing');
   }
 
   /**
@@ -442,7 +443,9 @@ class PlanGoverningEntitiesTable extends GHIBlockBase implements ConfigurableTab
    */
   private function getGenericEntityName() {
     $context = $this->getBlockContext();
-    $plan_structure = PlanStructureHelper::getRpmPlanStructure($context['plan_object']);
+    $plan = $context['plan_object'];
+    assert($plan instanceof Plan);
+    $plan_structure = PlanStructureHelper::getRpmPlanStructure($plan);
     $first_gve = !empty($plan_structure['governing_entities']) ? reset($plan_structure['governing_entities']) : NULL;
     return $first_gve ? $first_gve->label_singular : $this->t('Cluster');
   }

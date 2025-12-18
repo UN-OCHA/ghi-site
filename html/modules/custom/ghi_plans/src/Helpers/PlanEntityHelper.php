@@ -4,6 +4,7 @@ namespace Drupal\ghi_plans\Helpers;
 
 use Drupal\ghi_plans\ApiObjects\Entities\GoverningEntity;
 use Drupal\ghi_plans\ApiObjects\Entities\PlanEntity;
+use Drupal\ghi_plans\ApiObjects\Prototypes\EntityPrototype;
 use Drupal\hpc_api\Query\EndpointQuery;
 use Drupal\hpc_common\Helpers\ArrayHelper;
 
@@ -85,24 +86,16 @@ class PlanEntityHelper {
    * @param string $version_argument
    *   The plan version argument.
    *
-   * @return \Drupal\ghi_plans\ApiObjects\Entities\PlanEntity
-   *   The plan entity object.
+   * @return \Drupal\ghi_plans\ApiObjects\Entities\PlanEntity|null
+   *   The plan entity object or NULL.
    */
-  public static function getPlanEntity($entity_id, $version_argument = 'current') {
-    /** @var \Drupal\hpc_api\Query\EndpointQuery $query */
-    $query = clone \Drupal::service('hpc_api.endpoint_query');
-    $query->setArguments([
-      'endpoint' => 'planEntity/' . $entity_id,
-      'api_version' => 'v2',
-      'auth_method' => EndpointQuery::AUTH_METHOD_API_KEY,
-      'query_args' => [
-        'addPercentageOfTotalTarget' => 'true',
-        'disaggregation' => 'false',
-        'version' => $version_argument,
-      ],
-    ]);
-    $data = $query->getData();
-    return $data ? new PlanEntity($data) : NULL;
+  public static function getPlanEntity($entity_id, $version_argument = 'current'): ?PlanEntity {
+    /** @var \Drupal\hpc_api\Query\FabricQueryManager $query_manager */
+    $query_manager = \Drupal::service('plugin.manager.fabric_query_manager');
+    /** @var \Drupal\ghi_plans\Plugin\FabricQuery\PlanEntityQuery $query */
+    $query = $query_manager->createInstance('plan_entity');
+    $entity = $query->getEntity('planEntity', $entity_id);
+    return $entity instanceof PlanEntity ? $entity : NULL;
   }
 
   /**
@@ -113,24 +106,16 @@ class PlanEntityHelper {
    * @param string $version_argument
    *   The plan version argument.
    *
-   * @return \Drupal\ghi_plans\ApiObjects\Entities\GoverningEntity
-   *   The governing entity object.
+   * @return \Drupal\ghi_plans\ApiObjects\Entities\GoverningEntity|null
+   *   The governing entity object or NULL.
    */
-  public static function getGoverningEntity($entity_id, $version_argument = 'current') {
-    /** @var \Drupal\hpc_api\Query\EndpointQuery $query */
-    $query = \Drupal::service('hpc_api.endpoint_query');
-    $query->setArguments([
-      'endpoint' => 'governingEntity/' . $entity_id,
-      'api_version' => 'v2',
-      'auth_method' => EndpointQuery::AUTH_METHOD_API_KEY,
-      'query_args' => [
-        'addPercentageOfTotalTarget' => 'true',
-        'disaggregation' => 'false',
-        'version' => $version_argument,
-      ],
-    ]);
-    $data = $query->getData();
-    return $data ? new GoverningEntity($data) : NULL;
+  public static function getGoverningEntity($entity_id, $version_argument = 'current'): ?GoverningEntity {
+    /** @var \Drupal\hpc_api\Query\FabricQueryManager $query_manager */
+    $query_manager = \Drupal::service('plugin.manager.fabric_query_manager');
+    /** @var \Drupal\ghi_plans\Plugin\FabricQuery\PlanEntityQuery $query */
+    $query = $query_manager->createInstance('plan_entity');
+    $entity = $query->getEntity('governingEntity', $entity_id);
+    return $entity instanceof GoverningEntity ? $entity : NULL;
   }
 
   /**
@@ -139,18 +124,15 @@ class PlanEntityHelper {
    * @param int $id
    *   The prototype id to retrieve.
    *
-   * @return object
-   *   The prototype object.
+   * @return \Drupal\ghi_plans\ApiObjects\Prototypes\EntityPrototype|null
+   *   The entity prototype object or NULL if not found.
    */
-  public static function getEntityPrototype($id) {
-    /** @var \Drupal\hpc_api\Query\EndpointQuery $query */
-    $query = \Drupal::service('hpc_api.endpoint_query');
-    $query->setArguments([
-      'endpoint' => 'plan/entity-prototype/' . $id,
-      'api_version' => 'v2',
-      'auth_method' => EndpointQuery::AUTH_METHOD_API_KEY,
-    ]);
-    return $query->getData();
+  public static function getEntityPrototype(int $id): ?EntityPrototype {
+    /** @var \Drupal\hpc_api\Query\FabricQueryManager $query_manager */
+    $query_manager = \Drupal::service('plugin.manager.fabric_query_manager');
+    /** @var \Drupal\ghi_plans\Plugin\FabricQuery\EntityPrototypeQuery $query */
+    $query = $query_manager->createInstance('entity_prototype');
+    return $query->getPrototype($id);
   }
 
   /**
