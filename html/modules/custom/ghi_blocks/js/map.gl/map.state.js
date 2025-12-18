@@ -399,8 +399,8 @@
 
       // Sort alphabetically to get a defined order.
       locations.sort(function(a, b) {
-        var a_name = a.hasOwnProperty('sort_key') ? a.sort_key.toLowerCase() : a.location_name.toLowerCase();
-        var b_name = b.hasOwnProperty('sort_key') ? b.sort_key.toLowerCase() : b.location_name.toLowerCase();
+        var a_name = a.hasOwnProperty('sort_key') ? a.sort_key.toLowerCase() : a.name.toLowerCase();
+        var b_name = b.hasOwnProperty('sort_key') ? b.sort_key.toLowerCase() : b.name.toLowerCase();
         return a_name.localeCompare(b_name, undefined, {numeric: true, sensitivity: 'base'});
       });
 
@@ -1448,7 +1448,7 @@
 
         // Hide the label of the currently viewed country from the background
         // layer.
-        this.hideCountryLabelFromBackgroundLayer(this.options?.outline_country?.location_name ?? null);
+        this.hideCountryLabelFromBackgroundLayer(this.options?.outline_country?.name ?? null);
       }
       this.updateMapData(label_layer_id + '-source', backgroundFeatures);
     }

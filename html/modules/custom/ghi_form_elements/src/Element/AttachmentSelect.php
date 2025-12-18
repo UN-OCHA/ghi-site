@@ -138,17 +138,40 @@ class AttachmentSelect extends FormElementBase {
     // Get the attachments.
     $attachments = self::getPlanEntitiesQuery($plan_id)->getDataAttachments($context['base_object'] ?? NULL, $element_context_filter);
 
+    // Preload the entities.
+    $source_entity_ids = [];
+    foreach ($attachments as $attachment) {
+      $source_type = $attachment->getSourceEntityType();
+      $source_id = $attachment->getSourceEntityId();
+      if (!$source_type || !$source_id || $source_type == 'plan') {
+        continue;
+      }
+      $source_entity_ids[$source_type] = $source_entity_ids[$source_type] ?? [];
+      $source_entity_ids[$source_type][] = $source_id;
+    }
+
+    /** @var \Drupal\ghi_plans\Plugin\FabricQuery\PlanEntityQuery $entity_query */
+    $entity_query = self::getPlanEntityQuery();
+    $source_entities = [];
+    foreach ($source_entity_ids as $source_type => $source_ids) {
+      $source_entities[$source_type] = $entity_query->getEntities($source_type, array_unique($source_ids));
+    }
+
     // Get the different options from the available set of all attachments in
     // the current base context.
     $entity_type_options = [];
     $attachment_type_options = [];
     $attachment_prototype_options = [];
     foreach ($attachments as $attachment) {
-      if ($source_entity = $attachment->getSourceEntity()) {
+      $source_type = $attachment->getSourceEntityType();
+      $source_id = $attachment->getSourceEntityId();
+      if ($source_entity = ($source_entities[$source_type][$source_id] ?? NULL)) {
         $entity_type_options[$source_entity->getEntityType()] = $source_entity->getEntityTypeName();
       }
-      $attachment_type_options[$attachment->type] = ucfirst($attachment->type);
-      $attachment_prototype_options[$attachment->prototype->id] = $attachment->prototype->name . ' (' . $attachment->prototype->ref_code . ')';
+      $attachment_type_options[$attachment->getType()] = ucfirst($attachment->getType());
+      if ($prototype = $attachment->getPrototype()) {
+        $attachment_prototype_options[$prototype->id()] = $prototype->getName() . ' (' . $prototype->getRefCode() . ')';
+      }
     }
     krsort($attachment_prototype_options);
 
@@ -425,6 +448,16 @@ class AttachmentSelect extends FormElementBase {
   }
 
   /**
+   * Get the fabric query manager service.
+   *
+   * @return \Drupal\hpc_api\Query\FabricQueryManager
+   *   The fabric query manager service.
+   */
+  private static function getFabricQueryManager() {
+    return \Drupal::service('plugin.manager.fabric_query_manager');
+  }
+
+  /**
    * Get the attachment query service.
    *
    * @return \Drupal\ghi_plans\Plugin\EndpointQuery\AttachmentQuery
@@ -457,6 +490,16 @@ class AttachmentSelect extends FormElementBase {
     $query_handler = self::getEndpointQueryManager()->createInstance('plan_entities_query');
     $query_handler->setPlaceholder('plan_id', $plan_id);
     return $query_handler;
+  }
+
+  /**
+   * Get the plan entity query service.
+   *
+   * @return \Drupal\ghi_plans\Plugin\FabricQuery\PlanEntityQuery
+   *   The plan entities query plugin.
+   */
+  public static function getPlanEntityQuery() {
+    return self::getFabricQueryManager()->createInstance('plan_entity');
   }
 
 }

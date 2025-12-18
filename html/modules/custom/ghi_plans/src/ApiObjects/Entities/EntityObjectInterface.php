@@ -18,6 +18,14 @@ interface EntityObjectInterface extends PlanEntityInterface {
   public function getEntityVersion();
 
   /**
+   * Get the composed reference.
+   *
+   * @return string
+   *   The composed reference string.
+   */
+  public function getComposedReference();
+
+  /**
    * Get the children of an entity object.
    *
    * @return \Drupal\ghi_plans\ApiObjects\Entities\EntityObjectInterface[]
@@ -39,7 +47,7 @@ interface EntityObjectInterface extends PlanEntityInterface {
    * @return string
    *   The name.
    */
-  public function getEntityName();
+  public function getDisplayName();
 
   /**
    * Get the full name for an object for admin purposes.

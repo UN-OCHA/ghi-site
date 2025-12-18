@@ -116,7 +116,11 @@ trait AjaxElementTrait {
         if (!is_string($error) && !$error instanceof MarkupInterface) {
           return NULL;
         }
-        return ['#markup' => $error];
+        return [
+          '#type' => 'html_tag',
+          '#tag' => 'div',
+          '#value' => $error,
+        ];
       }, $form_subset['#element_errors']));
       if (!empty($errors)) {
         $response->addCommand(new OpenModalDialogCommand(t('Unexpected errors'), [$errors], [

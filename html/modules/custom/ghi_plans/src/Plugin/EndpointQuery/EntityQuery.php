@@ -5,7 +5,6 @@ namespace Drupal\ghi_plans\Plugin\EndpointQuery;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\ghi_plans\ApiObjects\Entities\GoverningEntity;
 use Drupal\ghi_plans\ApiObjects\Entities\PlanEntity;
-use Drupal\ghi_plans\ApiObjects\Plan;
 use Drupal\hpc_api\Query\EndpointQueryBase;
 
 /**
@@ -43,9 +42,6 @@ class EntityQuery extends EndpointQueryBase implements ContainerFactoryPluginInt
     }
 
     switch ($entity_type) {
-      case 'plan':
-        return new Plan($data);
-
       case 'governingEntity':
         return new GoverningEntity($data);
 

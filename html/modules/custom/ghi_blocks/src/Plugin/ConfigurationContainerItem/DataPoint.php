@@ -9,7 +9,7 @@ use Drupal\Core\Link;
 use Drupal\Core\Url;
 use Drupal\ghi_form_elements\ConfigurationContainerItemPluginBase;
 use Drupal\ghi_form_elements\Element\DataPoint as ElementDataPoint;
-use Drupal\ghi_plans\ApiObjects\AttachmentPrototype\AttachmentPrototype;
+use Drupal\ghi_plans\ApiObjects\Prototypes\AttachmentPrototype;
 use Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -34,7 +34,8 @@ class DataPoint extends ConfigurationContainerItemPluginBase {
   /**
    * {@inheritdoc}
    */
-  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition): DataPoint {
+    /** @var self $instance */
     $instance = parent::create($container, $configuration, $plugin_id, $plugin_definition);
     $instance->attachmentQuery = $instance->endpointQueryManager->createInstance('attachment_query');
     return $instance;
@@ -59,7 +60,7 @@ class DataPoint extends ConfigurationContainerItemPluginBase {
     $attachment = $this->getContextValue('attachment');
     $plan_object = $this->getContextValue('plan_object');
     $configuration = $this->getPluginConfiguration();
-    /** @var \Drupal\ghi_plans\ApiObjects\AttachmentPrototype\AttachmentPrototype $attachment_prototype */
+    /** @var \Drupal\ghi_plans\ApiObjects\Prototypes\AttachmentPrototype $attachment_prototype */
     $attachment_prototype = $configuration['attachment_prototype'];
 
     $element['data_point'] = [

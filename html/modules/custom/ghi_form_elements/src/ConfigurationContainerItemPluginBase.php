@@ -54,6 +54,14 @@ abstract class ConfigurationContainerItemPluginBase extends PluginBase implement
   protected $entityTypeManager;
 
   /**
+   * The fabric query manager.
+   *
+   * @var \Drupal\hpc_api\Query\FabricQueryManager
+   *   The fabric query manager service.
+   */
+  protected $fabricQueryManager;
+
+  /**
    * The manager class for endpoint query plugins.
    *
    * @var \Drupal\hpc_api\Query\EndpointQueryManager
@@ -63,13 +71,10 @@ abstract class ConfigurationContainerItemPluginBase extends PluginBase implement
   /**
    * {@inheritdoc}
    */
-  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
-    $instance = new static(
-      $configuration,
-      $plugin_id,
-      $plugin_definition,
-    );
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition): ConfigurationContainerItemPluginBase {
+    $instance = new static($configuration, $plugin_id, $plugin_definition);
     $instance->entityTypeManager = $container->get('entity_type.manager');
+    $instance->fabricQueryManager = $container->get('plugin.manager.fabric_query_manager');
     $instance->endpointQueryManager = $container->get('plugin.manager.endpoint_query_manager');
     return $instance;
   }

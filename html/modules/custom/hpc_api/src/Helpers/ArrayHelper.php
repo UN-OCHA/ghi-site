@@ -10,6 +10,22 @@ use Drupal\hpc_api\Query\EndpointQuery;
 class ArrayHelper {
 
   /**
+   * Key an array by one of its properties.
+   *
+   * @param array $array
+   *   The input array.
+   * @param string $property
+   *   The property to use as a key.
+   *
+   * @return array
+   *   The resulting array.
+   */
+  public static function keyByProperty($array, $property): array {
+    $ids = array_map(fn($item) => $item->$property, $array);
+    return array_combine($ids, $array);
+  }
+
+  /**
    * Deep filter the given array.
    *
    * Supports array of arrays and array of objects and/or mixed.

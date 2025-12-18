@@ -652,7 +652,7 @@ abstract class HPCBlockBase extends BlockBase implements HPCPluginInterface, Con
     [$source_api, $plugin_id] = explode(':', $sources[$source_key]);
 
     $query_handler = NULL;
-    if ($source_api == 'fabric' && $this->fabricQueryManager->hasDefinition($plugin_id)) {
+    if ($source_api == 'fabric_query' && $this->fabricQueryManager->hasDefinition($plugin_id)) {
       $query_handler = $this->fabricQueryManager->createInstance($plugin_id);
     }
     elseif ($source_api == 'hpc_api' && $this->endpointQueryManager->hasDefinition($plugin_id)) {

@@ -208,7 +208,7 @@ function ghi_subpages_form_alter(array &$form, FormStateInterface $form_state, $
         '@entity_type_label' => strtolower($entity->type->entity->label()),
       ]);
     }
-    $form['promote']['#access'] = \Drupal::currentUser()->hasPermission('administer site');
+    $form['promote']['#access'] = \Drupal::currentUser()->hasPermission('administer site configuration');
   }
 }
 

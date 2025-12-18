@@ -2,7 +2,7 @@
 
 namespace Drupal\ghi_plans\Plugin\EndpointQuery;
 
-use Drupal\ghi_plans\ApiObjects\AttachmentPrototype\AttachmentPrototype;
+use Drupal\ghi_plans\ApiObjects\Prototypes\AttachmentPrototype;
 use Drupal\hpc_api\Query\EndpointQueryBase;
 
 /**
@@ -25,7 +25,7 @@ class AttachmentPrototypeQuery extends EndpointQueryBase {
    * @param int $prototype_id
    *   The id of the prototype.
    *
-   * @return \Drupal\ghi_plans\ApiObjects\AttachmentPrototype\AttachmentPrototype|null
+   * @return \Drupal\ghi_plans\ApiObjects\Prototypes\AttachmentPrototype|null
    *   The processed attachment prototype object.
    */
   public function getPrototypeById($prototype_id) {

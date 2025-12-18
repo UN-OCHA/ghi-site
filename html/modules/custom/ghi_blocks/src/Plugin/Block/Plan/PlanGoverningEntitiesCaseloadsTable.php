@@ -31,7 +31,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  *  data_sources = {
  *    "entities" = "hpc_api:plan_entities_query",
  *    "attachment_search" = "hpc_api:attachment_search_query",
- *    "attachment_prototype" = "hpc_api:plan_attachment_prototype_query",
+ *    "attachment_prototype" = "fabric_query:attachment_prototype",
  *  },
  *  default_title = @Translation("Cluster caseloads"),
  *  context_definitions = {
@@ -152,7 +152,7 @@ class PlanGoverningEntitiesCaseloadsTable extends GHIBlockBase implements Config
 
     // Sort the entities by name.
     usort($entities, function ($a, $b) {
-      return strnatcasecmp($a->getEntityName(), $b->getEntityName());
+      return strnatcasecmp($a->getDisplayName(), $b->getDisplayName());
     });
 
     $rows = [];

@@ -22,14 +22,12 @@ class CountryImportQuery extends FabricQueryBase implements ImportQueryInterface
    */
   public function getSourceData() {
     $payload = '
-      {
-        locations (
-          filter: { AdminLevel: { eq: 0 } }
-          first: 10000,
-          orderBy: { Name: ASC }
-        ) {
-          items { ' . Country::GRAPHQL_ITEMS . ' }
-        }
+      locations (
+        filter: { AdminLevel: { eq: 0 } }
+        first: 10000,
+        orderBy: { Name: ASC }
+      ) {
+        items { ' . Country::GRAPHQL_ITEMS . ' }
       }';
     $data = $this->fabricQuery->query($payload);
     return $data->locations->items;

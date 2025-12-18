@@ -32,9 +32,9 @@ class EntityCounter extends ConfigurationContainerItemPluginBase {
   /**
    * The plan entities query.
    *
-   * @var \Drupal\ghi_plans\Plugin\EndpointQuery\PlanEntitiesQuery
+   * @var \Drupal\ghi_plans\Plugin\FabricQuery\PlanEntityQuery
    */
-  public $planEntitiesQuery;
+  public $planEntityQuery;
 
   /**
    * The icon query.
@@ -46,10 +46,11 @@ class EntityCounter extends ConfigurationContainerItemPluginBase {
   /**
    * {@inheritdoc}
    */
-  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition): EntityCounter {
+    /** @var self $instance */
     $instance = parent::create($container, $configuration, $plugin_id, $plugin_definition);
     $instance->iconQuery = $instance->endpointQueryManager->createInstance('icon_query');
-    $instance->planEntitiesQuery = $instance->endpointQueryManager->createInstance('plan_entities_query');
+    $instance->planEntityQuery = $instance->fabricQueryManager->createInstance('plan_entity');
     return $instance;
   }
 
@@ -257,7 +258,10 @@ class EntityCounter extends ConfigurationContainerItemPluginBase {
     if (empty($context['base_object']) || !$context['base_object'] instanceof ContentEntityInterface) {
       return [];
     }
-    return $this->planEntitiesQuery->getPlanEntities($context['base_object'], $entity_type, NULL);
+    if (empty($context['plan_object']) || !$context['plan_object'] instanceof ContentEntityInterface) {
+      return [];
+    }
+    return $this->planEntityQuery->getPlanEntities($context['plan_object']->id(), $context['base_object'], $entity_type, NULL);
   }
 
   /**

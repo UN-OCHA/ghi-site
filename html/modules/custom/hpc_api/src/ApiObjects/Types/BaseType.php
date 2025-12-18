@@ -10,19 +10,14 @@ use Drupal\hpc_api\ApiObjects\ApiObjectBase;
 abstract class BaseType extends ApiObjectBase {
 
   /**
-   * Map the raw data.
-   *
-   * This uses only what we needed up to now. More properties can be mapped if
-   * needed.
-   *
-   * @return object
-   *   An object with the mapped data.
+   * {@inheritdoc}
    */
   protected function map() {
     $data = $this->getRawData();
     return (object) [
       'id' => $data->Id,
       'name' => $data->Name,
+      'description' => $data->Description ?? NULL,
     ];
   }
 
@@ -32,8 +27,18 @@ abstract class BaseType extends ApiObjectBase {
    * @return string
    *   The name.
    */
-  public function getName() {
+  public function getName(): string {
     return $this->name;
+  }
+
+  /**
+   * Get the description of the type.
+   *
+   * @return string|null
+   *   The description.
+   */
+  public function getDescription(): ?string {
+    return $this->description;
   }
 
 }

@@ -51,7 +51,8 @@ class ArticleCollection extends ConfigurationContainerItemPluginBase implements 
   /**
    * {@inheritdoc}
    */
-  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition): ArticleCollection {
+    /** @var self $instance */
     $instance = parent::create($container, $configuration, $plugin_id, $plugin_definition);
     $instance->articleManager = $container->get('ghi_content.manager.article');
     return $instance;

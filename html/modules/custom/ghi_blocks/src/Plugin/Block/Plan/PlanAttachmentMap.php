@@ -15,6 +15,7 @@ use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
 use Drupal\ghi_blocks\Traits\BlockCommentTrait;
 use Drupal\ghi_blocks\Traits\ConfigValidationTrait;
 use Drupal\ghi_blocks\Traits\GlobalMapTrait;
+use Drupal\ghi_geojson\GeoJsonLocationInterface;
 use Drupal\ghi_plans\ApiObjects\Attachments\AttachmentInterface;
 use Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment;
 use Drupal\ghi_plans\Traits\AttachmentFilterTrait;
@@ -31,10 +32,8 @@ use Drupal\hpc_downloads\Interfaces\HPCDownloadPNGInterface;
  *  admin_label = @Translation("Attachment Map"),
  *  category = @Translation("Plan elements"),
  *  data_sources = {
- *    "entities" = "hpc_api:plan_entities_query",
- *    "attachment" = "hpc_api:attachment_query",
  *    "attachment_search" = "hpc_api:attachment_search_query",
- *    "locations" = "hpc_api:locations_query",
+ *    "country" = "fabric_query:country",
  *  },
  *  default_title = @Translation("Data by location"),
  *  context_definitions = {
@@ -82,11 +81,8 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
 
     $outline_country = NULL;
     $focus_country = $this->getCurrentPlanObject()->getFocusCountry();
-    if ($focus_country) {
-      /** @var \Drupal\ghi_base_objects\Plugin\EndpointQuery\LocationsQuery $locations_query */
-      $locations_query = $this->getQueryHandler('locations');
-      $country = $locations_query->getCountry($focus_country->getSourceId(), 0);
-      $outline_country = $country?->toArray();
+    if ($focus_country instanceof GeoJsonLocationInterface) {
+      $outline_country = $focus_country->getGeoJsonLocationData();
     }
 
     if (empty($map['data'])) {

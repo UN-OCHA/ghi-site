@@ -2,7 +2,7 @@
 
 namespace Drupal\ghi_blocks\Traits;
 
-use Drupal\ghi_plans\ApiObjects\AttachmentPrototype\AttachmentPrototype;
+use Drupal\ghi_plans\ApiObjects\Prototypes\AttachmentPrototype;
 use Drupal\ghi_plans\ApiObjects\Entities\PlanEntity;
 
 /**
@@ -50,7 +50,7 @@ trait AttachmentTableTrait {
    * @param \Drupal\ghi_plans\ApiObjects\Attachments\AttachmentInterface[] $attachments
    *   The attachments from which to extract the prototype.
    *
-   * @return \Drupal\ghi_plans\ApiObjects\AttachmentPrototype\AttachmentPrototype|null
+   * @return \Drupal\ghi_plans\ApiObjects\Prototypes\AttachmentPrototype|null
    *   The attachment prototype object.
    */
   public function getAttachmentPrototype($attachments = NULL) {
@@ -68,9 +68,15 @@ trait AttachmentTableTrait {
     if (!$prototype_id) {
       return NULL;
     }
-    /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\PlanAttachmentPrototypeQuery $query */
+    /** @var \Drupal\ghi_plans\Plugin\FabricQuery\AttachmentPrototypeQuery $query */
     $query = $this->getQueryHandler('attachment_prototype');
-    return $query->getPrototypeByPlanAndId($this->getCurrentPlanId(), $prototype_id);
+    $plan_id = $this->getCurrentPlanId();
+    if ($plan_id) {
+      return $query->getPrototypeByPlanAndId($this->getCurrentPlanId(), $prototype_id);
+    }
+    else {
+      return $query->getPrototype($prototype_id);
+    }
   }
 
   /**
@@ -102,12 +108,12 @@ trait AttachmentTableTrait {
    * codes and compares that to entity type ref codes of the given set of plan
    * entities.
    *
-   * @param \Drupal\ghi_plans\ApiObjects\AttachmentPrototype\AttachmentPrototype[] $attachment_prototypes
+   * @param \Drupal\ghi_plans\ApiObjects\Prototypes\AttachmentPrototype[] $attachment_prototypes
    *   An array of attachment prototype objects to filter.
    * @param array $ref_codes
    *   An array of entity ref codes.
    *
-   * @return \Drupal\ghi_plans\ApiObjects\AttachmentPrototype\AttachmentPrototype[]
+   * @return \Drupal\ghi_plans\ApiObjects\Prototypes\AttachmentPrototype[]
    *   The filtered list of attachment prototypes.
    */
   public function filterAttachmentPrototypesByEntityRefCodes(array $attachment_prototypes, array $ref_codes) {
@@ -131,12 +137,12 @@ trait AttachmentTableTrait {
    * codes and compares that to entity type ref codes of the given set of plan
    * entities.
    *
-   * @param \Drupal\ghi_plans\ApiObjects\AttachmentPrototype\AttachmentPrototype[] $attachment_prototypes
+   * @param \Drupal\ghi_plans\ApiObjects\Prototypes\AttachmentPrototype[] $attachment_prototypes
    *   An array of attachment prototype objects to filter.
    * @param array $entity_types
    *   An array of entity type labels, keyed by the entity ref code.
    *
-   * @return \Drupal\ghi_plans\ApiObjects\AttachmentPrototype\AttachmentPrototype[]
+   * @return \Drupal\ghi_plans\ApiObjects\Prototypes\AttachmentPrototype[]
    *   The filtered list of attachment prototypes.
    */
   public function filterAttachmentPrototypesByEntityTypes(array $attachment_prototypes, array $entity_types) {

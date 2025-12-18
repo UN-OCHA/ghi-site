@@ -153,6 +153,13 @@ class Section extends Node implements SectionNodeInterface, ImageNodeInterface {
   /**
    * {@inheritdoc}
    */
+  public static function getBaseObjectType() {
+    return \Drupal::entityTypeManager()->getStorage('base_object_type')->load('plan');
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function getSectionType() {
     $base_object = $this->getBaseObject();
     return $base_object->type->entity->label();

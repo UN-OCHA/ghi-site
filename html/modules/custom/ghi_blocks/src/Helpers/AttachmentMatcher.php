@@ -2,7 +2,7 @@
 
 namespace Drupal\ghi_blocks\Helpers;
 
-use Drupal\ghi_plans\ApiObjects\AttachmentPrototype\AttachmentPrototype;
+use Drupal\ghi_plans\ApiObjects\Prototypes\AttachmentPrototype;
 use Drupal\ghi_plans\ApiObjects\Attachments\AttachmentInterface;
 use Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment;
 
@@ -77,9 +77,9 @@ class AttachmentMatcher {
    *
    * @param int $data_point_index
    *   The data point index to match.
-   * @param \Drupal\ghi_plans\ApiObjects\AttachmentPrototype\AttachmentPrototype $prototype_1
+   * @param \Drupal\ghi_plans\ApiObjects\Prototypes\AttachmentPrototype $prototype_1
    *   The first or original attachment prototype.
-   * @param \Drupal\ghi_plans\ApiObjects\AttachmentPrototype\AttachmentPrototype $prototype_2
+   * @param \Drupal\ghi_plans\ApiObjects\Prototypes\AttachmentPrototype $prototype_2
    *   The second or new attachment prototype.
    *
    * @return int
@@ -115,7 +115,7 @@ class AttachmentMatcher {
    * @param int $prototype_id
    *   The id of the attachment prototype to load.
    *
-   * @return \Drupal\ghi_plans\ApiObjects\AttachmentPrototype\AttachmentPrototype|null
+   * @return \Drupal\ghi_plans\ApiObjects\Prototypes\AttachmentPrototype|null
    *   An attachment prototype object.
    */
   private static function getPrototype($prototype_id) {
