@@ -32,7 +32,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  *  admin_label = @Translation("Plan table"),
  *  category = @Translation("Global"),
  *  data_sources = {
- *    "plans" = "hpc_api:plan_overview_query",
+ *    "plans_overview" = "hpc_api:plan_overview_query",
  *  },
  *  context_definitions = {
  *    "node" = @ContextDefinition("entity:node", label = @Translation("Node"), required = FALSE),
@@ -664,7 +664,7 @@ class PlanTable extends GHIBlockBase implements HPCDownloadExcelInterface, HPCDo
     $custom_rows_config = $config['custom_rows'] ?? $defaults['custom_rows'];
     $plans_config = $config['plans'] ?? $defaults['plans'];
 
-    $plans = $this->getPlanQuery()->getPlans();
+    $plans = $this->getPlanOverviewQuery()->getPlans();
     $custom_rows = $this->getCustomPlanRows();
     if (!empty($custom_rows)) {
       if ($custom_rows_config['replace']) {

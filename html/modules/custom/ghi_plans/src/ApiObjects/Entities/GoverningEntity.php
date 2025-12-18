@@ -11,43 +11,50 @@ class GoverningEntity extends EntityObjectBase {
 
   const ENTITY_REF_CODE = 'CL';
 
+  const GRAPHQL_ITEMS = "
+    Id
+    Name
+    Description
+    PlanId
+    EntityTypeId
+    HpcEntityPrototypeId
+    CustomReference
+    ComposedReference
+  ";
+
   /**
    * {@inheritdoc}
    */
   protected function map() {
-    $entity = $this->getRawData();
-    $entity_version = $this->getEntityVersion($entity);
-    if (!property_exists($entity, 'entityPrototype') && !empty($entity->entityPrototypeId)) {
-      $entity->entityPrototype = PlanEntityHelper::getEntityPrototype($entity->entityPrototypeId);
-    }
-    $prototype = $entity->entityPrototype;
+    $data = $this->getRawData();
+    $_entity_version = $this->getEntityVersion($data);
+    $prototype = !empty($data->HpcEntityPrototypeId ?? NULL) ? PlanEntityHelper::getEntityPrototype($data->HpcEntityPrototypeId) : NULL;
 
     return (object) [
-      'id' => $entity->id,
-      'name' => $entity->composedReference . ': ' . $entity_version->name,
-      'group_name' => $entity->composedReference . ': ' . $entity_version->name,
-      'display_name' => $entity->composedReference . ': ' . $entity_version->name,
-      'singular_name' => $prototype->value->name->en->singular,
-      'plural_name' => $prototype->value->name->en->plural,
-      'description' => property_exists($entity_version->value, 'description') ? $entity_version->value->description : NULL,
-      'entity_name' => $entity_version->name,
-      'ref_code' => $prototype->refCode,
+      'id' => $data->Id,
+      'name' => ($data->ComposedReference ?? '') . ': ' . $data->Name,
+      'group_name' => ($data->ComposedReference ?? '') . ': ' . $data->Name,
+      'display_name' => ($data->ComposedReference ?? '') . ': ' . $data->Name,
+      'singular_name' => $prototype?->getNameSingular(),
+      'plural_name' => $prototype?->getNamePlural(),
+      'description' => $data->Description ?: NULL,
+      'entity_name' => $data->Name,
+      'plan_id' => $data->plan?->Id ?? NULL,
+      'ref_code' => $prototype?->getRefCode() ?? NULL,
       'ref_codes_children' => array_map(function ($child) {
         return $child->refCode;
-      }, $prototype->value->possibleChildren ?: []),
-      'entity_type' => $prototype->type,
-      'entity_prototype_name' => $prototype->value->name->en->singular,
-      'entity_prototype_id' => $prototype->id,
-      'order_number' => $entity_version->value->orderNumber ?? 0,
-      'custom_reference' => $entity_version->customReference,
-      'composed_reference' => $entity->composedReference,
-      'sort_key' => property_exists($entity_version->value, 'orderNumber') ? $entity_version->value->orderNumber : ($prototype->orderNumber . ($entity->customReference ?? NULL)),
-      'icon' => !empty($entity_version->value->icon) ? $entity_version->value->icon : NULL,
-      'tags' => property_exists($entity_version, 'tags') ? $entity_version->tags : [],
-      'parent_id' => $entity->parentId ?? NULL,
+      }, $prototype?->getChildren() ?: []),
+      'entity_type' => $prototype?->getType() ?? NULL,
+      'entity_prototype_name' => $prototype?->getNameSingular(),
+      'entity_prototype_id' => $data->HpcEntityPrototypeId,
+      'order_number' => 0,
+      'custom_reference' => $data->CustomReference,
+      'composed_reference' => $data->ComposedReference ?? NULL,
+      'sort_key' => ($prototype?->getOrderNumber() ?? '') . ($data->CustomReference ?? NULL),
+      'icon' => $_entity_version?->value?->icon ?: $_entity_version?->value?->icon,
 
       // Legacy support.
-      'custom_id' => $entity_version->customReference,
+      'custom_id' => $data->CustomReference,
     ];
   }
 
@@ -55,13 +62,13 @@ class GoverningEntity extends EntityObjectBase {
    * {@inheritdoc}
    */
   public function getEntityVersion() {
-    return $this->getRawData()->governingEntityVersion;
+    return $this->getRawData()->governingEntityVersion ?? NULL;
   }
 
   /**
    * {@inheritdoc}
    */
-  public function getEntityName() {
+  public function getDisplayName() {
     return $this->entity_name;
   }
 
@@ -92,8 +99,8 @@ class GoverningEntity extends EntityObjectBase {
   /**
    * {@inheritdoc}
    */
-  public function getDescription() {
-    return $this->getEntityName();
+  public function getDescription(): ?string {
+    return $this->getDisplayName();
   }
 
 }

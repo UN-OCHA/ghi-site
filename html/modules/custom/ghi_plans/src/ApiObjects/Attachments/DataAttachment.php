@@ -8,7 +8,6 @@ use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\ghi_base_objects\Entity\BaseObjectChildInterface;
 use Drupal\ghi_base_objects\Entity\BaseObjectInterface;
 use Drupal\ghi_base_objects\Helpers\BaseObjectHelper;
-use Drupal\ghi_plans\ApiObjects\AttachmentPrototype\AttachmentPrototype;
 use Drupal\ghi_plans\ApiObjects\Measurements\Measurement;
 use Drupal\ghi_plans\Entity\GoverningEntity;
 use Drupal\ghi_plans\Entity\Plan;
@@ -169,25 +168,47 @@ class DataAttachment extends AttachmentBase implements DataAttachmentInterface {
   }
 
   /**
+   * Get the source entity type.
+   *
+   * @return string|null
+   *   The source entity type.
+   */
+  public function getSourceEntityType() {
+    return $this->source->entity_type;
+  }
+
+  /**
+   * Get the source entity id.
+   *
+   * @return string|null
+   *   The source entity id.
+   */
+  public function getSourceEntityId() {
+    return $this->source->entity_id;
+  }
+
+  /**
    * Get the source entity.
    *
    * @return \Drupal\ghi_plans\ApiObjects\PlanEntityInterface|null
    *   The entity object.
    */
   public function getSourceEntity() {
-    if (empty($this->source->entity_type) || empty($this->source->entity_id)) {
+    $source_type = $this->getSourceEntityType();
+    $source_id = $this->getSourceEntityId();
+    if ($source_type || !$source_id) {
       return NULL;
     }
     if (empty($this->sourceEntity)) {
-      if ($this->source->entity_type === 'plan') {
+      if ($source_type === 'plan') {
         /** @var \Drupal\ghi_plans\Plugin\FabricQuery\PlanQuery $plan_query */
         $plan_query = $this->getFabricQueryManager()->createInstance('plan');
-        $this->sourceEntity = $plan_query->getPlan($this->source->entity_id);
+        $this->sourceEntity = $plan_query->getPlan($source_id);
       }
       else {
-        /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\EntityQuery $entityQuery */
-        $entity_query = $this->getEndpointQueryManager()->createInstance('entity_query');
-        $this->sourceEntity = $entity_query->getEntity($this->source->entity_type, $this->source->entity_id);
+        /** @var \Drupal\ghi_plans\Plugin\FabricQuery\PlanEntityQuery $entity_query */
+        $entity_query = $this->getFabricQueryManager()->createInstance('plan_entity');
+        $this->sourceEntity = $entity_query->getEntity($source_type, $source_id);
       }
     }
     return $this->sourceEntity;
@@ -364,7 +385,7 @@ class DataAttachment extends AttachmentBase implements DataAttachmentInterface {
   /**
    * Get the prototype for an attachment.
    *
-   * @return \Drupal\ghi_plans\ApiObjects\AttachmentPrototype\AttachmentPrototype
+   * @return \Drupal\ghi_plans\ApiObjects\Prototypes\AttachmentPrototype
    *   The attachment prototype object.
    */
   public function getPrototype() {
@@ -902,26 +923,6 @@ class DataAttachment extends AttachmentBase implements DataAttachmentInterface {
   }
 
   /**
-   * Get the main country from the plan id.
-   *
-   * @param int $plan_id
-   *   The plan id for which to retrieve the country.
-   *
-   * @return object
-   *   An object with 2 keys: 'id' and 'name'.
-   */
-  private function getMainCountryFromPlanId($plan_id) {
-    /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\PlanLocationsQuery $plan_locations_query */
-    $plan_locations_query = $this->getEndpointQueryManager()->createInstance('plan_locations_query');
-    $plan_locations_query->setPlaceholder('plan_id', $plan_id);
-    $country = $plan_locations_query->getCountry();
-    return (object) [
-      'id' => $country->id,
-      'name' => $country->name,
-    ];
-  }
-
-  /**
    * Get the locations for the current attachment.
    *
    * @param object $base_data
@@ -933,13 +934,17 @@ class DataAttachment extends AttachmentBase implements DataAttachmentInterface {
    *   An array of location objects.
    */
   private function getLocations($base_data, $ignore_missing_location_ids) {
+    $plan_object = $this->getPlanObject();
 
     // We extract the country from the locations array.
     $country = $this->getMainCountryFromLocations($base_data->locations);
-    if (!$country && !empty($this->getPlanId())) {
+    if (!$country && $focus_country = $this->getPlanObject()?->getFocusCountry() ?? NULL) {
       // The disaggregation data doesn't seem to include the main country in the
       // locations. Let's try to get it from the plan id.
-      $country = $this->getMainCountryFromPlanId($this->getPlanId());
+      $country = (object) [
+        'id' => $focus_country->id(),
+        'name' => $focus_country->getName(),
+      ];
     }
 
     // Then we remove the country from the locations array and create an array
@@ -957,7 +962,6 @@ class DataAttachment extends AttachmentBase implements DataAttachmentInterface {
     // See until which level of detail we should go for the attachment. This is
     // stored as a configuration option on the plan base object, so let's look
     // that up.
-    $plan_object = $this->getPlanObject();
     $max_level = $plan_object ? $plan_object->getMaxAdminLevel() : NULL;
 
     // Then we get the coordinates for all locations that the API knows for this
@@ -974,13 +978,13 @@ class DataAttachment extends AttachmentBase implements DataAttachmentInterface {
       if (empty($_location)) {
         continue;
       }
-      $locations[$location_key]->map_data = $_location->toArray();
+      $locations[$location_key]->map_data = $_location->getGeoJsonLocationData();
       $locations[$location_key]->map_data['object_id'] = $location->id;
       $locations[$location_key]->map_data['total'] = 0;
       $locations[$location_key]->cache_meta_data = CacheableMetadata::createFromObject($_location);
 
       // @see https://humanitarian.atlassian.net/browse/HPC-9838?focusedCommentId=201540
-      $locations[$location_key]->name = $locations[$location_key]->map_data['location_name'];
+      $locations[$location_key]->name = $locations[$location_key]->map_data['name'];
     }
     return $locations;
   }
@@ -1084,7 +1088,7 @@ class DataAttachment extends AttachmentBase implements DataAttachmentInterface {
       return NULL;
     }
     // Limit this to the published measurements.
-    $latest_published_period_id = $this->getLatestPublishedReportingPeriod($this->getPlanId());
+    $latest_published_period_id = $this->getPlanId() ? $this->getLatestPublishedReportingPeriod($this->getPlanId()) : NULL;
     if (!$latest_published_period_id) {
       return NULL;
     }
@@ -1157,7 +1161,7 @@ class DataAttachment extends AttachmentBase implements DataAttachmentInterface {
    * classes should assure that they use the correct endpoint if full prototype
    * data is required.
    *
-   * @return \Drupal\ghi_plans\ApiObjects\AttachmentPrototype\AttachmentPrototype
+   * @return \Drupal\ghi_plans\ApiObjects\Prototypes\AttachmentPrototype
    *   An attachment prototype object.
    *
    * @throws \Exception
@@ -1165,12 +1169,7 @@ class DataAttachment extends AttachmentBase implements DataAttachmentInterface {
    */
   protected function getPrototypeData() {
     $attachment = $this->getRawData();
-    if (property_exists($attachment, 'attachmentPrototype')) {
-      $prototype = new AttachmentPrototype($attachment->attachmentPrototype);
-    }
-    else {
-      $prototype = self::fetchPrototypeForAttachment($attachment);
-    }
+    $prototype = self::fetchPrototypeForAttachment($attachment);
 
     if (!$prototype) {
       throw new \Exception(sprintf('Failed to extract prototype for attachment %s', $attachment->id));
@@ -1224,7 +1223,7 @@ class DataAttachment extends AttachmentBase implements DataAttachmentInterface {
    * @param object $attachment
    *   The attachment object from the API.
    *
-   * @return \Drupal\ghi_plans\ApiObjects\AttachmentPrototype\AttachmentPrototype|null
+   * @return \Drupal\ghi_plans\ApiObjects\Prototypes\AttachmentPrototype|null
    *   An attachment prototype object.
    */
   protected function fetchPrototypeForAttachment($attachment) {
@@ -1232,23 +1231,22 @@ class DataAttachment extends AttachmentBase implements DataAttachmentInterface {
     // for performance when we need to do this for multiple attachments
     // belonging to the same plan (which is the usual case) because the
     // requests are cached.
-    /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\PlanAttachmentPrototypeQuery $query_handler */
-    $query_handler = $this->getEndpointQueryManager()->createInstance('plan_attachment_prototype_query');
+    /** @var \Drupal\ghi_plans\Plugin\FabricQuery\AttachmentPrototypeQuery $query_handler */
+    $query_handler = $this->getFabricQueryManager()->createInstance('attachment_prototype');
     if (!$query_handler) {
       return NULL;
     }
-    if ($prototype = $query_handler->getPrototypeByPlanAndId($attachment->planId, $attachment->attachmentPrototypeId)) {
+    $plan_id = $attachment->planId ?? NULL;
+    $prototype_id = $attachment->attachmentPrototype?->id ?? ($attachment->attachmentPrototypeId ?? NULL);
+    if (!$plan_id && !$prototype_id) {
+      return NULL;
+    }
+    if ($plan_id && $prototype_id && $prototype = $query_handler->getPrototypeByPlanAndId($plan_id, $prototype_id)) {
       return $prototype;
     }
 
-    // If that didn't work, we query the full attachment data to extract the
-    // prototype from there.
-    /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\AttachmentQuery $query_handler */
-    $query_handler = $this->getEndpointQueryManager()->createInstance('attachment_query');
-    if (!$query_handler) {
-      return NULL;
-    }
-    return $query_handler->getPrototype($attachment->id);
+    // If that didn't work, we query the prototype data directly.
+    return $prototype_id ? $query_handler->getPrototype($prototype_id) : NULL;
   }
 
   /**

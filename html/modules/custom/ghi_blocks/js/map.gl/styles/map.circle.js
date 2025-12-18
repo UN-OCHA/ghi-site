@@ -280,7 +280,7 @@
         'properties': {
           // General properties.
           'object_id': object.object_id,
-          'object_name': object.location_name,
+          'object_name': object.name,
           'admin_level': object.admin_level,
           'legend_type': object.plan_type ?? null,
           // Paint properties.
@@ -1117,7 +1117,7 @@
       let state = this.state;
       let tooltip = object.hasOwnProperty('tooltip') ? object.tooltip : null;
       if (tooltip === null) {
-        tooltip = '<b>Location:</b> ' + object.location_name;
+        tooltip = '<b>Location:</b> ' + object.name;
         if (typeof state.getData().hasOwnProperty('metric')) {
           tooltip += '<br /><b>Total ' + state.getData().metric.name.en.toLowerCase() + ':</b> ' + Drupal.theme('number', object.total);
         }

@@ -79,7 +79,8 @@ class FundingData extends ConfigurationContainerItemPluginBase {
   /**
    * {@inheritdoc}
    */
-  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition): FundingData {
+    /** @var self $instance */
     $instance = parent::create($container, $configuration, $plugin_id, $plugin_definition);
     $instance->fundingSummaryQuery = $instance->endpointQueryManager->createInstance('plan_funding_summary_query');
     $instance->planClusterSummaryQuery = $instance->endpointQueryManager->createInstance('plan_funding_cluster_query');

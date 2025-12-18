@@ -346,10 +346,10 @@ class EndpointQuery {
   /**
    * Execute the current query and preprocess the results.
    *
-   * @return object|array
-   *   The result from the endpoint query.
+   * @return object|array|false
+   *   The result from the endpoint query or FALSE.
    */
-  public function query() {
+  public function query(): object|array|false {
     $endpoint_url = $this->getFullEndpointUrl();
 
     $cache_key = $this->getCacheKey([
@@ -406,7 +406,7 @@ class EndpointQuery {
       }
     }
 
-    if (!is_array($data) && !is_object($data) && !count($data)) {
+    if (!is_array($data) && !is_object($data) && (is_countable($data) && !count($data))) {
       return [];
     }
 
@@ -459,7 +459,7 @@ class EndpointQuery {
     if (!empty($meta) && empty($data->meta)) {
       $data->meta = $meta;
     }
-    return $data;
+    return $data ?? FALSE;
   }
 
   /**
@@ -523,10 +523,10 @@ class EndpointQuery {
   /**
    * Retrieve data from the API.
    *
-   * @return object|array
-   *   The result from the endpoint query.
+   * @return object|array|false
+   *   The result from the endpoint query or FALSE.
    */
-  public function getData() {
+  public function getData(): object|array|false {
     return $this->query();
   }
 

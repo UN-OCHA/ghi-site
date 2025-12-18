@@ -10,6 +10,7 @@ use Drupal\hpc_api\Event\FabricDataEvent;
 use Drupal\hpc_api\Helpers\QueryHelper;
 use Drupal\hpc_api\Traits\SimpleCacheTrait;
 use GuzzleHttp\ClientInterface;
+use JsonMachine\Exception\JsonMachineException;
 use JsonMachine\Items;
 use League\OAuth2\Client\Provider\Exception\IdentityProviderException;
 use Microsoft\Kiota\Authentication\Oauth\ClientCredentialContext;
@@ -167,6 +168,11 @@ class FabricQuery {
    *   An access token or NULL.
    */
   public function getAccessToken(): ?string {
+    $cache_key = self::class . '_' . __METHOD__ . '_access_token';
+    $access_token = $this->cache($cache_key);
+    if ($access_token) {
+      return $access_token;
+    }
     $config = $this->configFactory->get('fabric_graphql.settings');
     $tenant_id = $config->get('tenant_id');
     $client_id = $config->get('client_id');
@@ -174,6 +180,10 @@ class FabricQuery {
     $token_url = "https://login.microsoftonline.com/{$tenant_id}/oauth2/v2.0/token";
     $allowedHosts = ['login.microsoftonline.com'];
     $scopes = ["https://api.fabric.microsoft.com/.default"];
+
+    if (!$tenant_id || !$client_id || !$client_secret) {
+      return NULL;
+    }
 
     // Get an access token.
     $tokenRequestContext = new ClientCredentialContext(
@@ -207,12 +217,17 @@ class FabricQuery {
       else {
         $error[] = "Response body: " . var_export($response, TRUE);
       }
-      $this->logError("Error acquiring access token: " . implode("\n", $error));
+      $this->logError("Error acquiring access token: @error", [
+        '@error' => implode("\n", $error),
+      ]);
     }
     catch (\Exception $e) {
-      $this->logError("Error acquiring access token: " . $e->getMessage());
+      $this->logError("Error acquiring access token: @message", [
+        '@message' => $e->getMessage(),
+      ]);
     }
 
+    $this->cache($cache_key, $access_token, FALSE, NULL, [], 300);
     return $access_token;
   }
 
@@ -222,17 +237,14 @@ class FabricQuery {
    * @param string $payload
    *   The payload to send to the endpoint.
    *
-   * @return object|array
-   *   The result from the endpoint query.
+   * @return object|array|false
+   *   The result from the endpoint query or FALSE on failure.
    */
   public function query($payload) {
-    $query = 'query ' . str_replace("\n", " ", addslashes(trim($payload)));
+    $query = 'query { ' . str_replace("\n", " ", addslashes(trim($payload))) . ' }';
     $body = '{"query": "' . $query . '"}';
-    $access_token = &drupal_static(__METHOD__ . '_access_token', NULL);
-    if ($access_token === NULL) {
-      $access_token = $this->getAccessToken();
-    }
 
+    $access_token = $this->getAccessToken();
     if (!$access_token) {
       $this->logError('No access token available for GraphQL request.');
       return FALSE;
@@ -261,42 +273,61 @@ class FabricQuery {
     try {
       $start = microtime(TRUE);
       $response = $this->httpClient->post($this->getEndpointUrl(), $post_args);
-      QueryHelper::endpointCallTimeStorage(preg_replace('/\s+/', ' ', $body), microtime(TRUE) - $start);
+      QueryHelper::endpointCallTimeStorage(preg_replace('/\s+/', ' ', $query), microtime(TRUE) - $start);
     }
     catch (\Exception $e) {
-      $this->logError("GraphQL request error: " . $e->getMessage());
+      $this->logError("GraphQL request error for query @query: @message", [
+        '@query' => $query,
+        '@message' => $e->getMessage(),
+      ]);
     }
 
     if (empty($response) || !$response instanceof ResponseInterface) {
-      $this->logError("GraphQL response is empty or invalid:\n");
+      $this->logError("GraphQL response is empty or invalid for query: @query", [
+        '@query' => $query,
+      ]);
       return FALSE;
     }
     if ($response->getStatusCode() != 200) {
-      $this->logError("GraphQL status code:\n" . $response->getStatusCode());
+      $this->logError("GraphQL status code @status_code for query @query", [
+        '@status_code' => $response->getStatusCode(),
+        '@query' => $query,
+      ]);
       return FALSE;
     }
 
     $body = (string) $response->getBody();
     if (empty($body)) {
-      return NULL;
-    }
-
-    // Now handle the JSON response, extract the data.
-    $data = Items::fromString($body, ['pointer' => '/data']);
-    if ($data === NULL) {
-      // Malformed JSON or other reason that the decoding has failed. Reset
-      // cache to force a new request on following calls.
-      $this->cache($cache_key, NULL, TRUE);
       return FALSE;
     }
 
-    $event = new FabricDataEvent($this, $data);
-    $this->eventDispatcher->dispatch($event, FabricDataEvent::class);
-    $data = $event->getData();
+    // Now handle the JSON response, extract the data.
+    $data = NULL;
+    try {
+      $data = Items::fromString($body, ['pointer' => '/data']);
+      if ($data === NULL) {
+        // Malformed JSON or other reason that the decoding has failed. Reset
+        // cache to force a new request on following calls.
+        $this->cache($cache_key, NULL, TRUE);
+        return FALSE;
+      }
 
-    // Cast into an object and store in cache.
-    $data = (object) iterator_to_array($data);
-    $this->cache($cache_key, $data, FALSE, NULL, $this->getCacheTags());
+      $event = new FabricDataEvent($this, $data);
+      $this->eventDispatcher->dispatch($event, FabricDataEvent::class);
+      $data = $event->getData();
+
+      // Cast into an object and store in cache.
+      $data = (object) iterator_to_array($data);
+      $this->cache($cache_key, $data, FALSE, NULL, $this->getCacheTags());
+    }
+    catch (JsonMachineException $e) {
+      $this->logError("Failed to parse GraphQL response for query @query with error message @message. Full data received was: <pre>@data</pre>", [
+        '@query' => $query,
+        '@message' => $e->getMessage(),
+        '@data' => print_r($body, TRUE),
+      ]);
+      return FALSE;
+    }
 
     // @todo Support sorting?
     return $data;

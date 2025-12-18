@@ -1,5 +1,5 @@
 langcode: en
-status: true
+status: false
 dependencies:
   enforced:
     module:
@@ -101,4 +101,6 @@ destination:
     - field_url
     - field_organization_locations
     - field_organization_type
+idMap: {  }
 migration_dependencies: {  }
+include: null

@@ -3,7 +3,7 @@
 namespace Drupal\Tests\ghi_plans\Unit;
 
 use Drupal\Component\Render\MarkupInterface;
-use Drupal\ghi_plans\ApiObjects\AttachmentPrototype\AttachmentPrototype;
+use Drupal\ghi_plans\ApiObjects\Prototypes\AttachmentPrototype;
 use Drupal\ghi_plans\ApiObjects\Attachments\CaseloadAttachment;
 use Drupal\ghi_plans\ApiObjects\Attachments\ContactAttachment;
 use Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment;

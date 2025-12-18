@@ -2,7 +2,7 @@
 
 namespace Drupal\Tests\ghi_plans\Kernel\ApiObjects;
 
-use Drupal\ghi_plans\ApiObjects\EntityPrototype;
+use Drupal\ghi_plans\ApiObjects\Prototypes\EntityPrototype;
 
 /**
  * Tests the EntityPrototype API object.

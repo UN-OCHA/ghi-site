@@ -9,8 +9,7 @@ ghi_plans.base_object.plan_structure:
         type: entity:base_object
     _admin_route: TRUE
   requirements:
-    _custom_access: '\Drupal\ghi_plans\Controller\PlanAdminController::access'
-    _permission: 'administer site configuration'
+    _custom_access: '\Drupal\ghi_plans\Controller\PlanAdminController::accessPlanStructure'
 ghi_plans.plan_autocomplete:
   path: '/plan/autocomplete'
   defaults:

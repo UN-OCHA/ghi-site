@@ -10,8 +10,13 @@ use Drupal\Core\Render\Element\FormElementBase;
 use Drupal\ghi_form_elements\Traits\AjaxElementTrait;
 use Drupal\ghi_plans\ApiObjects\Entities\EntityObjectInterface;
 use Drupal\ghi_plans\ApiObjects\Entities\GoverningEntity;
+use Drupal\ghi_plans\ApiObjects\Plan as ApiObjectsPlan;
 use Drupal\ghi_plans\Entity\Plan;
 use Drupal\ghi_plans\Helpers\PlanStructureHelper;
+use Drupal\ghi_plans\Plugin\FabricQuery\PlanEntityQuery;
+use Drupal\ghi_plans\Plugin\FabricQuery\PlanQuery;
+use Drupal\hpc_api\Query\EndpointQueryManager;
+use Drupal\hpc_api\Query\FabricQueryManager;
 use Drupal\hpc_common\Helpers\NodeHelper;
 
 /**
@@ -134,8 +139,8 @@ class EntitySelect extends FormElementBase {
     $plan_object = $element['#element_context']['plan_object'] ?? NULL;
 
     $plan_id = $plan_object->getSourceId();
-    $plan_entities = self::getPlanEntitiesQuery($plan_id)->getPlanEntities($base_object) ?? [];
-    $plan_data = self::getPlanEntitiesQuery($plan_id)->getData();
+    $plan_entities = self::getPlanEntityQuery($plan_id)->getPlanEntities($plan_id, $base_object) ?? [];
+    $plan = self::getPlanQuery()->getPlan($plan_id);
 
     $is_hidden = array_key_exists('#hidden', $element) && $element['#hidden'];
 
@@ -155,7 +160,7 @@ class EntitySelect extends FormElementBase {
     }, ARRAY_FILTER_USE_KEY);
 
     $entities = self::getEntityOptionsFromEntities($plan_entities);
-    $sorted_entity_options = self::sortEntitiesByPlanStructure($entities, $plan_data, $base_object, TRUE, FALSE);
+    $sorted_entity_options = self::sortEntitiesByPlanStructure($entities, $plan, $base_object, TRUE, FALSE);
     $found_entities = array_reduce($sorted_entity_options, function ($carry, $items) {
       return $carry + count($items);
     });
@@ -182,7 +187,7 @@ class EntitySelect extends FormElementBase {
       $entity_options[$plan_id] = [
         'id' => $plan_id,
         'name' => [
-          'data' => $plan_data->planVersion->name,
+          'data' => $plan->getName(),
           'colspan' => 2,
         ],
         '#disabled' => TRUE,
@@ -280,22 +285,39 @@ class EntitySelect extends FormElementBase {
    * @return \Drupal\hpc_api\Query\EndpointQueryManager
    *   The endpoint query manager service.
    */
-  private static function getEndpointQueryManager() {
+  private static function getEndpointQueryManager(): EndpointQueryManager {
     return \Drupal::service('plugin.manager.endpoint_query_manager');
   }
 
   /**
-   * Get the plan entities query service.
+   * Get the fabric query manager service.
    *
-   * @param int $plan_id
-   *   The plan id for which a query should be build.
-   *
-   * @return \Drupal\ghi_plans\Plugin\EndpointQuery\PlanEntitiesQuery
-   *   The plan entities query plugin.
+   * @return \Drupal\hpc_api\Query\FabricQueryManager
+   *   The fabric query manager service.
    */
-  public static function getPlanEntitiesQuery($plan_id) {
-    $query_handler = self::getEndpointQueryManager()->createInstance('plan_entities_query');
-    $query_handler->setPlaceholder('plan_id', $plan_id);
+  private static function getFabricQueryManager(): FabricQueryManager {
+    return \Drupal::service('plugin.manager.fabric_query_manager');
+  }
+
+  /**
+   * Get the plan entity query service.
+   *
+   * @return \Drupal\ghi_plans\Plugin\FabricQuery\PlanEntityQuery
+   *   The plan entity query plugin.
+   */
+  public static function getPlanEntityQuery(): PlanEntityQuery {
+    $query_handler = self::getFabricQueryManager()->createInstance('plan_entity');
+    return $query_handler;
+  }
+
+  /**
+   * Get the plan query service.
+   *
+   * @return \Drupal\ghi_plans\Plugin\FabricQuery\PlanQuery
+   *   The plan query plugin.
+   */
+  public static function getPlanQuery(): PlanQuery {
+    $query_handler = self::getFabricQueryManager()->createInstance('plan');
     return $query_handler;
   }
 
@@ -318,7 +340,7 @@ class EntitySelect extends FormElementBase {
         $entity_options[$entity->id()] = [
           'id' => $entity->id(),
           'name' => $entity->getFullName(),
-          'description' => $entity->description ?? '',
+          'description' => $entity->getDescription() ?? '',
         ];
       }
     }
@@ -330,8 +352,8 @@ class EntitySelect extends FormElementBase {
    *
    * @param array $entity_options
    *   A flat array of entity objects, keyed by the entity id.
-   * @param object $plan_data
-   *   The plan data.
+   * @param \Drupal\ghi_plans\ApiObjects\Plan $plan
+   *   The plan object.
    * @param object $context_node
    *   An optional context node object. If given this will set the high level
    *   group of the resulting sorted options array to the level represented by
@@ -351,9 +373,10 @@ class EntitySelect extends FormElementBase {
    *   Array with all entities of the plan, represented in a
    *   multi-dimensional, hierarchical structure.
    */
-  public static function sortEntitiesByPlanStructure(array $entity_options, $plan_data, $context_node = NULL, $hierarchical = FALSE, $label_only = TRUE, ?array $ple_structure = NULL) {
-    $ple_structure = $ple_structure ?? PlanStructureHelper::getPlanEntityStructure($plan_data);
+  public static function sortEntitiesByPlanStructure(array $entity_options, ApiObjectsPlan $plan, $context_node = NULL, $hierarchical = FALSE, $label_only = TRUE, ?array $ple_structure = NULL) {
+    $options = [];
 
+    $ple_structure = $ple_structure ?? PlanStructureHelper::getPlanEntityStructure($plan->id());
     $context_entity_original_id = $context_node ? NodeHelper::getOriginalIdFromNode($context_node) : NULL;
 
     // Create a nested option list based on the plan structure.
@@ -365,14 +388,14 @@ class EntitySelect extends FormElementBase {
         // structure, but we want to start one level lower. So we call this
         // function again with the childs of this first level item as a default
         // PLE structure.
-        $options = self::sortEntitiesByPlanStructure($entity_options, $plan_data, $context_node, $hierarchical, $label_only, $first_level_item->getChildren());
+        $options = self::sortEntitiesByPlanStructure($entity_options, $plan, $context_node, $hierarchical, $label_only, $first_level_item->getChildren());
       }
       else {
         if (empty($options[$first_level_item->group_name])) {
           $options[$first_level_item->group_name] = [];
         }
         if (!empty($entity_options[$first_level_item->id()])) {
-          $options[$first_level_item->group_name][$first_level_item->id()] = $label_only ? $first_level_item->getEntityName() : $entity_options[$first_level_item->id()];
+          $options[$first_level_item->group_name][$first_level_item->id()] = $label_only ? $first_level_item->getDisplayName() : $entity_options[$first_level_item->id()];
         }
         $children = $first_level_item->getChildren();
         if (!empty($children) && $hierarchical) {
@@ -421,7 +444,7 @@ class EntitySelect extends FormElementBase {
           $options[$child_item->id()] = $entity_options[$child_item->id()];
         }
         else {
-          $options[$child_item->id()] = str_repeat('—', $level) . ' ' . $child_item->getEntityName();
+          $options[$child_item->id()] = str_repeat('—', $level) . ' ' . $child_item->getDisplayName();
         }
       }
       if (!empty($child_item->getChildren())) {

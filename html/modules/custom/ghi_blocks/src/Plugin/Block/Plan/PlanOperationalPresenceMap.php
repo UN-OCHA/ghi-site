@@ -211,7 +211,7 @@ class PlanOperationalPresenceMap extends GHIBlockBase implements MultiStepFormBl
     // Process the locations.
     foreach ($locations as $location) {
       $objects = $objects_by_location[$location->location_id] ?? [];
-      $location_data = (object) $location->toArray();
+      $location_data = (object) $location->getGeoJsonLocationData();
       $location_data->object_id = $location->location_id;
       $location_data->object_count = count($objects);
       $location_data->modal_content = $this->buildModalContent($location, $objects, $selected_view, $fts_link);
@@ -512,14 +512,14 @@ class PlanOperationalPresenceMap extends GHIBlockBase implements MultiStepFormBl
     ];
 
     $modal_content = [
-      'location_id' => $location->location_id,
-      'location_name' => $location->location_name,
-      'admin_level' => $location->admin_level,
-      'pcode' => $location->pcode,
+      'id' => $location->id(),
+      'name' => $location->getName(),
+      'admin_level' => $location->getAdminLevel(),
+      'pcode' => $location->getPcode(),
       'title_heading' => $this->t('Admin area @admin_level', [
         '@admin_level' => $location->admin_level,
       ]),
-      'title' => $location->location_name,
+      'title' => $location->getName(),
       'content' => (!empty($objects) ? $fts_link : NULL) . $content,
       'object_count_label' => $object_count_label_map[$selected_view],
     ];

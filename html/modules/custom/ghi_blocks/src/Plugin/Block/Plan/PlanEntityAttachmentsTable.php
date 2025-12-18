@@ -33,7 +33,7 @@ use Drupal\hpc_downloads\Interfaces\HPCDownloadPNGInterface;
  *    "entity" = "hpc_api:entity_query",
  *    "attachment" = "hpc_api:attachment_query",
  *    "attachment_search" = "hpc_api:attachment_search_query",
- *    "attachment_prototype" = "hpc_api:plan_attachment_prototype_query",
+ *    "attachment_prototype" = "fabric_query:attachment_prototype",
  *  },
  *  default_title = @Translation("Indicator overview"),
  *  context_definitions = {
@@ -292,31 +292,15 @@ class PlanEntityAttachmentsTable extends GHIBlockBase implements ConfigurableTab
     $entity_options = [];
     foreach ($entities as $entity) {
       if ($entity instanceof PlanEntity) {
-        // @codingStandardsIgnoreStart
-        // if ($parent_id = $entity->getMainLevelParentId()) {
-        //   $parent_entity = PlanEntityHelper::getPlanEntity($parent_id);
-        //   $parent_entity_name = $parent_entity->getEntityName();
-        //   $group_name = $parent_entity->getGroupName();
-        //   $entity_options[$group_name] = $entity_options[$group_name] ?? [];
-        //   $entity_options[$group_name][$parent_entity->id()] = $parent_entity_name;
-        //   ksort($entity_options[$group_name]);
-        // }
-        // else {
-        //   $group_name = $entity->getGroupName();
-        //   $entity_options[$group_name] = $entity_options[$group_name] ?? [];
-        //   $entity_options[$group_name][$entity->id()] = $entity->getEntityName();
-        //   ksort($entity_options[$group_name]);
-        // }
-        // @codingStandardsIgnoreEnd
         $group_name = $entity->getGroupName();
         $entity_options[$group_name] = $entity_options[$group_name] ?? [];
-        $entity_options[$group_name][$entity->id()] = $entity->getEntityName();
+        $entity_options[$group_name][$entity->id()] = $entity->getDisplayName();
         ksort($entity_options[$group_name]);
       }
       else {
-        $entity_name = $entity->getEntityName();
+        $entity_name = $entity->getDisplayName();
         $entity_options[$entity_name] = $entity_options[$entity_name] ?? [];
-        $entity_options[$entity_name][$entity->id()] = $entity->getEntityName();
+        $entity_options[$entity_name][$entity->id()] = $entity->getDisplayName();
         ksort($entity_options[$entity_name]);
       }
     }
@@ -331,7 +315,7 @@ class PlanEntityAttachmentsTable extends GHIBlockBase implements ConfigurableTab
    */
   private function getCurrentEntityOptionsFlat() {
     return array_map(function ($entity) {
-      return $entity->getEntityName();
+      return $entity->getDisplayName();
     }, $this->getCurrentEntities());
   }
 
@@ -610,7 +594,7 @@ class PlanEntityAttachmentsTable extends GHIBlockBase implements ConfigurableTab
       return NULL;
     }
     $entity_ids = array_map(function ($entity) {
-      return $entity->id;
+      return $entity->id();
     }, $entities);
     $filter = array_filter([
       'type' => 'indicator',

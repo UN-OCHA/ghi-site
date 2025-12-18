@@ -10,6 +10,12 @@ use Drupal\hpc_common\Helpers\CommonHelper;
  */
 class Organization extends BaseObject {
 
+  const GRAPHQL_ITEMS = '
+    Id
+    Name
+    Url
+  ';
+
   /**
    * A list of clusters.
    *
@@ -26,9 +32,9 @@ class Organization extends BaseObject {
   protected function map() {
     $data = $this->getRawData();
     return (object) [
-      'id' => $data->id,
-      'name' => $data->name,
-      'url' => CommonHelper::assureWellFormedUri($data->url),
+      'id' => $data->Id ?? $data->id,
+      'name' => $data->Name ?? $data->name,
+      'url' => CommonHelper::assureWellFormedUri($data->Url ?? $data->url),
     ];
   }
 

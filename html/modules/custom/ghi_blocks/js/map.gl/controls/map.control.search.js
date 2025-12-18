@@ -61,7 +61,7 @@
         this.searchIndex[location.object_id] = {
           loc: location.latLng,
           object_id: location.object_id,
-          object_title: location.object_title ?? location.location_name,
+          object_title: location.object_title ?? location.name,
           pcode: location.pcode ?? null,
           plan_type: location.plan_type ?? null,
           admin_level: location.admin_level ?? null,

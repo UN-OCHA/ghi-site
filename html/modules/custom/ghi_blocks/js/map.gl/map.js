@@ -98,11 +98,11 @@
             if (!type || !feature) {
               return;
             }
-            feature.id = Number(location.location_id);
+            feature.id = Number(location.id);
             feature.properties = {
-              object_id: location.object_id ?? location.location_id,
-              location_id: location.location_id,
-              location_name: location.location_name,
+              object_id: location.object_id ?? location.id,
+              location_id: location.id,
+              location_name: location.name,
             };
             if (featureCallback) {
               feature = featureCallback(feature, location);

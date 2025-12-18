@@ -74,7 +74,7 @@
         if (vars.previous) {
           previous_link
             .attr('data-object-id', vars.previous.object_id)
-            .attr('title', vars.previous.location_name);
+            .attr('title', vars.previous.name);
         }
         else {
           previous_link.addClass('disabled');
@@ -87,7 +87,7 @@
         if (vars.next) {
           next_link
             .attr('data-object-id', vars.next.object_id)
-            .attr('title', vars.next.location_name);
+            .attr('title', vars.next.name);
         }
         else {
           next_link.addClass('disabled');

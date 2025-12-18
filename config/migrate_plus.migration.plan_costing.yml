@@ -14,6 +14,8 @@ migration_tags:
 migration_group: hpc_fabric_api
 label: 'Plan costing categories from the Fabric API'
 source:
+  include_raw_data: true
+  track_changes: true
   fabric_query:
     plugin: plan_costing_import
   fields:

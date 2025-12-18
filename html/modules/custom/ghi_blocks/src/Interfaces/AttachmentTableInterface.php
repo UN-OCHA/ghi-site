@@ -39,7 +39,7 @@ interface AttachmentTableInterface {
   /**
    * Get the attachment prototype to use for the current block instance.
    *
-   * @return \Drupal\ghi_plans\ApiObjects\AttachmentPrototype\AttachmentPrototype|null
+   * @return \Drupal\ghi_plans\ApiObjects\Prototypes\AttachmentPrototype|null
    *   The attachment prototype object.
    */
   public function getAttachmentPrototype($attachments = NULL);

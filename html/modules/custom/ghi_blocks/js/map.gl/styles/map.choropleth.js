@@ -296,7 +296,7 @@
           'coordinates': [object.latLng[1], object.latLng[0]],
         },
         'properties': {
-          'location_name': object.location_name,
+          'location_name': object.name,
           'sort_order': -1 * object.object_count,
         }
       };
@@ -491,7 +491,7 @@
      *   The location data object.
      */
     getTooltipContent = function (object) {
-      return object.location_name + ' (' + object.object_count + ')';
+      return object.name + ' (' + object.object_count + ')';
     }
 
     /**

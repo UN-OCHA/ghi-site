@@ -4,6 +4,11 @@ namespace Drupal\ghi_plans\Entity;
 
 use Drupal\ghi_base_objects\Entity\BaseObject;
 use Drupal\ghi_base_objects\Entity\BaseObjectChildInterface;
+use Drupal\ghi_plans\ApiObjects\Entities\GoverningEntity as EntitiesGoverningEntity;
+use Drupal\ghi_plans\Plugin\FabricQuery\PlanEntityQuery;
+use Drupal\hpc_api\Plugin\EndpointQuery\IconQuery;
+use Drupal\hpc_api\Query\EndpointQueryManager;
+use Drupal\hpc_api\Query\FabricQueryManager;
 
 /**
  * Bundle class for governing entity base objects.
@@ -61,27 +66,29 @@ class GoverningEntity extends BaseObject implements BaseObjectChildInterface {
    * @return \Drupal\ghi_plans\ApiObjects\Entities\GoverningEntity
    *   The entity object.
    */
-  public function getSourceObject() {
-    return $this->getEntityQuery()->getEntity('governingEntity', $this->getSourceId());
+  public function getSourceObject(): EntitiesGoverningEntity {
+    $entity = $this->getEntityQuery()->getEntity('governingEntity', $this->getSourceId());
+    assert($entity instanceof EntitiesGoverningEntity);
+    return $entity;
   }
 
   /**
    * Get the entity query.
    *
-   * @return \Drupal\ghi_plans\Plugin\EndpointQuery\EntityQuery
+   * @return \Drupal\ghi_plans\Plugin\FabricQuery\EntityQuery
    *   The entity query object.
    */
-  private function getEntityQuery() {
-    return self::getEndpointQueryManager()->createInstance('entity_query');
+  private function getEntityQuery(): PlanEntityQuery {
+    return self::getFabricQueryManager()->createInstance('plan_entity');
   }
 
   /**
    * Get the icon query.
    *
-   * @return \Drupal\ghi_plans\Plugin\EndpointQuery\EntityQuery
+   * @return \Drupal\hpc_api\Plugin\EndpointQuery\IconQuery
    *   The icon query object.
    */
-  private function getIconQuery() {
+  private function getIconQuery(): IconQuery {
     return self::getEndpointQueryManager()->createInstance('icon_query');
   }
 
@@ -91,8 +98,18 @@ class GoverningEntity extends BaseObject implements BaseObjectChildInterface {
    * @return \Drupal\hpc_api\Query\EndpointQueryManager
    *   The endpoint query manager.
    */
-  private static function getEndpointQueryManager() {
+  private static function getEndpointQueryManager(): EndpointQueryManager {
     return \Drupal::service('plugin.manager.endpoint_query_manager');
+  }
+
+  /**
+   * Get the fabric query manager.
+   *
+   * @return \Drupal\hpc_api\Query\FabricQueryManager
+   *   The fabric query manager.
+   */
+  private static function getFabricQueryManager(): FabricQueryManager {
+    return \Drupal::service('plugin.manager.fabric_query_manager');
   }
 
 }

@@ -2,7 +2,7 @@
 
 namespace Drupal\Tests\ghi_plans\Kernel\ApiObjects;
 
-use Drupal\ghi_plans\ApiObjects\PlanPrototype;
+use Drupal\ghi_plans\ApiObjects\Prototypes\PlanPrototype;
 
 /**
  * Tests the PlanPrototype API object.

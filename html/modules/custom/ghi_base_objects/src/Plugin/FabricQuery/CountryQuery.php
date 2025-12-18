@@ -31,21 +31,15 @@ class CountryQuery extends FabricQueryBase {
       return;
     }
     $payload = '
-      {
-        locations (
-          filter: { AdminLevel: { eq: 0 } },
-          first: 1000,
-          orderBy: { Name: ASC }
-        ) {
-          items { ' . Country::GRAPHQL_ITEMS . ' }
-        }
-      }
-    ';
+      locations (
+        filter: { AdminLevel: { eq: 0 } },
+        first: 1000,
+        orderBy: { Name: ASC }
+      ) {
+        items { ' . Country::GRAPHQL_ITEMS . ' }
+      }';
     $data = $this->fabricQuery->query($payload);
-    $items = $data->locations->items;
-    $ids = array_map(fn($item) => $item->Id, $items);
-    $items = array_combine($ids, $items);
-    $this->countries = array_map(fn($item): Country => new Country($item), $items);
+    $this->countries = $this->buildResultObjectsFromData($data, 'locations', Country::class);
   }
 
   /**

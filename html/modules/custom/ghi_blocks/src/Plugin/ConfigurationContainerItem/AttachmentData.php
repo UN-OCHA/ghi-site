@@ -11,6 +11,7 @@ use Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment;
 use Drupal\ghi_plans\Entity\Plan;
 use Drupal\ghi_plans\Traits\AttachmentFilterTrait;
 use Drupal\hpc_common\Helpers\StringHelper;
+use Drupal\user\Entity\User;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -35,11 +36,20 @@ class AttachmentData extends ConfigurationContainerItemPluginBase {
   public $attachmentQuery;
 
   /**
+   * The current user account.
+   *
+   * @var \Drupal\Core\Session\AccountProxyInterface
+   */
+  protected $currentUser;
+
+  /**
    * {@inheritdoc}
    */
-  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition): AttachmentData {
+    /** @var self $instance */
     $instance = parent::create($container, $configuration, $plugin_id, $plugin_definition);
     $instance->attachmentQuery = $instance->endpointQueryManager->createInstance('attachment_query');
+    $instance->currentUser = $container->get('current_user');
     return $instance;
   }
 
@@ -61,10 +71,12 @@ class AttachmentData extends ConfigurationContainerItemPluginBase {
 
     // Load an attachment if already selected.
     $attachment = NULL;
+    $errors = [];
     if (!empty($attachment_select['attachment_id'])) {
       $attachment_id = is_array($attachment_select['attachment_id']) ? reset($attachment_select['attachment_id']) : $attachment_select['attachment_id'];
       $attachment = $this->attachmentQuery->getAttachment($attachment_id);
-      $attachment = $attachment && empty($this->validateAttachment($attachment)) ? $attachment : NULL;
+      $errors = $attachment ? $this->validateAttachment($attachment) : [];
+      $attachment = $attachment && empty($errors) ? $attachment : NULL;
       $attachment_select['attachment_id'] = $attachment?->id();
     }
 
@@ -72,6 +84,11 @@ class AttachmentData extends ConfigurationContainerItemPluginBase {
       $element['#element_errors'] = [
         $this->t('There was a problem loading the selected attachment. If the problem persists, please contact an administrator.'),
       ];
+      if (!empty($errors) && User::load($this->currentUser->id())?->hasRole('administrator')) {
+        $element['#element_errors'][] = $this->t('The original error message was: <em>@errors</em>', [
+          '@errors' => implode('', $errors),
+        ]);
+      }
     }
 
     // See if we are in attachment select mode (or in data point configuration
@@ -236,7 +253,7 @@ class AttachmentData extends ConfigurationContainerItemPluginBase {
     }
     // Cast this to a scalar if necessary.
     $attachment_id = is_array($attachment_id) ? array_key_first($attachment_id) : $attachment_id;
-    $attachment = $this->attachmentQuery->getAttachment($attachment_id, FALSE, 'all');
+    $attachment = $this->attachmentQuery->getAttachment($attachment_id, 'all');
     if (!$attachment) {
       return NULL;
     }

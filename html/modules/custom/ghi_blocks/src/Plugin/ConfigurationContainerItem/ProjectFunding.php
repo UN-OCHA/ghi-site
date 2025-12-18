@@ -35,7 +35,8 @@ class ProjectFunding extends ConfigurationContainerItemPluginBase {
   /**
    * {@inheritdoc}
    */
-  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition): ProjectFunding {
+    /** @var self $instance */
     $instance = parent::create($container, $configuration, $plugin_id, $plugin_definition);
     $instance->projectFundingQuery = $instance->endpointQueryManager->createInstance('plan_project_funding_query');
     return $instance;

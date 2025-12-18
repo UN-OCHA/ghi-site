@@ -1,44 +1,45 @@
 <?php
 
-namespace Drupal\ghi_plans\ApiObjects;
+namespace Drupal\ghi_plans\ApiObjects\Prototypes;
 
-use Drupal\ghi_base_objects\ApiObjects\BaseObject;
+use Drupal\hpc_api\ApiObjects\ApiObjectBase;
 
 /**
- * Abstraction class for API entity prototype objects.
+ * Abstraction for API entity prototype objects.
  */
-class EntityPrototype extends BaseObject {
+class EntityPrototype extends ApiObjectBase {
+
+  const GRAPHQL_ITEMS = "
+    Id
+    RefCode
+    Type
+    Value
+    PlanId
+    OrderNumber
+    CreatedAt
+    UpdatedAt
+    RecordStatus
+    Source
+    SourceId
+  ";
 
   /**
-   * Map the raw data.
-   *
-   * @return object
-   *   An object with the mapped data.
+   * {@inheritdoc}
    */
   protected function map() {
     $data = $this->getRawData();
-
+    $value = json_decode($data->Value ?? '');
     return (object) [
-      'id' => $data->id,
-      'ref_code' => $data->refCode,
-      'type' => $data->type,
-      'name_singular' => $data->value->name->en->singular,
-      'name_plural' => $data->value->name->en->plural,
-      'order_number' => $data->orderNumber,
-      'can_support' => $data->value->canSupport ?? [],
-      'children' => $data->value->possibleChildren ?? [],
+      'id' => $data->Id,
+      'ref_code' => $data->RefCode,
+      'type' => strtoupper($data->Type),
+      'plan_id' => $data->PlanId,
+      'order_number' => $data->OrderNumber,
+      'name_singular' => $value->name->en->singular,
+      'name_plural' => $value->name->en->plural,
+      'can_support' => $value->canSupport ?? [],
+      'children' => $value->possibleChildren ?? [],
     ];
-
-  }
-
-  /**
-   * Get the plural name for the entity prototype.
-   *
-   * @return string
-   *   The plural name.
-   */
-  public function getPluralName() {
-    return $this->name_plural;
   }
 
   /**
@@ -104,6 +105,16 @@ class EntityPrototype extends BaseObject {
   }
 
   /**
+   * Get the order number for the entity prototype.
+   *
+   * @return int|null
+   *   The order number.
+   */
+  public function getOrderNumber(): ?int {
+    return $this->order_number ?? NULL;
+  }
+
+  /**
    * Get the ids of supported prototypes.
    *
    * @todo Define what "support" means.
@@ -127,6 +138,16 @@ class EntityPrototype extends BaseObject {
     return array_filter(array_map(function ($item) {
       return $item->id ?? NULL;
     }, $can_support));
+  }
+
+  /**
+   * Get the children.
+   *
+   * @return object[]
+   *   An array of children objects that this entity prototype supports.
+   */
+  public function getChildren(): array {
+    return $this->children ?: [];
   }
 
   /**

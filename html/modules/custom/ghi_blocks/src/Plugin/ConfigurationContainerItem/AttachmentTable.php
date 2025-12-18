@@ -10,7 +10,7 @@ use Drupal\ghi_form_elements\ConfigurationContainerItemCustomActionsInterface;
 use Drupal\ghi_form_elements\ConfigurationContainerItemPluginBase;
 use Drupal\ghi_form_elements\Traits\ConfigurationContainerItemCustomActionTrait;
 use Drupal\ghi_form_elements\Traits\ConfigurationContainerTrait;
-use Drupal\ghi_plans\ApiObjects\AttachmentPrototype\AttachmentPrototype;
+use Drupal\ghi_plans\ApiObjects\Prototypes\AttachmentPrototype;
 use Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment;
 use Drupal\ghi_plans\ApiObjects\Attachments\IndicatorAttachment;
 use Drupal\ghi_plans\ApiObjects\PlanEntityInterface;
@@ -48,7 +48,8 @@ class AttachmentTable extends ConfigurationContainerItemPluginBase implements Co
   /**
    * {@inheritdoc}
    */
-  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition): AttachmentTable {
+    /** @var self $instance */
     $instance = parent::create($container, $configuration, $plugin_id, $plugin_definition);
     $instance->configurationContainerItemManager = $container->get('plugin.manager.configuration_container_item_manager');
     $instance->uuidService = $container->get('uuid');
@@ -355,7 +356,7 @@ class AttachmentTable extends ConfigurationContainerItemPluginBase implements Co
   /**
    * Get the available attachment prototypes.
    *
-   * @return \Drupal\ghi_plans\ApiObjects\AttachmentPrototype\AttachmentPrototype[]
+   * @return \Drupal\ghi_plans\ApiObjects\Prototypes\AttachmentPrototype[]
    *   An array of attachment prototype objects.
    */
   private function getAttachmentPrototypes() {
@@ -428,7 +429,7 @@ class AttachmentTable extends ConfigurationContainerItemPluginBase implements Co
   /**
    * Get the attachment prototype to use for the current element.
    *
-   * @return \Drupal\ghi_plans\ApiObjects\AttachmentPrototype\AttachmentPrototype|null
+   * @return \Drupal\ghi_plans\ApiObjects\Prototypes\AttachmentPrototype|null
    *   The attachment prototype object.
    */
   public function getAttachmentPrototype($attachments = NULL) {
@@ -442,7 +443,7 @@ class AttachmentTable extends ConfigurationContainerItemPluginBase implements Co
    * @param int $prototype_id
    *   The prototype id.
    *
-   * @return \Drupal\ghi_plans\ApiObjects\AttachmentPrototype\AttachmentPrototype|null
+   * @return \Drupal\ghi_plans\ApiObjects\Prototypes\AttachmentPrototype|null
    *   The attachment prototype object.
    */
   public function getAttachmentPrototypeById($prototype_id) {
