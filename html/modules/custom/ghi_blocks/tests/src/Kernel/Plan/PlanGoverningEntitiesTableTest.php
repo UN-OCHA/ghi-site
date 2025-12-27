@@ -7,7 +7,8 @@ use Drupal\ghi_base_objects\Entity\BaseObjectInterface;
 use Drupal\ghi_blocks\Interfaces\MultiStepFormBlockInterface;
 use Drupal\ghi_blocks\Interfaces\OverrideDefaultTitleBlockInterface;
 use Drupal\ghi_blocks\Plugin\Block\Plan\PlanGoverningEntitiesTable;
-use Drupal\ghi_plans\Plugin\EndpointQuery\PlanEntitiesQuery;
+use Drupal\ghi_plans\ApiObjects\Entities\GoverningEntity;
+use Drupal\ghi_plans\Plugin\FabricQuery\PlanEntityQuery;
 use Drupal\hpc_downloads\Interfaces\HPCDownloadExcelInterface;
 use Drupal\hpc_downloads\Interfaces\HPCDownloadPNGInterface;
 use Drupal\Tests\ghi_blocks\Kernel\PlanBlockKernelTestBase;
@@ -154,7 +155,8 @@ class PlanGoverningEntitiesTableTest extends PlanBlockKernelTestBase {
   public function testGetEntityObjects() {
     $plugin = $this->getBlockPlugin();
     $entity_objects = $this->callPrivateMethod($plugin, 'getEntityObjects');
-    $this->assertNull($entity_objects);
+    $this->assertIsArray($entity_objects);
+    $this->assertEmpty($entity_objects);
 
     $this->injectPlanEntityQueryStub($plugin);
     $entity_objects = $this->callPrivateMethod($plugin, 'getEntityObjects');
@@ -170,7 +172,12 @@ class PlanGoverningEntitiesTableTest extends PlanBlockKernelTestBase {
     $this->assertNull($base_objects);
 
     $cluster = $this->createBaseObject(['type' => 'governing_entity']);
-    $entity_object = (object) ['id' => $cluster->getSourceId()];
+    $entity_object = new GoverningEntity((object) [
+      'Id' => $cluster->getSourceId(),
+      'Name' => $cluster->label(),
+      'Description' => NULL,
+      'CustomReference' => NULL,
+    ]);
     $base_objects = $this->callPrivateMethod($plugin, 'loadBaseObjectsForEntities', [[$entity_object]]);
     $this->assertIsArray($base_objects);
     $this->assertArrayHasKey($cluster->getSourceId(), $base_objects);
@@ -227,14 +234,16 @@ class PlanGoverningEntitiesTableTest extends PlanBlockKernelTestBase {
     $clusters = $clusters ?? [
       $this->createBaseObject(['type' => 'governing_entity']),
     ];
-    $plan_entities_query = $this->prophesize(PlanEntitiesQuery::class);
-    $plan_entities_query->getPlanEntities(Argument::cetera())->willReturn(array_map(function ($cluster) {
-      return (object) [
-        'id' => $cluster->getSourceId(),
-        'name' => $cluster->label(),
-      ];
+    $plan_entity_query = $this->prophesize(PlanEntityQuery::class);
+    $plan_entity_query->getPlanEntities(Argument::cetera())->willReturn(array_map(function ($cluster) {
+      return new GoverningEntity((object) [
+        'Id' => $cluster->getSourceId(),
+        'Name' => $cluster->label(),
+        'Description' => NULL,
+        'CustomReference' => NULL,
+      ]);
     }, $clusters));
-    $plugin->setQueryHandler('entities', $plan_entities_query->reveal());
+    $plugin->setQueryHandler('entities', $plan_entity_query->reveal());
   }
 
 }

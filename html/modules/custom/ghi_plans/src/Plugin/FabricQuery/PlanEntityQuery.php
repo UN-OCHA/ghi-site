@@ -38,7 +38,7 @@ class PlanEntityQuery extends FabricQueryBase {
             items { " . GoverningEntity::GRAPHQL_ITEMS . " }
           }";
         $data = $this->fabricQuery->query($payload);
-        $items = $this->getItems($data, 'coordinationEntities');
+        $items = $data ? $this->getItems($data, 'coordinationEntities') : [];
         return count($items) == 1 ? new GoverningEntity(reset($items)) : NULL;
 
       case 'planEntity':
@@ -47,7 +47,7 @@ class PlanEntityQuery extends FabricQueryBase {
             items { " . PlanEntity::GRAPHQL_ITEMS . " }
           }";
         $data = $this->fabricQuery->query($payload);
-        $items = $this->getItems($data, 'logframeEntities');
+        $items = $data ? $this->getItems($data, 'logframeEntities') : [];
         return count($items) == 1 ? new PlanEntity(reset($items)) : NULL;
     }
 

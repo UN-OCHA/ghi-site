@@ -40,7 +40,7 @@ abstract class BaseObject extends ApiObjectBase implements BaseObjectInterface {
    * {@inheritdoc}
    */
   public function getName(): ?string {
-    return $this->name ?? ($this->getRawData()->name ?? NULL);
+    return $this->map->name ?? ($this->getRawData()->Name ?? NULL);
   }
 
   /**

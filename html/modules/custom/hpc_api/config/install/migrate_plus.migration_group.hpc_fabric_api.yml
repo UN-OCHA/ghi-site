@@ -1,0 +1,23 @@
+# A "migration group" is - surprise! - a group of migrations. It is used to
+# group migrations for display by our tools, and to perform operations on a
+# specific set of migrations. It can also be used to hold any configuration
+# common to those migrations, so it doesn't have to be duplicated in each one.
+
+# The machine name of the group, by which it is referenced in individual
+# migrations.
+id: hpc_fabric_api
+
+# A human-friendly label for the group.
+label: 'HPC Fabric API'
+
+# More information about the group.
+description: 'Data from the HPC Fabric API'
+
+# Short description of the type of source, e.g. "Drupal 6" or "WordPress".
+source_type: 'Fabric GraphQL'
+
+shared_configuration:
+  source:
+    plugin: hpc_fabric_graphql
+    data_fetcher_plugin: fabric_http
+    data_parser_plugin: fabric_graphql

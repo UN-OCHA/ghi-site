@@ -37,7 +37,7 @@ class EntityPrototypeQuery extends FabricQueryBase {
         items { " . EntityPrototype::GRAPHQL_ITEMS . "}
       }";
     $data = $this->fabricQuery->query($payload);
-    $prototypes = $this->getItems($data, 'entityPrototypes');
+    $prototypes = $data ? $this->getItems($data, 'entityPrototypes') : [];
     if (empty($prototypes)) {
       return NULL;
     }
@@ -52,7 +52,7 @@ class EntityPrototypeQuery extends FabricQueryBase {
    *   The id of the plan to which a prototype belongs.
    *
    * @return \Drupal\ghi_plans\ApiObjects\Prototypes\PlanPrototype|null
-   *   The processed plan prototype object.
+   *   The processed plan prototype object or NULL.
    */
   public function getPlanPrototype(int $plan_id): ?PlanPrototype {
     // Get the attachment data.
@@ -65,7 +65,7 @@ class EntityPrototypeQuery extends FabricQueryBase {
         items { " . EntityPrototype::GRAPHQL_ITEMS . "}
       }";
     $data = $this->fabricQuery->query($payload);
-    $prototypes = $this->getItems($data, 'entityPrototypes');
+    $prototypes = $data ? $this->getItems($data, 'entityPrototypes') : NULL;
     if (empty($prototypes)) {
       return NULL;
     }

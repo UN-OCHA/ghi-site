@@ -2,12 +2,12 @@
 
 namespace Drupal\ghi_plans\ApiObjects\Prototypes;
 
-use Drupal\hpc_api\ApiObjects\ApiObjectBase;
+use Drupal\ghi_base_objects\ApiObjects\BaseObject;
 
 /**
  * Abstraction for API entity prototype objects.
  */
-class EntityPrototype extends ApiObjectBase {
+class EntityPrototype extends BaseObject {
 
   const GRAPHQL_ITEMS = "
     Id
