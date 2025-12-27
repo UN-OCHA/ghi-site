@@ -404,7 +404,7 @@ class PlanTable extends GHIBlockBase implements HPCDownloadExcelInterface, HPCDo
   /**
    * Get the custom plan rows if configured.
    *
-   * @return \Drupal\ghi_plans\ApiObjects\Mocks\PlanOverviewPlanMock
+   * @return \Drupal\ghi_plans\ApiObjects\Mocks\PlanOverviewPlanMock[]
    *   An array of mocked plan overview response objects.
    */
   private function getCustomPlanRows() {

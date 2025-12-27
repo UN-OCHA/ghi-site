@@ -28,5 +28,5 @@ while [ "$1" != "" ]; do
   shift
 done
 
-fin drush migrate:import --group hpc_api_data --update
+fin drush migrate:import --group hpc_fabric_api --update
 fin drush migrate:import --group ncms

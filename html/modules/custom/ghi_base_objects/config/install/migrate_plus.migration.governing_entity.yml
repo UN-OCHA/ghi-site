@@ -10,7 +10,7 @@ field_plugin_method: null
 cck_plugin_method: null
 migration_tags:
   - 'HPC Fabric'
-migration_group: hpc_fabric_api
+migration_group: hpc_api_data
 label: 'Governing entities from the HPC Fabric API'
 source:
   include_raw_data: true

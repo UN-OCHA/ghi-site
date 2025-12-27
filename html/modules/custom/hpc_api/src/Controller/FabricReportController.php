@@ -137,6 +137,9 @@ class FabricReportController extends ControllerBase {
     $rows = [];
     if ($data !== NULL) {
       foreach (get_object_vars($data) as $key => $value) {
+        if (is_bool($value)) {
+          $value = $value === TRUE ? 'true' : 'false';
+        }
         $rows[] = [$key, $value];
       }
     }

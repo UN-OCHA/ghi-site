@@ -6,6 +6,8 @@ use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\ghi_base_objects\ApiObjects\Country;
 use Drupal\ghi_base_objects\Plugin\FabricQuery\CountryQuery;
 use Drupal\ghi_plans\ApiObjects\Plan;
+use Drupal\hpc_api\ApiObjects\Types\PlanCostingType;
+use Drupal\hpc_api\ApiObjects\Types\PlanType;
 use Drupal\hpc_api\Attribute\FabricQuery;
 use Drupal\hpc_api\Query\FabricQueryBase;
 
@@ -59,6 +61,8 @@ class PlanQuery extends FabricQueryBase {
 
     // Lookup the focus country.
     $plan_data->FocusCountry = $plan_data->FocusedLocationName ? $this->lookupCountry($plan_data->FocusedLocationName) : NULL;
+    $plan_data->PlanType = $plan_data->PlanType ? $this->getPlanTypeByName($plan_data->PlanType) : NULL;
+    $plan_data->PlanCosting = $plan_data->PlanCosting ? $this->getPlanCostingTypeByName($plan_data->PlanCosting) : NULL;
 
     return new Plan($plan_data);
   }
@@ -85,6 +89,44 @@ class PlanQuery extends FabricQueryBase {
       }";
     $data = $this->fabricQuery->query($payload);
     return $this->buildResultObjectsFromData($data, 'plans', Plan::class);
+  }
+
+  /**
+   * Get the plan type by name.
+   *
+   * @param string $name
+   *   The name of the plan type to get.
+   *
+   * @return \Drupal\hpc_api\ApiObjects\Types\PlanType|null
+   *   The plan type object or NULL.
+   */
+  protected function getPlanTypeByName($name): ?PlanType {
+    $this->fetchPlanTypes();
+    foreach ($this->planTypes as $plan_type) {
+      if ($plan_type->getName() == $name) {
+        return $plan_type;
+      }
+    }
+    return NULL;
+  }
+
+  /**
+   * Get the plan costing type by name.
+   *
+   * @param string $name
+   *   The name of the plan costing type to get.
+   *
+   * @return \Drupal\hpc_api\ApiObjects\Types\PlanCostingType|null
+   *   The plan costing type object or NULL.
+   */
+  protected function getPlanCostingTypeByName($name): ?PlanCostingType {
+    $this->fetchPlanCostingTypes();
+    foreach ($this->planCostingTypes as $plan_costing_type) {
+      if ($plan_costing_type->getName() == $name) {
+        return $plan_costing_type;
+      }
+    }
+    return NULL;
   }
 
   /**

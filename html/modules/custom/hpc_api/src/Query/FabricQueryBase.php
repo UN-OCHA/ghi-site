@@ -17,8 +17,8 @@ use Drupal\hpc_api\ApiObjects\Types\PlanCostingType;
 use Drupal\hpc_api\ApiObjects\Types\PlanType;
 use Drupal\hpc_api\ApiObjects\Types\PlanYear;
 use Drupal\hpc_api\ApiObjects\Types\PopulationStatus;
-use Drupal\hpc_api\ApiObjects\Types\PopulationType;
 use Drupal\hpc_api\ApiObjects\Types\RelationshipType;
+use Drupal\hpc_api\ApiObjects\Types\ResourceType;
 use Drupal\hpc_api\ApiObjects\Types\SettlementType;
 use Drupal\hpc_api\ApiObjects\Types\Unit;
 use Drupal\hpc_api\Helpers\ArrayHelper;
@@ -255,8 +255,8 @@ abstract class FabricQueryBase extends PluginBase implements FabricQueryPluginIn
       'healthInterventionCategories' => [HealthInterventionCategory::class, $properties],
       'metricTypes' => [MetricType::class, $properties],
       'populationStatuses' => [PopulationStatus::class, $properties],
-      'populationTypes' => [PopulationType::class, $properties],
-      // 'resourceTypes' => [ResourceType::class, $properties],
+      // 'populationTypes' => [PopulationType::class, $properties],
+      'resourceTypes' => [ResourceType::class, $properties],
       'settlementTypes' => [SettlementType::class, $properties],
       'units' => [Unit::class, $properties],
     ];
@@ -643,6 +643,11 @@ abstract class FabricQueryBase extends PluginBase implements FabricQueryPluginIn
         $data = $this->fabricQuery->query("plans (filter: { Id: { eq: {$entity_id} } }) { items { Id Name } } ");
         $items = $data ? $this->getItems($data, 'plans') : [];
         return $items[$entity_id]?->Name ?? NULL;
+
+      case 'Project':
+        $data = $this->fabricQuery->query("projects (filter: { Id: { eq: {$entity_id} } }) { items { Id ProjectCode Name } } ");
+        $items = $data ? $this->getItems($data, 'projects') : [];
+        return !empty($items[$entity_id]) ? ($items[$entity_id]->ProjectCode . ': ' . $items[$entity_id]->Name) : NULL;
 
       case 'Location':
         $data = $this->fabricQuery->query("locations (filter: { Id: { eq: {$entity_id} } }) { items { Id Name } } ");

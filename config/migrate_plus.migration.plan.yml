@@ -11,7 +11,7 @@ field_plugin_method: null
 cck_plugin_method: null
 migration_tags:
   - 'HPC Fabric'
-migration_group: hpc_fabric_api
+migration_group: hpc_api_data
 label: 'Plans from the HPC Fabric API'
 source:
   include_raw_data: true
@@ -39,6 +39,8 @@ process:
     plugin: default_value
     default_value: plan
   name: name
+  created: plan_created_date
+  changed: plan_updated_date
   field_original_id: original_id
   field_description: comments
   field_short_name: short_name
@@ -81,7 +83,7 @@ process:
     plugin: skip_on_empty
     method: row
     source: plan_date_end
-    message: 'Plan emd date is missing'
+    message: 'Plan end date is missing'
   field_document_published_on: document_published_on
   field_plan_coordinator: plan_coordinator
 destination:
