@@ -6,6 +6,7 @@ use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Link;
 use Drupal\Core\Url;
+use Drupal\hpc_api\ApiObjects\Types\EntityType;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -161,7 +162,9 @@ class RelationshipLookupForm extends FormBase {
   public function getEntityTypeOptions() {
     /** @var \Drupal\hpc_api\Plugin\FabricQuery\RelationshipQuery $query */
     $query = $this->fabricQueryManager->createInstance('relationship');
-    return [0 => $this->t('Any')] + array_map(fn($item) => $item->getName(), $query->getEntityTypes());
+    $types = array_map(fn(EntityType $item) => $item->getLabel(), $query->getEntityTypes());
+    ksort($types);
+    return [0 => $this->t('Any')] + $types;
   }
 
 }

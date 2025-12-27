@@ -27,23 +27,24 @@ class Plan extends BaseObject implements PlanEntityInterface {
     PlanClusterType
     StartDate
     EndDate
+    CreatedAt
+    UpdatedAt
     IsReleased
     IsRestricted
     IsPartOfGHO
     DocumentPublishDate
     Description
     FocusedLocationName
-    period (
-      filter: { PeriodType: { eq: "Year" } },
-      orderBy: { CalendarYear: ASC },
-      first: 1
-    ) {
+    FocusedLocationId
+    planPeriod {
       items {
-        CalendarYear
+        period {
+            CalendarYear
+        }
       }
     }
-    location {
-      items { ' . Country::GRAPHQL_ITEMS . ' }
+    planLocation {
+      items { location { ' . Country::GRAPHQL_ITEMS . ' } }
     }
   ';
 
@@ -62,7 +63,7 @@ class Plan extends BaseObject implements PlanEntityInterface {
     return (object) [
       'id' => $data->Id,
       'name' => $data->Name,
-      'year' => $data->period?->items[0]->CalendarYear ?? NULL,
+      'year' => $data->planPeriod?->items[0]?->period?->CalendarYear ?? NULL,
       'short_name' => $data->ShortName ?? NULL,
       'subtitle' => $data->PlanSubTitle ?? NULL,
       'comments' => $data->Description ?? NULL,
@@ -71,13 +72,15 @@ class Plan extends BaseObject implements PlanEntityInterface {
       'plan_costing_type' => $data->PlanCosting,
       'start_date' => $data->StartDate ? $this->reformatDate($data->StartDate) : NULL,
       'end_date' => $data->EndDate ? $this->reformatDate($data->EndDate) : NULL,
+      'created_date' => $data->CreatedAt ? $this->getTimestamp($data->CreatedAt) : NULL,
+      'updated_date' => $data->UpdatedAt ? $this->getTimestamp($data->UpdatedAt) : NULL,
       'document_published_date' => $data->DocumentPublishDate ? $this->reformatDate($data->DocumentPublishDate) : NULL,
       'last_published_period' => NULL,
       'is_released' => $data->IsReleased ?? FALSE,
       'is_restricted' => $data->IsRestricted ?? FALSE,
       'is_part_of_gho' => $data->IsPartOfGHO ?? FALSE,
       'langcode' => $data->PlanLanguageCode ?? 'en',
-      'countries' => array_map(fn ($item) => new Country($item), $data->location?->items ?? []),
+      'countries' => array_map(fn ($item) => new Country($item->location), $data->planLocation?->items ?? []),
       'focus_country' => $data->FocusCountry,
     ];
   }
@@ -232,6 +235,26 @@ class Plan extends BaseObject implements PlanEntityInterface {
   }
 
   /**
+   * Get the created date of the plan.
+   *
+   * @return string|null
+   *   The created date as a string.
+   */
+  public function getCreatedDate(): ?string {
+    return $this->map->created_date;
+  }
+
+  /**
+   * Get the updated date of the plan.
+   *
+   * @return string|null
+   *   The updated date as a string.
+   */
+  public function getUpdatedDate(): ?string {
+    return $this->map->updated_date;
+  }
+
+  /**
    * Get the document published date of the plan.
    *
    * @return string|null
@@ -323,6 +346,20 @@ class Plan extends BaseObject implements PlanEntityInterface {
   private function reformatDate(string $date): string {
     $datetime = new \DateTime($date, new \DateTimeZone('UTC'));
     return $datetime->format('Y-m-d');
+  }
+
+  /**
+   * Get a timestamp from a date.
+   *
+   * @param string $date
+   *   The original date string.
+   *
+   * @return int
+   *   The timestamp.
+   */
+  private function getTimestamp(string $date): string {
+    $datetime = new \DateTime($date, new \DateTimeZone('UTC'));
+    return $datetime->getTimestamp();
   }
 
 }

@@ -21,7 +21,6 @@ use Drupal\hpc_downloads\Interfaces\HPCDownloadPNGInterface;
  *  admin_label = @Translation("Organizations Table"),
  *  category = @Translation("Plan elements"),
  *  data_sources = {
- *    "entities" = "hpc_api:plan_entities_query",
  *    "project_search" = "hpc_api:plan_project_search_query",
  *    "project_funding" = "hpc_api:plan_project_funding_query",
  *  },
