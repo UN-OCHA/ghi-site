@@ -46,7 +46,7 @@ class GoverningEntity extends EntityObjectBase {
       }, $prototype?->getChildren() ?: []),
       'entity_type' => $prototype?->getType() ?? NULL,
       'entity_prototype_name' => $prototype?->getNameSingular(),
-      'entity_prototype_id' => $data->HpcEntityPrototypeId,
+      'entity_prototype_id' => $prototype?->id(),
       'order_number' => 0,
       'custom_reference' => $data->CustomReference,
       'composed_reference' => $data->ComposedReference ?? NULL,

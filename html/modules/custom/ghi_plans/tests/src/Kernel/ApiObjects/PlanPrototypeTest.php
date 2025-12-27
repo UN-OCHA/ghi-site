@@ -22,13 +22,13 @@ class PlanPrototypeTest extends PlanApiObjectKernelTestBase {
    */
   protected function createMockRawDataArray(array $data_overrides = []): array {
     $default_item = [
-      'id' => rand(1, 1000),
-      'name' => $this->randomString(),
-      'planId' => rand(1, 100),
-      'orderNumber' => 1,
-      'refCode' => 'REF' . rand(1, 100),
-      'type' => (object) ['name' => 'Entity Type'],
-      'value' => (object) [
+      'Id' => rand(1, 1000),
+      'Name' => $this->randomString(),
+      'PlanId' => rand(1, 100),
+      'OrderNumber' => 1,
+      'RefCode' => 'REF' . rand(1, 100),
+      'Type' => 'Entity Type',
+      'Value' => json_encode((object) [
         'name' => (object) [
           'en' => (object) [
             'singular' => 'Entity',
@@ -37,7 +37,7 @@ class PlanPrototypeTest extends PlanApiObjectKernelTestBase {
         ],
         'canSupport' => [],
         'possibleChildren' => [],
-      ],
+      ]),
     ];
 
     $merged_item = array_merge($default_item, $data_overrides);
@@ -49,10 +49,10 @@ class PlanPrototypeTest extends PlanApiObjectKernelTestBase {
    */
   public function testPlanPrototypeConstructorAndMapping(): void {
     $raw_data = $this->createMockRawDataArray([
-      'id' => 123,
-      'name' => 'Test Plan Prototype',
-      'planId' => 456,
-      'orderNumber' => 1,
+      'Id' => 123,
+      'Name' => 'Test Plan Prototype',
+      'PlanId' => 456,
+      'OrderNumber' => 1,
     ]);
 
     $plan_prototype = new PlanPrototype($raw_data);
@@ -78,12 +78,12 @@ class PlanPrototypeTest extends PlanApiObjectKernelTestBase {
     try {
       $empty_data = [
         (object) [
-          'id' => 1,
-          'planId' => 1,
-          'orderNumber' => 1,
-          'refCode' => 'TEST',
-          'type' => (object) ['name' => 'Test'],
-          'value' => (object) [
+          'Id' => 1,
+          'PlanId' => 1,
+          'OrderNumber' => 1,
+          'RefCode' => 'TEST',
+          'Type' => 'Test',
+          'Value' => json_encode((object) [
             'name' => (object) [
               'en' => (object) [
                 'singular' => 'Test',
@@ -92,7 +92,7 @@ class PlanPrototypeTest extends PlanApiObjectKernelTestBase {
             ],
             'canSupport' => [],
             'possibleChildren' => [],
-          ],
+          ]),
         ],
       ];
       $plan_prototype = new PlanPrototype($empty_data);

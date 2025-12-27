@@ -13,6 +13,7 @@ use Drupal\ghi_plans\Entity\GoverningEntity;
 use Drupal\ghi_plans\Entity\Plan;
 use Drupal\ghi_plans\Exceptions\InvalidAttachmentTypeException;
 use Drupal\ghi_plans\Helpers\PlanEntityHelper;
+use Drupal\ghi_plans\Plugin\FabricQuery\AttachmentPrototypeQuery;
 use Drupal\ghi_plans\Traits\PlanReportingPeriodTrait;
 use Drupal\hpc_api\Query\EndpointQuery;
 use Drupal\hpc_api\Traits\SimpleCacheTrait;
@@ -1233,7 +1234,7 @@ class DataAttachment extends AttachmentBase implements DataAttachmentInterface {
     // requests are cached.
     /** @var \Drupal\ghi_plans\Plugin\FabricQuery\AttachmentPrototypeQuery $query_handler */
     $query_handler = $this->getFabricQueryManager()->createInstance('attachment_prototype');
-    if (!$query_handler) {
+    if (!$query_handler instanceof AttachmentPrototypeQuery) {
       return NULL;
     }
     $plan_id = $attachment->planId ?? NULL;

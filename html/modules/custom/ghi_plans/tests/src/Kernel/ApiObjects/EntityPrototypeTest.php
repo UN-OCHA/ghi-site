@@ -29,9 +29,10 @@ class EntityPrototypeTest extends PlanApiObjectKernelTestBase {
    */
   protected function createMockRawData(array $data_overrides = []): object {
     $entity_prototype_defaults = [
-      'refCode' => 'REF' . rand(1, 100),
-      'type' => (object) ['name' => 'Entity Type'],
-      'value' => (object) [
+      'PlanId' => 1,
+      'RefCode' => 'REF' . rand(1, 100),
+      'Type' => 'Entity Type',
+      'Value' => json_encode((object) [
         'name' => (object) [
           'en' => (object) [
             'singular' => 'Entity',
@@ -40,8 +41,8 @@ class EntityPrototypeTest extends PlanApiObjectKernelTestBase {
         ],
         'canSupport' => [],
         'possibleChildren' => [],
-      ],
-      'orderNumber' => rand(1, 10),
+      ]),
+      'OrderNumber' => rand(1, 10),
     ];
 
     $merged_overrides = array_merge($entity_prototype_defaults, $data_overrides);
@@ -53,10 +54,11 @@ class EntityPrototypeTest extends PlanApiObjectKernelTestBase {
    */
   public function testEntityPrototypeConstructorAndMapping(): void {
     $raw_data = $this->createMockRawData([
-      'id' => 123,
-      'refCode' => 'REF123',
-      'type' => (object) ['name' => 'Plan Entity'],
-      'value' => (object) [
+      'Id' => 123,
+      'PlanId' => 1,
+      'RefCode' => 'REF123',
+      'Type' => 'Plan Entity',
+      'Value' => json_encode((object) [
         'name' => (object) [
           'en' => (object) [
             'singular' => 'Entity Prototype',
@@ -65,8 +67,8 @@ class EntityPrototypeTest extends PlanApiObjectKernelTestBase {
         ],
         'canSupport' => [],
         'possibleChildren' => [],
-      ],
-      'orderNumber' => 1,
+      ]),
+      'OrderNumber' => 1,
     ]);
 
     $entity_prototype = new EntityPrototype($raw_data);

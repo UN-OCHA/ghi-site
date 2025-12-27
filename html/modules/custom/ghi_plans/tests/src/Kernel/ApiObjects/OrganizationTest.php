@@ -16,7 +16,7 @@ class OrganizationTest extends PlanApiObjectKernelTestBase {
    */
   protected function createMockRawData(array $data_overrides = []): object {
     $organization_defaults = [
-      'url' => 'https://example.org',
+      'Url' => 'https://example.org',
     ];
 
     $merged_overrides = array_merge($organization_defaults, $data_overrides);
@@ -28,9 +28,9 @@ class OrganizationTest extends PlanApiObjectKernelTestBase {
    */
   public function testOrganizationConstructorAndMapping(): void {
     $raw_data = $this->createMockRawData([
-      'id' => 123,
-      'name' => 'Test Organization',
-      'url' => 'https://example.org',
+      'Id' => 123,
+      'Name' => 'Test Organization',
+      'Url' => 'https://example.org',
     ]);
 
     $organization = new Organization($raw_data);
@@ -57,7 +57,7 @@ class OrganizationTest extends PlanApiObjectKernelTestBase {
    */
   public function testInvalidDataStructureHandling(): void {
     // Test with missing URL.
-    $raw_data = $this->createMockRawData(['url' => NULL]);
+    $raw_data = $this->createMockRawData(['Url' => NULL]);
     $organization = new Organization($raw_data);
 
     $this->assertNull($organization->url);

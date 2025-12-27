@@ -29,10 +29,10 @@ class CountryTest extends BaseObjectKernelTestBase {
    */
   public function testCountryConstructorAndMapping(): void {
     $raw_data = $this->createMockRawData([
-      'id' => 123,
-      'name' => 'Test Country',
-      'latitude' => '12.345',
-      'longitude' => '67.890',
+      'Id' => 123,
+      'Name' => 'Test Country',
+      'Latitude' => '12.345',
+      'Longitude' => '67.890',
     ]);
 
     $country = new Country($raw_data);

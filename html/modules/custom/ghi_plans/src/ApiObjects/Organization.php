@@ -32,9 +32,9 @@ class Organization extends BaseObject {
   protected function map() {
     $data = $this->getRawData();
     return (object) [
-      'id' => $data->Id ?? $data->id,
-      'name' => $data->Name ?? $data->name,
-      'url' => CommonHelper::assureWellFormedUri($data->Url ?? $data->url),
+      'id' => $data->Id ?? ($data->id ?? NULL),
+      'name' => $data->Name ?? ($data->name ?? NULL),
+      'url' => CommonHelper::assureWellFormedUri($data->Url ?? ($data->url ?? NULL)),
     ];
   }
 
