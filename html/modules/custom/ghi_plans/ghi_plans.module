@@ -197,6 +197,8 @@ function ghi_plans_migrate_plan_prepare_row(Row $row, MigrateSourceInterface $so
   $row->setSourceProperty('plan_cluster_type', $plan->getPlanClusterType());
   $row->setSourceProperty('plan_date_start', $plan->getStartDate());
   $row->setSourceProperty('plan_date_end', $plan->getEndDate());
+  $row->setSourceProperty('plan_created_date', $plan->getCreatedDate());
+  $row->setSourceProperty('plan_updated_date', $plan->getUpdatedDate());
   $row->setSourceProperty('document_published_on', $plan->getDocumentPublishedDate());
 
   $row->setSourceProperty('plan_type_id', $plan->getPlanType()?->id());

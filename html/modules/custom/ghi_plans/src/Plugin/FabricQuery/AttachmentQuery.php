@@ -30,46 +30,57 @@ class AttachmentQuery extends FabricQueryBase {
   public function getAttachment(int $attachment_id, $reporting_period = 'latest'): ?AttachmentInterface {
     // Get the attachment data.
     $payload = "
-      facts (filter: {
+      attachmentFacts (filter: {
         IsTotal: { eq: 1 }
         HpcId:  {
           eq: {$attachment_id}
         }
       }) {
         items {
-          HpcId
-          PlanId
-          PeriodId
-          LogframeEntityId
-          CoordinationEntityId
-          IndicatorId
-          UnitId
+          Id
+          AttachmentId
           MetricTypeId
+          PeriodId
+          SectorId
+          LocationId
+          GenderId
+          AgeGroupId
+          PopulationStatusId
+          SettlementTypeId
+          DisabilityStatusId
+          HealthInterventionCategoryId
+          MaternalStatusId
+          DisaggregationCategoryOtherId
+          DeliveryModalityId
+          CalcMethodId
           IsTotal
-          FactType
-          FactScope
-          AttachmentCustomReference
           ValueNum
+          CustomMetricName
+          EffectiveFrom
+          EffectiveTo
           Description
           VisibilityGroupId
-          SourceType
           Source
           SourceId
+          CreatedAt
+          UpdatedAt
+          IsLocked
+          HpcId
         }
       }";
     $facts_data = $this->fabricQuery->query($payload);
-    $facts = $this->getItems($facts_data, 'facts');
+    $facts = $this->getItems($facts_data, 'attachmentFacts');
     if (empty($facts)) {
       return NULL;
     }
     $fact = reset($facts);
 
     $attachment = NULL;
-    if (!empty($fact->IndicatorId)) {
+    if (!empty($fact->AttachmentId)) {
       $payload = "
-        indicators (filter: {
+        attachments (filter: {
           HpcId:  {
-            eq: {$fact->IndicatorId}
+            eq: {$fact->AttachmentId}
           }
         }) {
           items {
@@ -83,11 +94,11 @@ class AttachmentQuery extends FabricQueryBase {
           }
         }";
       $data = $this->fabricQuery->query($payload);
-      $indicators = $this->getItems($data, 'indicators');
-      // Retrieving an indicator by id should yield a max of 1, so let's assert
+      $attachments = $this->getItems($data, 'attachments');
+      // Retrieving an attachment by id should yield a max of 1, so let's assert
       // that.
-      assert(count($indicators) <= 1);
-      $attachment = reset($indicators);
+      assert(count($attachments) <= 1);
+      $attachment = reset($attachments);
     }
     if (empty($attachment)) {
       return NULL;
