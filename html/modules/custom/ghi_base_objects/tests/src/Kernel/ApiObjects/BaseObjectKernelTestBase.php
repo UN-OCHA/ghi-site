@@ -49,8 +49,8 @@ abstract class BaseObjectKernelTestBase extends KernelTestBase {
    */
   protected function createMockRawData(array $data_overrides = []): object {
     $default_data = [
-      'id' => rand(1, 1000),
-      'name' => $this->randomString(),
+      'Id' => rand(1, 1000),
+      'Name' => $this->randomString(),
     ];
 
     $merged_data = array_merge($default_data, $data_overrides);
@@ -99,7 +99,7 @@ abstract class BaseObjectKernelTestBase extends KernelTestBase {
    */
   protected function testNullEmptyDataHandling(string $class_name): void {
     // Test with minimal data.
-    $minimal_data = $this->createMockRawData(['id' => 1, 'name' => '']);
+    $minimal_data = $this->createMockRawData(['Id' => 1, 'Name' => '']);
     $api_object = new $class_name($minimal_data);
 
     $this->assertEquals(1, $api_object->id());

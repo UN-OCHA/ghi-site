@@ -58,6 +58,10 @@ abstract class ApiObjectTestBase extends UnitTestCase {
     $endpoint_query_manager = $this->getMockBuilder('Drupal\hpc_api\Query\EndpointQueryManager')
       ->disableOriginalConstructor()
       ->getMock();
+    // Disable fabric queries during the tests.
+    $fabric_query_manager = $this->getMockBuilder('Drupal\hpc_api\Query\FabricQueryManager')
+      ->disableOriginalConstructor()
+      ->getMock();
 
     // Mock entity loading from storage.
     $entity_storage = $this->getMockBuilder('Drupal\node\NodeStorage')
@@ -99,6 +103,7 @@ abstract class ApiObjectTestBase extends UnitTestCase {
 
     $container = new ContainerBuilder();
     $container->set('plugin.manager.endpoint_query_manager', $endpoint_query_manager);
+    $container->set('plugin.manager.fabric_query_manager', $fabric_query_manager);
     $container->set('entity_type.manager', $entity_type_manager);
     $container->set('cache.default', $cache);
     $container->set('datetime.time', $time);

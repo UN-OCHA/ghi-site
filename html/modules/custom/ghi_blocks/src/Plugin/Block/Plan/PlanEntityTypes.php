@@ -22,7 +22,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  *  admin_label = @Translation("Entity Types"),
  *  category = @Translation("Plan elements"),
  *  data_sources = {
- *    "entities" = "hpc_api:plan_entities_query"
+ *    "entities" = "fabric_query:plan_entity"
  *  },
  *  context_definitions = {
  *    "node" = @ContextDefinition("entity:node", label = @Translation("Node")),
@@ -351,14 +351,14 @@ class PlanEntityTypes extends GHIBlockBase implements AutomaticTitleBlockInterfa
    */
   private function getPlanEntities($entity_ref_code = NULL) {
     $context_object = $this->getCurrentBaseObject();
-
+    $plan_id = $this->getCurrentPlanId();
     $filter = NULL;
     if ($entity_ref_code) {
       $filter = ['ref_code' => $entity_ref_code];
     }
-    /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\PlanEntitiesQuery $query */
+    /** @var \Drupal\ghi_plans\Plugin\FabricQuery\PlanEntityQuery $query */
     $query = $this->getQueryHandler('entities');
-    $entities = $query->getPlanEntities($context_object, 'plan', $filter);
+    $entities = $query->getPlanEntities($plan_id, $context_object, 'plan', $filter);
     // This should give us only PlanEntity objects, but let's make sure.
     $entities = is_array($entities) ? array_filter($entities, function ($entity) {
       return $entity instanceof PlanEntity;

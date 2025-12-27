@@ -9,6 +9,7 @@ use Drupal\Core\Plugin\Context\Context;
 use Drupal\Core\Plugin\Context\ContextDefinition;
 use Drupal\ghi_subpages\Entity\SubpageNodeInterface;
 use Drupal\hpc_api\Query\EndpointQueryPluginInterface;
+use Drupal\hpc_api\Query\FabricQueryPluginInterface;
 use Drupal\hpc_common\Helpers\ContextHelper;
 use Drupal\hpc_common\Helpers\RequestHelper;
 use Drupal\layout_builder\Plugin\SectionStorage\OverridesSectionStorage;
@@ -637,7 +638,7 @@ abstract class HPCBlockBase extends BlockBase implements HPCPluginInterface, Con
    * @param string $source_key
    *   The source key that should be used to retrieve data for a block.
    *
-   * @return \Drupal\hpc_api\Query\EndpointQueryPluginInterface
+   * @return \Drupal\hpc_api\Query\EndpointQueryPluginInterface|\Drupal\hpc_api\Query\FabricQueryPluginInterface
    *   The query handler class.
    */
   protected function getQueryHandler($source_key = 'data') {
@@ -696,10 +697,10 @@ abstract class HPCBlockBase extends BlockBase implements HPCPluginInterface, Con
    *
    * @param string $source_key
    *   The source key for which the given query plugin should be used.
-   * @param \Drupal\hpc_api\Query\EndpointQueryPluginInterface $query_handler
+   * @param \Drupal\hpc_api\Query\EndpointQueryPluginInterface|\Drupal\hpc_api\Query\FabricQueryPluginInterface $query_handler
    *   The query plugin.
    */
-  public function setQueryHandler($source_key, EndpointQueryPluginInterface $query_handler) {
+  public function setQueryHandler($source_key, EndpointQueryPluginInterface|FabricQueryPluginInterface $query_handler) {
     $this->queryHandlers[$source_key] = $query_handler;
   }
 

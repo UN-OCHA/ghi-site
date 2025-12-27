@@ -3,6 +3,7 @@
 namespace Drupal\ghi_plans\Traits;
 
 use Drupal\ghi_plans\ApiObjects\Plan;
+use Drupal\ghi_plans\Plugin\FabricQuery\PlanQuery;
 
 /**
  * Trait to help with retrieving reporting periods for a plan.
@@ -70,7 +71,7 @@ trait PlanReportingPeriodTrait {
   public static function getLatestPublishedReportingPeriod(int $plan_id) {
     /** @var \Drupal\ghi_plans\Plugin\FabricQuery\PlanQuery $query */
     $query = self::getFabricQueryManager()->createInstance('plan');
-    if (!$query) {
+    if (!$query instanceof PlanQuery) {
       return NULL;
     }
     $plan = $query->getPlan($plan_id);

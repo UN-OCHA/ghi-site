@@ -29,8 +29,7 @@ use Drupal\hpc_downloads\Interfaces\HPCDownloadPNGInterface;
  *  admin_label = @Translation("Entity Attachments Table"),
  *  category = @Translation("Plan elements"),
  *  data_sources = {
- *    "entities" = "hpc_api:plan_entities_query",
- *    "entity" = "hpc_api:entity_query",
+ *    "entity" = "fabric_query:plan_entity",
  *    "attachment" = "hpc_api:attachment_query",
  *    "attachment_search" = "hpc_api:attachment_search_query",
  *    "attachment_prototype" = "fabric_query:attachment_prototype",
@@ -130,7 +129,7 @@ class PlanEntityAttachmentsTable extends GHIBlockBase implements ConfigurableTab
     if (!$entity_id) {
       return NULL;
     }
-    /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\EntityQuery $query */
+    /** @var \Drupal\ghi_plans\Plugin\FabricQuery\PlanEntityQuery $query */
     $query = $this->getQueryHandler('entity');
     return $query->getEntity('planEntity', $entity_id) ?? $query->getEntity('governingEntity', $entity_id);
   }

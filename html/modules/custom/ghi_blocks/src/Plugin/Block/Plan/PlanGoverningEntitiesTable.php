@@ -393,8 +393,8 @@ class PlanGoverningEntitiesTable extends GHIBlockBase implements ConfigurableTab
   /**
    * Get all governing entity objects for the current block instance.
    *
-   * @return \Drupal\ghi_plans\ApiObjects\Entities\EntityObjectInterface[]|null
-   *   An array of entity objects, aka clusters or NULL.
+   * @return \Drupal\ghi_plans\ApiObjects\Entities\EntityObjectInterface[]
+   *   An array of entity objects, aka clusters.
    */
   private function getEntityObjects() {
     /** @var \Drupal\ghi_plans\Plugin\FabricQuery\PlanEntityQuery $query */
@@ -405,7 +405,7 @@ class PlanGoverningEntitiesTable extends GHIBlockBase implements ConfigurableTab
   /**
    * Load the nodes associated to the entities.
    *
-   * @param array $entities
+   * @param \Drupal\ghi_plans\ApiObjects\Entities\EntityObjectInterface[] $entities
    *   The entity objects.
    *
    * @return \Drupal\ghi_base_objects\Entity\BaseObjectInterface[]
@@ -413,7 +413,7 @@ class PlanGoverningEntitiesTable extends GHIBlockBase implements ConfigurableTab
    */
   private function loadBaseObjectsForEntities(array $entities) {
     $entity_ids = array_map(function ($entity) {
-      return $entity->id;
+      return $entity->id();
     }, $entities);
 
     return BaseObjectHelper::getBaseObjectsFromOriginalIds($entity_ids, 'governing_entity');

@@ -63,12 +63,12 @@ class GoverningEntity extends BaseObject implements BaseObjectChildInterface {
   /**
    * Get the source object from the API.
    *
-   * @return \Drupal\ghi_plans\ApiObjects\Entities\GoverningEntity
-   *   The entity object.
+   * @return \Drupal\ghi_plans\ApiObjects\Entities\GoverningEntity|null
+   *   The entity object or NULL.
    */
-  public function getSourceObject(): EntitiesGoverningEntity {
+  public function getSourceObject(): ?EntitiesGoverningEntity {
     $entity = $this->getEntityQuery()->getEntity('governingEntity', $this->getSourceId());
-    assert($entity instanceof EntitiesGoverningEntity);
+    assert($entity === NULL || $entity instanceof EntitiesGoverningEntity);
     return $entity;
   }
 

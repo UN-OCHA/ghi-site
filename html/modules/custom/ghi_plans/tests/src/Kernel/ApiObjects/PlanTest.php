@@ -16,17 +16,12 @@ class PlanTest extends PlanApiObjectKernelTestBase {
    */
   protected function createMockRawData(array $data_overrides = []): object {
     $plan_defaults = [
-      'categories' => [
-        (object) [
-          'group' => 'plantype',
-          'name' => 'Humanitarian Response Plan',
-        ],
-      ],
-      'planVersion' => (object) [
-        'id' => rand(1, 100),
-        'name' => 'Plan Version ' . $this->randomString(),
-        'lastPublishedReportingPeriodId' => rand(1, 50),
-      ],
+      'PlanType' => 'Humanitarian Response Plan',
+      'PlanCosting' => 'Cluster requirements only without projects',
+      'StartDate' => '2019-01-01',
+      'EndDate' => '2019-12-31',
+      'DocumentPublishDate' => NULL,
+      'FocusCountry' => NULL,
     ];
 
     $merged_overrides = array_merge($plan_defaults, $data_overrides);
@@ -38,12 +33,7 @@ class PlanTest extends PlanApiObjectKernelTestBase {
    */
   public function testPlanConstructorAndMapping(): void {
     $raw_data = $this->createMockRawData([
-      'id' => 123,
-      'planVersion' => (object) [
-        'id' => 456,
-        'name' => 'Version 1.0',
-        'lastPublishedReportingPeriodId' => 1,
-      ],
+      'Id' => 123,
     ]);
 
     $plan = new Plan($raw_data);
@@ -52,7 +42,6 @@ class PlanTest extends PlanApiObjectKernelTestBase {
 
     // Test Plan-specific properties if they exist.
     $this->assertEquals(123, $plan->id());
-    $this->assertEquals('Version 1.0', $plan->getName());
 
     // Test bundle method (from former testGetBundleReturnsCorrectBundle).
     $this->assertEquals('plan', $plan->getBundle());
