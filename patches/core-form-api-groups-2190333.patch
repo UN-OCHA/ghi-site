@@ -1,0 +1,208 @@
+diff --git a/core/lib/Drupal/Core/Datetime/Element/Datetime.php b/core/lib/Drupal/Core/Datetime/Element/Datetime.php
+index e877971bd92..febe9e49c48 100644
+--- a/core/lib/Drupal/Core/Datetime/Element/Datetime.php
++++ b/core/lib/Drupal/Core/Datetime/Element/Datetime.php
+@@ -54,10 +54,6 @@ public function getInfo() {
+       '#process' => [
+         [$class, 'processDatetime'],
+         [$class, 'processAjaxForm'],
+-        [$class, 'processGroup'],
+-      ],
+-      '#pre_render' => [
+-        [$class, 'preRenderGroup'],
+       ],
+       '#theme' => 'datetime_form',
+       '#theme_wrappers' => ['datetime_wrapper'],
+diff --git a/core/lib/Drupal/Core/Render/Element/Checkbox.php b/core/lib/Drupal/Core/Render/Element/Checkbox.php
+index b758f26da73..6f6af2e722d 100644
+--- a/core/lib/Drupal/Core/Render/Element/Checkbox.php
++++ b/core/lib/Drupal/Core/Render/Element/Checkbox.php
+@@ -36,11 +36,9 @@ public function getInfo() {
+       '#process' => [
+         [$class, 'processCheckbox'],
+         [$class, 'processAjaxForm'],
+-        [$class, 'processGroup'],
+       ],
+       '#pre_render' => [
+         [$class, 'preRenderCheckbox'],
+-        [$class, 'preRenderGroup'],
+       ],
+       '#theme' => 'input__checkbox',
+       '#theme_wrappers' => ['form_element'],
+diff --git a/core/lib/Drupal/Core/Render/Element/Container.php b/core/lib/Drupal/Core/Render/Element/Container.php
+index dfb1bd63f9a..0c32a7bf22c 100644
+--- a/core/lib/Drupal/Core/Render/Element/Container.php
++++ b/core/lib/Drupal/Core/Render/Element/Container.php
+@@ -53,10 +53,10 @@ public function getInfo() {
+     return [
+       '#optional' => FALSE,
+       '#process' => [
+-        [$class, 'processGroup'],
+         [$class, 'processContainer'],
+       ],
+       '#pre_render' => [
++        // Prepend preRenderGroup, so it runs first.
+         [$class, 'preRenderGroup'],
+         [$class, 'preRenderContainer'],
+       ],
+diff --git a/core/lib/Drupal/Core/Render/Element/Details.php b/core/lib/Drupal/Core/Render/Element/Details.php
+index b85474ba15f..8408d4df734 100644
+--- a/core/lib/Drupal/Core/Render/Element/Details.php
++++ b/core/lib/Drupal/Core/Render/Element/Details.php
+@@ -48,12 +48,10 @@ public function getInfo() {
+       '#summary_attributes' => [],
+       '#value' => NULL,
+       '#process' => [
+-        [$class, 'processGroup'],
+         [$class, 'processAjaxForm'],
+       ],
+       '#pre_render' => [
+         [$class, 'preRenderDetails'],
+-        [$class, 'preRenderGroup'],
+       ],
+       '#theme_wrappers' => ['details'],
+     ];
+diff --git a/core/lib/Drupal/Core/Render/Element/Fieldset.php b/core/lib/Drupal/Core/Render/Element/Fieldset.php
+index 1311e7899c5..c1e7b4295b8 100644
+--- a/core/lib/Drupal/Core/Render/Element/Fieldset.php
++++ b/core/lib/Drupal/Core/Render/Element/Fieldset.php
+@@ -33,12 +33,8 @@ public function getInfo() {
+     $class = static::class;
+     return [
+       '#process' => [
+-        [$class, 'processGroup'],
+         [$class, 'processAjaxForm'],
+       ],
+-      '#pre_render' => [
+-        [$class, 'preRenderGroup'],
+-      ],
+       '#value' => NULL,
+       '#theme_wrappers' => ['fieldset'],
+     ];
+diff --git a/core/lib/Drupal/Core/Render/Element/Textarea.php b/core/lib/Drupal/Core/Render/Element/Textarea.php
+index 44f1e069282..3922ada1706 100644
+--- a/core/lib/Drupal/Core/Render/Element/Textarea.php
++++ b/core/lib/Drupal/Core/Render/Element/Textarea.php
+@@ -41,10 +41,6 @@ public function getInfo() {
+       '#resizable' => 'vertical',
+       '#process' => [
+         [$class, 'processAjaxForm'],
+-        [$class, 'processGroup'],
+-      ],
+-      '#pre_render' => [
+-        [$class, 'preRenderGroup'],
+       ],
+       '#theme' => 'textarea',
+       '#theme_wrappers' => ['form_element'],
+diff --git a/core/lib/Drupal/Core/Render/Element/Textfield.php b/core/lib/Drupal/Core/Render/Element/Textfield.php
+index 4fbc773c4a7..b63db815097 100644
+--- a/core/lib/Drupal/Core/Render/Element/Textfield.php
++++ b/core/lib/Drupal/Core/Render/Element/Textfield.php
+@@ -52,11 +52,9 @@ public function getInfo() {
+         [$class, 'processAutocomplete'],
+         [$class, 'processAjaxForm'],
+         [$class, 'processPattern'],
+-        [$class, 'processGroup'],
+       ],
+       '#pre_render' => [
+         [$class, 'preRenderTextfield'],
+-        [$class, 'preRenderGroup'],
+       ],
+       '#theme' => 'input__textfield',
+       '#theme_wrappers' => ['form_element'],
+diff --git a/core/lib/Drupal/Core/Render/Element/VerticalTabs.php b/core/lib/Drupal/Core/Render/Element/VerticalTabs.php
+index eea7d9753ac..c952484807b 100644
+--- a/core/lib/Drupal/Core/Render/Element/VerticalTabs.php
++++ b/core/lib/Drupal/Core/Render/Element/VerticalTabs.php
+@@ -140,4 +140,18 @@ public static function processVerticalTabs(&$element, FormStateInterface $form_s
+     return $element;
+   }
+ 
++  /**
++   * {@inheritdoc}
++   */
++  public static function processGroup(&$element, FormStateInterface $form_state, &$complete_form) {
++    return $element;
++  }
++
++  /**
++   * {@inheritdoc}
++   */
++  public static function preRenderGroup($element) {
++    return $element;
++  }
++
+ }
+diff --git a/core/lib/Drupal/Core/Render/ElementInfoManager.php b/core/lib/Drupal/Core/Render/ElementInfoManager.php
+index a2efac85089..828164f75c3 100644
+--- a/core/lib/Drupal/Core/Render/ElementInfoManager.php
++++ b/core/lib/Drupal/Core/Render/ElementInfoManager.php
+@@ -133,6 +133,7 @@ protected function buildInfo($theme_name) {
+       }
+     });
+     foreach ($this->getDefinitions() as $element_type => $definition) {
++      $class = $definition['class'];
+       $element = $this->createInstance($element_type);
+       $element_info = $element->getInfo();
+ 
+@@ -140,8 +141,23 @@ protected function buildInfo($theme_name) {
+       // will receive input, and assign the value callback.
+       if ($element instanceof FormElementInterface) {
+         $element_info['#input'] = TRUE;
+-        $element_info['#value_callback'] = [$definition['class'], 'valueCallback'];
++        $element_info['#value_callback'] = [$class, 'valueCallback'];
+       }
++
++      // Add the processGroup #process callback, unless already set.
++      $process = $element_info['#process'] ?? [];
++      if (!in_array('processGroup', array_column($process, 1))) {
++        $process[] = [$class, 'processGroup'];
++      }
++      $element_info['#process'] = $process;
++
++      // Add the preRenderGroup #pre_render callback, unless already set.
++      $pre_render = $element_info['#pre_render'] ?? [];
++      if (!in_array('preRenderGroup', array_column($pre_render, 1))) {
++        $pre_render[] = [$class, 'preRenderGroup'];
++      }
++      $element_info['#pre_render'] = $pre_render;
++
+       $info[$element_type] = $element_info;
+     }
+     restore_error_handler();
+diff --git a/core/modules/file/src/Element/ManagedFile.php b/core/modules/file/src/Element/ManagedFile.php
+index b5b0c1209e8..b4795b2a041 100644
+--- a/core/modules/file/src/Element/ManagedFile.php
++++ b/core/modules/file/src/Element/ManagedFile.php
+@@ -195,6 +195,9 @@ public static function uploadAjaxCallback(&$form, FormStateInterface &$form_stat
+       $form[$current_file_count]['#attributes']['class'][] = 'ajax-new-content';
+     }
+ 
++    // Removing groups to make preRenderGroup to skip this call
++    unset($form['#groups']);
++
+     $status_messages = ['#type' => 'status_messages'];
+     $form['#prefix'] .= $renderer->renderRoot($status_messages);
+     $output = $renderer->renderRoot($form);
+diff --git a/core/tests/Drupal/Tests/Core/Render/ElementInfoManagerTest.php b/core/tests/Drupal/Tests/Core/Render/ElementInfoManagerTest.php
+index a9ede9f13c8..ef47d81db05 100644
+--- a/core/tests/Drupal/Tests/Core/Render/ElementInfoManagerTest.php
++++ b/core/tests/Drupal/Tests/Core/Render/ElementInfoManagerTest.php
+@@ -122,6 +122,8 @@ public static function providerTestGetInfoElementPlugin() {
+         '#type' => 'page',
+         '#theme' => 'page',
+         '#defaults_loaded' => TRUE,
++        '#process' => [['TestElementPlugin', 'processGroup']],
++        '#pre_render' => [['TestElementPlugin', 'preRenderGroup']],
+       ],
+     ];
+ 
+@@ -133,6 +135,8 @@ public static function providerTestGetInfoElementPlugin() {
+         '#input' => TRUE,
+         '#value_callback' => ['TestElementPlugin', 'valueCallback'],
+         '#defaults_loaded' => TRUE,
++        '#process' => [['TestElementPlugin', 'processGroup']],
++        '#pre_render' => [['TestElementPlugin', 'preRenderGroup']],
+       ],
+     ];
+     return $data;
