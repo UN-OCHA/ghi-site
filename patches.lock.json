@@ -1,5 +1,5 @@
 {
-    "_hash": "ed07940046a0853dc3971332ee21077d55f97277678811c79669d2d5f92ea2b9",
+    "_hash": "114951bb39fcb9817e32a37adaf854edc000b965c78f5e628773304510bc97f1",
     "patches": {
         "drupal/core": [
             {
@@ -113,6 +113,18 @@
                 }
             }
         ],
+        "drupal/file_mdm": [
+            {
+                "package": "drupal/file_mdm",
+                "description": "Issue #3570037: Deprecated Error",
+                "url": "https://www.drupal.org/files/issues/2026-03-20/file_mdm-nullable-3570037-8.patch",
+                "sha256": "e8594a1ac08db1c7298c350ea792e3a22d6eaf76cf8eb293f6186840410252e4",
+                "depth": 1,
+                "extra": {
+                    "provenance": "patches-file:composer.patches.json"
+                }
+            }
+        ],
         "drupal/geofield_map": [
             {
                 "package": "drupal/geofield_map",
@@ -183,24 +195,36 @@
                 "extra": {
                     "provenance": "patches-file:composer.patches.json"
                 }
+            },
+            {
+                "package": "drupal/page_manager",
+                "description": "Issue #3536704: [PHP8.4] Misc NULL deprecation warning on a few files",
+                "url": "https://www.drupal.org/files/issues/2026-03-07/page_manager-php8-4-deprecation-3536704-15.patch",
+                "sha256": "e97c945f609348108156ce95f691f63962ae994dea77f1c5303aa0b541b10c22",
+                "depth": 1,
+                "extra": {
+                    "provenance": "patches-file:composer.patches.json"
+                }
             }
         ],
         "drupal/publishcontent": [
             {
                 "package": "drupal/publishcontent",
                 "description": "Issue #2820867: Bulk operations actions skip 'publishcontent' defined permissions",
-                "url": "https://www.drupal.org/files/issues/2024-10-14/permissions-for-bulk-operations-2820867-9.patch",
-                "sha256": "64a988727c3df3d58b7490851d66442de2cf29ce95a84c4023ac55fff3ed030a",
+                "url": "https://www.drupal.org/files/issues/2026-03-31/permissions-for-bulk-operations-2820867-12.patch",
+                "sha256": "6bd3326561f450069c798d46175bdb8f889d8ea98ad06d7fc25de23420f46744",
                 "depth": 1,
                 "extra": {
                     "provenance": "patches-file:composer.patches.json"
                 }
-            },
+            }
+        ],
+        "drupal/rabbit_hole": [
             {
-                "package": "drupal/publishcontent",
-                "description": "Issue #3545863: Fix PHP 8.4 implicit nullable deprecation",
-                "url": "./patches/publishcontent-3545863.patch",
-                "sha256": "4f0f10b9b9f8e3b116b00c6fb14ede1bb054c66cfc77eea34ac6e49e1fced6f7",
+                "package": "drupal/rabbit_hole",
+                "description": "Fix Multiple Implicit Nullable Parameters for PHP 8.4 Compatibility",
+                "url": "./patches/3516167-8-x-1.x-52.patch",
+                "sha256": "f886ca76de0d2a8d9307cb523f56fa54dfc1282b1d9086c415713dded5d9c057",
                 "depth": 1,
                 "extra": {
                     "provenance": "patches-file:composer.patches.json"
@@ -225,6 +249,16 @@
                 "description": "Handle case if user is in blocked state after SSO Authorization",
                 "url": "./patches/openid_connect-3390668-6.patch",
                 "sha256": "3dfdaf6593f62c629db9d4a8701ebb7bf8a6ae9f479c4d5d89e1799d37a5a422",
+                "depth": 1,
+                "extra": {
+                    "provenance": "patches-file:composer.patches.json"
+                }
+            },
+            {
+                "package": "drupal/openid_connect",
+                "description": "Incorrect context in hook_redirect_logout_alter",
+                "url": "./patches/openid_connect-3577436-191.patch",
+                "sha256": "c04ff5f48e1a4e495bc22329b203dd42b0e9cbaa9ec2f0f08e96697dc66c17db",
                 "depth": 1,
                 "extra": {
                     "provenance": "patches-file:composer.patches.json"
@@ -293,6 +327,16 @@
                 "description": "Issue #3153137: Using Image Widget Crop in responsive images does not refresh webp image",
                 "url": "./patches/3153137-custom-fix-3281606.patch",
                 "sha256": "b730a0d7ea82c58d5f47183c8b171d71dac3ebb2015689a68930b25ccdc51fc7",
+                "depth": 1,
+                "extra": {
+                    "provenance": "patches-file:composer.patches.json"
+                }
+            },
+            {
+                "package": "drupal/webp",
+                "description": "Issue #3561953: PHP 8.4 implicit nullable & constructor parameter order issues in WebP FileDownloadController",
+                "url": "https://www.drupal.org/files/issues/2026-03-06/3561953-12.patch",
+                "sha256": "93e4f9290326c6be9f9cb8c345692f9935b7503b25034906f85cdb16e03f5314",
                 "depth": 1,
                 "extra": {
                     "provenance": "patches-file:composer.patches.json"

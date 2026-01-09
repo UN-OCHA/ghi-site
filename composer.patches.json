@@ -36,7 +36,7 @@
       "Issue #3536704: [PHP8.4] Misc NULL deprecation warning on a few files": "https://www.drupal.org/files/issues/2026-03-07/page_manager-php8-4-deprecation-3536704-15.patch"
     },
     "drupal/publishcontent": {
-      "Issue #2820867: Bulk operations actions skip 'publishcontent' defined permissions": "https://www.drupal.org/files/issues/2024-10-14/permissions-for-bulk-operations-2820867-9.patch"
+      "Issue #2820867: Bulk operations actions skip 'publishcontent' defined permissions": "https://www.drupal.org/files/issues/2026-03-31/permissions-for-bulk-operations-2820867-12.patch"
     },
     "drupal/rabbit_hole": {
       "Fix Multiple Implicit Nullable Parameters for PHP 8.4 Compatibility": "./patches/3516167-8-x-1.x-52.patch"
