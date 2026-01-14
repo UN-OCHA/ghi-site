@@ -10,7 +10,6 @@ use Drupal\ghi_plans\ApiObjects\Prototypes\AttachmentPrototype;
 use Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment;
 use Drupal\ghi_plans\ApiObjects\Attachments\IndicatorAttachment;
 use Drupal\hpc_common\Helpers\ThemeHelper;
-use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Provides a sparkline chart item for configuration containers.
@@ -24,23 +23,6 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 class SparkLineChart extends ConfigurationContainerItemPluginBase {
 
   const ITEM_TYPE = 'chart';
-
-  /**
-   * The attachment query.
-   *
-   * @var \Drupal\ghi_plans\Plugin\EndpointQuery\AttachmentQuery
-   */
-  public $attachmentQuery;
-
-  /**
-   * {@inheritdoc}
-   */
-  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition): SparkLineChart {
-    /** @var self $instance */
-    $instance = parent::create($container, $configuration, $plugin_id, $plugin_definition);
-    $instance->attachmentQuery = $instance->endpointQueryManager->createInstance('attachment_query');
-    return $instance;
-  }
 
   /**
    * {@inheritdoc}

@@ -27,7 +27,8 @@ use Drupal\hpc_downloads\Helpers\DownloadHelper;
  *  admin_label = @Translation("Plan overview map"),
  *  category = @Translation("Global"),
  *  data_sources = {
- *    "plans_overview" = "hpc_api:plan_overview_query",
+ *    "plans_overview" = "fabric_query:plan_overview",
+ *    "funding_overview" = "hpc_api:funding_overview_query",
  *    "plan" = "fabric_query:plan",
  *    "country" = "fabric_query:country",
  *  },
@@ -155,12 +156,15 @@ class PlanOverviewMap extends GHIBlockBase {
 
     $this->sortPlansByPlanType($plans, $config['plan_short_names'] ?? FALSE);
 
+    /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\FundingOverviewQuery $funding_query */
+    $funding_query = $this->getQueryHandler('funding_overview');
+    $plan_funding = $funding_query->getFundingByPlans();
     foreach ($plans as $plan) {
-      $funding = $plan->getFunding();
+      $funding = $plan_funding[$plan->id()] ?? 0;
       $requirements = $plan->getRequirements();
 
-      $in_need = $plan->getCaseloadValue('inNeed');
-      $target = $plan->getCaseloadValue('target');
+      $in_need = $plan->getCaseloadValue('InNeed');
+      $target = $plan->getCaseloadValue('Target');
       $reached = $plan->getCaseloadValue('latestReach');
       $expected_reach = $plan->getCaseloadValue('expectedReach');
 
@@ -183,7 +187,7 @@ class PlanOverviewMap extends GHIBlockBase {
       }
 
       $caseload = (object) [
-        'total_population' => $plan->getCaseloadValue('totalPopulation'),
+        'total_population' => $plan->getCaseloadValue('Population'),
         'target' => $target,
         'in_need' => $in_need,
         'expected_reach' => $expected_reach,
@@ -194,7 +198,7 @@ class PlanOverviewMap extends GHIBlockBase {
       $funding = (object) [
         'total_funding' => $funding,
         'total_requirements' => $requirements,
-        'funding_progress' => $plan->getCoverage(),
+        'funding_progress' => $plan->getCoverage($funding),
       ];
 
       $plan_id = $plan->id();

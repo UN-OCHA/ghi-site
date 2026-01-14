@@ -19,7 +19,8 @@ use Drupal\hpc_common\Helpers\CommonHelper;
  *  admin_label = @Translation("Key figures"),
  *  category = @Translation("Global"),
  *  data_sources = {
- *    "plans_overview" = "hpc_api:plan_overview_query",
+ *    "plans_overview" = "fabric_query:plan_overview",
+ *    "funding_overview" = "hpc_api:funding_overview_query",
  *  },
  *  context_definitions = {
  *    "node" = @ContextDefinition("entity:node", label = @Translation("Node"), required = FALSE),
@@ -48,21 +49,23 @@ class KeyFigures extends GHIBlockBase implements MultiStepFormBlockInterface {
    * {@inheritdoc}
    */
   public function getData(string $source_key = 'data') {
-    $data = parent::getData($source_key);
-    $requirements = !empty($data->totals->revisedRequirements) ? $data->totals->revisedRequirements : NULL;
+    $data = parent::getData('funding_overview');
     $funding = !empty($data->totals->totalFunding) ? $data->totals->totalFunding : NULL;
+
+    $plan_overview_query = $this->getPlanOverviewQuery();
+    $requirements = $plan_overview_query->getTotalRequirements();
     $funding_progress = CommonHelper::calculateRatio($funding, $requirements);
 
     // Get the values of people in need and target from the caseload totals.
     $types = [
-      'inNeed' => 'In need',
-      'target' => 'Targeted',
+      'inNeed' => 'InNeed',
+      'target' => 'Target',
       'reached' => [
         'type' => 'latestReach',
       ],
       'expectedReach' => 'Expected reach',
     ];
-    $plan_overview_query = $this->getPlanOverviewQuery();
+
     $caseload_values = $plan_overview_query->getCaseloadTotalValues($types);
     $affected_countries = $plan_overview_query->getNumerOfGhoCountries();
     $gho_plans = count($plan_overview_query->getGhoPlans());
@@ -217,7 +220,7 @@ class KeyFigures extends GHIBlockBase implements MultiStepFormBlockInterface {
    */
   public function getBlockContext() {
     return [
-      'data' => $this->getData('plans'),
+      'data' => $this->getData('funding_overview'),
     ];
   }
 

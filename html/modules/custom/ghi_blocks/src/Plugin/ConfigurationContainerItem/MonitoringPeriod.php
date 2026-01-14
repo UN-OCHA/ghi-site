@@ -6,7 +6,6 @@ use Drupal\Component\Utility\Html;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\ghi_form_elements\ConfigurationContainerItemPluginBase;
 use Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment;
-use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Provides a monitoring period item for configuration containers.
@@ -21,23 +20,6 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 class MonitoringPeriod extends ConfigurationContainerItemPluginBase {
 
   const ITEM_TYPE = 'monitoring_period';
-
-  /**
-   * The attachment query.
-   *
-   * @var \Drupal\ghi_plans\Plugin\EndpointQuery\AttachmentQuery
-   */
-  public $attachmentQuery;
-
-  /**
-   * {@inheritdoc}
-   */
-  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition): MonitoringPeriod {
-    /** @var self $instance */
-    $instance = parent::create($container, $configuration, $plugin_id, $plugin_definition);
-    $instance->attachmentQuery = $instance->endpointQueryManager->createInstance('attachment_query');
-    return $instance;
-  }
 
   /**
    * {@inheritdoc}

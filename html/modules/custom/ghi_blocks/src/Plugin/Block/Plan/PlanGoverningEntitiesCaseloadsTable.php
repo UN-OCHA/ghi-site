@@ -392,13 +392,9 @@ class PlanGoverningEntitiesCaseloadsTable extends GHIBlockBase implements Config
       return $entity->id;
     }, $entities);
 
-    $filter = array_filter([
-      'type' => 'caseload',
-    ]);
-
     /** @var \Drupal\ghi_plans\Plugin\FabricQuery\AttachmentQuery $query */
     $query = $this->getQueryHandler('attachment');
-    return $query->getAttachmentsByObject('governingEntity', $entity_ids, $filter);
+    return $query->getAttachmentsByObject('governingEntity', $entity_ids, 'caseload');
   }
 
   /**
