@@ -6,6 +6,7 @@ use Drupal\ghi_plans\ApiObjects\Attachments\AttachmentInterface;
 use Drupal\ghi_plans\ApiObjects\Attachments\CaseloadAttachment;
 use Drupal\ghi_plans\ApiObjects\Attachments\ContactAttachment;
 use Drupal\ghi_plans\ApiObjects\Attachments\FileAttachment;
+use Drupal\ghi_plans\ApiObjects\Attachments\FinancialAttachment;
 use Drupal\ghi_plans\ApiObjects\Attachments\IndicatorAttachment;
 use Drupal\ghi_plans\ApiObjects\Attachments\TextAttachment;
 use Drupal\ghi_plans\Exceptions\InvalidAttachmentTypeException;
@@ -67,6 +68,9 @@ class AttachmentHelper {
           return $query->getAttachment($attachment->id);
         }
         return new IndicatorAttachment($attachment);
+
+      case 'financial':
+        return new FinancialAttachment($attachment);
 
       case 'filewebcontent':
         return new FileAttachment($attachment);

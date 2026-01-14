@@ -28,8 +28,9 @@ class PlanOverviewCaseload extends BaseObject implements CaseloadAttachmentInter
     }
     $fields = array_merge($data->totals, $calculated_fields);
     return (object) [
-      'id' => $data->attachmentId,
-      'custom_id' => $data->customReference,
+      'id' => $data->Id,
+      'custom_id' => $data->CustomReference,
+      'plan_id' => $data->PlanId,
       'original_fields' => $fields,
       'original_field_types' => array_map(function ($item) {
         return $item->type;
@@ -76,7 +77,7 @@ class PlanOverviewCaseload extends BaseObject implements CaseloadAttachmentInter
    * {@inheritdoc}
    */
   public function getPlanId() {
-    return NULL;
+    return $this->plan_id;
   }
 
 }

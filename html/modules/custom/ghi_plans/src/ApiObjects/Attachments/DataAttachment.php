@@ -7,6 +7,7 @@ use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\ghi_base_objects\Entity\BaseObjectChildInterface;
 use Drupal\ghi_base_objects\Entity\BaseObjectInterface;
 use Drupal\ghi_base_objects\Helpers\BaseObjectHelper;
+use Drupal\ghi_plans\ApiObjects\Facts\AttachmentFact;
 use Drupal\ghi_plans\ApiObjects\Measurements\Measurement;
 use Drupal\ghi_plans\Entity\Plan;
 use Drupal\ghi_plans\Exceptions\InvalidAttachmentTypeException;
@@ -68,37 +69,6 @@ class DataAttachment extends AttachmentBase implements DataAttachmentInterface {
     IsLocked
   ';
 
-  const GRAPHQL_FACTS_ITEMS = '
-    Id
-    AttachmentId
-    MetricTypeId
-    PeriodId
-    SectorId
-    LocationId
-    GenderId
-    AgeGroupId
-    PopulationStatusId
-    SettlementTypeId
-    DisabilityStatusId
-    HealthInterventionCategoryId
-    MaternalStatusId
-    DisaggregationCategoryOtherId
-    DeliveryModalityId
-    CalcMethodId
-    IsTotal
-    ValueNum
-    CustomMetricName
-    EffectiveFrom
-    EffectiveTo
-    Description
-    VisibilityGroupId
-    Source
-    SourceId
-    CreatedAt
-    UpdatedAt
-    IsLocked
-  ';
-
   /**
    * {@inheritdoc}
    */
@@ -111,7 +81,7 @@ class DataAttachment extends AttachmentBase implements DataAttachmentInterface {
     $references = property_exists($attachment, 'ComposedReference') ? explode('/', $attachment->ComposedReference) : [];
 
     // Extract the values.
-    $totals = $attachment->totals ?? [];
+    $totals = array_map(fn ($item) => new AttachmentFact($item), $attachment->totals ?? []);
 
     $processed = (object) [
       'id' => $attachment->Id,
@@ -563,7 +533,7 @@ class DataAttachment extends AttachmentBase implements DataAttachmentInterface {
    * {@inheritdoc}
    */
   public function getPlanId() {
-    return $this->source->plan_id;
+    return $this->map?->source?->plan_id ?? $this->getRawData()->PlanId;
   }
 
   /**
@@ -1047,21 +1017,27 @@ class DataAttachment extends AttachmentBase implements DataAttachmentInterface {
   }
 
   /**
+   * Get the totals from the given attachment.
+   *
+   * @return \Drupal\ghi_plans\ApiObjects\Facts\AttachmentFact[]
+   *   An array of attachment fact objects.
+   */
+  public function getTotals(): array {
+    return $this->map->totals ?? [];
+  }
+
+  /**
    * Get the metrics from the given attachment.
    *
-   * This fetches either the metrics from the attachment version, or from a
-   * measurement if a published one is already present.
+   * This fetches either the metrics from the attachment, or from a measurement
+   * if a published one is already present.
    *
-   * @return object|null
-   *   A metric object or NULL.
+   * @return \Drupal\ghi_plans\ApiObjects\Facts\AttachmentFact[]
+   *   An array attachment fact objects.
    */
-  protected function getMetrics() {
-    $attachment = $this->getRawData();
-    if (!is_object($attachment)) {
-      return NULL;
-    }
-    // Get the totals from the attachment version by default.
-    $metrics = $attachment->totals ?? NULL;
+  protected function getMetrics(): array {
+    // Get the totals from the attachment by default.
+    return $this->map->totals ?? [];
     // @codingStandardsIgnoreStart
     // // If there are measurements, look at the most recent one and get the
     // // metrics from there.
@@ -1069,8 +1045,8 @@ class DataAttachment extends AttachmentBase implements DataAttachmentInterface {
     // if ($measurement) {
     //   $metrics = $measurement->metrics;
     // }
+    // return $metrics;
     // @codingStandardsIgnoreEnd
-    return $metrics;
   }
 
   /**
@@ -1197,7 +1173,6 @@ class DataAttachment extends AttachmentBase implements DataAttachmentInterface {
   protected function getPrototypeData() {
     $attachment = $this->getRawData();
     $prototype = self::fetchPrototypeForAttachment($attachment);
-
     if (!$prototype) {
       throw new \Exception(sprintf('Failed to extract prototype for attachment %s', $attachment->id));
     }

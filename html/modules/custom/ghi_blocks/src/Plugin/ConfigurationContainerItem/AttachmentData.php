@@ -31,7 +31,7 @@ class AttachmentData extends ConfigurationContainerItemPluginBase {
   /**
    * The attachment query.
    *
-   * @var \Drupal\ghi_plans\Plugin\EndpointQuery\AttachmentQuery
+   * @var \Drupal\ghi_plans\Plugin\FabricQuery\AttachmentQuery
    */
   public $attachmentQuery;
 
@@ -48,7 +48,7 @@ class AttachmentData extends ConfigurationContainerItemPluginBase {
   public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition): AttachmentData {
     /** @var self $instance */
     $instance = parent::create($container, $configuration, $plugin_id, $plugin_definition);
-    $instance->attachmentQuery = $instance->endpointQueryManager->createInstance('attachment_query');
+    $instance->attachmentQuery = $instance->fabricQueryManager->createInstance('attachment');
     $instance->currentUser = $container->get('current_user');
     return $instance;
   }

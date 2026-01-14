@@ -68,30 +68,6 @@ class PlanQuery extends FabricQueryBase {
   }
 
   /**
-   * Get all plans for the given year.
-   *
-   * @param int $year
-   *   The year.
-   *
-   * @return \Drupal\ghi_plans\ApiObjects\Plan[]
-   *   An array of plan objects.
-   */
-  public function getPlansByYear(int $year) {
-    // Get the plan.
-    $payload = "
-      plans (filter:  {
-        period: {
-          PeriodType: { eq: \"Year\" }
-          and: [{ CalendarYear: { eq: {$year} } }]
-        }
-      }) {
-        items { " . Plan::GRAPHQL_DIMENSION_ITEMS . " }
-      }";
-    $data = $this->fabricQuery->query($payload);
-    return $this->buildResultObjectsFromData($data, 'plans', Plan::class);
-  }
-
-  /**
    * Get the plan type by name.
    *
    * @param string $name

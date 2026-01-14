@@ -1,31 +1,24 @@
 <?php
 
-namespace Drupal\ghi_plans\Plugin\EndpointQuery;
+namespace Drupal\ghi_plans\Plugin\FabricQuery;
 
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\ghi_plans\ApiObjects\Attachments\CaseloadAttachmentInterface;
+use Drupal\ghi_plans\ApiObjects\Attachments\FinancialAttachment;
 use Drupal\ghi_plans\ApiObjects\Partials\PlanOverviewPlan;
-use Drupal\hpc_api\Query\EndpointQueryBase;
+use Drupal\ghi_plans\ApiObjects\Plan;
+use Drupal\hpc_api\Attribute\FabricQuery;
+use Drupal\hpc_api\Query\FabricQueryBase;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
- * Provides a query plugin for plan overview data.
- *
- * @EndpointQuery(
- *   id = "plan_overview_query",
- *   label = @Translation("Plan overview query"),
- *   endpoint = {
- *     "public" = "public/plan/overview/{year}",
- *     "version" = "v2"
- *   }
- * )
+ * Plugin implementation of the 'plan overview' fabric query.
  */
-class PlanOverviewQuery extends EndpointQueryBase {
-
-  /**
-   * The module handler service.
-   *
-   * @var \Drupal\Core\Extension\ModuleHandlerInterface
-   */
-  protected $moduleHandler;
+#[FabricQuery(
+  id: 'plan_overview',
+  label: new TranslatableMarkup('Plan overview query'),
+)]
+class PlanOverviewQuery extends FabricQueryBase {
 
   /**
    * The fetched and processed plans.
@@ -35,25 +28,47 @@ class PlanOverviewQuery extends EndpointQueryBase {
   private $plans = NULL;
 
   /**
-   * {@inheritdoc}
+   * The year to use for the overview data.
+   *
+   * @var int|null
    */
-  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
-    $instance = parent::create($container, $configuration, $plugin_id, $plugin_definition);
-    $instance->moduleHandler = $container->get('module_handler');
-    return $instance;
-  }
+  private $year = NULL;
+
+  /**
+   * The attachment query.
+   *
+   * @var \Drupal\ghi_plans\Plugin\FabricQuery\AttachmentQuery
+   */
+  private $attachmentQuery = NULL;
 
   /**
    * {@inheritdoc}
    */
-  public function getData(array $placeholders = [], array $query_args = []) {
-    $this->endpointQuery->setPlaceholders($placeholders);
-    $year = $this->getPlaceholder('year');
-    if (!$year) {
-      return;
-    }
-    $this->moduleHandler->alter('plan_overview_query_arguments', $query_args, $year);
-    return parent::getData($placeholders, $query_args);
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition): PlanOverviewQuery {
+    /** @var self */
+    $instance = parent::create($container, $configuration, $plugin_id, $plugin_definition);
+    $instance->attachmentQuery = $container->get('plugin.manager.fabric_query_manager')->createInstance('attachment');
+    return $instance;
+  }
+
+  /**
+   * Public setter for the year.
+   *
+   * @param int $year
+   *   The year.
+   */
+  public function setYear(int $year) {
+    $this->year = $year;
+  }
+
+  /**
+   * Public getter for the year.
+   *
+   * @return int|null
+   *   The year.
+   */
+  public function getYear(): ?int {
+    return $this->year;
   }
 
   /**
@@ -66,15 +81,45 @@ class PlanOverviewQuery extends EndpointQueryBase {
       return;
     }
     $this->plans = [];
-    $query_args = [];
-
-    $data = $this->getData([], $query_args);
-    if (empty($data) || empty($data->plans)) {
+    $year = $this->getYear();
+    if ($year === NULL) {
       return;
     }
 
-    $plan_objects = $data->plans;
+    $payload = "
+      plans (first: 1000, filter:  {
+        planPeriod: {
+          period: {
+            PeriodType: { eq: \"Year\" }
+            CalendarYear: { eq: {$year} }
+          }
+        }
+      }) {
+        items { " . Plan::GRAPHQL_DIMENSION_ITEMS . " }
+      }";
+    $data = $this->fabricQuery->query($payload);
+    $plan_objects = $this->getItems($data, 'plans');
+    $plan_ids = array_map(fn ($plan_object) => $plan_object->Id, $plan_objects);
+    $attachments = $this->attachmentQuery->getAttachmentsByObject('plan', $plan_ids, ['caseload', 'financial']);
+    $caseloads_by_plan = [];
+    $requirements_by_plan = [];
+    foreach ($attachments as $attachment) {
+      if ($attachment instanceof CaseloadAttachmentInterface) {
+        $plan_id = $attachment->getPlanId();
+        $caseloads_by_plan[$plan_id] = $caseloads_by_plan[$plan_id] ?? [];
+        $caseloads_by_plan[$plan_id][$attachment->id()] = $attachment->getRawData();
+      }
+      if ($attachment instanceof FinancialAttachment) {
+        $plan_id = $attachment->getPlanId();
+        $requirements_by_plan[$plan_id] = $requirements_by_plan[$plan_id] ?? [];
+        $requirements_by_plan[$plan_id][$attachment->id()] = $attachment->getRequirements();
+      }
+    }
+
     foreach ($plan_objects as $plan_object) {
+      $plan_id = $plan_object->Id;
+      $plan_object->caseloads = $caseloads_by_plan[$plan_id] ?? [];
+      $plan_object->requirements = !empty($requirements_by_plan[$plan_id]) ? reset($requirements_by_plan[$plan_id]) : 0;
       $plan = new PlanOverviewPlan($plan_object);
       $this->plans[$plan->id()] = $plan;
     }
@@ -98,8 +143,8 @@ class PlanOverviewQuery extends EndpointQueryBase {
       $this->filterPlansByVisibilityOnGlobalPages($this->plans);
     }
 
-    uasort($this->plans, function ($a, $b) {
-      return strnatcmp($a->name, $b->name);
+    uasort($this->plans, function (PlanOverviewPlan $a, PlanOverviewPlan $b) {
+      return strnatcmp($a->getName(), $b->getName());
     });
     return $this->plans;
   }
@@ -122,6 +167,24 @@ class PlanOverviewQuery extends EndpointQueryBase {
       return $plan->isPartOfGho();
     });
     return $plans;
+  }
+
+  /**
+   * Get the total requirements for all plans.
+   *
+   * @return float
+   *   The sum of requirements for all GHO plans.
+   */
+  public function getTotalRequirements(): float {
+    $plans = $this->getGhoPlans();
+    if (empty($plans)) {
+      return 0;
+    }
+    $requirements = 0;
+    foreach ($plans as $plan) {
+      $requirements += $plan->getRequirements();
+    }
+    return $requirements;
   }
 
   /**
@@ -201,9 +264,8 @@ class PlanOverviewQuery extends EndpointQueryBase {
 
       foreach ($types as $type_key => $type) {
         $label = is_scalar($type) ? $type : ($type['label'] ?? NULL);
-        $key = is_array($type) && !empty($type['type']) ? $type['type'] : $type_key;
         $fallback = is_array($type) && !empty($type['fallback']) ? $type['fallback'] : NULL;
-        $value = $plan->getCaseloadValue($key, $label, $fallback);
+        $value = $plan->getCaseloadValue($label, $fallback);
         $caseload_totals[$type_key] += $value ?? 0;
         $plan_caseloads[$plan->id()][$type_key] = $value;
       }

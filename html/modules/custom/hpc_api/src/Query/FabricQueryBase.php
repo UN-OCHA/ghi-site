@@ -369,7 +369,7 @@ abstract class FabricQueryBase extends PluginBase implements FabricQueryPluginIn
       throw new \Exception('Category ' . $name . ' not found in the Fabric GraphQL API');
     }
     $payload = "
-      categories (filter: {
+      categories (first: 10000, filter: {
         CategoryTypeId: {
           eq: {$category->id()}
         }
@@ -495,7 +495,8 @@ abstract class FabricQueryBase extends PluginBase implements FabricQueryPluginIn
    *   The metric type object or NULL if not found.
    */
   public function getMetricType(int $id): ?MetricType {
-    $metric_type = $this->baseTypes['metricTypes'][$id] ?? NULL;
+    $metric_types = $this->getMetricTypes();
+    $metric_type = $metric_types[$id] ?? NULL;
     assert($metric_type instanceof MetricType);
     return $metric_type;
   }
