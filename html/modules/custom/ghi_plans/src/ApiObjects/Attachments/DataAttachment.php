@@ -2,20 +2,20 @@
 
 namespace Drupal\ghi_plans\ApiObjects\Attachments;
 
-use Drupal\Component\Serialization\Yaml;
 use Drupal\Core\Cache\Cache;
 use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\ghi_base_objects\Entity\BaseObjectChildInterface;
 use Drupal\ghi_base_objects\Entity\BaseObjectInterface;
 use Drupal\ghi_base_objects\Helpers\BaseObjectHelper;
 use Drupal\ghi_plans\ApiObjects\Measurements\Measurement;
-use Drupal\ghi_plans\Entity\GoverningEntity;
 use Drupal\ghi_plans\Entity\Plan;
 use Drupal\ghi_plans\Exceptions\InvalidAttachmentTypeException;
 use Drupal\ghi_plans\Helpers\PlanEntityHelper;
 use Drupal\ghi_plans\Plugin\FabricQuery\AttachmentPrototypeQuery;
 use Drupal\ghi_plans\Traits\PlanReportingPeriodTrait;
+use Drupal\hpc_api\ApiObjects\Types\Unit;
 use Drupal\hpc_api\Query\EndpointQuery;
+use Drupal\hpc_api\Traits\DateTimeTrait;
 use Drupal\hpc_api\Traits\SimpleCacheTrait;
 use Drupal\hpc_common\Helpers\ArrayHelper;
 
@@ -26,6 +26,7 @@ class DataAttachment extends AttachmentBase implements DataAttachmentInterface {
 
   use PlanReportingPeriodTrait;
   use SimpleCacheTrait;
+  use DateTimeTrait;
 
   /**
    * The source entity of an attachment.
@@ -33,13 +34,6 @@ class DataAttachment extends AttachmentBase implements DataAttachmentInterface {
    * @var \Drupal\ghi_plans\ApiObjects\Entities\EntityObjectInterface
    */
   private $sourceEntity;
-
-  /**
-   * Define the ID that is used for unit objects of type percentage.
-   *
-   * @todo Should be removed once HPC-5754 is done.
-   */
-  const UNIT_TYPE_ID_PERCENTAGE = 17;
 
   /**
    * Define a list of field types that should be considered cumulative reach.
@@ -50,75 +44,103 @@ class DataAttachment extends AttachmentBase implements DataAttachmentInterface {
     'optionOverallCumulReach',
   ];
 
+  const GRAPHQL_DIMENSION_ITEMS = '
+    Id
+    Name
+    PlanId
+    EntityId
+    EntityTypeId
+    EntityMainType
+    AttachmentType
+    CustomReference
+    HasDisaggregatedData
+    UnitId
+    CalculationMethodId
+    Description
+    VisibilityGroupId
+    AttachmentPrototypeId
+    RecordStatus
+    ActiveUntil
+    Source
+    SourceId
+    CreatedAt
+    UpdatedAt
+    IsLocked
+  ';
+
+  const GRAPHQL_FACTS_ITEMS = '
+    Id
+    AttachmentId
+    MetricTypeId
+    PeriodId
+    SectorId
+    LocationId
+    GenderId
+    AgeGroupId
+    PopulationStatusId
+    SettlementTypeId
+    DisabilityStatusId
+    HealthInterventionCategoryId
+    MaternalStatusId
+    DisaggregationCategoryOtherId
+    DeliveryModalityId
+    CalcMethodId
+    IsTotal
+    ValueNum
+    CustomMetricName
+    EffectiveFrom
+    EffectiveTo
+    Description
+    VisibilityGroupId
+    Source
+    SourceId
+    CreatedAt
+    UpdatedAt
+    IsLocked
+  ';
+
   /**
    * {@inheritdoc}
    */
   protected function map() {
+    $plan_query = $this->getFabricQueryManager()->createInstance('plan');
+
     $attachment = $this->getRawData();
-    $metrics = $this->getMetrics();
-    $unit = $metrics && is_object($metrics) && property_exists($metrics, 'unit') ? ($metrics->unit->object ?? NULL) : NULL;
     $prototype = $this->getPrototypeData();
     $period = $this->fetchReportingPeriodForAttachment();
-    $references = property_exists($attachment, 'composedReference') ? explode('/', $attachment->composedReference) : [];
+    $references = property_exists($attachment, 'ComposedReference') ? explode('/', $attachment->ComposedReference) : [];
 
     // Extract the values.
-    $totals = $metrics?->values?->totals ?? [];
-    $metric_fields = array_filter($totals, function ($index) use ($prototype) {
-      return !array_key_exists($index, $prototype->getMeasurementMetricFields());
-    }, ARRAY_FILTER_USE_KEY);
-    $measurement_fields = $metrics?->measureFields ?? [];
-    $calculated_fields = $metrics?->calculatedFields ?? [];
-
-    // Work around an issue with the API format for this.
-    $calculated_fields = is_array($calculated_fields) ? $calculated_fields : [$calculated_fields];
-
-    // Put all fields together.
-    $all_fields = array_merge(
-      $metric_fields,
-      $measurement_fields,
-      $calculated_fields,
-    );
+    $totals = $attachment->totals ?? [];
 
     $processed = (object) [
-      'id' => $attachment->id,
-      'type' => strtolower($attachment->type),
+      'id' => $attachment->Id,
+      'type' => strtolower($attachment->AttachmentType),
       'source' => (object) [
-        'entity_type' => PlanEntityHelper::checkObjectType($attachment->objectType ?? NULL),
-        'entity_id' => $attachment->objectId ?? NULL,
-        'plan_id' => $attachment->planId ?? NULL,
+        'entity_type' => PlanEntityHelper::checkObjectType($attachment->EntityMainType ?? NULL),
+        'entity_id' => $attachment->EntityId ?? NULL,
+        'plan_id' => $attachment->PlanId ?? NULL,
       ],
-      'custom_id' => $attachment->attachmentVersion?->value?->customId ?? ($attachment->attachmentVersion?->customReference ?? NULL),
+      'custom_id' => $attachment->CustomId ?? ($attachment->CustomReference ?? NULL),
       'custom_id_prefixed_refcode' => end($references),
-      'composed_reference' => $attachment->composedReference ?? NULL,
-      'description' => $attachment->attachmentVersion?->value?->description ?? NULL,
+      'composed_reference' => $attachment->ComposedReference ?? NULL,
+      'description' => $attachment->Name ?? NULL,
       'values' => $this->extractValues(),
       'prototype' => $prototype,
-      'unit' => $unit ? (object) [
-        'label' => $unit->label ?? NULL,
-        'type' => $unit->id == self::UNIT_TYPE_ID_PERCENTAGE ? 'percentage' : 'amount',
-        'group' => property_exists($unit, 'isGender') && $unit->isGender == 1 ? 'people' : 'amount',
-        'locale' => [
-          'en' => $unit->label ?? NULL,
-          'fr' => $unit->labelFr ?? NULL,
-        ],
-      ] : NULL,
+      'unit' => ($attachment->UnitId ?? NULL) ? $plan_query->getUnit($attachment->UnitId) : NULL,
       'monitoring_period' => $period ?? NULL,
       'fields' => $prototype->getFields(),
       'field_types' => $prototype->getFieldTypes(),
-      'original_fields' => $all_fields,
+      'original_fields' => $prototype->getOriginalFields(),
       'original_field_types' => array_map(function ($item) {
         return $item->type;
-      }, $all_fields ?? []),
-      'measurement_fields' => $measurement_fields ? array_map(function ($field) {
-        return $field->name->en;
-      }, $measurement_fields) : [],
-      'calculated_fields' => $calculated_fields ? array_map(function ($field) {
-        return $field->name->en;
-      }, $calculated_fields) : [],
+      }, $prototype->getOriginalFields() ?? []),
+      'measurement_fields' => $prototype->getMeasurementMetricFields(),
+      'calculated_fields' => $prototype->getCalculatedMetricFields(),
       'totals' => $totals,
-      'has_disaggregated_data' => !empty($attachment->attachmentVersion?->hasDisaggregatedData),
-      'disaggregated' => $attachment->attachmentVersion?->value?->metrics?->values?->disaggregated ?? NULL,
-      'calculation_method' => $attachment->attachmentVersion?->value?->metrics?->calculationMethod ?? NULL,
+      'has_disaggregated_data' => !empty($attachment->HasDisaggregatedData),
+      'disaggregated' => $attachment->disaggregated ?? NULL,
+      'calculation_method' => $attachment->CalculationMethodId ? $plan_query->getCalculationMethod($attachment->CalculationMethodId)?->getName() : NULL,
     ];
     $processed->calculation_method = is_string($processed->calculation_method) ? strtolower($processed->calculation_method) : NULL;
 
@@ -156,6 +178,16 @@ class DataAttachment extends AttachmentBase implements DataAttachmentInterface {
    */
   public function getCustomIdWithRefCode() {
     return $this->custom_id_prefixed_refcode;
+  }
+
+  /**
+   * Get the timestamp for the last update.
+   *
+   * @return int
+   *   A timestamp.
+   */
+  public function getLastUpdated() {
+    return $this->getTimestamp($this->data->UpdatedAt);
   }
 
   /**
@@ -197,7 +229,7 @@ class DataAttachment extends AttachmentBase implements DataAttachmentInterface {
   public function getSourceEntity() {
     $source_type = $this->getSourceEntityType();
     $source_id = $this->getSourceEntityId();
-    if ($source_type || !$source_id) {
+    if (!$source_type || !$source_id) {
       return NULL;
     }
     if (empty($this->sourceEntity)) {
@@ -361,13 +393,23 @@ class DataAttachment extends AttachmentBase implements DataAttachmentInterface {
   }
 
   /**
+   * Get the unit.
+   *
+   * @return \Drupal\hpc_api\ApiObjects\Types\Unit|null
+   *   The unit object or NULL.
+   */
+  public function getUnit(): ?Unit {
+    return $this->unit ?? NULL;
+  }
+
+  /**
    * Get the type of unit for an attachment.
    *
    * @return string|null
    *   The unit type as a string.
    */
-  public function getUnitType() {
-    return $this->unit ? $this->unit->type : NULL;
+  public function getUnitType(): ?string {
+    return $this->getUnit()?->getType() ?? NULL;
   }
 
   /**
@@ -376,11 +418,15 @@ class DataAttachment extends AttachmentBase implements DataAttachmentInterface {
    * @return string|null
    *   The unit label as a string.
    */
-  public function getUnitLabel($langcode = NULL) {
-    if ($langcode && !empty($this->unit->locale[$langcode])) {
-      return $this->unit->locale[$langcode];
+  public function getUnitLabel($langcode = NULL): ?string {
+    $unit = $this->getUnit();
+    if (!$unit) {
+      return NULL;
     }
-    return $this->unit->label ?? NULL;
+    if ($langcode) {
+      return $unit->getLocalizedName($langcode);
+    }
+    return $unit->getName();
   }
 
   /**
@@ -517,26 +563,7 @@ class DataAttachment extends AttachmentBase implements DataAttachmentInterface {
    * {@inheritdoc}
    */
   public function getPlanId() {
-    $attachment_data = $this->getRawData();
-    $plan_id = NULL;
-    if (!empty($attachment_data->objectType) && is_string($attachment_data->objectType) && $attachment_data->objectType == 'plan') {
-      $plan_id = $attachment_data->objectId;
-    }
-    elseif (!empty($attachment_data->planId)) {
-      $plan_id = $attachment_data->planId;
-    }
-    elseif (!empty($attachment_data->attachmentPrototype->planId)) {
-      $plan_id = $attachment_data->attachmentPrototype->planId;
-    }
-    elseif (!empty($attachment_data->measurements) && !empty($attachment_data->measurements[0]?->attachment?->planId)) {
-      $plan_id = $attachment_data->measurements[0]?->attachment?->planId;
-    }
-    elseif (!empty($attachment_data->objectType) && is_string($attachment_data->objectType) && $attachment_data->objectType == 'governingEntities') {
-      $object_id = $attachment_data->objectId;
-      $entity = BaseObjectHelper::getBaseObjectFromOriginalId($object_id, 'governing_entity');
-      $plan_id = $entity instanceof GoverningEntity ? $entity->getPlan()?->id() : NULL;
-    }
-    return $plan_id;
+    return $this->source->plan_id;
   }
 
   /**
@@ -670,22 +697,14 @@ class DataAttachment extends AttachmentBase implements DataAttachmentInterface {
    *   A processed array of disaggregated data.
    */
   public function getDisaggregatedData($reporting_period = 'latest', $filter_empty_locations = FALSE, $filter_empty_categories = FALSE, $ignore_missing_location_ids = FALSE) {
-    $this->assureDisaggregatedData();
-    $attachment_data = $this->getRawData();
-
     // First check if we have already processed this data.
     $cache_key = $this->getCacheKey([
-      'attachment_id' => $attachment_data->id,
+      'attachment_id' => $this->id(),
       'reporting_period' => $reporting_period,
       'filter_empty_locations' => intval($filter_empty_locations),
       'filter_empty_categories' => intval($filter_empty_categories),
       'ignore_missing_location_ids' => intval($ignore_missing_location_ids),
-      'updated' => $attachment_data->attachmentVersion->updatedAt,
-      // This hash is here to get a better chance of capturing differences of
-      // data for the same attachment id, like when the attachment data is
-      // retrieved by an anonymous user vs a logged-in user, where both might
-      // see different data, depending on their access level.
-      'hash' => md5(Yaml::encode(ArrayHelper::mapObjectsToString([$attachment_data->attachmentVersion?->value?->metrics?->values?->totals]))),
+      'updated' => $this->getLastUpdated(),
     ]);
 
     $cached_data = $this->cache($cache_key);
@@ -693,6 +712,7 @@ class DataAttachment extends AttachmentBase implements DataAttachmentInterface {
       return $cached_data;
     }
 
+    $this->assureDisaggregatedData();
     $cache_tags = [];
 
     // No, so we need to do it now. Extract the base metrics and base data.
@@ -854,13 +874,13 @@ class DataAttachment extends AttachmentBase implements DataAttachmentInterface {
    */
   private function assureDisaggregatedData() {
     $attachment_data = $this->getRawData();
-    if (property_exists($attachment_data->attachmentVersion->value->metrics->values, 'disaggregated')) {
+    if (property_exists($attachment_data, 'disaggregated')) {
       // Nothing to do.
       return;
     }
-    /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\AttachmentQuery $attachment_query */
-    $attachment_query = $this->getEndpointQueryManager()->createInstance('attachment_query');
-    $attachment_data = $attachment_query->getAttachmentDataWithDisaggregatedData($this->id);
+    /** @var \Drupal\ghi_plans\Plugin\FabricQuery\AttachmentQuery $attachment_query */
+    $attachment_query = $this->getFabricQueryManager()->createInstance('attachment');
+    $attachment_data->disaggregated = $attachment_query->getAttachmentDisaggregatedData($this->id());
     if (!$attachment_data) {
       return;
     }
@@ -892,6 +912,9 @@ class DataAttachment extends AttachmentBase implements DataAttachmentInterface {
    * metrics data will be used.
    */
   private function getBaseData($reporting_period = 'latest') {
+    // @todo Fix
+    return NULL;
+    // @codingStandardsIgnoreStart
     $measurement = $this->getMeasurementByReportingPeriod($reporting_period);
     if ($measurement && !empty($measurement->disaggregated)) {
       $base_data = $measurement->disaggregated;
@@ -903,6 +926,7 @@ class DataAttachment extends AttachmentBase implements DataAttachmentInterface {
       return NULL;
     }
     return clone $base_data;
+    // @codingStandardsIgnoreEnd
   }
 
   /**
@@ -1033,17 +1057,19 @@ class DataAttachment extends AttachmentBase implements DataAttachmentInterface {
    */
   protected function getMetrics() {
     $attachment = $this->getRawData();
-    if (!$attachment || !is_object($attachment)) {
+    if (!is_object($attachment)) {
       return NULL;
     }
-    // Get the metrics from the attachment version by default.
-    $metrics = $attachment->attachmentVersion?->value?->metrics ?? NULL;
-    // If there are measurements, look at the most recent one and get the
-    // metrics from there.
-    $measurement = self::getCurrentMeasurement();
-    if ($measurement) {
-      $metrics = $measurement->metrics;
-    }
+    // Get the totals from the attachment version by default.
+    $metrics = $attachment->totals ?? NULL;
+    // @codingStandardsIgnoreStart
+    // // If there are measurements, look at the most recent one and get the
+    // // metrics from there.
+    // $measurement = self::getCurrentMeasurement();
+    // if ($measurement) {
+    //   $metrics = $measurement->metrics;
+    // }
+    // @codingStandardsIgnoreEnd
     return $metrics;
   }
 
@@ -1228,7 +1254,7 @@ class DataAttachment extends AttachmentBase implements DataAttachmentInterface {
    *   An attachment prototype object.
    */
   protected function fetchPrototypeForAttachment($attachment) {
-    // First see if we can extract the attachment from the plan. This is better
+    // First see if we can extract the prototype from the plan. This is better
     // for performance when we need to do this for multiple attachments
     // belonging to the same plan (which is the usual case) because the
     // requests are cached.
@@ -1237,11 +1263,8 @@ class DataAttachment extends AttachmentBase implements DataAttachmentInterface {
     if (!$query_handler instanceof AttachmentPrototypeQuery) {
       return NULL;
     }
-    $plan_id = $attachment->planId ?? NULL;
-    $prototype_id = $attachment->attachmentPrototype?->id ?? ($attachment->attachmentPrototypeId ?? NULL);
-    if (!$plan_id && !$prototype_id) {
-      return NULL;
-    }
+    $plan_id = $attachment->PlanId ?? ($attachment->planId ?? NULL);
+    $prototype_id = $attachment->AttachmentPrototypeId ?? ($attachment->attachmentPrototypeId ?? NULL);
     if ($plan_id && $prototype_id && $prototype = $query_handler->getPrototypeByPlanAndId($plan_id, $prototype_id)) {
       return $prototype;
     }

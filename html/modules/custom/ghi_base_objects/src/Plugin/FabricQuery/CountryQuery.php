@@ -36,7 +36,7 @@ class CountryQuery extends FabricQueryBase {
         first: 1000,
         orderBy: { Name: ASC }
       ) {
-        items { ' . Country::GRAPHQL_ITEMS . ' }
+        items { ' . Country::GRAPHQL_DIMENSION_ITEMS . ' }
       }';
     $data = $this->fabricQuery->query($payload);
     $this->countries = $this->buildResultObjectsFromData($data, 'locations', Country::class);

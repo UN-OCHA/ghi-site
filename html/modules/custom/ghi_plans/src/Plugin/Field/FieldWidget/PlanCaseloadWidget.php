@@ -19,18 +19,18 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 class PlanCaseloadWidget extends WidgetBase {
 
   /**
-   * The attachment search query class.
+   * The attachment query.
    *
-   * @var \Drupal\ghi_plans\Plugin\EndpointQuery\AttachmentSearchQuery
+   * @var \Drupal\ghi_plans\Plugin\FabricQuery\AttachmentQuery
    */
-  protected $attachmentSearchQuery;
+  protected $attachmentQuery;
 
   /**
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
     $instance = parent::create($container, $configuration, $plugin_id, $plugin_definition);
-    $instance->attachmentSearchQuery = $container->get('plugin.manager.endpoint_query_manager')->createInstance('attachment_search_query');
+    $instance->attachmentQuery = $container->get('plugin.manager.fabric_query_manager')->createInstance('attachment_query');
     return $instance;
   }
 
@@ -47,7 +47,7 @@ class PlanCaseloadWidget extends WidgetBase {
     if (!$plan_id) {
       return $element;
     }
-    $attachments = $this->attachmentSearchQuery->getAttachmentsByObject('plan', $plan_id, [
+    $attachments = $this->attachmentQuery->getAttachmentsByObject('plan', $plan_id, [
       'type' => 'caseload',
     ]);
     $attachment_options = $attachments ? array_map(function ($attachment) {

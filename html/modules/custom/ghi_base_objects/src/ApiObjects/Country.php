@@ -13,7 +13,7 @@ class Country extends BaseObject implements GeoJsonLocationInterface {
 
   use GeoJsonLocationTrait;
 
-  const GRAPHQL_ITEMS = "
+  const GRAPHQL_DIMENSION_ITEMS = "
     Id
     Name
     ISO3

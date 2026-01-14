@@ -43,7 +43,7 @@ abstract class ApiObjectBase implements ApiObjectInterface, CacheableDependencyI
    * {@inheritdoc}
    */
   public function id() {
-    return (int) ($this->map?->id ?? $this->data->id);
+    return (int) ($this->map?->id ?? ($this->data->id ?? $this->data->Id));
   }
 
   /**

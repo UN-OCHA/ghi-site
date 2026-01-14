@@ -32,7 +32,7 @@ class OrganizationQuery extends FabricQueryBase {
           eq: {$organization_id}
         }
       }) {
-        items { " . Organization::GRAPHQL_ITEMS . " }
+        items { " . Organization::GRAPHQL_DIMENSION_ITEMS . " }
       }";
     $data = $this->fabricQuery->query($payload);
     $items = $data->organizations->items;

@@ -29,7 +29,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  *  admin_label = @Translation("Governing Entities Caseloads Table"),
  *  category = @Translation("Plan elements"),
  *  data_sources = {
- *    "attachment_search" = "hpc_api:attachment_search_query",
+ *    "attachment" = "fabric_query:attachment",
  *    "attachment_prototype" = "fabric_query:attachment_prototype",
  *  },
  *  default_title = @Translation("Cluster caseloads"),
@@ -396,8 +396,8 @@ class PlanGoverningEntitiesCaseloadsTable extends GHIBlockBase implements Config
       'type' => 'caseload',
     ]);
 
-    /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\AttachmentSearchQuery $query */
-    $query = $this->getQueryHandler('attachment_search');
+    /** @var \Drupal\ghi_plans\Plugin\FabricQuery\AttachmentQuery $query */
+    $query = $this->getQueryHandler('attachment');
     return $query->getAttachmentsByObject('governingEntity', $entity_ids, $filter);
   }
 
@@ -419,7 +419,7 @@ class PlanGoverningEntitiesCaseloadsTable extends GHIBlockBase implements Config
    *
    * @param array $attachments
    *   An array of attachment objects as returned by
-   *   AttachmentSearchQuery::getAttachmentsByObject().
+   *   AttachmentQuery::getAttachmentsByObject().
    *
    * @return array
    *   An array of arrays of attachment objects, keyed by the entity id.

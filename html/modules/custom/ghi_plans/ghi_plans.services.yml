@@ -4,7 +4,7 @@ services:
     arguments: ['@entity_type.manager', '@entity_field.manager', '@module_handler', '@current_user']
   attachment_converter:
     class: Drupal\ghi_plans\ParamConverter\AttachmentConverter
-    arguments: ['@plugin.manager.endpoint_query_manager']
+    arguments: ['@plugin.manager.fabric_query_manager']
     tags:
       - { name: paramconverter }
     lazy: true

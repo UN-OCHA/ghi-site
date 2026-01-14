@@ -9,7 +9,7 @@ use Drupal\ghi_base_objects\ApiObjects\BaseObject;
  */
 class EntityPrototype extends BaseObject {
 
-  const GRAPHQL_ITEMS = "
+  const GRAPHQL_DIMENSION_ITEMS = "
     Id
     RefCode
     Type

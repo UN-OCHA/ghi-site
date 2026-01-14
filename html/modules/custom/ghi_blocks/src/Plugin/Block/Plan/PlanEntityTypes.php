@@ -327,11 +327,10 @@ class PlanEntityTypes extends GHIBlockBase implements AutomaticTitleBlockInterfa
     }
     $weight = [];
     foreach ($matching_entities as $entity) {
-      $ref_code = $entity->ref_code;
+      $ref_code = $entity->getEntityTypeRefCode();
       if (empty($options[$ref_code])) {
-        $name = $entity->plural_name;
-        $options[$ref_code] = $name;
-        $weight[$ref_code] = $entity->order_number;
+        $options[$ref_code] = $entity->getPluralName();
+        $weight[$ref_code] = $entity->getOrderNumber;
       }
     }
     uksort($options, function ($ref_code_a, $ref_code_b) use ($weight) {

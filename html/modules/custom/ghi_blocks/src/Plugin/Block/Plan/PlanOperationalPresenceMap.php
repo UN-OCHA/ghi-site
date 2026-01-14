@@ -34,7 +34,6 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  *  category = @Translation("Plan elements"),
  *  data_sources = {
  *    "project_search" = "hpc_api:plan_project_search_query",
- *    "attachment_search" = "hpc_api:attachment_search_query",
  *    "locations" = "hpc_api:locations_query",
  *  },
  *  default_title = @Translation("Operations by admin area"),

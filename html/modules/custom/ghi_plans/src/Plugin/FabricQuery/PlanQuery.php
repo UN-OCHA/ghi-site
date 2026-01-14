@@ -51,7 +51,7 @@ class PlanQuery extends FabricQueryBase {
           eq: {$plan_id}
         }
       }) {
-        items { " . Plan::GRAPHQL_ITEMS . " }
+        items { " . Plan::GRAPHQL_DIMENSION_ITEMS . " }
       }";
     $data = $this->fabricQuery->query($payload);
     $plan_data = $data->plans->items[0] ?? NULL;
@@ -85,7 +85,7 @@ class PlanQuery extends FabricQueryBase {
           and: [{ CalendarYear: { eq: {$year} } }]
         }
       }) {
-        items { " . Plan::GRAPHQL_ITEMS . " }
+        items { " . Plan::GRAPHQL_DIMENSION_ITEMS . " }
       }";
     $data = $this->fabricQuery->query($payload);
     return $this->buildResultObjectsFromData($data, 'plans', Plan::class);

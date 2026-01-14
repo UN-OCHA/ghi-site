@@ -187,8 +187,9 @@ trait AttachmentTableTrait {
     $alignments = $this->getEntityAlignments($entity);
     $alignments_grouped = [];
     foreach ($alignments as $parent) {
-      $alignments_grouped[$parent->ref_code] = $alignments_grouped[$parent->ref_code] ?? [];
-      $alignments_grouped[$parent->ref_code][$parent->id()] = $parent->id();
+      $ref_code = $parent->getEntityTypeRefCode();
+      $alignments_grouped[$ref_code] = $alignments_grouped[$ref_code] ?? [];
+      $alignments_grouped[$ref_code][$parent->id()] = $parent->id();
     }
 
     $paths = [[]];
@@ -227,15 +228,14 @@ trait AttachmentTableTrait {
 
       if (!array_key_exists($ref_code, $contribute_items)) {
         $contribute_items[$ref_code] = [
-          'singular_name' => $plan_entity->singular_name,
-          'plural_name' => $plan_entity->plural_name,
+          'singular_name' => $plan_entity->getSingularName(),
+          'plural_name' => $plan_entity->getPluralName(),
           'items' => [],
         ];
       }
-      $contribute_items[$ref_code]['items'][] = $plan_entity->custom_reference;
+      $contribute_items[$ref_code]['items'][] = $plan_entity->getCustomReference();
       sort($contribute_items[$ref_code]['items']);
     }
-
     // Build the output.
     return [
       '#type' => 'container',

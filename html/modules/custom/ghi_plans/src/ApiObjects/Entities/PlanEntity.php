@@ -9,7 +9,7 @@ use Drupal\ghi_plans\Helpers\PlanEntityHelper;
  */
 class PlanEntity extends EntityObjectBase {
 
-  const GRAPHQL_ITEMS = "
+  const GRAPHQL_DIMENSION_ITEMS = "
     Id
     Name
     Description
@@ -20,6 +20,11 @@ class PlanEntity extends EntityObjectBase {
     CustomReference
     ComposedReference
     SortOrder
+    logframeEntityLink {
+      items {
+        ParentLogframeEntityId
+      }
+    }
   ";
 
   /**
@@ -28,13 +33,12 @@ class PlanEntity extends EntityObjectBase {
   protected function map() {
     $data = $this->getRawData();
     $prototype = !empty($data->HpcEntityPrototypeId ?? NULL) ? PlanEntityHelper::getEntityPrototype($data->HpcEntityPrototypeId) : NULL;
-
     return (object) [
       'id' => $data->Id,
       'name' => $prototype?->getNameSingular(),
       'group_name' => $prototype?->getNamePlural(),
       'display_name' => $prototype?->getNameSingular(),
-      'singular_name' => implode(' ', array_filter([$prototype?->getNameSingular(), $data->CustomReference])),
+      'singular_name' => $prototype?->getNameSingular(),
       'plural_name' => $prototype?->getNamePlural(),
       'description' => $data->Name,
       // @codingStandardsIgnoreStart
@@ -77,18 +81,11 @@ class PlanEntity extends EntityObjectBase {
     if (!$entity) {
       return NULL;
     }
-    if (property_exists($entity, 'parentId')) {
-      return $entity->parentId;
-    }
-    $entity_version = $this->getEntityVersion($entity);
-    if (empty($entity_version->value->support)) {
+    $items = $entity->logframeEntityLink?->items ?? [];
+    if (empty($items)) {
       return NULL;
     }
-    $first_ref = reset($entity_version->value->support);
-    if (!property_exists($first_ref, 'planEntityIds') || empty($first_ref->planEntityIds)) {
-      return NULL;
-    }
-    return reset($first_ref->planEntityIds);
+    return reset($items)->ParentLogframeEntityId;
   }
 
   /**
@@ -102,20 +99,11 @@ class PlanEntity extends EntityObjectBase {
     if (!$entity) {
       return [];
     }
-    $entity_version = $this->getEntityVersion($entity);
-    if (empty($entity_version->value->support)) {
+    $items = $entity->logframeEntityLink?->items ?? [];
+    if (empty($items)) {
       return [];
     }
-    if (!is_array($entity_version->value->support)) {
-      return [];
-    }
-    $first_ref = reset($entity_version->value->support);
-    if (property_exists($first_ref, 'planEntityIds') && !empty($first_ref->planEntityIds)) {
-      return $first_ref->planEntityIds;
-    }
-    if (property_exists($entity, 'parentId')) {
-      return [$entity->parentId];
-    }
+    return array_map(fn ($item) => $item->ParentLogframeEntityId, $items);
   }
 
   /**
@@ -129,16 +117,9 @@ class PlanEntity extends EntityObjectBase {
     if (!$entity) {
       return [];
     }
-    $entity_version = $this->getEntityVersion($entity);
-    if (empty($entity_version->value->support)) {
-      return [];
-    }
-    $first_ref = reset($entity_version->value->support);
-    if (!property_exists($first_ref, 'planEntityIds') || empty($first_ref->planEntityIds)) {
-      return [];
-    }
+    $parent_ids = $this->getParentIds();
     $parents = [];
-    foreach ($first_ref->planEntityIds as $entity_id) {
+    foreach ($parent_ids as $entity_id) {
       $parents[$entity_id] = PlanEntityHelper::getPlanEntity($entity_id);
     }
     return array_filter($parents);
@@ -157,26 +138,43 @@ class PlanEntity extends EntityObjectBase {
   /**
    * {@inheritdoc}
    */
-  public function getEntityVersion() {
-    return $this->getRawData()->planEntityVersion ?? NULL;
+  public function getFullName() {
+    $parent_entity = $this->getParentGoverningEntity();
+    if (!$parent_entity) {
+      return $this->t('@type @custom_reference', [
+        '@type' => $this->getName(),
+        '@custom_reference' => $this->getCustomReference(),
+      ]);
+    }
+    return $this->t('@parent: @type @custom_reference', [
+      '@parent' => $parent_entity->getCustomReference() . ' ' . $parent_entity->getPrototypeName(),
+      '@type' => $this->getName(),
+      '@custom_reference' => $this->getCustomReference(),
+    ]);
   }
 
   /**
    * {@inheritdoc}
    */
-  public function getFullName() {
-    $parent_entity = $this->getParentGoverningEntity();
-    if (!$parent_entity) {
-      return $this->t('@type @custom_reference', [
-        '@type' => $this->name,
-        '@custom_reference' => $this->custom_reference,
-      ]);
-    }
-    return $this->t('@parent: @type @custom_reference', [
-      '@parent' => $parent_entity->custom_reference . ' ' . $parent_entity->entity_prototype_name,
-      '@type' => $this->name,
-      '@custom_reference' => $this->custom_reference,
-    ]);
+  public function getSingularName(): string {
+    return $this->map->singular_name;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getPluralName(): string {
+    return $this->map->plural_name;
+  }
+
+  /**
+   * Get the order number.
+   *
+   * @return int
+   *   The order number.
+   */
+  public function getOrderNumber(): int {
+    return $this->order_number;
   }
 
   /**

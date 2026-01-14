@@ -9,6 +9,7 @@ use Drupal\ghi_plans\ApiObjects\Attachments\FileAttachment;
 use Drupal\ghi_plans\ApiObjects\Attachments\IndicatorAttachment;
 use Drupal\ghi_plans\ApiObjects\Attachments\TextAttachment;
 use Drupal\ghi_plans\Exceptions\InvalidAttachmentTypeException;
+use Drupal\ghi_plans\Plugin\FabricQuery\AttachmentQuery;
 
 /**
  * Helper class for mapping attachment objects.
@@ -28,7 +29,8 @@ class AttachmentHelper {
     $processed = [];
     foreach ($attachments as $attachment) {
       try {
-        $processed[$attachment->id] = self::processAttachment($attachment);
+        $attachment_object = self::processAttachment($attachment);
+        $processed[$attachment_object->id()] = $attachment_object;
       }
       catch (InvalidAttachmentTypeException $e) {
         // Ignore this for the moment.
@@ -50,12 +52,20 @@ class AttachmentHelper {
    *   For unsupported attachment types, an Exception is thrown.
    */
   public static function processAttachment(object $attachment) {
-    $attachment_type = $attachment->type ?? ($attachment->FactType ?? NULL);
+    $attachment_type = $attachment->AttachmentType ?? ($attachment->type ?? NULL);
     switch (strtolower($attachment_type)) {
       case 'caseload':
+        if (!empty($attachment->id)) {
+          $query = self::getAttachmentQuery();
+          return $query->getAttachment($attachment->id);
+        }
         return new CaseloadAttachment($attachment);
 
       case 'indicator':
+        if (!empty($attachment->id)) {
+          $query = self::getAttachmentQuery();
+          return $query->getAttachment($attachment->id);
+        }
         return new IndicatorAttachment($attachment);
 
       case 'filewebcontent':
@@ -108,6 +118,17 @@ class AttachmentHelper {
       case 'composed_reference':
         return $attachment->composed_reference;
     }
+  }
+
+  /**
+   * Get the attachment query.
+   *
+   * @return \Drupal\ghi_plans\Plugin\FabricQuery\AttachmentQuery
+   *   The attachment query..
+   */
+  private static function getAttachmentQuery(): AttachmentQuery {
+    $query_manager = \Drupal::service('plugin.manager.fabric_query_manager');
+    return $query_manager->createInstance('attachment');
   }
 
 }
