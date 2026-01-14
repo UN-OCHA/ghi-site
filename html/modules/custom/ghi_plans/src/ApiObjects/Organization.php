@@ -10,7 +10,7 @@ use Drupal\hpc_common\Helpers\CommonHelper;
  */
 class Organization extends BaseObject {
 
-  const GRAPHQL_ITEMS = '
+  const GRAPHQL_DIMENSION_ITEMS = '
     Id
     Name
     Url

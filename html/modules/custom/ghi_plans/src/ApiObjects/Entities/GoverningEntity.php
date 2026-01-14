@@ -11,7 +11,7 @@ class GoverningEntity extends EntityObjectBase {
 
   const ENTITY_REF_CODE = 'CL';
 
-  const GRAPHQL_ITEMS = "
+  const GRAPHQL_DIMENSION_ITEMS = "
     Id
     Name
     Description
@@ -77,10 +77,24 @@ class GoverningEntity extends EntityObjectBase {
    */
   public function getFullName() {
     return $this->t('@type @name (@custom_reference)', [
-      '@type' => $this->entity_prototype_name,
-      '@name' => $this->name,
-      '@custom_reference' => $this->custom_reference,
+      '@type' => $this->getPrototypeName(),
+      '@name' => $this->getName(),
+      '@custom_reference' => $this->getCustomReference(),
     ]);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getSingularName(): string {
+    return $this->map->singular_name;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getPluralName(): string {
+    return $this->map->plural_name;
   }
 
   /**
@@ -93,7 +107,7 @@ class GoverningEntity extends EntityObjectBase {
    *   An array of ref codes.
    */
   public function getValidRefCodes($include_children = TRUE) {
-    return array_merge([$this->ref_code], $this->ref_codes_children);
+    return array_merge([$this->getEntityTypeRefCode()], $this->ref_codes_children);
   }
 
   /**
@@ -101,6 +115,16 @@ class GoverningEntity extends EntityObjectBase {
    */
   public function getDescription(): ?string {
     return $this->getDisplayName();
+  }
+
+  /**
+   * Get the prototype name.
+   *
+   * @return string|null
+   *   The prototype name.
+   */
+  public function getPrototypeName(): ?string {
+    return $this->entity_prototype_name;
   }
 
 }

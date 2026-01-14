@@ -10,14 +10,6 @@ use Drupal\ghi_plans\ApiObjects\PlanEntityInterface;
 interface EntityObjectInterface extends PlanEntityInterface {
 
   /**
-   * Get the version property of an API entity object.
-   *
-   * @return object
-   *   The version property object.
-   */
-  public function getEntityVersion();
-
-  /**
    * Get the composed reference.
    *
    * @return string
@@ -56,6 +48,38 @@ interface EntityObjectInterface extends PlanEntityInterface {
    *   The full name.
    */
   public function getFullName();
+
+  /**
+   * Get the singular name.
+   *
+   * @return string
+   *   The singular name.
+   */
+  public function getSingularName(): string;
+
+  /**
+   * Get the plural name.
+   *
+   * @return string
+   *   The plural name.
+   */
+  public function getPluralName(): string;
+
+  /**
+   * Get the custom reference.
+   *
+   * @return string
+   *   The custom reference.
+   */
+  public function getCustomReference():string;
+
+  /**
+   * Get the entity type ref code.
+   *
+   * @return string
+   *   The entity type ref code.
+   */
+  public function getEntityTypeRefCode():string;
 
   /**
    * Get tags for an entity.

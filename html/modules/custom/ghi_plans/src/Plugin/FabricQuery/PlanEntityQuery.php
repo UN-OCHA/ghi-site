@@ -35,7 +35,7 @@ class PlanEntityQuery extends FabricQueryBase {
       case 'governingEntity':
         $payload = "
           coordinationEntities (filter: { Id: { eq: {$entity_id} } } ) {
-            items { " . GoverningEntity::GRAPHQL_ITEMS . " }
+            items { " . GoverningEntity::GRAPHQL_DIMENSION_ITEMS . " }
           }";
         $data = $this->fabricQuery->query($payload);
         $items = $data ? $this->getItems($data, 'coordinationEntities') : [];
@@ -44,7 +44,7 @@ class PlanEntityQuery extends FabricQueryBase {
       case 'planEntity':
         $payload = "
           logframeEntities (filter: { Id: { eq: {$entity_id} } }) {
-            items { " . PlanEntity::GRAPHQL_ITEMS . " }
+            items { " . PlanEntity::GRAPHQL_DIMENSION_ITEMS . " }
           }";
         $data = $this->fabricQuery->query($payload);
         $items = $data ? $this->getItems($data, 'logframeEntities') : [];
@@ -79,7 +79,7 @@ class PlanEntityQuery extends FabricQueryBase {
       case 'governingEntity':
         $payload = "
           coordinationEntities (filter: { Id: { in: [" . implode(',', $entity_ids) . "] } } ) {
-            items { " . GoverningEntity::GRAPHQL_ITEMS . " }
+            items { " . GoverningEntity::GRAPHQL_DIMENSION_ITEMS . " }
           }";
         $data = $this->fabricQuery->query($payload);
         return $this->buildResultObjectsFromData($data, 'coordinationEntities', GoverningEntity::class);
@@ -87,7 +87,7 @@ class PlanEntityQuery extends FabricQueryBase {
       case 'planEntity':
         $payload = "
           logframeEntities (filter: { Id: { in: [" . implode(',', $entity_ids) . "] } } ) {
-            items { " . PlanEntity::GRAPHQL_ITEMS . " }
+            items { " . PlanEntity::GRAPHQL_DIMENSION_ITEMS . " }
           }";
         $data = $this->fabricQuery->query($payload);
         return $this->buildResultObjectsFromData($data, 'logframeEntities', GoverningEntity::class);
@@ -129,13 +129,13 @@ class PlanEntityQuery extends FabricQueryBase {
     if ($fetch_coordination_entities) {
       $payloads[] = "
         coordinationEntities (first: 5000, filter: { PlanId: { eq: {$plan_id} } }) {
-          items { " . GoverningEntity::GRAPHQL_ITEMS . " }
+          items { " . GoverningEntity::GRAPHQL_DIMENSION_ITEMS . " }
         }";
     }
     if ($fetch_logframe_entities) {
       $payloads[] = "
         logframeEntities (first: 5000, filter: { PlanId: { eq: {$plan_id} } }) {
-          items { " . PlanEntity::GRAPHQL_ITEMS . " }
+          items { " . PlanEntity::GRAPHQL_DIMENSION_ITEMS . " }
         }";
     }
     $data = $this->fabricQuery->query(implode(' ', $payloads));

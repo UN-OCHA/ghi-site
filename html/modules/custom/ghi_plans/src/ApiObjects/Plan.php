@@ -7,6 +7,7 @@ use Drupal\ghi_base_objects\ApiObjects\Country;
 use Drupal\ghi_plans\Entity\Plan as EntityPlan;
 use Drupal\hpc_api\ApiObjects\Types\PlanCostingType;
 use Drupal\hpc_api\ApiObjects\Types\PlanType;
+use Drupal\hpc_api\Traits\DateTimeTrait;
 use Drupal\hpc_common\Helpers\StringHelper;
 
 /**
@@ -14,9 +15,11 @@ use Drupal\hpc_common\Helpers\StringHelper;
  */
 class Plan extends BaseObject implements PlanEntityInterface {
 
+  use DateTimeTrait;
+
   const ENTITY_REF_CODE = 'PL';
 
-  const GRAPHQL_ITEMS = '
+  const GRAPHQL_DIMENSION_ITEMS = '
     Id
     Name
     ShortName
@@ -44,7 +47,7 @@ class Plan extends BaseObject implements PlanEntityInterface {
       }
     }
     planLocation {
-      items { location { ' . Country::GRAPHQL_ITEMS . ' } }
+      items { location { ' . Country::GRAPHQL_DIMENSION_ITEMS . ' } }
     }
   ';
 
@@ -332,34 +335,6 @@ class Plan extends BaseObject implements PlanEntityInterface {
    */
   public function isPartOfGho(): bool {
     return $this->map->is_part_of_gho;
-  }
-
-  /**
-   * Reformat a date for internal use in the format Y-m-d.
-   *
-   * @param string $date
-   *   The original date string.
-   *
-   * @return string
-   *   The reformatted string.
-   */
-  private function reformatDate(string $date): string {
-    $datetime = new \DateTime($date, new \DateTimeZone('UTC'));
-    return $datetime->format('Y-m-d');
-  }
-
-  /**
-   * Get a timestamp from a date.
-   *
-   * @param string $date
-   *   The original date string.
-   *
-   * @return int
-   *   The timestamp.
-   */
-  private function getTimestamp(string $date): string {
-    $datetime = new \DateTime($date, new \DateTimeZone('UTC'));
-    return $datetime->getTimestamp();
   }
 
 }
