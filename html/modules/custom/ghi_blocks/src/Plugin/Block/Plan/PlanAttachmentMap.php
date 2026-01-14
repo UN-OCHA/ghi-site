@@ -32,7 +32,7 @@ use Drupal\hpc_downloads\Interfaces\HPCDownloadPNGInterface;
  *  admin_label = @Translation("Attachment Map"),
  *  category = @Translation("Plan elements"),
  *  data_sources = {
- *    "attachment_search" = "hpc_api:attachment_search_query",
+ *    "attachment" = "fabric_query:attachment",
  *    "country" = "fabric_query:country",
  *  },
  *  default_title = @Translation("Data by location"),
@@ -869,8 +869,8 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
   private function getConfiguredAttachments() {
     $conf = $this->getBlockConfig();
     $attachment_ids = array_filter($conf['attachments']['entity_attachments']['attachments']['attachment_id'] ?? []);
-    /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\AttachmentSearchQuery $query */
-    $query = $this->getQueryHandler('attachment_search');
+    /** @var \Drupal\ghi_plans\Plugin\FabricQuery\AttachmentQuery $query */
+    $query = $this->getQueryHandler('attachment');
     return !empty($attachment_ids) ? $query->getAttachmentsById($attachment_ids) : [];
   }
 

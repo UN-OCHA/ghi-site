@@ -27,7 +27,7 @@ class CountryImportQuery extends FabricQueryBase implements ImportQueryInterface
         first: 10000,
         orderBy: { Name: ASC }
       ) {
-        items { ' . Country::GRAPHQL_ITEMS . ' }
+        items { ' . Country::GRAPHQL_DIMENSION_ITEMS . ' }
       }';
     $data = $this->fabricQuery->query($payload);
     return $data->locations->items;

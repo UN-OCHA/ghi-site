@@ -8,6 +8,7 @@ use Drupal\Core\DependencyInjection\DependencySerializationTrait;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\hpc_api\ApiObjects\Relationship;
 use Drupal\hpc_api\ApiObjects\Types\AgeGroup;
+use Drupal\hpc_api\ApiObjects\Types\CalculationMethod;
 use Drupal\hpc_api\ApiObjects\Types\CategoryType;
 use Drupal\hpc_api\ApiObjects\Types\EntityType;
 use Drupal\hpc_api\ApiObjects\Types\Gender;
@@ -249,16 +250,16 @@ abstract class FabricQueryBase extends PluginBase implements FabricQueryPluginIn
     $properties = ['Id', 'Name', 'Description'];
     $base_type_definitions = [
       'ageGroups' => [AgeGroup::class, $properties],
+      'calcMethods' => [CalculationMethod::class, $properties],
       'categoryTypes' => [CategoryType::class, $properties],
       'entityTypes' => [EntityType::class, ['Id', 'Name', 'Alias']],
       'genders' => [Gender::class, $properties],
       'healthInterventionCategories' => [HealthInterventionCategory::class, $properties],
-      'metricTypes' => [MetricType::class, $properties],
+      'metricTypes' => [MetricType::class, ['Id', 'Name', 'OtherName']],
       'populationStatuses' => [PopulationStatus::class, $properties],
-      // 'populationTypes' => [PopulationType::class, $properties],
       'resourceTypes' => [ResourceType::class, $properties],
       'settlementTypes' => [SettlementType::class, $properties],
-      'units' => [Unit::class, $properties],
+      'units' => [Unit::class, ['Id', 'Name', 'NameFrench']],
     ];
     ksort($base_type_definitions);
     return $base_type_definitions;
@@ -523,6 +524,32 @@ abstract class FabricQueryBase extends PluginBase implements FabricQueryPluginIn
     $unit = $this->baseTypes['units'][$id] ?? NULL;
     assert($unit instanceof Unit);
     return $unit;
+  }
+
+  /**
+   * Get the available calculation methods.
+   *
+   * @return \Drupal\hpc_api\ApiObjects\Types\CalculationMethod[]
+   *   The calculation methods.
+   */
+  public function getCalculationMethods(): array {
+    $this->fetchBaseTypes();
+    return $this->baseTypes['calcMethods'];
+  }
+
+  /**
+   * Get a calculation method by id.
+   *
+   * @param int $id
+   *   The id of the calculation method.
+   *
+   * @return \Drupal\hpc_api\ApiObjects\Types\CalculationMethod|null
+   *   The calculation method object or NULL if not found.
+   */
+  public function getCalculationMethod(int $id): ?CalculationMethod {
+    $calculation_method = $this->baseTypes['calcMethods'][$id] ?? NULL;
+    assert($calculation_method instanceof CalculationMethod);
+    return $calculation_method;
   }
 
   /**

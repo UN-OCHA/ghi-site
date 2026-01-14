@@ -40,8 +40,8 @@ class PlanStructureController extends ControllerBase {
         if ($plan_object->entity_prototype_id != $entity->entity_prototype_id) {
           continue;
         }
-        $title = $entity->getName() . ' ' . $entity->custom_reference . ' (' . $entity->getComposedReference() . ')';
-        $title_tooltip = $entity->getName() . ' ' . $entity->custom_reference . ' (' . $entity->getComposedReference() . ', ' . $entity->id() . ')';
+        $title = $entity->getName() . ' ' . $entity->getCustomReference() . ' (' . $entity->getComposedReference() . ')';
+        $title_tooltip = $entity->getName() . ' ' . $entity->getCustomReference() . ' (' . $entity->getComposedReference() . ', ' . $entity->id() . ')';
         $item_title = Markup::create('<span title="' . $title_tooltip . '">' . $title . '</span>');
 
         if (!empty($entity->getChildren())) {

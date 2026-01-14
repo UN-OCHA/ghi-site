@@ -10,7 +10,7 @@ use Drupal\hpc_common\Helpers\StringHelper;
  */
 class AttachmentPrototype extends ApiObjectBase {
 
-  const GRAPHQL_ITEMS = "
+  const GRAPHQL_DIMENSION_ITEMS = "
     Id
     RefCode
     Type

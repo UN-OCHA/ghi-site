@@ -46,13 +46,13 @@ abstract class EntityObjectBase extends ApiObjectBase implements EntityObjectInt
   public function getCustomName($type) {
     switch ($type) {
       case 'custom_id':
-        return $this->custom_reference;
+        return $this->getCustomReference();
 
       case 'custom_id_prefixed_refcode':
-        return $this->ref_code . $this->custom_reference;
+        return $this->getEntityTypeRefCode() . $this->getCustomReference();
 
       case 'composed_reference':
-        return $this->composed_reference;
+        return $this->getComposedReference();
     }
   }
 
@@ -66,8 +66,15 @@ abstract class EntityObjectBase extends ApiObjectBase implements EntityObjectInt
   /**
    * {@inheritdoc}
    */
-  public function getEntityTypeRefCode() {
+  public function getEntityTypeRefCode(): string {
     return $this->ref_code;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getCustomReference():string {
+    return $this->custom_reference;
   }
 
   /**

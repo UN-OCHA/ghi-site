@@ -34,7 +34,7 @@ class EntityPrototypeQuery extends FabricQueryBase {
           eq: {$prototype_id}
         }
       }) {
-        items { " . EntityPrototype::GRAPHQL_ITEMS . "}
+        items { " . EntityPrototype::GRAPHQL_DIMENSION_ITEMS . "}
       }";
     $data = $this->fabricQuery->query($payload);
     $prototypes = $data ? $this->getItems($data, 'entityPrototypes') : [];
@@ -62,7 +62,7 @@ class EntityPrototypeQuery extends FabricQueryBase {
           eq: {$plan_id}
         }
       }) {
-        items { " . EntityPrototype::GRAPHQL_ITEMS . "}
+        items { " . EntityPrototype::GRAPHQL_DIMENSION_ITEMS . "}
       }";
     $data = $this->fabricQuery->query($payload);
     $prototypes = $data ? $this->getItems($data, 'entityPrototypes') : NULL;

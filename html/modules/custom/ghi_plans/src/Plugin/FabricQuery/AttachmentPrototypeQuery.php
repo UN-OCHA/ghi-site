@@ -33,7 +33,7 @@ class AttachmentPrototypeQuery extends FabricQueryBase {
           eq: {$prototype_id}
         }
       }) {
-        items { " . AttachmentPrototype::GRAPHQL_ITEMS . "}
+        items { " . AttachmentPrototype::GRAPHQL_DIMENSION_ITEMS . "}
       }";
     $data = $this->fabricQuery->query($payload);
     $prototypes = $this->getItems($data, 'attachmentPrototypes');
@@ -57,14 +57,11 @@ class AttachmentPrototypeQuery extends FabricQueryBase {
    */
   public function getPrototypeByPlanAndId(int $plan_id, int $prototype_id): ?AttachmentPrototype {
     // Get the attachment data.
-    $items = AttachmentPrototype::GRAPHQL_ITEMS;
     $payload = "
       attachmentPrototypes (filter: {
-        PlanId:  {
-          eq: {$plan_id}
-        }
+        PlanId:  { eq: {$plan_id} }
       }) {
-        items { {$items} }
+        items { " . AttachmentPrototype::GRAPHQL_DIMENSION_ITEMS . " }
       }";
     $data = $this->fabricQuery->query($payload);
     $prototypes = $this->getItems($data, 'attachmentPrototypes');
@@ -86,14 +83,13 @@ class AttachmentPrototypeQuery extends FabricQueryBase {
    */
   public function getDataPrototypesForPlan($plan_id) {
     // Get the attachment data.
-    $items = AttachmentPrototype::GRAPHQL_ITEMS;
     $types = '"' . implode('", "', AttachmentPrototype::DATA_TYPES) . '"';
     $payload = "
       attachmentPrototypes (filter: {
-        PlanId: { eq: 1263 }
+        PlanId: { eq: {$plan_id} }
         and: [{ Type: { in: [{$types}] } }]
       }) {
-        items { {$items} }
+        items { " . AttachmentPrototype::GRAPHQL_DIMENSION_ITEMS . " }
       }";
     $data = $this->fabricQuery->query($payload);
     return $this->buildResultObjectsFromData($data, 'attachmentPrototypes', AttachmentPrototype::class);

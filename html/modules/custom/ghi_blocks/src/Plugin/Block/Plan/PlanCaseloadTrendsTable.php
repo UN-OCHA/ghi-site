@@ -26,7 +26,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  *  category = @Translation("Plan elements"),
  *  default_title = @Translation("Evolution of the humanitarian response"),
  *  data_sources = {
- *    "attachment_search" = "hpc_api:attachment_search_query",
+ *    "attachment" = "fabric_query:attachment",
  *    "plan_funding" = "hpc_api:plan_funding_summary_query",
  *  },
  *  context_definitions = {
@@ -420,8 +420,8 @@ class PlanCaseloadTrendsTable extends GHIBlockBase implements OverrideDefaultTit
       $related_plans = array_slice($related_plans, 0, $limit, TRUE);
     }
 
-    /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\AttachmentSearchQuery $attachments_query */
-    $attachments_query = $this->getQueryHandler('attachment_search');
+    /** @var \Drupal\ghi_plans\Plugin\FabricQuery\AttachmentQuery $attachments_query */
+    $attachments_query = $this->getQueryHandler('attachment');
 
     /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\PlanFundingSummaryQuery $funding_query */
     $funding_query = $this->getQueryHandler('plan_funding');

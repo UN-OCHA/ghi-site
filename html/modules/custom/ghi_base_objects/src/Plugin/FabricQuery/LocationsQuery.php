@@ -38,7 +38,7 @@ class LocationsQuery extends FabricQueryBase {
         filter: { Id: { eq: {$location_id} } },
         first: 1,
       ) {
-        items { " . Location::GRAPHQL_ITEMS . " }
+        items { " . Location::GRAPHQL_DIMENSION_ITEMS . " }
       }";
     $data = $this->fabricQuery->query($payload);
     $items = $data->locations->items;

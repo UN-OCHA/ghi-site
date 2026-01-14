@@ -30,8 +30,7 @@ use Drupal\hpc_downloads\Interfaces\HPCDownloadPNGInterface;
  *  category = @Translation("Plan elements"),
  *  data_sources = {
  *    "entity" = "fabric_query:plan_entity",
- *    "attachment" = "hpc_api:attachment_query",
- *    "attachment_search" = "hpc_api:attachment_search_query",
+ *    "attachment" = "fabric_query:attachment",
  *    "attachment_prototype" = "fabric_query:attachment_prototype",
  *  },
  *  default_title = @Translation("Indicator overview"),
@@ -544,8 +543,8 @@ class PlanEntityAttachmentsTable extends GHIBlockBase implements ConfigurableTab
     if (empty($attachment_ids)) {
       return NULL;
     }
-    /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\AttachmentSearchQuery $query */
-    $query = $this->getQueryHandler('attachment_search');
+    /** @var \Drupal\ghi_plans\Plugin\FabricQuery\AttachmentQuery $query */
+    $query = $this->getQueryHandler('attachment');
     $attachments = $query->getAttachmentsById($attachment_ids);
     // Filter out non-data attachments.
     $attachments = array_filter($attachments, function ($attachment) {
@@ -599,8 +598,8 @@ class PlanEntityAttachmentsTable extends GHIBlockBase implements ConfigurableTab
       'type' => 'indicator',
     ]);
 
-    /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\AttachmentSearchQuery $query */
-    $query = $this->getQueryHandler('attachment_search');
+    /** @var \Drupal\ghi_plans\Plugin\FabricQuery\AttachmentQuery $query */
+    $query = $this->getQueryHandler('attachment');
     $attachments = $query->getAttachmentsByObject('governingEntity', $entity_ids, $filter) + $query->getAttachmentsByObject('planEntity', $entity_ids, $filter);
     // Filter out non-data attachments.
     $attachments = array_filter($attachments, function ($attachment) {

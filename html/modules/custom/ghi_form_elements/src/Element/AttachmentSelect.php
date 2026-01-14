@@ -9,6 +9,7 @@ use Drupal\Core\Render\Element;
 use Drupal\Core\Render\Element\FormElementBase;
 use Drupal\Core\Render\Markup;
 use Drupal\ghi_form_elements\Traits\AjaxElementTrait;
+use Drupal\ghi_plans\Plugin\FabricQuery\AttachmentQuery;
 use Drupal\ghi_plans\Traits\AttachmentFilterTrait;
 use Drupal\hpc_api\Helpers\ArrayHelper;
 use Drupal\hpc_api\Traits\SimpleCacheTrait;
@@ -226,7 +227,7 @@ class AttachmentSelect extends FormElementBase {
     }
 
     if ($element['#summary_only'] && !$triggered_by_select && !$triggered_by_change_request) {
-      $attachment = self::getAttachmentQuery()->getAttachment($defaults['attachment_id']);
+      $attachment = self::getAttachmentQuery()->getAttachment((int) $defaults['attachment_id']);
       $element['summary'] = [
         '#markup' => $attachment ? Markup::create($attachment->composed_reference) : t('No attachment selected.'),
       ];
@@ -460,21 +461,11 @@ class AttachmentSelect extends FormElementBase {
   /**
    * Get the attachment query service.
    *
-   * @return \Drupal\ghi_plans\Plugin\EndpointQuery\AttachmentQuery
+   * @return \Drupal\ghi_plans\Plugin\FabricQuery\AttachmentQuery
    *   The attachment query plugin.
    */
-  public static function getAttachmentQuery() {
-    return self::getEndpointQueryManager()->createInstance('attachment_query');
-  }
-
-  /**
-   * Get the attachment query service.
-   *
-   * @return \Drupal\ghi_plans\Plugin\EndpointQuery\AttachmentSearchQuery
-   *   The attachment search query plugin.
-   */
-  public static function getAttachmentSearchQuery() {
-    return self::getEndpointQueryManager()->createInstance('attachment_search_query');
+  public static function getAttachmentQuery(): AttachmentQuery {
+    return self::getFabricQueryManager()->createInstance('attachment');
   }
 
   /**

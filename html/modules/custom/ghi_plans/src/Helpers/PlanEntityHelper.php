@@ -149,9 +149,9 @@ class PlanEntityHelper {
    */
   public static function checkObjectType($type) {
     $known_types = [
-      'plans' => 'plan',
-      'planEntities' => 'planEntity',
-      'governingEntities' => 'governingEntity',
+      'Plan' => 'plan',
+      'LogframeEntity' => 'planEntity',
+      'CoordinationEntity' => 'governingEntity',
     ];
     return $known_types[$type] ?? (in_array($type, $known_types) ? $type : NULL);
   }

@@ -31,7 +31,7 @@ class GoverningEntityQuery extends FabricQueryBase {
     // Get the governing entity.
     $payload = "
       coordinationEntities (filter: { Id:  { eq: {$governing_entity_id} } } ) {
-        items { " . GoverningEntity::GRAPHQL_ITEMS . " }
+        items { " . GoverningEntity::GRAPHQL_DIMENSION_ITEMS . " }
       }
       planFieldClusters (filter: { ClusterId: { eq: {$governing_entity_id} } } ) {
         items {

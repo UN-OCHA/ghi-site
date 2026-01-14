@@ -382,8 +382,8 @@ class AttachmentTable extends ConfigurationContainerItemPluginBase implements Co
       return NULL;
     }
 
-    /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\AttachmentSearchQuery $query */
-    $query = $this->endpointQueryManager->createInstance('attachment_search_query');
+    /** @var \Drupal\ghi_plans\Plugin\FabricQuery\AttachmentQuery $query */
+    $query = $this->fabricQueryManager->createInstance('attachment');
     $attachments = $query->getAttachmentsForEntities($entities);
 
     // Filter the attachments.

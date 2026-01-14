@@ -45,8 +45,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  *  data_sources = {
  *    "entities" = "fabric_query:plan_entity",
  *    "plan" = "fabric_query:plan",
- *    "attachment" = "hpc_api:attachment_query",
- *    "attachment_search" = "hpc_api:attachment_search_query",
+ *    "attachment" = "fabric_query:attachment",
  *    "attachment_prototype" = "fabric_query:attachment_prototype",
  *  },
  *  context_definitions = {
@@ -104,13 +103,13 @@ class PlanEntityLogframe extends GHIBlockBase implements MultiStepFormBlockInter
     // Get the entities to render.
     $entities = $this->getRenderableEntities();
     $first_entity = !empty($entities) ? reset($entities) : NULL;
-    if (!$first_entity) {
-      return NULL;
-    }
     if ($first_entity instanceof ApiObjectsPlan) {
       return $this->t('Response plan', [], ['langcode' => $this->getCurrentPlanObject()?->getPlanLanguage()]);
     }
-    return count($entities) > 1 ? $first_entity->plural_name : $first_entity->singular_name;
+    if (!$first_entity instanceof EntityObjectInterface) {
+      return NULL;
+    }
+    return count($entities) > 1 ? $first_entity->getPluralName() : $first_entity->getSingularName();
   }
 
   /**
@@ -624,7 +623,7 @@ class PlanEntityLogframe extends GHIBlockBase implements MultiStepFormBlockInter
       if (empty($logical_framework['header'])) {
         $header = [];
         foreach ($parents as $parent) {
-          $parent_ref_code = $parent->ref_code;
+          $parent_ref_code = $parent->getEntityTypeRefCode();
           if (array_key_exists($parent_ref_code, $header)) {
             continue;
           }
@@ -633,10 +632,10 @@ class PlanEntityLogframe extends GHIBlockBase implements MultiStepFormBlockInter
             $header[] = (string) $this->t('@cluster_label name', $cluster_args, $t_options);
           }
           $header[$parent_ref_code] = (string) $this->t('@ref_code code', [
-            '@ref_code' => $parent->ref_code,
+            '@ref_code' => $parent->getEntityTypeRefCode(),
           ], $t_options);
           $header[$parent_ref_code . '_description'] = (string) $this->t('@ref_code description', [
-            '@ref_code' => $parent->ref_code,
+            '@ref_code' => $parent->getEntityTypeRefCode(),
           ], $t_options);
         }
 
@@ -1269,8 +1268,8 @@ class PlanEntityLogframe extends GHIBlockBase implements MultiStepFormBlockInter
       return NULL;
     }
 
-    /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\AttachmentSearchQuery $query */
-    $query = $this->endpointQueryManager->createInstance('attachment_search_query');
+    /** @var \Drupal\ghi_plans\Plugin\FabricQuery\AttachmentQuery $query */
+    $query = $this->getQueryHandler('attachment');
     $attachments = $query->getAttachmentsForEntities($entities);
 
     // Filter out non-data attachments.

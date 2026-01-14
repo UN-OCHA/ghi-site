@@ -6,8 +6,8 @@ use Drupal\Core\Form\FormState;
 use Drupal\ghi_blocks\Interfaces\OverrideDefaultTitleBlockInterface;
 use Drupal\ghi_blocks\Plugin\Block\Plan\PlanCaseloadTrendsTable;
 use Drupal\ghi_plans\ApiObjects\Attachments\CaseloadAttachment;
-use Drupal\ghi_plans\Plugin\EndpointQuery\AttachmentSearchQuery;
 use Drupal\ghi_plans\Plugin\EndpointQuery\PlanFundingSummaryQuery;
+use Drupal\ghi_plans\Plugin\FabricQuery\AttachmentQuery;
 use Drupal\hpc_downloads\Interfaces\HPCDownloadExcelInterface;
 use Drupal\hpc_downloads\Interfaces\HPCDownloadPNGInterface;
 use Drupal\Tests\ghi_blocks\Kernel\PlanBlockKernelTestBase;
@@ -254,9 +254,9 @@ class PlanCaseloadTrendsTableTest extends PlanBlockKernelTestBase {
     $caseload->getFieldByType('inNeed')->willReturn((object) ['value' => 300]);
     $caseload->getFieldByType('target')->willReturn((object) ['value' => 100]);
     $caseload->getCaseloadValue('latestReach')->willReturn(80);
-    $attachment_search_query = $this->prophesize(AttachmentSearchQuery::class);
-    $attachment_search_query->getAttachmentsByObject(Argument::cetera())->willReturn([$caseload->reveal()]);
-    $plugin->setQueryHandler('attachment_search', $attachment_search_query->reveal());
+    $attachment_query = $this->prophesize(AttachmentQuery::class);
+    $attachment_query->getAttachmentsByObject(Argument::cetera())->willReturn([$caseload->reveal()]);
+    $plugin->setQueryHandler('attachment', $attachment_query->reveal());
   }
 
 }
