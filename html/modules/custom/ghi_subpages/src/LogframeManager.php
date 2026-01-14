@@ -789,7 +789,7 @@ class LogframeManager implements ContainerInjectionInterface {
     }, $entities);
 
     /** @var \Drupal\ghi_plans\Plugin\FabricQuery\AttachmentQuery $query */
-    $query = $this->fabricQueryManager->createInstance('attachment_query');
+    $query = $this->fabricQueryManager->createInstance('attachment');
     $attachments = $query->getAttachmentsByObject('planEntity', $entity_ids);
     // Filter out non-data attachments.
     $attachments = array_filter($attachments, function ($attachment) use ($prototype_id) {

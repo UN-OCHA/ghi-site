@@ -11,7 +11,6 @@ use Drupal\ghi_form_elements\ConfigurationContainerItemPluginBase;
 use Drupal\ghi_form_elements\Element\DataPoint as ElementDataPoint;
 use Drupal\ghi_plans\ApiObjects\Prototypes\AttachmentPrototype;
 use Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment;
-use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Provides a data point item for configuration containers.
@@ -23,23 +22,6 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  * )
  */
 class DataPoint extends ConfigurationContainerItemPluginBase {
-
-  /**
-   * The attachment query.
-   *
-   * @var \Drupal\ghi_plans\Plugin\EndpointQuery\AttachmentQuery
-   */
-  public $attachmentQuery;
-
-  /**
-   * {@inheritdoc}
-   */
-  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition): DataPoint {
-    /** @var self $instance */
-    $instance = parent::create($container, $configuration, $plugin_id, $plugin_definition);
-    $instance->attachmentQuery = $instance->endpointQueryManager->createInstance('attachment_query');
-    return $instance;
-  }
 
   /**
    * {@inheritdoc}

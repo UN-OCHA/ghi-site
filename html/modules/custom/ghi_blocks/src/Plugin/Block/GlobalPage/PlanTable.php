@@ -32,7 +32,8 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  *  admin_label = @Translation("Plan table"),
  *  category = @Translation("Global"),
  *  data_sources = {
- *    "plans_overview" = "hpc_api:plan_overview_query",
+ *    "plans_overview" = "fabric_query:plan_overview",
+ *    "funding_overview" = "hpc_api:funding_overview_query",
  *  },
  *  context_definitions = {
  *    "node" = @ContextDefinition("entity:node", label = @Translation("Node"), required = FALSE),
@@ -140,7 +141,6 @@ class PlanTable extends GHIBlockBase implements HPCDownloadExcelInterface, HPCDo
     if (empty($plans)) {
       return NULL;
     }
-    $year = $this->getContextValue('year');
 
     $header = [];
     if ($export) {
@@ -171,6 +171,9 @@ class PlanTable extends GHIBlockBase implements HPCDownloadExcelInterface, HPCDo
     $cache_tags = [];
     $rows = [];
 
+    /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\FundingOverviewQuery $funding_query */
+    $funding_query = $this->getQueryHandler('funding_overview');
+    $plan_funding = $funding_query->getFundingByPlans();
     foreach ($plans as $plan) {
       $plan_entity = $plan->getEntity();
       if ($plan_entity) {
@@ -178,21 +181,21 @@ class PlanTable extends GHIBlockBase implements HPCDownloadExcelInterface, HPCDo
       }
 
       // Setup the PiN values.
-      $in_need = $plan->getCaseloadValue('inNeed');
-      $target = $plan->getCaseloadValue('target');
+      $in_need = $plan->getCaseloadValue('InNeed');
+      $target = $plan->getCaseloadValue('Target');
       $latest_reached = $plan->getCaseloadValue('latestReach');
 
       $reached_percent = !empty($latest_reached) && !empty($target) ? 100 / $target * $latest_reached : NULL;
       if ($plan instanceof PlanOverviewPlanMock) {
         $reached_percent = ((float) $plan->getCaseloadValue('reached_percent')) * 100;
       }
-      $expected_reach = $plan->getCaseloadValue('expectedReach', 'Expected Reach');
+      $expected_reach = $plan->getCaseloadValue('Expected Reach');
       $expected_reached = CommonHelper::calculateRatio($expected_reach, $target) * 100;
 
       // Setup the financial values.
       $requirements = $plan->getRequirements($plan);
-      $funding = $plan->getFunding($plan);
-      $coverage = $plan->getCoverage($plan);
+      $funding = $plan_funding[$plan->id()] ?? 0;
+      $coverage = $plan->getCoverage($funding);
 
       // Setup number formatting.
       $decimals = 1;
@@ -388,7 +391,7 @@ class PlanTable extends GHIBlockBase implements HPCDownloadExcelInterface, HPCDo
     }
 
     $this->applyTableConfiguration($header, $rows, $plans);
-    $this->applyGlobalConfigurationTable($header, $rows, $cache_tags, $year, $plans);
+    $this->applyGlobalConfigurationTable($header, $rows, $cache_tags, $this->getContextValue('year'), $plans);
 
     if (empty($rows)) {
       return NULL;

@@ -594,13 +594,11 @@ class PlanEntityAttachmentsTable extends GHIBlockBase implements ConfigurableTab
     $entity_ids = array_map(function ($entity) {
       return $entity->id();
     }, $entities);
-    $filter = array_filter([
-      'type' => 'indicator',
-    ]);
+    $attachment_type = 'indicator';
 
     /** @var \Drupal\ghi_plans\Plugin\FabricQuery\AttachmentQuery $query */
     $query = $this->getQueryHandler('attachment');
-    $attachments = $query->getAttachmentsByObject('governingEntity', $entity_ids, $filter) + $query->getAttachmentsByObject('planEntity', $entity_ids, $filter);
+    $attachments = $query->getAttachmentsByObject('governingEntity', $entity_ids, $attachment_type) + $query->getAttachmentsByObject('planEntity', $entity_ids, $attachment_type);
     // Filter out non-data attachments.
     $attachments = array_filter($attachments, function ($attachment) {
       return $attachment instanceof DataAttachment;

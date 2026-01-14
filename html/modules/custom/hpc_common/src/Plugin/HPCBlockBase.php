@@ -655,6 +655,23 @@ abstract class HPCBlockBase extends BlockBase implements HPCPluginInterface, Con
     $query_handler = NULL;
     if ($source_api == 'fabric_query' && $this->fabricQueryManager->hasDefinition($plugin_id)) {
       $query_handler = $this->fabricQueryManager->createInstance($plugin_id);
+      // Get the available context values and add them to the query class if
+      // that is supported.
+      foreach ($this->getContexts() as $context_key => $context) {
+        /** @var \Drupal\Core\Plugin\Context\Context $context */
+        if ($context_key == 'node' || strpos($context_key, '--') || !$context->hasContextValue()) {
+          continue;
+        }
+        $setter_method = 'set' . ucfirst($context_key);
+        if (!method_exists($query_handler, $setter_method)) {
+          continue;
+        }
+        $context_value = $context->getContextValue();
+        if (!is_scalar($context_value)) {
+          continue;
+        }
+        $query_handler->$setter_method($context->getContextValue());
+      }
     }
     elseif ($source_api == 'hpc_api' && $this->endpointQueryManager->hasDefinition($plugin_id)) {
       // Otherwise check the deprecated endpoint query plugins.

@@ -20,7 +20,7 @@ class PlanCaseloadFormatter extends FormatterBase {
   /**
    * The attachment query class.
    *
-   * @var \Drupal\ghi_plans\Plugin\EndpointQuery\AttachmentQuery
+   * @var \Drupal\ghi_plans\Plugin\FabricQuery\AttachmentQuery
    */
   protected $attachmentQuery;
 
@@ -29,7 +29,7 @@ class PlanCaseloadFormatter extends FormatterBase {
    */
   public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
     $instance = parent::create($container, $configuration, $plugin_id, $plugin_definition);
-    $instance->attachmentQuery = $container->get('plugin.manager.endpoint_query_manager')->createInstance('attachment_query');
+    $instance->attachmentQuery = $container->get('plugin.manager.fabric_query_manager')->createInstance('attachment');
     return $instance;
   }
 

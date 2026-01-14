@@ -468,7 +468,7 @@ class PlanEntityLogframe extends GHIBlockBase implements MultiStepFormBlockInter
       // Load a single attachment, just so we can use it to format the
       // monitoring periods.
       $attachment_id = $rows[0]['data-attachment-id'];
-      /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\AttachmentQuery $query */
+      /** @var \Drupal\ghi_plans\Plugin\FabricQuery\AttachmentQuery $query */
       $query = $this->getQueryHandler('attachment');
       $attachment = $query->getAttachment($attachment_id);
       if (!$attachment instanceof DataAttachment) {

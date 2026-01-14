@@ -22,10 +22,7 @@ use Drupal\hpc_common\Helpers\TaxonomyHelper;
 class PlanOverviewPlanMock extends PlanOverviewPlan {
 
   /**
-   * Map the raw data.
-   *
-   * @return object
-   *   An object with the mapped data.
+   * {@inheritdoc}
    */
   protected function map() {
     $data = $this->getRawData();
@@ -58,10 +55,7 @@ class PlanOverviewPlanMock extends PlanOverviewPlan {
   }
 
   /**
-   * Get the base object entity corresponding to this API object.
-   *
-   * @return \Drupal\ghi_plans\Entity\Plan
-   *   The plan entity.
+   * {@inheritdoc}
    */
   public function getEntity() {
     return NULL;
@@ -86,10 +80,7 @@ class PlanOverviewPlanMock extends PlanOverviewPlan {
   }
 
   /**
-   * Get the plan status as stored.
-   *
-   * @return bool
-   *   The plan status if available.
+   * {@inheritdoc}
    */
   public function getPlanStatus() {
     $raw_data = $this->getRawData();
@@ -97,10 +88,7 @@ class PlanOverviewPlanMock extends PlanOverviewPlan {
   }
 
   /**
-   * Get the plan status label.
-   *
-   * @return string
-   *   The human readable plan status if available.
+   * {@inheritdoc}
    */
   public function getPlanStatusLabel() {
     $plan_status_options = FieldHelper::getBooleanFieldOptions('base_object', 'plan', 'field_released');
@@ -115,23 +103,14 @@ class PlanOverviewPlanMock extends PlanOverviewPlan {
   }
 
   /**
-   * Get the type of a plan.
-   *
-   * @return string
-   *   The plan type name.
+   * {@inheritdoc}
    */
   public function getTypeName($fetch_from_entity = FALSE) {
     return $this->getPlanType()?->label();
   }
 
   /**
-   * Check if the plan is of the given type.
-   *
-   * @param string $type_name
-   *   The type name to check.
-   *
-   * @return bool
-   *   TRUE if the plan is of the given type, FALSE otherwise.
+   * {@inheritdoc}
    */
   public function isType($type_name) {
     $name = $this->getTypeName();
@@ -142,37 +121,24 @@ class PlanOverviewPlanMock extends PlanOverviewPlan {
   }
 
   /**
-   * Check if the plan is part of the GHO.
-   *
-   * @return bool
-   *   TRUE if the plan is partof the GHO, FALSE otherwise.
+   * {@inheritdoc}
    */
   public function isPartOfGho() {
     return $this->in_gho ?? FALSE;
   }
 
   /**
-   * Get a caseload value.
-   *
-   * @param string $metric_type
-   *   The metric type.
-   * @param string $metric_name
-   *   The english metric name.
-   * @param string $fallback_type
-   *   The metric type of a fallback.
-   *
-   * @return int|float
-   *   The caseload value if found.
+   * {@inheritdoc}
    */
-  public function getCaseloadValue($metric_type, $metric_name = NULL, $fallback_type = NULL) {
+  public function getCaseloadValue($metric_name): ?float {
     $raw_data = $this->getRawData();
     $map = [
-      'inNeed' => 'people_in_need',
-      'target' => 'people_target',
+      'InNeed' => 'people_in_need',
+      'Target' => 'people_target',
       'reached_percent' => 'people_reached_percent',
       'expectedReach' => 'estimated_reached',
     ];
-    if (!array_key_exists($metric_type, $map)) {
+    if (!array_key_exists($metric_name, $map)) {
       return NULL;
     }
     return (int) $raw_data->{$map[$metric_type]} ?? NULL;

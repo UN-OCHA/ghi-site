@@ -441,7 +441,7 @@ class PlanCaseloadTrendsTable extends GHIBlockBase implements OverrideDefaultTit
       $plan_type = $plan->getPlanType()->getAbbreviation();
 
       /** @var \Drupal\ghi_plans\ApiObjects\Attachments\CaseloadAttachment[] $caseloads */
-      $caseloads = $attachments_query->getAttachmentsByObject('plan', $plan->getSourceId(), ['type' => 'caseload']);
+      $caseloads = $attachments_query->getAttachmentsByObject('plan', $plan->getSourceId(), 'caseload');
       /** @var \Drupal\ghi_plans\ApiObjects\Attachments\CaseloadAttachment $caseload */
       $caseload = count($caseloads) > 1 ? $plan->getPlanCaseload($caseloads) : (!empty($caseloads) ? reset($caseloads) : NULL);
       $funding_data = $funding_query->getData(['plan_id' => $plan->getSourceId()]);

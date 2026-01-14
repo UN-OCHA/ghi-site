@@ -30,7 +30,7 @@ class PlanCaseloadWidget extends WidgetBase {
    */
   public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
     $instance = parent::create($container, $configuration, $plugin_id, $plugin_definition);
-    $instance->attachmentQuery = $container->get('plugin.manager.fabric_query_manager')->createInstance('attachment_query');
+    $instance->attachmentQuery = $container->get('plugin.manager.fabric_query_manager')->createInstance('attachment');
     return $instance;
   }
 
@@ -47,12 +47,10 @@ class PlanCaseloadWidget extends WidgetBase {
     if (!$plan_id) {
       return $element;
     }
-    $attachments = $this->attachmentQuery->getAttachmentsByObject('plan', $plan_id, [
-      'type' => 'caseload',
-    ]);
+    $attachments = $this->attachmentQuery->getAttachmentsByObject('plan', $plan_id, 'caseload');
     $attachment_options = $attachments ? array_map(function ($attachment) {
       /** @var \Drupal\ghi_plans\ApiObjects\Attachments\AttachmentInterface $attachment */
-      return $attachment->getTitle() . ' (' . $attachment->id() . ')';
+      return ($attachment->getTitle() ?? $attachment->getDescription()) . ' (' . $attachment->id() . ')';
     }, $attachments) : [];
 
     $element += [
