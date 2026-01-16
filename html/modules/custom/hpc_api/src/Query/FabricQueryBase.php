@@ -497,7 +497,7 @@ abstract class FabricQueryBase extends PluginBase implements FabricQueryPluginIn
   public function getMetricType(int $id): ?MetricType {
     $metric_types = $this->getMetricTypes();
     $metric_type = $metric_types[$id] ?? NULL;
-    assert($metric_type instanceof MetricType);
+    assert($metric_type === NULL || $metric_type instanceof MetricType);
     return $metric_type;
   }
 
@@ -523,7 +523,7 @@ abstract class FabricQueryBase extends PluginBase implements FabricQueryPluginIn
    */
   public function getUnit(int $id): ?Unit {
     $unit = $this->baseTypes['units'][$id] ?? NULL;
-    assert($unit instanceof Unit);
+    assert($unit === NULL || $unit instanceof Unit);
     return $unit;
   }
 
@@ -549,7 +549,7 @@ abstract class FabricQueryBase extends PluginBase implements FabricQueryPluginIn
    */
   public function getCalculationMethod(int $id): ?CalculationMethod {
     $calculation_method = $this->baseTypes['calcMethods'][$id] ?? NULL;
-    assert($calculation_method instanceof CalculationMethod);
+    assert($calculation_method === NULL || $calculation_method instanceof CalculationMethod);
     return $calculation_method;
   }
 

@@ -9,6 +9,7 @@ use Drupal\ghi_base_objects\ApiObjects\Country;
 use Drupal\ghi_base_objects\Entity\BaseObject;
 use Drupal\ghi_base_objects\Entity\BaseObjectFocusCountryInterface;
 use Drupal\ghi_base_objects\Entity\BaseObjectMetaDataInterface;
+use Drupal\ghi_plans\ApiObjects\Attachments\CaseloadAttachmentInterface;
 use Drupal\ghi_plans\Traits\AttachmentFilterTrait;
 use Drupal\ghi_plans\Traits\FtsLinkTrait;
 use Drupal\ghi_plans\Traits\PlanTypeTrait;
@@ -351,10 +352,10 @@ class Plan extends BaseObject implements BaseObjectMetaDataInterface, BaseObject
    * @param array $caseloads
    *   The caseloads to choose from.
    *
-   * @return object|null
+   * @return \Drupal\ghi_plans\ApiObjects\Attachments\CaseloadAttachmentInterface|null
    *   A caseload object or NULL.
    */
-  public function getPlanCaseload(array $caseloads) {
+  public function getPlanCaseload(array $caseloads): ?CaseloadAttachmentInterface {
     return $this->findPlanCaseload($caseloads, $this->getPlanCaseloadId());
   }
 

@@ -44,6 +44,11 @@ class PlanQuery extends FabricQueryBase {
    *   The plan object or NULL if not found.
    */
   public function getPlan(int $plan_id): ?Plan {
+    $cache_key = $this->getCacheKey(['id' => $plan_id]);
+    $plan = $this->getCache($cache_key);
+    if ($plan) {
+      return $plan;
+    }
     // Get the plan.
     $payload = "
       plans (filter:  {
@@ -64,7 +69,9 @@ class PlanQuery extends FabricQueryBase {
     $plan_data->PlanType = $plan_data->PlanType ? $this->getPlanTypeByName($plan_data->PlanType) : NULL;
     $plan_data->PlanCosting = $plan_data->PlanCosting ? $this->getPlanCostingTypeByName($plan_data->PlanCosting) : NULL;
 
-    return new Plan($plan_data);
+    $plan = new Plan($plan_data);
+    $this->setCache($cache_key, $plan);
+    return $plan;
   }
 
   /**

@@ -538,9 +538,9 @@ class AttachmentTable extends ConfigurationContainerItemPluginBase implements Co
     if (!$prototype_id) {
       return NULL;
     }
-    /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\AttachmentPrototypeQuery $query */
-    $query = $this->endpointQueryManager->createInstance('attachment_prototype_query');
-    $original_prototype = $query->getPrototypeById($prototype_id);
+    /** @var \Drupal\ghi_plans\Plugin\FabricQuery\AttachmentPrototypeQuery $query */
+    $query = $this->fabricQueryManager->createInstance('attachment_prototype');
+    $original_prototype = $query->getPrototype($prototype_id);
     if (!$original_prototype) {
       return NULL;
     }

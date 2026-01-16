@@ -11,6 +11,7 @@ use Drupal\Core\Url;
 use Drupal\ghi_blocks\Traits\ConfigurationItemClusterRestrictTrait;
 use Drupal\ghi_blocks\Traits\ConfigurationItemValuePreviewTrait;
 use Drupal\ghi_form_elements\ConfigurationContainerItemPluginBase;
+use Drupal\ghi_plans\Entity\Plan;
 use Drupal\ghi_plans\Helpers\PlanStructureHelper;
 use Drupal\ghi_plans\Plugin\EndpointQuery\PlanProjectSearchQuery;
 use Drupal\ghi_plans\Traits\FtsLinkTrait;
@@ -31,13 +32,6 @@ class ProjectCounter extends ConfigurationContainerItemPluginBase {
   use ConfigurationItemClusterRestrictTrait;
   use ConfigurationItemValuePreviewTrait;
   use FtsLinkTrait;
-
-  /**
-   * The plan entities query.
-   *
-   * @var \Drupal\ghi_plans\Plugin\EndpointQuery\PlanEntitiesQuery
-   */
-  public $planEntitiesQuery;
 
   /**
    * The project search query.
@@ -73,7 +67,6 @@ class ProjectCounter extends ConfigurationContainerItemPluginBase {
   public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition): ProjectCounter {
     /** @var self $instance */
     $instance = parent::create($container, $configuration, $plugin_id, $plugin_definition);
-    $instance->planEntitiesQuery = $instance->endpointQueryManager->createInstance('plan_entities_query');
     $instance->projectSearchQuery = $instance->endpointQueryManager->createInstance('plan_project_search_query');
     $instance->flowSearchQuery = $instance->endpointQueryManager->createInstance('flow_search_query');
     $instance->clusterQuery = $instance->endpointQueryManager->createInstance('cluster_query');
@@ -292,10 +285,10 @@ class ProjectCounter extends ConfigurationContainerItemPluginBase {
   private function initializeQuery() {
     $project_query = $this->projectSearchQuery;
     $plan_object = $this->getContextValue('plan_object');
-    if (!$plan_object) {
+    if (!$plan_object instanceof Plan) {
       return NULL;
     }
-    $project_query->setPlaceholder('plan_id', $plan_object->get('field_original_id')->value);
+    $project_query->setPlaceholder('plan_id', $plan_object->getSourceId());
 
     // @todo Why is this needed?
     $cluster_restrict = $cluster_restrict ?? $this->get('cluster_restrict');
@@ -310,11 +303,15 @@ class ProjectCounter extends ConfigurationContainerItemPluginBase {
    */
   public function setContext($context) {
     parent::setContext($context);
+    $plan_object = $this->getContextValue('plan_object');
+    if (!$plan_object instanceof Plan) {
+      return NULL;
+    }
 
     // Also set cluster context if the current page is a plan entity.
     $context_node = $context['context_node'] ?? NULL;
     if ($context_node && $context_node->bundle() == 'plan_entity' && $this->projectSearchQuery) {
-      $cluster_ids = PlanStructureHelper::getPlanEntityStructure($this->planEntitiesQuery->getData());
+      $cluster_ids = PlanStructureHelper::getPlanEntityStructure($plan_object->getSourceId());
       $this->projectSearchQuery->setFilterByClusterIds($cluster_ids);
     }
   }
@@ -329,17 +326,8 @@ class ProjectCounter extends ConfigurationContainerItemPluginBase {
    *   An array of cluster ids.
    */
   private function getClusterIdsForConfig(array $cluster_restrict) {
-    $context = $this->getContext();
-    $plan_node = $context['plan_object'];
-    $plan_id = $plan_node->field_original_id->value;
-
-    // Extract the actually used cluster from the funding and requirements data.
-    $search_results = $this->flowSearchQuery->search([
-      'planid' => $plan_id,
-      'groupby' => 'cluster',
-    ]);
-
-    return $this->getClusterIdsByClusterRestrict($cluster_restrict, $search_results, $this->clusterQuery);
+    // Extract the actually used cluster from the funding data.
+    return $this->getClusterIdsByClusterRestrict($cluster_restrict, $this->clusterQuery, $this->flowSearchQuery);
   }
 
   /**

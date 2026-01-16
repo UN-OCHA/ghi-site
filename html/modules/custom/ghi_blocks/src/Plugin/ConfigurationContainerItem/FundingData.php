@@ -9,6 +9,7 @@ use Drupal\ghi_blocks\Traits\ConfigurationItemClusterRestrictTrait;
 use Drupal\ghi_blocks\Traits\ConfigurationItemValuePreviewTrait;
 use Drupal\ghi_blocks\Traits\PlanFootnoteTrait;
 use Drupal\ghi_form_elements\ConfigurationContainerItemPluginBase;
+use Drupal\ghi_plans\ApiObjects\Attachments\FinancialAttachment;
 use Drupal\ghi_plans\Entity\GoverningEntity;
 use Drupal\ghi_plans\Entity\Plan;
 use Drupal\ghi_plans\Traits\FtsLinkTrait;
@@ -49,25 +50,25 @@ class FundingData extends ConfigurationContainerItemPluginBase {
   public $fundingSummaryQuery;
 
   /**
-   * The funding query.
-   *
-   * @var \Drupal\ghi_plans\Plugin\EndpointQuery\PlanClusterSummaryQuery
-   */
-  public $planClusterSummaryQuery;
-
-  /**
-   * The funding query.
+   * The flow search query.
    *
    * @var \Drupal\ghi_plans\Plugin\EndpointQuery\FlowSearchQuery
    */
   public $flowSearchQuery;
 
   /**
-   * The funding query.
+   * The cluster query.
    *
    * @var \Drupal\ghi_plans\Plugin\EndpointQuery\ClusterQuery
    */
   public $clusterQuery;
+
+  /**
+   * The attachment query.
+   *
+   * @var \Drupal\ghi_plans\Plugin\FabricQuery\AttachmentQuery
+   */
+  public $attachmentQuery;
 
   /**
    * Flag fro disabling the FTS link for an instance.
@@ -83,9 +84,9 @@ class FundingData extends ConfigurationContainerItemPluginBase {
     /** @var self $instance */
     $instance = parent::create($container, $configuration, $plugin_id, $plugin_definition);
     $instance->fundingSummaryQuery = $instance->endpointQueryManager->createInstance('plan_funding_summary_query');
-    $instance->planClusterSummaryQuery = $instance->endpointQueryManager->createInstance('plan_funding_cluster_query');
     $instance->flowSearchQuery = $instance->endpointQueryManager->createInstance('flow_search_query');
     $instance->clusterQuery = $instance->endpointQueryManager->createInstance('cluster_query');
+    $instance->attachmentQuery = $instance->fabricQueryManager->createInstance('attachment');
     return $instance;
   }
 
@@ -177,6 +178,24 @@ class FundingData extends ConfigurationContainerItemPluginBase {
   }
 
   /**
+   * Get the requirements for the given object type and object id.
+   *
+   * @param string $entity_type
+   *   The entity type.
+   * @param int $entity_id
+   *   The entity id.
+   *
+   * @return float|null
+   *   The requirements.
+   */
+  private function getRequirements($entity_type, $entity_id): ?float {
+    $attachments = $this->attachmentQuery->getAttachmentsByObject($entity_type, [$entity_id], 'financial');
+    $attachment = count($attachments) > 0 ? reset($attachments) : NULL;
+    assert($attachment === NULL || $attachment instanceof FinancialAttachment);
+    return $attachment?->getRequirements();
+  }
+
+  /**
    * {@inheritdoc}
    */
   public function getValue($data_type_key = NULL, $scale = NULL, $cluster_restrict = NULL) {
@@ -196,6 +215,7 @@ class FundingData extends ConfigurationContainerItemPluginBase {
     }
     /** @var \Drupal\ghi_plans\ApiObjects\Entities\EntityObjectInterface $entity */
     $entity = $this->getContextValue('entity');
+    /** @var \Drupal\ghi_plans\Entity\Plan $plan_object */
     $plan_object = $this->getContextValue('plan_object');
     $base_object = $this->getContextValue('base_object');
     $cluster_context = $base_object && $base_object instanceof GoverningEntity ? $base_object : NULL;
@@ -203,22 +223,124 @@ class FundingData extends ConfigurationContainerItemPluginBase {
 
     $value = NULL;
     if ($entity && $entity instanceof ApiObjectInterface) {
-      return $this->planClusterSummaryQuery->getClusterPropertyById($entity->id(), $property, 0);
+      $value = $this->getValueForCluster($entity->id(), $property);
     }
     if ($plan_object && !$cluster_context) {
       if (!empty($cluster_restrict) && !empty($cluster_restrict['type']) && $cluster_restrict['type'] != 'none') {
         $value = $this->getValueWithClusterRestrict($data_type, $cluster_restrict);
       }
       else {
-        $value = $this->fundingSummaryQuery->get($property, 0);
+        $value = $this->getValueForPlan($plan_object->getSourceId(), $property);
       }
     }
     elseif ($cluster_context) {
       $cluster_id = $cluster_context->get('field_original_id')->value;
-      $value = $this->planClusterSummaryQuery->getClusterPropertyById($cluster_id, $property, 0);
+      $value = $this->getValueForCluster($cluster_id, $property);
     }
 
     return $value;
+  }
+
+  /**
+   * Get a value from a specific plan.
+   *
+   * @param int $plan_id
+   *   The plan id.
+   * @param string $property
+   *   The property to retrieve.
+   *
+   * @return float|mixed|null
+   *   The value.
+   */
+  public function getValueForPlan($plan_id, $property) {
+    $this->fundingSummaryQuery->setPlaceholder('plan_id', $plan_id);
+    switch ($property) {
+      case 'current_requirements':
+      case 'original_requirements':
+        return $this->getRequirements('plan', $plan_id);
+
+      case 'total_funding':
+        return $this->fundingSummaryQuery->getTotalFunding();
+
+      case 'outside_funding':
+        return $this->fundingSummaryQuery->getOutsideFunding();
+
+      case 'funding_gap':
+        $requirements = $this->getRequirements('plan', $plan_id);
+        return $this->fundingSummaryQuery->getFundingGap($requirements);
+
+      case 'funding_coverage':
+        $requirements = $this->getRequirements('plan', $plan_id);
+        return $this->fundingSummaryQuery->getFundingCoverage($requirements);
+
+      default:
+        return $this->fundingSummaryQuery->get($property, 0);
+    }
+  }
+
+  /**
+   * Get a value from a specific cluster.
+   *
+   * @param int $cluster_id
+   *   The cluster id.
+   * @param string $property
+   *   The property to retrieve.
+   *
+   * @return float|mixed|null
+   *   The value.
+   */
+  public function getValueForCluster($cluster_id, $property) {
+    switch ($property) {
+      case 'current_requirements':
+      case 'original_requirements':
+        return $this->getRequirements('governingEntity', $cluster_id);
+
+      case 'total_funding':
+        return $this->flowSearchQuery->getClusterTotalFunding($cluster_id);
+
+      case 'funding_gap':
+        $requirements = $this->getRequirements('governingEntity', $cluster_id);
+        return $this->flowSearchQuery->getClusterFundingGap($cluster_id, $requirements);
+
+      case 'funding_coverage':
+        $requirements = $this->getRequirements('governingEntity', $cluster_id);
+        return $this->flowSearchQuery->getClusterFundingCoverage($cluster_id, $requirements);
+
+      default:
+        return $this->flowSearchQuery->getClusterPropertyById($cluster_id, $property, 0);
+    }
+  }
+
+  /**
+   * Get a value using the configured cluster restrict.
+   *
+   * @param array $data_type
+   *   A data type definition.
+   * @param array $cluster_restrict
+   *   A cluster restriction to apply.
+   *
+   * @return mixed|null
+   *   The retrieved value.
+   */
+  public function getValueWithClusterRestrict(array $data_type, array $cluster_restrict) {
+    $property = $data_type['property'];
+
+    // Extract the actually used cluster from the funding data.
+    $cluster_ids = $this->getClusterIdsByClusterRestrict($cluster_restrict, $this->clusterQuery, $this->flowSearchQuery);
+    if (empty($cluster_ids)) {
+      return NULL;
+    }
+    if ($property == 'current_requirements') {
+      $attachments = $this->attachmentQuery->getAttachmentsByObject('governingEntity', $cluster_ids, 'financial');
+      /** @var \Drupal\ghi_plans\ApiObjects\Attachments\FinancialAttachment[] $attachments */
+      $attachments = array_filter($attachments, fn (FinancialAttachment $attachment): bool => $attachment instanceof FinancialAttachment);
+      return array_sum(array_map(fn (FinancialAttachment $attachment): float => $attachment->getRequirements(), $attachments));
+    }
+
+    $values = array_map(function ($cluster_id) use ($property) {
+      return $this->getValueForCluster($cluster_id, $property);
+    }, $cluster_ids);
+    return array_sum($values);
   }
 
   /**
@@ -311,37 +433,6 @@ class FundingData extends ConfigurationContainerItemPluginBase {
    */
   public function getColumnType() {
     return $this->get('data_type') == 'funding_coverage' ? 'percentage' : parent::getColumnType();
-  }
-
-  /**
-   * Get a value using the configured cluster restrict.
-   *
-   * @param array $data_type
-   *   A data type definition.
-   * @param array $cluster_restrict
-   *   A cluster restriction to apply.
-   *
-   * @return mixed|null
-   *   The retrieved value.
-   */
-  public function getValueWithClusterRestrict(array $data_type, array $cluster_restrict) {
-
-    $context = $this->getContext();
-    $plan_object = $context['plan_object'];
-    $plan_id = $plan_object->get('field_original_id')->value;
-
-    // Extract the actually used cluster from the funding and requirements data.
-    $search_results = $this->flowSearchQuery->search([
-      'planid' => $plan_id,
-      'groupby' => 'cluster',
-    ]);
-
-    $cluster_ids = $this->getClusterIdsByClusterRestrict($cluster_restrict, $search_results, $this->clusterQuery);
-    if (empty($cluster_ids)) {
-      return NULL;
-    }
-    $data = $this->flowSearchQuery->getFundingDataByClusterIds($search_results, $cluster_ids);
-    return array_key_exists($data_type['property'], $data) ? $data[$data_type['property']] : NULL;
   }
 
   /**
