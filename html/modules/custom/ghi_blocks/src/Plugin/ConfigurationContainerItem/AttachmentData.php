@@ -75,6 +75,7 @@ class AttachmentData extends ConfigurationContainerItemPluginBase {
     if (!empty($attachment_select['attachment_id'])) {
       $attachment_id = is_array($attachment_select['attachment_id']) ? reset($attachment_select['attachment_id']) : $attachment_select['attachment_id'];
       $attachment = $this->attachmentQuery->getAttachment($attachment_id);
+      assert($attachment === NULL || $attachment instanceof DataAttachment);
       $errors = $attachment ? $this->validateAttachment($attachment) : [];
       $attachment = $attachment && empty($errors) ? $attachment : NULL;
       $attachment_select['attachment_id'] = $attachment?->id();
@@ -97,7 +98,7 @@ class AttachmentData extends ConfigurationContainerItemPluginBase {
 
     if (!$attachment_select_mode) {
       $element['attachment_summary'] = [
-        '#markup' => Markup::create('<strong>' . $this->t('Selected attachment: %attachment', ['%attachment' => $attachment->composed_reference]) . '</strong>'),
+        '#markup' => Markup::create('<strong>' . $this->t('Selected attachment: %attachment', ['%attachment' => $attachment->getDescription()]) . '</strong>'),
       ];
       $element['change_attachment'] = [
         '#type' => 'button',

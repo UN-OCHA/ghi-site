@@ -9,6 +9,7 @@ use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
 use Drupal\ghi_blocks\Traits\PlanFootnoteTrait;
 use Drupal\ghi_blocks\Traits\TableSoftLimitTrait;
 use Drupal\ghi_blocks\Traits\TableTrait;
+use Drupal\ghi_plans\ApiObjects\Attachments\FinancialAttachment;
 use Drupal\ghi_plans\Entity\Plan;
 use Drupal\hpc_common\Helpers\BlockHelper;
 use Drupal\hpc_common\Helpers\CommonHelper;
@@ -436,22 +437,30 @@ class PlanCaseloadTrendsTable extends GHIBlockBase implements OverrideDefaultTit
       $plan_types[$plan_year][$plan_type] = !empty($plan_types[$plan_year][$plan_type]) ? $plan_types[$plan_year][$plan_type] + 1 : 1;
     }
 
+    $plan_ids = array_filter(array_map(fn (Plan $plan): ?int => $plan->getSourceId(), $related_plans));
+    $caseloads_by_plan = $attachments_query->getAttachmentsByPlan($plan_ids, 'caseload');
+    $requirements_by_plan = $attachments_query->getAttachmentsByPlan($plan_ids, 'financial');
+
     foreach ($related_plans as $plan) {
+      $plan_id = $plan->getSourceId();
       $plan_year = $plan->getYear();
       $plan_type = $plan->getPlanType()->getAbbreviation();
 
-      /** @var \Drupal\ghi_plans\ApiObjects\Attachments\CaseloadAttachment[] $caseloads */
-      $caseloads = $attachments_query->getAttachmentsByObject('plan', $plan->getSourceId(), 'caseload');
+      $caseloads = $caseloads_by_plan[$plan_id] ?? [];
       /** @var \Drupal\ghi_plans\ApiObjects\Attachments\CaseloadAttachment $caseload */
       $caseload = count($caseloads) > 1 ? $plan->getPlanCaseload($caseloads) : (!empty($caseloads) ? reset($caseloads) : NULL);
+
+      $requirements = $requirements_by_plan[$plan_id] ?? [];
+      $requirements = reset($requirements) ?: NULL;
+
       $funding_data = $funding_query->getData(['plan_id' => $plan->getSourceId()]);
 
       // Setup the plan type label to distinguish years with multiple plans of
       // the same type.
       $plan_type_label = $plan_types[$plan_year][$plan_type] > 1 ? $plan_type . ' - ' . $plan->getShortName() : $plan_type;
 
-      $in_need = $caseload?->getFieldByType('inNeed')?->value;
-      $target = $caseload?->getFieldByType('target')?->value;
+      $in_need = $caseload?->getValueByMetricName('InNeed');
+      $target = $caseload?->getValueByMetricName('Target');
       $reached = $caseload?->getCaseloadValue('latestReach');
 
       // See if there is a section for this plan.
@@ -467,9 +476,9 @@ class PlanCaseloadTrendsTable extends GHIBlockBase implements OverrideDefaultTit
         'target_percent' => $target ? CommonHelper::calculateRatio($target, $in_need) * 100 : NULL,
         'reached' => $reached,
         'reached_percent' => $reached ? CommonHelper::calculateRatio($reached, $target) * 100 : NULL,
-        'requirements' => $funding_data['current_requirements'],
+        'requirements' => $requirements instanceof FinancialAttachment ? $requirements->getRequirements() : NULL,
         'funding' => $funding_data['total_funding'],
-        'coverage' => $funding_data['funding_coverage'],
+        'coverage' => $requirements instanceof FinancialAttachment ? $requirements->getCoverage($funding_data['total_funding']) : NULL,
         'footnotes' => $plan ? $this->getFootnotesForPlanBaseobject($plan) : NULL,
       ];
     }

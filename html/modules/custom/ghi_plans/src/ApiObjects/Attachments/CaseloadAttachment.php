@@ -8,6 +8,31 @@ namespace Drupal\ghi_plans\ApiObjects\Attachments;
 class CaseloadAttachment extends DataAttachment implements CaseloadAttachmentInterface {
 
   /**
+   * Get a value by the metric name.
+   *
+   * @param string $metric_name
+   *   The english metric name.
+   *
+   * @return int
+   *   The caseload value if found.
+   */
+  public function getValueByMetricName($metric_name): ?float {
+    if (!$this->hasValues()) {
+      return NULL;
+    }
+
+    foreach ($this->totals as $total) {
+      if (!$total->getMetric()) {
+        continue;
+      }
+      if ($total->getMetric()->getName() == $metric_name) {
+        return $total->getValue();
+      }
+    }
+    return 0;
+  }
+
+  /**
    * Get a caseload value.
    *
    * @param string $metric_type

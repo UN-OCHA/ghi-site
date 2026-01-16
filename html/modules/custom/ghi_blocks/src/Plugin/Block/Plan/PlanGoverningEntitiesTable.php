@@ -27,7 +27,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  *  category = @Translation("Plan elements"),
  *  data_sources = {
  *    "entities" = "fabric_query:plan_entity",
- *    "cluster_summary" = "hpc_api:plan_funding_cluster_query",
+ *    "flow_search" = "hpc_api:flow_search_query",
  *  },
  *  default_title = @Translation("Cluster overview"),
  *  context_definitions = {
@@ -140,6 +140,9 @@ class PlanGoverningEntitiesTable extends GHIBlockBase implements ConfigurableTab
 
       // Set the context.
       $subpage_node = $this->subpageManager->loadSubpageForBaseObject($base_object);
+      if ($conf['base']['hide_unpublished_clusters'] && !$subpage_node->isPublished()) {
+        continue;
+      }
 
       $context['base_object'] = $base_object;
       $context['context_node'] = $subpage_node;
@@ -172,13 +175,13 @@ class PlanGoverningEntitiesTable extends GHIBlockBase implements ConfigurableTab
       $rows[] = $row;
     }
 
-    /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\PlanClusterSummaryQuery $cluster_query */
-    $cluster_query = $this->getQueryHandler('cluster_summary');
+    /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\FlowSearchQuery $flow_search_query */
+    $flow_search_query = $this->getQueryHandler('flow_search');
 
     // If configured accordingly, add a "Cluster not specified row".
     if (!empty($conf['base']['include_cluster_not_reported']) && $conf['base']['include_cluster_not_reported']) {
 
-      $not_specified_entity = $cluster_query->getNotSpecifiedCluster();
+      $not_specified_entity = $flow_search_query->getNotSpecifiedCluster();
 
       if ($not_specified_entity && !empty($not_specified_entity->total_funding)) {
         $context['base_object'] = NULL;
@@ -226,11 +229,11 @@ class PlanGoverningEntitiesTable extends GHIBlockBase implements ConfigurableTab
       }
     }
 
-    if (!empty($conf['base']['include_shared_funding']) && $conf['base']['include_shared_funding'] && $cluster_query->hasSharedFunding()) {
+    if (!empty($conf['base']['include_shared_funding']) && $conf['base']['include_shared_funding'] && $flow_search_query->hasSharedClusterFunding()) {
       $context['base_object'] = NULL;
       $context['context_node'] = NULL;
       $context['raw_data'] = (object) [
-        'total_funding' => $cluster_query->getSharedFunding(),
+        'total_funding' => $flow_search_query->getSharedClusterFunding(),
       ];
 
       $row = [];
@@ -292,6 +295,7 @@ class PlanGoverningEntitiesTable extends GHIBlockBase implements ConfigurableTab
         'include_cluster_not_reported' => FALSE,
         'include_shared_funding' => FALSE,
         'hide_target_values_for_projects' => FALSE,
+        'hide_unpublished_clusters' => FALSE,
         'cluster_restrict' => [],
       ],
       'table' => [
@@ -342,6 +346,13 @@ class PlanGoverningEntitiesTable extends GHIBlockBase implements ConfigurableTab
       '#title' => $this->t('Hide target values for projects'),
       '#description' => $this->t('Check this if you want to hide the target values from the project details popover.'),
       '#default_value' => $this->getDefaultFormValueFromFormState($form_state, 'hide_target_values_for_projects'),
+    ];
+
+    $form['hide_unpublished_clusters'] = [
+      '#type' => 'checkbox',
+      '#title' => $this->t('Hide clusters with a cluster subpage that is not displayed.'),
+      '#description' => $this->t('Check this if you want to hide the clusters with a cluster subpage that is set to "Not displayed".'),
+      '#default_value' => $this->getDefaultFormValueFromFormState($form_state, 'hide_unpublished_clusters'),
     ];
 
     $form['cluster_restrict'] = $this->buildClusterRestrictFormElement($this->getDefaultFormValueFromFormState($form_state, 'cluster_restrict'));

@@ -85,7 +85,7 @@ class ClusterQuery extends EndpointQueryBase {
    * @return array
    *   An array of cluster objects, keyed by the cluster id.
    */
-  public function getTaggedClustersForPlan($plan_id, $cluster_tag) {
+  public function getTaggedClustersForPlan($plan_id, $cluster_tag): array {
     $this->setCacheTags([
       'plan_id:' . $plan_id,
     ]);
@@ -94,7 +94,7 @@ class ClusterQuery extends EndpointQueryBase {
       'scopes' => 'governingEntityVersion',
     ]);
     if (empty($clusters)) {
-      return NULL;
+      return [];
     }
     $tagged_clusters = array_filter($clusters, function ($cluster) use ($cluster_tag) {
       if (empty($cluster->tags)) {

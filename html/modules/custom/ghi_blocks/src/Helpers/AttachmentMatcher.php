@@ -119,12 +119,12 @@ class AttachmentMatcher {
    *   An attachment prototype object.
    */
   private static function getPrototype($prototype_id) {
-    /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\AttachmentPrototypeQuery $query_handler */
-    $query_handler = \Drupal::service('plugin.manager.endpoint_query_manager')->createInstance('attachment_prototype_query');
+    /** @var \Drupal\ghi_plans\Plugin\FabricQuery\AttachmentPrototypeQuery $query_handler */
+    $query_handler = \Drupal::service('plugin.manager.fabric_query_manager')->createInstance('attachment_prototype');
     if (!$query_handler) {
       return NULL;
     }
-    return $query_handler->getPrototypeById($prototype_id);
+    return $query_handler->getPrototype($prototype_id);
   }
 
 }

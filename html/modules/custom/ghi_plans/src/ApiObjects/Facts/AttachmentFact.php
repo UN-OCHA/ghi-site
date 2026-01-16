@@ -63,9 +63,6 @@ class AttachmentFact extends ApiObjectBase {
   protected function map() {
     $query = $this->getFabricQueryManager()->createInstance('plan');
     $fact = $this->getRawData();
-    if (empty($fact->MetricTypeId)) {
-      d($fact);
-    }
     return (object) [
       'id' => $fact->Id,
       'attachment_id' => $fact->AttachmentId,

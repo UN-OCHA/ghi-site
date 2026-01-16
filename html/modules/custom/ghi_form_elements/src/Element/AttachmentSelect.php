@@ -131,13 +131,13 @@ class AttachmentSelect extends FormElementBase {
 
     // Get the list of attachments that this element can access.
     $element_context_filter = array_filter([
-      'entity_id' => $element['#entity_ids'] ?? NULL,
-      'entity_type' => $element['#entity_type'] ?? NULL,
-      'type' => $element['#attachment_type'] ?? NULL,
+      'EntityId' => $element['#entity_ids'] ?? NULL,
+      'EntityMainType' => $element['#entity_type'] ?? NULL,
+      'AttachmentType' => $element['#attachment_type'] ?? ['caseload', 'indicator'],
     ]);
 
     // Get the attachments.
-    $attachments = self::getPlanEntitiesQuery($plan_id)->getDataAttachments($context['base_object'] ?? NULL, $element_context_filter);
+    $attachments = self::getAttachmentQuery()->getAttachmentsForPlan($plan_id, $context['base_object'] ?? NULL, $element_context_filter);
 
     // Preload the entities.
     $source_entity_ids = [];
@@ -151,29 +151,23 @@ class AttachmentSelect extends FormElementBase {
       $source_entity_ids[$source_type][] = $source_id;
     }
 
-    /** @var \Drupal\ghi_plans\Plugin\FabricQuery\PlanEntityQuery $entity_query */
-    $entity_query = self::getPlanEntityQuery();
-    $source_entities = [];
-    foreach ($source_entity_ids as $source_type => $source_ids) {
-      $source_entities[$source_type] = $entity_query->getEntities($source_type, array_unique($source_ids));
-    }
-
     // Get the different options from the available set of all attachments in
     // the current base context.
     $entity_type_options = [];
     $attachment_type_options = [];
     $attachment_prototype_options = [];
+    /** @var \Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment[] $attachments */
     foreach ($attachments as $attachment) {
       $source_type = $attachment->getSourceEntityType();
+      $source_type_label = $attachment->getSourceEntityTypeLabel();
       $source_id = $attachment->getSourceEntityId();
-      if ($source_entity = ($source_entities[$source_type][$source_id] ?? NULL)) {
-        $entity_type_options[$source_entity->getEntityType()] = $source_entity->getEntityTypeName();
-      }
+      $entity_type_options[$source_type] = $source_type_label;
       $attachment_type_options[$attachment->getType()] = ucfirst($attachment->getType());
       if ($prototype = $attachment->getPrototype()) {
         $attachment_prototype_options[$prototype->id()] = $prototype->getName() . ' (' . $prototype->getRefCode() . ')';
       }
     }
+    krsort($entity_type_options);
     krsort($attachment_prototype_options);
 
     // Sanity check to handle imported code from other plan pages.
@@ -229,7 +223,7 @@ class AttachmentSelect extends FormElementBase {
     if ($element['#summary_only'] && !$triggered_by_select && !$triggered_by_change_request) {
       $attachment = self::getAttachmentQuery()->getAttachment((int) $defaults['attachment_id']);
       $element['summary'] = [
-        '#markup' => $attachment ? Markup::create($attachment->composed_reference) : t('No attachment selected.'),
+        '#markup' => $attachment ? Markup::create($attachment->getTitle()) : t('No attachment selected.'),
       ];
       return $element;
     }
@@ -466,21 +460,6 @@ class AttachmentSelect extends FormElementBase {
    */
   public static function getAttachmentQuery(): AttachmentQuery {
     return self::getFabricQueryManager()->createInstance('attachment');
-  }
-
-  /**
-   * Get the plan entities query service.
-   *
-   * @param int $plan_id
-   *   The plan id for which a query should be build.
-   *
-   * @return \Drupal\ghi_plans\Plugin\EndpointQuery\PlanEntitiesQuery
-   *   The plan entities query plugin.
-   */
-  public static function getPlanEntitiesQuery($plan_id) {
-    $query_handler = self::getEndpointQueryManager()->createInstance('plan_entities_query');
-    $query_handler->setPlaceholder('plan_id', $plan_id);
-    return $query_handler;
   }
 
   /**
