@@ -4,6 +4,7 @@ namespace Drupal\ghi_plans\Plugin\EndpointQuery;
 
 use Drupal\hpc_api\Query\EndpointQueryBase;
 use Drupal\hpc_common\Helpers\ArrayHelper;
+use Drupal\hpc_common\Helpers\CommonHelper;
 
 /**
  * Provides a query plugin for flow search.
@@ -37,64 +38,193 @@ class FlowSearchQuery extends EndpointQueryBase {
   }
 
   /**
-   * Check if the current query is grouped.
-   *
-   * @return bool
-   *   Whether the current search query is grouped.
+   * {@inheritdoc}
    */
-  private function isGrouped() {
-    return !empty($this->endpointQuery->getEndpointArgument('groupby'));
+  public function getClusterSummaryData() {
+    $placeholders = $this->getPlaceholders();
+    $query_args = [
+      'planId' => $placeholders['plan_id'],
+      'groupBy' => 'cluster',
+      'report' => 3,
+    ];
+    $cache_key = $this->getCacheKey(['type' => 'cluster_summary'] + $this->getPlaceholders() + $query_args);
+    if ($summary_data = $this->getCache($cache_key)) {
+      return $summary_data;
+    }
+    $data = parent::getData($placeholders, $query_args);
+    if (empty($data)) {
+      $this->setCache($cache_key, []);
+      return [];
+    }
+
+    $clusters = $data->report3?->fundingTotals?->objects[0]?->objectsBreakdown ?? [];
+    $totals = $data->report3?->fundingTotals?->objects[0]?->totalBreakdown ?? NULL;
+    if (empty($clusters) || empty($totals)) {
+      $this->setCache($cache_key, []);
+      return [];
+    }
+
+    $summary_data = (object) [
+      'clusters' => array_map(function ($cluster) {
+        return (object) [
+          // Id is not set for "Not specified clusters".
+          'id' => $cluster->id ?? NULL,
+          'name' => $cluster->name,
+          'total_funding' => $cluster->totalFunding,
+        ];
+      }, $clusters),
+      'totals' => (object) [
+        'sum' => $totals?->objectsSum ?? 0,
+        'overlap' => $totals?->overlapCorrection ?? 0,
+        'shared' => $totals?->sharedFunding ?? 0,
+        'total_funding' => $totals?->totalFunding ?? 0,
+      ],
+    ];
+    $this->setCache($cache_key, $summary_data);
+    return $summary_data;
   }
 
   /**
-   * Static helper function to extract cluster ids for a flow search result.
+   * Get a property from a cluster object.
    *
-   * @param object $data
-   *   The result object from a grouped flow search.
-   * @param array $cluster_ids
-   *   Optional some cluster ids to restrict to.
+   * @param object $cluster
+   *   The cluster for which to retrieve the property.
+   * @param string $property
+   *   The property to retrieve. See self::getData().
+   * @param mixed $default
+   *   A default value to return if the property is not set.
+   *
+   * @return mixed
+   *   The value for the property on the cluster, or the default value.
+   */
+  private function getClusterProperty($cluster, $property, $default = NULL) {
+    if (!$cluster || !is_object($cluster)) {
+      return $default;
+    }
+    return property_exists($cluster, $property) ? $cluster->$property : $default;
+  }
+
+  /**
+   * Get a property from one of the clusters.
+   *
+   * @param int $cluster_id
+   *   The cluster id for which to retrieve the property.
+   * @param string $property
+   *   The property to retrieve. See self::getData().
+   * @param mixed $default
+   *   A default value to return if the property is not set.
+   *
+   * @return mixed
+   *   The value for tha property on the cluster, or the default value.
+   */
+  public function getClusterPropertyById($cluster_id, $property, $default = NULL) {
+    $data = $this->getClusterSummaryData();
+    if (empty($data) || empty($data->clusters)) {
+      return $default;
+    }
+    $cluster = ArrayHelper::findFirstItemByProperties($data->clusters, ['id' => $cluster_id]);
+    return $this->getClusterProperty($cluster, $property, $default);
+  }
+
+  /**
+   * Get the total funding for a cluster.
+   *
+   * @param int $cluster_id
+   *   The cluster id.
+   * @param int $default
+   *   Optional default value.
+   *
+   * @return float
+   *   The total funding for the given cluster id.
+   */
+  public function getClusterTotalFunding($cluster_id, $default = 0): float {
+    return (float) $this->getClusterPropertyById($cluster_id, 'total_funding', $default);
+  }
+
+  /**
+   * Get the funding gap for a cluster and the given requirements.
+   *
+   * @param int $cluster_id
+   *   The cluster id.
+   * @param float $requirements
+   *   The requirements to compare the funding against.
+   *
+   * @return float
+   *   The funding gap for the given cluster id.
+   */
+  public function getClusterFundingGap(int $cluster_id, float $requirements): float {
+    $funding = $this->getClusterTotalFunding($cluster_id);
+    return $requirements - $funding;
+  }
+
+  /**
+   * Get the funding coverage for a cluster and the given requirements.
+   *
+   * @param int $cluster_id
+   *   The cluster id.
+   * @param float $requirements
+   *   The requirements to compare the funding against.
+   *
+   * @return float
+   *   The funding coverage for the given cluster id.
+   */
+  public function getClusterFundingCoverage($cluster_id, ?float $requirements = 0): float {
+    $funding = $this->getClusterTotalFunding($cluster_id);
+    return (float) CommonHelper::calculateRatio($funding, $requirements) * 100;
+  }
+
+  /**
+   * Get the not specified cluster from the result set.
+   *
+   * This should be the only one with a missing or empty id property.
+   *
+   * @return object|null
+   *   The cluster object or NULL if none can be found.
+   */
+  public function getNotSpecifiedCluster() {
+    $data = $this->getClusterSummaryData();
+    if (empty($data) || empty($data->clusters)) {
+      return NULL;
+    }
+    foreach ($data->clusters as $cluster) {
+      if (!property_exists($cluster, 'id') || empty($cluster->id)) {
+        return $cluster;
+      }
+    }
+    return NULL;
+  }
+
+  /**
+   * Checks if the current result set has shared funding.
+   *
+   * @return bool
+   *   TRUE if the data contains shared funding, FALSE if it doesn't.
+   */
+  public function hasSharedClusterFunding() {
+    $data = $this->getClusterSummaryData();
+    return !empty($data->totals->shared);
+  }
+
+  /**
+   * Checks if the current result set has shared funding.
+   *
+   * @return int
+   *   The shared funding amount.
+   */
+  public function getSharedClusterFunding() {
+    $data = $this->getClusterSummaryData();
+    return !empty($data->totals->shared) ? $data->totals->shared : 0;
+  }
+
+  /**
+   * Extract cluster ids from the summary data.
    *
    * @return int[]
    *   An array of cluster ids.
    */
-  public function getClusterIds($data, ?array $cluster_ids = NULL) {
-    if (!$this->isGrouped()) {
-      return NULL;
-    }
-    $cluster_ids_requirements = [];
-    if (!empty($data->requirements) && !empty($data->requirements->objects)) {
-      $requirements_objects = $data->requirements->objects;
-
-      if (!empty($cluster_ids)) {
-        $requirements_objects = ArrayHelper::filterArray($requirements_objects, ['id' => $cluster_ids]);
-      }
-      $cluster_ids_requirements = !empty($requirements_objects) ? array_map(function ($object) {
-        return (int) $object->id;
-      }, $requirements_objects) : [];
-    }
-
-    // Extract and aggregate the funding.
-    $cluster_ids_funding = [];
-    if (!empty($data->report3->fundingTotals)) {
-      $funding_objects = $data->report3->fundingTotals->objects[0]->objectsBreakdown;
-      if (!empty($cluster_ids)) {
-        $funding_objects = ArrayHelper::filterArray($funding_objects, ['id' => $cluster_ids]);
-      }
-      $cluster_ids_funding = !empty($funding_objects) ? array_unique(
-        array_map(function ($object) {
-          return (int) $object->id;
-        }, $funding_objects)
-      ) : [];
-    }
-
-    // Merge and make clusters unique.
-    return array_values(
-      array_filter(
-        array_unique(
-          array_merge($cluster_ids_requirements, $cluster_ids_funding)
-        )
-      )
-    );
+  public function getClusterIds() {
+    $data = $this->getClusterSummaryData();
+    return array_filter(array_map(fn ($cluster) => $cluster->id ?? NULL, $data->clusters ?? []));
   }
 
   /**

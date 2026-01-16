@@ -853,10 +853,9 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
       $plan_id => $query_handler->getPlan($plan_id),
     ];
 
-    /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\PlanEntitiesQuery $query_handler */
-    $query_handler = $this->endpointQueryManager->createInstance('plan_entities_query');
-    $query_handler->setPlaceholder('plan_id', $plan_id);
-    $plan_entities += $query_handler->getPlanEntities($this->getCurrentBaseObject()) ?? [];
+    /** @var \Drupal\ghi_plans\Plugin\FabricQuery\PlanEntityQuery $query */
+    $query = $this->getQueryHandler('entities');
+    $plan_entities += $query->getPlanEntities($plan_id, $this->getCurrentBaseObject()) ?? [];
     return $plan_entities;
   }
 
@@ -885,10 +884,9 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
     if (!$plan_object) {
       return [];
     }
-    /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\PlanEntitiesQuery $query_handler */
-    $query_handler = $this->endpointQueryManager->createInstance('plan_entities_query');
-    $query_handler->setPlaceholder('plan_id', $plan_object->getSourceId());
-    return $query_handler->getDataAttachments($this->getCurrentBaseObject());
+    /** @var \Drupal\ghi_plans\Plugin\FabricQuery\AttachmentQuery $query_handler */
+    $query_handler = $this->getQueryHandler('attachment');
+    return $query_handler->getAttachmentsForPlan($plan_object->getSourceId(), $this->getCurrentBaseObject());
   }
 
   /**

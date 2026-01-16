@@ -45,6 +45,33 @@ class AttachmentPrototypeQuery extends FabricQueryBase {
   }
 
   /**
+   * Get attachment prototypes by ids.
+   *
+   * @param int[] $prototype_ids
+   *   An array of attachment prototype ids.
+   *
+   * @return \Drupal\ghi_plans\ApiObjects\Prototypes\AttachmentPrototype[]
+   *   The attachment prototype object or NULL if not found.
+   */
+  public function getPrototypes(array $prototype_ids): array {
+    // Get the attachment data.
+    $payload = "
+      attachmentPrototypes (filter: {
+        Id:  {
+          in: [ " . implode(',', $prototype_ids) . " ]
+        }
+      }) {
+        items { " . AttachmentPrototype::GRAPHQL_DIMENSION_ITEMS . "}
+      }";
+    $data = $this->fabricQuery->query($payload);
+    $prototypes = $this->getItems($data, 'attachmentPrototypes');
+    if (empty($prototypes)) {
+      return [];
+    }
+    return array_map(fn ($prototype): AttachmentPrototype => new AttachmentPrototype($prototype), $prototypes);
+  }
+
+  /**
    * Get an attachment prototype by plan and prototype ID.
    *
    * @param int $plan_id

@@ -43,13 +43,6 @@ class OrganizationProjectCounter extends ConfigurationContainerItemPluginBase {
   /**
    * The funding query.
    *
-   * @var \Drupal\ghi_plans\Plugin\EndpointQuery\FlowSearchQuery
-   */
-  public $flowSearchQuery;
-
-  /**
-   * The funding query.
-   *
    * @var \Drupal\ghi_plans\Plugin\EndpointQuery\ClusterQuery
    */
   public $clusterQuery;
@@ -62,7 +55,6 @@ class OrganizationProjectCounter extends ConfigurationContainerItemPluginBase {
     $instance = parent::create($container, $configuration, $plugin_id, $plugin_definition);
     $instance->planEntitiesQuery = $instance->endpointQueryManager->createInstance('plan_entities_query');
     $instance->projectSearchQuery = $instance->endpointQueryManager->createInstance('plan_project_search_query');
-    $instance->flowSearchQuery = $instance->endpointQueryManager->createInstance('flow_search_query');
     $instance->clusterQuery = $instance->endpointQueryManager->createInstance('cluster_query');
     return $instance;
   }

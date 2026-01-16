@@ -2,7 +2,9 @@
 
 namespace Drupal\ghi_blocks\Traits;
 
+use Drupal\ghi_plans\Entity\Plan;
 use Drupal\ghi_plans\Plugin\EndpointQuery\ClusterQuery;
+use Drupal\ghi_plans\Plugin\EndpointQuery\FlowSearchQuery;
 
 /**
  * Helper trait for cluster restriction on configuration item plugins.
@@ -36,36 +38,38 @@ trait ConfigurationItemClusterRestrictTrait {
    *
    * @param array $cluster_restrict
    *   A cluster restriction to apply.
-   * @param object $search_results
-   *   A result object from the custom search endpoint.
-   * @param \Drupal\ghi_plans\Plugin\EndpointQuery\ClusterQuery $clusterQuery
+   * @param \Drupal\ghi_plans\Plugin\EndpointQuery\ClusterQuery $cluster_query
    *   A query object for the cluster endpoint.
+   * @param \Drupal\ghi_plans\Plugin\EndpointQuery\FlowSearchQuery $flow_search_query
+   *   A query object for the plan cluster summary data.
    *
    * @return mixed|null
    *   The retrieved value.
    */
-  public function getClusterIdsByClusterRestrict(array $cluster_restrict, $search_results, ClusterQuery $clusterQuery) {
+  public function getClusterIdsByClusterRestrict(array $cluster_restrict, ClusterQuery $cluster_query, FlowSearchQuery $flow_search_query): ?array {
     if ($cluster_restrict['type'] == 'none') {
       return NULL;
     }
 
     $context = $this->getContext();
     $plan_node = $context['plan_object'];
-    $plan_id = $plan_node->field_original_id->value;
+    if (!$plan_node instanceof Plan) {
+      return NULL;
+    }
 
     // First extract the cluster ids for the given cluster tag, as used for
     // the specific plan.
-    $cluster_ids = [];
-    $tagged_clusters = $clusterQuery->getTaggedClustersForPlan($plan_id, $cluster_restrict['tag']);
-    if (!empty($tagged_clusters)) {
-      // Get the cluster ids that are actually part of the result set.
-      $cluster_ids = $this->flowSearchQuery->getClusterIds($search_results, array_keys($tagged_clusters));
-    }
+    $tagged_clusters = $cluster_query->getTaggedClustersForPlan($plan_node->getSourceId(), $cluster_restrict['tag']);
+    $cluster_ids_tagged = array_keys($tagged_clusters);
 
-    if ($cluster_restrict['type'] == 'tag_exclude') {
-      $cluster_ids_all = $this->flowSearchQuery->getClusterIds($search_results);
-      $cluster_ids = array_diff($cluster_ids_all, $cluster_ids);
-    }
+    // Get all cluster ids in the current context.
+    $cluster_ids_all = $flow_search_query->getClusterIds();
+
+    // Now apply the logic.
+    $cluster_ids = match ($cluster_restrict['type']) {
+      'tag_include' => array_intersect($cluster_ids_all, $cluster_ids_tagged),
+      'tag_exclude' => array_diff($cluster_ids_all, $cluster_ids_tagged),
+    };
     return $cluster_ids;
   }
 

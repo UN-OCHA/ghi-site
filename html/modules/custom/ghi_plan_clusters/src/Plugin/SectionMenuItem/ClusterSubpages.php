@@ -2,6 +2,7 @@
 
 namespace Drupal\ghi_plan_clusters\Plugin\SectionMenuItem;
 
+use Drupal\ghi_plan_clusters\Entity\PlanCluster;
 use Drupal\ghi_sections\Menu\SectionMenuItem;
 use Drupal\ghi_sections\Menu\SectionMenuPluginBase;
 use Drupal\ghi_sections\MenuItemType\SectionDropdown;
@@ -84,7 +85,9 @@ class ClusterSubpages extends SectionMenuPluginBase {
     if (!$section) {
       return [];
     }
-    return $this->planClusterManager->loadNodesForSection($section) ?: [];
+    $cluster_nodes = $this->planClusterManager->loadNodesForSection($section) ?: [];
+    $cluster_nodes = array_filter($cluster_nodes, fn (PlanCluster $node): bool => $node->isPublished());
+    return $cluster_nodes;
   }
 
 }

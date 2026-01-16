@@ -31,6 +31,9 @@ class AttachmentHelper {
     foreach ($attachments as $attachment) {
       try {
         $attachment_object = self::processAttachment($attachment);
+        if (!$attachment_object) {
+          continue;
+        }
         $processed[$attachment_object->id()] = $attachment_object;
       }
       catch (InvalidAttachmentTypeException $e) {
@@ -57,6 +60,9 @@ class AttachmentHelper {
     switch (strtolower($attachment_type)) {
       case 'caseload':
         if (!empty($attachment->id)) {
+          // Backwards compatibility layer for objects originating from the HPC
+          // API. Reload them from fabric.
+          // @todo Remove after transition to fabric is finished.
           $query = self::getAttachmentQuery();
           return $query->getAttachment($attachment->id);
         }
@@ -64,6 +70,9 @@ class AttachmentHelper {
 
       case 'indicator':
         if (!empty($attachment->id)) {
+          // Backwards compatibility layer for objects originating from the HPC
+          // API. Reload them from fabric.
+          // @todo Remove after transition to fabric is finished.
           $query = self::getAttachmentQuery();
           return $query->getAttachment($attachment->id);
         }

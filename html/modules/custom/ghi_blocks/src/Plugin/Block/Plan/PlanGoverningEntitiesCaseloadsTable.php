@@ -586,10 +586,11 @@ class PlanGoverningEntitiesCaseloadsTable extends GHIBlockBase implements Config
     }
     if ($original_prototype_id && !empty($conf['base']['prototype_id'])) {
       $new_prototype_id = $conf['base']['prototype_id'];
-      /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\AttachmentPrototypeQuery $query */
-      $query = $this->endpointQueryManager->createInstance('attachment_prototype_query');
-      $original_prototype = $query->getPrototypeById($original_prototype_id);
-      $new_prototype = $query->getPrototypeById($new_prototype_id);
+      /** @var \Drupal\ghi_plans\Plugin\FabricQuery\AttachmentPrototypeQuery $query */
+      $query = $this->fabricQueryManager->createInstance('attachment_prototype');
+      $prototypes = $query->getPrototypes([$original_prototype_id, $new_prototype_id]);
+      $original_prototype = $prototypes[$original_prototype_id] ?? NULL;
+      $new_prototype = $prototypes[$new_prototype_id] ?? NULL;
       foreach ($conf['table']['columns'] as &$column) {
         if ($column['item_type'] == 'data_point') {
           $data_points = &$column['config']['data_point']['data_points'];

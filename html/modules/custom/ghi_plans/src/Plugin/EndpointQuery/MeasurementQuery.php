@@ -34,20 +34,25 @@ class MeasurementQuery extends EndpointQueryBase implements ContainerFactoryPlug
    *
    * @return array
    *   An array of unprocessed measurement objects.
+   *
+   * @todo Port to fabric.
    */
   public function getUnprocessedMeasurements(DataAttachment $attachment, $disaggregation = FALSE) {
-    $endpoint_args = [];
-    if (!$disaggregation) {
-      $endpoint_args['disaggregation'] = 'false';
-    }
-    $plan_id = $attachment->getPlanId();
-    if ($plan_id) {
-      $this->setCacheTags([
-        'plan_id:' . $plan_id,
-      ]);
-    }
-    $data = $this->getData(['attachment_id' => $attachment->id()], $endpoint_args);
-    return $data->measurements ?? [];
+    // @codingStandardsIgnoreStart
+    // $endpoint_args = [];
+    // if (!$disaggregation) {
+    //   $endpoint_args['disaggregation'] = 'false';
+    // }
+    // $plan_id = $attachment->getPlanId();
+    // if ($plan_id) {
+    //   $this->setCacheTags([
+    //     'plan_id:' . $plan_id,
+    //   ]);
+    // }
+    // $data = $this->getData(['attachment_id' => $attachment->id()], $endpoint_args);
+    // return $data->measurements ?? [];
+    // @codingStandardsIgnoreEnd
+    return [];
   }
 
 }

@@ -4,6 +4,7 @@ namespace Drupal\ghi_plans\ApiObjects\Attachments;
 
 use Drupal\Core\Cache\Cache;
 use Drupal\Core\Cache\CacheableMetadata;
+use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\ghi_base_objects\Entity\BaseObjectChildInterface;
 use Drupal\ghi_base_objects\Entity\BaseObjectInterface;
 use Drupal\ghi_base_objects\Helpers\BaseObjectHelper;
@@ -28,6 +29,7 @@ class DataAttachment extends AttachmentBase implements DataAttachmentInterface {
   use PlanReportingPeriodTrait;
   use SimpleCacheTrait;
   use DateTimeTrait;
+  use StringTranslationTrait;
 
   /**
    * The source entity of an attachment.
@@ -95,7 +97,7 @@ class DataAttachment extends AttachmentBase implements DataAttachmentInterface {
       'custom_id_prefixed_refcode' => end($references),
       'composed_reference' => $attachment->ComposedReference ?? NULL,
       'description' => $attachment->Name ?? NULL,
-      'values' => $this->extractValues(),
+      'values' => $this->extractValues($totals),
       'prototype' => $prototype,
       'unit' => ($attachment->UnitId ?? NULL) ? $plan_query->getUnit($attachment->UnitId) : NULL,
       'monitoring_period' => $period ?? NULL,
@@ -181,6 +183,20 @@ class DataAttachment extends AttachmentBase implements DataAttachmentInterface {
   }
 
   /**
+   * Get the source entity type label.
+   *
+   * @return string|null
+   *   The source entity type.
+   */
+  public function getSourceEntityTypeLabel() {
+    return match ($this->source->entity_type) {
+      'plan' => $this->t('Plan'),
+      'planEntity' => $this->t('Plan entity'),
+      'governingEntity' => $this->t('Governing entity'),
+    };
+  }
+
+  /**
    * Get the source entity id.
    *
    * @return string|null
@@ -227,13 +243,11 @@ class DataAttachment extends AttachmentBase implements DataAttachmentInterface {
    *   TRUE if the attachment belongs to the base object, FALSE otherwise.
    */
   public function belongsToBaseObject(BaseObjectInterface $base_object) {
-    /** @var \Drupal\ghi_plans\ApiObjects\PlanEntityInterface $source_entity */
-    $source_entity = $this->getSourceEntity();
-    if ($source_entity && $source_entity->id() == $base_object->getSourceId()) {
+    if ($this->getSourceEntityId() == $base_object->getSourceId()) {
       return TRUE;
     }
     $parent_base_object = $base_object instanceof BaseObjectChildInterface ? $base_object->getParentBaseObject() : NULL;
-    if ($source_entity && $parent_base_object && $source_entity->id() == $parent_base_object->getSourceId()) {
+    if ($parent_base_object && $this->getSourceEntityId() == $parent_base_object->getSourceId()) {
       return TRUE;
     }
     return FALSE;
@@ -556,6 +570,16 @@ class DataAttachment extends AttachmentBase implements DataAttachmentInterface {
    */
   public function getPlanLanguage() {
     return $this->getPlanObject()?->getPlanLanguage();
+  }
+
+  /**
+   * Check if this attachment has data to show.
+   *
+   * @return bool
+   *   TRUE if there is data, FALSE otherwise.
+   */
+  public function hasValues() {
+    return !empty($this->totals);
   }
 
   /**
@@ -987,11 +1011,14 @@ class DataAttachment extends AttachmentBase implements DataAttachmentInterface {
   /**
    * Extract the metric values from an attachment.
    *
+   * @param \Drupal\ghi_plans\ApiObjects\Facts\AttachmentFact[] $totals
+   *   The totals.
+   *
    * @return array
    *   Array with values for each metric and measurement data point, according
    *   to the prototype.
    */
-  protected function extractValues() {
+  protected function extractValues($totals): array {
     $prototype = $this->getPrototypeData();
     $metrics = $this->getMetrics();
 
