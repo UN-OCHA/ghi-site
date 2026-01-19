@@ -13,7 +13,9 @@ class Organization extends BaseObject {
   const GRAPHQL_DIMENSION_ITEMS = '
     Id
     Name
-    Url
+    NativeName
+    Abbreviation
+    url
   ';
 
   /**
@@ -34,8 +36,19 @@ class Organization extends BaseObject {
     return (object) [
       'id' => $data->Id ?? ($data->id ?? NULL),
       'name' => $data->Name ?? ($data->name ?? NULL),
-      'url' => CommonHelper::assureWellFormedUri($data->Url ?? ($data->url ?? NULL)),
+      'abbreviation' => $data->Abbreviation ?? ($data->abbreviation ?? NULL),
+      'url' => CommonHelper::assureWellFormedUri($data->url ?? NULL),
     ];
+  }
+
+  /**
+   * Get the abbreviation.
+   *
+   * @return string|null
+   *   The abbreviation of the organization.
+   */
+  public function getAbbreviation(): ?string {
+    return $this->map->abbreviation;
   }
 
   /**
