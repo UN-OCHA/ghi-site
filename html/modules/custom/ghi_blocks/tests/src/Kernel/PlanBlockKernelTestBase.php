@@ -5,6 +5,8 @@ namespace Drupal\Tests\ghi_blocks\Kernel;
 use Drupal\Core\Plugin\Context\EntityContext;
 use Drupal\Core\Plugin\Context\EntityContextDefinition;
 use Drupal\hpc_api\Query\EndpointQuery;
+use Drupal\hpc_api\Query\FabricQuery;
+use Drupal\hpc_api\Query\FabricQueryManager;
 use Drupal\taxonomy\Entity\Vocabulary;
 use Drupal\Tests\field\Traits\EntityReferenceFieldCreationTrait;
 use Drupal\Tests\ghi_base_objects\Traits\BaseObjectTestTrait;
@@ -62,10 +64,14 @@ abstract class PlanBlockKernelTestBase extends BlockKernelTestBase {
     $this->installSchema('node', ['node_access']);
     $this->installConfig(['system', 'node', 'field', 'pathauto']);
 
+    $fabric_query_manager = $this->prophesize(FabricQueryManager::class);
     $endpoint_query = $this->prophesize(EndpointQuery::class);
+    $fabric_query = $this->prophesize(FabricQuery::class);
 
     $container = \Drupal::getContainer();
+    $container->set('plugin.manager.fabric_query_manager', $fabric_query_manager->reveal());
     $container->set('hpc_api.endpoint_query', $endpoint_query->reveal());
+    $container->set('hpc_api.fabric_query', $fabric_query->reveal());
     \Drupal::setContainer($container);
 
     $this->createPlanBaseObjectType();

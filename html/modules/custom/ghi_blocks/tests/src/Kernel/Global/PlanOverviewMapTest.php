@@ -10,6 +10,7 @@ use Drupal\ghi_blocks\Plugin\Block\GlobalPage\PlanOverviewMap;
 use Drupal\ghi_plans\ApiObjects\Partials\PlanOverviewPlan;
 use Drupal\ghi_plans\Entity\PlanType;
 use Drupal\Tests\ghi_blocks\Kernel\PlanBlockKernelTestBase;
+use Prophecy\Argument;
 use Prophecy\PhpUnit\ProphecyTrait;
 
 /**
@@ -40,9 +41,10 @@ class PlanOverviewMapTest extends PlanBlockKernelTestBase {
     $this->assertEquals('Plan overview map', (string) $definition['admin_label']);
     $this->assertEquals('Global', (string) $definition['category']);
     $this->assertArrayHasKey('data_sources', $definition);
-    $this->assertArrayHasKey('plans', $definition['data_sources']);
-    $this->assertArrayHasKey('locations', $definition['data_sources']);
-    $this->assertArrayHasKey('countries', $definition['data_sources']);
+    $this->assertArrayHasKey('plans_overview', $definition['data_sources']);
+    $this->assertArrayHasKey('funding_overview', $definition['data_sources']);
+    $this->assertArrayHasKey('plan', $definition['data_sources']);
+    $this->assertArrayHasKey('country', $definition['data_sources']);
   }
 
   /**
@@ -70,7 +72,7 @@ class PlanOverviewMapTest extends PlanBlockKernelTestBase {
       $this->mockPlan()->reveal(),
       $this->mockPlan()->reveal(),
     ];
-    $this->mockPlanOverviewQuery($plugin, $plans, 2024);
+    $this->mockPlanOverviewQuery($plugin, $plans);
 
     $build = $plugin->buildContent();
 
@@ -100,15 +102,19 @@ class PlanOverviewMapTest extends PlanBlockKernelTestBase {
     $plugin = $this->getBlockPlugin();
 
     // Mock the getPlans method to return empty array.
-    $plans_query = $this->prophesize('\Drupal\ghi_plans\Plugin\EndpointQuery\PlanOverviewQuery');
+    $plans_query = $this->prophesize('\Drupal\ghi_plans\Plugin\FabricQuery\PlanOverviewQuery');
+    $plans_query->setYear(2024);
     $plans_query->getPlans()->willReturn([]);
-    $plans_query->setPlaceholder('year', '2024')->shouldBeCalled();
+    $funding_query = $this->prophesize('\Drupal\ghi_plans\Plugin\EndpointQuery\FundingOverviewQuery');
+    $funding_query->getFundingByPlans()->willReturn([]);
 
     // Set the mocked query handler.
     $reflection = new \ReflectionClass($plugin);
     $property = $reflection->getProperty('queryHandlers');
-    $property->setAccessible(TRUE);
-    $property->setValue($plugin, ['plans' => $plans_query->reveal()]);
+    $property->setValue($plugin, [
+      'plans_overview' => $plans_query->reveal(),
+      'funding_overview' => $funding_query->reveal(),
+    ]);
 
     $build = $plugin->buildContent();
 
@@ -135,6 +141,13 @@ class PlanOverviewMapTest extends PlanBlockKernelTestBase {
    */
   public function testBlockBuildWithValidConfiguration() {
     $plugin = $this->getBlockPlugin();
+
+    $plans = [
+      $this->mockPlan()->reveal(),
+      $this->mockPlan()->reveal(),
+    ];
+    $this->mockPlanOverviewQuery($plugin, $plans);
+
     $build = $plugin->buildContent();
 
     $this->assertIsArray($build);
@@ -160,7 +173,7 @@ class PlanOverviewMapTest extends PlanBlockKernelTestBase {
       $this->mockPlan()->reveal(),
       $this->mockPlan()->reveal(),
     ];
-    $this->mockPlanOverviewQuery($plugin, $plans, 2024);
+    $this->mockPlanOverviewQuery($plugin, $plans);
 
     // Test default cache tags.
     $cache_tags = $plugin->getCacheTags();
@@ -230,6 +243,11 @@ class PlanOverviewMapTest extends PlanBlockKernelTestBase {
    */
   public function testBuildLegendItems() {
     $plugin = $this->getBlockPlugin();
+    $plans = [
+      $this->mockPlan()->reveal(),
+      $this->mockPlan()->reveal(),
+    ];
+    $this->mockPlanOverviewQuery($plugin, $plans);
 
     $legend = $this->callPrivateMethod($plugin, 'buildLegendItems');
 
@@ -315,14 +333,13 @@ class PlanOverviewMapTest extends PlanBlockKernelTestBase {
     $plan->id()->willReturn($id);
     $plan->getName()->willReturn($plan_name);
     $plan->getEntity()->willReturn($plan_entity->reveal());
-    $plan->getFunding()->willReturn(1000000);
     $plan->getRequirements()->willReturn(2000000);
-    $plan->getCaseloadValue('inNeed')->willReturn(100000);
-    $plan->getCaseloadValue('target')->willReturn(80000);
+    $plan->getCaseloadValue('InNeed')->willReturn(100000);
+    $plan->getCaseloadValue('Target')->willReturn(80000);
     $plan->getCaseloadValue('latestReach')->willReturn(60000);
     $plan->getCaseloadValue('expectedReach')->willReturn(70000);
-    $plan->getCaseloadValue('totalPopulation')->willReturn(150000);
-    $plan->getCoverage()->willReturn(0.5);
+    $plan->getCaseloadValue('Population')->willReturn(150000);
+    $plan->getCoverage(Argument::any())->willReturn(0.5);
     $plan->getPlanType()->willReturn($plan_type->reveal());
     $plan->getTypeName()->willReturn('Humanitarian Response Plan');
     $plan->getTypeShortName()->willReturn('HRP');
@@ -344,24 +361,25 @@ class PlanOverviewMapTest extends PlanBlockKernelTestBase {
    *   The PlanOverviewMap plugin instance.
    * @param array $plans
    *   An array of mocked plans.
-   * @param int $year
-   *   The year used in the query placeholder.
    */
-  private function mockPlanOverviewQuery(PlanOverviewMap $plugin, array $plans, int $year) {
+  private function mockPlanOverviewQuery(PlanOverviewMap $plugin, array $plans) {
     $plan_ids = array_map(function ($plan) {
       return $plan->id();
     }, $plans);
 
     // Mock the getPlans method to return empty array.
-    $plans_query = $this->prophesize('\Drupal\ghi_plans\Plugin\EndpointQuery\PlanOverviewQuery');
+    $plans_query = $this->prophesize('\Drupal\ghi_plans\Plugin\FabricQuery\PlanOverviewQuery');
     $plans_query->getPlans()->willReturn(array_combine($plan_ids, $plans));
-    $plans_query->setPlaceholder('year', $year)->shouldBeCalled();
+    $funding_query = $this->prophesize('\Drupal\ghi_plans\Plugin\EndpointQuery\FundingOverviewQuery');
+    $funding_query->getFundingByPlans()->willReturn([]);
 
     // Set the mocked query handler.
     $reflection = new \ReflectionClass($plugin);
     $property = $reflection->getProperty('queryHandlers');
-    $property->setAccessible(TRUE);
-    $property->setValue($plugin, ['plans' => $plans_query->reveal()]);
+    $property->setValue($plugin, [
+      'plans_overview' => $plans_query->reveal(),
+      'funding_overview' => $funding_query->reveal(),
+    ]);
   }
 
 }

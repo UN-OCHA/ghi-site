@@ -13,7 +13,7 @@ class CaseloadAttachment extends DataAttachment implements CaseloadAttachmentInt
    * @param string $metric_name
    *   The english metric name.
    *
-   * @return int
+   * @return float
    *   The caseload value if found.
    */
   public function getValueByMetricName($metric_name): ?float {
