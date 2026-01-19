@@ -16,8 +16,8 @@ class CustomApiObjectTest extends BaseObjectKernelTestBase {
    */
   public function testCustomApiObjectConstructorAndMapping(): void {
     $raw_data = $this->createMockRawData([
-      'id' => 123,
-      'name' => 'Test Custom Object',
+      'Id' => 123,
+      'Name' => 'Test Custom Object',
     ]);
 
     $custom_object = new CustomApiObject($raw_data);

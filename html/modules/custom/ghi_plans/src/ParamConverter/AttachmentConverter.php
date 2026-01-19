@@ -25,7 +25,8 @@ class AttachmentConverter implements ParamConverterInterface {
    *   The query manager.
    */
   public function __construct(FabricQueryManager $fabric_query_manager) {
-    $this->attachmentQuery = $fabric_query_manager->createInstance('attachment');
+
+    $this->attachmentQuery = $fabric_query_manager->hasDefinition('attachment') ? $fabric_query_manager->createInstance('attachment') : NULL;
   }
 
   /**
@@ -33,7 +34,7 @@ class AttachmentConverter implements ParamConverterInterface {
    */
   public function convert($value, $definition, $name, array $defaults) {
     if (!empty($value)) {
-      return $this->attachmentQuery->getAttachment($value);
+      return $this->attachmentQuery?->getAttachment($value);
     }
     return NULL;
   }

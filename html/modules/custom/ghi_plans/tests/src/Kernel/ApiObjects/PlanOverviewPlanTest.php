@@ -45,15 +45,9 @@ class PlanOverviewPlanTest extends PlanApiObjectKernelTestBase {
    */
   public function testPlanOverviewPlanConstructorAndMapping(): void {
     $raw_data = $this->createMockRawData([
-      'id' => 123,
-      'name' => 'Test Plan Overview',
-      'funding' => (object) [
-        'totalFunding' => 1000000,
-        'progress' => 75.5,
-      ],
-      'requirements' => (object) [
-        'revisedRequirements' => 1500000,
-      ],
+      'Id' => 123,
+      'Name' => 'Test Plan Overview',
+      'requirements' => 1500000,
     ]);
 
     $plan_overview = new PlanOverviewPlan($raw_data);
@@ -66,9 +60,8 @@ class PlanOverviewPlanTest extends PlanApiObjectKernelTestBase {
       'coverage',
     ]);
 
-    $this->assertEquals(1000000, $plan_overview->getFunding());
     $this->assertEquals(1500000, $plan_overview->getRequirements());
-    $this->assertEquals(75.5, $plan_overview->getCoverage());
+    $this->assertEquals(66.7, $plan_overview->getCoverage(1000000));
 
     $this->assertEquals('plan', $plan_overview->getBundle());
     $this->assertEquals('Test Plan Overview', $plan_overview->getName());
@@ -94,9 +87,7 @@ class PlanOverviewPlanTest extends PlanApiObjectKernelTestBase {
    */
   public function testPlanPlanTypes(): void {
     $raw_data = $this->createMockRawData([
-      'planType' => (object) [
-        'name' => 'Humanitarian response plan',
-      ],
+      'PlanType' => 'Humanitarian response plan',
     ]);
     $plan_overview = new PlanOverviewPlan($raw_data);
     $this->assertNull($plan_overview->getPlanType());
@@ -116,35 +107,15 @@ class PlanOverviewPlanTest extends PlanApiObjectKernelTestBase {
   public function testNullOrEmptyDataHandling(): void {
     // Test with minimal data including null funding/requirements.
     $minimal_data = $this->createMockRawData([
-      'id' => 1,
-      'name' => '',
-      'funding' => NULL,
+      'Id' => 1,
+      'Name' => '',
       'requirements' => NULL,
     ]);
     $plan_overview = new PlanOverviewPlan($minimal_data);
 
     $this->assertEquals(1, $plan_overview->id());
     $this->assertIsString($plan_overview->getName());
-    $this->assertEquals(0, $plan_overview->funding);
-    $this->assertEquals(0, $plan_overview->requirements);
-  }
-
-  /**
-   * Test invalid data structure handling.
-   */
-  public function testInvalidDataStructureHandling(): void {
-    // Test with missing funding and requirements objects.
-    $raw_data = $this->createMockRawData([
-      'id' => 123,
-      'name' => 'Test Plan',
-      'funding' => NULL,
-      'requirements' => NULL,
-    ]);
-    $plan_overview = new PlanOverviewPlan($raw_data);
-
-    $this->assertEquals(123, $plan_overview->id());
-    $this->assertEquals(0, $plan_overview->funding);
-    $this->assertEquals(0, $plan_overview->requirements);
+    $this->assertEquals(0, $plan_overview->getRequirements());
   }
 
   /**
