@@ -15,7 +15,7 @@ class PlanReportingPeriodTest extends PlanApiObjectKernelTestBase {
    * {@inheritdoc}
    */
   protected function createMockRawData(array $data_overrides = []): object {
-    $plan_reporting_period_defaults = [
+    $defaults = [
       'planId' => rand(1, 100),
       'periodNumber' => rand(1, 4),
       'measurementsGenerated' => TRUE,
@@ -23,7 +23,7 @@ class PlanReportingPeriodTest extends PlanApiObjectKernelTestBase {
       'endDate' => '2024-03-31',
     ];
 
-    $merged_overrides = array_merge($plan_reporting_period_defaults, $data_overrides);
+    $merged_overrides = array_merge($defaults, $data_overrides);
     return parent::createMockRawData($merged_overrides);
   }
 

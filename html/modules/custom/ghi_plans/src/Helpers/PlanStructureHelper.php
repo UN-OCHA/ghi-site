@@ -98,7 +98,7 @@ class PlanStructureHelper {
     /** @var \Drupal\ghi_plans\Plugin\FabricQuery\EntityPrototypeQuery $entity_prototype_query */
     $entity_prototype_query = self::getEntityPrototypeQuery();
     // Get the prototype data for analysis.
-    $prototype = $entity_prototype_query->getPlanPrototype($plan->getSourceId());
+    $prototype = $entity_prototype_query?->getPlanPrototype($plan->getSourceId());
     if (!$prototype) {
       return NULL;
     }
@@ -197,14 +197,13 @@ class PlanStructureHelper {
   /**
    * Get the entity prototype query.
    *
-   * @return \Drupal\ghi_plans\Plugin\FabricQuery\EntityPrototypeQuery
-   *   The entity prototype query.
+   * @return \Drupal\ghi_plans\Plugin\FabricQuery\EntityPrototypeQuery|null
+   *   The entity prototype query or NULL.
    */
-  private static function getEntityPrototypeQuery(): EntityPrototypeQuery {
+  private static function getEntityPrototypeQuery(): ?EntityPrototypeQuery {
     /** @var \Drupal\hpc_api\Query\FabricQueryManager $query_manager */
     $query_manager = \Drupal::service('plugin.manager.fabric_query_manager');
-    /** @var \Drupal\ghi_plans\Plugin\FabricQuery\EntityPrototypeQuery $query */
-    return $query_manager->createInstance('entity_prototype');
+    return $query_manager->hasDefinition('entity_prototype') ? $query_manager->createInstance('entity_prototype') : NULL;
   }
 
 }

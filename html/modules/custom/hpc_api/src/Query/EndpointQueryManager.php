@@ -23,7 +23,7 @@ class EndpointQueryManager extends DefaultPluginManager {
   /**
    * {@inheritdoc}
    */
-  public function createInstance($plugin_id, array $configuration = []) {
+  public function createInstance($plugin_id, array $configuration = []): EndpointQueryBase {
     /** @var \Drupal\hpc_api\Query\EndpointQueryBase $instance */
     $instance = parent::createInstance($plugin_id, $configuration);
     return $instance;
