@@ -11,6 +11,7 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\Element;
 use Drupal\ghi_base_objects\ApiObjects\Country;
 use Drupal\ghi_base_objects\Helpers\BaseObjectHelper;
+use Drupal\ghi_plans\ApiObjects\Organization;
 use Drupal\ghi_plans\Entity\GoverningEntity;
 use Drupal\ghi_plans\Entity\Plan;
 use Drupal\ghi_plans\Entity\PlanType;
@@ -187,6 +188,9 @@ function ghi_plans_migrate_plan_prepare_row(Row $row, MigrateSourceInterface $so
     throw new MigrateSkipRowException();
   }
 
+  $countries = array_map(fn(Country $country): array => $country->toArray(), $plan->getCountries());
+  $plan_organizations = array_map(fn(Organization $organization): string => $organization->getAbbreviation(), $plan->getPlanOrganizations());
+
   $row->setSourceProperty('released', $plan->isReleased());
   $row->setSourceProperty('is_part_of_gho', $plan->isPartOfGho());
   $row->setSourceProperty('name', $plan->getName());
@@ -200,24 +204,13 @@ function ghi_plans_migrate_plan_prepare_row(Row $row, MigrateSourceInterface $so
   $row->setSourceProperty('plan_created_date', $plan->getCreatedDate());
   $row->setSourceProperty('plan_updated_date', $plan->getUpdatedDate());
   $row->setSourceProperty('document_published_on', $plan->getDocumentPublishedDate());
-
   $row->setSourceProperty('plan_type_id', $plan->getPlanType()?->id());
   $row->setSourceProperty('plan_costing_id', $plan->getPlanCostingType()?->id());
-
   $row->setSourceProperty('plan_year', $plan->getYear());
-
-  $row->setSourceProperty('countries', array_map(fn(Country $country): array => $country->toArray(), $plan->getCountries()));
+  $row->setSourceProperty('plan_coordinator', $plan_organizations);
+  $row->setSourceProperty('countries', $countries);
   $row->setSourceProperty('focus_country_id', $plan->getFocusCountry()?->id());
 
-  // @codingStandardsIgnoreStart
-  // // Plan coordinator.
-  // if (!empty($plan->planVersion->coordinatingOrganizations)) {
-  //   $plan_coordinator = array_map(function ($organization) {
-  //     return $organization->abbreviation;
-  //   }, $plan->planVersion->coordinatingOrganizations);
-  //   $row->setSourceProperty('plan_coordinator', $plan_coordinator);
-  // }
-  // @codingStandardsIgnoreEnd
   unset($plan);
 }
 
