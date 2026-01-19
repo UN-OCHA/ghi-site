@@ -102,19 +102,15 @@ class GeoJsonSourcesControllerTest extends UnitTestCase {
     $reflection = new \ReflectionClass($this->controller);
 
     $fileSystemProperty = $reflection->getProperty('fileSystem');
-    $fileSystemProperty->setAccessible(TRUE);
     $this->assertInstanceOf(FileSystemInterface::class, $fileSystemProperty->getValue($this->controller));
 
     $geoJsonProperty = $reflection->getProperty('geojson');
-    $geoJsonProperty->setAccessible(TRUE);
     $this->assertInstanceOf(GeoJson::class, $geoJsonProperty->getValue($this->controller));
 
     $directoryListProperty = $reflection->getProperty('geojsonDirectoryList');
-    $directoryListProperty->setAccessible(TRUE);
     $this->assertInstanceOf(GeoJsonDirectoryList::class, $directoryListProperty->getValue($this->controller));
 
     $modalConfigProperty = $reflection->getProperty('modalConfig');
-    $modalConfigProperty->setAccessible(TRUE);
     $this->assertInstanceOf(Config::class, $modalConfigProperty->getValue($this->controller));
   }
 

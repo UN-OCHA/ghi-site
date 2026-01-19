@@ -670,7 +670,7 @@ abstract class HPCBlockBase extends BlockBase implements HPCPluginInterface, Con
         if (!is_scalar($context_value)) {
           continue;
         }
-        $query_handler->$setter_method($context->getContextValue());
+        $query_handler->$setter_method($context_value);
       }
     }
     elseif ($source_api == 'hpc_api' && $this->endpointQueryManager->hasDefinition($plugin_id)) {
@@ -688,7 +688,7 @@ abstract class HPCBlockBase extends BlockBase implements HPCPluginInterface, Con
         $context_value = $context->getContextValue();
         if (is_scalar($context_value)) {
           // Arguments like "year".
-          $query_handler->setPlaceholder($context_key, $context->getContextValue());
+          $query_handler->setPlaceholder($context_key, $context_value);
         }
         elseif ($context_value instanceof ContentEntityInterface && $context_value->hasField('field_original_id')) {
           // Arguments like "plan_id".

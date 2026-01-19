@@ -438,8 +438,8 @@ class PlanCaseloadTrendsTable extends GHIBlockBase implements OverrideDefaultTit
     }
 
     $plan_ids = array_filter(array_map(fn (Plan $plan): ?int => $plan->getSourceId(), $related_plans));
-    $caseloads_by_plan = $attachments_query->getAttachmentsByPlan($plan_ids, 'caseload');
-    $requirements_by_plan = $attachments_query->getAttachmentsByPlan($plan_ids, 'financial');
+    $caseloads_by_plan = $attachments_query?->getAttachmentsByPlan($plan_ids, 'caseload') ?? [];
+    $requirements_by_plan = $attachments_query?->getAttachmentsByPlan($plan_ids, 'financial') ?? [];
 
     foreach ($related_plans as $plan) {
       $plan_id = $plan->getSourceId();
@@ -477,7 +477,7 @@ class PlanCaseloadTrendsTable extends GHIBlockBase implements OverrideDefaultTit
         'reached' => $reached,
         'reached_percent' => $reached ? CommonHelper::calculateRatio($reached, $target) * 100 : NULL,
         'requirements' => $requirements instanceof FinancialAttachment ? $requirements->getRequirements() : NULL,
-        'funding' => $funding_data['total_funding'],
+        'funding' => $funding_data['total_funding'] ?? NULL,
         'coverage' => $requirements instanceof FinancialAttachment ? $requirements->getCoverage($funding_data['total_funding']) : NULL,
         'footnotes' => $plan ? $this->getFootnotesForPlanBaseobject($plan) : NULL,
       ];

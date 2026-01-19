@@ -128,13 +128,13 @@ class PlanEntityQuery extends FabricQueryBase {
     $payloads = [];
     if ($fetch_coordination_entities) {
       $payloads[] = "
-        coordinationEntities (first: 5000, filter: { PlanId: { eq: {$plan_id} } }) {
+        coordinationEntities (first: 5000, filter: { PlanId: { eq: {$plan_id} } RecordStatus: { eq: \"Active\" } }) {
           items { " . GoverningEntity::GRAPHQL_DIMENSION_ITEMS . " }
         }";
     }
     if ($fetch_logframe_entities) {
       $payloads[] = "
-        logframeEntities (first: 5000, filter: { PlanId: { eq: {$plan_id} } }) {
+        logframeEntities (first: 5000, filter: { PlanId: { eq: {$plan_id} } RecordStatus: { eq: \"Active\" } }) {
           items { " . PlanEntity::GRAPHQL_DIMENSION_ITEMS . " }
         }";
     }

@@ -6,6 +6,7 @@ use Drupal\Core\Form\FormState;
 use Drupal\ghi_blocks\Interfaces\OverrideDefaultTitleBlockInterface;
 use Drupal\ghi_blocks\Plugin\Block\Plan\PlanCaseloadTrendsTable;
 use Drupal\ghi_plans\ApiObjects\Attachments\CaseloadAttachment;
+use Drupal\ghi_plans\ApiObjects\Attachments\FinancialAttachment;
 use Drupal\ghi_plans\Plugin\EndpointQuery\PlanFundingSummaryQuery;
 use Drupal\ghi_plans\Plugin\FabricQuery\AttachmentQuery;
 use Drupal\hpc_downloads\Interfaces\HPCDownloadExcelInterface;
@@ -19,6 +20,8 @@ use Prophecy\Argument;
  * @group ghi_blocks
  */
 class PlanCaseloadTrendsTableTest extends PlanBlockKernelTestBase {
+
+  const PLAN_ID = 10;
 
   /**
    * Tests the block properties.
@@ -231,8 +234,24 @@ class PlanCaseloadTrendsTableTest extends PlanBlockKernelTestBase {
       ],
       'soft_limit' => 10,
     ];
-    $contexts = $this->getPlanSectionContexts(['field_year' => 2025]);
-    return $this->createBlockPlugin('plan_caseload_trends_table', $configuration, $contexts);
+    $contexts = $this->getPlanSectionContexts([
+      'field_original_id' => self::PLAN_ID,
+      'field_year' => 2025,
+    ]);
+
+    $plugin = $this->createBlockPlugin('plan_caseload_trends_table', $configuration, $contexts);
+
+    $plan_funding_query = $this->prophesize(PlanFundingSummaryQuery::class);
+    $attachment_query = $this->prophesize(AttachmentQuery::class);
+
+    $reflection = new \ReflectionClass($plugin);
+    $property = $reflection->getProperty('queryHandlers');
+    $property->setValue($plugin, [
+      'plan_funding' => $plan_funding_query->reveal(),
+      'attachment' => $attachment_query->reveal(),
+    ]);
+
+    return $plugin;
   }
 
   /**
@@ -245,17 +264,21 @@ class PlanCaseloadTrendsTableTest extends PlanBlockKernelTestBase {
     $plan_funding_query = $this->prophesize(PlanFundingSummaryQuery::class);
     $plan_funding_query->getData(Argument::cetera())->willReturn([
       'total_funding' => 1000,
-      'current_requirements' => 3000,
-      'funding_coverage' => 0.333,
     ]);
     $plugin->setQueryHandler('plan_funding', $plan_funding_query->reveal());
 
     $caseload = $this->prophesize(CaseloadAttachment::class);
-    $caseload->getFieldByType('inNeed')->willReturn((object) ['value' => 300]);
-    $caseload->getFieldByType('target')->willReturn((object) ['value' => 100]);
+    $caseload->getValueByMetricName('InNeed')->willReturn(300);
+    $caseload->getValueByMetricName('Target')->willReturn(100);
     $caseload->getCaseloadValue('latestReach')->willReturn(80);
+
+    $financial = $this->prophesize(FinancialAttachment::class);
+    $financial->getRequirements()->willReturn(3000);
+    $financial->getCoverage(1000)->willReturn(0.333);
+
     $attachment_query = $this->prophesize(AttachmentQuery::class);
-    $attachment_query->getAttachmentsByObject(Argument::cetera())->willReturn([$caseload->reveal()]);
+    $attachment_query->getAttachmentsByPlan(Argument::any(), 'caseload')->willReturn([self::PLAN_ID => [$caseload->reveal()]]);
+    $attachment_query->getAttachmentsByPlan(Argument::any(), 'financial')->willReturn([self::PLAN_ID => [$financial->reveal()]]);
     $plugin->setQueryHandler('attachment', $attachment_query->reveal());
   }
 

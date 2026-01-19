@@ -42,6 +42,8 @@ class LocationTest extends BaseObjectKernelTestBase {
    */
   protected function createMockRawData(array $data_overrides = []): object {
     $location_defaults = [
+      'id' => 1,
+      'name' => 'Test Location',
       'latitude' => '0.0',
       'longitude' => '0.0',
       'adminLevel' => 1,
