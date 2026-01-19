@@ -55,7 +55,7 @@ class GoverningEntity extends BaseObject implements BaseObjectChildInterface {
   public function getIconEmbedCode() {
     $entity = $this->getSourceObject();
     if ($entity && $icon = $entity->icon) {
-      return $this->getIconQuery()->getIconEmbedCode($icon);
+      return $this->getIconQuery()?->getIconEmbedCode($icon);
     }
     return NULL;
   }
@@ -67,29 +67,32 @@ class GoverningEntity extends BaseObject implements BaseObjectChildInterface {
    *   The entity object or NULL.
    */
   public function getSourceObject(): ?EntitiesGoverningEntity {
-    $entity = $this->getEntityQuery()->getEntity('governingEntity', $this->getSourceId());
+
+    $entity = $this->getPlanEntityQuery()?->getEntity('governingEntity', $this->getSourceId());
     assert($entity === NULL || $entity instanceof EntitiesGoverningEntity);
     return $entity;
   }
 
   /**
-   * Get the entity query.
+   * Get the plan entity query.
    *
-   * @return \Drupal\ghi_plans\Plugin\FabricQuery\EntityQuery
-   *   The entity query object.
+   * @return \Drupal\ghi_plans\Plugin\FabricQuery\PlanEntityQuery|null
+   *   The plan entity query object.
    */
-  private function getEntityQuery(): PlanEntityQuery {
-    return self::getFabricQueryManager()->createInstance('plan_entity');
+  private function getPlanEntityQuery(): ?PlanEntityQuery {
+    $fabric_query_manager = self::getFabricQueryManager();
+    return $fabric_query_manager->hasDefinition('plan_entity') ? $fabric_query_manager->createInstance('plan_entity') : NULL;
   }
 
   /**
    * Get the icon query.
    *
-   * @return \Drupal\hpc_api\Plugin\EndpointQuery\IconQuery
+   * @return \Drupal\hpc_api\Plugin\EndpointQuery\IconQuery|null
    *   The icon query object.
    */
-  private function getIconQuery(): IconQuery {
-    return self::getEndpointQueryManager()->createInstance('icon_query');
+  private function getIconQuery(): ?IconQuery {
+    $endpoint_query_manager = self::getEndpointQueryManager();
+    return $endpoint_query_manager->hasDefinition('icon_query') ? $endpoint_query_manager->createInstance('icon_query') : NULL;
   }
 
   /**

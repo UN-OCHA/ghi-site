@@ -16,6 +16,8 @@ class CountryTest extends BaseObjectKernelTestBase {
    */
   protected function createMockRawData(array $data_overrides = []): object {
     $country_defaults = [
+      'Id' => 123,
+      'Name' => 'Test Country',
       'latitude' => '0.0',
       'longitude' => '0.0',
     ];
@@ -47,6 +49,7 @@ class CountryTest extends BaseObjectKernelTestBase {
     $this->assertEquals(['12.345', '67.890'], $country->getLatLng());
 
     $this->assertEquals('country', $country->getBundle());
+    $this->assertEquals(123, $country->id());
     $this->assertEquals('Test Country', $country->getName());
   }
 
