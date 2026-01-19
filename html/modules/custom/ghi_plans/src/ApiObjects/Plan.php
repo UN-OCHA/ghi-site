@@ -40,14 +40,13 @@ class Plan extends BaseObject implements PlanEntityInterface {
     FocusedLocationName
     FocusedLocationId
     planPeriod {
-      items {
-        period {
-            CalendarYear
-        }
-      }
+      items { period { CalendarYear } }
     }
     planLocation {
       items { location { ' . Country::GRAPHQL_DIMENSION_ITEMS . ' } }
+    }
+    planOrganization (filter: { RecordStatus: { eq: "Active" } } ) {
+      items { organization { ' . Organization::GRAPHQL_DIMENSION_ITEMS . ' } }
     }
   ';
 
@@ -84,6 +83,7 @@ class Plan extends BaseObject implements PlanEntityInterface {
       'is_part_of_gho' => $data->IsPartOfGHO ?? FALSE,
       'langcode' => $data->PlanLanguageCode ?? 'en',
       'countries' => array_map(fn ($item) => new Country($item->location), $data->planLocation?->items ?? []),
+      'organizations' => array_map(fn ($item) => new Organization($item->organization), $data->planOrganization?->items ?? []),
       'focus_country' => $data->FocusCountry,
     ];
   }
@@ -295,6 +295,16 @@ class Plan extends BaseObject implements PlanEntityInterface {
    */
   public function getCountries(): array {
     return $this->map->countries;
+  }
+
+  /**
+   * Get the plan organizations.
+   *
+   * @return \Drupal\ghi_plans\ApiObjects\Organization[]
+   *   An array of organization objects.
+   */
+  public function getPlanOrganizations(): array {
+    return $this->map->organizations;
   }
 
   /**
