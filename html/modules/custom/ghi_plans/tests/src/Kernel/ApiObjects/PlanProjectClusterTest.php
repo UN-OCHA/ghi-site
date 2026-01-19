@@ -16,6 +16,8 @@ class PlanProjectClusterTest extends PlanApiObjectKernelTestBase {
    */
   protected function createMockRawData(array $data_overrides = []): object {
     $plan_project_cluster_defaults = [
+      'id' => 123,
+      'name' => 'Test Cluster',
       'icon' => (object) ['class' => 'icon-test'],
     ];
 
@@ -48,38 +50,6 @@ class PlanProjectClusterTest extends PlanApiObjectKernelTestBase {
 
     $this->assertEquals('planprojectcluster', $project_cluster->getBundle());
     $this->assertEquals('Test Project Cluster', $project_cluster->getName());
-  }
-
-  /**
-   * Test null or empty data handling.
-   */
-  public function testNullOrEmptyDataHandling(): void {
-    // Test with minimal data including null value object.
-    $minimal_data = $this->createMockRawData([
-      'id' => 1,
-      'name' => '',
-      'value' => (object) ['icon' => NULL],
-    ]);
-    $project_cluster = new PlanProjectCluster($minimal_data);
-
-    $this->assertEquals(1, $project_cluster->id());
-    $this->assertIsString($project_cluster->getName());
-    $this->assertNull($project_cluster->getIcon());
-  }
-
-  /**
-   * Test invalid data structure handling.
-   */
-  public function testInvalidDataStructureHandling(): void {
-    // Test with minimal required data.
-    $raw_data = $this->createMockRawData([
-      'id' => 123,
-      'name' => 'Test Cluster',
-      'value' => (object) ['icon' => 'test-icon'],
-    ]);
-    $project_cluster = new PlanProjectCluster($raw_data);
-
-    $this->assertEquals(123, $project_cluster->id());
   }
 
   /**

@@ -407,10 +407,10 @@ class PlanGoverningEntitiesTable extends GHIBlockBase implements ConfigurableTab
    * @return \Drupal\ghi_plans\ApiObjects\Entities\EntityObjectInterface[]
    *   An array of entity objects, aka clusters.
    */
-  private function getEntityObjects() {
+  private function getEntityObjects(): array {
     /** @var \Drupal\ghi_plans\Plugin\FabricQuery\PlanEntityQuery $query */
     $query = $this->getQueryHandler('entities');
-    return $query->getPlanEntities($this->getCurrentPlanId(), $this->getPageNode(), 'governing');
+    return $query?->getPlanEntities($this->getCurrentPlanId(), $this->getPageNode(), 'governing') ?? [];
   }
 
   /**
