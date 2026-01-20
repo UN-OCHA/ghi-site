@@ -336,10 +336,12 @@ class AttachmentData extends ConfigurationContainerItemPluginBase {
 
     if ($original_attachment) {
       // Let's see if we can find an alternative attachment.
-      /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\PlanEntitiesQuery $query */
-      $query = $this->endpointQueryManager->createInstance('plan_entities_query');
-      $query->setPlaceholder('plan_id', $plan->getSourceId());
-      $attachments = $query->getDataAttachments($this->getContextValue('base_object'));
+      /** @var \Drupal\ghi_plans\Plugin\FabricQuery\AttachmentQuery $query */
+      $query = $this->fabricQueryManager->createInstance('attachment');
+      $attachments = $query->getAttachmentsForPlan($plan->getSourceId(), $this->getContextValue('base_object'), [
+        'caseload',
+        'indicator',
+      ]);
       $filtered_attachments = AttachmentMatcher::matchDataAttachments($original_attachment, $attachments);
 
       // Use the default plan caseload if available.
