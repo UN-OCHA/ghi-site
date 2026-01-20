@@ -29,6 +29,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  *  admin_label = @Translation("Governing Entities Caseloads Table"),
  *  category = @Translation("Plan elements"),
  *  data_sources = {
+ *    "entities" = "fabric_query:plan_entity",
  *    "attachment" = "fabric_query:attachment",
  *    "attachment_prototype" = "fabric_query:attachment_prototype",
  *  },

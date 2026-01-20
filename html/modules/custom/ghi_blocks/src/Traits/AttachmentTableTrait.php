@@ -25,9 +25,10 @@ trait AttachmentTableTrait {
    *   An array of entity objects, aka clusters.
    */
   public function getEntityObjects() {
-    /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\PlanEntitiesQuery $query */
+    /** @var \Drupal\ghi_plans\Plugin\FabricQuery\PlanEntityQuery $query */
     $query = $this->getQueryHandler('entities');
-    return $query->getPlanEntities($this->getPageNode(), 'governing');
+    $plan_id = $this->getCurrentPlanId();
+    return $query->getPlanEntities($plan_id, $this->getPageNode(), 'governing');
   }
 
   /**
