@@ -31,7 +31,7 @@ class AttachmentMatcher {
         // Check the attachment type, e.g. "caseload" vs "indicator".
         return FALSE;
       }
-      if ($original_attachment->source->entity_type != $attachment->source->entity_type) {
+      if ($original_attachment->getSourceEntityType() != $attachment->getSourceEntityType()) {
         // Check the source entity type, e.g. "governingEntity" vs "plan".
         return FALSE;
       }

@@ -2,20 +2,21 @@
 
 namespace Drupal\hpc_api\Plugin\migrate_plus\data_parser;
 
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\hpc_api\Plugin\migrate_plus\data_fetcher\FabricHttp;
 use Drupal\hpc_api\Query\FabricQueryPluginInterface;
+use Drupal\migrate_plus\Attribute\DataParser;
 use Drupal\migrate_plus\DataFetcherPluginManager;
 use Drupal\migrate_plus\Plugin\migrate_plus\data_parser\Json;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Obtain JSON data for migration.
- *
- * @DataParser(
- *   id = "fabric_graphql",
- *   title = @Translation("Fabric GraphQL")
- * )
  */
+#[DataParser(
+  id: 'fabric_graphql',
+  title: new TranslatableMarkup('Fabric GraphQL')
+)]
 class FabricGraphQl extends Json {
 
   /**

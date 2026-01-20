@@ -9,7 +9,6 @@ use Drupal\Core\Url;
 use Drupal\ghi_blocks\Traits\ConfigurationItemValuePreviewTrait;
 use Drupal\ghi_form_elements\ConfigurationContainerItemPluginBase;
 use Drupal\ghi_plans\Entity\Plan;
-use Drupal\ghi_plans\Helpers\PlanStructureHelper;
 use Drupal\hpc_common\Helpers\TaxonomyHelper;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -27,13 +26,6 @@ class OrganizationProjectCounter extends ConfigurationContainerItemPluginBase {
   use ConfigurationItemValuePreviewTrait;
 
   /**
-   * The plan entities query.
-   *
-   * @var \Drupal\ghi_plans\Plugin\EndpointQuery\PlanEntitiesQuery
-   */
-  public $planEntitiesQuery;
-
-  /**
    * The project search query.
    *
    * @var \Drupal\ghi_plans\Plugin\EndpointQuery\PlanProjectSearchQuery
@@ -41,21 +33,12 @@ class OrganizationProjectCounter extends ConfigurationContainerItemPluginBase {
   public $projectSearchQuery;
 
   /**
-   * The funding query.
-   *
-   * @var \Drupal\ghi_plans\Plugin\EndpointQuery\ClusterQuery
-   */
-  public $clusterQuery;
-
-  /**
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition): OrganizationProjectCounter {
     /** @var self $instance */
     $instance = parent::create($container, $configuration, $plugin_id, $plugin_definition);
-    $instance->planEntitiesQuery = $instance->endpointQueryManager->createInstance('plan_entities_query');
     $instance->projectSearchQuery = $instance->endpointQueryManager->createInstance('plan_project_search_query');
-    $instance->clusterQuery = $instance->endpointQueryManager->createInstance('cluster_query');
     return $instance;
   }
 
@@ -172,20 +155,6 @@ class OrganizationProjectCounter extends ConfigurationContainerItemPluginBase {
       ],
     ];
     return $modal_link;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function setContext($context) {
-    parent::setContext($context);
-
-    // Also set cluster context if the current page is a plan entity.
-    $base_object = $context['base_object'] ?? NULL;
-    if ($base_object && $base_object->bundle() == 'plan_entity' && $this->projectSearchQuery) {
-      $cluster_ids = PlanStructureHelper::getPlanEntityStructure($this->planEntitiesQuery->getData());
-      $this->projectSearchQuery->setFilterByClusterIds($cluster_ids);
-    }
   }
 
   /**
