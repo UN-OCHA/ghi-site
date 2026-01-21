@@ -4,10 +4,12 @@ namespace Drupal\ghi_blocks\Plugin\ConfigurationContainerItem;
 
 use Drupal\Component\Utility\Html;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\ghi_base_objects\Entity\BaseObjectInterface;
 use Drupal\ghi_blocks\Traits\ConfigurationItemClusterRestrictTrait;
 use Drupal\ghi_blocks\Traits\ConfigurationItemValuePreviewTrait;
 use Drupal\ghi_blocks\Traits\PlanFootnoteTrait;
+use Drupal\ghi_form_elements\Attribute\ConfigurationContainerItem;
 use Drupal\ghi_form_elements\ConfigurationContainerItemPluginBase;
 use Drupal\ghi_plans\ApiObjects\Attachments\FinancialAttachment;
 use Drupal\ghi_plans\Entity\GoverningEntity;
@@ -27,13 +29,12 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  *   cluster restriction form element in configuration.
  *
  * @todo This is still missing support for special requirements logic.
- *
- * @ConfigurationContainerItem(
- *   id = "funding_data",
- *   label = @Translation("Financial data"),
- *   description = @Translation("Using the Financial data item, you can add funding and requirements data to this block. You can choose between different ways of displaying the data and do calculations. You can also override the default label."),
- * )
  */
+#[ConfigurationContainerItem(
+  id: 'funding_data',
+  label: new TranslatableMarkup('Financial data'),
+  description: new TranslatableMarkup('Using the Financial data item, you can add funding and requirements data to this block. You can choose between different ways of displaying the data and do calculations. You can also override the default label.'),
+)]
 class FundingData extends ConfigurationContainerItemPluginBase {
 
   use ConfigurationItemClusterRestrictTrait;

@@ -4,8 +4,10 @@ namespace Drupal\ghi_blocks\Plugin\ConfigurationContainerItem;
 
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\Markup;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\ghi_blocks\Helpers\AttachmentMatcher;
 use Drupal\ghi_blocks\Traits\PlanFootnoteTrait;
+use Drupal\ghi_form_elements\Attribute\ConfigurationContainerItem;
 use Drupal\ghi_form_elements\ConfigurationContainerItemPluginBase;
 use Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment;
 use Drupal\ghi_plans\Entity\Plan;
@@ -16,13 +18,12 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Provides an attachment data item for configuration containers.
- *
- * @ConfigurationContainerItem(
- *   id = "attachment_data",
- *   label = @Translation("Attachment data"),
- *   description = @Translation("This item displays a single metric or measurement item from a selected attachment."),
- * )
  */
+#[ConfigurationContainerItem(
+  id: 'attachment_data',
+  label: new TranslatableMarkup('Attachment data'),
+  description: new TranslatableMarkup('This item displays a single metric or measurement item from a selected attachment.'),
+)]
 class AttachmentData extends ConfigurationContainerItemPluginBase {
 
   use PlanFootnoteTrait;
@@ -228,7 +229,7 @@ class AttachmentData extends ConfigurationContainerItemPluginBase {
     $build = $attachment->formatValue($data_point_conf);
 
     $data_point_index = $data_point_conf['data_points'][0]['index'];
-    $property = $attachment->field_types[$data_point_index] ?? NULL;
+    $property = $attachment->getFieldTypes()[$data_point_index] ?? NULL;
     if ($attachment->isCalculatedIndex($data_point_index) && $source = $attachment->getSourceTypeForCalculatedField($data_point_index)) {
       $property = StringHelper::camelCaseToUnderscoreCase($source);
     }

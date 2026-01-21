@@ -8,7 +8,9 @@ use Drupal\Core\Ajax\HtmlCommand;
 use Drupal\Core\Cache\Cache;
 use Drupal\Core\DependencyInjection\DependencySerializationTrait;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\ghi_content\Entity\Article;
+use Drupal\ghi_form_elements\Attribute\ConfigurationContainerItem;
 use Drupal\ghi_form_elements\ConfigurationContainerItemCustomActionsInterface;
 use Drupal\ghi_form_elements\ConfigurationContainerItemPluginBase;
 use Drupal\ghi_form_elements\Helpers\FormElementHelper;
@@ -20,13 +22,12 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Provides an article collection item for configuration containers.
- *
- * @ConfigurationContainerItem(
- *   id = "article_collection",
- *   label = @Translation("Article collection"),
- *   description = @Translation("This item allows the selection of articles based on their tags."),
- * )
  */
+#[ConfigurationContainerItem(
+  id: 'article_collection',
+  label: new TranslatableMarkup('Article collection'),
+  description: new TranslatableMarkup('This item allows the selection of articles based on their tags.'),
+)]
 class ArticleCollection extends ConfigurationContainerItemPluginBase implements ConfigurationContainerItemCustomActionsInterface {
 
   use SectionTrait;

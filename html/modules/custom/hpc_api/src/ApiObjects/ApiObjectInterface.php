@@ -23,4 +23,12 @@ interface ApiObjectInterface {
    */
   public function getRawData();
 
+  /**
+   * Represent this as an array.
+   *
+   * @return array
+   *   The mapped data as an array.
+   */
+  public function toArray();
+
 }

@@ -73,3 +73,13 @@ ghi_plans.modal_content.organization_projects:
         type: entity:base_object
       organization_id:
         type: integer
+
+ghi_plans.attachment_lookup:
+  path: '/admin/reports/fabric/attachment-lookup'
+  defaults:
+    _form: '\Drupal\ghi_plans\Form\AttachmentLookupForm'
+    _title: 'Attachment lookup'
+  requirements:
+    _permission: 'access site reports'
+  options:
+    _admin_route: TRUE

@@ -5,8 +5,10 @@ namespace Drupal\ghi_blocks\Plugin\ConfigurationContainerItem;
 use Drupal\Component\Serialization\Json;
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Link;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\Url;
 use Drupal\ghi_blocks\Traits\ConfigurationItemValuePreviewTrait;
+use Drupal\ghi_form_elements\Attribute\ConfigurationContainerItem;
 use Drupal\ghi_form_elements\ConfigurationContainerItemPluginBase;
 use Drupal\ghi_plans\Entity\Plan;
 use Drupal\hpc_common\Helpers\TaxonomyHelper;
@@ -14,13 +16,12 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Provides an organization projects counter item for configuration containers.
- *
- * @ConfigurationContainerItem(
- *   id = "organization_project_counter",
- *   label = @Translation("Project counter"),
- *   description = @Translation("This item displays a project counter per organization."),
- * )
  */
+#[ConfigurationContainerItem(
+  id: 'organization_project_counter',
+  label: new TranslatableMarkup('Project counter'),
+  description: new TranslatableMarkup('This item displays a project counter per organization.'),
+)]
 class OrganizationProjectCounter extends ConfigurationContainerItemPluginBase {
 
   use ConfigurationItemValuePreviewTrait;

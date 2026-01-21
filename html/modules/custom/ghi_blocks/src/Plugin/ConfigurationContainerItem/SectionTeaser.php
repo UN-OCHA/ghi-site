@@ -4,18 +4,19 @@ namespace Drupal\ghi_blocks\Plugin\ConfigurationContainerItem;
 
 use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\ghi_form_elements\Attribute\ConfigurationContainerItem;
 use Drupal\ghi_form_elements\ConfigurationContainerItemPluginBase;
 use Drupal\ghi_sections\Entity\SectionNodeInterface;
 
 /**
  * Provides a section teaser item for configuration containers.
- *
- * @ConfigurationContainerItem(
- *   id = "section_teaser",
- *   label = @Translation("Section"),
- *   description = @Translation("This item displays a section teaser."),
- * )
  */
+#[ConfigurationContainerItem(
+  id: 'section_teaser',
+  label: new TranslatableMarkup('Section'),
+  description: new TranslatableMarkup('This item displays a section teaser.'),
+)]
 class SectionTeaser extends ConfigurationContainerItemPluginBase {
 
   /**
