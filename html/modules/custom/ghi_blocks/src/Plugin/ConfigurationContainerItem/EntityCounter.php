@@ -6,25 +6,26 @@ use Drupal\Component\Utility\Html;
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\Markup;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\ghi_blocks\Traits\ConfigurationItemValuePreviewTrait;
+use Drupal\ghi_form_elements\Attribute\ConfigurationContainerItem;
 use Drupal\ghi_form_elements\ConfigurationContainerItemPluginBase;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Provides an entity counter item for configuration containers.
  *
- * This item type allows the following options when using as part of a
+ * This item type allows the following options when used as part of a
  * configuration container:
  * - entity_type: Sets a preselected entity type and hides the entity type
  *   select element.
  * - value_preview: If set and set to FALSE, will hide the value preview.
- *
- * @ConfigurationContainerItem(
- *   id = "entity_counter",
- *   label = @Translation("Entity counter"),
- *   description = @Translation("This item displays the number of entities of a specific type."),
- * )
  */
+#[ConfigurationContainerItem(
+  id: 'entity_counter',
+  label: new TranslatableMarkup('Entity counter'),
+  description: new TranslatableMarkup('This item displays the number of entities of a specific type.'),
+)]
 class EntityCounter extends ConfigurationContainerItemPluginBase {
 
   use ConfigurationItemValuePreviewTrait;

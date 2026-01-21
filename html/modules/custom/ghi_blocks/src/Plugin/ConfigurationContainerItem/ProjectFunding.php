@@ -4,21 +4,22 @@ namespace Drupal\ghi_blocks\Plugin\ConfigurationContainerItem;
 
 use Drupal\Component\Utility\Html;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\ghi_blocks\Traits\ConfigurationItemClusterRestrictTrait;
 use Drupal\ghi_blocks\Traits\ConfigurationItemValuePreviewTrait;
+use Drupal\ghi_form_elements\Attribute\ConfigurationContainerItem;
 use Drupal\ghi_form_elements\ConfigurationContainerItemPluginBase;
 use Drupal\hpc_common\Traits\RenderArrayTrait;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Provides project funding items for configuration containers.
- *
- * @ConfigurationContainerItem(
- *   id = "project_funding",
- *   label = @Translation("Project funding"),
- *   description = @Translation("This item displays project funding information."),
- * )
  */
+#[ConfigurationContainerItem(
+  id: 'project_funding',
+  label: new TranslatableMarkup('Project funding'),
+  description: new TranslatableMarkup('This item displays project funding information.'),
+)]
 class ProjectFunding extends ConfigurationContainerItemPluginBase {
 
   use ConfigurationItemClusterRestrictTrait;

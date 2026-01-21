@@ -3,10 +3,12 @@
 namespace Drupal\hpc_api\Plugin\migrate_plus\data_fetcher;
 
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\hpc_api\Helpers\ApiEntityHelper;
 use Drupal\hpc_api\Helpers\QueryHelper;
 use Drupal\hpc_api\Query\EndpointQuery;
 use Drupal\migrate\MigrateException;
+use Drupal\migrate_plus\Attribute\DataFetcher;
 use Drupal\migrate_plus\Plugin\migrate_plus\data_fetcher\Http;
 use GuzzleHttp\Exception\RequestException;
 use Psr\Http\Message\ResponseInterface;
@@ -33,6 +35,10 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  *   title = @Translation("HPC API HTTP")
  * )
  */
+#[DataFetcher(
+  id: 'hpc_api_http',
+  title: new TranslatableMarkup('HPC API HTTP')
+)]
 class ApiHttp extends Http implements ContainerFactoryPluginInterface {
 
   /**

@@ -4,8 +4,10 @@ namespace Drupal\ghi_blocks\Plugin\ConfigurationContainerItem;
 
 use Drupal\Component\Utility\SortArray;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\ghi_blocks\Interfaces\AttachmentTableInterface;
 use Drupal\ghi_blocks\Traits\AttachmentTableTrait;
+use Drupal\ghi_form_elements\Attribute\ConfigurationContainerItem;
 use Drupal\ghi_form_elements\ConfigurationContainerItemCustomActionsInterface;
 use Drupal\ghi_form_elements\ConfigurationContainerItemPluginBase;
 use Drupal\ghi_form_elements\Traits\ConfigurationContainerItemCustomActionTrait;
@@ -18,13 +20,12 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Provides an attachment table item for configuration containers.
- *
- * @ConfigurationContainerItem(
- *   id = "attachment_table",
- *   label = @Translation("Attachment table"),
- *   description = @Translation("This item allows the creation of attachment tables."),
- * )
  */
+#[ConfigurationContainerItem(
+  id: 'attachment_table',
+  label: new TranslatableMarkup('Attachment table'),
+  description: new TranslatableMarkup('This item allows the creation of attachment tables.'),
+)]
 class AttachmentTable extends ConfigurationContainerItemPluginBase implements ConfigurationContainerItemCustomActionsInterface, AttachmentTableInterface {
 
   use ConfigurationContainerTrait;

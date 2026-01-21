@@ -3,8 +3,10 @@
 namespace Drupal\hpc_api\Plugin\migrate_plus\data_fetcher;
 
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\hpc_api\Query\ImportQueryInterface;
 use Drupal\migrate\MigrateException;
+use Drupal\migrate_plus\Attribute\DataFetcher;
 use Drupal\migrate_plus\Plugin\migrate_plus\data_fetcher\Http;
 use GuzzleHttp\Exception\RequestException;
 use GuzzleHttp\Psr7\Response;
@@ -26,12 +28,11 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  *     Authorization-Key: secret
  *     Arbitrary-Header: foobarbaz
  * @endcode
- *
- * @DataFetcher(
- *   id = "fabric_http",
- *   title = @Translation("Fabric HTTP")
- * )
  */
+#[DataFetcher(
+  id: 'fabric_http',
+  title: new TranslatableMarkup('Fabric HTTP')
+)]
 class FabricHttp extends Http implements ContainerFactoryPluginInterface {
 
   /**

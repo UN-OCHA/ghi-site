@@ -9,8 +9,8 @@ use Drupal\Core\Render\Element;
 use Drupal\Core\Render\Element\FormElementBase;
 use Drupal\Core\Render\Markup;
 use Drupal\ghi_form_elements\Traits\AjaxElementTrait;
-use Drupal\ghi_plans\Plugin\FabricQuery\AttachmentQuery;
 use Drupal\ghi_plans\Traits\AttachmentFilterTrait;
+use Drupal\ghi_plans\Traits\PlanQueryTrait;
 use Drupal\hpc_api\Helpers\ArrayHelper;
 use Drupal\hpc_api\Traits\SimpleCacheTrait;
 
@@ -23,6 +23,7 @@ class AttachmentSelect extends FormElementBase {
   use AjaxElementTrait;
   use SimpleCacheTrait;
   use AttachmentFilterTrait;
+  use PlanQueryTrait;
 
   /**
    * {@inheritdoc}
@@ -440,36 +441,6 @@ class AttachmentSelect extends FormElementBase {
    */
   private static function getEndpointQueryManager() {
     return \Drupal::service('plugin.manager.endpoint_query_manager');
-  }
-
-  /**
-   * Get the fabric query manager service.
-   *
-   * @return \Drupal\hpc_api\Query\FabricQueryManager
-   *   The fabric query manager service.
-   */
-  private static function getFabricQueryManager() {
-    return \Drupal::service('plugin.manager.fabric_query_manager');
-  }
-
-  /**
-   * Get the attachment query service.
-   *
-   * @return \Drupal\ghi_plans\Plugin\FabricQuery\AttachmentQuery
-   *   The attachment query plugin.
-   */
-  public static function getAttachmentQuery(): AttachmentQuery {
-    return self::getFabricQueryManager()->createInstance('attachment');
-  }
-
-  /**
-   * Get the plan entity query service.
-   *
-   * @return \Drupal\ghi_plans\Plugin\FabricQuery\PlanEntityQuery
-   *   The plan entities query plugin.
-   */
-  public static function getPlanEntityQuery() {
-    return self::getFabricQueryManager()->createInstance('plan_entity');
   }
 
 }

@@ -4,8 +4,7 @@ namespace Drupal\ghi_plans\Helpers;
 
 use Drupal\ghi_plans\ApiObjects\Entities\PlanEntity;
 use Drupal\ghi_plans\Entity\Plan;
-use Drupal\ghi_plans\Plugin\FabricQuery\EntityPrototypeQuery;
-use Drupal\ghi_plans\Plugin\FabricQuery\PlanEntityQuery;
+use Drupal\ghi_plans\Traits\PlanQueryTrait;
 use Drupal\hpc_api\Helpers\ApiEntityHelper;
 
 /**
@@ -14,6 +13,8 @@ use Drupal\hpc_api\Helpers\ApiEntityHelper;
  * @phpcs:disable DrupalPractice.FunctionCalls.InsecureUnserialize
  */
 class PlanStructureHelper {
+
+  use PlanQueryTrait;
 
   /**
    * Retrieve the plan entity structure based on the given plan id.
@@ -179,31 +180,6 @@ class PlanStructureHelper {
     }
 
     return $plan_structures[$plan->id()];
-  }
-
-  /**
-   * Get the plan entity query.
-   *
-   * @return \Drupal\ghi_plans\Plugin\FabricQuery\PlanEntityQuery
-   *   The plan entity query.
-   */
-  private static function getPlanEntityQuery(): PlanEntityQuery {
-    /** @var \Drupal\hpc_api\Query\FabricQueryManager $query_manager */
-    $query_manager = \Drupal::service('plugin.manager.fabric_query_manager');
-    /** @var \Drupal\ghi_plans\Plugin\FabricQuery\PlanEntityQuery $query */
-    return $query_manager->createInstance('plan_entity');
-  }
-
-  /**
-   * Get the entity prototype query.
-   *
-   * @return \Drupal\ghi_plans\Plugin\FabricQuery\EntityPrototypeQuery|null
-   *   The entity prototype query or NULL.
-   */
-  private static function getEntityPrototypeQuery(): ?EntityPrototypeQuery {
-    /** @var \Drupal\hpc_api\Query\FabricQueryManager $query_manager */
-    $query_manager = \Drupal::service('plugin.manager.fabric_query_manager');
-    return $query_manager->hasDefinition('entity_prototype') ? $query_manager->createInstance('entity_prototype') : NULL;
   }
 
 }

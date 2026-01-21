@@ -4,6 +4,8 @@ namespace Drupal\ghi_blocks\Plugin\ConfigurationContainerItem;
 
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\Markup;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\ghi_form_elements\Attribute\ConfigurationContainerItem;
 use Drupal\ghi_form_elements\ConfigurationContainerItemPluginBase;
 use Drupal\ghi_form_elements\Helpers\FormElementHelper;
 use Drupal\ghi_plans\ApiObjects\Prototypes\AttachmentPrototype;
@@ -13,13 +15,12 @@ use Drupal\hpc_common\Helpers\ThemeHelper;
 
 /**
  * Provides a sparkline chart item for configuration containers.
- *
- * @ConfigurationContainerItem(
- *   id = "spark_line_chart",
- *   label = @Translation("Spark line chart"),
- *   description = @Translation("This item displays a spark line chart for multiple periods of a measurement data point."),
- * )
  */
+#[ConfigurationContainerItem(
+  id: 'spark_line_chart',
+  label: new TranslatableMarkup('Spark line chart'),
+  description: new TranslatableMarkup('This item displays a spark line chart for multiple periods of a measurement data point.'),
+)]
 class SparkLineChart extends ConfigurationContainerItemPluginBase {
 
   const ITEM_TYPE = 'chart';

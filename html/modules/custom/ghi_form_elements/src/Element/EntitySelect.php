@@ -13,10 +13,8 @@ use Drupal\ghi_plans\ApiObjects\Entities\GoverningEntity;
 use Drupal\ghi_plans\ApiObjects\Plan as ApiObjectsPlan;
 use Drupal\ghi_plans\Entity\Plan;
 use Drupal\ghi_plans\Helpers\PlanStructureHelper;
-use Drupal\ghi_plans\Plugin\FabricQuery\PlanEntityQuery;
-use Drupal\ghi_plans\Plugin\FabricQuery\PlanQuery;
+use Drupal\ghi_plans\Traits\PlanQueryTrait;
 use Drupal\hpc_api\Query\EndpointQueryManager;
-use Drupal\hpc_api\Query\FabricQueryManager;
 use Drupal\hpc_common\Helpers\NodeHelper;
 
 /**
@@ -26,6 +24,7 @@ use Drupal\hpc_common\Helpers\NodeHelper;
 class EntitySelect extends FormElementBase {
 
   use AjaxElementTrait;
+  use PlanQueryTrait;
 
   /**
    * {@inheritdoc}
@@ -287,38 +286,6 @@ class EntitySelect extends FormElementBase {
    */
   private static function getEndpointQueryManager(): EndpointQueryManager {
     return \Drupal::service('plugin.manager.endpoint_query_manager');
-  }
-
-  /**
-   * Get the fabric query manager service.
-   *
-   * @return \Drupal\hpc_api\Query\FabricQueryManager
-   *   The fabric query manager service.
-   */
-  private static function getFabricQueryManager(): FabricQueryManager {
-    return \Drupal::service('plugin.manager.fabric_query_manager');
-  }
-
-  /**
-   * Get the plan entity query service.
-   *
-   * @return \Drupal\ghi_plans\Plugin\FabricQuery\PlanEntityQuery
-   *   The plan entity query plugin.
-   */
-  public static function getPlanEntityQuery(): PlanEntityQuery {
-    $query_handler = self::getFabricQueryManager()->createInstance('plan_entity');
-    return $query_handler;
-  }
-
-  /**
-   * Get the plan query service.
-   *
-   * @return \Drupal\ghi_plans\Plugin\FabricQuery\PlanQuery
-   *   The plan query plugin.
-   */
-  public static function getPlanQuery(): PlanQuery {
-    $query_handler = self::getFabricQueryManager()->createInstance('plan');
-    return $query_handler;
   }
 
   /**

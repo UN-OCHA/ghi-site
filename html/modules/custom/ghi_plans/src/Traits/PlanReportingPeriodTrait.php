@@ -3,12 +3,13 @@
 namespace Drupal\ghi_plans\Traits;
 
 use Drupal\ghi_plans\ApiObjects\Plan;
-use Drupal\ghi_plans\Plugin\FabricQuery\PlanQuery;
 
 /**
  * Trait to help with retrieving reporting periods for a plan.
  */
 trait PlanReportingPeriodTrait {
+
+  use PlanQueryTrait;
 
   /**
    * Get a single specified reporting period object for the given plan.
@@ -69,12 +70,7 @@ trait PlanReportingPeriodTrait {
    *   The id of the latest published reporting period.
    */
   public static function getLatestPublishedReportingPeriod(int $plan_id) {
-    /** @var \Drupal\ghi_plans\Plugin\FabricQuery\PlanQuery $query */
-    $query = self::getFabricQueryManager()->createInstance('plan');
-    if (!$query instanceof PlanQuery) {
-      return NULL;
-    }
-    $plan = $query->getPlan($plan_id);
+    $plan = self::getPlanQuery()?->getPlan($plan_id);
     return $plan instanceof Plan ? $plan->getLastPublishedReportingPeriodId() : NULL;
   }
 
@@ -86,16 +82,6 @@ trait PlanReportingPeriodTrait {
    */
   private static function getEndpointQueryManager() {
     return \Drupal::service('plugin.manager.endpoint_query_manager');
-  }
-
-  /**
-   * Get the fabric query manager service.
-   *
-   * @return \Drupal\hpc_api\Query\FabricQueryManager
-   *   The fabric query manager service.
-   */
-  private static function getFabricQueryManager() {
-    return \Drupal::service('plugin.manager.fabric_query_manager');
   }
 
 }

@@ -10,10 +10,11 @@ use Drupal\ghi_base_objects\Entity\BaseObjectInterface;
 use Drupal\ghi_base_objects\Helpers\BaseObjectHelper;
 use Drupal\ghi_plans\ApiObjects\Facts\AttachmentFact;
 use Drupal\ghi_plans\ApiObjects\Measurements\Measurement;
+use Drupal\ghi_plans\ApiObjects\Prototypes\AttachmentPrototype;
 use Drupal\ghi_plans\Entity\Plan;
 use Drupal\ghi_plans\Exceptions\InvalidAttachmentTypeException;
 use Drupal\ghi_plans\Helpers\PlanEntityHelper;
-use Drupal\ghi_plans\Plugin\FabricQuery\AttachmentPrototypeQuery;
+use Drupal\ghi_plans\Traits\PlanQueryTrait;
 use Drupal\ghi_plans\Traits\PlanReportingPeriodTrait;
 use Drupal\hpc_api\ApiObjects\Types\Unit;
 use Drupal\hpc_api\Query\EndpointQuery;
@@ -30,6 +31,7 @@ class DataAttachment extends AttachmentBase implements DataAttachmentInterface {
   use SimpleCacheTrait;
   use DateTimeTrait;
   use StringTranslationTrait;
+  use PlanQueryTrait;
 
   /**
    * The source entity of an attachment.
@@ -37,6 +39,13 @@ class DataAttachment extends AttachmentBase implements DataAttachmentInterface {
    * @var \Drupal\ghi_plans\ApiObjects\Entities\EntityObjectInterface
    */
   private $sourceEntity;
+
+  /**
+   * The attachment prototype.
+   *
+   * @var \Drupal\ghi_plans\ApiObjects\Prototypes\AttachmentPrototype
+   */
+  private $prototype;
 
   /**
    * Define a list of field types that should be considered cumulative reach.
@@ -75,15 +84,11 @@ class DataAttachment extends AttachmentBase implements DataAttachmentInterface {
    * {@inheritdoc}
    */
   protected function map() {
-    $plan_query = $this->getFabricQueryManager()->createInstance('plan');
+    $query = $this->getEntityTypeQuery();
 
     $attachment = $this->getRawData();
-    $prototype = $this->getPrototypeData();
     $period = $this->fetchReportingPeriodForAttachment();
     $references = property_exists($attachment, 'ComposedReference') ? explode('/', $attachment->ComposedReference) : [];
-
-    // Extract the values.
-    $totals = array_map(fn ($item) => new AttachmentFact($item), $attachment->totals ?? []);
 
     $processed = (object) [
       'id' => $attachment->Id,
@@ -93,26 +98,17 @@ class DataAttachment extends AttachmentBase implements DataAttachmentInterface {
         'entity_id' => $attachment->EntityId ?? NULL,
         'plan_id' => $attachment->PlanId ?? NULL,
       ],
+      'attachment_prototype_id' => $attachment->AttachmentPrototypeId,
       'custom_id' => $attachment->CustomId ?? ($attachment->CustomReference ?? NULL),
       'custom_id_prefixed_refcode' => end($references),
       'composed_reference' => $attachment->ComposedReference ?? NULL,
       'description' => $attachment->Name ?? NULL,
-      'values' => $this->extractValues($totals),
-      'prototype' => $prototype,
-      'unit' => ($attachment->UnitId ?? NULL) ? $plan_query->getUnit($attachment->UnitId) : NULL,
+      'values' => $this->extractValues(),
+      'disaggregated' => $this->extractDisaggregatedValues(),
+      'unit' => ($attachment->UnitId ?? NULL) ? $query->getUnit($attachment->UnitId) : NULL,
       'monitoring_period' => $period ?? NULL,
-      'fields' => $prototype->getFields(),
-      'field_types' => $prototype->getFieldTypes(),
-      'original_fields' => $prototype->getOriginalFields(),
-      'original_field_types' => array_map(function ($item) {
-        return $item->type;
-      }, $prototype->getOriginalFields() ?? []),
-      'measurement_fields' => $prototype->getMeasurementMetricFields(),
-      'calculated_fields' => $prototype->getCalculatedMetricFields(),
-      'totals' => $totals,
       'has_disaggregated_data' => !empty($attachment->HasDisaggregatedData),
-      'disaggregated' => $attachment->disaggregated ?? NULL,
-      'calculation_method' => $attachment->CalculationMethodId ? $plan_query->getCalculationMethod($attachment->CalculationMethodId)?->getName() : NULL,
+      'calculation_method' => $attachment->CalculationMethodId ? $query->getCalculationMethod($attachment->CalculationMethodId)?->getName() : NULL,
     ];
     $processed->calculation_method = is_string($processed->calculation_method) ? strtolower($processed->calculation_method) : NULL;
 
@@ -213,22 +209,21 @@ class DataAttachment extends AttachmentBase implements DataAttachmentInterface {
    *   The entity object.
    */
   public function getSourceEntity() {
+    if (!empty($this->sourceEntity)) {
+      return $this->sourceEntity;
+    }
     $source_type = $this->getSourceEntityType();
     $source_id = $this->getSourceEntityId();
     if (!$source_type || !$source_id) {
       return NULL;
     }
-    if (empty($this->sourceEntity)) {
-      if ($source_type === 'plan') {
-        /** @var \Drupal\ghi_plans\Plugin\FabricQuery\PlanQuery $plan_query */
-        $plan_query = $this->getFabricQueryManager()->createInstance('plan');
-        $this->sourceEntity = $plan_query->getPlan($source_id);
-      }
-      else {
-        /** @var \Drupal\ghi_plans\Plugin\FabricQuery\PlanEntityQuery $entity_query */
-        $entity_query = $this->getFabricQueryManager()->createInstance('plan_entity');
-        $this->sourceEntity = $entity_query->getEntity($source_type, $source_id);
-      }
+    if ($source_type === 'plan') {
+      $plan_query = $this->getPlanQuery();
+      $this->sourceEntity = $plan_query->getPlan($source_id);
+    }
+    else {
+      $entity_query = $this->getPlanEntityQuery();
+      $this->sourceEntity = $entity_query->getEntity($source_type, $source_id);
     }
     return $this->sourceEntity;
   }
@@ -267,14 +262,36 @@ class DataAttachment extends AttachmentBase implements DataAttachmentInterface {
    * {@inheritdoc}
    */
   public function getOriginalFields() {
-    return $this->original_fields;
+    return $this->getPrototype()?->getOriginalFields() ?? [];
   }
 
   /**
    * {@inheritdoc}
    */
   public function getOriginalFieldTypes() {
-    return $this->original_field_types;
+    return array_map(function ($item) {
+      return $item->type;
+    }, $this->getOriginalFields());
+  }
+
+  /**
+   * Get the fields.
+   *
+   * @return array
+   *   An array of field labels, keyed by their index.
+   */
+  public function getFields() {
+    return $this->getPrototype()?->getFields() ?? [];
+  }
+
+  /**
+   * Get the field types.
+   *
+   * @return string[]
+   *   An array of field types, keyed by their index.
+   */
+  public function getFieldTypes() {
+    return $this->getPrototype()?->getFieldTypes() ?? [];
   }
 
   /**
@@ -317,7 +334,17 @@ class DataAttachment extends AttachmentBase implements DataAttachmentInterface {
    *   An array of metric names.
    */
   public function getMetricFields() {
-    return $this->fields;
+    return $this->getFields();
+  }
+
+  /**
+   * Get the metric types from the totals.
+   *
+   * @return string[]
+   *   An array of metric type machine names used in the totals.
+   */
+  public function getTotalMetricTypes(): array {
+    return array_map(fn ($item) => $item->getMetric()->getMachineName(), $this->getTotals());
   }
 
   /**
@@ -327,8 +354,8 @@ class DataAttachment extends AttachmentBase implements DataAttachmentInterface {
    *   An array of metric names.
    */
   public function getGoalMetricFields() {
-    $measurements = $this->measurement_fields;
-    return array_filter($this->fields, function ($field) use ($measurements) {
+    $measurements = $this->getPrototype()?->getMeasurementMetricFields() ?? [];
+    return array_filter($this->getFields(), function ($field) use ($measurements) {
       return !in_array($field, $measurements);
     });
   }
@@ -340,8 +367,8 @@ class DataAttachment extends AttachmentBase implements DataAttachmentInterface {
    *   An array of metric names.
    */
   public function getMeasurementMetricFields() {
-    $measurements = $this->measurement_fields;
-    return array_filter($this->fields, function ($field) use ($measurements) {
+    $measurements = $this->getPrototype()?->getMeasurementMetricFields() ?? [];
+    return array_filter($this->getFields(), function ($field) use ($measurements) {
       return in_array($field, $measurements);
     });
   }
@@ -353,8 +380,8 @@ class DataAttachment extends AttachmentBase implements DataAttachmentInterface {
    *   An array of metric names.
    */
   public function getCalculatedMetricFields() {
-    $calculated_fields = $this->calculated_fields;
-    return array_filter($this->fields, function ($field) use ($calculated_fields) {
+    $calculated_fields = $this->getPrototype()?->getCalculatedMetricFields() ?? [];
+    return array_filter($this->getFields(), function ($field) use ($calculated_fields) {
       return in_array($field, $calculated_fields);
     });
   }
@@ -416,10 +443,10 @@ class DataAttachment extends AttachmentBase implements DataAttachmentInterface {
   /**
    * Get the prototype for an attachment.
    *
-   * @return \Drupal\ghi_plans\ApiObjects\Prototypes\AttachmentPrototype
+   * @return \Drupal\ghi_plans\ApiObjects\Prototypes\AttachmentPrototype|null
    *   The attachment prototype object.
    */
-  public function getPrototype() {
+  public function getPrototype(): ?AttachmentPrototype {
     return $this->prototype;
   }
 
@@ -630,6 +657,19 @@ class DataAttachment extends AttachmentBase implements DataAttachmentInterface {
     return empty(array_filter($metric_item['locations'], function ($location) {
       return !empty($location['total']);
     }));
+  }
+
+  /**
+   * Get the disaggregated data from the attachment.
+   *
+   * @return \Drupal\ghi_plans\ApiObjects\Facts\AttachmentFact[]
+   *   An array of attachment fact objects.
+   */
+  public function getDisaggregated(): array {
+    $this->assureDisaggregatedData();
+    $data = $this->getRawData();
+    // Extract the values.
+    return array_map(fn ($item) => new AttachmentFact($item), $data->disaggregated ?? []);
   }
 
   /**
@@ -872,8 +912,7 @@ class DataAttachment extends AttachmentBase implements DataAttachmentInterface {
       // Nothing to do.
       return;
     }
-    /** @var \Drupal\ghi_plans\Plugin\FabricQuery\AttachmentQuery $attachment_query */
-    $attachment_query = $this->getFabricQueryManager()->createInstance('attachment');
+    $attachment_query = $this->getAttachmentQuery();
     $attachment_data->disaggregated = $attachment_query->getAttachmentDisaggregatedData($this->id());
     if (!$attachment_data) {
       return;
@@ -1011,46 +1050,49 @@ class DataAttachment extends AttachmentBase implements DataAttachmentInterface {
   /**
    * Extract the metric values from an attachment.
    *
-   * @param \Drupal\ghi_plans\ApiObjects\Facts\AttachmentFact[] $totals
-   *   The totals.
-   *
    * @return array
-   *   Array with values for each metric and measurement data point, according
-   *   to the prototype.
+   *   Array with values for each metric and measurement data point.
    */
-  protected function extractValues($totals): array {
-    $prototype = $this->getPrototypeData();
-    $metrics = $this->getMetrics();
-
-    // Then get the measure fields.
-    $measure_fields = $metrics?->measureFields ?? NULL;
-    $calculated_fields = $metrics?->calculatedFields ?? NULL;
-
-    // Work around an issue with the API format for this.
-    $calculated_fields = is_array($calculated_fields) ? $calculated_fields : [$calculated_fields];
-
-    // And merge metrics and measurements together.
-    return array_pad(array_merge(
-      array_map(function ($item) {
-        return $item->value ?? NULL;
-      }, $metrics?->values?->totals ?? []),
-      $measure_fields ? array_map(function ($item) {
-        return $item->value ?? NULL;
-      }, $measure_fields) : [],
-      $calculated_fields ? array_map(function ($item) {
-        return $item->value ?? NULL;
-      }, $calculated_fields) : [],
-    ), count($prototype->fields), NULL);
+  protected function extractValues(): array {
+    $values = [];
+    foreach ($this->getTotals() as $item) {
+      $values[$item->getMetric()->getMachineName()] = $item->getValue();
+    }
+    return $values;
   }
 
   /**
-   * Get the totals from the given attachment.
+   * Extract the disaggregated values from an attachment.
+   *
+   * @return array
+   *   Array with values for each metric and measurement data point, grouped by
+   *   location and various categories.
+   */
+  protected function extractDisaggregatedValues() {
+    $values = [];
+    foreach ($this->getDisaggregated() as $item) {
+      $location_id = $item->getLocationId();
+      $values[$location_id] = $values[$location_id] ?? [];
+      $values[$location_id][$item->id()] = [
+        'value' => $item->getValue(),
+        'metric' => $item->getMetric()->getMachineName(),
+        'location_id' => $item->getLocationId(),
+        'category_ids' => $item->getCategoryIds(),
+      ];
+    }
+    return $values;
+  }
+
+  /**
+   * Get the totals from the attachment.
    *
    * @return \Drupal\ghi_plans\ApiObjects\Facts\AttachmentFact[]
    *   An array of attachment fact objects.
    */
   public function getTotals(): array {
-    return $this->map->totals ?? [];
+    $data = $this->getRawData();
+    // Extract the values.
+    return array_map(fn ($item) => new AttachmentFact($item), $data->totals ?? []);
   }
 
   /**
@@ -1198,13 +1240,16 @@ class DataAttachment extends AttachmentBase implements DataAttachmentInterface {
    *   If the prototype cannot be inferred.
    */
   protected function getPrototypeData() {
+    if ($this->prototype instanceof AttachmentPrototype) {
+      return $this->prototype;
+    }
     $attachment = $this->getRawData();
     $prototype = self::fetchPrototypeForAttachment($attachment);
-    if (!$prototype) {
+    if (!$prototype instanceof AttachmentPrototype) {
       throw new \Exception(sprintf('Failed to extract prototype for attachment %s', $attachment->id));
     }
-
-    return $prototype;
+    $this->prototype = $prototype;
+    return $this->prototype;
   }
 
   /**
@@ -1260,9 +1305,8 @@ class DataAttachment extends AttachmentBase implements DataAttachmentInterface {
     // for performance when we need to do this for multiple attachments
     // belonging to the same plan (which is the usual case) because the
     // requests are cached.
-    /** @var \Drupal\ghi_plans\Plugin\FabricQuery\AttachmentPrototypeQuery $query_handler */
-    $query_handler = $this->getFabricQueryManager()->createInstance('attachment_prototype');
-    if (!$query_handler instanceof AttachmentPrototypeQuery) {
+    $query_handler = $this->getAttachmentPrototypeQuery();
+    if (!$query_handler) {
       return NULL;
     }
     $plan_id = $attachment->PlanId ?? ($attachment->planId ?? NULL);
@@ -1307,16 +1351,6 @@ class DataAttachment extends AttachmentBase implements DataAttachmentInterface {
    */
   private static function getEndpointQueryManager() {
     return \Drupal::service('plugin.manager.endpoint_query_manager');
-  }
-
-  /**
-   * Get the fabric query manager.
-   *
-   * @return \Drupal\hpc_api\Query\FabricQueryManager
-   *   The fabric query manager service.
-   */
-  private static function getFabricQueryManager() {
-    return \Drupal::service('plugin.manager.fabric_query_manager');
   }
 
   /**
