@@ -5,11 +5,14 @@ namespace Drupal\ghi_blocks\Helpers;
 use Drupal\ghi_plans\ApiObjects\Prototypes\AttachmentPrototype;
 use Drupal\ghi_plans\ApiObjects\Attachments\AttachmentInterface;
 use Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment;
+use Drupal\ghi_plans\Traits\PlanQueryTrait;
 
 /**
  * Helper function for attachment matching.
  */
 class AttachmentMatcher {
+
+  use PlanQueryTrait;
 
   /**
    * Match an array of data attachments against an original attachment.
@@ -119,12 +122,7 @@ class AttachmentMatcher {
    *   An attachment prototype object.
    */
   private static function getPrototype($prototype_id) {
-    /** @var \Drupal\ghi_plans\Plugin\FabricQuery\AttachmentPrototypeQuery $query_handler */
-    $query_handler = \Drupal::service('plugin.manager.fabric_query_manager')->createInstance('attachment_prototype');
-    if (!$query_handler) {
-      return NULL;
-    }
-    return $query_handler->getPrototype($prototype_id);
+    return self::getAttachmentPrototypeQuery()?->getPrototype($prototype_id) ?? NULL;
   }
 
 }

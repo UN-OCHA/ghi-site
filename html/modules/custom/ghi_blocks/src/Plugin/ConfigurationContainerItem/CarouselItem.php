@@ -4,20 +4,21 @@ namespace Drupal\ghi_blocks\Plugin\ConfigurationContainerItem;
 
 use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\Url;
 use Drupal\file\Entity\File;
+use Drupal\ghi_form_elements\Attribute\ConfigurationContainerItem;
 use Drupal\ghi_form_elements\ConfigurationContainerItemPluginBase;
 use Drupal\ghi_form_elements\Traits\CustomLinkTrait;
 
 /**
  * Provides a carousel item for configuration containers.
- *
- * @ConfigurationContainerItem(
- *   id = "carousel_item",
- *   label = @Translation("Carousel item"),
- *   description = @Translation("This item displays an image with text to be used as part of a carousel."),
- * )
  */
+#[ConfigurationContainerItem(
+  id: 'carousel_item',
+  label: new TranslatableMarkup('Carousel item'),
+  description: new TranslatableMarkup('This item displays an image with text to be used as part of a carousel.'),
+)]
 class CarouselItem extends ConfigurationContainerItemPluginBase {
 
   use CustomLinkTrait;

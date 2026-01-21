@@ -3,6 +3,8 @@
 namespace Drupal\ghi_blocks\Plugin\ConfigurationContainerItem;
 
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\ghi_form_elements\Attribute\ConfigurationContainerItem;
 use Drupal\ghi_form_elements\ConfigurationContainerItemPluginBase;
 use Drupal\ghi_form_elements\Helpers\FormElementHelper;
 use Drupal\ghi_plans\ApiObjects\Attachments\AttachmentInterface;
@@ -11,13 +13,12 @@ use Drupal\ghi_plans\Helpers\AttachmentHelper;
 
 /**
  * Provides an attachment label item for configuration containers.
- *
- * @ConfigurationContainerItem(
- *   id = "attachment_label",
- *   label = @Translation("Attachment label"),
- *   description = @Translation("This item displays the label of an attachment."),
- * )
  */
+#[ConfigurationContainerItem(
+  id: 'attachment_label',
+  label: new TranslatableMarkup('Attachment label'),
+  description: new TranslatableMarkup('This item displays the label of an attachment.'),
+)]
 class AttachmentLabel extends ConfigurationContainerItemPluginBase {
 
   const SORT_TYPE = 'alfa';

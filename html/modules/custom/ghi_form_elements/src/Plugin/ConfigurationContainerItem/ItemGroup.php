@@ -3,19 +3,20 @@
 namespace Drupal\ghi_form_elements\Plugin\ConfigurationContainerItem;
 
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\ghi_form_elements\Attribute\ConfigurationContainerItem;
 use Drupal\ghi_form_elements\ConfigurationContainerItemGroupInterface;
 use Drupal\ghi_form_elements\ConfigurationContainerItemPluginBase;
 use Drupal\ghi_form_elements\Traits\CustomLinkTrait;
 
 /**
  * Provides an entity counter item for configuration containers.
- *
- * @ConfigurationContainerItem(
- *   id = "item_group",
- *   label = @Translation("Item group"),
- *   description = @Translation("This item groups several others."),
- * )
  */
+#[ConfigurationContainerItem(
+  id: 'item_group',
+  label: new TranslatableMarkup('Item group'),
+  description: new TranslatableMarkup('This item groups several others.'),
+)]
 class ItemGroup extends ConfigurationContainerItemPluginBase implements ConfigurationContainerItemGroupInterface {
 
   use CustomLinkTrait;

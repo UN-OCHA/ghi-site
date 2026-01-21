@@ -4,6 +4,8 @@ namespace Drupal\ghi_blocks\Plugin\ConfigurationContainerItem;
 
 use Drupal\Core\Link;
 use Drupal\Core\Render\Markup;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\ghi_form_elements\Attribute\ConfigurationContainerItem;
 use Drupal\ghi_form_elements\ConfigurationContainerItemPluginBase;
 use Drupal\ghi_plans\ApiObjects\Entities\EntityObjectInterface;
 use Drupal\node\NodeInterface;
@@ -11,13 +13,12 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Provides an entity name item for configuration containers.
- *
- * @ConfigurationContainerItem(
- *   id = "entity_name",
- *   label = @Translation("Entity name"),
- *   description = @Translation("This item displays the name of an entity."),
- * )
  */
+#[ConfigurationContainerItem(
+  id: 'entity_name',
+  label: new TranslatableMarkup('Entity name'),
+  description: new TranslatableMarkup('This item displays the name of an entity.'),
+)]
 class EntityName extends ConfigurationContainerItemPluginBase {
 
   const SORT_TYPE = 'alfa';

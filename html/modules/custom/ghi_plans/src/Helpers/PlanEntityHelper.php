@@ -5,6 +5,7 @@ namespace Drupal\ghi_plans\Helpers;
 use Drupal\ghi_plans\ApiObjects\Entities\GoverningEntity;
 use Drupal\ghi_plans\ApiObjects\Entities\PlanEntity;
 use Drupal\ghi_plans\ApiObjects\Prototypes\EntityPrototype;
+use Drupal\ghi_plans\Traits\PlanQueryTrait;
 use Drupal\hpc_api\Query\EndpointQuery;
 use Drupal\hpc_common\Helpers\ArrayHelper;
 
@@ -14,6 +15,8 @@ use Drupal\hpc_common\Helpers\ArrayHelper;
  * @phpcs:disable DrupalPractice.FunctionCalls.InsecureUnserialize
  */
 class PlanEntityHelper {
+
+  use PlanQueryTrait;
 
   /**
    * Instantiate a plan entity object.
@@ -90,11 +93,7 @@ class PlanEntityHelper {
    *   The plan entity object or NULL.
    */
   public static function getPlanEntity($entity_id, $version_argument = 'current'): ?PlanEntity {
-    /** @var \Drupal\hpc_api\Query\FabricQueryManager $query_manager */
-    $query_manager = \Drupal::service('plugin.manager.fabric_query_manager');
-    /** @var \Drupal\ghi_plans\Plugin\FabricQuery\PlanEntityQuery $query */
-    $query = $query_manager->createInstance('plan_entity');
-    $entity = $query->getEntity('planEntity', $entity_id);
+    $entity = self::getPlanEntityQuery()?->getEntity('planEntity', $entity_id) ?? NULL;
     return $entity instanceof PlanEntity ? $entity : NULL;
   }
 
@@ -110,11 +109,7 @@ class PlanEntityHelper {
    *   The governing entity object or NULL.
    */
   public static function getGoverningEntity($entity_id, $version_argument = 'current'): ?GoverningEntity {
-    /** @var \Drupal\hpc_api\Query\FabricQueryManager $query_manager */
-    $query_manager = \Drupal::service('plugin.manager.fabric_query_manager');
-    /** @var \Drupal\ghi_plans\Plugin\FabricQuery\PlanEntityQuery $query */
-    $query = $query_manager->createInstance('plan_entity');
-    $entity = $query->getEntity('governingEntity', $entity_id);
+    $entity = self::getPlanEntityQuery()?->getEntity('governingEntity', $entity_id) ?? NULL;
     return $entity instanceof GoverningEntity ? $entity : NULL;
   }
 
@@ -128,11 +123,7 @@ class PlanEntityHelper {
    *   The entity prototype object or NULL if not found.
    */
   public static function getEntityPrototype(int $id): ?EntityPrototype {
-    /** @var \Drupal\hpc_api\Query\FabricQueryManager $query_manager */
-    $query_manager = \Drupal::service('plugin.manager.fabric_query_manager');
-    /** @var \Drupal\ghi_plans\Plugin\FabricQuery\EntityPrototypeQuery $query */
-    $query = $query_manager->createInstance('entity_prototype');
-    return $query->getPrototype($id);
+    return self::getEntityPrototypeQuery()?->getPrototype($id) ?? NULL;
   }
 
   /**

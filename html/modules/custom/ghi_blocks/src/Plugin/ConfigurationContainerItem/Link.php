@@ -8,9 +8,11 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\Element\RenderElementBase;
 use Drupal\Core\Render\Element\VerticalTabs;
 use Drupal\Core\Render\Markup;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\file\Entity\File;
 use Drupal\file\FileInterface;
 use Drupal\ghi_blocks\Traits\VerticalTabsTrait;
+use Drupal\ghi_form_elements\Attribute\ConfigurationContainerItem;
 use Drupal\ghi_form_elements\ConfigurationContainerItemPluginBase;
 use Drupal\ghi_form_elements\Helpers\FormElementHelper;
 use Drupal\ghi_form_elements\Traits\CustomLinkTrait;
@@ -18,13 +20,12 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Provides a link item for configuration containers.
- *
- * @ConfigurationContainerItem(
- *   id = "link",
- *   label = @Translation("Link"),
- *   description = @Translation("This item displays a link with a title, a description and an optional image."),
- * )
  */
+#[ConfigurationContainerItem(
+  id: 'link',
+  label: new TranslatableMarkup('Link'),
+  description: new TranslatableMarkup('This item displays a link with a title, a description and an optional image.'),
+)]
 class Link extends ConfigurationContainerItemPluginBase {
 
   use CustomLinkTrait;

@@ -3,19 +3,20 @@
 namespace Drupal\ghi_blocks\Plugin\ConfigurationContainerItem;
 
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\Url;
+use Drupal\ghi_form_elements\Attribute\ConfigurationContainerItem;
 use Drupal\ghi_form_elements\ConfigurationContainerItemPluginBase;
 use Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment;
 
 /**
  * Provides a label/value item for configuration containers.
- *
- * @ConfigurationContainerItem(
- *   id = "label_value",
- *   label = @Translation("Label/value"),
- *   description = @Translation("This item displays an arbitrary label/value pair."),
- * )
  */
+#[ConfigurationContainerItem(
+  id: 'label_value',
+  label: new TranslatableMarkup('Label/value'),
+  description: new TranslatableMarkup('This item displays an arbitrary label/value pair.'),
+)]
 class LabelValue extends ConfigurationContainerItemPluginBase {
 
   /**

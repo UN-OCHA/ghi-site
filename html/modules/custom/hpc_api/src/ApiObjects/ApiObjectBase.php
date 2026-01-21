@@ -97,13 +97,23 @@ abstract class ApiObjectBase implements ApiObjectInterface, CacheableDependencyI
   }
 
   /**
-   * Represent this as an array.
-   *
-   * @return array
-   *   The mapped data as an array.
+   * {@inheritdoc}
    */
   public function toArray() {
-    return (array) $this->map ?? [];
+    $array = (array) $this->map ?? [];
+    foreach ($array as $key => $item) {
+      if (is_object($item) && method_exists($item, 'toArray')) {
+        $array[$key] = $item->toArray();
+      }
+      if (is_array($item)) {
+        foreach ($item as $_key => $_item) {
+          if (is_object($_item) && method_exists($_item, 'toArray')) {
+            $array[$key][$_key] = $_item->toArray();
+          }
+        }
+      }
+    }
+    return $array;
   }
 
   /**

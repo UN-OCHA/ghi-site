@@ -3,20 +3,21 @@
 namespace Drupal\ghi_blocks\Plugin\ConfigurationContainerItem;
 
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\ghi_blocks\Traits\ConfigurationItemValuePreviewTrait;
+use Drupal\ghi_form_elements\Attribute\ConfigurationContainerItem;
 use Drupal\ghi_form_elements\ConfigurationContainerItemPluginBase;
 use Drupal\ghi_form_elements\Helpers\FormElementHelper;
 use Drupal\hpc_common\Traits\RenderArrayTrait;
 
 /**
  * Provides a plan overview data item for configuration containers.
- *
- * @ConfigurationContainerItem(
- *   id = "plan_overview_data",
- *   label = @Translation("Plan overview data"),
- *   description = @Translation("This item displays data from the plan overview for a year."),
- * )
  */
+#[ConfigurationContainerItem(
+  id: 'plan_overview_data',
+  label: new TranslatableMarkup('Plan overview data'),
+  description: new TranslatableMarkup('This item displays data from the plan overview for a year.'),
+)]
 class PlanOverviewData extends ConfigurationContainerItemPluginBase {
 
   use ConfigurationItemValuePreviewTrait;

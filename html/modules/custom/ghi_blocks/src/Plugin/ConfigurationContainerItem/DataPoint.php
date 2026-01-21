@@ -6,7 +6,9 @@ use Drupal\Component\Serialization\Json;
 use Drupal\Component\Utility\Html;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Link;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\Url;
+use Drupal\ghi_form_elements\Attribute\ConfigurationContainerItem;
 use Drupal\ghi_form_elements\ConfigurationContainerItemPluginBase;
 use Drupal\ghi_form_elements\Element\DataPoint as ElementDataPoint;
 use Drupal\ghi_plans\ApiObjects\Prototypes\AttachmentPrototype;
@@ -14,13 +16,12 @@ use Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment;
 
 /**
  * Provides a data point item for configuration containers.
- *
- * @ConfigurationContainerItem(
- *   id = "data_point",
- *   label = @Translation("Data point"),
- *   description = @Translation("This item displays a single metric or measurement item."),
- * )
  */
+#[ConfigurationContainerItem(
+  id: 'data_point',
+  label: new TranslatableMarkup('Data point'),
+  description: new TranslatableMarkup('This item displays a single metric or measurement item.'),
+)]
 class DataPoint extends ConfigurationContainerItemPluginBase {
 
   /**

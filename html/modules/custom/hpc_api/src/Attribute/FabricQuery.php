@@ -14,12 +14,12 @@ use Drupal\Core\StringTranslation\TranslatableMarkup;
 class FabricQuery extends Plugin {
 
   /**
-   * Constructs a FieldFormatter attribute.
+   * Constructs a FabricQuery attribute.
    *
    * @param string $id
    *   The plugin ID.
    * @param \Drupal\Core\StringTranslation\TranslatableMarkup|null $label
-   *   (optional) The human-readable name of the formatter type.
+   *   (optional) The human-readable name of the fabric query type.
    */
   public function __construct(
     public readonly string $id,

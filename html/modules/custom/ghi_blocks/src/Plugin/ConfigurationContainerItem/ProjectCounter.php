@@ -7,9 +7,11 @@ use Drupal\Component\Utility\Html;
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Link;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\Url;
 use Drupal\ghi_blocks\Traits\ConfigurationItemClusterRestrictTrait;
 use Drupal\ghi_blocks\Traits\ConfigurationItemValuePreviewTrait;
+use Drupal\ghi_form_elements\Attribute\ConfigurationContainerItem;
 use Drupal\ghi_form_elements\ConfigurationContainerItemPluginBase;
 use Drupal\ghi_plans\Entity\Plan;
 use Drupal\ghi_plans\Helpers\PlanStructureHelper;
@@ -20,13 +22,12 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Provides project based counter items for configuration containers.
- *
- * @ConfigurationContainerItem(
- *   id = "project_counter",
- *   label = @Translation("Project counter"),
- *   description = @Translation("This item displays project based counters."),
- * )
  */
+#[ConfigurationContainerItem(
+  id: 'project_counter',
+  label: new TranslatableMarkup('Project counter'),
+  description: new TranslatableMarkup('This item displays project based counters.'),
+)]
 class ProjectCounter extends ConfigurationContainerItemPluginBase {
 
   use ConfigurationItemClusterRestrictTrait;

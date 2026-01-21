@@ -4,19 +4,21 @@ namespace Drupal\ghi_blocks\Plugin\ConfigurationContainerItem;
 
 use Drupal\Component\Utility\Html;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\ghi_form_elements\Attribute\ConfigurationContainerItem;
 use Drupal\ghi_form_elements\ConfigurationContainerItemPluginBase;
 use Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment;
 
 /**
  * Provides a monitoring period item for configuration containers.
  *
- * @ConfigurationContainerItem(
- *   id = "monitoring_period",
- *   label = @Translation("Monitoring period"),
- *   description = @Translation("This item displays the monitoring period for an attachment."),
- * )
  * @phpcs:disable DrupalPractice.FunctionCalls.InsecureUnserialize
  */
+#[ConfigurationContainerItem(
+  id: 'monitoring_period',
+  label: new TranslatableMarkup('Monitoring period'),
+  description: new TranslatableMarkup('This item displays the monitoring period for an attachment.'),
+)]
 class MonitoringPeriod extends ConfigurationContainerItemPluginBase {
 
   const ITEM_TYPE = 'monitoring_period';

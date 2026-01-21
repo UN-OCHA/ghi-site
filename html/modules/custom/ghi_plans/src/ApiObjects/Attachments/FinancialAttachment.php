@@ -16,7 +16,7 @@ class FinancialAttachment extends DataAttachment {
    *   The requirements.
    */
   public function getRequirements() {
-    $totals = $this->totals;
+    $totals = $this->getTotals();
     // @todo What to do if there are multiple requirement records?
     $requirements = reset($totals);
     return $requirements ? $requirements->getValue() : 0;

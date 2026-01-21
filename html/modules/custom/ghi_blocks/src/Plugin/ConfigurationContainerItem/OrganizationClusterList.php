@@ -4,20 +4,21 @@ namespace Drupal\ghi_blocks\Plugin\ConfigurationContainerItem;
 
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\Markup;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\Template\Attribute;
 use Drupal\ghi_blocks\Traits\ConfigurationItemValuePreviewTrait;
+use Drupal\ghi_form_elements\Attribute\ConfigurationContainerItem;
 use Drupal\ghi_form_elements\ConfigurationContainerItemPluginBase;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Provides an organization cluster list item for configuration containers.
- *
- * @ConfigurationContainerItem(
- *   id = "organization_cluster_list",
- *   label = @Translation("Clusters"),
- *   description = @Translation("This item displays a list of clusters per organization."),
- * )
  */
+#[ConfigurationContainerItem(
+  id: 'organization_cluster_list',
+  label: new TranslatableMarkup('Clusters'),
+  description: new TranslatableMarkup('This item displays a list of clusters per organization.'),
+)]
 class OrganizationClusterList extends ConfigurationContainerItemPluginBase {
 
   use ConfigurationItemValuePreviewTrait;

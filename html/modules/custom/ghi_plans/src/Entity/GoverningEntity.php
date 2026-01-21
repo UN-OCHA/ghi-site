@@ -5,15 +5,16 @@ namespace Drupal\ghi_plans\Entity;
 use Drupal\ghi_base_objects\Entity\BaseObject;
 use Drupal\ghi_base_objects\Entity\BaseObjectChildInterface;
 use Drupal\ghi_plans\ApiObjects\Entities\GoverningEntity as EntitiesGoverningEntity;
-use Drupal\ghi_plans\Plugin\FabricQuery\PlanEntityQuery;
+use Drupal\ghi_plans\Traits\PlanQueryTrait;
 use Drupal\hpc_api\Plugin\EndpointQuery\IconQuery;
 use Drupal\hpc_api\Query\EndpointQueryManager;
-use Drupal\hpc_api\Query\FabricQueryManager;
 
 /**
  * Bundle class for governing entity base objects.
  */
 class GoverningEntity extends BaseObject implements BaseObjectChildInterface {
+
+  use PlanQueryTrait;
 
   /**
    * {@inheritdoc}
@@ -74,17 +75,6 @@ class GoverningEntity extends BaseObject implements BaseObjectChildInterface {
   }
 
   /**
-   * Get the plan entity query.
-   *
-   * @return \Drupal\ghi_plans\Plugin\FabricQuery\PlanEntityQuery|null
-   *   The plan entity query object.
-   */
-  private function getPlanEntityQuery(): ?PlanEntityQuery {
-    $fabric_query_manager = self::getFabricQueryManager();
-    return $fabric_query_manager->hasDefinition('plan_entity') ? $fabric_query_manager->createInstance('plan_entity') : NULL;
-  }
-
-  /**
    * Get the icon query.
    *
    * @return \Drupal\hpc_api\Plugin\EndpointQuery\IconQuery|null
@@ -103,16 +93,6 @@ class GoverningEntity extends BaseObject implements BaseObjectChildInterface {
    */
   private static function getEndpointQueryManager(): EndpointQueryManager {
     return \Drupal::service('plugin.manager.endpoint_query_manager');
-  }
-
-  /**
-   * Get the fabric query manager.
-   *
-   * @return \Drupal\hpc_api\Query\FabricQueryManager
-   *   The fabric query manager.
-   */
-  private static function getFabricQueryManager(): FabricQueryManager {
-    return \Drupal::service('plugin.manager.fabric_query_manager');
   }
 
 }

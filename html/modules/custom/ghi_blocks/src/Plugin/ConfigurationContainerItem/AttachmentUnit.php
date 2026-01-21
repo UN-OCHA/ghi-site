@@ -2,18 +2,19 @@
 
 namespace Drupal\ghi_blocks\Plugin\ConfigurationContainerItem;
 
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\ghi_form_elements\Attribute\ConfigurationContainerItem;
 use Drupal\ghi_form_elements\ConfigurationContainerItemPluginBase;
 use Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment;
 
 /**
  * Provides an attachment unit item for configuration containers.
- *
- * @ConfigurationContainerItem(
- *   id = "attachment_unit",
- *   label = @Translation("Attachment unit"),
- *   description = @Translation("This item displays the unit of an attachment."),
- * )
  */
+#[ConfigurationContainerItem(
+  id: 'attachment_unit',
+  label: new TranslatableMarkup('Attachment unit'),
+  description: new TranslatableMarkup('This item displays the unit of an attachment.'),
+)]
 class AttachmentUnit extends ConfigurationContainerItemPluginBase {
 
   const SORT_TYPE = 'alfa';
