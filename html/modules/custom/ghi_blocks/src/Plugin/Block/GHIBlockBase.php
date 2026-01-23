@@ -157,19 +157,6 @@ abstract class GHIBlockBase extends HPCBlockBase {
   protected $currentUser;
 
   /**
-   * Retrieves a configuration object.
-   *
-   * @param string $name
-   *   The name of the configuration object to retrieve.
-   *
-   * @return \Drupal\Core\Config\Config
-   *   A configuration object.
-   */
-  protected function config($name) {
-    return $this->configFactory->get($name);
-  }
-
-  /**
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
@@ -192,6 +179,19 @@ abstract class GHIBlockBase extends HPCBlockBase {
     $instance->getContexts();
 
     return $instance;
+  }
+
+  /**
+   * Retrieves a configuration object.
+   *
+   * @param string $name
+   *   The name of the configuration object to retrieve.
+   *
+   * @return \Drupal\Core\Config\Config
+   *   A configuration object.
+   */
+  protected function config($name) {
+    return $this->configFactory->get($name);
   }
 
   /**
@@ -277,8 +277,7 @@ abstract class GHIBlockBase extends HPCBlockBase {
    *   TRUE if a title can be shown, FALSE otherwise.
    */
   public function shouldDisplayTitle() {
-    $plugin_definition = $this->getPluginDefinition();
-    return !array_key_exists('title', $plugin_definition) || $plugin_definition['title'] !== FALSE;
+    return static::metadata()->usesTitle ?? TRUE;
   }
 
   /**
@@ -302,14 +301,10 @@ abstract class GHIBlockBase extends HPCBlockBase {
    * Get the default title.
    *
    * @return \Drupal\Core\StringTranslation\TranslatableMarkup|string
-   *   The default title if one is set in the plugin definition.
+   *   The default title if one is set in the plugins metadata.
    */
   public function getDefaultTitle() {
-    $plugin_definition = $this->getPluginDefinition();
-    if (empty($plugin_definition['default_title'])) {
-      return NULL;
-    }
-    return $plugin_definition['default_title'];
+    return static::metadata()->defaultTitle ?: NULL;
   }
 
   /**
@@ -779,8 +774,7 @@ abstract class GHIBlockBase extends HPCBlockBase {
   public function getSubforms() {
     $subforms = &drupal_static(__FUNCTION__, NULL);
     if ($subforms === NULL) {
-      $definition = $this->getPluginDefinition();
-      $plugin_subforms = $definition['config_forms'] ?? [
+      $plugin_subforms = static::metadata()->configForms ?? [
         self::DEFAULT_FORM_KEY => [
           'title' => $this->t('Configuration'),
           'callback' => 'getConfigForm',

@@ -2,21 +2,23 @@
 
 namespace Drupal\ghi_blocks\Plugin\Block\GlobalPage;
 
+use Drupal\Core\Block\Attribute\Block;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Plugin\Context\ContextDefinition;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
 
 /**
  * Provides a 'FeaturedOperations' block.
- *
- * @Block(
- *  id = "global_featured_operations",
- *  admin_label = @Translation("Featured operations"),
- *  category = @Translation("Global"),
- *  context_definitions = {
- *    "year" = @ContextDefinition("integer", label = @Translation("Year"))
- *  }
- * )
  */
+#[Block(
+  id: 'global_featured_operations',
+  admin_label: new TranslatableMarkup('Featured operations'),
+  category: new TranslatableMarkup('Global'),
+  context_definitions: [
+    'year' => new ContextDefinition(data_type: 'integer', label: new TranslatableMarkup("Year")),
+  ]
+)]
 class FeaturedOperations extends GHIBlockBase {
 
   /**

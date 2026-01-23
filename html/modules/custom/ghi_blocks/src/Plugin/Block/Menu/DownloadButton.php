@@ -2,23 +2,25 @@
 
 namespace Drupal\ghi_blocks\Plugin\Block\Menu;
 
+use Drupal\Core\Block\Attribute\Block;
 use Drupal\Core\Block\BlockBase;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
+use Drupal\Core\Plugin\Context\EntityContextDefinition;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\hpc_downloads\NodeDownloadPlugin;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Provides a 'DownloadButton' block.
- *
- * @Block(
- *  id = "download_button",
- *  admin_label = @Translation("Download Button"),
- *  category = @Translation("Menus"),
- *  context_definitions = {
- *    "node" = @ContextDefinition("entity:node", label = @Translation("Node")),
- *   }
- * )
  */
+#[Block(
+  id: 'download_button',
+  admin_label: new TranslatableMarkup('Download Button'),
+  category: new TranslatableMarkup('Menus'),
+  context_definitions: [
+    'node' => new EntityContextDefinition('entity:node', new TranslatableMarkup('Node')),
+  ]
+)]
 class DownloadButton extends BlockBase implements ContainerFactoryPluginInterface {
 
   /**

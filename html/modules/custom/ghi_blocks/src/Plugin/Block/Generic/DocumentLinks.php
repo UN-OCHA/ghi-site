@@ -2,42 +2,52 @@
 
 namespace Drupal\ghi_blocks\Plugin\Block\Generic;
 
+use Drupal\Core\Block\Attribute\Block;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Link;
 use Drupal\Core\Url;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\ghi_blocks\Interfaces\ConfigurableTableBlockInterface;
 use Drupal\ghi_blocks\Interfaces\MultiStepFormBlockInterface;
 use Drupal\ghi_blocks\Interfaces\OverrideDefaultTitleBlockInterface;
 use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
 use Drupal\ghi_form_elements\Traits\ConfigurationContainerGroup;
 use Drupal\ghi_form_elements\Traits\ConfigurationContainerTrait;
+use Drupal\hpc_common\Plugin\HPCBlockMetadata;
 use Drupal\link\Plugin\Field\FieldWidget\LinkWidget;
 
 /**
  * Provides a 'Document link' block.
- *
- * @Block(
- *  id = "generic_document_links",
- *  admin_label = @Translation("Document links"),
- *  category = @Translation("Generic elements"),
- *  default_title = @Translation("Publications"),
- *  config_forms = {
- *    "documents" = {
- *      "title" = @Translation("Documents"),
- *      "callback" = "documentsForm",
- *      "base_form" = TRUE
- *    },
- *    "display" = {
- *      "title" = @Translation("Display"),
- *      "callback" = "displayForm"
- *    }
- *  }
- * )
  */
+#[Block(
+  id: 'generic_document_links',
+  admin_label: new TranslatableMarkup('Document links'),
+  category: new TranslatableMarkup('Generic elements'),
+)]
 class DocumentLinks extends GHIBlockBase implements MultiStepFormBlockInterface, OverrideDefaultTitleBlockInterface, ConfigurableTableBlockInterface {
 
   use ConfigurationContainerTrait;
   use ConfigurationContainerGroup;
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function metadata(): ?HPCBlockMetadata {
+    return new HPCBlockMetadata(
+      defaultTitle: 'Publications',
+      configForms: [
+        'documents' => [
+          'title' => 'Documents',
+          'callback' => 'documentsForm',
+          'base_form' => TRUE,
+        ],
+        'display' => [
+          'title' => 'Display',
+          'callback' => 'displayForm',
+        ],
+      ]
+    );
+  }
 
   /**
    * {@inheritdoc}

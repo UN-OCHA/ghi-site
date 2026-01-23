@@ -4,8 +4,10 @@ namespace Drupal\ghi_blocks\Plugin\Block\Plan;
 
 use Drupal\Component\Utility\Html;
 use Drupal\Component\Utility\Unicode;
+use Drupal\Core\Block\Attribute\Block;
 use Drupal\Core\Cache\Cache;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Plugin\Context\EntityContextDefinition;
 use Drupal\ghi_base_objects\ApiObjects\Location;
 use Drupal\ghi_blocks\Interfaces\MultiStepFormBlockInterface;
 use Drupal\ghi_blocks\Interfaces\OverrideDefaultTitleBlockInterface;
@@ -24,36 +26,22 @@ use Drupal\ghi_plans\Traits\FtsLinkTrait;
 use Drupal\hpc_common\Helpers\ThemeHelper;
 use Drupal\hpc_downloads\Interfaces\HPCDownloadPNGInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\hpc_common\Plugin\HPCBlockMetadata;
 
 /**
  * Provides a 'PlanOperationalPresenceMap' block.
- *
- * @Block(
- *  id = "plan_operational_presence_map",
- *  admin_label = @Translation("Operational Presence Map"),
- *  category = @Translation("Plan elements"),
- *  data_sources = {
- *    "project_search" = "hpc_api:plan_project_search_query",
- *    "locations" = "hpc_api:locations_query",
- *  },
- *  default_title = @Translation("Operations by admin area"),
- *  context_definitions = {
- *    "node" = @ContextDefinition("entity:node", label = @Translation("Node")),
- *    "plan" = @ContextDefinition("entity:base_object", label = @Translation("Plan"), constraints = { "Bundle": "plan" }),
- *    "plan_cluster" = @ContextDefinition("entity:base_object", label = @Translation("Cluster"), constraints = { "Bundle": "governing_entity" }, required =  FALSE)
- *  },
- *  config_forms = {
- *    "organizations" = {
- *      "title" = @Translation("Organizations"),
- *      "callback" = "organizationsForm"
- *    },
- *    "display" = {
- *      "title" = @Translation("Display"),
- *      "callback" = "displayForm"
- *    }
- *  }
- * )
  */
+#[Block(
+  id: 'plan_operational_presence_map',
+  admin_label: new TranslatableMarkup('Operational Presence Map'),
+  category: new TranslatableMarkup('Plan elements'),
+  context_definitions: [
+    'node' => new EntityContextDefinition('entity:node', new TranslatableMarkup('Node')),
+    'plan' => new EntityContextDefinition('entity:base_object', new TranslatableMarkup('Plan'), constraints: ['Bundle' => 'plan']),
+    'plan_cluster' => new EntityContextDefinition('entity:base_object', new TranslatableMarkup('Cluster'), required: FALSE, constraints: ['Bundle' => 'governing_entity']),
+  ],
+)]
 class PlanOperationalPresenceMap extends GHIBlockBase implements MultiStepFormBlockInterface, OverrideDefaultTitleBlockInterface, HPCDownloadPNGInterface {
 
   use OrganizationsBlockTrait;
@@ -72,6 +60,29 @@ class PlanOperationalPresenceMap extends GHIBlockBase implements MultiStepFormBl
    * @var \Drupal\hpc_api\Plugin\EndpointQuery\IconQuery
    */
   public $iconQuery;
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function metadata(): ?HPCBlockMetadata {
+    return new HPCBlockMetadata(
+      defaultTitle: 'Operations by admin area',
+      dataSources: [
+        'project_search' => 'hpc_api:plan_project_search_query',
+        'locations' => 'hpc_api:locations_query',
+      ],
+      configForms: [
+        'organizations' => [
+          'title' => 'Organizations',
+          'callback' => 'organizationsForm',
+        ],
+        'display' => [
+          'title' => 'Display',
+          'callback' => 'displayForm',
+        ],
+      ]
+    );
+  }
 
   /**
    * {@inheritdoc}

@@ -4,8 +4,11 @@ namespace Drupal\ghi_blocks\Plugin\Block\Plan;
 
 use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Component\Utility\Html;
+use Drupal\Core\Block\Attribute\Block;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Plugin\Context\EntityContextDefinition;
 use Drupal\Core\Render\Markup;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\ghi_blocks\Interfaces\AttachmentTableInterface;
 use Drupal\ghi_blocks\Interfaces\ConfigurableTableBlockInterface;
 use Drupal\ghi_blocks\Interfaces\MultiStepFormBlockInterface;
@@ -18,44 +21,23 @@ use Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment;
 use Drupal\ghi_plans\ApiObjects\Entities\PlanEntity;
 use Drupal\hpc_api\Helpers\ArrayHelper;
 use Drupal\hpc_api\Query\EndpointQuery;
+use Drupal\hpc_common\Plugin\HPCBlockMetadata;
 use Drupal\hpc_downloads\Interfaces\HPCDownloadExcelInterface;
 use Drupal\hpc_downloads\Interfaces\HPCDownloadPNGInterface;
 
 /**
  * Provides a 'PlanEntityAttachmentsTable' block.
- *
- * @Block(
- *  id = "plan_entity_attachments_table",
- *  admin_label = @Translation("Entity Attachments Table"),
- *  category = @Translation("Plan elements"),
- *  data_sources = {
- *    "entities" = "fabric_query:plan_entity",
- *    "attachment" = "fabric_query:attachment",
- *    "attachment_prototype" = "fabric_query:attachment_prototype",
- *  },
- *  default_title = @Translation("Indicator overview"),
- *  context_definitions = {
- *    "node" = @ContextDefinition("entity:node", label = @Translation("Node")),
- *    "plan" = @ContextDefinition("entity:base_object", label = @Translation("Plan"), constraints = { "Bundle": "plan" }),
- *    "plan_cluster" = @ContextDefinition("entity:base_object", label = @Translation("Cluster"), constraints = { "Bundle": "governing_entity" }, required =  FALSE)
- *  },
- *  config_forms = {
- *    "attachments" = {
- *      "title" = @Translation("Attachments"),
- *      "callback" = "attachmentsForm"
- *    },
- *    "table" = {
- *      "title" = @Translation("Table"),
- *      "callback" = "tableForm"
- *    },
- *    "display" = {
- *      "title" = @Translation("Display"),
- *      "callback" = "displayForm",
- *      "base_form" = TRUE
- *    }
- *  }
- * )
  */
+#[Block(
+  id: 'plan_entity_attachments_table',
+  admin_label: new TranslatableMarkup('Entity Attachments Table'),
+  category: new TranslatableMarkup('Plan elements'),
+  context_definitions: [
+    'node' => new EntityContextDefinition('entity:node', new TranslatableMarkup('Node')),
+    'plan' => new EntityContextDefinition('entity:base_object', new TranslatableMarkup('Plan'), constraints: ['Bundle' => 'plan']),
+    'plan_cluster' => new EntityContextDefinition('entity:base_object', new TranslatableMarkup('Cluster'), required: FALSE, constraints: ['Bundle' => 'governing_entity']),
+  ],
+)]
 class PlanEntityAttachmentsTable extends GHIBlockBase implements ConfigurableTableBlockInterface, MultiStepFormBlockInterface, OverrideDefaultTitleBlockInterface, AttachmentTableInterface, HPCDownloadExcelInterface, HPCDownloadPNGInterface {
 
   use ConfigurationContainerTrait;
@@ -70,6 +52,35 @@ class PlanEntityAttachmentsTable extends GHIBlockBase implements ConfigurableTab
    * @var bool
    */
   private $isExport = FALSE;
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function metadata(): ?HPCBlockMetadata {
+    return new HPCBlockMetadata(
+      defaultTitle: 'Indicator overview',
+      dataSources: [
+        'entities' => 'fabric_query:plan_entity',
+        'attachment' => 'fabric_query:attachment',
+        'attachment_prototype' => 'fabric_query:attachment_prototype',
+      ],
+      configForms: [
+        'attachments' => [
+          'title' => 'Attachments',
+          'callback' => 'attachmentsForm',
+        ],
+        'table' => [
+          'title' => 'Table',
+          'callback' => 'tableForm',
+        ],
+        'display' => [
+          'title' => 'Display',
+          'callback' => 'displayForm',
+          'base_form' => TRUE,
+        ],
+      ]
+    );
+  }
 
   /**
    * {@inheritdoc}

@@ -2,20 +2,28 @@
 
 namespace Drupal\ghi_blocks\Plugin\Block\Generic;
 
+use Drupal\Core\Block\Attribute\Block;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\hpc_common\Plugin\HPCBlockMetadata;
 
 /**
  * Provides a 'Document link button' block.
- *
- * @Block(
- *  id = "generic_document_link_button",
- *  admin_label = @Translation("Document link button"),
- *  category = @Translation("Generic elements"),
- *  title = FALSE
- * )
  */
+#[Block(
+  id: 'generic_document_link_button',
+  admin_label: new TranslatableMarkup('Document link button'),
+  category: new TranslatableMarkup('Generic elements'),
+)]
 class DocumentLinkButton extends GHIBlockBase {
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function metadata(): ?HPCBlockMetadata {
+    return new HPCBlockMetadata(usesTitle: FALSE);
+  }
 
   /**
    * {@inheritdoc}

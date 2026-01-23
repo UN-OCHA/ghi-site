@@ -2,40 +2,32 @@
 
 namespace Drupal\ghi_blocks\Plugin\Block\GlobalPage;
 
+use Drupal\Core\Block\Attribute\Block;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Plugin\Context\ContextDefinition;
+use Drupal\Core\Plugin\Context\EntityContextDefinition;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\ghi_blocks\Interfaces\MultiStepFormBlockInterface;
 use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
 use Drupal\ghi_blocks\Traits\GlobalPlanOverviewBlockTrait;
 use Drupal\ghi_blocks\Traits\HomepageBlockTrait;
 use Drupal\ghi_form_elements\Traits\ConfigurationContainerGroup;
 use Drupal\ghi_form_elements\Traits\ConfigurationContainerTrait;
+use Drupal\hpc_common\Plugin\HPCBlockMetadata;
 use Drupal\hpc_common\Helpers\CommonHelper;
 
 /**
  * Provides a 'KeyFigures' block.
- *
- * @Block(
- *  id = "global_key_figures",
- *  admin_label = @Translation("Key figures"),
- *  category = @Translation("Global"),
- *  data_sources = {
- *    "plans_overview" = "fabric_query:plan_overview",
- *    "funding_overview" = "hpc_api:funding_overview_query",
- *  },
- *  context_definitions = {
- *    "node" = @ContextDefinition("entity:node", label = @Translation("Node"), required = FALSE),
- *    "year" = @ContextDefinition("integer", label = @Translation("Year"))
- *  },
- *  title = FALSE,
- *  config_forms = {
- *    "key_figures" = {
- *      "title" = @Translation("Key figures"),
- *      "callback" = "keyFiguresForm",
- *      "base_form" = TRUE
- *    }
- *  }
- * )
  */
+#[Block(
+  id: 'global_key_figures',
+  admin_label: new TranslatableMarkup('Key figures'),
+  category: new TranslatableMarkup('Global'),
+  context_definitions: [
+    'node' => new EntityContextDefinition('entity:node', new TranslatableMarkup('Node'), required: FALSE),
+    'year' => new ContextDefinition(data_type: 'integer', label: new TranslatableMarkup("Year")),
+  ],
+)]
 class KeyFigures extends GHIBlockBase implements MultiStepFormBlockInterface {
 
   use GlobalPlanOverviewBlockTrait;
@@ -44,6 +36,26 @@ class KeyFigures extends GHIBlockBase implements MultiStepFormBlockInterface {
   use HomepageBlockTrait;
 
   const MAX_ITEMS = 30;
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function metadata(): ?HPCBlockMetadata {
+    return new HPCBlockMetadata(
+      usesTitle: FALSE,
+      dataSources: [
+        'plans_overview' => 'fabric_query:plan_overview',
+        'funding_overview' => 'hpc_api:funding_overview_query',
+      ],
+      configForms: [
+        'key_figures' => [
+          'title' => 'Key figures',
+          'callback' => 'keyFiguresForm',
+          'base_form' => TRUE,
+        ],
+      ]
+    );
+  }
 
   /**
    * {@inheritdoc}

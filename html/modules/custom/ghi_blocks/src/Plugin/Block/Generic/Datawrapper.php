@@ -4,21 +4,29 @@ namespace Drupal\ghi_blocks\Plugin\Block\Generic;
 
 use Drupal\Component\Utility\Html;
 use Drupal\Component\Utility\UrlHelper;
+use Drupal\Core\Block\Attribute\Block;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\Markup;
 use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\hpc_common\Plugin\HPCBlockMetadata;
 
 /**
  * Provides a 'Datawrapper' block.
- *
- * @Block(
- *  id = "generic_datawrapper",
- *  admin_label = @Translation("Datawrapper"),
- *  category = @Translation("Generic elements"),
- *  title = FALSE
- * )
  */
+#[Block(
+  id: 'generic_datawrapper',
+  admin_label: new TranslatableMarkup('Datawrapper'),
+  category: new TranslatableMarkup('Generic elements'),
+)]
 class Datawrapper extends GHIBlockBase {
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function metadata(): ?HPCBlockMetadata {
+    return new HPCBlockMetadata(usesTitle: FALSE);
+  }
 
   /**
    * {@inheritdoc}
