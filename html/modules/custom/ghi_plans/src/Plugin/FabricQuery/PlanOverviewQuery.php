@@ -86,19 +86,15 @@ class PlanOverviewQuery extends FabricQueryBase {
       return;
     }
 
-    $payload = "
-      plans (first: 1000, filter:  {
-        planPeriod: {
+    $plan_objects = $this->fabricClient->createQuery('plans', Plan::GRAPHQL_DIMENSION_ITEMS)
+      ->setFilter('planPeriod', '{
           period: {
             PeriodType: { eq: \"Year\" }
             CalendarYear: { eq: {$year} }
           }
-        }
-      }) {
-        items { " . Plan::GRAPHQL_DIMENSION_ITEMS . " }
-      }";
-    $data = $this->fabricQuery->query($payload);
-    $plan_objects = $this->getItems($data, 'plans');
+        }')
+      ->execute();
+
     $plan_ids = array_map(fn ($plan_object) => $plan_object->Id, $plan_objects);
     $attachments = $this->attachmentQuery->getAttachmentsByObject('plan', $plan_ids, ['caseload', 'financial']);
     $caseloads_by_plan = [];

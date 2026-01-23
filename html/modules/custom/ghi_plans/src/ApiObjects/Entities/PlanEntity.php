@@ -9,23 +9,22 @@ use Drupal\ghi_plans\Helpers\PlanEntityHelper;
  */
 class PlanEntity extends EntityObjectBase {
 
-  const GRAPHQL_DIMENSION_ITEMS = "
-    Id
-    Name
-    Description
-    PlanId
-    EntityTypeId
-    CoordinationEntityId
-    HpcEntityPrototypeId
-    CustomReference
-    ComposedReference
-    SortOrder
-    logframeEntityLink {
-      items {
-        ParentLogframeEntityId
-      }
-    }
-  ";
+  /**
+   * Define the dimension items used in queries.
+   */
+  const GRAPHQL_DIMENSION_ITEMS = [
+    'Id',
+    'Name',
+    'Description',
+    'PlanId',
+    'EntityTypeId',
+    'CoordinationEntityId',
+    'HpcEntityPrototypeId',
+    'CustomReference',
+    'ComposedReference',
+    'SortOrder',
+    'logframeEntityLink { items { ParentLogframeEntityId } }',
+  ];
 
   /**
    * {@inheritdoc}
@@ -41,10 +40,10 @@ class PlanEntity extends EntityObjectBase {
       'singular_name' => $prototype?->getNameSingular(),
       'plural_name' => $prototype?->getNamePlural(),
       'description' => $data->Name,
-      // @codingStandardsIgnoreStart
+      // phpcs:disable
       // @todo Retrieve and store the support information.
       // 'support' => !empty($_entity_version->value->support) ? (array) $_entity_version->value->support : NULL,
-      // @codingStandardsIgnoreEnd
+      // phpcs:enable
       'ref_code' => $prototype?->getRefCode(),
       'entity_type' => $prototype?->getType(),
       'entity_prototype_id' => $prototype?->id(),

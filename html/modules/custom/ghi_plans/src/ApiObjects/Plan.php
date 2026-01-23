@@ -19,36 +19,38 @@ class Plan extends BaseObject implements PlanEntityInterface {
 
   const ENTITY_REF_CODE = 'PL';
 
-  const GRAPHQL_DIMENSION_ITEMS = '
-    Id
-    Name
-    ShortName
-    PlanSubTitle
-    PlanType
-    PlanCosting
-    PlanLanguageCode
-    PlanClusterType
-    StartDate
-    EndDate
-    CreatedAt
-    UpdatedAt
-    IsReleased
-    IsRestricted
-    IsPartOfGHO
-    DocumentPublishDate
-    Description
-    FocusedLocationName
-    FocusedLocationId
-    planPeriod {
-      items { period { CalendarYear } }
-    }
-    planLocation {
-      items { location { ' . Country::GRAPHQL_DIMENSION_ITEMS . ' } }
-    }
-    planOrganization (filter: { RecordStatus: { eq: "Active" } } ) {
-      items { organization { ' . Organization::GRAPHQL_DIMENSION_ITEMS . ' } }
-    }
-  ';
+  /**
+   * Define the dimension items used in queries.
+   */
+  const GRAPHQL_DIMENSION_ITEMS = [
+    'Id',
+    'Name',
+    'ShortName',
+    'PlanSubTitle',
+    'PlanType',
+    'PlanCosting',
+    'PlanLanguageCode',
+    'PlanClusterType',
+    'StartDate',
+    'EndDate',
+    'CreatedAt',
+    'UpdatedAt',
+    'IsReleased',
+    'IsRestricted',
+    'IsPartOfGHO',
+    'DocumentPublishDate',
+    'Description',
+    'FocusedLocationName',
+    'FocusedLocationId',
+    // phpcs:disable Squiz.Arrays.ArrayDeclaration.KeySpecified
+    'planPeriod' => ['items' => ['period' => ['CalendarYear']]],
+    'planLocation' => ['items' => ['location' => Country::GRAPHQL_DIMENSION_ITEMS]],
+    'planOrganization' => [
+      'filter' => ['RecordStatus' => 'Active'],
+      'items' => ['organization' => Organization::GRAPHQL_DIMENSION_ITEMS],
+    ],
+    // phpcs:enable Squiz.Arrays.ArrayDeclaration.KeySpecified
+  ];
 
   /**
    * Map the raw data.

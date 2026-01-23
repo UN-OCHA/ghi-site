@@ -22,7 +22,6 @@ use Drupal\hpc_api\ApiObjects\Types\RelationshipType;
 use Drupal\hpc_api\ApiObjects\Types\ResourceType;
 use Drupal\hpc_api\ApiObjects\Types\SettlementType;
 use Drupal\hpc_api\ApiObjects\Types\Unit;
-use Drupal\hpc_api\Helpers\ArrayHelper;
 use Drupal\hpc_api\Traits\SimpleCacheTrait;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -49,11 +48,11 @@ abstract class FabricQueryBase extends PluginBase implements FabricQueryPluginIn
   const CATEGORY_NAME_PLAN_COSTING = 'PlanCosting';
 
   /**
-   * The endpoint query service.
+   * The fabric query builder service.
    *
-   * @var \Drupal\hpc_api\Query\FabricQuery
+   * @var \Drupal\hpc_api\Query\FabricClient
    */
-  public $fabricQuery;
+  public $fabricClient;
 
   /**
    * The current user.
@@ -108,9 +107,9 @@ abstract class FabricQueryBase extends PluginBase implements FabricQueryPluginIn
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition): FabricQueryBase {
-    /** @var \Drupal\hpc_api\Query\FabricQueryBase $instance */
+    /** @var self $instance */
     $instance = new static($configuration, $plugin_id, $plugin_definition);
-    $instance->fabricQuery = $container->get('hpc_api.fabric_query');
+    $instance->fabricClient = $container->get('hpc_api.fabric_client');
     $instance->user = $container->get('current_user');
     $instance->cache = $container->get('cache.data');
     return $instance;
@@ -128,6 +127,16 @@ abstract class FabricQueryBase extends PluginBase implements FabricQueryPluginIn
    */
   public function getPluginDefinition() {
     return $this->pluginDefinition;
+  }
+
+  /**
+   * Set if cache should be used.
+   *
+   * @param bool $status
+   *   TRUE if cache should be used (default) or FALSE otherwise.
+   */
+  public function setUseCache($status = TRUE) {
+    $this->fabricClient->setUseCache($status);
   }
 
   /**
@@ -194,11 +203,7 @@ abstract class FabricQueryBase extends PluginBase implements FabricQueryPluginIn
    *   The item list.
    */
   protected function getItems(object $data, ?string $namespace = NULL, string $key_property = 'Id'): array {
-    if ($namespace === NULL) {
-      $properties = array_keys(get_object_vars($data));
-      $namespace = count($properties) == 1 ? reset($properties) : NULL;
-    }
-    return $namespace ? ArrayHelper::keyByProperty($data?->{$namespace}?->items ?? [], $key_property) : [];
+    return $this->fabricClient->getItems($data, $namespace, $key_property);
   }
 
   /**
@@ -284,7 +289,7 @@ abstract class FabricQueryBase extends PluginBase implements FabricQueryPluginIn
     $payload = $query_key . ' (first: 1000) {
       items { ' . implode(' ', end($def)) . ' }
     }';
-    $data = $this->fabricQuery->query($payload);
+    $data = $this->fabricClient->query($payload);
     $class_name = reset($def);
     return $data ? $this->buildResultObjectsFromData($data, $query_key, $class_name) : FALSE;
   }
@@ -303,7 +308,7 @@ abstract class FabricQueryBase extends PluginBase implements FabricQueryPluginIn
     $payloads = array_map(fn($key, $def) => $key . ' (first: 1000) {
       items { ' . implode(' ', end($def)) . ' }
     }', array_keys($queries), $queries);
-    $data = $this->fabricQuery->query(implode(' ', $payloads));
+    $data = $this->fabricClient->query(implode(' ', $payloads));
     $this->baseTypes = [];
     if ($data === FALSE) {
       return;
@@ -328,7 +333,7 @@ abstract class FabricQueryBase extends PluginBase implements FabricQueryPluginIn
           CalendarYear
         }
       }";
-    $data = $this->fabricQuery->query($payload);
+    $data = $this->fabricClient->query($payload);
     $this->planYears = $this->buildResultObjectsFromData($data, 'periods', PlanYear::class);
   }
 
@@ -382,7 +387,7 @@ abstract class FabricQueryBase extends PluginBase implements FabricQueryPluginIn
           Code
         }
       }";
-    $data = $this->fabricQuery->query($payload);
+    $data = $this->fabricClient->query($payload);
     return $this->getItems($data, 'categories');
   }
 
@@ -426,7 +431,7 @@ abstract class FabricQueryBase extends PluginBase implements FabricQueryPluginIn
           RelationshipType
         }
       }";
-    $data = $this->fabricQuery->query($payload);
+    $data = $this->fabricClient->query($payload);
     return $this->buildResultObjectsFromData($data, 'relationships', Relationship::class);
   }
 
@@ -668,32 +673,32 @@ abstract class FabricQueryBase extends PluginBase implements FabricQueryPluginIn
     $entity_type = $this->getEntityTypeById($entity_type_id);
     switch ($entity_type->getName()) {
       case 'Plan':
-        $data = $this->fabricQuery->query("plans (filter: { Id: { eq: {$entity_id} } }) { items { Id Name } } ");
+        $data = $this->fabricClient->query("plans (filter: { Id: { eq: {$entity_id} } }) { items { Id Name } } ");
         $items = $data ? $this->getItems($data, 'plans') : [];
         return $items[$entity_id]?->Name ?? NULL;
 
       case 'Project':
-        $data = $this->fabricQuery->query("projects (filter: { Id: { eq: {$entity_id} } }) { items { Id ProjectCode Name } } ");
+        $data = $this->fabricClient->query("projects (filter: { Id: { eq: {$entity_id} } }) { items { Id ProjectCode Name } } ");
         $items = $data ? $this->getItems($data, 'projects') : [];
         return !empty($items[$entity_id]) ? ($items[$entity_id]->ProjectCode . ': ' . $items[$entity_id]->Name) : NULL;
 
       case 'Location':
-        $data = $this->fabricQuery->query("locations (filter: { Id: { eq: {$entity_id} } }) { items { Id Name } } ");
+        $data = $this->fabricClient->query("locations (filter: { Id: { eq: {$entity_id} } }) { items { Id Name } } ");
         $items = $data ? $this->getItems($data, 'locations') : [];
         return $items[$entity_id]?->Name ?? NULL;
 
       case 'Organization':
-        $data = $this->fabricQuery->query("organizations (filter: { Id: { eq: {$entity_id} } }) { items { Id Name } } ");
+        $data = $this->fabricClient->query("organizations (filter: { Id: { eq: {$entity_id} } }) { items { Id Name } } ");
         $items = $data ? $this->getItems($data, 'organizations') : [];
         return $items[$entity_id]?->Name ?? NULL;
 
       case 'FieldCluster':
-        $data = $this->fabricQuery->query("coordinationEntities (filter: { Id: { eq: {$entity_id} } }) { items { Id Name } } ");
+        $data = $this->fabricClient->query("coordinationEntities (filter: { Id: { eq: {$entity_id} } }) { items { Id Name } } ");
         $items = $data ? $this->getItems($data, 'coordinationEntities') : [];
         return $items[$entity_id]?->Name ?? NULL;
 
       case 'Period':
-        $data = $this->fabricQuery->query("periods (filter: { Id: { eq: {$entity_id} } }) { items { Id Name } } ");
+        $data = $this->fabricClient->query("periods (filter: { Id: { eq: {$entity_id} } }) { items { Id Name } } ");
         $items = $data ? $this->getItems($data, 'periods') : [];
         return $items[$entity_id]?->Name ?? NULL;
 
@@ -701,7 +706,7 @@ abstract class FabricQueryBase extends PluginBase implements FabricQueryPluginIn
       case 'SpecificObjective':
       case 'ClusterObjective':
       case 'ClusterActivity':
-        $data = $this->fabricQuery->query("logframeEntities (filter: { Id: { eq: {$entity_id} } }) { items { Id Name } } ");
+        $data = $this->fabricClient->query("logframeEntities (filter: { Id: { eq: {$entity_id} } }) { items { Id Name } } ");
         $items = $data ? $this->getItems($data, 'logframeEntities') : [];
         return $items[$entity_id]?->Name ?? NULL;
     }

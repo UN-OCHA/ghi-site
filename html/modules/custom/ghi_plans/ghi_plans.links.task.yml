@@ -3,3 +3,14 @@ entity.base_object.plan_structure:
   base_route: entity.base_object.canonical
   title: Plan structure
   weight: 100
+
+hpc_api.fabric_report.entity_lookup:
+  route_name: ghi_plans.entity_lookup
+  base_route: hpc_api.fabric_report
+  title: 'Entity lookup'
+  weight: 5
+hpc_api.fabric_report.attachment_lookup:
+  route_name: ghi_plans.attachment_lookup
+  base_route: hpc_api.fabric_report
+  title: 'Attachment lookup'
+  weight: 7

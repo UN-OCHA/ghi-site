@@ -75,7 +75,7 @@ class ArrayHelperTest extends UnitTestCase {
    */
   public function testMapObjectsToString() {
     $class = function ($value) {
-      // @codingStandardsIgnoreStart
+      // phpcs:disable
       return new class ($value) {
         private $value;
         public function __construct($value) {
@@ -83,7 +83,7 @@ class ArrayHelperTest extends UnitTestCase {
         }
         public function __toString() { return $this->value; }
       };
-      // @codingStandardsIgnoreEnd
+      // phpcs:enable
     };
     $array = [
       6 => [6 => 'six', 5 => $class('eleven'), 9 => ['one', 'three', $class('two')]],

@@ -35,36 +35,28 @@ class AttachmentFact extends ApiObjectBase {
     'optionOverallCumulReach',
   ];
 
-  const GRAPHQL_FACTS_ITEMS = '
-    Id
-    AttachmentId
-    MetricTypeId
-    PeriodId
-    SectorId
-    LocationId
-    GenderId
-    AgeGroupId
-    PopulationStatusId
-    SettlementTypeId
-    DisabilityStatusId
-    HealthInterventionCategoryId
-    MaternalStatusId
-    DisaggregationCategoryOtherId
-    DeliveryModalityId
-    CalcMethodId
-    IsTotal
-    ValueNum
-    CustomMetricName
-    EffectiveFrom
-    EffectiveTo
-    Description
-    VisibilityGroupId
-    Source
-    SourceId
-    CreatedAt
-    UpdatedAt
-    IsLocked
-  ';
+  const GRAPHQL_FACTS_ITEMS = [
+    'Id',
+    'AttachmentId',
+    'MetricTypeId',
+    'PeriodId',
+    'SectorId',
+    'LocationId',
+    'GenderId',
+    'AgeGroupId',
+    'PopulationStatusId',
+    'SettlementTypeId',
+    'DisabilityStatusId',
+    'HealthInterventionCategoryId',
+    'MaternalStatusId',
+    'DisaggregationCategoryOtherId',
+    'DeliveryModalityId',
+    'CalcMethodId',
+    'CustomMetricName',
+    'Description',
+    'IsTotal',
+    'ValueNum',
+  ];
 
   /**
    * {@inheritdoc}

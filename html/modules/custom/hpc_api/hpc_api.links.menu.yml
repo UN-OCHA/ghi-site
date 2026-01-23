@@ -13,16 +13,24 @@ hpc_api.fabric_report:
   description: 'Access fabric reports.'
   route_name: hpc_api.reports.fabric
   parent: system.admin_reports
+hpc_api.fabric_report.query:
+  title: 'Execute query'
+  description: 'Execute a fabric query.'
+  route_name: hpc_api.reports.fabric.query
+  parent: hpc_api.fabric_report
+  weight: 0
 hpc_api.fabric_report.base_types:
   title: 'Base types'
   description: 'List known base types.'
   route_name: hpc_api.reports.fabric.base_types
   parent: hpc_api.fabric_report
+  weight: 1
 hpc_api.fabric_report.relationships:
   title: 'Relationships'
   description: 'Lookup relationships.'
   route_name: hpc_api.reports.fabric.relationships
   parent: hpc_api.fabric_report
+  weight: 2
 hpc_api.files_report:
   title: HPC files
   description: 'List files imported from HPC.'

@@ -111,7 +111,7 @@ abstract class EntityObjectBase extends ApiObjectBase implements EntityObjectInt
    */
   public function getTags() {
     // Make all tags lowercase.
-    return array_map('strtolower', $this->tags);
+    return array_map('strtolower', $this->tags ?? []);
   }
 
   /**
@@ -133,7 +133,7 @@ abstract class EntityObjectBase extends ApiObjectBase implements EntityObjectInt
    * {@inheritdoc}
    */
   public function getPlanId() {
-    return $this->getRawData()->plan?->Id ?? NULL;
+    return $this->getRawData()->PlanId ?? NULL;
   }
 
 }

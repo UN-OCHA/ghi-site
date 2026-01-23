@@ -83,3 +83,12 @@ ghi_plans.attachment_lookup:
     _permission: 'access site reports'
   options:
     _admin_route: TRUE
+ghi_plans.entity_lookup:
+  path: '/admin/reports/fabric/entity-lookup'
+  defaults:
+    _form: '\Drupal\ghi_plans\Form\EntityLookupForm'
+    _title: 'Entity lookup'
+  requirements:
+    _permission: 'access site reports'
+  options:
+    _admin_route: TRUE

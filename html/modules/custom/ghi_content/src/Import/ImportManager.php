@@ -448,11 +448,11 @@ class ImportManager implements ContainerInjectionInterface {
     $delta = 0;
     $section = &$sections[$delta];
 
-    // @codingStandardsIgnoreStart
+    // phpcs:disable
     $existing_chapters_count = count(array_filter(array_map(function ($component) {
       return $component->getPlugin() instanceof DocumentChapter;
     }, $section->getComponents())));
-    // @codingStandardsIgnoreEnd
+    // phpcs:enable
 
     if ($cleanup && $section->getComponents()) {
       foreach ($section->getComponents() as $component) {
@@ -528,7 +528,7 @@ class ImportManager implements ContainerInjectionInterface {
 
     }
 
-    // @codingStandardsIgnoreStart
+    // phpcs:disable
     // if ($existing_chapters_count && !empty($new_components)) {
     //   $this->positionNewComponents($section, $new_components, $chapters);
     //   if ($node instanceof ContentReviewInterface) {
@@ -537,7 +537,7 @@ class ImportManager implements ContainerInjectionInterface {
     //     $node->needsReview(TRUE);
     //   }
     // }
-    // @codingStandardsIgnoreEnd
+    // phpcs:enable
 
     // Always cleanup chapters that have been removed from the source.
     $definition = $this->getChapterPluginDefintion();

@@ -256,7 +256,7 @@ class ApiEntityHelper {
    *   An array of plan ids which are supported by the given $entity.
    */
   public static function getSupportPlanIds(array $entities, $entity, $chained = FALSE) {
-    $entity_version = ApiEntityHelper::getEntityVersion($entity);
+    $entity_version = self::getEntityVersion($entity);
     if (empty($entity_version->value->support)) {
       return [];
     }

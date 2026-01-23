@@ -20,16 +20,14 @@ class PlanImportQuery extends FabricQueryBase implements ImportQueryInterface {
    * {@inheritdoc}
    */
   public function getSourceData() {
-    $payload = '
-      plans (first: 10000, orderBy: { Id: DESC }) {
-        items {
-          Id
-          Name
-          ShortName
-        }
-      }';
-    $data = $this->fabricQuery->query($payload);
-    return $this->getItems($data, 'plans');
+    $items = [
+      'Id',
+      'Name',
+      'ShortName',
+    ];
+    return $this->fabricClient->createQuery('plans', $items)
+      ->setOrderBy(['Id' => 'DESC'])
+      ->execute();
   }
 
 }
