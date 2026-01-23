@@ -23,6 +23,13 @@ hpc_api.reports.fabric:
     _title: 'Fabric'
   requirements:
     _permission: 'access site reports'
+hpc_api.reports.fabric.query:
+  path: '/admin/reports/fabric/query'
+  defaults:
+    _form: '\Drupal\hpc_api\Form\FabricQueryForm'
+    _title: 'Execute query'
+  requirements:
+    _permission: 'administer site configuration'
 hpc_api.reports.fabric.base_types:
   path: '/admin/reports/fabric/base-types'
   defaults:

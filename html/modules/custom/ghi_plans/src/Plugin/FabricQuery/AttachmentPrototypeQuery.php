@@ -17,6 +17,24 @@ use Drupal\hpc_api\Query\FabricQueryBase;
 class AttachmentPrototypeQuery extends FabricQueryBase {
 
   /**
+   * Internal helper to query attachment prototypes with the given filters.
+   *
+   * @param array $filters
+   *   An associative array of filters.
+   *
+   * @return false|object|array
+   *   The result from the fabric query or FALSE on failure.
+   */
+  private function queryWithFilters($filters): false|object|array {
+    return $this->fabricClient->createQuery('attachmentPrototypes', AttachmentPrototype::GRAPHQL_DIMENSION_ITEMS)
+      ->setFilters($filters + [
+        'RecordStatus' => 'Active',
+      ])
+      ->execute();
+
+  }
+
+  /**
    * Get an attachment prototype by its id.
    *
    * @param int $prototype_id
@@ -27,16 +45,9 @@ class AttachmentPrototypeQuery extends FabricQueryBase {
    */
   public function getPrototype(int $prototype_id): ?AttachmentPrototype {
     // Get the attachment data.
-    $payload = "
-      attachmentPrototypes (filter: {
-        Id:  {
-          eq: {$prototype_id}
-        }
-      }) {
-        items { " . AttachmentPrototype::GRAPHQL_DIMENSION_ITEMS . "}
-      }";
-    $data = $this->fabricQuery->query($payload);
-    $prototypes = $this->getItems($data, 'attachmentPrototypes');
+    $prototypes = $this->queryWithFilters([
+      'Id' => $prototype_id,
+    ]);
     if (empty($prototypes)) {
       return NULL;
     }
@@ -55,16 +66,9 @@ class AttachmentPrototypeQuery extends FabricQueryBase {
    */
   public function getPrototypes(array $prototype_ids): array {
     // Get the attachment data.
-    $payload = "
-      attachmentPrototypes (filter: {
-        Id:  {
-          in: [ " . implode(',', $prototype_ids) . " ]
-        }
-      }) {
-        items { " . AttachmentPrototype::GRAPHQL_DIMENSION_ITEMS . "}
-      }";
-    $data = $this->fabricQuery->query($payload);
-    $prototypes = $this->getItems($data, 'attachmentPrototypes');
+    $prototypes = $this->queryWithFilters([
+      'Id' => $prototype_ids,
+    ]);
     if (empty($prototypes)) {
       return [];
     }
@@ -84,14 +88,9 @@ class AttachmentPrototypeQuery extends FabricQueryBase {
    */
   public function getPrototypeByPlanAndId(int $plan_id, int $prototype_id): ?AttachmentPrototype {
     // Get the attachment data.
-    $payload = "
-      attachmentPrototypes (filter: {
-        PlanId:  { eq: {$plan_id} }
-      }) {
-        items { " . AttachmentPrototype::GRAPHQL_DIMENSION_ITEMS . " }
-      }";
-    $data = $this->fabricQuery->query($payload);
-    $prototypes = $this->getItems($data, 'attachmentPrototypes');
+    $prototypes = $this->queryWithFilters([
+      'PlanId' => $plan_id,
+    ]);
     if (empty($prototypes)) {
       return NULL;
     }
@@ -110,16 +109,11 @@ class AttachmentPrototypeQuery extends FabricQueryBase {
    */
   public function getDataPrototypesForPlan($plan_id) {
     // Get the attachment data.
-    $types = '"' . implode('", "', AttachmentPrototype::DATA_TYPES) . '"';
-    $payload = "
-      attachmentPrototypes (filter: {
-        PlanId: { eq: {$plan_id} }
-        and: [{ Type: { in: [{$types}] } }]
-      }) {
-        items { " . AttachmentPrototype::GRAPHQL_DIMENSION_ITEMS . " }
-      }";
-    $data = $this->fabricQuery->query($payload);
-    return $this->buildResultObjectsFromData($data, 'attachmentPrototypes', AttachmentPrototype::class);
+    $prototypes = $this->queryWithFilters([
+      'PlanId' => $plan_id,
+      'Type' => AttachmentPrototype::DATA_TYPES,
+    ]);
+    return $this->buildResultObjects($prototypes, AttachmentPrototype::class);
   }
 
 }

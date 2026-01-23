@@ -231,7 +231,7 @@ class FundingData extends ConfigurationContainerItemPluginBase {
         $value = $this->getValueWithClusterRestrict($data_type, $cluster_restrict);
       }
       else {
-        $value = $this->getValueForPlan($plan_object->getSourceId(), $property);
+        $value = $this->getValueForPlan($plan_object, $property);
       }
     }
     elseif ($cluster_context) {
@@ -245,20 +245,21 @@ class FundingData extends ConfigurationContainerItemPluginBase {
   /**
    * Get a value from a specific plan.
    *
-   * @param int $plan_id
-   *   The plan id.
+   * @param \Drupal\ghi_plans\Entity\Plan $plan
+   *   The plan entity object.
    * @param string $property
    *   The property to retrieve.
    *
    * @return float|mixed|null
    *   The value.
    */
-  public function getValueForPlan($plan_id, $property) {
+  public function getValueForPlan(Plan $plan, $property) {
+    $plan_id = $plan->getSourceId();
     $this->fundingSummaryQuery->setPlaceholder('plan_id', $plan_id);
     switch ($property) {
       case 'current_requirements':
       case 'original_requirements':
-        return $this->getRequirements('plan', $plan_id);
+        return $plan->getRequirements();
 
       case 'total_funding':
         return $this->fundingSummaryQuery->getTotalFunding();
@@ -267,12 +268,10 @@ class FundingData extends ConfigurationContainerItemPluginBase {
         return $this->fundingSummaryQuery->getOutsideFunding();
 
       case 'funding_gap':
-        $requirements = $this->getRequirements('plan', $plan_id);
-        return $this->fundingSummaryQuery->getFundingGap($requirements);
+        return $plan->getFundingGap($this->fundingSummaryQuery->getTotalFunding());
 
       case 'funding_coverage':
-        $requirements = $this->getRequirements('plan', $plan_id);
-        return $this->fundingSummaryQuery->getFundingCoverage($requirements);
+        return $plan->getCoverage($this->fundingSummaryQuery->getTotalFunding());
 
       default:
         return $this->fundingSummaryQuery->get($property, 0);

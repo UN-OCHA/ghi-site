@@ -40,7 +40,7 @@ class EntityQuery extends FabricQueryBase {
     if (!$query) {
       return NULL;
     }
-    $data = $this->fabricQuery->query($query);
+    $data = $this->fabricClient->query($query);
     $items = $data ? $this->getItems($data, $query_definition['namespace'], $query_definition['primary_key']) : [];
     return $items[$entity_id] ?? NULL;
   }

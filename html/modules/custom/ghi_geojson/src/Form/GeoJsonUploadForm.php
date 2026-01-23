@@ -405,16 +405,16 @@ class GeoJsonUploadForm extends WizardBase {
     if ($replace_version === NULL) {
       $options = array_diff($range, $versions);
     }
-    else if ($replace_version == 'current' && count($versions) == 1) {
+    elseif ($replace_version == 'current' && count($versions) == 1) {
       $options = $range;
     }
-    else if ($replace_version == 'current' && count($versions) > 1) {
+    elseif ($replace_version == 'current' && count($versions) > 1) {
       $previous_version = $versions[1];
       $options = array_filter($range, function ($year) use ($previous_version) {
         return $year > $previous_version;
       });
     }
-    else if ($replace_version != 'current' && count($versions) > 1) {
+    elseif ($replace_version != 'current' && count($versions) > 1) {
       $index = array_search($replace_version, $versions);
       $previous_version = $versions[$index + 1] ?? NULL;
       $options = array_filter($range, function ($year) use ($replace_version, $previous_version) {

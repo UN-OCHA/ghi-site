@@ -13,16 +13,19 @@ class Country extends BaseObject implements GeoJsonLocationInterface {
 
   use GeoJsonLocationTrait;
 
-  const GRAPHQL_DIMENSION_ITEMS = "
-    Id
-    Name
-    ISO3
-    Pcode
-    Latitude
-    Longitude
-    RecordStatus
-    ActiveUntil
-  ";
+  /**
+   * Define the dimension items used in queries.
+   */
+  const GRAPHQL_DIMENSION_ITEMS = [
+    'Id',
+    'Name',
+    'ISO3',
+    'Pcode',
+    'Latitude',
+    'Longitude',
+    'RecordStatus',
+    'ActiveUntil',
+  ];
 
   /**
    * {@inheritdoc}
@@ -36,6 +39,7 @@ class Country extends BaseObject implements GeoJsonLocationInterface {
       'iso3' => $data->ISO3 ?? NULL,
       'latLng' => [(string) ($data->Latitude ?? 0), (string) ($data->Longitude ?? 0)],
       'valid_on' => ($data->ActiveUntil ?? NULL) ? substr($data->ActiveUntil, 0, strlen($data->ActiveUntil) - 3) : NULL,
+      'status' => strtolower($data->RecordStatus),
     ];
   }
 

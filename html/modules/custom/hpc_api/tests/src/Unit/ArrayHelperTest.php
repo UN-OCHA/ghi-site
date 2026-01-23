@@ -415,7 +415,7 @@ class ArrayHelperTest extends UnitTestCase {
    */
   public function sortObjectsByMethodDataProvider() {
     $class = function ($item, $cost) {
-      // @codingStandardsIgnoreStart
+      // phpcs:disable
       return new class ($item, $cost) {
         private $item;
         private $cost;
@@ -426,7 +426,7 @@ class ArrayHelperTest extends UnitTestCase {
         public function getCost() { return $this->cost; }
         public function getItem() { return $this->item; }
       };
-      // @codingStandardsIgnoreEnd
+      // phpcs:enable
     };
 
     $array = [

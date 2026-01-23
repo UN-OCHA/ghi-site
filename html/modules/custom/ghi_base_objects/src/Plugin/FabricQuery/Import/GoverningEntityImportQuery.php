@@ -20,18 +20,15 @@ class GoverningEntityImportQuery extends FabricQueryBase implements ImportQueryI
    * {@inheritdoc}
    */
   public function getSourceData() {
-    $payload = '
-      coordinationEntities (first: 50000, orderBy: { Id: DESC }) {
-        items {
-          Id
-          Name
-          PlanId
-          HpcEntityPrototypeId
-        }
-      }';
-    $data = $this->fabricQuery->query($payload);
-    $governing_entity_items = $this->getItems($data, 'coordinationEntities');
-    return $governing_entity_items;
+    $items = [
+      'Id',
+      'Name',
+      'PlanId',
+      'HpcEntityPrototypeId',
+    ];
+    return $this->fabricClient->createQuery('coordinationEntities', $items)
+      ->setOrderBy(['Id' => 'DESC'])
+      ->execute();
   }
 
 }

@@ -3,18 +3,17 @@
 namespace Drupal\ghi_plans\Form;
 
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment;
 
 /**
- * Provides a form to lookup attachment data.
+ * Provides a form to lookup entity data.
  */
-class AttachmentLookupForm extends BaseLookupForm {
+class EntityLookupForm extends BaseLookupForm {
 
   /**
    * {@inheritdoc}
    */
   public function getFormId(): string {
-    return 'attachment_lookup_form';
+    return 'entity_lookup_form';
   }
 
   /**
@@ -28,57 +27,76 @@ class AttachmentLookupForm extends BaseLookupForm {
         'style' => 'display: flex; gap: 1rem; flex-wrap: wrap; align-items: anchor-center;',
       ],
     ];
-    $form['filter']['attachment_id'] = [
+    $form['filter']['entity_type'] = [
+      '#type' => 'select',
+      '#title' => $this->t('Entity type'),
+      '#options' => [
+        'plan' => $this->t('Plan'),
+        'planEntity' => $this->t('Plan entity'),
+        'governingEntity' => $this->t('Governing entity'),
+      ],
+    ];
+    $form['filter']['entity_id'] = [
       '#type' => 'number',
-      '#title' => $this->t('Attachment ID'),
+      '#title' => $this->t('Entity ID'),
     ];
     $form['filter']['submit'] = [
       '#type' => 'submit',
       '#value' => $this->t('Submit'),
     ];
 
-    $attachment_query = $this->getAttachmentQuery();
-    $attachment_query?->setUseCache(FALSE);
-    $attachment_id = $form_state->getValue('attachment_id');
-    if ($attachment_id && $attachment = $attachment_query?->getAttachment($attachment_id)) {
-      if ($attachment instanceof DataAttachment) {
-        $attachment->assureDisaggregatedData();
-      }
-      $form['attachment_type'] = [
+    $entity_query = $this->getPlanEntityQuery();
+    $entity_query?->setUseCache(FALSE);
+    $entity_type = $form_state->getValue('entity_type');
+    $entity_id = $form_state->getValue('entity_id');
+    if (!$entity_id) {
+      return $form;
+    }
+
+    if ($entity_type == 'plan') {
+      $entity = $this->getPlanQuery()->getPlan($entity_id);
+    }
+    else {
+      $entities = $this->getPlanEntityQuery()->getEntities($entity_type, [$entity_id]);
+      $entity = reset($entities);
+    }
+
+    if ($entity) {
+      $form['entity_type'] = [
         '#type' => 'html_tag',
         '#tag' => 'pre',
-        '#value' => $this->t('Attachment type: @type', [
-          '@type' => get_class($attachment),
+        '#value' => $this->t('Entity type: @type', [
+          '@type' => get_class($entity),
         ]),
       ];
-      $form['attachment_data'] = [
+      $form['entity_data'] = [
         '#type' => 'details',
         '#title' => $this->t('Processed data'),
         '#open' => TRUE,
         'children' => [
           '#type' => 'html_tag',
           '#tag' => 'pre',
-          '#value' => print_r($attachment->toArray(), TRUE),
+          '#value' => print_r($entity->toArray(), TRUE),
         ],
       ];
-      $form['attachment_source_data'] = [
+      $form['entity_source_data'] = [
         '#type' => 'details',
         '#title' => $this->t('Source data'),
         'children' => [
           '#type' => 'html_tag',
           '#tag' => 'pre',
-          '#value' => print_r($attachment->getRawData(), TRUE),
+          '#value' => print_r($entity->getRawData(), TRUE),
         ],
       ];
 
-      foreach ($this->getPublicMethodResults($attachment) as $method_name => $result) {
+      foreach ($this->getPublicMethodResults($entity) as $method_name => $result) {
         $form[$method_name] = [
           '#type' => 'details',
           '#title' => $method_name,
           'children' => [
             '#type' => 'html_tag',
             '#tag' => 'pre',
-            '#value' => empty($result) && $result !== 0 && $result !== FALSE ? 'no result' : print_r($result, TRUE),
+            '#value' => print_r($result, TRUE),
           ],
         ];
       }

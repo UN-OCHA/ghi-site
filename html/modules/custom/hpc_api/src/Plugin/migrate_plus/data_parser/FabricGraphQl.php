@@ -46,9 +46,9 @@ class FabricGraphQl extends Json {
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition): self {
-    /** @var \Drupal\hpc_api\Query\FabricQuery $fabric_query */
-    $fabric_query = $container->get('hpc_api.fabric_query');
-    $configuration['urls'] = [$fabric_query->getEndpointUrl()];
+    /** @var \Drupal\hpc_api\Query\FabricCLient $fabric_client */
+    $fabric_client = $container->get('hpc_api.fabric_client');
+    $configuration['urls'] = [$fabric_client->getEndpointUrl()];
     $instance = new static(
       $configuration,
       $plugin_id,

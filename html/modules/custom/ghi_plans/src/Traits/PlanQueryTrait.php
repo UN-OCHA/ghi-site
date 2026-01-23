@@ -2,6 +2,7 @@
 
 namespace Drupal\ghi_plans\Traits;
 
+use Drupal\ghi_base_objects\Plugin\FabricQuery\CountryQuery;
 use Drupal\ghi_plans\Plugin\FabricQuery\AttachmentPrototypeQuery;
 use Drupal\ghi_plans\Plugin\FabricQuery\AttachmentQuery;
 use Drupal\ghi_plans\Plugin\FabricQuery\EntityPrototypeQuery;
@@ -85,12 +86,23 @@ trait PlanQueryTrait {
   /**
    * Get the organization query.
    *
-   * @return \Drupal\ghi_plans\Plugin\FabricQuery\AttachmentPrototypeQuery|null
+   * @return \Drupal\ghi_plans\Plugin\FabricQuery\OrganizationQuery|null
    *   The organization query or NULL.
    */
   protected static function getOrganizationQuery(): ?OrganizationQuery {
     $query = self::getQueryInstance('organization');
     return $query instanceof OrganizationQuery ? $query : NULL;
+  }
+
+  /**
+   * Get the country query.
+   *
+   * @return \Drupal\ghi_base_objects\Plugin\FabricQuery\CountryQuery|null
+   *   The country query or NULL.
+   */
+  protected static function getCountryQuery(): ?CountryQuery {
+    $query = self::getQueryInstance('country');
+    return $query instanceof CountryQuery ? $query : NULL;
   }
 
   /**
@@ -103,9 +115,13 @@ trait PlanQueryTrait {
    *   The query instance or NULL.
    */
   protected static function getQueryInstance($plugin_id): ?FabricQueryBase {
-    $query_manager = self::getFabricQueryManager();
-    $query = $query_manager->hasDefinition($plugin_id) ? $query_manager->createInstance($plugin_id) : NULL;
-    return $query instanceof FabricQueryBase ? $query : NULL;
+    $queries = &drupal_static(__FUNCTION__, []);
+    if (!array_key_exists($plugin_id, $queries)) {
+      $query_manager = self::getFabricQueryManager();
+      $query = $query_manager->hasDefinition($plugin_id) ? $query_manager->createInstance($plugin_id) : NULL;
+      $queries[$plugin_id] = $query instanceof FabricQueryBase ? $query : NULL;
+    }
+    return $queries[$plugin_id];
   }
 
   /**

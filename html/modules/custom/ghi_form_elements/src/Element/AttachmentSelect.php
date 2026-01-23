@@ -351,7 +351,7 @@ class AttachmentSelect extends FormElementBase {
       }
     }
 
-    // @codingStandardsIgnoreStart
+    // phpcs:disable
     // $show_filter = TRUE;
     // if ($show_filter) {
     //   $element['filter']['text'] = [
@@ -361,7 +361,7 @@ class AttachmentSelect extends FormElementBase {
     //     '#filter_key' => 'description',
     //   ];
     // }
-    // @codingStandardsIgnoreEnd
+    // phpcs:enable
 
     $columns = [
       'id' => t('ID'),

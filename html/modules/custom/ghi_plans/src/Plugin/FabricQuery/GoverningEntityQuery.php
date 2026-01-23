@@ -4,8 +4,8 @@ namespace Drupal\ghi_plans\Plugin\FabricQuery;
 
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\ghi_base_objects\ApiObjects\Country;
-use Drupal\ghi_base_objects\Plugin\FabricQuery\CountryQuery;
 use Drupal\ghi_plans\ApiObjects\Entities\GoverningEntity;
+use Drupal\ghi_plans\Traits\PlanQueryTrait;
 use Drupal\hpc_api\Attribute\FabricQuery;
 use Drupal\hpc_api\Query\FabricQueryBase;
 
@@ -18,6 +18,8 @@ use Drupal\hpc_api\Query\FabricQueryBase;
 )]
 class GoverningEntityQuery extends FabricQueryBase {
 
+  use PlanQueryTrait;
+
   /**
    * Get a plan by its id.
    *
@@ -29,22 +31,20 @@ class GoverningEntityQuery extends FabricQueryBase {
    */
   public function getGoverningEntity(int $governing_entity_id): ?GoverningEntity {
     // Get the governing entity.
-    $payload = "
-      coordinationEntities (filter: { Id:  { eq: {$governing_entity_id} } } ) {
-        items { " . GoverningEntity::GRAPHQL_DIMENSION_ITEMS . " }
-      }
-      planFieldClusters (filter: { ClusterId: { eq: {$governing_entity_id} } } ) {
-        items {
-          PlanId
-          PlanName
-        }
-      }";
-    $data = $this->fabricQuery->query($payload);
-    $governing_entities_data = $data->coordinationEntities->items[0] ?? NULL;
+    $queries = [
+      $this->fabricClient->createQuery('coordinationEntities', GoverningEntity::GRAPHQL_DIMENSION_ITEMS)
+        ->setFilter('Id', $governing_entity_id),
+      $this->fabricClient->createQuery('planFieldClusters', [
+        'PlanId',
+        'PlanName',
+      ])->setFilter('ClusterId', $governing_entity_id),
+    ];
+    $data = $this->fabricClient->executeMultiple($queries);
+    $governing_entities_data = $data['coordinationEntities'][0] ?? NULL;
     if ($governing_entities_data === NULL) {
       return NULL;
     }
-    $governing_entities_data->plan = $data->planFieldClusters->items[0] ?? NULL;
+    $governing_entities_data->plan = $data['planFieldClusters'][0] ?? NULL;
     return new GoverningEntity($governing_entities_data);
   }
 
@@ -58,20 +58,8 @@ class GoverningEntityQuery extends FabricQueryBase {
    *   The country object or NULL.
    */
   protected function lookupCountry(string $name): ?Country {
-    return $this->countryQuery()->getCountryByName($name);
+    return $this->getCountryQuery()->getCountryByName($name);
 
-  }
-
-  /**
-   * Get the country query.
-   *
-   * @return \Drupal\ghi_base_objects\Plugin\FabricQuery\CountryQuery
-   *   The country query.
-   */
-  public static function countryQuery(): CountryQuery {
-    /** @var \Drupal\hpc_api\Query\FabricQueryManager $fabric_query_manager */
-    $fabric_query_manager = \Drupal::service('plugin.manager.fabric_query_manager');
-    return $fabric_query_manager->createInstance('country');
   }
 
 }

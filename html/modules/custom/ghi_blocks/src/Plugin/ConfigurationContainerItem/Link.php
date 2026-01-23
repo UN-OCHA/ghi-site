@@ -174,7 +174,7 @@ class Link extends ConfigurationContainerItemPluginBase {
 
     // Also allows to define the crop type but this has been deactivated for
     // the moment, see https://humanitarian.atlassian.net/browse/HPC-9391.
-    // @codingStandardsIgnoreStart
+    // phpcs:disable
     // $crop_type_options = [];
     // foreach (self::CROP_TYPES as $crop_type) {
     //   $crop_type_options[$crop_type] = $this->entityTypeManager->getStorage('crop_type')->load($crop_type)->label();
@@ -194,7 +194,7 @@ class Link extends ConfigurationContainerItemPluginBase {
     //     ],
     //   ],
     // ];
-    // @codingStandardsIgnoreEnd
+    // phpcs:enable
     $element['image']['image']['crop_type'] = [
       '#type' => 'hidden',
       '#value' => self::CROP_TYPES[0],

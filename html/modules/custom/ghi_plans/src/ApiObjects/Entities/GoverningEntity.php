@@ -11,23 +11,25 @@ class GoverningEntity extends EntityObjectBase {
 
   const ENTITY_REF_CODE = 'CL';
 
-  const GRAPHQL_DIMENSION_ITEMS = "
-    Id
-    Name
-    Description
-    PlanId
-    EntityTypeId
-    HpcEntityPrototypeId
-    CustomReference
-    ComposedReference
-  ";
+  /**
+   * Define the dimension items used in queries.
+   */
+  const GRAPHQL_DIMENSION_ITEMS = [
+    'Id',
+    'Name',
+    'Description',
+    'PlanId',
+    'EntityTypeId',
+    'HpcEntityPrototypeId',
+    'CustomReference',
+    'ComposedReference',
+  ];
 
   /**
    * {@inheritdoc}
    */
   protected function map() {
     $data = $this->getRawData();
-    $_entity_version = $this->getEntityVersion($data);
     $prototype = !empty($data->HpcEntityPrototypeId ?? NULL) ? PlanEntityHelper::getEntityPrototype($data->HpcEntityPrototypeId) : NULL;
 
     return (object) [
@@ -39,7 +41,7 @@ class GoverningEntity extends EntityObjectBase {
       'plural_name' => $prototype?->getNamePlural(),
       'description' => $data->Description ?: NULL,
       'entity_name' => $data->Name,
-      'plan_id' => $data->plan?->Id ?? NULL,
+      'plan_id' => $data->PlanId ?? NULL,
       'ref_code' => $prototype?->getRefCode() ?? NULL,
       'ref_codes_children' => array_map(function ($child) {
         return $child->refCode;
@@ -51,18 +53,11 @@ class GoverningEntity extends EntityObjectBase {
       'custom_reference' => $data->CustomReference,
       'composed_reference' => $data->ComposedReference ?? NULL,
       'sort_key' => ($prototype?->getOrderNumber() ?? '') . ($data->CustomReference ?? NULL),
-      'icon' => $_entity_version?->value?->icon ?: $_entity_version?->value?->icon,
+      'icon' => NULL,
 
       // Legacy support.
       'custom_id' => $data->CustomReference,
     ];
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function getEntityVersion() {
-    return $this->getRawData()->governingEntityVersion ?? NULL;
   }
 
   /**

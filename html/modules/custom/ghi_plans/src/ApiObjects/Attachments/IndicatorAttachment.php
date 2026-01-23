@@ -62,7 +62,7 @@ class IndicatorAttachment extends DataAttachment {
    */
   public function getCalculationMethod() {
     $calculation_method = $this->calculation_method;
-    $prototype = $this->getPrototypeData();
+    $prototype = $this->getPrototype();
     $available_methods = $prototype->getCalculationMethods();
     return in_array($calculation_method, $available_methods) ? $calculation_method : self::CALCULATION_METHOD_LATEST;
   }

@@ -27,17 +27,10 @@ class EntityPrototypeQuery extends FabricQueryBase {
    *   The entity prototype object or NULL if not found.
    */
   public function getPrototype(int $prototype_id): ?EntityPrototype {
-    // Get the attachment data.
-    $payload = "
-      entityPrototypes (filter: {
-        Id:  {
-          eq: {$prototype_id}
-        }
-      }) {
-        items { " . EntityPrototype::GRAPHQL_DIMENSION_ITEMS . "}
-      }";
-    $data = $this->fabricQuery->query($payload);
-    $prototypes = $data ? $this->getItems($data, 'entityPrototypes') : [];
+    // Get the prototype data.
+    $prototypes = $this->fabricClient->createQuery('entityPrototypes', EntityPrototype::GRAPHQL_DIMENSION_ITEMS)
+      ->setFilter('Id', $prototype_id)
+      ->execute();
     if (empty($prototypes)) {
       return NULL;
     }
@@ -55,17 +48,10 @@ class EntityPrototypeQuery extends FabricQueryBase {
    *   The processed plan prototype object or NULL.
    */
   public function getPlanPrototype(int $plan_id): ?PlanPrototype {
-    // Get the attachment data.
-    $payload = "
-      entityPrototypes (filter: {
-        PlanId:  {
-          eq: {$plan_id}
-        }
-      }) {
-        items { " . EntityPrototype::GRAPHQL_DIMENSION_ITEMS . "}
-      }";
-    $data = $this->fabricQuery->query($payload);
-    $prototypes = $data ? $this->getItems($data, 'entityPrototypes') : NULL;
+    // Get the prototypes.
+    $prototypes = $this->fabricClient->createQuery('entityPrototypes', EntityPrototype::GRAPHQL_DIMENSION_ITEMS)
+      ->setFilter('PlanId', $plan_id)
+      ->execute();
     if (empty($prototypes)) {
       return NULL;
     }

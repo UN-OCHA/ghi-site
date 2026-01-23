@@ -56,29 +56,32 @@ class DataAttachment extends AttachmentBase implements DataAttachmentInterface {
     'optionOverallCumulReach',
   ];
 
-  const GRAPHQL_DIMENSION_ITEMS = '
-    Id
-    Name
-    PlanId
-    EntityId
-    EntityTypeId
-    EntityMainType
-    AttachmentType
-    CustomReference
-    HasDisaggregatedData
-    UnitId
-    CalculationMethodId
-    Description
-    VisibilityGroupId
-    AttachmentPrototypeId
-    RecordStatus
-    ActiveUntil
-    Source
-    SourceId
-    CreatedAt
-    UpdatedAt
-    IsLocked
-  ';
+  /**
+   * Define the dimension items used in queries.
+   */
+  const GRAPHQL_DIMENSION_ITEMS = [
+    'Id',
+    'Name',
+    'PlanId',
+    'EntityId',
+    'EntityTypeId',
+    'EntityMainType',
+    'AttachmentType',
+    'CustomReference',
+    'HasDisaggregatedData',
+    'UnitId',
+    'CalculationMethodId',
+    'Description',
+    'VisibilityGroupId',
+    'AttachmentPrototypeId',
+    'RecordStatus',
+    // 'ActiveUntil',
+    // 'Source',
+    // 'SourceId',
+    // 'CreatedAt',
+    'UpdatedAt',
+    // 'IsLocked',
+  ];
 
   /**
    * {@inheritdoc}
@@ -155,7 +158,7 @@ class DataAttachment extends AttachmentBase implements DataAttachmentInterface {
    *   A timestamp.
    */
   public function getLastUpdated() {
-    return $this->getTimestamp($this->data->UpdatedAt);
+    return $this->getTimestamp($this->getRawData()->UpdatedAt);
   }
 
   /**
@@ -447,7 +450,7 @@ class DataAttachment extends AttachmentBase implements DataAttachmentInterface {
    *   The attachment prototype object.
    */
   public function getPrototype(): ?AttachmentPrototype {
-    return $this->prototype;
+    return $this->getPrototypeData();
   }
 
   /**
@@ -606,7 +609,7 @@ class DataAttachment extends AttachmentBase implements DataAttachmentInterface {
    *   TRUE if there is data, FALSE otherwise.
    */
   public function hasValues() {
-    return !empty($this->totals);
+    return !empty($this->getTotals());
   }
 
   /**
@@ -906,7 +909,7 @@ class DataAttachment extends AttachmentBase implements DataAttachmentInterface {
   /**
    * Assure that the disaggregated data for an attachment has been fetched.
    */
-  private function assureDisaggregatedData() {
+  public function assureDisaggregatedData() {
     $attachment_data = $this->getRawData();
     if (property_exists($attachment_data, 'disaggregated')) {
       // Nothing to do.
@@ -933,7 +936,7 @@ class DataAttachment extends AttachmentBase implements DataAttachmentInterface {
       $base_metrics = $measurement->totals;
     }
     else {
-      $base_metrics = $this->totals;
+      $base_metrics = $this->getTotals();
     }
     return $base_metrics;
   }
@@ -947,7 +950,7 @@ class DataAttachment extends AttachmentBase implements DataAttachmentInterface {
   private function getBaseData($reporting_period = 'latest') {
     // @todo Fix
     return NULL;
-    // @codingStandardsIgnoreStart
+    // phpcs:disable
     $measurement = $this->getMeasurementByReportingPeriod($reporting_period);
     if ($measurement && !empty($measurement->disaggregated)) {
       $base_data = $measurement->disaggregated;
@@ -959,7 +962,7 @@ class DataAttachment extends AttachmentBase implements DataAttachmentInterface {
       return NULL;
     }
     return clone $base_data;
-    // @codingStandardsIgnoreEnd
+    // phpcs:enable
   }
 
   /**
@@ -1070,15 +1073,16 @@ class DataAttachment extends AttachmentBase implements DataAttachmentInterface {
    */
   protected function extractDisaggregatedValues() {
     $values = [];
+    $categories = [];
     foreach ($this->getDisaggregated() as $item) {
       $location_id = $item->getLocationId();
       $values[$location_id] = $values[$location_id] ?? [];
-      $values[$location_id][$item->id()] = [
-        'value' => $item->getValue(),
-        'metric' => $item->getMetric()->getMachineName(),
-        'location_id' => $item->getLocationId(),
-        'category_ids' => $item->getCategoryIds(),
-      ];
+      $values[$location_id][$item->getMetric()->getMachineName()] = $item->getValue();
+      $categories[$location_id] = $categories[$location_id] ?? [];
+      $categories[$location_id] = array_merge($categories[$location_id], $item->getCategoryIds());
+    }
+    foreach (array_keys($values) as $location_id) {
+      $values[$location_id]['category_ids'] = $categories[$location_id];
     }
     return $values;
   }
@@ -1106,8 +1110,8 @@ class DataAttachment extends AttachmentBase implements DataAttachmentInterface {
    */
   protected function getMetrics(): array {
     // Get the totals from the attachment by default.
-    return $this->map->totals ?? [];
-    // @codingStandardsIgnoreStart
+    return $this->getTotals();
+    // phpcs:disable
     // // If there are measurements, look at the most recent one and get the
     // // metrics from there.
     // $measurement = self::getCurrentMeasurement();
@@ -1115,7 +1119,7 @@ class DataAttachment extends AttachmentBase implements DataAttachmentInterface {
     //   $metrics = $measurement->metrics;
     // }
     // return $metrics;
-    // @codingStandardsIgnoreEnd
+    // phpcs:enable
   }
 
   /**

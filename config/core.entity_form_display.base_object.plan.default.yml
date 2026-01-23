@@ -24,6 +24,7 @@ dependencies:
     - field.field.base_object.plan.field_plan_document_link
     - field.field.base_object.plan.field_plan_type
     - field.field.base_object.plan.field_released
+    - field.field.base_object.plan.field_requirements
     - field.field.base_object.plan.field_restricted
     - field.field.base_object.plan.field_short_name
     - field.field.base_object.plan.field_subtitle
@@ -47,8 +48,8 @@ third_party_settings:
         - field_subtitle
         - field_plan_coordinator
         - field_plan_type
-        - field_plan_version_tag
         - field_plan_costing
+        - field_requirements
         - field_year
         - field_plan_date_range
         - field_released
@@ -94,7 +95,6 @@ third_party_settings:
     group_settings:
       children:
         - field_operations_category
-        - field_plan_version_argument
         - field_plan_caseload
         - field_plan_document_link
         - field_decimal_format
@@ -308,7 +308,7 @@ content:
     third_party_settings: {  }
   field_plan_costing:
     type: entity_reference_autocomplete
-    weight: 10
+    weight: 9
     region: content
     settings:
       match_operator: CONTAINS
@@ -346,6 +346,13 @@ content:
     region: content
     settings:
       display_label: true
+    third_party_settings: {  }
+  field_requirements:
+    type: number
+    weight: 10
+    region: content
+    settings:
+      placeholder: ''
     third_party_settings: {  }
   field_restricted:
     type: boolean_checkbox

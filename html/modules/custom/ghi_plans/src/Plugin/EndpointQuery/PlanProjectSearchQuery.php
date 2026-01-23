@@ -13,7 +13,7 @@ use Drupal\hpc_common\Helpers\CommonHelper;
 /**
  * Provides a query plugin for project search.
  *
- * @codingStandardsIgnoreStart
+ * phpcs:disable
  * @EndpointQuery(
  *   id = "plan_project_search_query",
  *   label = @Translation("Plan project search query"),
@@ -29,7 +29,7 @@ use Drupal\hpc_common\Helpers\CommonHelper;
  *     }
  *   }
  * )
- * @codingStandardsIgnoreEnd
+ * phpcs:enable
  */
 class PlanProjectSearchQuery extends EndpointQueryBase {
 
