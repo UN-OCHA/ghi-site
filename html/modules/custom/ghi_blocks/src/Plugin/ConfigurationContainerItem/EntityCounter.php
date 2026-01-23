@@ -10,6 +10,7 @@ use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\ghi_blocks\Traits\ConfigurationItemValuePreviewTrait;
 use Drupal\ghi_form_elements\Attribute\ConfigurationContainerItem;
 use Drupal\ghi_form_elements\ConfigurationContainerItemPluginBase;
+use Drupal\ghi_plans\Entity\Plan;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -251,18 +252,17 @@ class EntityCounter extends ConfigurationContainerItemPluginBase {
    * @param string $entity_type
    *   Can be either "plan" or "governing".
    *
-   * @return array|null
-   *   An array of entity objects or NULL.
+   * @return \Drupal\ghi_plans\ApiObjects\Entities\EntityObjectInterface[]
+   *   An array of entity objects.
    */
   private function getEntities($entity_type) {
     $context = $this->getContext();
-    if (empty($context['base_object']) || !$context['base_object'] instanceof ContentEntityInterface) {
+    $base_object = $context['base_object'] ?? NULL;
+    $plan_object = $context['plan_object'] ?? NULL;
+    if (!$base_object instanceof ContentEntityInterface || !$plan_object instanceof Plan) {
       return [];
     }
-    if (empty($context['plan_object']) || !$context['plan_object'] instanceof ContentEntityInterface) {
-      return [];
-    }
-    return $this->planEntityQuery->getPlanEntities($context['plan_object']->id(), $context['base_object'], $entity_type, NULL);
+    return $this->planEntityQuery->getPlanEntities($plan_object->getSourceId(), $base_object, $entity_type) ?? [];
   }
 
   /**
@@ -299,8 +299,8 @@ class EntityCounter extends ConfigurationContainerItemPluginBase {
       }
     }
 
-    uksort($entity_prototype_options, function ($prototype_id_a, $prototype_id_b) use ($weight) {
-      return $weight[$prototype_id_a] - $weight[$prototype_id_b];
+    uksort($entity_prototype_options, function ($pid_a, $pid_b) use ($weight) {
+      return $weight[$pid_a] - $weight[$pid_b];
     });
     return $entity_prototype_options;
   }
