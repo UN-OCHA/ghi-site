@@ -4,39 +4,50 @@ namespace Drupal\ghi_blocks\Plugin\Block\PlanCluster;
 
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\Markup;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\ghi_blocks\Interfaces\MultiStepFormBlockInterface;
 use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
+use Drupal\Core\Block\Attribute\Block;
+use Drupal\Core\Plugin\Context\EntityContextDefinition;
+use Drupal\hpc_common\Plugin\HPCBlockMetadata;
 
 /**
  * Provides a 'PlanClusterHeader' block.
- *
- * @Block(
- *  id = "plan_cluster_header",
- *  admin_label = @Translation("Plan Cluster Header"),
- *  category = @Translation("Plan cluster elements"),
- *  data_sources = {
- *    "entities" = "hpc_api:plan_entities_query",
- *    "attachment" = "hpc_api:attachment_query",
- *  },
- *  title = FALSE,
- *  context_definitions = {
- *    "node" = @ContextDefinition("entity:node", label = @Translation("Node")),
- *    "plan_cluster" = @ContextDefinition("entity:base_object", label = @Translation("Plan"), constraints = { "Bundle": "governing_entity" })
- *  },
- *  config_forms = {
- *    "attachment" = {
- *      "title" = @Translation("Attachment"),
- *      "callback" = "attachmentForm",
- *      "base_form" = TRUE
- *    },
- *    "display" = {
- *      "title" = @Translation("Display"),
- *      "callback" = "displayForm"
- *    }
- *  }
- * )
  */
+#[Block(
+  id: 'plan_cluster_header',
+  admin_label: new TranslatableMarkup('Plan Cluster Header'),
+  category: new TranslatableMarkup('Plan cluster elements'),
+  context_definitions: [
+    'node' => new EntityContextDefinition('entity:node', new TranslatableMarkup('Node')),
+    'plan_cluster' => new EntityContextDefinition('entity:base_object', new TranslatableMarkup('Cluster'), constraints: ['Bundle' => 'governing_entity']),
+  ],
+)]
 class PlanClusterHeader extends GHIBlockBase implements MultiStepFormBlockInterface {
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function metadata(): ?HPCBlockMetadata {
+    return new HPCBlockMetadata(
+      usesTitle: FALSE,
+      dataSources: [
+        'entities' => 'hpc_api:plan_entities_query',
+        'attachment' => 'hpc_api:attachment_query',
+      ],
+      configForms: [
+        'attachment' => [
+          'title' => 'Attachment',
+          'callback' => 'attachmentForm',
+          'base_form' => TRUE,
+        ],
+        'display' => [
+          'title' => 'Display',
+          'callback' => 'displayForm',
+        ],
+      ]
+    );
+  }
 
   /**
    * {@inheritdoc}

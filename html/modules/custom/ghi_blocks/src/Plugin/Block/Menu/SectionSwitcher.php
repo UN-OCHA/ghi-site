@@ -2,8 +2,11 @@
 
 namespace Drupal\ghi_blocks\Plugin\Block\Menu;
 
+use Drupal\Core\Block\Attribute\Block;
 use Drupal\Core\Block\BlockBase;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
+use Drupal\Core\Plugin\Context\EntityContextDefinition;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\ghi_base_objects\Traits\ShortNameTrait;
 use Drupal\ghi_sections\Entity\SectionNodeInterface;
 use Drupal\ghi_sections\Traits\SectionPathTrait;
@@ -11,16 +14,15 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Provides a 'SectionSwitcher' block.
- *
- * @Block(
- *  id = "section_switcher",
- *  admin_label = @Translation("Section switcher"),
- *  category = @Translation("Menus"),
- *  context_definitions = {
- *    "node" = @ContextDefinition("entity:node", label = @Translation("Node")),
- *   }
- * )
  */
+#[Block(
+  id: 'section_switcher',
+  admin_label: new TranslatableMarkup('Section switcher'),
+  category: new TranslatableMarkup('Menus'),
+  context_definitions: [
+    'node' => new EntityContextDefinition('entity:node', new TranslatableMarkup('Node')),
+  ]
+)]
 class SectionSwitcher extends BlockBase implements ContainerFactoryPluginInterface {
 
   use SectionPathTrait;

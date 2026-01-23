@@ -2,40 +2,51 @@
 
 namespace Drupal\ghi_content\Plugin\Block;
 
+use Drupal\Core\Block\Attribute\Block;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Plugin\Context\EntityContextDefinition;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\ghi_blocks\Interfaces\ConfigurationUpdateInterface;
 use Drupal\ghi_blocks\Interfaces\MultiStepFormBlockInterface;
 use Drupal\ghi_blocks\Interfaces\OptionalTitleBlockInterface;
 use Drupal\ghi_content\Entity\Article;
 use Drupal\ghi_sections\Entity\SectionNodeInterface;
+use Drupal\hpc_common\Plugin\HPCBlockMetadata;
 use Drupal\hpc_common\Traits\EntityHelperTrait;
 
 /**
  * Provides an 'RelatedArticles' block.
- *
- * @Block(
- *  id = "related_articles",
- *  admin_label = @Translation("Related articles"),
- *  category = @Translation("Narrative Content"),
- *  context_definitions = {
- *    "node" = @ContextDefinition("entity:node", label = @Translation("Node")),
- *  },
- *  config_forms = {
- *    "articles" = {
- *      "title" = @Translation("Articles"),
- *      "callback" = "articlesForm",
- *      "base_form" = TRUE
- *    },
- *    "display" = {
- *      "title" = @Translation("Display"),
- *      "callback" = "displayForm"
- *    }
- *  }
- * )
  */
+#[Block(
+  id: 'related_articles',
+  admin_label: new TranslatableMarkup('Related articles'),
+  category: new TranslatableMarkup('Narrative Content'),
+  context_definitions: [
+    'node' => new EntityContextDefinition('entity:node', new TranslatableMarkup('Node')),
+  ],
+)]
 class RelatedArticles extends ContentBlockBase implements MultiStepFormBlockInterface, OptionalTitleBlockInterface, ConfigurationUpdateInterface {
 
   use EntityHelperTrait;
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function metadata(): ?HPCBlockMetadata {
+    return new HPCBlockMetadata(
+      configForms: [
+        'articles' => [
+          'title' => 'Articles',
+          'callback' => 'articlesForm',
+          'base_form' => TRUE,
+        ],
+        'display' => [
+          'title' => 'Display',
+          'callback' => 'displayForm',
+        ],
+      ]
+    );
+  }
 
   /**
    * {@inheritdoc}

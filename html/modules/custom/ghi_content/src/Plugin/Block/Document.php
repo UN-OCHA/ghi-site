@@ -4,22 +4,24 @@ namespace Drupal\ghi_content\Plugin\Block;
 
 use Drupal\Core\Cache\Cache;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\ghi_blocks\Interfaces\AutomaticTitleBlockInterface;
 use Drupal\ghi_content\Entity\ContentBase;
 use Drupal\ghi_content\RemoteContent\HpcContentModule\RemoteChapter;
+use Drupal\Core\Block\Attribute\Block;
+use Drupal\Core\Plugin\Context\EntityContextDefinition;
 
 /**
  * Provides a 'Document' block.
- *
- * @Block(
- *  id = "document",
- *  admin_label = @Translation("Document"),
- *  category = @Translation("Narrative Content"),
- *  context_definitions = {
- *    "node" = @ContextDefinition("entity:node", label = @Translation("Node"), required = FALSE),
- *  }
- * )
  */
+#[Block(
+  id: 'document',
+  admin_label: new TranslatableMarkup('Document'),
+  category: new TranslatableMarkup('Narrative Content'),
+  context_definitions: [
+    'node' => new EntityContextDefinition('entity:node', new TranslatableMarkup('Node'), required: FALSE),
+  ]
+)]
 class Document extends ContentBlockBase implements AutomaticTitleBlockInterface {
 
   /**

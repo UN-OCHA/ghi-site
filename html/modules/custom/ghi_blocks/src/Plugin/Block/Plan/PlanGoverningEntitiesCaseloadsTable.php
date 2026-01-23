@@ -2,8 +2,11 @@
 
 namespace Drupal\ghi_blocks\Plugin\Block\Plan;
 
+use Drupal\Core\Block\Attribute\Block;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Plugin\Context\EntityContextDefinition;
 use Drupal\Core\Render\Markup;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\ghi_base_objects\Helpers\BaseObjectHelper;
 use Drupal\ghi_blocks\Helpers\AttachmentMatcher;
 use Drupal\ghi_blocks\Interfaces\AttachmentTableInterface;
@@ -17,40 +20,23 @@ use Drupal\ghi_blocks\Traits\ConfigValidationTrait;
 use Drupal\ghi_form_elements\Traits\ConfigurationContainerTrait;
 use Drupal\ghi_sections\Entity\SectionNodeInterface;
 use Drupal\ghi_subpages\Entity\SubpageNodeInterface;
+use Drupal\hpc_common\Plugin\HPCBlockMetadata;
 use Drupal\hpc_downloads\Interfaces\HPCDownloadExcelInterface;
 use Drupal\hpc_downloads\Interfaces\HPCDownloadPNGInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Provides a 'PlanGoverningEntitiesCaseloadsTable' block.
- *
- * @Block(
- *  id = "plan_governing_entities_caseloads_table",
- *  admin_label = @Translation("Governing Entities Caseloads Table"),
- *  category = @Translation("Plan elements"),
- *  data_sources = {
- *    "entities" = "fabric_query:plan_entity",
- *    "attachment" = "fabric_query:attachment",
- *    "attachment_prototype" = "fabric_query:attachment_prototype",
- *  },
- *  default_title = @Translation("Cluster caseloads"),
- *  context_definitions = {
- *    "node" = @ContextDefinition("entity:node", label = @Translation("Node")),
- *    "plan" = @ContextDefinition("entity:base_object", label = @Translation("Plan"), constraints = { "Bundle": "plan" })
- *  },
- *  config_forms = {
- *    "base" = {
- *      "title" = @Translation("Base settings"),
- *      "callback" = "baseForm",
- *      "base_form" = TRUE
- *    },
- *    "table" = {
- *      "title" = @Translation("Table columns"),
- *      "callback" = "tableForm"
- *    }
- *  }
- * )
  */
+#[Block(
+  id: 'plan_governing_entities_caseloads_table',
+  admin_label: new TranslatableMarkup('Governing Entities Caseloads Table'),
+  category: new TranslatableMarkup('Plan elements'),
+  context_definitions: [
+    'node' => new EntityContextDefinition('entity:node', new TranslatableMarkup('Node')),
+    'plan' => new EntityContextDefinition('entity:base_object', new TranslatableMarkup('Plan'), constraints: ['Bundle' => 'plan']),
+  ],
+)]
 class PlanGoverningEntitiesCaseloadsTable extends GHIBlockBase implements ConfigurableTableBlockInterface, MultiStepFormBlockInterface, OverrideDefaultTitleBlockInterface, AttachmentTableInterface, ConfigValidationInterface, HPCDownloadExcelInterface, HPCDownloadPNGInterface {
 
   use ConfigurationContainerTrait;
@@ -63,6 +49,31 @@ class PlanGoverningEntitiesCaseloadsTable extends GHIBlockBase implements Config
    * @var \Drupal\ghi_subpages\SubpageManager
    */
   protected $subpageManager;
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function metadata(): ?HPCBlockMetadata {
+    return new HPCBlockMetadata(
+      defaultTitle: 'Cluster caseloads',
+      dataSources: [
+        'entities' => 'fabric_query:plan_entity',
+        'attachment' => 'fabric_query:attachment',
+        'attachment_prototype' => 'fabric_query:attachment_prototype',
+      ],
+      configForms: [
+        'base' => [
+          'title' => 'Base settings',
+          'callback' => 'baseForm',
+          'base_form' => TRUE,
+        ],
+        'table' => [
+          'title' => 'Table columns',
+          'callback' => 'tableForm',
+        ],
+      ]
+    );
+  }
 
   /**
    * {@inheritdoc}

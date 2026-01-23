@@ -2,27 +2,29 @@
 
 namespace Drupal\ghi_sections\Plugin\Block;
 
+use Drupal\Core\Block\Attribute\Block;
 use Drupal\Core\Block\BlockBase;
 use Drupal\Core\Cache\Cache;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
+use Drupal\Core\Plugin\Context\EntityContextDefinition;
 use Drupal\Core\Render\BubbleableMetadata;
 use Drupal\ghi_sections\Traits\SectionPathTrait;
 use Drupal\layout_builder\LayoutEntityHelperTrait;
 use Drupal\node\NodeInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 
 /**
  * Provides a 'SectionNavigation' block.
- *
- * @Block(
- *  id = "section_navigation",
- *  admin_label = @Translation("Section navigation"),
- *  category = @Translation("Menus"),
- *  context_definitions = {
- *    "node" = @ContextDefinition("entity:node", label = @Translation("Node"))
- *  }
- * )
  */
+#[Block(
+  id: 'section_navigation',
+  admin_label: new TranslatableMarkup('Section navigation'),
+  category: new TranslatableMarkup('Menus'),
+  context_definitions: [
+    'node' => new EntityContextDefinition('entity:node', new TranslatableMarkup('Node')),
+  ]
+)]
 class SectionNavigation extends BlockBase implements ContainerFactoryPluginInterface {
 
   use LayoutEntityHelperTrait;

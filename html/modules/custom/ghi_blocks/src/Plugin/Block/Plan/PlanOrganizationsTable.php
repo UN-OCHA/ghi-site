@@ -2,7 +2,9 @@
 
 namespace Drupal\ghi_blocks\Plugin\Block\Plan;
 
+use Drupal\Core\Block\Attribute\Block;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Plugin\Context\EntityContextDefinition;
 use Drupal\ghi_blocks\Interfaces\ConfigurableTableBlockInterface;
 use Drupal\ghi_blocks\Interfaces\MultiStepFormBlockInterface;
 use Drupal\ghi_blocks\Interfaces\OverrideDefaultTitleBlockInterface;
@@ -12,46 +14,55 @@ use Drupal\ghi_blocks\Traits\TableSoftLimitTrait;
 use Drupal\ghi_form_elements\Traits\ConfigurationContainerTrait;
 use Drupal\hpc_downloads\Interfaces\HPCDownloadExcelInterface;
 use Drupal\hpc_downloads\Interfaces\HPCDownloadPNGInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\hpc_common\Plugin\HPCBlockMetadata;
 
 /**
  * Provides a 'PlanOrganizationsTable' block.
- *
- * @Block(
- *  id = "plan_organizations_table",
- *  admin_label = @Translation("Organizations Table"),
- *  category = @Translation("Plan elements"),
- *  data_sources = {
- *    "project_search" = "hpc_api:plan_project_search_query",
- *    "project_funding" = "hpc_api:plan_project_funding_query",
- *  },
- *  default_title = @Translation("Organizations overview"),
- *  context_definitions = {
- *    "node" = @ContextDefinition("entity:node", label = @Translation("Node")),
- *    "plan" = @ContextDefinition("entity:base_object", label = @Translation("Plan"), constraints = { "Bundle": "plan" }),
- *    "plan_cluster" = @ContextDefinition("entity:base_object", label = @Translation("Cluster"), constraints = { "Bundle": "governing_entity" }, required =  FALSE)
- *  },
- *  config_forms = {
- *    "organizations" = {
- *      "title" = @Translation("Organizations"),
- *      "callback" = "organizationsForm",
- *      "base_form" = TRUE
- *    },
- *    "table" = {
- *      "title" = @Translation("Table columns"),
- *      "callback" = "tableForm"
- *    },
- *    "display" = {
- *      "title" = @Translation("Display"),
- *      "callback" = "displayForm"
- *    }
- *  }
- * )
  */
+#[Block(
+  id: 'plan_organizations_table',
+  admin_label: new TranslatableMarkup('Organizations Table'),
+  category: new TranslatableMarkup('Plan elements'),
+  context_definitions: [
+    'node' => new EntityContextDefinition('entity:node', new TranslatableMarkup('Node')),
+    'plan' => new EntityContextDefinition('entity:base_object', new TranslatableMarkup('Plan'), constraints: ['Bundle' => 'plan']),
+    'plan_cluster' => new EntityContextDefinition('entity:base_object', new TranslatableMarkup('Cluster'), required: FALSE, constraints: ['Bundle' => 'governing_entity']),
+  ],
+)]
 class PlanOrganizationsTable extends GHIBlockBase implements ConfigurableTableBlockInterface, MultiStepFormBlockInterface, OverrideDefaultTitleBlockInterface, HPCDownloadExcelInterface, HPCDownloadPNGInterface {
 
   use ConfigurationContainerTrait;
   use TableSoftLimitTrait;
   use OrganizationsBlockTrait;
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function metadata(): ?HPCBlockMetadata {
+    return new HPCBlockMetadata(
+      defaultTitle: 'Organizations overview',
+      dataSources: [
+        'project_search' => 'hpc_api:plan_project_search_query',
+        'project_funding' => 'hpc_api:plan_project_funding_query',
+      ],
+      configForms: [
+        'organizations' => [
+          'title' => 'Organizations',
+          'callback' => 'organizationsForm',
+          'base_form' => TRUE,
+        ],
+        'table' => [
+          'title' => 'Table columns',
+          'callback' => 'tableForm',
+        ],
+        'display' => [
+          'title' => 'Display',
+          'callback' => 'displayForm',
+        ],
+      ]
+    );
+  }
 
   /**
    * {@inheritdoc}

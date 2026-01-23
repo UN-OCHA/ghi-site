@@ -3,8 +3,11 @@
 namespace Drupal\ghi_blocks\Plugin\Block\GlobalPage;
 
 use Drupal\Component\Utility\Html;
+use Drupal\Core\Block\Attribute\Block;
 use Drupal\Core\Cache\Cache;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Plugin\Context\ContextDefinition;
+use Drupal\Core\Plugin\Context\EntityContextDefinition;
 use Drupal\Core\Render\Markup;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\Url;
@@ -15,35 +18,43 @@ use Drupal\ghi_blocks\Traits\GlobalSettingsTrait;
 use Drupal\ghi_blocks\Traits\PlanFootnoteTrait;
 use Drupal\ghi_plans\ApiObjects\Partials\PlanOverviewPlan;
 use Drupal\ghi_plans\Entity\PlanType;
+use Drupal\hpc_common\Plugin\HPCBlockMetadata;
 use Drupal\hpc_common\Helpers\CommonHelper;
 use Drupal\hpc_common\Helpers\ThemeHelper;
 use Drupal\hpc_downloads\Helpers\DownloadHelper;
 
 /**
  * Provides a 'PlanOverviewMap' block.
- *
- * @Block(
- *  id = "global_plan_overview_map",
- *  admin_label = @Translation("Plan overview map"),
- *  category = @Translation("Global"),
- *  data_sources = {
- *    "plans_overview" = "fabric_query:plan_overview",
- *    "funding_overview" = "hpc_api:funding_overview_query",
- *    "plan" = "fabric_query:plan",
- *    "country" = "fabric_query:country",
- *  },
- *  context_definitions = {
- *    "node" = @ContextDefinition("entity:node", label = @Translation("Node"), required = FALSE),
- *    "year" = @ContextDefinition("integer", label = @Translation("Year"))
- *  }
- * )
  */
+#[Block(
+  id: 'global_plan_overview_map',
+  admin_label: new TranslatableMarkup('Plan overview map'),
+  category: new TranslatableMarkup('Global'),
+  context_definitions: [
+    'node' => new EntityContextDefinition('entity:node', new TranslatableMarkup('Node'), required: FALSE),
+    'year' => new ContextDefinition(data_type: 'integer', label: new TranslatableMarkup("Year")),
+  ]
+)]
 class PlanOverviewMap extends GHIBlockBase {
 
   use GlobalMapTrait;
   use GlobalPlanOverviewBlockTrait;
   use GlobalSettingsTrait;
   use PlanFootnoteTrait;
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function metadata(): ?HPCBlockMetadata {
+    return new HPCBlockMetadata(
+      dataSources: [
+        'plans_overview' => 'fabric_query:plan_overview',
+        'funding_overview' => 'hpc_api:funding_overview_query',
+        'plan' => 'fabric_query:plan',
+        'country' => 'fabric_query:country',
+      ],
+    );
+  }
 
   /**
    * {@inheritdoc}

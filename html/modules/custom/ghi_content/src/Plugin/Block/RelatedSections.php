@@ -2,23 +2,25 @@
 
 namespace Drupal\ghi_content\Plugin\Block;
 
+use Drupal\Core\Block\Attribute\Block;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Plugin\Context\EntityContextDefinition;
 use Drupal\ghi_base_objects\Helpers\BaseObjectHelper;
 use Drupal\ghi_blocks\Interfaces\OptionalTitleBlockInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 
 /**
  * Provides an 'RelatedArticles' block.
- *
- * @Block(
- *  id = "related_sections",
- *  admin_label = @Translation("Related sections"),
- *  category = @Translation("Narrative Content"),
- *  context_definitions = {
- *    "node" = @ContextDefinition("entity:node", label = @Translation("Node")),
- *   }
- * )
  */
+#[Block(
+  id: 'related_sections',
+  admin_label: new TranslatableMarkup('Related sections'),
+  category: new TranslatableMarkup('Narrative Content'),
+  context_definitions: [
+    'node' => new EntityContextDefinition('entity:node', new TranslatableMarkup('Node')),
+  ]
+)]
 class RelatedSections extends ContentBlockBase implements OptionalTitleBlockInterface {
 
   /**
