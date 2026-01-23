@@ -2,42 +2,53 @@
 
 namespace Drupal\ghi_content\Plugin\Block;
 
+use Drupal\Core\Block\Attribute\Block;
 use Drupal\Core\Cache\Cache;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Link;
+use Drupal\Core\Plugin\Context\EntityContextDefinition;
 use Drupal\Core\Url;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\ghi_blocks\Interfaces\MultiStepFormBlockInterface;
 use Drupal\ghi_blocks\Interfaces\OptionalTitleBlockInterface;
 use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
 use Drupal\ghi_form_elements\Traits\ConfigurationContainerTrait;
+use Drupal\hpc_common\Plugin\HPCBlockMetadata;
 use Drupal\link\Plugin\Field\FieldWidget\LinkWidget;
 
 /**
  * Provides a 'ArticleCollectio' block.
- *
- * @Block(
- *  id = "article_collection",
- *  admin_label = @Translation("Article collection"),
- *  category = @Translation("Narrative Content"),
- *  context_definitions = {
- *    "node" = @ContextDefinition("entity:node", label = @Translation("Node"), required = FALSE),
- *  },
- *  config_forms = {
- *    "tabs" = {
- *      "title" = @Translation("Tabs"),
- *      "callback" = "tabsForm",
- *      "base_form" = TRUE
- *    },
- *    "display" = {
- *      "title" = @Translation("Display"),
- *      "callback" = "displayForm"
- *    }
- *  }
- * )
  */
+#[Block(
+  id: 'article_collection',
+  admin_label: new TranslatableMarkup('Article collection'),
+  category: new TranslatableMarkup('Narrative Content'),
+  context_definitions: [
+    'node' => new EntityContextDefinition('entity:node', new TranslatableMarkup('Node'), required: FALSE),
+  ],
+)]
 class ArticleCollection extends GHIBlockBase implements MultiStepFormBlockInterface, OptionalTitleBlockInterface {
 
   use ConfigurationContainerTrait;
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function metadata(): ?HPCBlockMetadata {
+    return new HPCBlockMetadata(
+      configForms: [
+        'tabs' => [
+          'title' => 'Tabs',
+          'callback' => 'tabsForm',
+          'base_form' => TRUE,
+        ],
+        'display' => [
+          'title' => 'Display',
+          'callback' => 'displayForm',
+        ],
+      ]
+    );
+  }
 
   /**
    * {@inheritdoc}

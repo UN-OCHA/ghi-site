@@ -3,8 +3,12 @@
 namespace Drupal\ghi_blocks\Plugin\Block\GlobalPage;
 
 use Drupal\Component\Render\FormattableMarkup;
+use Drupal\Core\Block\Attribute\Block;
 use Drupal\Core\Cache\Cache;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Plugin\Context\ContextDefinition;
+use Drupal\Core\Plugin\Context\EntityContextDefinition;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\Url;
 use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
 use Drupal\ghi_blocks\Traits\BlockCommentTrait;
@@ -15,6 +19,7 @@ use Drupal\ghi_blocks\Traits\TableSoftLimitTrait;
 use Drupal\ghi_blocks\Traits\TableTrait;
 use Drupal\ghi_plans\ApiObjects\Mocks\PlanOverviewPlanMock;
 use Drupal\ghi_plans\Traits\FtsLinkTrait;
+use Drupal\hpc_common\Plugin\HPCBlockMetadata;
 use Drupal\hpc_common\Helpers\ArrayHelper;
 use Drupal\hpc_common\Helpers\CommonHelper;
 use Drupal\hpc_common\Helpers\FieldHelper;
@@ -26,21 +31,16 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Provides a 'PlanTable' block.
- *
- * @Block(
- *  id = "global_plan_table",
- *  admin_label = @Translation("Plan table"),
- *  category = @Translation("Global"),
- *  data_sources = {
- *    "plans_overview" = "fabric_query:plan_overview",
- *    "funding_overview" = "hpc_api:funding_overview_query",
- *  },
- *  context_definitions = {
- *    "node" = @ContextDefinition("entity:node", label = @Translation("Node"), required = FALSE),
- *    "year" = @ContextDefinition("integer", label = @Translation("Year"))
- *  }
- * )
  */
+#[Block(
+  id: 'global_plan_table',
+  admin_label: new TranslatableMarkup('Plan table'),
+  category: new TranslatableMarkup('Global'),
+  context_definitions: [
+    'node' => new EntityContextDefinition('entity:node', new TranslatableMarkup('Node'), required: FALSE),
+    'year' => new ContextDefinition(data_type: 'integer', label: new TranslatableMarkup("Year")),
+  ]
+)]
 class PlanTable extends GHIBlockBase implements HPCDownloadExcelInterface, HPCDownloadPNGInterface {
 
   use GlobalPlanOverviewBlockTrait;
@@ -57,6 +57,18 @@ class PlanTable extends GHIBlockBase implements HPCDownloadExcelInterface, HPCDo
    * @var \Drupal\ghi_sections\SectionManager
    */
   protected $sectionManager;
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function metadata(): ?HPCBlockMetadata {
+    return new HPCBlockMetadata(
+      dataSources: [
+        'plans_overview' => 'fabric_query:plan_overview',
+        'funding_overview' => 'hpc_api:funding_overview_query',
+      ],
+    );
+  }
 
   /**
    * {@inheritdoc}

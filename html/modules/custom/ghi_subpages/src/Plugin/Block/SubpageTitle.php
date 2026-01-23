@@ -3,8 +3,10 @@
 namespace Drupal\ghi_subpages\Plugin\Block;
 
 use Drupal\Component\Render\FormattableMarkup;
+use Drupal\Core\Block\Attribute\Block;
 use Drupal\Core\Block\BlockBase;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
+use Drupal\Core\Plugin\Context\EntityContextDefinition;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\ghi_sections\Entity\SectionNodeInterface;
 use Drupal\ghi_subpages\Entity\SubpageIconInterface;
@@ -16,16 +18,15 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Provides a 'SubpageTitle' block.
- *
- * @Block(
- *  id = "subpage_title",
- *  admin_label = @Translation("Subpage title"),
- *  category = @Translation("Page"),
- *  context_definitions = {
- *    "node" = @ContextDefinition("entity:node", label = @Translation("Node"))
- *  }
- * )
  */
+#[Block(
+  id: 'subpage_title',
+  admin_label: new TranslatableMarkup('Subpage title'),
+  category: new TranslatableMarkup('Page'),
+  context_definitions: [
+    'node' => new EntityContextDefinition('entity:node', new TranslatableMarkup('Node')),
+  ]
+)]
 class SubpageTitle extends BlockBase implements ContainerFactoryPluginInterface {
 
   use SubpageTrait;

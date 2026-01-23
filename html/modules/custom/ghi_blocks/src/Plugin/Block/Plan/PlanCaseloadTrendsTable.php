@@ -2,8 +2,11 @@
 
 namespace Drupal\ghi_blocks\Plugin\Block\Plan;
 
+use Drupal\Core\Block\Attribute\Block;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Plugin\Context\EntityContextDefinition;
 use Drupal\Core\Security\TrustedCallbackInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\ghi_blocks\Interfaces\OverrideDefaultTitleBlockInterface;
 use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
 use Drupal\ghi_blocks\Traits\PlanFootnoteTrait;
@@ -12,6 +15,7 @@ use Drupal\ghi_blocks\Traits\TableTrait;
 use Drupal\ghi_plans\Entity\Plan;
 use Drupal\hpc_common\Helpers\BlockHelper;
 use Drupal\hpc_common\Helpers\CommonHelper;
+use Drupal\hpc_common\Plugin\HPCBlockMetadata;
 use Drupal\hpc_common\Traits\RenderArrayTrait;
 use Drupal\hpc_downloads\Interfaces\HPCDownloadExcelInterface;
 use Drupal\hpc_downloads\Interfaces\HPCDownloadPNGInterface;
@@ -19,23 +23,16 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Provides a 'PlanCaseloadTrendsTable' block.
- *
- * @Block(
- *  id = "plan_caseload_trends_table",
- *  admin_label = @Translation("Caseload Trends Table"),
- *  category = @Translation("Plan elements"),
- *  default_title = @Translation("Evolution of the humanitarian response"),
- *  data_sources = {
- *    "attachment" = "fabric_query:attachment",
- *    "entity" = "fabric_query:plan_entity",
- *    "plan_funding" = "hpc_api:plan_funding_summary_query",
- *  },
- *  context_definitions = {
- *    "node" = @ContextDefinition("entity:node", label = @Translation("Node")),
- *    "plan" = @ContextDefinition("entity:base_object", label = @Translation("Plan"), constraints = { "Bundle": "plan" })
- *  }
- * )
  */
+#[Block(
+  id: 'plan_caseload_trends_table',
+  admin_label: new TranslatableMarkup('Caseload Trends Table'),
+  category: new TranslatableMarkup('Plan elements'),
+  context_definitions: [
+    'node' => new EntityContextDefinition('entity:node', new TranslatableMarkup('Node')),
+    'plan' => new EntityContextDefinition('entity:base_object', new TranslatableMarkup('Plan'), constraints: ['Bundle' => 'plan']),
+  ]
+)]
 class PlanCaseloadTrendsTable extends GHIBlockBase implements OverrideDefaultTitleBlockInterface, HPCDownloadExcelInterface, HPCDownloadPNGInterface, TrustedCallbackInterface {
 
   use PlanFootnoteTrait;
@@ -58,6 +55,20 @@ class PlanCaseloadTrendsTable extends GHIBlockBase implements OverrideDefaultTit
    * @var \Drupal\ghi_sections\SectionManager
    */
   protected $sectionManager;
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function metadata(): ?HPCBlockMetadata {
+    return new HPCBlockMetadata(
+      defaultTitle: 'Evolution of the humanitarian response',
+      dataSources: [
+        'attachment' => 'fabric_query:attachment',
+        'entity' => 'fabric_query:plan_entity',
+        'plan_funding' => 'hpc_api:plan_funding_summary_query',
+      ]
+    );
+  }
 
   /**
    * {@inheritdoc}

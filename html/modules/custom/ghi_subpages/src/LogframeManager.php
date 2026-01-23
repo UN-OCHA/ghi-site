@@ -22,6 +22,7 @@ use Drupal\ghi_sections\Entity\SectionNodeInterface;
 use Drupal\ghi_subpages\Entity\LogframeSubpage;
 use Drupal\hpc_api\Query\EndpointQueryManager;
 use Drupal\hpc_api\Query\FabricQueryManager;
+use Drupal\hpc_common\Plugin\HPCBlockBase;
 use Drupal\layout_builder\LayoutEntityHelperTrait;
 use Drupal\layout_builder\LayoutTempstoreRepositoryInterface;
 use Drupal\layout_builder\Plugin\SectionStorage\DefaultsSectionStorage;
@@ -201,6 +202,7 @@ class LogframeManager implements ContainerInjectionInterface {
     }
 
     $definition = $this->blockManager->getDefinition('plan_headline_figures', FALSE);
+    $class = $definition['class'];
     $context_mapping = $this->buildContextMappingForBlock($definition, $node);
 
     $configuration = [
@@ -247,7 +249,7 @@ class LogframeManager implements ContainerInjectionInterface {
     $config = array_filter([
       'id' => $definition['id'],
       'provider' => $definition['provider'],
-      'data_sources' => $definition['data_sources'] ?? NULL,
+      'data_sources' => $class instanceof HPCBlockBase ? ($class::metadata()->dataSources ?? NULL) : NULL,
       'label' => '<none>',
       'label_display' => TRUE,
     ]) + $context_mapping;
@@ -272,6 +274,7 @@ class LogframeManager implements ContainerInjectionInterface {
       return NULL;
     }
     $definition = $this->blockManager->getDefinition('plan_entity_logframe', FALSE);
+    $class = $definition['class'];
     $context_mapping = $this->buildContextMappingForBlock($definition, $node);
 
     /** @var \Drupal\ghi_plans\Entity\Plan $plan */
@@ -344,7 +347,7 @@ class LogframeManager implements ContainerInjectionInterface {
     $config = array_filter([
       'id' => $definition['id'],
       'provider' => $definition['provider'],
-      'data_sources' => $definition['data_sources'] ?? NULL,
+      'data_sources' => $class instanceof HPCBlockBase ? ($class::metadata()->dataSources ?? NULL) : NULL,
       'label' => '<none>',
       'label_display' => TRUE,
     ]) + $context_mapping;

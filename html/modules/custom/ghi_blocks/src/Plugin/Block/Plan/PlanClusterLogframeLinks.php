@@ -2,8 +2,11 @@
 
 namespace Drupal\ghi_blocks\Plugin\Block\Plan;
 
+use Drupal\Core\Block\Attribute\Block;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Plugin\Context\EntityContextDefinition;
 use Drupal\Core\Render\Markup;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\ghi_blocks\Interfaces\OverrideDefaultTitleBlockInterface;
 use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
 use Drupal\ghi_form_elements\Traits\CustomLinkTrait;
@@ -11,22 +14,21 @@ use Drupal\ghi_plan_clusters\Entity\PlanCluster;
 use Drupal\ghi_plans\Entity\GoverningEntity;
 use Drupal\ghi_plans\Entity\Plan;
 use Drupal\ghi_subpages\Entity\LogframeSubpage;
+use Drupal\hpc_common\Plugin\HPCBlockMetadata;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Provides a 'PlanClusterLogframeLinks' block.
- *
- * @Block(
- *  id = "plan_cluster_logframe_links",
- *  admin_label = @Translation("Cluster logframe links"),
- *  category = @Translation("Plan elements"),
- *  default_title = @Translation("Cluster Frameworks"),
- *  context_definitions = {
- *    "node" = @ContextDefinition("entity:node", label = @Translation("Node"), constraints = { "Bundle": "logframe" }),
- *    "plan" = @ContextDefinition("entity:base_object", label = @Translation("Plan"), constraints = { "Bundle": "plan" })
- *  }
- * )
  */
+#[Block(
+  id: 'plan_cluster_logframe_links',
+  admin_label: new TranslatableMarkup('Cluster logframe links'),
+  category: new TranslatableMarkup('Plan elements'),
+  context_definitions: [
+    'node' => new EntityContextDefinition('entity:node', new TranslatableMarkup('Node'), constraints: ['Bundle' => 'logframe']),
+    'plan' => new EntityContextDefinition('entity:base_object', new TranslatableMarkup('Plan'), constraints: ['Bundle' => 'plan']),
+  ]
+)]
 class PlanClusterLogframeLinks extends GHIBlockBase implements OverrideDefaultTitleBlockInterface {
 
   use CustomLinkTrait;
@@ -51,6 +53,13 @@ class PlanClusterLogframeLinks extends GHIBlockBase implements OverrideDefaultTi
    * @var \Drupal\ghi_plan_clusters\PlanClusterManager
    */
   protected $planClusterManager;
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function metadata(): ?HPCBlockMetadata {
+    return new HPCBlockMetadata(defaultTitle: 'Cluster Frameworks');
+  }
 
   /**
    * {@inheritdoc}

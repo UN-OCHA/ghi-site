@@ -2,21 +2,23 @@
 
 namespace Drupal\ghi_content\Plugin\Block;
 
+use Drupal\Core\Block\Attribute\Block;
 use Drupal\Core\Block\BlockBase;
+use Drupal\Core\Plugin\Context\EntityContextDefinition;
 use Drupal\ghi_content\Traits\ContentPathTrait;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 
 /**
  * Provides a 'DocumentMetaData' block.
- *
- * @Block(
- *  id = "document_meta_data",
- *  admin_label = @Translation("Document meta data"),
- *  category = @Translation("Page"),
- *  context_definitions = {
- *    "node" = @ContextDefinition("entity:node", label = @Translation("Node")),
- *   }
- * )
  */
+#[Block(
+  id: 'document_meta_data',
+  admin_label: new TranslatableMarkup('Document meta data'),
+  category: new TranslatableMarkup('Page'),
+  context_definitions: [
+    'node' => new EntityContextDefinition('entity:node', new TranslatableMarkup('Node')),
+  ]
+)]
 class DocumentMetaData extends BlockBase {
 
   use ContentPathTrait;

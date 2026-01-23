@@ -2,30 +2,41 @@
 
 namespace Drupal\ghi_blocks\Plugin\Block\Plan;
 
+use Drupal\Core\Block\Attribute\Block;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Plugin\Context\EntityContextDefinition;
 use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
 use Drupal\ghi_plans\ApiObjects\Attachments\TextAttachment;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\hpc_common\Plugin\HPCBlockMetadata;
 
 /**
  * Provides a 'PlanWebcontentText' block.
- *
- * @Block(
- *  id = "plan_webcontent_text",
- *  admin_label = @Translation("Web Content Text"),
- *  category = @Translation("Plan elements"),
- *  data_sources = {
- *    "entities" = "hpc_api:plan_entities_query",
- *    "attachment" = "hpc_api:attachment_query",
- *  },
- *  title = FALSE,
- *  context_definitions = {
- *    "node" = @ContextDefinition("entity:node", label = @Translation("Node")),
- *    "plan" = @ContextDefinition("entity:base_object", label = @Translation("Plan"), constraints = { "Bundle": "plan" }),
- *    "plan_cluster" = @ContextDefinition("entity:base_object", label = @Translation("Cluster"), constraints = { "Bundle": "governing_entity" }, required =  FALSE)
- *   }
- * )
  */
+#[Block(
+  id: 'plan_webcontent_text',
+  admin_label: new TranslatableMarkup('Web Content Text'),
+  category: new TranslatableMarkup('Plan elements'),
+  context_definitions: [
+    'node' => new EntityContextDefinition('entity:node', new TranslatableMarkup('Node')),
+    'plan' => new EntityContextDefinition('entity:base_object', new TranslatableMarkup('Plan'), constraints: ['Bundle' => 'plan']),
+    'plan_cluster' => new EntityContextDefinition('entity:base_object', new TranslatableMarkup('Cluster'), required: FALSE, constraints: ['Bundle' => 'governing_entity']),
+  ]
+)]
 class PlanWebcontentText extends GHIBlockBase {
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function metadata(): ?HPCBlockMetadata {
+    return new HPCBlockMetadata(
+      usesTitle: FALSE,
+      dataSources: [
+        'entities' => 'hpc_api:plan_entities_query',
+        'attachment' => 'hpc_api:attachment_query',
+      ]
+    );
+  }
 
   /**
    * {@inheritdoc}

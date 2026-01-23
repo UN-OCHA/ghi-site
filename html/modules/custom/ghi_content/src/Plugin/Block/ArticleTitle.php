@@ -3,22 +3,24 @@
 namespace Drupal\ghi_content\Plugin\Block;
 
 use Drupal\Component\Render\FormattableMarkup;
+use Drupal\Core\Block\Attribute\Block;
 use Drupal\Core\Block\BlockBase;
+use Drupal\Core\Plugin\Context\EntityContextDefinition;
 use Drupal\ghi_content\Entity\Article;
 use Drupal\ghi_content\Traits\ContentPathTrait;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 
 /**
  * Provides a 'ArticleTitle' block.
- *
- * @Block(
- *  id = "article_title",
- *  admin_label = @Translation("Article title"),
- *  category = @Translation("Page"),
- *  context_definitions = {
- *    "node" = @ContextDefinition("entity:node", label = @Translation("Node"))
- *  }
- * )
  */
+#[Block(
+  id: 'article_title',
+  admin_label: new TranslatableMarkup('Article title'),
+  category: new TranslatableMarkup('Page'),
+  context_definitions: [
+    'node' => new EntityContextDefinition('entity:node', new TranslatableMarkup('Node')),
+  ]
+)]
 class ArticleTitle extends BlockBase {
 
   use ContentPathTrait;

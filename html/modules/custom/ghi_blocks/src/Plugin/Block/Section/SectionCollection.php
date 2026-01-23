@@ -2,40 +2,50 @@
 
 namespace Drupal\ghi_blocks\Plugin\Block\Section;
 
+use Drupal\Core\Block\Attribute\Block;
 use Drupal\Core\Cache\Cache;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\ghi_blocks\Interfaces\ConfigurableTableBlockInterface;
 use Drupal\ghi_blocks\Interfaces\MultiStepFormBlockInterface;
 use Drupal\ghi_blocks\Interfaces\OverrideDefaultTitleBlockInterface;
 use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
 use Drupal\ghi_form_elements\Traits\ConfigurationContainerGroup;
 use Drupal\ghi_form_elements\Traits\ConfigurationContainerTrait;
+use Drupal\hpc_common\Plugin\HPCBlockMetadata;
 
 /**
  * Provides a 'Section collection' block.
- *
- * @Block(
- *  id = "section_collection",
- *  admin_label = @Translation("Section collection"),
- *  category = @Translation("Sections"),
- *  default_title = @Translation("Featured sections"),
- *  config_forms = {
- *    "sections" = {
- *      "title" = @Translation("Sections"),
- *      "callback" = "sectionsForm",
- *      "base_form" = TRUE
- *    },
- *    "display" = {
- *      "title" = @Translation("Display"),
- *      "callback" = "displayForm"
- *    }
- *  }
- * )
  */
+#[Block(
+  id: 'section_collection',
+  admin_label: new TranslatableMarkup('Section collection'),
+  category: new TranslatableMarkup('Sections'),
+)]
 class SectionCollection extends GHIBlockBase implements ConfigurableTableBlockInterface, MultiStepFormBlockInterface, OverrideDefaultTitleBlockInterface {
 
   use ConfigurationContainerTrait;
   use ConfigurationContainerGroup;
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function metadata(): ?HPCBlockMetadata {
+    return new HPCBlockMetadata(
+      defaultTitle: 'Featured sections',
+      configForms: [
+        'sections' => [
+          'title' => 'Sections',
+          'callback' => 'sectionsForm',
+          'base_form' => TRUE,
+        ],
+        'display' => [
+          'title' => 'Display',
+          'callback' => 'displayForm',
+        ],
+      ]
+    );
+  }
 
   /**
    * {@inheritdoc}

@@ -3,10 +3,12 @@
 namespace Drupal\ghi_content\Plugin\Block;
 
 use Drupal\Component\Utility\Html;
+use Drupal\Core\Block\Attribute\Block;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\Markup;
 use Drupal\Core\Security\TrustedCallbackInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\Url;
 use Drupal\ghi_blocks\Interfaces\MultiStepFormBlockInterface;
 use Drupal\ghi_blocks\Interfaces\OptionalTitleBlockInterface;
@@ -16,28 +18,17 @@ use Drupal\ghi_content\RemoteContent\RemoteParagraphInterface;
 use Drupal\ghi_form_elements\Traits\CustomLinkTrait;
 use Drupal\gho_footnotes\GhoFootnotes;
 use Drupal\hpc_common\Helpers\ThemeHelper;
+use Drupal\hpc_common\Plugin\HPCBlockMetadata;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Provides a 'Paragraph' block.
- *
- * @Block(
- *  id = "paragraph",
- *  admin_label = @Translation("Paragraph"),
- *  category = @Translation("Narrative Content"),
- *  config_forms = {
- *    "article_select" = {
- *      "title" = @Translation("Article selection"),
- *      "callback" = "articleSelectForm",
- *      "base_form" = TRUE
- *    },
- *    "paragraph" = {
- *      "title" = @Translation("Paragraph"),
- *      "callback" = "paragraphForm"
- *    }
- *  }
- * )
  */
+#[Block(
+  id: 'paragraph',
+  admin_label: new TranslatableMarkup('Paragraph'),
+  category: new TranslatableMarkup('Narrative Content'),
+)]
 class Paragraph extends ContentBlockBase implements OptionalTitleBlockInterface, MultiStepFormBlockInterface, TrustedCallbackInterface {
 
   use CustomLinkTrait;
@@ -63,6 +54,25 @@ class Paragraph extends ContentBlockBase implements OptionalTitleBlockInterface,
    * The CSS class used for promoted paragraphs. This comes from the NCMS.
    */
   const PROMOTED_CLASS = 'gho-paragraph-promoted';
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function metadata(): ?HPCBlockMetadata {
+    return new HPCBlockMetadata(
+      configForms: [
+        'article_select' => [
+          'title' => 'Article selection',
+          'callback' => 'articleSelectForm',
+          'base_form' => TRUE,
+        ],
+        'paragraph' => [
+          'title' => 'Paragraph',
+          'callback' => 'paragraphForm',
+        ],
+      ]
+    );
+  }
 
   /**
    * {@inheritdoc}

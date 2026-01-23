@@ -2,23 +2,25 @@
 
 namespace Drupal\ghi_sections\Plugin\Block;
 
+use Drupal\Core\Block\Attribute\Block;
 use Drupal\Core\Block\BlockBase;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
+use Drupal\Core\Plugin\Context\EntityContextDefinition;
 use Drupal\ghi_sections\Traits\SectionPathTrait;
 use Symfony\Component\DependencyInjection\ContainerInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 
 /**
  * Provides a 'SectionMetaData' block.
- *
- * @Block(
- *  id = "section_meta_data",
- *  admin_label = @Translation("Section meta data"),
- *  category = @Translation("Page"),
- *  context_definitions = {
- *    "node" = @ContextDefinition("entity:node", label = @Translation("Node")),
- *   }
- * )
  */
+#[Block(
+  id: 'section_meta_data',
+  admin_label: new TranslatableMarkup('Section meta data'),
+  category: new TranslatableMarkup('Page'),
+  context_definitions: [
+    'node' => new EntityContextDefinition('entity:node', new TranslatableMarkup('Node')),
+  ]
+)]
 class SectionMetaData extends BlockBase implements ContainerFactoryPluginInterface {
 
   use SectionPathTrait;

@@ -137,6 +137,13 @@ abstract class HPCBlockBase extends BlockBase implements HPCPluginInterface, Con
   protected $queryHandlers = [];
 
   /**
+   * Block-level metadata.
+   */
+  public static function metadata(): ?HpcBlockMetadata {
+    return NULL;
+  }
+
+  /**
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
@@ -227,8 +234,7 @@ abstract class HPCBlockBase extends BlockBase implements HPCPluginInterface, Con
    */
   public function getConfiguration() {
     // Make sure we always use up to data data source information.
-    $plugin_definition = $this->getPluginDefinition();
-    $this->configuration['data_sources'] = $plugin_definition['data_sources'] ?? NULL;
+    $this->configuration['data_sources'] = static::metadata()->dataSources ?? NULL;
     return $this->configuration;
   }
 
@@ -620,8 +626,9 @@ abstract class HPCBlockBase extends BlockBase implements HPCPluginInterface, Con
    */
   protected function baseConfigurationDefaults() {
     $defaults = parent::baseConfigurationDefaults();
-    if (!empty($this->pluginDefinition['data_sources'])) {
-      $defaults['data_sources'] = $this->pluginDefinition['data_sources'];
+    $metadata = static::metadata();
+    if (!empty($metadata->dataSources)) {
+      $defaults['data_sources'] = $metadata->dataSources;
     }
     $defaults['uuid'] = $this->getUuid();
     return $defaults;
@@ -645,7 +652,7 @@ abstract class HPCBlockBase extends BlockBase implements HPCPluginInterface, Con
     if (!empty($this->queryHandlers[$source_key])) {
       return $this->queryHandlers[$source_key];
     }
-    $sources = $this->getPluginDefinition()['data_sources'] ?? NULL;
+    $sources = static::metadata()->dataSources ?? NULL;
     if (!$sources || empty($sources[$source_key]) || !is_scalar($sources[$source_key])) {
       return NULL;
     }

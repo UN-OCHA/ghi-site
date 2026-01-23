@@ -7,12 +7,14 @@ use Drupal\Component\Utility\Html;
 use Drupal\Component\Utility\NestedArray;
 use Drupal\Core\Ajax\AjaxResponse;
 use Drupal\Core\Ajax\ReplaceCommand;
+use Drupal\Core\Block\Attribute\Block;
 use Drupal\Core\Block\BlockBase;
 use Drupal\Core\Cache\Cache;
 use Drupal\Core\Field\FieldDefinitionInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Form\SubformStateInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\ghi_sections\Entity\Section;
 use Drupal\ghi_subpages\SubpageTrait;
 use Drupal\taxonomy\Entity\Term;
@@ -20,13 +22,12 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Provides a 'SectionsByTerm' block.
- *
- * @Block(
- *  id = "sections_by_term",
- *  admin_label = @Translation("Sections by base object term"),
- *  category = @Translation("Menus"),
- * )
  */
+#[Block(
+  id: 'sections_by_term',
+  admin_label: new TranslatableMarkup('Sections by base object term'),
+  category: new TranslatableMarkup('Menus')
+)]
 class SectionsByTerm extends BlockBase implements ContainerFactoryPluginInterface {
 
   use SubpageTrait;
