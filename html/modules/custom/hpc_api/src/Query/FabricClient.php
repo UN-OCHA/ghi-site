@@ -422,11 +422,11 @@ class FabricClient {
    *   The message to log.
    * @param array $context
    *   Optional: Additional context information.
-   * @param array $error
+   * @param string $error
    *   Optional: Error storage.
    */
-  private function logError(string|\Stringable $message, array $context = [], &$error = []): void {
-    $error[] = (string) (new FormattableMarkup($message, $context));
+  private function logError(string|\Stringable $message, array $context = [], ?string &$error = NULL): void {
+    $error = (string) (new FormattableMarkup($message, $context));
     $this->loggerFactory->get(self::LOG_ID)->error($message, $context);
   }
 

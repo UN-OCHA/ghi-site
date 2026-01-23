@@ -102,11 +102,12 @@ class DataPoint extends FormElementBase {
    * any arbitrary data inside the form_state object.
    */
   public static function processDataPoint(array &$element, FormStateInterface $form_state) {
-    $attachment = $element['#attachment'];
+    $attachment = $element['#attachment'] ?: NULL;
+    assert($attachment === NULL || $attachment instanceof DataAttachment);
     /** @var \Drupal\ghi_plans\Entity\Plan $plan_object */
     $plan_object = $element['#plan_object'] ?? NULL;
     /** @var \Drupal\ghi_plans\ApiObjects\Prototypes\AttachmentPrototype $attachment_prototype */
-    $attachment_prototype = $attachment ? $attachment->prototype : $element['#attachment_prototype'];
+    $attachment_prototype = $attachment?->getPrototype() ?? $element['#attachment_prototype'];
     if (empty($attachment) && empty($attachment_prototype)) {
       return $element;
     }
@@ -415,13 +416,15 @@ class DataPoint extends FormElementBase {
    * Assemble the options array for a datapoint.
    */
   public static function getDataPointOptions($element) {
-    $attachment = $element['#attachment'];
-    $attachment_prototype = $attachment ? $attachment->prototype : $element['#attachment_prototype'];
+    $attachment = $element['#attachment'] ?: NULL;
+    assert($attachment === NULL || $attachment instanceof DataAttachment);
+    /** @var \Drupal\ghi_plans\ApiObjects\Prototypes\AttachmentPrototype $attachment_prototype */
+    $attachment_prototype = $attachment?->getPrototype() ?? $element['#attachment_prototype'];
     if (empty($element['#disable_empty_fields']) || empty($attachment)) {
-      return $attachment_prototype->fields;
+      return $attachment_prototype->getFields();
     }
     $options = [];
-    foreach ($attachment_prototype->fields as $key => $field) {
+    foreach ($attachment_prototype->getFields() as $key => $field) {
       if ($attachment->values[$key] === NULL) {
         $options[$field] = [];
       }
