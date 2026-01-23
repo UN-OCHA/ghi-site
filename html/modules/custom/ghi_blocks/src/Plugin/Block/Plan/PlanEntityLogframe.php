@@ -159,7 +159,6 @@ class PlanEntityLogframe extends GHIBlockBase implements MultiStepFormBlockInter
    * {@inheritdoc}
    */
   public function buildContent() {
-
     // Get the entities to render.
     $entities = $this->getRenderableEntities();
     if (empty($entities)) {

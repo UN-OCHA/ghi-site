@@ -26,16 +26,9 @@ class OrganizationQuery extends FabricQueryBase {
    *   An organization object or NULL.
    */
   public function getOrganization($organization_id): ?Organization {
-    $payload = "
-      organizations (filter:  {
-        Id:  {
-          eq: {$organization_id}
-        }
-      }) {
-        items { " . Organization::GRAPHQL_DIMENSION_ITEMS . " }
-      }";
-    $data = $this->fabricQuery->query($payload);
-    $items = $data->organizations->items;
+    $items = $this->fabricClient->createQuery('organizations', Organization::GRAPHQL_DIMENSION_ITEMS)
+      ->setFilter('Id', $organization_id)
+      ->execute();
     return count($items) == 1 ? new Organization($items[0]) : NULL;
   }
 

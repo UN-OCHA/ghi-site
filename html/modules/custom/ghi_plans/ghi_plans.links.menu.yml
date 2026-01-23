@@ -1,5 +1,12 @@
+ghi_plans.entity_lookup:
+  title: 'Entity lookup'
+  description: 'Lookup entity data.'
+  route_name: ghi_plans.entity_lookup
+  parent: hpc_api.fabric_report
+  weight: 5
 ghi_plans.attachment_lookup:
   title: 'Attachment lookup'
   description: 'Lookup attachment data.'
   route_name: ghi_plans.attachment_lookup
   parent: hpc_api.fabric_report
+  weight: 7

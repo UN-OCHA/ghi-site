@@ -10,13 +10,16 @@ use Drupal\hpc_common\Helpers\CommonHelper;
  */
 class Organization extends BaseObject {
 
-  const GRAPHQL_DIMENSION_ITEMS = '
-    Id
-    Name
-    NativeName
-    Abbreviation
-    url
-  ';
+  /**
+   * Define the dimension items used in queries.
+   */
+  const GRAPHQL_DIMENSION_ITEMS = [
+    'Id',
+    'Name',
+    'NativeName',
+    'Abbreviation',
+    'url',
+  ];
 
   /**
    * A list of clusters.

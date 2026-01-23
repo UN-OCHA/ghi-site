@@ -21,7 +21,7 @@ class CaseloadAttachment extends DataAttachment implements CaseloadAttachmentInt
       return NULL;
     }
 
-    foreach ($this->totals as $total) {
+    foreach ($this->getTotals() as $total) {
       if (!$total->getMetric()) {
         continue;
       }

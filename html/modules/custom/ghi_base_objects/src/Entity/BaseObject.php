@@ -103,7 +103,8 @@ class BaseObject extends ContentEntityBase implements BaseObjectInterface {
     if (!$this->hasField('field_original_id')) {
       return NULL;
     }
-    return $this->get('field_original_id')->value ?? NULL;
+    $source_id = $this->get('field_original_id')->value ?? NULL;
+    return $source_id !== NULL ? (int) $source_id : NULL;
   }
 
   /**

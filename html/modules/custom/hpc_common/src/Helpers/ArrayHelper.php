@@ -142,4 +142,18 @@ class ArrayHelper extends ApiArrayHelper {
     return $array;
   }
 
+  /**
+   * Tell whether all members of $array validate the $predicate.
+   */
+  public static function all(array $array, callable $predicate) {
+    return $array === array_filter($array, $predicate);
+  }
+
+  /**
+   * Tell whether any member of $array validates the $predicate.
+   */
+  public static function any(array $array, $predicate) {
+    return !empty(array_filter($array, $predicate));
+  }
+
 }

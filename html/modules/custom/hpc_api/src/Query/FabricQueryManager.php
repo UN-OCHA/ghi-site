@@ -14,19 +14,19 @@ class FabricQueryManager extends DefaultPluginManager {
   /**
    * List of source endpoint definitions.
    *
-   * @var \Drupal\hpc_api\Query\FabricQuery
+   * @var \Drupal\hpc_api\Query\FabricClient
    */
-  protected $fabricQuery;
+  protected $fabricClient;
 
   /**
    * {@inheritdoc}
    */
-  public function __construct(\Traversable $namespaces, CacheBackendInterface $cache_backend, ModuleHandlerInterface $module_handler, FabricQuery $fabric_query) {
+  public function __construct(\Traversable $namespaces, CacheBackendInterface $cache_backend, ModuleHandlerInterface $module_handler, FabricClient $fabric_client) {
     parent::__construct('Plugin/FabricQuery', $namespaces, $module_handler, 'Drupal\hpc_api\Query\FabricQueryPluginInterface', 'Drupal\hpc_api\Attribute\FabricQuery');
     $this->alterInfo('hpc_api_fabric_query_info');
     $this->setCacheBackend($cache_backend, 'hpc_api_fabric_query_plugins');
 
-    $this->fabricQuery = $fabric_query;
+    $this->fabricClient = $fabric_client;
   }
 
   /**
@@ -45,7 +45,7 @@ class FabricQueryManager extends DefaultPluginManager {
    *   The endpoint URL.
    */
   public function getEndpointUrl() {
-    return $this->fabricQuery->getEndpointUrl();
+    return $this->fabricClient->getEndpointUrl();
   }
 
 }

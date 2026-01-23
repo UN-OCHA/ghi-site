@@ -288,7 +288,7 @@ class GeoJson {
       if (is_file($file->uri)) {
         $zip->addFile($file_system->realpath($file->uri), $file->filename);
       }
-      else if (is_dir($file->uri)) {
+      elseif (is_dir($file->uri)) {
         $zip->addEmptyDir($file->filename);
         foreach ($this->getFiles($file->uri) as $_file) {
           if (!is_file($_file->uri)) {

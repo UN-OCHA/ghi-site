@@ -107,7 +107,7 @@ class ThemeHelperTest extends UnitTestCase {
    * Data provider for testGetThemeOptions.
    */
   public function getThemeOptionsDataProvider() {
-    // @codingStandardsIgnoreStart
+    // phpcs:disable
     $items = [
       // Amount.
       ['hpc_amount', 100, [], [
@@ -192,7 +192,7 @@ class ThemeHelperTest extends UnitTestCase {
       // Invalid theme argument.
       ['unknown_theme_function', 100, [], new \InvalidArgumentException('Unknown theme function "unknown_theme_function"')],
     ];
-    // @codingStandardsIgnoreEnd
+    // phpcs:enable
     return $items;
   }
 

@@ -4,8 +4,8 @@ namespace Drupal\ghi_plans\Plugin\FabricQuery;
 
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\ghi_base_objects\ApiObjects\Country;
-use Drupal\ghi_base_objects\Plugin\FabricQuery\CountryQuery;
 use Drupal\ghi_plans\ApiObjects\Plan;
+use Drupal\ghi_plans\Traits\PlanQueryTrait;
 use Drupal\hpc_api\ApiObjects\Types\PlanCostingType;
 use Drupal\hpc_api\ApiObjects\Types\PlanType;
 use Drupal\hpc_api\Attribute\FabricQuery;
@@ -19,6 +19,8 @@ use Drupal\hpc_api\Query\FabricQueryBase;
   label: new TranslatableMarkup('Plan query'),
 )]
 class PlanQuery extends FabricQueryBase {
+
+  use PlanQueryTrait;
 
   /**
    * The plan types.
@@ -49,17 +51,12 @@ class PlanQuery extends FabricQueryBase {
     if ($plan) {
       return $plan;
     }
-    // Get the plan.
-    $payload = "
-      plans (filter:  {
-        Id:  {
-          eq: {$plan_id}
-        }
-      }) {
-        items { " . Plan::GRAPHQL_DIMENSION_ITEMS . " }
-      }";
-    $data = $this->fabricQuery->query($payload);
-    $plan_data = $data->plans->items[0] ?? NULL;
+    // Get the plan data.
+    $items = $this->fabricClient->createQuery('plans', Plan::GRAPHQL_DIMENSION_ITEMS, NULL, 1)
+      ->setFilter('Id', $plan_id)
+      ->execute();
+
+    $plan_data = count($items) ? reset($items) : NULL;
     if ($plan_data === NULL) {
       return NULL;
     }
@@ -122,19 +119,7 @@ class PlanQuery extends FabricQueryBase {
    *   The country object or NULL.
    */
   protected function lookupCountry(string $name): ?Country {
-    return $this->countryQuery()->getCountryByName($name);
-  }
-
-  /**
-   * Get the country query.
-   *
-   * @return \Drupal\ghi_base_objects\Plugin\FabricQuery\CountryQuery
-   *   The country query.
-   */
-  public static function countryQuery(): CountryQuery {
-    /** @var \Drupal\hpc_api\Query\FabricQueryManager $fabric_query_manager */
-    $fabric_query_manager = \Drupal::service('plugin.manager.fabric_query_manager');
-    return $fabric_query_manager->createInstance('country');
+    return $this->getCountryQuery()->getCountryByName($name);
   }
 
 }

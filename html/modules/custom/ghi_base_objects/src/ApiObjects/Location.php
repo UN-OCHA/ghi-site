@@ -13,16 +13,19 @@ class Location extends BaseObject implements GeoJsonLocationInterface {
 
   use GeoJsonLocationTrait;
 
-  const GRAPHQL_DIMENSION_ITEMS = "
-    Id
-    Name
-    ISO3
-    Pcode
-    Latitude
-    Longitude
-    RecordStatus
-    ActiveUntil
-  ";
+  /**
+   * Define the dimension items used in queries.
+   */
+  const GRAPHQL_DIMENSION_ITEMS = [
+    'Id',
+    'Name',
+    'ISO3',
+    'Pcode',
+    'Latitude',
+    'Longitude',
+    'RecordStatus',
+    'ActiveUntil',
+  ];
 
   /**
    * The parent country.

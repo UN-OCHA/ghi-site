@@ -10,18 +10,21 @@ use Drupal\hpc_common\Helpers\StringHelper;
  */
 class AttachmentPrototype extends ApiObjectBase {
 
-  const GRAPHQL_DIMENSION_ITEMS = "
-    Id
-    RefCode
-    Type
-    Value
-    PlanId
-    CreatedAt
-    UpdatedAt
-    RecordStatus
-    Source
-    SourceId
-  ";
+  /**
+   * Define the dimension items used in queries.
+   */
+  const GRAPHQL_DIMENSION_ITEMS = [
+    'Id',
+    'RefCode',
+    'Type',
+    'Value',
+    'PlanId',
+    'CreatedAt',
+    'UpdatedAt',
+    'RecordStatus',
+    'Source',
+    'SourceId',
+  ];
 
   const DATA_TYPES = [
     'indicator',

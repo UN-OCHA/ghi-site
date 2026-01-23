@@ -9,7 +9,6 @@ use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
 use Drupal\ghi_blocks\Traits\PlanFootnoteTrait;
 use Drupal\ghi_blocks\Traits\TableSoftLimitTrait;
 use Drupal\ghi_blocks\Traits\TableTrait;
-use Drupal\ghi_plans\ApiObjects\Attachments\FinancialAttachment;
 use Drupal\ghi_plans\Entity\Plan;
 use Drupal\hpc_common\Helpers\BlockHelper;
 use Drupal\hpc_common\Helpers\CommonHelper;
@@ -28,6 +27,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  *  default_title = @Translation("Evolution of the humanitarian response"),
  *  data_sources = {
  *    "attachment" = "fabric_query:attachment",
+ *    "entity" = "fabric_query:plan_entity",
  *    "plan_funding" = "hpc_api:plan_funding_summary_query",
  *  },
  *  context_definitions = {
@@ -83,9 +83,9 @@ class PlanCaseloadTrendsTable extends GHIBlockBase implements OverrideDefaultTit
   public function getDefaultTitle() {
     $title = parent::getDefaultTitle();
     $langcode = $this->getCurrentPlanObject()?->getPlanLanguage() ?? 'en';
-    // @codingStandardsIgnoreStart
+    // phpcs:disable
     return $title ? $this->t((string) $title, [], ['langcode' => $langcode]) : $title;
-    // @codingStandardsIgnoreEnd
+    // phpcs:enable
   }
 
   /**
@@ -439,7 +439,6 @@ class PlanCaseloadTrendsTable extends GHIBlockBase implements OverrideDefaultTit
 
     $plan_ids = array_filter(array_map(fn (Plan $plan): ?int => $plan->getSourceId(), $related_plans));
     $caseloads_by_plan = $attachments_query?->getAttachmentsByPlan($plan_ids, 'caseload') ?? [];
-    $requirements_by_plan = $attachments_query?->getAttachmentsByPlan($plan_ids, 'financial') ?? [];
 
     foreach ($related_plans as $plan) {
       $plan_id = $plan->getSourceId();
@@ -449,9 +448,6 @@ class PlanCaseloadTrendsTable extends GHIBlockBase implements OverrideDefaultTit
       $caseloads = $caseloads_by_plan[$plan_id] ?? [];
       /** @var \Drupal\ghi_plans\ApiObjects\Attachments\CaseloadAttachment $caseload */
       $caseload = count($caseloads) > 1 ? $plan->getPlanCaseload($caseloads) : (!empty($caseloads) ? reset($caseloads) : NULL);
-
-      $requirements = $requirements_by_plan[$plan_id] ?? [];
-      $requirements = reset($requirements) ?: NULL;
 
       $funding_data = $funding_query->getData(['plan_id' => $plan->getSourceId()]);
 
@@ -476,9 +472,9 @@ class PlanCaseloadTrendsTable extends GHIBlockBase implements OverrideDefaultTit
         'target_percent' => $target ? CommonHelper::calculateRatio($target, $in_need) * 100 : NULL,
         'reached' => $reached,
         'reached_percent' => $reached ? CommonHelper::calculateRatio($reached, $target) * 100 : NULL,
-        'requirements' => $requirements instanceof FinancialAttachment ? $requirements->getRequirements() : NULL,
+        'requirements' => $plan->getRequirements(),
         'funding' => $funding_data['total_funding'] ?? NULL,
-        'coverage' => $requirements instanceof FinancialAttachment ? $requirements->getCoverage($funding_data['total_funding']) : NULL,
+        'coverage' => $plan->getCoverage($funding_data['total_funding'] ?? 0),
         'footnotes' => $plan ? $this->getFootnotesForPlanBaseobject($plan) : NULL,
       ];
     }

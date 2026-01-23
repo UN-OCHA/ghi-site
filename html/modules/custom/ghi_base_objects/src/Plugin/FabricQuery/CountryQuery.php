@@ -30,16 +30,11 @@ class CountryQuery extends FabricQueryBase {
     if ($this->countries !== NULL) {
       return;
     }
-    $payload = '
-      locations (
-        filter: { AdminLevel: { eq: 0 } },
-        first: 1000,
-        orderBy: { Name: ASC }
-      ) {
-        items { ' . Country::GRAPHQL_DIMENSION_ITEMS . ' }
-      }';
-    $data = $this->fabricQuery->query($payload);
-    $this->countries = $this->buildResultObjectsFromData($data, 'locations', Country::class);
+    $items = $this->fabricClient->createQuery('locations', Country::GRAPHQL_DIMENSION_ITEMS)
+      ->setFilter('AdminLevel', 0)
+      ->setOrderBy(['Name' => 'ASC'])
+      ->execute();
+    $this->countries = $this->buildResultObjects($items, Country::class);
   }
 
   /**

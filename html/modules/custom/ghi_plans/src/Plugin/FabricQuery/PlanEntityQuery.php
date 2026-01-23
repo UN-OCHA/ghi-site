@@ -7,6 +7,7 @@ use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\ghi_plans\ApiObjects\Entities\GoverningEntity;
 use Drupal\ghi_plans\ApiObjects\Entities\PlanEntity;
 use Drupal\ghi_plans\ApiObjects\PlanEntityInterface;
+use Drupal\ghi_plans\Entity\GoverningEntity as EntityGoverningEntity;
 use Drupal\hpc_api\Attribute\FabricQuery;
 use Drupal\hpc_api\Query\FabricQueryBase;
 
@@ -33,21 +34,21 @@ class PlanEntityQuery extends FabricQueryBase {
   public function getEntity($entity_type, $entity_id): ?PlanEntityInterface {
     switch ($entity_type) {
       case 'governingEntity':
-        $payload = "
-          coordinationEntities (filter: { Id: { eq: {$entity_id} } } ) {
-            items { " . GoverningEntity::GRAPHQL_DIMENSION_ITEMS . " }
-          }";
-        $data = $this->fabricQuery->query($payload);
-        $items = $data ? $this->getItems($data, 'coordinationEntities') : [];
+        $items = $this->fabricClient->createQuery('coordinationEntities', GoverningEntity::GRAPHQL_DIMENSION_ITEMS)
+          ->setFilters([
+            'Id' => $entity_id,
+            'RecordStatus' => 'Active',
+          ])
+          ->execute();
         return count($items) == 1 ? new GoverningEntity(reset($items)) : NULL;
 
       case 'planEntity':
-        $payload = "
-          logframeEntities (filter: { Id: { eq: {$entity_id} } }) {
-            items { " . PlanEntity::GRAPHQL_DIMENSION_ITEMS . " }
-          }";
-        $data = $this->fabricQuery->query($payload);
-        $items = $data ? $this->getItems($data, 'logframeEntities') : [];
+        $items = $this->fabricClient->createQuery('logframeEntities', PlanEntity::GRAPHQL_DIMENSION_ITEMS)
+          ->setFilters([
+            'Id' => $entity_id,
+            'RecordStatus' => 'Active',
+          ])
+          ->execute();
         return count($items) == 1 ? new PlanEntity(reset($items)) : NULL;
     }
 
@@ -77,20 +78,22 @@ class PlanEntityQuery extends FabricQueryBase {
     }
     switch ($entity_type) {
       case 'governingEntity':
-        $payload = "
-          coordinationEntities (filter: { Id: { in: [" . implode(',', $entity_ids) . "] } } ) {
-            items { " . GoverningEntity::GRAPHQL_DIMENSION_ITEMS . " }
-          }";
-        $data = $this->fabricQuery->query($payload);
-        return $this->buildResultObjectsFromData($data, 'coordinationEntities', GoverningEntity::class);
+        $items = $this->fabricClient->createQuery('coordinationEntities', GoverningEntity::GRAPHQL_DIMENSION_ITEMS)
+          ->setFilters([
+            'Id' => $entity_ids,
+            'RecordStatus' => 'Active',
+          ])
+          ->execute();
+        return $this->buildResultObjects($items, GoverningEntity::class);
 
       case 'planEntity':
-        $payload = "
-          logframeEntities (filter: { Id: { in: [" . implode(',', $entity_ids) . "] } } ) {
-            items { " . PlanEntity::GRAPHQL_DIMENSION_ITEMS . " }
-          }";
-        $data = $this->fabricQuery->query($payload);
-        return $this->buildResultObjectsFromData($data, 'logframeEntities', GoverningEntity::class);
+        $items = $this->fabricClient->createQuery('logframeEntities', PlanEntity::GRAPHQL_DIMENSION_ITEMS)
+          ->setFilters([
+            'Id' => $entity_ids,
+            'RecordStatus' => 'Active',
+          ])
+          ->execute();
+        return $this->buildResultObjects($items, GoverningEntity::class);
     }
 
     return [];
@@ -113,6 +116,7 @@ class PlanEntityQuery extends FabricQueryBase {
    */
   public function getPlanEntities(int $plan_id, ?ContentEntityInterface $context_object = NULL, $entity_type = NULL, ?array $filters = NULL) {
     $cache_key = $this->getCacheKey(array_filter([
+      'plan_id' => $plan_id,
       'id' => $context_object ? $context_object->id() : NULL,
       'entity_type' => $entity_type,
     ] + ($filters ?? [])));
@@ -125,20 +129,26 @@ class PlanEntityQuery extends FabricQueryBase {
     $fetch_coordination_entities = $entity_type === NULL || $entity_type == 'governing';
     $fetch_logframe_entities = $entity_type === NULL || $entity_type == 'plan';
 
+    $query_filter = [
+      'PlanId' => $plan_id,
+      'RecordStatus' => 'Active',
+    ];
+
     $payloads = [];
     if ($fetch_coordination_entities) {
-      $payloads[] = "
-        coordinationEntities (first: 5000, filter: { PlanId: { eq: {$plan_id} } RecordStatus: { eq: \"Active\" } }) {
-          items { " . GoverningEntity::GRAPHQL_DIMENSION_ITEMS . " }
-        }";
+      $payloads[] = $this->fabricClient->createQuery('coordinationEntities', GoverningEntity::GRAPHQL_DIMENSION_ITEMS)
+        ->setFilters($query_filter)
+        ->toString();
     }
     if ($fetch_logframe_entities) {
-      $payloads[] = "
-        logframeEntities (first: 5000, filter: { PlanId: { eq: {$plan_id} } RecordStatus: { eq: \"Active\" } }) {
-          items { " . PlanEntity::GRAPHQL_DIMENSION_ITEMS . " }
-        }";
+      if ($context_object instanceof EntityGoverningEntity) {
+        $query_filter['CoordinationEntityId'] = $context_object->getSourceId();
+      }
+      $payloads[] = $this->fabricClient->createQuery('logframeEntities', PlanEntity::GRAPHQL_DIMENSION_ITEMS)
+        ->setFilters($query_filter)
+        ->toString();
     }
-    $data = $this->fabricQuery->query(implode(' ', $payloads));
+    $data = $this->fabricClient->query(implode(' ', $payloads));
     $coordination_entities = $this->buildResultObjectsFromData($data, 'coordinationEntities', GoverningEntity::class);
     $logframe_entities = $this->buildResultObjectsFromData($data, 'logframeEntities', PlanEntity::class);
     $plan_entities = $coordination_entities + $logframe_entities;

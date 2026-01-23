@@ -10,9 +10,12 @@ use Drupal\ghi_base_objects\Entity\BaseObject;
 use Drupal\ghi_base_objects\Entity\BaseObjectFocusCountryInterface;
 use Drupal\ghi_base_objects\Entity\BaseObjectMetaDataInterface;
 use Drupal\ghi_plans\ApiObjects\Attachments\CaseloadAttachmentInterface;
+use Drupal\ghi_plans\ApiObjects\Attachments\FinancialAttachment;
 use Drupal\ghi_plans\Traits\AttachmentFilterTrait;
 use Drupal\ghi_plans\Traits\FtsLinkTrait;
+use Drupal\ghi_plans\Traits\PlanQueryTrait;
 use Drupal\ghi_plans\Traits\PlanTypeTrait;
+use Drupal\hpc_common\Helpers\CommonHelper;
 
 /**
  * Bundle class for plan base objects.
@@ -22,6 +25,7 @@ class Plan extends BaseObject implements BaseObjectMetaDataInterface, BaseObject
   use PlanTypeTrait;
   use FtsLinkTrait;
   use AttachmentFilterTrait;
+  use PlanQueryTrait;
 
   public const CLUSTER_TYPE_CLUSTER = 'cluster';
   public const CLUSTER_TYPE_SECTOR = 'sector';
@@ -201,6 +205,124 @@ class Plan extends BaseObject implements BaseObjectMetaDataInterface, BaseObject
    */
   public function isOther() {
     return $this->isType('Other');
+  }
+
+  /**
+   * Get the plan type.
+   *
+   * @return \Drupal\ghi_plans\Entity\PlanCostingType|null
+   *   The plan type.
+   */
+  public function getPlanCostingType() {
+    if (!$this->hasField('field_plan_costing')) {
+      return NULL;
+    }
+    return $this->get('field_plan_costing')?->entity ?? NULL;
+  }
+
+  /**
+   * Update the requirements for the plan.
+   */
+  public function updateRequirements() {
+    if (!$this->hasField('field_requirements')) {
+      return;
+    }
+
+    $attachments_query = $this->getAttachmentQuery();
+    $requirements = NULL;
+    if ($this->usePlanRequirements()) {
+      $attachments = $attachments_query->getAttachmentsByObject('plan', [$this->getSourceId()], 'financial');
+      $attachment = count($attachments) ? reset($attachments) : NULL;
+      $requirements = $attachment?->getRequirements() ?? NULL;
+    }
+    elseif ($this->useClusterRequirements()) {
+      $plan_entity_query = $this->getPlanEntityQuery();
+      $clusters = $plan_entity_query->getPlanEntities($this->getSourceId(), NULL, 'governing');
+      $requirements = 0;
+      $attachments = $attachments_query->getAttachmentsByObject('governingEntity', array_keys($clusters), 'financial');
+      foreach ($attachments as $attachment) {
+        if (!$attachment instanceof FinancialAttachment) {
+          continue;
+        }
+        $requirements += $attachment->getRequirements();
+      }
+    }
+    elseif ($this->useProjectRequirements()) {
+      // @todo Implement project requirements.
+    }
+    $this->get('field_requirements')->setValue($requirements);
+  }
+
+  /**
+   * Get the requirements for a plan.
+   *
+   * @return float|null
+   *   The requirements for the plan.
+   */
+  public function getRequirements(): ?float {
+    if (!$this->hasField('field_requirements')) {
+      return NULL;
+    }
+    $requirements = $this->get('field_requirements')?->value;
+    return $requirements !== NULL ? (float) $requirements : NULL;
+  }
+
+  /**
+   * Get the coverage for a plan.
+   *
+   * @param float $funding
+   *   The funding to compare against.
+   *
+   * @return float
+   *   The coverage.
+   */
+  public function getCoverage($funding): float {
+    return (float) CommonHelper::calculateRatio($funding, $this->getRequirements()) * 100;
+  }
+
+  /**
+   * Get the coverage for a plan.
+   *
+   * @param float $funding
+   *   The funding to compare against.
+   *
+   * @return float
+   *   The funding gap.
+   */
+  public function getFundingGap($funding): float {
+    return $this->getRequirements() - $funding;
+  }
+
+  /**
+   * Check if the plan uses plan requirements.
+   *
+   * @return bool
+   *   TRUE if the plan has its own requirements, FALSE otherwise.
+   */
+  public function usePlanRequirements() {
+    return $this->getPlanCostingType()?->isPlanRequirements() ?? FALSE;
+  }
+
+  /**
+   * Check if the plan uses cluster requirements.
+   *
+   * @return bool
+   *   TRUE if the plan gets its requirements from the sum of the cluster
+   *   requirements, FALSE otherwise.
+   */
+  public function useClusterRequirements() {
+    return $this->getPlanCostingType()?->isClusterRequirements() ?? FALSE;
+  }
+
+  /**
+   * Check if the plan uses project requirements.
+   *
+   * @return bool
+   *   TRUE if the plan gets its requirements from the sum of the project
+   *   requirements, FALSE otherwise.
+   */
+  public function useProjectRequirements() {
+    return $this->getPlanCostingType() === NULL;
   }
 
   /**

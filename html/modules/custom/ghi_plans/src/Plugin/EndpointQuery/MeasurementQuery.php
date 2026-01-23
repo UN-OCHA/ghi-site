@@ -38,7 +38,7 @@ class MeasurementQuery extends EndpointQueryBase implements ContainerFactoryPlug
    * @todo Port to fabric.
    */
   public function getUnprocessedMeasurements(DataAttachment $attachment, $disaggregation = FALSE) {
-    // @codingStandardsIgnoreStart
+    // phpcs:disable
     // $endpoint_args = [];
     // if (!$disaggregation) {
     //   $endpoint_args['disaggregation'] = 'false';
@@ -51,7 +51,7 @@ class MeasurementQuery extends EndpointQueryBase implements ContainerFactoryPlug
     // }
     // $data = $this->getData(['attachment_id' => $attachment->id()], $endpoint_args);
     // return $data->measurements ?? [];
-    // @codingStandardsIgnoreEnd
+    // phpcs:enable
     return [];
   }
 

@@ -34,11 +34,11 @@ class PlanAutocompleteController extends ControllerBase {
       foreach ($nodes as $node) {
         $title = $node->getTitle();
         $plan_id = NodeHelper::getOriginalIdFromNode($node);
-        // @codingStandardsIgnoreStart
+        // phpcs:disable
         // if (!empty($hidden_plan_ids) && in_array($plan_id, $hidden_plan_ids)) {
         //   continue;
         // }
-        // @codingStandardsIgnoreEnd
+        // phpcs:enable
 
         $matches[] = [
           'value' => $title,

@@ -39,34 +39,29 @@ class AttachmentQuery extends FabricQueryBase {
    */
   public function getAttachment(int $attachment_id, $reporting_period = NULL): ?AttachmentInterface {
     $attachment = NULL;
-    $payload = "
-      attachments (filter: {
-        Id:  {
-          eq: {$attachment_id}
-        }
-      }) {
-        items {" . DataAttachment::GRAPHQL_DIMENSION_ITEMS . "}
-      }
-      attachmentFacts (filter: {
-        IsTotal: { eq: true }
-        AttachmentId:  {
-          eq: {$attachment_id}
-        }
-      }) {
-        items {" . AttachmentFact::GRAPHQL_FACTS_ITEMS . " }
-      }";
-    $data = $this->fabricQuery->query($payload);
-    $attachments = $this->getItems($data, 'attachments');
+    $queries = [
+      $this->fabricClient->createQuery('attachments', DataAttachment::GRAPHQL_DIMENSION_ITEMS)
+        ->setFilter('Id', $attachment_id),
+      $this->fabricClient->createQuery('attachmentFacts', AttachmentFact::GRAPHQL_FACTS_ITEMS)
+        ->setFilters([
+          'AttachmentId' => $attachment_id,
+          'IsTotal' => TRUE,
+        ]),
+    ];
+
+    $data = $this->fabricClient->executeMultiple($queries);
+    $attachments = $data['attachments'];
+
     // Retrieving an attachment by id should yield a max of 1, so let's assert
     // that.
     assert(count($attachments) <= 1);
 
     $attachment = reset($attachments);
-    if (empty($attachment)) {
+    if (!$attachment) {
       return NULL;
     }
 
-    $attachment->totals = $this->getItems($data, 'attachmentFacts') ?: [];
+    $attachment->totals = $data['attachmentFacts'];
 
     return AttachmentHelper::processAttachment($attachment);
   }
@@ -82,7 +77,7 @@ class AttachmentQuery extends FabricQueryBase {
    * @return \Drupal\ghi_plans\ApiObjects\Attachments\AttachmentInterface[]
    *   The matching (processed) attachment objects, keyed by the attachment id.
    */
-  public function getAttachmentsById(array $attachment_ids, $disaggregated = FALSE) {
+  public function getAttachmentsById(array $attachment_ids, bool $disaggregated = FALSE) {
     sort($attachment_ids);
 
     $cache_key = $this->getCacheKey([
@@ -93,28 +88,21 @@ class AttachmentQuery extends FabricQueryBase {
     if ($attachments) {
       return $attachments;
     }
-    $payload = "
-      attachments (first: 10000, filter: {
-        Id:  {
-          in: [" . implode(',', $attachment_ids) . "]
-        }
-      }) {
-        items {" . DataAttachment::GRAPHQL_DIMENSION_ITEMS . "}
-      }
-      attachmentFacts (first: 100000, filter: {
-        IsTotal: { eq: " . ($disaggregated ? 'false' : 'true') . " }
-        AttachmentId:  {
-          in: [" . implode(',', $attachment_ids) . "]
-        }
-      }) {
-        items {" . AttachmentFact::GRAPHQL_FACTS_ITEMS . " }
-      }";
-    $data = $this->fabricQuery->query($payload);
-    $attachments = $this->getItems($data, 'attachments');
+    $queries = [
+      $this->fabricClient->createQuery('attachments', DataAttachment::GRAPHQL_DIMENSION_ITEMS)
+        ->setFilter('Id', $attachment_ids),
+      $this->fabricClient->createQuery('attachmentFacts', AttachmentFact::GRAPHQL_FACTS_ITEMS)
+        ->setFilters([
+          'AttachmentId' => $attachment_ids,
+          'IsTotal' => $disaggregated,
+        ]),
+    ];
+    $data = $this->fabricClient->executeMultiple($queries);
+    $attachments = $data['attachments'];
     if (empty($attachments)) {
       return [];
     }
-    $attachment_facts = $this->getItems($data, 'attachmentFacts');
+    $attachment_facts = $data['attachmentFacts'];
     // If we have found attachments, also load the total facts.
     $this->addAttachmentFacts($attachments, $attachment_facts);
 
@@ -152,24 +140,15 @@ class AttachmentQuery extends FabricQueryBase {
     }
 
     $type_filter_value = $this->getEntityTypeFilterValue($entity_type);
-    $filters = [
-      'EntityMainType: { eq: "' . $type_filter_value . '" }',
-      'EntityId: { in: [' . implode(',', $entity_ids) . '] }',
-    ];
-    if (!empty($attachment_types)) {
-      $filters[] = 'AttachmentType: { in: ["' . implode('", "', $attachment_types) . '"] }';
-    }
+    $filters = array_filter([
+      'EntityMainType' => $type_filter_value,
+      'EntityId' => $entity_ids,
+      'AttachmentType' => $attachment_types ?: NULL,
+    ]);
 
-    $filter = implode(' ', $filters);
-    $payload = "
-      attachments (first: 10000, filter: {
-        $filter
-      }) {
-        items {" . DataAttachment::GRAPHQL_DIMENSION_ITEMS . "}
-      }
-      ";
-    $data = $this->fabricQuery->query($payload);
-    $attachments = $this->getItems($data, 'attachments');
+    $attachments = $this->fabricClient->createQuery('attachments', DataAttachment::GRAPHQL_DIMENSION_ITEMS)
+      ->setFilters($filters)
+      ->execute();
     if (empty($attachments)) {
       return [];
     }
@@ -226,26 +205,17 @@ class AttachmentQuery extends FabricQueryBase {
     if ($context_object && $entity_type = $supported_contexts[$context_object->bundle()] ?? NULL) {
       $type_filter_value = $this->getEntityTypeFilterValue($entity_type);
     }
-    $query_filters = array_filter([
-      'PlanId: { eq: ' . $plan_id . '}',
-      $type_filter_value ? 'EntityMainType: { eq: "' . $type_filter_value . '" }' : NULL,
-    ]);
+
     $attachment_types = !empty($filter['AttachmentType']) ? (array) $filter['AttachmentType'] : NULL;
     unset($filter['AttachmentType']);
-    if (!empty($attachment_types)) {
-      $query_filters[] = 'AttachmentType: { in: ["' . implode('", "', $attachment_types) . '"] }';
-    }
 
-    $query_filter = implode(' ', $query_filters);
-    $payload = "
-      attachments (first: 10000, filter: {
-        $query_filter
-      }) {
-        items {" . DataAttachment::GRAPHQL_DIMENSION_ITEMS . "}
-      }
-      ";
-    $data = $this->fabricQuery->query($payload);
-    $attachments = $this->getItems($data, 'attachments');
+    $attachments = $this->fabricClient->createQuery('attachments', DataAttachment::GRAPHQL_DIMENSION_ITEMS)
+      ->setFilters(array_filter([
+        'PlanId' => $plan_id,
+        'EntityMainType' => $type_filter_value,
+        'AttachmentType' => $attachment_types,
+      ]))
+      ->execute();
     if (empty($attachments)) {
       return [];
     }
@@ -287,6 +257,32 @@ class AttachmentQuery extends FabricQueryBase {
       $attachments_by_plan[$plan_id][$attachment->id()] = $attachment;
     }
     return $attachments_by_plan;
+  }
+
+  /**
+   * Get attachments by clusters.
+   *
+   * @param int[] $cluster_ids
+   *   The cluster ids.
+   * @param array|string $attachment_types
+   *   Optional array of attachment types for filtering.
+   *
+   * @return \Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment[][]
+   *   An array of array of data attachments, keyed by the cluster id and the
+   *   attachment id.
+   */
+  public function getAttachmentsByCluster(array $cluster_ids, $attachment_types = NULL) {
+    $attachments = $this->getAttachmentsByObject('governingEntity', $cluster_ids, $attachment_types);
+    $attachments_by_cluster = [];
+    foreach ($attachments as $attachment) {
+      if (!$attachment instanceof DataAttachment || $attachment->getSourceEntityType() != 'governingEntity') {
+        continue;
+      }
+      $cluster_id = $attachment->getSourceEntityId();
+      $attachments_by_cluster[$cluster_id] = $attachments_by_cluster[$cluster_id] ?? [];
+      $attachments_by_cluster[$cluster_id][$attachment->id()] = $attachment;
+    }
+    return $attachments_by_cluster;
   }
 
   /**
@@ -332,11 +328,11 @@ class AttachmentQuery extends FabricQueryBase {
         or: [" . implode('', $filters) . "]
         AttachmentType:  { in: [\"Caseload\", \"Indicator\"] }
       }) {
-        items {" . DataAttachment::GRAPHQL_DIMENSION_ITEMS . "}
+        items {" . implode(' ', DataAttachment::GRAPHQL_DIMENSION_ITEMS) . "}
       }
       ";
-    $data = $this->fabricQuery->query($payload);
-    $attachments = $this->getItems($data, 'attachments');
+    $data = $this->fabricClient->query($payload);
+    $attachments = $data ? $this->getItems($data, 'attachments') : [];
     if (empty($attachments)) {
       return [];
     }
@@ -360,18 +356,12 @@ class AttachmentQuery extends FabricQueryBase {
   private function addAttachmentFacts(&$attachments, ?array $attachment_facts = NULL) {
     if (!$attachment_facts) {
       $attachment_ids = array_map(fn ($item) => $item->Id, $attachments);
-      $facts_payload = "
-        attachmentFacts (first: 100000, filter: {
-          IsTotal: { eq: true }
-          AttachmentId:  {
-            in: [" . implode(',', $attachment_ids) . "]
-          }
-        }) {
-          items {" . AttachmentFact::GRAPHQL_FACTS_ITEMS . " }
-        }
-        ";
-      $data = $this->fabricQuery->query($facts_payload);
-      $attachment_facts = $this->getItems($data, 'attachmentFacts');
+      $attachment_facts = $this->fabricClient->createQuery('attachmentFacts', AttachmentFact::GRAPHQL_FACTS_ITEMS)
+        ->setFilters([
+          'AttachmentId' => $attachment_ids,
+          'IsTotal' => TRUE,
+        ])
+        ->execute();
     }
 
     foreach ($attachment_facts as $attachment_fact) {
@@ -392,16 +382,12 @@ class AttachmentQuery extends FabricQueryBase {
    */
   public function getAttachmentDisaggregatedData(int $attachment_id): array {
     // Get the attachment facts.
-    $payload = "
-      attachmentFacts (filter: {
-        IsTotal: { eq: false }
-        AttachmentId:  {
-          eq: {$attachment_id}
-        }
-      }) {
-        items {" . AttachmentFact::GRAPHQL_FACTS_ITEMS . " }
-      }";
-    return $this->getItems($this->fabricQuery->query($payload), 'attachmentFacts') ?: [];
+    return $this->fabricClient->createQuery('attachmentFacts', AttachmentFact::GRAPHQL_FACTS_ITEMS)
+      ->setFilters([
+        'AttachmentId' => $attachment_id,
+        'IsTotal' => FALSE,
+      ])
+      ->execute() ?: [];
   }
 
   /**

@@ -12,6 +12,8 @@ use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
 use Drupal\ghi_blocks\Traits\ConfigurationItemClusterRestrictTrait;
 use Drupal\ghi_blocks\Traits\TableSoftLimitTrait;
 use Drupal\ghi_form_elements\Traits\ConfigurationContainerTrait;
+use Drupal\ghi_plans\ApiObjects\Entities\EntityObjectInterface;
+use Drupal\ghi_plans\ApiObjects\Entities\GoverningEntity;
 use Drupal\ghi_plans\Entity\Plan;
 use Drupal\ghi_plans\Helpers\PlanStructureHelper;
 use Drupal\hpc_downloads\Interfaces\HPCDownloadExcelInterface;
@@ -133,7 +135,7 @@ class PlanGoverningEntitiesTable extends GHIBlockBase implements ConfigurableTab
 
     $rows = [];
     foreach ($entities as $entity) {
-      $base_object = $objects[$entity->id] ?? NULL;
+      $base_object = $objects[$entity->id()] ?? NULL;
       if (!$base_object) {
         continue;
       }
@@ -172,7 +174,11 @@ class PlanGoverningEntitiesTable extends GHIBlockBase implements ConfigurableTab
         continue;
       }
 
-      $rows[] = $row;
+      $rows[] = [
+        'data' => $row,
+        'data-entity-id' => $entity->id(),
+        'data-entity-type' => 'governing-entity',
+      ];
     }
 
     /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\FlowSearchQuery $flow_search_query */
@@ -404,13 +410,15 @@ class PlanGoverningEntitiesTable extends GHIBlockBase implements ConfigurableTab
   /**
    * Get all governing entity objects for the current block instance.
    *
-   * @return \Drupal\ghi_plans\ApiObjects\Entities\EntityObjectInterface[]
-   *   An array of entity objects, aka clusters.
+   * @return \Drupal\ghi_plans\ApiObjects\Entities\GoverningEntity[]
+   *   An array of governing entity objects, aka clusters.
    */
   private function getEntityObjects(): array {
     /** @var \Drupal\ghi_plans\Plugin\FabricQuery\PlanEntityQuery $query */
     $query = $this->getQueryHandler('entities');
-    return $query?->getPlanEntities($this->getCurrentPlanId(), $this->getPageNode(), 'governing') ?? [];
+    $entities = $query?->getPlanEntities($this->getCurrentPlanId(), $this->getPageNode(), 'governing') ?? [];
+    $entities = array_filter($entities, fn (EntityObjectInterface $entity): bool => $entity instanceof GoverningEntity);
+    return $entities;
   }
 
   /**
