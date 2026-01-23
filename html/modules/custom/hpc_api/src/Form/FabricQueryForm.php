@@ -40,8 +40,8 @@ class FabricQueryForm extends FormBase {
     $query = $form_state->getValue('query');
     if (!empty($query)) {
       $fabric_client = $this->getFabricClient();
-      $errors = [];
-      $result = $fabric_client->query($query, $errors);
+      $error = NULL;
+      $result = $fabric_client->query($query, $error);
       $form['result'] = [
         '#type' => 'details',
         '#title' => $this->t('Result'),
@@ -49,7 +49,7 @@ class FabricQueryForm extends FormBase {
         'children' => [
           '#type' => 'html_tag',
           '#tag' => 'pre',
-          '#value' => empty($errors) ? print_r($result, TRUE) : print_r($errors, TRUE),
+          '#value' => empty($error) ? print_r($result, TRUE) : print_r($error, TRUE),
         ],
       ];
     }
