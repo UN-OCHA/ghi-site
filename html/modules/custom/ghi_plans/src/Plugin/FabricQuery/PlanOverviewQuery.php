@@ -87,12 +87,14 @@ class PlanOverviewQuery extends FabricQueryBase {
     }
 
     $plan_objects = $this->fabricClient->createQuery('plans', Plan::GRAPHQL_DIMENSION_ITEMS)
-      ->setFilter('planPeriod', '{
-          period: {
-            PeriodType: { eq: \"Year\" }
-            CalendarYear: { eq: {$year} }
-          }
-        }')
+      ->setFilters([
+        'planPeriod' => [
+          'period' => [
+            'PeriodType' => 'Year',
+            'CalendarYear' => $year,
+          ],
+        ],
+      ])
       ->execute();
 
     $plan_ids = array_map(fn ($plan_object) => $plan_object->Id, $plan_objects);

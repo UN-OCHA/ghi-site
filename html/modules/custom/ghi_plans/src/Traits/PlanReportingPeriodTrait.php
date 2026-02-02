@@ -3,6 +3,7 @@
 namespace Drupal\ghi_plans\Traits;
 
 use Drupal\ghi_plans\ApiObjects\Plan;
+use Drupal\ghi_plans\Plugin\EndpointQuery\PlanReportingPeriodsQuery;
 
 /**
  * Trait to help with retrieving reporting periods for a plan.
@@ -47,7 +48,7 @@ trait PlanReportingPeriodTrait {
   public static function getPlanReportingPeriods($plan_id, $limit_to_published = FALSE) {
     /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\PlanReportingPeriodsQuery $query */
     $query = self::getEndpointQueryManager()->createInstance('plan_reporting_periods_query');
-    if (!$query) {
+    if (!$query instanceof PlanReportingPeriodsQuery) {
       return [];
     }
     $query->setPlaceholder('plan_id', $plan_id);

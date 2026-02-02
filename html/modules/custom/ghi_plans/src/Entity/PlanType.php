@@ -10,6 +10,8 @@ use Drupal\taxonomy\Entity\Term;
  */
 class PlanType extends Term {
 
+  public const BUNDLE = 'plan_type';
+
   /**
    * Get the abbreaviation for the plan type.
    *

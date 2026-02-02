@@ -2,6 +2,7 @@
 
 namespace Drupal\ghi_plans\ApiObjects;
 
+use Drupal\Core\Url;
 use Drupal\ghi_base_objects\ApiObjects\BaseObject;
 use Drupal\hpc_common\Helpers\CommonHelper;
 
@@ -52,6 +53,16 @@ class Organization extends BaseObject {
    */
   public function getAbbreviation(): ?string {
     return $this->map->abbreviation;
+  }
+
+  /**
+   * Get the url.
+   *
+   * @return \Drupal\Core\Url
+   *   The url of the organization.
+   */
+  public function getUrl(?array $options = []): ?Url {
+    return $this->url ? Url::fromUri($this->url, $options) : NULL;
   }
 
   /**

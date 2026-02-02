@@ -10,27 +10,29 @@ use Drupal\ghi_base_objects\Entity\BaseObjectChildInterface;
  */
 class PlanEntity extends BaseObject implements BaseObjectChildInterface {
 
+  public const BUNDLE = 'plan_entity';
+
   /**
    * {@inheritdoc}
    */
-  public function getParentBaseObject() {
+  public function getParentBaseObject(): ?Plan {
     return $this->getPlan();
   }
 
   /**
    * {@inheritdoc}
    */
-  public function labelWithParent() {
+  public function labelWithParent(): string {
     return $this->getParentBaseObject()->label() . ': ' . $this->label();
   }
 
   /**
    * Get the plan object that this governing entity belongs to.
    *
-   * @return \Drupal\ghi_plans\Entity\Plan
-   *   The plan base object.
+   * @return \Drupal\ghi_plans\Entity\Plan|null
+   *   The plan base object or NULL.
    */
-  public function getPlan() {
+  public function getPlan(): ?Plan {
     if (!$this->hasField('field_plan')) {
       return NULL;
     }

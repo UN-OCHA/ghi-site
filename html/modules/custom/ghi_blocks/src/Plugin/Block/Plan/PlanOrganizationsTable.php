@@ -15,6 +15,7 @@ use Drupal\ghi_form_elements\Traits\ConfigurationContainerTrait;
 use Drupal\hpc_downloads\Interfaces\HPCDownloadExcelInterface;
 use Drupal\hpc_downloads\Interfaces\HPCDownloadPNGInterface;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\ghi_base_objects\Entity\BaseObjectChildInterface;
 use Drupal\hpc_common\Plugin\HPCBlockMetadata;
 
 /**
@@ -43,8 +44,7 @@ class PlanOrganizationsTable extends GHIBlockBase implements ConfigurableTableBl
     return new HPCBlockMetadata(
       defaultTitle: 'Organizations overview',
       dataSources: [
-        'project_search' => 'hpc_api:plan_project_search_query',
-        'project_funding' => 'hpc_api:plan_project_funding_query',
+        'project_search' => 'fabric_query:project',
       ],
       configForms: [
         'organizations' => [
@@ -305,16 +305,15 @@ class PlanOrganizationsTable extends GHIBlockBase implements ConfigurableTableBl
    * {@inheritdoc}
    */
   public function getBlockContext() {
-    /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\PlanProjectSearchQuery $project_search_query */
-    $project_search_query = $this->getQueryHandler('project_search');
-    if ($cluster_context = $this->getClusterContext()) {
-      $project_search_query->setClusterContext($cluster_context->getSourceId());
-    }
+    /** @var \Drupal\ghi_plans\Plugin\FabricQuery\ProjectQuery $project_query */
+    $project_query = $this->getQueryHandler('project_search');
+    $cluster_context = $this->getClusterContext();
+    $plan_object = $this->getCurrentPlanObject();
     return [
       'page_node' => $this->getPageNode(),
-      'plan_object' => $this->getCurrentPlanObject(),
+      'plan_object' => $plan_object,
       'base_object' => $this->getCurrentBaseObject(),
-      'projects' => $project_search_query->getProjects(),
+      'projects' => $project_query->getProjectsForPlan($plan_object, $cluster_context instanceof BaseObjectChildInterface ? $cluster_context : NULL),
     ];
   }
 

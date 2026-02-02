@@ -4,11 +4,14 @@ namespace Drupal\ghi_blocks\Traits;
 
 use Drupal\ghi_plans\ApiObjects\Organization;
 use Drupal\ghi_plans\Entity\GoverningEntity;
+use Drupal\ghi_plans\Traits\PlanQueryTrait;
 
 /**
  * Helper trait for block plugins showing organization data.
  */
 trait OrganizationsBlockTrait {
+
+  use PlanQueryTrait;
 
   /**
    * Get the configured organizations.
@@ -32,8 +35,12 @@ trait OrganizationsBlockTrait {
    *   Array of organization objects as returned by the API.
    */
   private function getOrganizations() {
-    $query = $this->getProjectSearchQuery();
-    return $query->getOrganizations();
+    $plan_object = $this->getCurrentPlanObject();
+    $organizations = &drupal_static(__FUNCTION__, []);
+    if (empty($organizations)) {
+      $organizations = $this->getProjectQuery()->getProjectOrganizationsForPlan($plan_object);
+    }
+    return $organizations;
   }
 
   /**
@@ -48,11 +55,10 @@ trait OrganizationsBlockTrait {
   private function getOrganizationProjects(Organization $organization) {
     $plan_object = $this->getCurrentPlanObject();
     $projects = &drupal_static(__FUNCTION__, []);
-    if (empty($projects[$organization->id])) {
-      $query = $this->getProjectSearchQuery();
-      $projects[$organization->id] = $query->getOrganizationProjects($organization, $plan_object);
+    if (empty($projects[$organization->id()])) {
+      $projects[$organization->id()] = $this->getProjectQuery()->getProjectsForPlan($plan_object, NULL, $organization->id());
     }
-    return $projects[$organization->id];
+    return $projects[$organization->id()];
   }
 
   /**
@@ -67,11 +73,10 @@ trait OrganizationsBlockTrait {
   private function getOrganizationClusters(Organization $organization) {
     $plan_object = $this->getCurrentPlanObject();
     $clusters = &drupal_static(__FUNCTION__, []);
-    if (empty($clusters[$organization->id])) {
-      $query = $this->getProjectSearchQuery();
-      $clusters[$organization->id] = $query->getOrganizationClusters($organization, $plan_object);
+    if (empty($clusters[$organization->id()])) {
+      $clusters[$organization->id()] = $this->getProjectQuery()->getProjectClustersForPlan($plan_object, NULL, $organization->id());
     }
-    return $clusters[$organization->id];
+    return $clusters[$organization->id()];
   }
 
   /**
@@ -81,21 +86,9 @@ trait OrganizationsBlockTrait {
    *   An array of arrays. First level key is the organization id, second level
    *   key the project id and the value is a project object.
    */
-  private function getProjectsByOrganization() {
-    $query = $this->getProjectSearchQuery();
-    return $query->getProjectsByOrganization();
-  }
-
-  /**
-   * Get the clusters grouped by organization.
-   *
-   * @return array[]
-   *   An array of arrays. First level key is the organization id, second level
-   *   key the cluster id and the value is a cluster object.
-   */
-  private function getClustersByOrganization() {
-    $query = $this->getProjectSearchQuery();
-    return $query->getClustersByOrganization();
+  private function getProjectsByOrganization(?array $organizations = NULL) {
+    $plan_object = $this->getCurrentPlanObject();
+    return $this->getProjectQuery()->getPlanProjectsByOrganization($plan_object);
   }
 
   /**
@@ -107,21 +100,6 @@ trait OrganizationsBlockTrait {
   private function getClusterContext() {
     $base_object = $this->getCurrentBaseObject();
     return $base_object && $base_object instanceof GoverningEntity ? $base_object : NULL;
-  }
-
-  /**
-   * Get the project search query.
-   *
-   * @return \Drupal\ghi_plans\Plugin\EndpointQuery\PlanProjectSearchQuery
-   *   The project search query.
-   */
-  private function getProjectSearchQuery() {
-    /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\PlanProjectSearchQuery $query */
-    $query = $this->getQueryHandler('project_search');
-    if ($cluster_context = $this->getClusterContext()) {
-      $query->setClusterContext($cluster_context->getSourceId());
-    }
-    return $query;
   }
 
 }

@@ -38,10 +38,10 @@ class PlanHeadlineFiguresTest extends PlanBlockKernelTestBase {
 
     $this->assertNull($plugin->label());
 
-    $definition = $plugin->getPluginDefinition();
-    $this->assertIsArray($definition['config_forms']);
-    $this->assertCount(2, $definition['config_forms']);
-    $this->assertArrayHasKey($plugin->getDefaultSubform(), $definition['config_forms']);
+    $config_forms = $plugin->metadata()->configForms;
+    $this->assertIsArray($config_forms);
+    $this->assertCount(2, $config_forms);
+    $this->assertArrayHasKey($plugin->getDefaultSubform(), $config_forms);
     $this->assertEquals('key_figures', $plugin->getDefaultSubform());
   }
 

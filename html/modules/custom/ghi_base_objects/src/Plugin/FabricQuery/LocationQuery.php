@@ -12,10 +12,10 @@ use Drupal\hpc_api\Query\FabricQueryBase;
  * Plugin implementation of the 'locations' fabric query.
  */
 #[FabricQuery(
-  id: 'locations',
+  id: 'location',
   label: new TranslatableMarkup('Locations query'),
 )]
-class LocationsQuery extends FabricQueryBase {
+class LocationQuery extends FabricQueryBase {
 
   use StringTranslationTrait;
 
@@ -26,17 +26,34 @@ class LocationsQuery extends FabricQueryBase {
    *
    * @param int $location_id
    *   A location id known to the API.
-   * @param int $max_level
-   *   A maximum level of nested locations to retrieve.
    *
    * @return \Drupal\ghi_base_objects\ApiObjects\Location|null
    *   A location object.
    */
-  public function getLocation($location_id, $max_level = 1): ?Location {
+  public function getLocation($location_id): ?Location {
     $items = $this->fabricClient->createQuery('locations', Location::GRAPHQL_DIMENSION_ITEMS, NULL, 1)
       ->setFilter('Id', $location_id)
       ->execute();
-    return count($items) == 1 ? new Location($items[0]) : NULL;
+    $item = count($items) == 1 ? reset($items) : NULL;
+    return $item ? new Location($item) : NULL;
+  }
+
+  /**
+   * Get all locations of the country.
+   *
+   * @param int $country_id
+   *   The country id.
+   * @param int $max_level
+   *   A maximum level of nested locations to retrieve.
+   * @param int[] $limit_location_ids
+   *   Optional: An array of location ids to limit the result to.
+   *
+   * @return \Drupal\ghi_base_objects\ApiObjects\Location[]
+   *   An array of location objects keyed by the location id.
+   */
+  public function getLocationsForCountry(int $country_id, int $max_level, $limit_location_ids = NULL) {
+
+    return [];
   }
 
 }

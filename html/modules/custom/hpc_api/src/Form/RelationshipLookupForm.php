@@ -25,7 +25,7 @@ class RelationshipLookupForm extends FormBase {
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container) {
-    /** @var \Drupal\ghi_blocks\Form\TableSettingsForm $instance */
+    /** @var self $instance */
     $instance = parent::create($container);
     $instance->fabricQueryManager = $container->get('plugin.manager.fabric_query_manager');
     return $instance;
@@ -118,8 +118,6 @@ class RelationshipLookupForm extends FormBase {
 
         $rows[] = [
           count($rows) + 1,
-          // $item->id(),
-          // $item->getType(),
           $entity_types[$_source_type_id]->getName(),
           $source_label,
           $entity_types[$_target_type_id]->getName(),
@@ -132,8 +130,6 @@ class RelationshipLookupForm extends FormBase {
       '#type' => 'table',
       '#header' => [
         '#',
-        // $this->t('Id'),
-        // $this->t('Type'),
         $this->t('Source type'),
         $this->t('Source (id)'),
         $this->t('Target type'),

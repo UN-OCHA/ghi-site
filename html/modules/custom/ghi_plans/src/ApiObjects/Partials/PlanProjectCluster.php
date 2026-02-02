@@ -22,9 +22,9 @@ class PlanProjectCluster extends BaseObject {
   protected function map() {
     $data = $this->getRawData();
     return (object) [
-      'id' => $data->id,
-      'name' => $data->name,
-      'icon' => $data->value->icon,
+      'id' => $data->Id,
+      'name' => $data->Name,
+      'icon' => $data->Icon ?? NULL,
     ];
   }
 

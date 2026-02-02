@@ -27,6 +27,7 @@ class Plan extends BaseObject implements BaseObjectMetaDataInterface, BaseObject
   use AttachmentFilterTrait;
   use PlanQueryTrait;
 
+  public const BUNDLE = 'plan';
   public const CLUSTER_TYPE_CLUSTER = 'cluster';
   public const CLUSTER_TYPE_SECTOR = 'sector';
 

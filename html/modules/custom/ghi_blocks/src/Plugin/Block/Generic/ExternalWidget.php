@@ -3,6 +3,7 @@
 namespace Drupal\ghi_blocks\Plugin\Block\Generic;
 
 use Drupal\Component\Utility\UrlHelper;
+use Drupal\Core\Block\Attribute\Block;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Plugin\Context\ContextDefinition;
 use Drupal\Core\Plugin\Context\EntityContextDefinition;

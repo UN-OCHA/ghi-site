@@ -16,6 +16,52 @@ class FabricQueryTest extends UnitTestCase {
   use PrivateMethodTrait;
 
   /**
+   * Data provider for testBuildFilterString.
+   */
+  public function dataProviderBuildFilterString() {
+    $cases = [];
+    $cases[] = [
+      [
+        'Id' => 10,
+        'Name' => 'Test',
+      ],
+      'Id: { eq: 10 } Name: { eq: "Test" }',
+    ];
+    $cases[] = [
+      [
+        'Name' => 'Test',
+        'Id' => 10,
+      ],
+      'Name: { eq: "Test" } Id: { eq: 10 }',
+    ];
+    $cases[] = [
+      [
+        'planPeriod' => [
+          'period' => [
+            'PeriodType' => 'Year',
+            'CalendarYear' => 2025,
+          ],
+        ],
+      ],
+      'planPeriod: { period: { PeriodType: { eq: "Year" } CalendarYear: { eq: 2025 } } }',
+    ];
+    return $cases;
+  }
+
+  /**
+   * Test building of the item string.
+   *
+   * @group FabricQuery
+   * @dataProvider dataProviderBuildFilterString
+   */
+  public function testBuildFilterString($filters, $expected) {
+    $fabric_query = new FabricQuery('test');
+    $fabric_query->setFilters($filters);
+    $actual = $this->callPrivateMethod($fabric_query, 'buildFilterString');
+    $this->assertEquals($expected, $actual);
+  }
+
+  /**
    * Data provider for testBuildItemString.
    */
   public function dataProviderBuildItemString() {

@@ -134,23 +134,21 @@ class PlanEntityQuery extends FabricQueryBase {
       'RecordStatus' => 'Active',
     ];
 
-    $payloads = [];
+    $queries = [];
     if ($fetch_coordination_entities) {
-      $payloads[] = $this->fabricClient->createQuery('coordinationEntities', GoverningEntity::GRAPHQL_DIMENSION_ITEMS)
-        ->setFilters($query_filter)
-        ->toString();
+      $queries[] = $this->fabricClient->createQuery('coordinationEntities', GoverningEntity::GRAPHQL_DIMENSION_ITEMS)
+        ->setFilters($query_filter);
     }
     if ($fetch_logframe_entities) {
       if ($context_object instanceof EntityGoverningEntity) {
         $query_filter['CoordinationEntityId'] = $context_object->getSourceId();
       }
-      $payloads[] = $this->fabricClient->createQuery('logframeEntities', PlanEntity::GRAPHQL_DIMENSION_ITEMS)
-        ->setFilters($query_filter)
-        ->toString();
+      $queries[] = $this->fabricClient->createQuery('logframeEntities', PlanEntity::GRAPHQL_DIMENSION_ITEMS)
+        ->setFilters($query_filter);
     }
-    $data = $this->fabricClient->query(implode(' ', $payloads));
-    $coordination_entities = $this->buildResultObjectsFromData($data, 'coordinationEntities', GoverningEntity::class);
-    $logframe_entities = $this->buildResultObjectsFromData($data, 'logframeEntities', PlanEntity::class);
+    $data = $this->fabricClient->executeMultiple($queries);
+    $coordination_entities = $this->buildResultObjects($data['coordinationEntities'] ?? [], GoverningEntity::class);
+    $logframe_entities = $this->buildResultObjects($data['logframeEntities'] ?? [], PlanEntity::class);
     $plan_entities = $coordination_entities + $logframe_entities;
 
     // Apply filters.

@@ -240,8 +240,11 @@ class FabricQuery {
       elseif (is_array($value) && ArrayHelper::all($value, 'is_numeric')) {
         $strings[] = $key . ': { in: [' . implode(',', $value) . '] }';
       }
-      elseif (is_array($value)) {
+      elseif (is_array($value) && ArrayHelper::all($value, 'is_string')) {
         $strings[] = $key . ': { in: ["' . implode('", "', $value) . '"] }';
+      }
+      elseif (is_array($value)) {
+        $strings[] = $key . ': { ' . $this->buildFilterString($value) . ' }';
       }
     }
     return !empty($strings) ? implode(' ', $strings) : NULL;
@@ -268,10 +271,10 @@ class FabricQuery {
   /**
    * Execute the current query.
    *
-   * @return false|object|array
+   * @return false|array
    *   The result from the fabric query or FALSE on failure.
    */
-  public function execute() {
+  public function execute(): false|array {
     return $this->getFabricClient()->execute($this);
   }
 

@@ -133,7 +133,8 @@ class FabricReportController extends ControllerBase {
       ];
     }
 
-    $data = $query->getEntityData($entity_type_id, $entity_id);
+    $items = $entity_query->execute();
+    $data = $items[$entity_id] ?? NULL;
     $rows = [];
     if ($data !== NULL) {
       foreach (get_object_vars($data) as $key => $value) {
@@ -149,7 +150,7 @@ class FabricReportController extends ControllerBase {
         '#type' => 'details',
         '#title' => $this->t('Query'),
         [
-          '#markup' => Markup::create('query { ' . $entity_query . ' }'),
+          '#markup' => Markup::create('query { ' . $entity_query->toString() . ' }'),
         ],
         '#attributes' => ['class' => ['gin-layer-wrapper']],
       ],

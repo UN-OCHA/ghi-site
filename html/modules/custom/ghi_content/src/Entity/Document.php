@@ -12,6 +12,8 @@ use Drupal\node\NodeInterface;
  */
 class Document extends ContentBase {
 
+  public const BUNDLE = 'document';
+
   /**
    * {@inheritdoc}
    */

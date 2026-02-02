@@ -6,6 +6,7 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\Markup;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\Template\Attribute;
+use Drupal\ghi_base_objects\Entity\BaseObjectChildInterface;
 use Drupal\ghi_blocks\Traits\ConfigurationItemValuePreviewTrait;
 use Drupal\ghi_form_elements\Attribute\ConfigurationContainerItem;
 use Drupal\ghi_form_elements\ConfigurationContainerItemPluginBase;
@@ -30,9 +31,9 @@ class OrganizationClusterList extends ConfigurationContainerItemPluginBase {
   /**
    * The project search query.
    *
-   * @var \Drupal\ghi_plans\Plugin\EndpointQuery\PlanProjectSearchQuery
+   * @var \Drupal\ghi_plans\Plugin\FabricQuery\ProjectQuery
    */
-  public $projectSearchQuery;
+  public $projectQuery;
 
   /**
    * The icon query.
@@ -47,7 +48,7 @@ class OrganizationClusterList extends ConfigurationContainerItemPluginBase {
   public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition): OrganizationClusterList {
     /** @var self $instance */
     $instance = parent::create($container, $configuration, $plugin_id, $plugin_definition);
-    $instance->projectSearchQuery = $instance->endpointQueryManager->createInstance('plan_project_search_query');
+    $instance->projectQuery = $instance->fabricQueryManager->createInstance('project');
     $instance->iconQuery = $instance->endpointQueryManager->createInstance('icon_query');
     return $instance;
   }
@@ -80,14 +81,15 @@ class OrganizationClusterList extends ConfigurationContainerItemPluginBase {
    * Get the clusters for the current context.
    *
    * @return array
-   *   An array of cluste objects.
+   *   An array of cluster objects.
    */
   private function getClusters() {
+    $plan_object = $this->getContextValue('plan_object');
     $base_object = $this->getContextValue('base_object');
     $organization = $this->getContextValue('organization');
     $clusters_by_organizations = &drupal_static(__FUNCTION__, NULL);
     if ($clusters_by_organizations === NULL) {
-      $clusters_by_organizations = $this->projectSearchQuery->getClustersByOrganization($base_object);
+      $clusters_by_organizations = $this->projectQuery->getProjectClustersByOrganization($plan_object, $base_object instanceof BaseObjectChildInterface ? $base_object : NULL);
     }
     return $clusters_by_organizations[$organization->id] ?? NULL;
   }
@@ -104,7 +106,7 @@ class OrganizationClusterList extends ConfigurationContainerItemPluginBase {
       return NULL;
     }
     return array_map(function ($cluster) {
-      return $cluster->name;
+      return $cluster->getName();
     }, $clusters);
   }
 

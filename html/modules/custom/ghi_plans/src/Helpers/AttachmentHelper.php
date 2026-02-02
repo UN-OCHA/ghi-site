@@ -125,13 +125,13 @@ class AttachmentHelper {
   public static function getCustomAttachmentId(AttachmentInterface $attachment, $id_type) {
     switch ($id_type) {
       case 'custom_id':
-        return $attachment->custom_id;
+        return $attachment->getCustomId();
 
       case 'custom_id_prefixed_refcode':
-        return $attachment->custom_id_prefixed_refcode;
+        return $attachment->getCustomIdWithRefCode();
 
       case 'composed_reference':
-        return $attachment->composed_reference;
+        return $attachment->getComposedReference();
     }
   }
 

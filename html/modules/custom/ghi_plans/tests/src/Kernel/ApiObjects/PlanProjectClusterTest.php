@@ -16,9 +16,9 @@ class PlanProjectClusterTest extends PlanApiObjectKernelTestBase {
    */
   protected function createMockRawData(array $data_overrides = []): object {
     $plan_project_cluster_defaults = [
-      'id' => 123,
-      'name' => 'Test Cluster',
-      'icon' => (object) ['class' => 'icon-test'],
+      'Id' => 123,
+      'Name' => 'Test Cluster',
+      'Icon' => 'icon-test',
     ];
 
     $merged_overrides = array_merge($plan_project_cluster_defaults, $data_overrides);
@@ -30,11 +30,9 @@ class PlanProjectClusterTest extends PlanApiObjectKernelTestBase {
    */
   public function testPlanProjectClusterConstructorAndMapping(): void {
     $raw_data = $this->createMockRawData([
-      'id' => 123,
-      'name' => 'Test Project Cluster',
-      'value' => (object) [
-        'icon' => 'health-icon',
-      ],
+      'Id' => 123,
+      'Name' => 'Test Project Cluster',
+      'Icon' => 'health-icon',
     ]);
 
     $project_cluster = new PlanProjectCluster($raw_data);
@@ -57,7 +55,7 @@ class PlanProjectClusterTest extends PlanApiObjectKernelTestBase {
    */
   public function testCacheTagsAndDependencies(): void {
     $raw_data = $this->createMockRawData([
-      'value' => (object) ['icon' => 'test-icon'],
+      'Icon' => 'test-icon',
     ]);
     $project_cluster = new PlanProjectCluster($raw_data);
 
@@ -76,7 +74,7 @@ class PlanProjectClusterTest extends PlanApiObjectKernelTestBase {
    */
   public function testGetIconMethod(): void {
     $raw_data = $this->createMockRawData([
-      'value' => (object) ['icon' => 'education-icon'],
+      'Icon' => 'education-icon',
     ]);
     $project_cluster = new PlanProjectCluster($raw_data);
 

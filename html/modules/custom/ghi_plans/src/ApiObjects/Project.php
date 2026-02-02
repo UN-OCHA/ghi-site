@@ -4,6 +4,7 @@ namespace Drupal\ghi_plans\ApiObjects;
 
 use Drupal\ghi_base_objects\ApiObjects\BaseObject;
 use Drupal\ghi_plans\ApiObjects\Partials\PlanProjectCluster;
+use Drupal\ghi_plans\Entity\GoverningEntity;
 use Drupal\hpc_api\Traits\SimpleCacheTrait;
 
 /**
@@ -14,6 +15,41 @@ class Project extends BaseObject {
   use SimpleCacheTrait;
 
   /**
+   * Define the dimension items used in queries.
+   */
+  const GRAPHQL_DIMENSION_ITEMS = [
+    'Id',
+    'Name',
+    'ProjectCode',
+    'Description',
+    'StartDate',
+    'EndDate',
+    'Objective',
+    'VisibilityGroupId',
+    'ImplementingPartners',
+    'ImplementationStatus',
+    'CurrentRequestedFunds',
+    'RecordStatus',
+    'ActiveUntil',
+    'Source',
+    'SourceId',
+    'PlanId',
+    'CreatedAt',
+    'UpdatedAt',
+    'IsLocked',
+    'PgSqlPdf',
+    'HpcId',
+    'HpcVersionId',
+  ];
+
+  /**
+   * The clusters.
+   *
+   * @var \Drupal\ghi_plans\ApiObjects\Partials\PlanProjectCluster[]|null
+   */
+  private ?array $clusters = NULL;
+
+  /**
    * Map the raw data.
    *
    * @return object
@@ -22,25 +58,50 @@ class Project extends BaseObject {
   protected function map() {
     $data = $this->getRawData();
 
-    // Extract the clusters.
-    $clusters = [];
-    foreach ($data->governingEntities ?? [] as $governing_entity) {
-      $project_cluster = new PlanProjectCluster($governing_entity);
-      $clusters[$project_cluster->id()] = $project_cluster;
-    }
-
     return (object) [
-      'id' => $data->id,
-      'name' => $data->name,
-      'version_code' => $data->versionCode,
-      'clusters' => $clusters,
+      'id' => $data->Id,
+      'name' => $data->Name,
+      'code' => $data->ProjectCode,
+      'plan_id' => $data->PlanId ?? NULL,
+      'sectors' => $data->sectors ?? [],
       'published' => !empty($data->currentPublishedVersionId),
-      'requirements' => $data->currentRequestedFunds,
+      'requirements' => $data->CurrentRequestedFunds,
       'location_ids' => $data->locationIds->ids ?? [],
+      'organizations' => $data->organizations ?? [],
       'target' => !empty($data->targets) ? array_sum(array_map(function ($item) {
         return $item->total;
       }, $data->targets)) : 0,
     ];
+  }
+
+  /**
+   * Get the plan id.
+   *
+   * @return int|null
+   *   The plan id.
+   */
+  public function getPlanId(): ?int {
+    return $this->map->plan_id !== NULL ? (int) $this->map->plan_id : NULL;
+  }
+
+  /**
+   * Get the project code.
+   *
+   * @return string
+   *   The project code.
+   */
+  public function getProjectCode(): string {
+    return (string) $this->map->code;
+  }
+
+  /**
+   * Get the requirements.
+   *
+   * @return float
+   *   The project requirements.
+   */
+  public function getRequirements(): float {
+    return (float) $this->map->requirements;
   }
 
   /**
@@ -50,32 +111,27 @@ class Project extends BaseObject {
    *   An array of processed organization objects.
    */
   public function getOrganizations() {
-    $cache_key = $this->getCacheKey(['project_id' => $this->id()]);
-    $processed_organizations = $this->cache($cache_key);
-    if ($processed_organizations) {
-      return $processed_organizations;
-    }
+    return $this->map->organizations;
+  }
 
-    $data = $this->getRawData();
-    $processed_organizations = [];
-    // First find the organizations. There are 2 ways.
-    $project_organizations = !empty($data->organizations) ? $data->organizations : [];
-    if (property_exists($data, 'projectVersions')) {
-      $project_version = array_filter($data->projectVersions, function ($item) use ($data) {
-        return $item->id == $data->currentPublishedVersionId && !empty($item->organizations);
-      });
-      $project_organizations = $project_version->organizations;
-    }
+  /**
+   * Get the project sectors.
+   *
+   * @return \Drupal\hpc_api\ApiObjects\Types\Sector[]
+   *   An array of sectors for this project.
+   */
+  public function getSectors() {
+    return $this->sectors ?? [];
+  }
 
-    // Now process the organizations.
-    foreach ($project_organizations as $organization) {
-      if (!empty($processed_organizations[$organization->id])) {
-        continue;
-      }
-      $processed_organizations[$organization->id] = new Organization($organization);
-    }
-    $this->cache($cache_key, $processed_organizations, FALSE, NULL, $this->getCacheTags());
-    return $processed_organizations;
+  /**
+   * Get the project cluster ids.
+   *
+   * @return int[]
+   *   An array of cluster ids for this project.
+   */
+  public function getSectorIds() {
+    return array_keys($this->getSectors() ?? []);
   }
 
   /**
@@ -85,7 +141,26 @@ class Project extends BaseObject {
    *   An array of clusters for this project.
    */
   public function getClusters() {
-    return $this->clusters ?? [];
+    if (!$this->getPlanId()) {
+      return [];
+    }
+    if (is_array($this->clusters)) {
+      return $this->clusters;
+    }
+    /** @var \Drupal\ghi_plans\Entity\GoverningEntity[] $governing_entities */
+    $governing_entities = \Drupal::entityTypeManager()->getStorage('base_object')->loadByProperties([
+      'type' => GoverningEntity::BUNDLE,
+      'field_plan.entity:base_object.field_original_id.value' => $this->getPlanId(),
+    ]);
+    $sector_ids = $this->getSectorIds();
+    $relevant_entities = array_filter($governing_entities, fn ($entity) => in_array($entity->getSectorId(), $sector_ids));
+    $this->clusters = array_map(fn ($entity) => new PlanProjectCluster((object) [
+      'Id' => $entity->getSourceId(),
+      'Name' => $entity->label(),
+      // @todo Retrieve icon.
+      'Icon' => NULL,
+    ]), $relevant_entities);
+    return $this->clusters;
   }
 
   /**

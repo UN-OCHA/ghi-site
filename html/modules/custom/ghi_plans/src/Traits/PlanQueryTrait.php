@@ -3,6 +3,7 @@
 namespace Drupal\ghi_plans\Traits;
 
 use Drupal\ghi_base_objects\Plugin\FabricQuery\CountryQuery;
+use Drupal\ghi_base_objects\Plugin\FabricQuery\LocationQuery;
 use Drupal\ghi_plans\Plugin\FabricQuery\AttachmentPrototypeQuery;
 use Drupal\ghi_plans\Plugin\FabricQuery\AttachmentQuery;
 use Drupal\ghi_plans\Plugin\FabricQuery\EntityPrototypeQuery;
@@ -10,15 +11,18 @@ use Drupal\ghi_plans\Plugin\FabricQuery\EntityTypeQuery;
 use Drupal\ghi_plans\Plugin\FabricQuery\OrganizationQuery;
 use Drupal\ghi_plans\Plugin\FabricQuery\PlanEntityQuery;
 use Drupal\ghi_plans\Plugin\FabricQuery\PlanQuery;
-use Drupal\hpc_api\Query\FabricQueryBase;
+use Drupal\ghi_plans\Plugin\FabricQuery\ProjectQuery;
+use Drupal\hpc_api\Traits\FabricQueryTrait;
 
 /**
  * Trait to help with plan related fabric queries.
  */
 trait PlanQueryTrait {
 
+  use FabricQueryTrait;
+
   /**
-   * Get the entity type query.
+   * Get the plan query.
    *
    * @return \Drupal\ghi_plans\Plugin\FabricQuery\PlanQuery|null
    *   The plan query or NULL.
@@ -84,6 +88,17 @@ trait PlanQueryTrait {
   }
 
   /**
+   * Get the location query.
+   *
+   * @return \Drupal\ghi_base_objects\Plugin\FabricQuery\LocationQuery|null
+   *   The location query or NULL.
+   */
+  protected static function getLocationQuery(): ?LocationQuery {
+    $query = self::getQueryInstance('organization');
+    return $query instanceof LocationQuery ? $query : NULL;
+  }
+
+  /**
    * Get the organization query.
    *
    * @return \Drupal\ghi_plans\Plugin\FabricQuery\OrganizationQuery|null
@@ -95,6 +110,17 @@ trait PlanQueryTrait {
   }
 
   /**
+   * Get the project query.
+   *
+   * @return \Drupal\ghi_plans\Plugin\FabricQuery\ProjectQuery|null
+   *   The project query or NULL.
+   */
+  protected static function getProjectQuery(): ?ProjectQuery {
+    $query = self::getQueryInstance('project');
+    return $query instanceof ProjectQuery ? $query : NULL;
+  }
+
+  /**
    * Get the country query.
    *
    * @return \Drupal\ghi_base_objects\Plugin\FabricQuery\CountryQuery|null
@@ -103,35 +129,6 @@ trait PlanQueryTrait {
   protected static function getCountryQuery(): ?CountryQuery {
     $query = self::getQueryInstance('country');
     return $query instanceof CountryQuery ? $query : NULL;
-  }
-
-  /**
-   * Get a query instance by id.
-   *
-   * @param string $plugin_id
-   *   The plugin id of the fabric query plugin.
-   *
-   * @return \Drupal\hpc_api\Query\FabricQueryBase|null
-   *   The query instance or NULL.
-   */
-  protected static function getQueryInstance($plugin_id): ?FabricQueryBase {
-    $queries = &drupal_static(__FUNCTION__, []);
-    if (!array_key_exists($plugin_id, $queries)) {
-      $query_manager = self::getFabricQueryManager();
-      $query = $query_manager->hasDefinition($plugin_id) ? $query_manager->createInstance($plugin_id) : NULL;
-      $queries[$plugin_id] = $query instanceof FabricQueryBase ? $query : NULL;
-    }
-    return $queries[$plugin_id];
-  }
-
-  /**
-   * Get the fabric query manager.
-   *
-   * @return \Drupal\hpc_api\Query\FabricQueryManager
-   *   The fabric query manager service.
-   */
-  protected static function getFabricQueryManager() {
-    return \Drupal::service('plugin.manager.fabric_query_manager');
   }
 
 }
