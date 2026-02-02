@@ -43,9 +43,9 @@ class AttachmentPrototype extends ApiObjectBase {
   /**
    * {@inheritdoc}
    */
-  protected function map() {
+  protected function map(): object {
     $data = $this->getRawData();
-    $value = json_decode($data->Value ?? '');
+    $value = is_string($data->Value) ? json_decode($data->Value ?? '') : $data->Value;
     $metric_fields = $value->metrics ?? [];
     $measurement_fields = $value->measureFields ?? [];
     $calculated_fields = $value->calculatedFields ?? [];
@@ -60,7 +60,7 @@ class AttachmentPrototype extends ApiObjectBase {
     );
     return (object) [
       'id' => $data->Id,
-      'name' => $value->name->en,
+      'name' => $value->Name ?? NULL,
       'ref_code' => $data->RefCode,
       'type' => strtolower($data->Type),
       'fields' => array_map(function ($item) {
@@ -92,8 +92,8 @@ class AttachmentPrototype extends ApiObjectBase {
    * @return string
    *   The name of the attachment prototype.
    */
-  public function getName() {
-    return $this->name;
+  public function getName(): string {
+    return $this->name ?? $this->getTypeLabel();
   }
 
   /**
@@ -102,7 +102,7 @@ class AttachmentPrototype extends ApiObjectBase {
    * @return string
    *   The type of the attachment prototype.
    */
-  public function getType() {
+  public function getType(): string {
     return strtolower($this->type);
   }
 
@@ -265,7 +265,7 @@ class AttachmentPrototype extends ApiObjectBase {
    *   FALSE otherwise.
    */
   public static function isDataType($attachment_prototype) {
-    return in_array(strtolower($attachment_prototype->type), self::DATA_TYPES);
+    return in_array(strtolower($attachment_prototype->Type), self::DATA_TYPES);
   }
 
 }

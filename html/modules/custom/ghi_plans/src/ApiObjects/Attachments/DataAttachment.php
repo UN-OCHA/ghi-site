@@ -38,14 +38,14 @@ class DataAttachment extends AttachmentBase implements DataAttachmentInterface {
    *
    * @var \Drupal\ghi_plans\ApiObjects\Entities\EntityObjectInterface
    */
-  private $sourceEntity;
+  protected $sourceEntity;
 
   /**
    * The attachment prototype.
    *
    * @var \Drupal\ghi_plans\ApiObjects\Prototypes\AttachmentPrototype
    */
-  private $prototype;
+  protected $prototype;
 
   /**
    * Define a list of field types that should be considered cumulative reach.
@@ -91,7 +91,6 @@ class DataAttachment extends AttachmentBase implements DataAttachmentInterface {
 
     $attachment = $this->getRawData();
     $period = $this->fetchReportingPeriodForAttachment();
-    $references = property_exists($attachment, 'ComposedReference') ? explode('/', $attachment->ComposedReference) : [];
 
     $processed = (object) [
       'id' => $attachment->Id,
@@ -102,8 +101,7 @@ class DataAttachment extends AttachmentBase implements DataAttachmentInterface {
         'plan_id' => $attachment->PlanId ?? NULL,
       ],
       'attachment_prototype_id' => $attachment->AttachmentPrototypeId,
-      'custom_id' => $attachment->CustomId ?? ($attachment->CustomReference ?? NULL),
-      'custom_id_prefixed_refcode' => end($references),
+      'custom_id' => $attachment->CustomReference ?? NULL,
       'composed_reference' => $attachment->ComposedReference ?? NULL,
       'description' => $attachment->Name ?? NULL,
       'values' => $this->extractValues(),
@@ -111,7 +109,7 @@ class DataAttachment extends AttachmentBase implements DataAttachmentInterface {
       'unit' => ($attachment->UnitId ?? NULL) ? $query->getUnit($attachment->UnitId) : NULL,
       'monitoring_period' => $period ?? NULL,
       'has_disaggregated_data' => !empty($attachment->HasDisaggregatedData),
-      'calculation_method' => $attachment->CalculationMethodId ? $query->getCalculationMethod($attachment->CalculationMethodId)?->getName() : NULL,
+      'calculation_method' => ($attachment->CalculationMethodId ?? NULL) ? $query->getCalculationMethod($attachment->CalculationMethodId)?->getName() : NULL,
     ];
     $processed->calculation_method = is_string($processed->calculation_method) ? strtolower($processed->calculation_method) : NULL;
 
@@ -127,7 +125,7 @@ class DataAttachment extends AttachmentBase implements DataAttachmentInterface {
    * {@inheritdoc}
    */
   public function getTitle() {
-    return $this->composed_reference;
+    return $this->getCustomIdWithRefCode();
   }
 
   /**
@@ -145,10 +143,23 @@ class DataAttachment extends AttachmentBase implements DataAttachmentInterface {
   }
 
   /**
-   * {@inheritdoc}
+   * Get the custom id prefixed with the ref code.
+   *
+   * @return string
+   *   The custom id prefixed with the ref code.
    */
-  public function getCustomIdWithRefCode() {
-    return $this->custom_id_prefixed_refcode;
+  public function getCustomIdWithRefCode(): string {
+    return $this->getPrototype()->getRefCode() . $this->getCustomId();
+  }
+
+  /**
+   * Get the composed reference.
+   *
+   * @return string
+   *   The composed reference.
+   */
+  public function getComposedReference(): string {
+    return $this->getCustomIdWithRefCode();
   }
 
   /**
@@ -221,12 +232,10 @@ class DataAttachment extends AttachmentBase implements DataAttachmentInterface {
       return NULL;
     }
     if ($source_type === 'plan') {
-      $plan_query = $this->getPlanQuery();
-      $this->sourceEntity = $plan_query->getPlan($source_id);
+      $this->sourceEntity = $this->getPlanQuery()?->getPlan($source_id);
     }
     else {
-      $entity_query = $this->getPlanEntityQuery();
-      $this->sourceEntity = $entity_query->getEntity($source_type, $source_id);
+      $this->sourceEntity = $this->getPlanEntityQuery()?->getEntity($source_type, $source_id);
     }
     return $this->sourceEntity;
   }
@@ -916,7 +925,7 @@ class DataAttachment extends AttachmentBase implements DataAttachmentInterface {
       return;
     }
     $attachment_query = $this->getAttachmentQuery();
-    $attachment_data->disaggregated = $attachment_query->getAttachmentDisaggregatedData($this->id());
+    $attachment_data->disaggregated = $attachment_query?->getAttachmentDisaggregatedData($this->id());
     if (!$attachment_data) {
       return;
     }
@@ -1017,8 +1026,7 @@ class DataAttachment extends AttachmentBase implements DataAttachmentInterface {
       return $location->id;
     }, $locations);
 
-    /** @var \Drupal\ghi_base_objects\Plugin\EndpointQuery\LocationsQuery $locations_query */
-    $locations_query = $this->getEndpointQueryManager()->createInstance('locations_query');
+    $location_query = $this->getLocationQuery();
 
     // See until which level of detail we should go for the attachment. This is
     // stored as a configuration option on the plan base object, so let's look
@@ -1028,7 +1036,7 @@ class DataAttachment extends AttachmentBase implements DataAttachmentInterface {
     // Then we get the coordinates for all locations that the API knows for this
     // country. The coordinates are keyed by the location id.
     /** @var \Drupal\ghi_base_objects\ApiObjects\Location[] $country_locations */
-    $country_locations = $country && $locations_query ? $locations_query->getCountryLocations($country->id, $max_level, $location_ids) : [];
+    $country_locations = $country && $location_query ? $location_query->getLocationsForCountry($country->id, $max_level, $location_ids) : [];
 
     foreach ($locations as $location_key => $location) {
       $locations[$location_key]->country_id = $country->id;
@@ -1133,14 +1141,7 @@ class DataAttachment extends AttachmentBase implements DataAttachmentInterface {
     if (!$attachment || !is_object($attachment)) {
       return NULL;
     }
-    $measurements = property_exists($attachment, 'measurements') ? $attachment->measurements : NULL;
-    if ($measurements === NULL && $measurements_query = $this->getEndpointQueryManager()->createInstance('measurement_query')) {
-      /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\MeasurementQuery $measurements_query */
-      $measurements = $measurements_query->getUnprocessedMeasurements($this, TRUE);
-      $attachment->measurements = $measurements;
-      $this->setRawData($attachment);
-      $this->updateMap();
-    }
+    $measurements = [];
 
     if (empty($measurements)) {
       return NULL;
@@ -1250,7 +1251,7 @@ class DataAttachment extends AttachmentBase implements DataAttachmentInterface {
     $attachment = $this->getRawData();
     $prototype = self::fetchPrototypeForAttachment($attachment);
     if (!$prototype instanceof AttachmentPrototype) {
-      throw new \Exception(sprintf('Failed to extract prototype for attachment %s', $attachment->id));
+      throw new \Exception(sprintf('Failed to extract prototype for attachment %s', $attachment->Id));
     }
     $this->prototype = $prototype;
     return $this->prototype;

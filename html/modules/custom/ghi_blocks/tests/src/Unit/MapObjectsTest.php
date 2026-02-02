@@ -34,11 +34,11 @@ class MapObjectsTest extends UnitTestCase {
    */
   public function testOrganizationMapObjects() {
     $project = new Project((object) [
-      'id' => 1,
-      'name' => 'Test project',
-      'versionCode' => '1.0',
+      'Id' => 1,
+      'Name' => 'Test project',
+      'ProjectCode' => '1.0',
       'currentPublishedVersionId' => '1.0',
-      'currentRequestedFunds' => 100,
+      'CurrentRequestedFunds' => 100,
       'locationIds' => (object) ['ids' => []],
     ]);
     $organization_map_object = new OrganizationMapObject(1, 'Test organization', [1, 2, 3], [
@@ -55,9 +55,9 @@ class MapObjectsTest extends UnitTestCase {
    */
   public function testProjectMapObjects() {
     $cluster = new PlanProjectCluster((object) [
-      'id' => 1,
-      'name' => 'Test cluster',
-      'value' => (object) ['icon' => 'test-icon'],
+      'Id' => 1,
+      'Name' => 'Test cluster',
+      'Icon' => 'test-icon',
     ]);
     $project_map_object = new ProjectMapObject(1, 'Test project', [1, 2, 3], [
       'clusters' => [$cluster],

@@ -26,16 +26,16 @@ use Drupal\migrate\Row;
  * Implements hook_entity_bundle_info_alter().
  */
 function ghi_plans_entity_bundle_info_alter(array &$bundles) {
-  $bundles['base_object']['plan']['class'] = Plan::class;
-  $bundles['base_object']['plan']['label'] = t('Plan');
-  $bundles['base_object']['governing_entity']['class'] = GoverningEntity::class;
-  $bundles['base_object']['governing_entity']['label'] = t('Governing Entity');
-  $bundles['base_object']['plan_entity']['class'] = PlanEntity::class;
-  $bundles['base_object']['plan_entity']['label'] = t('Plan Entity');
-  $bundles['taxonomy_term']['plan_type']['class'] = PlanType::class;
-  $bundles['taxonomy_term']['plan_type']['label'] = t('Plan type');
-  $bundles['taxonomy_term']['plan_costing']['class'] = PlanCostingType::class;
-  $bundles['taxonomy_term']['plan_costing']['label'] = t('Plan costing');
+  $bundles['base_object'][Plan::BUNDLE]['class'] = Plan::class;
+  $bundles['base_object'][Plan::BUNDLE]['label'] = t('Plan');
+  $bundles['base_object'][GoverningEntity::BUNDLE]['class'] = GoverningEntity::class;
+  $bundles['base_object'][GoverningEntity::BUNDLE]['label'] = t('Governing Entity');
+  $bundles['base_object'][PlanEntity::BUNDLE]['class'] = PlanEntity::class;
+  $bundles['base_object'][PlanEntity::BUNDLE]['label'] = t('Plan Entity');
+  $bundles['taxonomy_term'][PlanType::BUNDLE]['class'] = PlanType::class;
+  $bundles['taxonomy_term'][PlanType::BUNDLE]['label'] = t('Plan type');
+  $bundles['taxonomy_term'][PlanCostingType::BUNDLE]['class'] = PlanCostingType::class;
+  $bundles['taxonomy_term'][PlanCostingType::BUNDLE]['label'] = t('Plan costing');
 }
 
 /**
@@ -248,17 +248,25 @@ function ghi_plans_migrate_governing_entity_prepare_row(Row $row, MigrateSourceI
     // No associated plan node found.
     throw new MigrateSkipRowException();
   }
+  // This is the internal id of the plan base object, not the source or
+  // original id.
   $row->setSourceProperty('plan_entity_id', $plan_object->id());
 
+  // Retrieve the sector that this GVE is associated with. This helps lookups
+  // later on.
+  /** @var \Drupal\hpc_api\Query\FabricQueryManager $query_manager */
+  $query_manager = \Drupal::service('plugin.manager.fabric_query_manager');
+  /** @var \Drupal\ghi_plans\Plugin\FabricQuery\PlanQuery $plan_query */
+  $plan_query = $query_manager->createInstance('plan');
+  $sector_type = $plan_query->getEntityTypeByName('Sector');
+  $field_cluster_type = $plan_query->getEntityTypeByName('FieldCluster');
+  $relationships = $plan_query->getRelationshipItems($sector_type->id(), $field_cluster_type->id(), NULL, $raw_data->Id);
+  $sector_ids = array_map(fn ($item) => $item->getSourceId(), $relationships);
+  $row->setSourceProperty('sector_ids', $sector_ids ?: NULL);
+
+  // Use the truncated description as the name if the name is empty.
   if (empty($raw_data->Name) && !empty($raw_data->Description)) {
     $row->setSourceProperty('name', Unicode::truncate($raw_data->Description, 255, TRUE, TRUE));
   }
-
-}
-
-/**
- * Implements hook_migrate_MIGRATE_ID_prepare_row().
- */
-function ghi_plans_migrate_plan_entity_prepare_row(Row $row, MigrateSourceInterface $source, MigrationInterface $migration) {
 
 }

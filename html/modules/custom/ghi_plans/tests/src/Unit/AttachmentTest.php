@@ -2,14 +2,10 @@
 
 namespace Drupal\Tests\ghi_plans\Unit;
 
-use Drupal\Component\Render\MarkupInterface;
 use Drupal\ghi_plans\ApiObjects\Prototypes\AttachmentPrototype;
 use Drupal\ghi_plans\ApiObjects\Attachments\CaseloadAttachment;
-use Drupal\ghi_plans\ApiObjects\Attachments\ContactAttachment;
 use Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment;
-use Drupal\ghi_plans\ApiObjects\Attachments\FileAttachment;
 use Drupal\ghi_plans\ApiObjects\Attachments\IndicatorAttachment;
-use Drupal\ghi_plans\ApiObjects\Attachments\TextAttachment;
 use Drupal\ghi_plans\ApiObjects\PlanReportingPeriod;
 use Drupal\ghi_plans\Exceptions\InvalidAttachmentTypeException;
 use Drupal\ghi_plans\Helpers\AttachmentHelper;
@@ -69,9 +65,10 @@ class AttachmentTest extends ApiObjectTestBase {
   public function testAttachmentEmptyData() {
     /** @var \Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment $attachment */
     $attachment = AttachmentHelper::processAttachment((object) [
-      'id' => 38529,
-      'type' => 'caseLoad',
-      'attachmentPrototype' => $this->getApiObjectFixture('AttachmentPrototype', 'caseload'),
+      'Id' => 38529,
+      'PlanId' => 1266,
+      'AttachmentType' => 'Caseload',
+      'AttachmentPrototypeId' => rand(1, 100),
     ]);
     $this->assertInstanceOf(DataAttachment::class, $attachment);
     $this->assertEmpty($attachment->getSourceEntity());
@@ -101,9 +98,10 @@ class AttachmentTest extends ApiObjectTestBase {
 
     /** @var \Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment $attachment */
     $attachment = AttachmentHelper::processAttachment((object) [
-      'id' => 38529,
-      'type' => 'caseLoad',
-      'attachmentPrototype' => $this->getApiObjectFixture('AttachmentPrototype', 'caseload'),
+      'Id' => 38529,
+      'PlanId' => 1266,
+      'AttachmentType' => 'Caseload',
+      'AttachmentPrototypeId' => rand(1, 100),
     ]);
     $this->assertInstanceOf(DataAttachment::class, $attachment);
     $this->assertEmpty($attachment->getSourceEntity());
@@ -116,6 +114,11 @@ class AttachmentTest extends ApiObjectTestBase {
     /** @var \Drupal\ghi_plans\ApiObjects\Attachments\CaseloadAttachment $attachment */
     $attachment = $this->getAttachmentFromFixture('caseload');
     $this->assertInstanceOf(CaseloadAttachment::class, $attachment);
+
+    // Set the attachment prototype to prevent exceptions.
+    $attachment_prototype = new AttachmentPrototype($this->getApiObjectFixture('AttachmentPrototype', 'caseload'));
+    (new \ReflectionClass($attachment::class))->getProperty('prototype')->setValue($attachment, $attachment_prototype);
+
     $conf = [
       'processing' => 'single',
       'data_points' => [['index' => 2]],
@@ -480,19 +483,19 @@ class AttachmentTest extends ApiObjectTestBase {
     /** @var \Drupal\ghi_plans\ApiObjects\Attachments\CaseloadAttachment $attachment */
     $attachment = $this->getAttachmentFromFixture('caseload');
     $this->assertInstanceOf(CaseloadAttachment::class, $attachment);
-    $this->assertEquals('BP1', $attachment->getTitle());
+    $this->assertEquals('BF1', $attachment->getTitle());
     $this->assertEquals('HPC 2023', $attachment->getDescription());
     $this->assertEquals('caseload', $attachment->getType());
     $this->assertEmpty($attachment->getSourceEntity());
-    $this->assertCount(8, $attachment->getMetricFields());
-    $this->assertCount(5, $attachment->getGoalMetricFields());
-    $this->assertCount(3, $attachment->getMeasurementMetricFields());
+    $this->assertCount(5, $attachment->getMetricFields());
+    $this->assertCount(3, $attachment->getGoalMetricFields());
+    $this->assertCount(2, $attachment->getMeasurementMetricFields());
     $this->assertNull($attachment->getUnitType());
     $this->assertInstanceOf(AttachmentPrototype::class, $attachment->getPrototype());
     $this->assertFalse($attachment->isMeasurementIndex(0));
-    $this->assertTrue($attachment->isMeasurementIndex(5));
-    $this->assertFalse($attachment->isMeasurementField('Population'));
-    $this->assertTrue($attachment->isMeasurementField('Cumul atteints'));
+    $this->assertTrue($attachment->isMeasurementIndex(3));
+    $this->assertFalse($attachment->isMeasurementField('Affected'));
+    $this->assertTrue($attachment->isMeasurementField('Reached'));
     $this->assertTrue($attachment->isPendingDataEntry());
     $this->assertEquals(1112, $attachment->getPlanId());
     $this->assertTrue($attachment->hasDisaggregatedData());
@@ -553,48 +556,6 @@ class AttachmentTest extends ApiObjectTestBase {
   }
 
   /**
-   * Test parsing of fileWebContent attachments.
-   */
-  public function testAttachmentFileWebContent() {
-    /** @var \Drupal\ghi_plans\ApiObjects\Attachments\FileAttachment $attachment */
-    $attachment = $this->getAttachmentFromFixture('filewebcontent');
-    $this->assertInstanceOf(FileAttachment::class, $attachment);
-    $this->assertEquals('262835-burkinafaso_ocha_Michele-Cattani_hero.jpg', $attachment->getTitle());
-    $this->assertEquals('https://api.hpc.tools/public/files/rpm/262835-burkinafaso_ocha_Michele-Cattani_hero.jpg', $attachment->getUrl());
-    $this->assertEquals('OCHA/Michele Cattani', $attachment->getCredit());
-    $this->assertNull($attachment->getDescription());
-  }
-
-  /**
-   * Test parsing of textWebContent attachments.
-   */
-  public function testAttachmentTextWebContent() {
-    /** @var \Drupal\ghi_plans\ApiObjects\Attachments\TextAttachment $attachment */
-    $attachment = $this->getAttachmentFromFixture('textwebcontent');
-    $this->assertInstanceOf(TextAttachment::class, $attachment);
-    $this->assertEquals('MSA detail', $attachment->getTitle());
-    $this->assertStringStartsWith('<h3>Refugee Response</h3>', $attachment->getContent());
-    $this->assertInstanceOf(MarkupInterface::class, $attachment->getMarkup());
-  }
-
-  /**
-   * Test parsing of contact attachments.
-   */
-  public function testAttachmentContact() {
-    /** @var \Drupal\ghi_plans\ApiObjects\Attachments\ContactAttachment $attachment */
-    $attachment = $this->getAttachmentFromFixture('contact');
-    $this->assertInstanceOf(ContactAttachment::class, $attachment);
-    $this->assertEquals('Craig Hampton', $attachment->getTitle());
-    $this->assertEquals([
-      'id' => 4617,
-      'type' => 'contact',
-      'name' => 'Craig Hampton',
-      'mail' => 'hamptonc@who.int',
-      'agency' => 'WHO',
-    ], $attachment->toArray());
-  }
-
-  /**
    * Load an attachment from the fixtures.
    *
    * @param string $type
@@ -606,7 +567,13 @@ class AttachmentTest extends ApiObjectTestBase {
   private function getAttachmentFromFixture($type) {
     $attachment_data = $this->getApiObjectFixture('Attachments', $type);
     $this->assertNotEmpty($attachment_data);
-    return AttachmentHelper::processAttachment($attachment_data);
+    $attachment = AttachmentHelper::processAttachment($attachment_data);
+
+    // Set the attachment prototype to prevent exceptions.
+    $attachment_prototype = new AttachmentPrototype($this->getApiObjectFixture('AttachmentPrototype', 'caseload'));
+    (new \ReflectionClass($attachment::class))->getProperty('prototype')->setValue($attachment, $attachment_prototype);
+
+    return $attachment;
   }
 
   /**

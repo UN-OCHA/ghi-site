@@ -6,6 +6,7 @@ dependencies:
     - field.field.base_object.governing_entity.field_original_id
     - field.field.base_object.governing_entity.field_plan
     - field.field.base_object.governing_entity.field_prototype_id
+    - field.field.base_object.governing_entity.field_sector_ids
     - ghi_base_objects.base_object_type.governing_entity
 id: base_object.governing_entity.default
 targetEntityType: base_object
@@ -37,6 +38,15 @@ content:
       prefix_suffix: true
     third_party_settings: {  }
     weight: -1
+    region: content
+  field_sector_ids:
+    type: number_integer
+    label: above
+    settings:
+      thousand_separator: ''
+      prefix_suffix: true
+    third_party_settings: {  }
+    weight: 1
     region: content
   name:
     type: string

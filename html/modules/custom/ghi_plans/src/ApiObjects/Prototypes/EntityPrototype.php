@@ -9,6 +9,9 @@ use Drupal\ghi_base_objects\ApiObjects\BaseObject;
  */
 class EntityPrototype extends BaseObject {
 
+  /**
+   * Define the dimension items used in queries.
+   */
   const GRAPHQL_DIMENSION_ITEMS = "
     Id
     RefCode

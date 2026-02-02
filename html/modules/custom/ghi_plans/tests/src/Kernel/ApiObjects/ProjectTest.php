@@ -16,10 +16,11 @@ class ProjectTest extends PlanApiObjectKernelTestBase {
    */
   protected function createMockRawData(array $data_overrides = []): object {
     $project_defaults = [
-      'versionCode' => 'V1',
+      'ProjectCode' => 'V1',
+      'PlanId' => rand(1, 100),
       'governingEntities' => [],
       'currentPublishedVersionId' => rand(1, 100),
-      'currentRequestedFunds' => 1000000,
+      'CurrentRequestedFunds' => 1000000,
       'locationIds' => (object) ['ids' => [1, 2, 3]],
       'targets' => [
         (object) ['total' => 100],
@@ -37,9 +38,9 @@ class ProjectTest extends PlanApiObjectKernelTestBase {
    */
   public function testProjectConstructorAndMapping(): void {
     $raw_data = $this->createMockRawData([
-      'id' => 123,
-      'name' => 'Test Project',
-      'code' => 'PROJ123',
+      'Id' => 123,
+      'Name' => 'Test Project',
+      'ProjectCode' => 'PROJ123',
     ]);
 
     $project = new Project($raw_data);
