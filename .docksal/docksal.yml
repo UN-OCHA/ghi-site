@@ -22,23 +22,23 @@ services:
 
   browser:
     hostname: browser
-    image: selenium/standalone-chromium:latest
+    platform: linux/amd64
+    image: selenium/standalone-chrome:103.0
     volumes:
       # Workaround to avoid the browser crashing inside a docker container
       # See https://github.com/SeleniumHQ/docker-selenium#quick-start
       - /tmp:/dev/shm
       - ${PROJECT_ROOT}/logs/chromedriver:/var/log/chromedriver
     environment:
-      # - JAVA_OPTS=-Dwebdriver.chrome.whitelistedIps=
-      - 'JAVA_OPTS=-Dwebdriver.chrome.logfile=/var/log/chromedriver/chromedriver.log'
-      - 'SE_NODE_MAX_SESSIONS=2'
-      - 'SE_NODE_STEREOTYPE={"browserName": "chrome"}'
-      - 'SE_VNC_NO_PASSWORD=1'
-    # shm_size: '2gb'
+      - JAVA_OPTS=-Dwebdriver.chrome.whitelistedIps=
+      - SE_NODE_MAX_SESSIONS=2
+      - SE_OPENTELEMETRY_TRACES_ENABLED=false
+      - SE_VNC_NO_PASSWORD=1
     ports:
-      - 5902:5900
-      - 7902:7900
-      - 4446:4444
+      - "4444:4444"   # Selenium Grid endpoint
+      - "5900:5900"
+      - "7902:7900"   # VNC, optional
+    shm_size: '2gb'   # important for Chrome stability
 
   snap:
     image: public.ecr.aws/unocha/tools-snap-service:dev-chromium
