@@ -8,6 +8,18 @@ namespace Drupal\hpc_api\ApiObjects;
 class Relationship extends ApiObjectBase {
 
   /**
+   * Define the dimension items used in queries.
+   */
+  const GRAPHQL_DIMENSION_ITEMS = [
+    'Id',
+    'FromEntityTypeId',
+    'FromId',
+    'ToEntityTypeId',
+    'ToId',
+    'RelationshipType',
+  ];
+
+  /**
    * Map the raw data.
    *
    * This uses only what we needed up to now. More properties can be mapped if

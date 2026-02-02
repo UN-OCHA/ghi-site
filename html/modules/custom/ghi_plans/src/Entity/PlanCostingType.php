@@ -9,6 +9,8 @@ use Drupal\taxonomy\Entity\Term;
  */
 class PlanCostingType extends Term {
 
+  public const BUNDLE = 'plan_costing';
+
   /**
    * Get the abbreaviation for the plan type.
    *

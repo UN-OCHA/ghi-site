@@ -20,6 +20,7 @@ use Drupal\hpc_api\ApiObjects\Types\PlanYear;
 use Drupal\hpc_api\ApiObjects\Types\PopulationStatus;
 use Drupal\hpc_api\ApiObjects\Types\RelationshipType;
 use Drupal\hpc_api\ApiObjects\Types\ResourceType;
+use Drupal\hpc_api\ApiObjects\Types\Sector;
 use Drupal\hpc_api\ApiObjects\Types\SettlementType;
 use Drupal\hpc_api\ApiObjects\Types\Unit;
 use Drupal\hpc_api\Traits\SimpleCacheTrait;
@@ -263,6 +264,7 @@ abstract class FabricQueryBase extends PluginBase implements FabricQueryPluginIn
       'metricTypes' => [MetricType::class, ['Id', 'Name', 'OtherName']],
       'populationStatuses' => [PopulationStatus::class, $properties],
       'resourceTypes' => [ResourceType::class, $properties],
+      'sectors' => [Sector::class, ['Id', 'Name', 'SectorType', 'SectorCode']],
       'settlementTypes' => [SettlementType::class, $properties],
       'units' => [Unit::class, ['Id', 'Name', 'NameFrench']],
     ];
@@ -273,25 +275,20 @@ abstract class FabricQueryBase extends PluginBase implements FabricQueryPluginIn
   /**
    * Fetch a single base type from the Fabric backend.
    *
-   * @param string $query_key
-   *   The query key.
+   * @param string $namespace
+   *   The query namespace.
    *
    * @return array|false
    *   An array of result objects, or FALSE on failure.
    */
-  public function fetchBaseType($query_key) {
-    $queries = $this->getBaseTypeDefinitions();
-    $def = $queries[$query_key] ?? NULL;
-    if (!$def) {
+  public function fetchBaseType($namespace) {
+    $base_types = $this->getBaseTypeDefinitions();
+    if (empty($base_types[$namespace])) {
       return FALSE;
     }
-
-    $payload = $query_key . ' (first: 1000) {
-      items { ' . implode(' ', end($def)) . ' }
-    }';
-    $data = $this->fabricClient->query($payload);
-    $class_name = reset($def);
-    return $data ? $this->buildResultObjectsFromData($data, $query_key, $class_name) : FALSE;
+    [$class_name, $items] = $base_types[$namespace];
+    $objects = $this->fabricClient->createQuery($namespace, $items)->execute();
+    return $objects ? $this->buildResultObjects($objects, $class_name) : FALSE;
   }
 
   /**
@@ -303,19 +300,17 @@ abstract class FabricQueryBase extends PluginBase implements FabricQueryPluginIn
     }
     // Get the base type definitions, so we know what to query and what objetct
     // to build.
-    $queries = $this->getBaseTypeDefinitions();
+    $base_types = $this->getBaseTypeDefinitions();
 
-    $payloads = array_map(fn($key, $def) => $key . ' (first: 1000) {
-      items { ' . implode(' ', end($def)) . ' }
-    }', array_keys($queries), $queries);
-    $data = $this->fabricClient->query(implode(' ', $payloads));
+    $queries = array_map(fn($key, $def) => $this->fabricClient->createQuery($key, end($def)), array_keys($base_types), $base_types);
+    $data = $this->fabricClient->executeMultiple($queries);
     $this->baseTypes = [];
     if ($data === FALSE) {
       return;
     }
-    foreach ($queries as $query_key => $def) {
+    foreach ($base_types as $query_key => $def) {
       $class_name = reset($def);
-      $this->baseTypes[$query_key] = $this->buildResultObjectsFromData($data, $query_key, $class_name);
+      $this->baseTypes[$query_key] = !empty($data[$query_key]) ? $this->buildResultObjects($data[$query_key], $class_name) : [];
     }
   }
 
@@ -326,15 +321,11 @@ abstract class FabricQueryBase extends PluginBase implements FabricQueryPluginIn
     if ($this->planYears !== NULL) {
       return;
     }
-    $payload = "
-      periods (filter: { PeriodType: { eq: \"Year\" } } ){
-        items {
-          Id
-          CalendarYear
-        }
-      }";
-    $data = $this->fabricClient->query($payload);
-    $this->planYears = $this->buildResultObjectsFromData($data, 'periods', PlanYear::class);
+    $items = $this->fabricClient->createQuery('periods')
+      ->setFilter('PeriodType', 'Year')
+      ->setItems(['Id', 'CalendarYear'])
+      ->execute();
+    $this->planYears = $this->buildResultObjects($items, PlanYear::class);
   }
 
   /**
@@ -373,22 +364,10 @@ abstract class FabricQueryBase extends PluginBase implements FabricQueryPluginIn
     if (!$category) {
       throw new \Exception('Category ' . $name . ' not found in the Fabric GraphQL API');
     }
-    $payload = "
-      categories (first: 10000, filter: {
-        CategoryTypeId: {
-          eq: {$category->id()}
-        }
-      }) {
-        items {
-          Id
-          ParentId
-          Name
-          Description
-          Code
-        }
-      }";
-    $data = $this->fabricClient->query($payload);
-    return $this->getItems($data, 'categories');
+    return $this->fabricClient->createQuery('categories')
+      ->setFilter('CategoryTypeId', $category->id())
+      ->setItems(['Id', 'ParentId', 'Name', 'Description', 'Code'])
+      ->execute();
   }
 
   /**
@@ -398,41 +377,29 @@ abstract class FabricQueryBase extends PluginBase implements FabricQueryPluginIn
    *   The id of the source entity type.
    * @param int $target_type_id
    *   The id of the target entity type.
-   * @param int $source_id
+   * @param int|int[] $source_id
    *   The id of the source entity.
-   * @param int $target_id
+   * @param int|int[] $target_id
    *   The id of the target entity.
    *
    * @return \Drupal\hpc_api\ApiObjects\Relationship[]
    *   An array of objects.
    */
-  public function getRelationshipItems(?int $source_type_id, ?int $target_type_id, ?int $source_id = NULL, ?int $target_id = NULL) {
+  public function getRelationshipItems(?int $source_type_id = NULL, ?int $target_type_id = NULL, $source_id = NULL, $target_id = NULL) {
     $filters = array_filter([
-      $source_type_id ? "FromEntityTypeId: { eq: {$source_type_id} }" : NULL,
-      $target_type_id ? "ToEntityTypeId: { eq: {$target_type_id} }" : NULL,
+      'FromEntityTypeId' => $source_type_id ?? NULL,
+      'ToEntityTypeId' => $target_type_id ?? NULL,
+      'FromId' => $source_id ?? NULL,
+      'ToId' => $target_id ?? NULL,
     ]);
-    if ($source_id !== NULL) {
-      $filters[] = "FromId: { eq: {$source_id} }";
-    }
-    if ($target_id !== NULL) {
-      $filters[] = "ToId: { eq: {$target_id} }";
-    }
     if (empty($filters)) {
       return [];
     }
-    $payload = "
-      relationships (first: 10000, filter: { " . implode('', $filters) . " }) {
-        items {
-          Id
-          FromEntityTypeId
-          FromId
-          ToEntityTypeId
-          ToId
-          RelationshipType
-        }
-      }";
-    $data = $this->fabricClient->query($payload);
-    return $this->buildResultObjectsFromData($data, 'relationships', Relationship::class);
+    $items = $this->fabricClient->createQuery('relationships')
+      ->setFilters($filters)
+      ->setItems(Relationship::GRAPHQL_DIMENSION_ITEMS)
+      ->execute();
+    return $items ? $this->buildResultObjects($items, Relationship::class) : [];
   }
 
   /**
@@ -504,6 +471,32 @@ abstract class FabricQueryBase extends PluginBase implements FabricQueryPluginIn
     $metric_type = $metric_types[$id] ?? NULL;
     assert($metric_type === NULL || $metric_type instanceof MetricType);
     return $metric_type;
+  }
+
+  /**
+   * Get the available sectors.
+   *
+   * @return \Drupal\hpc_api\ApiObjects\Types\Sector[]
+   *   The sectors.
+   */
+  public function getSectors(): array {
+    $this->fetchBaseTypes();
+    return $this->baseTypes['sectors'];
+  }
+
+  /**
+   * Get a sector by id.
+   *
+   * @param int $id
+   *   The id of the sector.
+   *
+   * @return \Drupal\hpc_api\ApiObjects\Types\Sector|null
+   *   The sector object or NULL if not found.
+   */
+  public function getSector(int $id): ?Sector {
+    $sector = $this->baseTypes['sectors'][$id] ?? NULL;
+    assert($sector === NULL || $sector instanceof Sector);
+    return $sector;
   }
 
   /**
@@ -673,44 +666,58 @@ abstract class FabricQueryBase extends PluginBase implements FabricQueryPluginIn
     $entity_type = $this->getEntityTypeById($entity_type_id);
     switch ($entity_type->getName()) {
       case 'Plan':
-        $data = $this->fabricClient->query("plans (filter: { Id: { eq: {$entity_id} } }) { items { Id Name } } ");
-        $items = $data ? $this->getItems($data, 'plans') : [];
-        return $items[$entity_id]?->Name ?? NULL;
+        return $this->getSingleEntityItem('plans', $entity_id)?->Name;
 
       case 'Project':
-        $data = $this->fabricClient->query("projects (filter: { Id: { eq: {$entity_id} } }) { items { Id ProjectCode Name } } ");
-        $items = $data ? $this->getItems($data, 'projects') : [];
-        return !empty($items[$entity_id]) ? ($items[$entity_id]->ProjectCode . ': ' . $items[$entity_id]->Name) : NULL;
+        $project = $this->getSingleEntityItem('projects', $entity_id, ['Id', 'Name', 'ProjectCode']);
+        return $project ? ($project->ProjectCode . ': ' . $project->Name) : NULL;
 
       case 'Location':
-        $data = $this->fabricClient->query("locations (filter: { Id: { eq: {$entity_id} } }) { items { Id Name } } ");
-        $items = $data ? $this->getItems($data, 'locations') : [];
-        return $items[$entity_id]?->Name ?? NULL;
+        return $this->getSingleEntityItem('locations', $entity_id)?->Name;
 
       case 'Organization':
-        $data = $this->fabricClient->query("organizations (filter: { Id: { eq: {$entity_id} } }) { items { Id Name } } ");
-        $items = $data ? $this->getItems($data, 'organizations') : [];
-        return $items[$entity_id]?->Name ?? NULL;
+        return $this->getSingleEntityItem('organizations', $entity_id)?->Name;
+
+      case 'Sector':
+        return $this->getSingleEntityItem('sectors', $entity_id)?->Name;
 
       case 'FieldCluster':
-        $data = $this->fabricClient->query("coordinationEntities (filter: { Id: { eq: {$entity_id} } }) { items { Id Name } } ");
-        $items = $data ? $this->getItems($data, 'coordinationEntities') : [];
-        return $items[$entity_id]?->Name ?? NULL;
+        return $this->getSingleEntityItem('coordinationEntities', $entity_id)?->Name;
 
       case 'Period':
-        $data = $this->fabricClient->query("periods (filter: { Id: { eq: {$entity_id} } }) { items { Id Name } } ");
-        $items = $data ? $this->getItems($data, 'periods') : [];
-        return $items[$entity_id]?->Name ?? NULL;
+        return $this->getSingleEntityItem('periods', $entity_id)?->Name;
 
       case 'StrategicObjective':
       case 'SpecificObjective':
       case 'ClusterObjective':
       case 'ClusterActivity':
-        $data = $this->fabricClient->query("logframeEntities (filter: { Id: { eq: {$entity_id} } }) { items { Id Name } } ");
-        $items = $data ? $this->getItems($data, 'logframeEntities') : [];
-        return $items[$entity_id]?->Name ?? NULL;
+        return $this->getSingleEntityItem('logframeEntities', $entity_id)?->Name;
+
+      case 'Contact':
+        return $this->getSingleEntityItem('contacts', $entity_id)?->Name;
     }
     return NULL;
+  }
+
+  /**
+   * Private helper function to get a single entity item.
+   *
+   * @param string $namespace
+   *   The graphql namespace.
+   * @param int $entity_id
+   *   The entity id to query for.
+   * @param string[] $fields
+   *   An array of field names to query.
+   *
+   * @return object|null
+   *   The result object or NULL.
+   */
+  private function getSingleEntityItem($namespace, $entity_id, $fields = NULL): ?object {
+    $items = $this->fabricClient->createQuery($namespace)
+      ->setItems($fields ?? ['Id', 'Name'])
+      ->setFilter('Id', $entity_id)
+      ->execute();
+    return count($items) == 1 ? reset($items) : NULL;
   }
 
 }

@@ -198,7 +198,7 @@ class Location extends BaseObject implements GeoJsonLocationInterface {
     $parent_location = NULL;
     $parent_id = $parent_id ?? $this->parent_id;
     while (!empty($parent_id)) {
-      $parent_location = $this->locationsQuery()->getLocation($parent_id);
+      $parent_location = $this->locationQuery()->getLocation($parent_id);
       $parent_id = $parent_location?->parent_id;
     }
     $this->parentCountry = $parent_location;
@@ -215,13 +215,13 @@ class Location extends BaseObject implements GeoJsonLocationInterface {
   /**
    * Get the locations query.
    *
-   * @return \Drupal\ghi_base_objects\Plugin\EndpointQuery\LocationsQuery
+   * @return \Drupal\ghi_base_objects\Plugin\FabricQuery\LocationsQuery
    *   The locations query.
    */
-  public static function locationsQuery() {
-    /** @var \Drupal\hpc_api\Query\EndpointQueryManager $endpoint_query_manager */
-    $endpoint_query_manager = \Drupal::service('plugin.manager.endpoint_query_manager');
-    return $endpoint_query_manager->createInstance('locations_query');
+  public static function locationQuery() {
+    /** @var \Drupal\hpc_api\Query\FabricQueryManager $endpoint_query_manager */
+    $query_manager = \Drupal::service('plugin.manager.fabric_query_manager');
+    return $query_manager->createInstance('location');
   }
 
 }

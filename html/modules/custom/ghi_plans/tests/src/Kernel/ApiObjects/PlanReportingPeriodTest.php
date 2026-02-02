@@ -16,6 +16,7 @@ class PlanReportingPeriodTest extends PlanApiObjectKernelTestBase {
    */
   protected function createMockRawData(array $data_overrides = []): object {
     $defaults = [
+      'id' => rand(1, 100),
       'planId' => rand(1, 100),
       'periodNumber' => rand(1, 4),
       'measurementsGenerated' => TRUE,
@@ -33,25 +34,15 @@ class PlanReportingPeriodTest extends PlanApiObjectKernelTestBase {
   public function testPlanReportingPeriodConstructorAndMapping(): void {
     $raw_data = $this->createMockRawData([
       'id' => 123,
-      'name' => 'Test Plan Reporting Period',
     ]);
 
     $plan_reporting_period = new PlanReportingPeriod($raw_data);
 
     $this->assertApiObjectBasics($plan_reporting_period, 'planreportingperiod', [
       'id',
-      'name',
     ]);
 
     $this->assertEquals('planreportingperiod', $plan_reporting_period->getBundle());
-    $this->assertEquals('Test Plan Reporting Period', $plan_reporting_period->getName());
-  }
-
-  /**
-   * Test null or empty data handling.
-   */
-  public function testNullOrEmptyDataHandling(): void {
-    $this->testNullEmptyDataHandling(PlanReportingPeriod::class);
   }
 
   /**

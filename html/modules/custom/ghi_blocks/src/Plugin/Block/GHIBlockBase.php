@@ -774,7 +774,7 @@ abstract class GHIBlockBase extends HPCBlockBase {
   public function getSubforms() {
     $subforms = &drupal_static(__FUNCTION__, NULL);
     if ($subforms === NULL) {
-      $plugin_subforms = static::metadata()->configForms ?? [
+      $plugin_subforms = static::metadata()->configForms ?: [
         self::DEFAULT_FORM_KEY => [
           'title' => $this->t('Configuration'),
           'callback' => 'getConfigForm',

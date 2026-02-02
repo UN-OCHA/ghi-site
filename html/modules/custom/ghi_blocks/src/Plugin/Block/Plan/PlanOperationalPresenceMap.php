@@ -68,8 +68,7 @@ class PlanOperationalPresenceMap extends GHIBlockBase implements MultiStepFormBl
     return new HPCBlockMetadata(
       defaultTitle: 'Operations by admin area',
       dataSources: [
-        'project_search' => 'hpc_api:plan_project_search_query',
-        'locations' => 'hpc_api:locations_query',
+        'locations' => 'fabric_query:location',
       ],
       configForms: [
         'organizations' => [
@@ -114,9 +113,9 @@ class PlanOperationalPresenceMap extends GHIBlockBase implements MultiStepFormBl
     $outline_country = NULL;
     $focus_country = $this->getCurrentPlanObject()->getFocusCountry();
     if ($focus_country) {
-      /** @var \Drupal\ghi_base_objects\Plugin\EndpointQuery\LocationsQuery $locations_query */
-      $locations_query = $this->getQueryHandler('locations');
-      $country = $locations_query->getCountry($focus_country->getSourceId(), 0);
+      /** @var \Drupal\ghi_base_objects\Plugin\FabricQuery\LocationQuery $location_query */
+      $location_query = $this->getQueryHandler('locations');
+      $country = $location_query->getLocation($focus_country->getSourceId());
       $outline_country = $country?->toArray();
     }
 
@@ -251,13 +250,14 @@ class PlanOperationalPresenceMap extends GHIBlockBase implements MultiStepFormBl
       return $objects[$selected_view];
     }
 
+    $organizations = $this->getConfiguredOrganizations();
+    $organization_projects = $this->getProjectsByOrganization();
+
     switch ($selected_view) {
       case 'organization':
         /** @var \Drupal\ghi_blocks\MapObjects\BaseMapObjectInterface[] $objects */
         $objects = [];
-        $organizations = $this->getConfiguredOrganizations();
-        // Build a list of organizations with clusters and locations_ids.
-        $organization_projects = $this->getProjectsByOrganization();
+
         foreach ($organizations as $organization) {
           /** @var \Drupal\ghi_plans\ApiObjects\Project[] $projects */
           $projects = $organization_projects[$organization->id()] ?? [];
@@ -278,8 +278,7 @@ class PlanOperationalPresenceMap extends GHIBlockBase implements MultiStepFormBl
       case 'cluster':
         /** @var \Drupal\ghi_blocks\MapObjects\BaseMapObjectInterface[] $objects */
         $objects = [];
-        $organizations = $this->getConfiguredOrganizations();
-        $organization_projects = $this->getProjectsByOrganization();
+
         // Build a list of clusters with location_ids.
         foreach ($organizations as $organization) {
           /** @var \Drupal\ghi_plans\ApiObjects\Project[] $projects */
@@ -304,8 +303,6 @@ class PlanOperationalPresenceMap extends GHIBlockBase implements MultiStepFormBl
       case 'project':
         /** @var \Drupal\ghi_blocks\MapObjects\BaseMapObjectInterface[] $objects */
         $objects = [];
-        $organizations = $this->getConfiguredOrganizations();
-        $organization_projects = $this->getProjectsByOrganization();
         // Build a list of projects.
         foreach ($organizations as $organization) {
           /** @var \Drupal\ghi_plans\ApiObjects\Project[] $projects */
@@ -916,9 +913,9 @@ class PlanOperationalPresenceMap extends GHIBlockBase implements MultiStepFormBl
       $country_id = $plan_object->field_country->entity->field_original_id->value ?? NULL;
       $max_admin_level = max($plan_object->getMaxAdminLevel(), 3);
 
-      /** @var \Drupal\ghi_base_objects\Plugin\EndpointQuery\LocationsQuery $locations_query */
-      $locations_query = $this->getQueryHandler('locations');
-      $locations = $locations_query->getCountryLocations($country_id, $max_admin_level);
+      /** @var \Drupal\ghi_base_objects\Plugin\FabricQuery\LocationQuery $location_query */
+      $location_query = $this->getQueryHandler('locations');
+      $locations = $location_query->getLocationsForCountry($country_id, $max_admin_level);
 
       // Filter out all locations which do not have a GEOJSON file.
       $locations = array_filter($locations, function ($location) {

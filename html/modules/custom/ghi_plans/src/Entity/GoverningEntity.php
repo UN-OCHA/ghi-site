@@ -16,32 +16,48 @@ class GoverningEntity extends BaseObject implements BaseObjectChildInterface {
 
   use PlanQueryTrait;
 
+  const BUNDLE = 'governing_entity';
+
   /**
    * {@inheritdoc}
    */
-  public function getParentBaseObject() {
+  public function getParentBaseObject(): ?Plan {
     return $this->getPlan();
   }
 
   /**
    * {@inheritdoc}
    */
-  public function labelWithParent() {
+  public function labelWithParent(): string {
     return $this->getParentBaseObject()->label() . ': ' . $this->label();
   }
 
   /**
    * Get the plan object that this governing entity belongs to.
    *
-   * @return \Drupal\ghi_plans\Entity\Plan
-   *   The plan base object.
+   * @return \Drupal\ghi_plans\Entity\Plan|null
+   *   The plan base object or NULL.
    */
-  public function getPlan() {
+  public function getPlan(): ?Plan {
     if (!$this->hasField('field_plan')) {
       return NULL;
     }
     $plan = $this->get('field_plan')->entity;
     return $plan instanceof Plan ? $plan : NULL;
+  }
+
+  /**
+   * Get the sector id that this governing entity belongs to.
+   *
+   * @return int|null
+   *   The sector id or NULL.
+   */
+  public function getSectorId(): ?int {
+    if (!$this->hasField('field_sector_id')) {
+      return NULL;
+    }
+    $sector_id = $this->get('field_sector_id')->value;
+    return $sector_id;
   }
 
   /**
@@ -68,7 +84,6 @@ class GoverningEntity extends BaseObject implements BaseObjectChildInterface {
    *   The entity object or NULL.
    */
   public function getSourceObject(): ?EntitiesGoverningEntity {
-
     $entity = $this->getPlanEntityQuery()?->getEntity('governingEntity', $this->getSourceId());
     assert($entity === NULL || $entity instanceof EntitiesGoverningEntity);
     return $entity;

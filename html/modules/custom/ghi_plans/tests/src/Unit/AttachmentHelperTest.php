@@ -23,14 +23,16 @@ class AttachmentHelperTest extends ApiObjectTestBase {
     // Test with 2 valid attachments.
     $attachments = [
       (object) [
-        'id' => 38529,
-        'type' => 'caseLoad',
-        'attachmentPrototype' => $this->getApiObjectFixture('AttachmentPrototype', 'caseload'),
+        'Id' => 38529,
+        'PlanId' => 1266,
+        'AttachmentType' => 'Caseload',
+        'AttachmentPrototypeId' => 1,
       ],
       (object) [
-        'id' => 38544,
-        'type' => 'indicator',
-        'attachmentPrototype' => $this->getApiObjectFixture('AttachmentPrototype', 'indicator'),
+        'Id' => 38544,
+        'PlanId' => 1266,
+        'AttachmentType' => 'Indicator',
+        'AttachmentPrototypeId' => 2,
       ],
     ];
     $processed_attachments = AttachmentHelper::processAttachments($attachments);
@@ -39,8 +41,8 @@ class AttachmentHelperTest extends ApiObjectTestBase {
 
     // Test with an invalid attachment.
     $attachments[] = (object) [
-      'id' => 38999,
-      'type' => 'INVALID_ATTACHMENT_TYPE',
+      'Id' => 38999,
+      'AttachmentType' => 'INVALID_ATTACHMENT_TYPE',
     ];
     $processed_attachments = AttachmentHelper::processAttachments($attachments);
     $this->assertIsArray($processed_attachments);

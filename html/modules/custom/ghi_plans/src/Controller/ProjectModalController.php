@@ -6,11 +6,12 @@ use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Link;
 use Drupal\Core\Render\Markup;
 use Drupal\Core\Url;
+use Drupal\ghi_base_objects\Entity\BaseObjectChildInterface;
 use Drupal\ghi_base_objects\Entity\BaseObjectInterface;
-use Drupal\ghi_plans\ApiObjects\Organization;
 use Drupal\ghi_plans\Entity\GoverningEntity;
 use Drupal\ghi_plans\Entity\Plan;
 use Drupal\ghi_plans\Traits\FtsLinkTrait;
+use Drupal\ghi_plans\Traits\PlanQueryTrait;
 use Drupal\hpc_common\Helpers\ThemeHelper;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -20,6 +21,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 class ProjectModalController extends ControllerBase {
 
   use FtsLinkTrait;
+  use PlanQueryTrait;
 
   /**
    * The endpoint query manager.
@@ -106,9 +108,10 @@ class ProjectModalController extends ControllerBase {
    *   A render array.
    */
   public function buildProjectTable(BaseObjectInterface $base_object) {
-    $project_search_query = $this->getProjectSearchQuery($base_object);
-    $projects = $project_search_query->getProjects($base_object);
     $plan_object = $this->getPlanObject($base_object);
+    $cluster_context = $base_object instanceof BaseObjectChildInterface ? $base_object : NULL;
+    $project_query = $this->getProjectQuery();
+    $projects = $project_query->getProjectsForPlan($plan_object, $cluster_context);
     $build = $this->getProjectTable($projects, $plan_object);
     return $this->returnBuild($build, $this->modalTitleBaseObject($base_object, $this->t('Projects', [], ['langcode' => $plan_object?->getPlanLanguage()])));
   }
@@ -123,9 +126,11 @@ class ProjectModalController extends ControllerBase {
    *   A render array.
    */
   public function buildOrganizationList(BaseObjectInterface $base_object) {
-    $project_search_query = $this->getProjectSearchQuery($base_object);
-    $organizations = $project_search_query->getOrganizations($base_object);
     $plan_object = $this->getPlanObject($base_object);
+    $cluster_context = $base_object instanceof BaseObjectChildInterface ? $base_object : NULL;
+    $project_query = $this->getProjectQuery();
+    $organizations = $project_query->getProjectOrganizationsForPlan($plan_object, $cluster_context);
+
     $t_options = [
       'langcode' => $plan_object?->getPlanLanguage(),
     ];
@@ -153,18 +158,21 @@ class ProjectModalController extends ControllerBase {
    */
   public function buildOrganizationProjectTable(BaseObjectInterface $base_object, $organization_id) {
     $plan_object = $this->getPlanObject($base_object);
+    $organization = $this->getOrganizationQuery()->getOrganization($organization_id);
     $t_options = [
       'langcode' => $plan_object?->getPlanLanguage(),
     ];
-    $organization = $this->getOrganization($organization_id);
     if (!$organization) {
       $build = [
         '#markup' => $this->t('An error occured. The requested ressource is not available.', [], $t_options),
       ];
       return $this->returnBuild($build, $this->t('Error', [], $t_options));
     }
-    $project_search_query = $this->getProjectSearchQuery($base_object);
-    $projects = $project_search_query->getOrganizationProjects($organization, $base_object);
+
+    $cluster_context = $base_object instanceof BaseObjectChildInterface ? $base_object : NULL;
+    $project_query = $this->getProjectQuery();
+    $projects = $project_query->getProjectsForPlan($plan_object, $cluster_context, $organization_id);
+
     $build = $this->getOrganizationProjectTable($projects, $plan_object);
     $title = $this->t('@organization_name | Projects', [
       '@organization_name' => $organization->getName(),
@@ -231,23 +239,23 @@ class ProjectModalController extends ControllerBase {
       $organization_ids_unique = array_unique(array_merge($organization_ids_unique, array_keys($organinizations)));
 
       $totals['targets'] += $project->target ?? 0;
-      $totals['requirements'] += $project->requirements ?? 0;
+      $totals['requirements'] += $project->getRequirements() ?? 0;
 
       $row = [];
       $row[] = [
         'data' => [
           '#type' => 'link',
-          '#title' => $project->version_code,
-          '#url' => Url::fromUri('https://projects.hpc.tools/project/' . $project->id . '/view'),
+          '#title' => $project->getProjectCode(),
+          '#url' => Url::fromUri('https://projects.hpc.tools/project/' . $project->id() . '/view'),
           '#attributes' => [
             'target' => '_blank',
           ],
         ],
-        'data-sort-value' => $project->version_code,
+        'data-sort-value' => $project->getProjectCode(),
         'data-sort-type' => 'alfa',
         'data-column-type' => 'string',
       ];
-      $row[] = $project->name;
+      $row[] = $project->getName();
       $row[] = [
         'data' => [
           '#markup' => Markup::create(implode(' | ', $this->getOrganizationLinks($organinizations))),
@@ -322,7 +330,7 @@ class ProjectModalController extends ControllerBase {
   /**
    * Get the popover content for project items.
    *
-   * @param array $projects
+   * @param \Drupal\ghi_plans\ApiObjects\Project[] $projects
    *   The projects to include in the table.
    * @param \Drupal\ghi_plans\Entity\Plan|null $plan_object
    *   The plan object for context.
@@ -352,27 +360,27 @@ class ProjectModalController extends ControllerBase {
 
     $rows = [];
     foreach ($projects as $project) {
-      $totals['requirements'] += $project->requirements ?? 0;
+      $totals['requirements'] += $project->getRequirements() ?? 0;
       $row = [];
       $row[] = [
         'data' => [
           '#type' => 'link',
-          '#title' => $project->version_code,
-          '#url' => Url::fromUri('https://projects.hpc.tools/project/' . $project->id . '/view'),
+          '#title' => $project->getProjectCode(),
+          '#url' => Url::fromUri('https://projects.hpc.tools/project/' . $project->id() . '/view'),
           '#attributes' => [
             'target' => '_blank',
           ],
         ],
       ];
-      $row[] = $project->name;
+      $row[] = $project->getName();
       $row[] = [
         'data' => [
           '#theme' => 'hpc_currency',
-          '#value' => $project->requirements,
+          '#value' => $project->getRequirements(),
           '#scale' => 'full',
           '#decimal_format' => $decimal_format,
         ],
-        'data-sort-value' => $project->requirements,
+        'data-sort-value' => $project->getRequirements(),
         'data-sort-type' => 'numeric',
         'data-column-type' => 'amount',
       ];
@@ -443,7 +451,8 @@ class ProjectModalController extends ControllerBase {
       ],
     ];
     return array_values(array_map(function ($object) use ($link_options) {
-      return $object->url ? Link::fromTextAndUrl($object->name, Url::fromUri($object->url, $link_options))->toString() : $object->name;
+      $url = $object->getUrl($link_options);
+      return $url ? Link::fromTextAndUrl($object->getName(), $url)->toString() : $object->getName();
     }, $objects));
   }
 
@@ -456,9 +465,9 @@ class ProjectModalController extends ControllerBase {
    * @return string[]
    *   An array of organization names.
    */
-  private function getOrganizationNames(array $objects) {
+  private function getOrganizationNames(array $objects): array {
     return array_values(array_map(function ($object) {
-      return $object->name;
+      return $object->getName();
     }, $objects));
   }
 
@@ -471,47 +480,14 @@ class ProjectModalController extends ControllerBase {
    * @return \Drupal\ghi_plans\Entity\Plan|null
    *   The plan object.
    */
-  private function getPlanObject(BaseObjectInterface $base_object) {
-    if ($base_object->bundle() == 'plan') {
+  private function getPlanObject(BaseObjectInterface $base_object): ?Plan {
+    if ($base_object instanceof Plan) {
       return $base_object;
     }
-    /** @var \Drupal\ghi_plans\Entity\Plan $plan_object */
-    return $base_object->get('field_plan')->entity ?? NULL;
-  }
-
-  /**
-   * Get an initialized project search query.
-   *
-   * @param \Drupal\ghi_base_objects\Entity\BaseObjectInterface $base_object
-   *   The base object for which to retrieve the project search query.
-   *
-   * @return \Drupal\ghi_plans\Plugin\EndpointQuery\PlanProjectSearchQuery
-   *   An instance of the project search query.
-   */
-  private function getProjectSearchQuery(BaseObjectInterface $base_object) {
-    $plan_object = $this->getPlanObject($base_object);
-    /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\PlanProjectSearchQuery $project_search_query */
-    $project_search_query = $this->endpointQueryManager->createInstance('plan_project_search_query');
-    $project_search_query->setPlaceholder('plan_id', $plan_object->getSourceId());
-    if ($base_object instanceof GoverningEntity) {
-      $project_search_query->setFilterByClusterIds([$base_object->getSourceId()]);
+    if ($base_object instanceof BaseObjectChildInterface && $base_object->getParentBaseObject() instanceof Plan) {
+      return $base_object->getParentBaseObject();
     }
-    return $project_search_query;
-  }
-
-  /**
-   * Load an organization object.
-   *
-   * @param int $organization_id
-   *   The id of the organization.
-   *
-   * @return \Drupal\ghi_plans\ApiObjects\Organization|null
-   *   The organization object or NULL.
-   */
-  private function getOrganization($organization_id): ?Organization {
-    /** @var \Drupal\ghi_plans\Plugin\FabricQuery\OrganizationQuery $organization_query */
-    $organization_query = $this->fabricQueryManager->createInstance('organization');
-    return $organization_query->getOrganization($organization_id);
+    return NULL;
   }
 
 }

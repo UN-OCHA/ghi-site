@@ -63,11 +63,11 @@ class PlanGoverningEntitiesTableTest extends PlanBlockKernelTestBase {
 
     $this->assertEquals('Cluster overview', $plugin->label());
 
-    $definition = $plugin->getPluginDefinition();
-    $this->assertIsArray($definition['config_forms']);
-    $this->assertCount(3, $definition['config_forms']);
-    $this->assertArrayHasKey($plugin->getDefaultSubform(), $definition['config_forms']);
-    $this->assertArrayHasKey($plugin->getTitleSubform(), $definition['config_forms']);
+    $config_forms = $plugin->metadata()->configForms;
+    $this->assertIsArray($config_forms);
+    $this->assertCount(3, $config_forms);
+    $this->assertArrayHasKey($plugin->getDefaultSubform(), $config_forms);
+    $this->assertArrayHasKey($plugin->getTitleSubform(), $config_forms);
     $this->assertEquals('base', $plugin->getDefaultSubform());
     $this->assertEquals('base', $plugin->getTitleSubform());
 
@@ -109,12 +109,12 @@ class PlanGoverningEntitiesTableTest extends PlanBlockKernelTestBase {
     $this->assertIsArray($table_data);
     $this->assertArrayHasKey('header', $table_data);
     $this->assertArrayHasKey('rows', $table_data);
-    $this->assertArrayHasKey(0, $table_data['rows']);
-    $this->assertArrayHasKey(0, $table_data['rows'][0]);
-    $this->assertEquals($cluster->label(), $table_data['rows'][0][0]['data-value']);
-    $this->assertEquals($cluster->label(), $table_data['rows'][0][0]['data-raw-value']);
-    $this->assertEquals($cluster->label(), $table_data['rows'][0][0]['export_value']);
-    $this->assertEquals('Cluster name', $table_data['rows'][0][0]['data-content']);
+    $this->assertEquals($cluster->label(), $table_data['rows'][0]['data'][0]['data-value'] ?? NULL);
+    $this->assertEquals($cluster->label(), $table_data['rows'][0]['data'][0]['data-raw-value'] ?? NULL);
+    $this->assertEquals($cluster->label(), $table_data['rows'][0]['data'][0]['export_value'] ?? NULL);
+    $this->assertEquals('Cluster name', $table_data['rows'][0]['data'][0]['data-content'] ?? NULL);
+    $this->assertEquals($cluster->getSourceId(), $table_data['rows'][0]['data-entity-id'] ?? NULL);
+    $this->assertEquals('governing-entity', $table_data['rows'][0]['data-entity-type'] ?? NULL);
   }
 
   /**

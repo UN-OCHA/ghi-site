@@ -1,8 +1,8 @@
 {
-  "id": 4130,
-  "refCode": "BF",
-  "type": "caseLoad",
-  "value": {
+  "Id": 4130,
+  "RefCode": "BF",
+  "Type": "Caseload",
+  "Value": {
     "hasMeasures": 1,
     "measureFields": [
       {
@@ -47,7 +47,7 @@
       "CL"
     ]
   },
-  "planId": 929,
-  "createdAt": "2019-11-27T14:30:30.340Z",
-  "updatedAt": "2020-08-10T08:22:57.942Z"
+  "PlanId": 1112,
+  "CreatedAt": "2019-11-27 14:30:30",
+  "UpdatedAt": "2020-08-10 08:22:57"
 }

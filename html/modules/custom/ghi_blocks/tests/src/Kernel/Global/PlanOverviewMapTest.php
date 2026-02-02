@@ -40,11 +40,15 @@ class PlanOverviewMapTest extends PlanBlockKernelTestBase {
     $this->assertEquals('global_plan_overview_map', $definition['id']);
     $this->assertEquals('Plan overview map', (string) $definition['admin_label']);
     $this->assertEquals('Global', (string) $definition['category']);
-    $this->assertArrayHasKey('data_sources', $definition);
-    $this->assertArrayHasKey('plans_overview', $definition['data_sources']);
-    $this->assertArrayHasKey('funding_overview', $definition['data_sources']);
-    $this->assertArrayHasKey('plan', $definition['data_sources']);
-    $this->assertArrayHasKey('country', $definition['data_sources']);
+
+    $metadata = $plugin->metadata();
+    $this->assertIsArray($metadata->dataSources);
+
+    $data_sources = $metadata->dataSources;
+    $this->assertArrayHasKey('plans_overview', $data_sources);
+    $this->assertArrayHasKey('funding_overview', $data_sources);
+    $this->assertArrayHasKey('plan', $data_sources);
+    $this->assertArrayHasKey('country', $data_sources);
   }
 
   /**

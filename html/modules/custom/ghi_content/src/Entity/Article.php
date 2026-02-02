@@ -10,6 +10,8 @@ use Drupal\ghi_content\RemoteContent\RemoteArticleInterface;
  */
 class Article extends ContentBase implements ContentReviewInterface {
 
+  public const BUNDLE = 'article';
+
   /**
    * {@inheritdoc}
    */

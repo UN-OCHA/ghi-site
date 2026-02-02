@@ -39,7 +39,7 @@ class Country extends BaseObject implements GeoJsonLocationInterface {
       'iso3' => $data->ISO3 ?? NULL,
       'latLng' => [(string) ($data->Latitude ?? 0), (string) ($data->Longitude ?? 0)],
       'valid_on' => ($data->ActiveUntil ?? NULL) ? substr($data->ActiveUntil, 0, strlen($data->ActiveUntil) - 3) : NULL,
-      'status' => strtolower($data->RecordStatus),
+      'status' => strtolower($data->RecordStatus ?? ''),
     ];
   }
 

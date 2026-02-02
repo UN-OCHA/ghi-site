@@ -238,10 +238,10 @@ class FabricClient {
    * @param \Drupal\hpc_api\Query\FabricQuery $query
    *   The query to execute.
    *
-   * @return false|object|array
+   * @return false|array
    *   The result from the fabric query or FALSE on failure.
    */
-  public function execute(FabricQuery $query): false|object|array {
+  public function execute(FabricQuery $query): false|array {
     $data = $this->query($query);
     return is_object($data) ? $this->getItems($data, $query->getQueryName()) : FALSE;
   }
@@ -252,10 +252,10 @@ class FabricClient {
    * @param \Drupal\hpc_api\Query\FabricQuery[] $queries
    *   The queries to execute.
    *
-   * @return false|object|array
+   * @return false|array
    *   The result from the fabric query or FALSE on failure.
    */
-  public function executeMultiple(array $queries): false|object|array {
+  public function executeMultiple(array $queries): false|array {
     $query_strings = array_map(fn ($query) => $query->toString(), $queries);
     $data = $this->query(implode(' ', $query_strings));
     $query_names = array_map(fn ($query) => $query->getQueryName(), $queries);

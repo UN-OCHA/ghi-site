@@ -7,6 +7,7 @@ use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Link;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\Url;
+use Drupal\ghi_base_objects\Entity\BaseObjectChildInterface;
 use Drupal\ghi_blocks\Traits\ConfigurationItemValuePreviewTrait;
 use Drupal\ghi_form_elements\Attribute\ConfigurationContainerItem;
 use Drupal\ghi_form_elements\ConfigurationContainerItemPluginBase;
@@ -29,9 +30,9 @@ class OrganizationProjectCounter extends ConfigurationContainerItemPluginBase {
   /**
    * The project search query.
    *
-   * @var \Drupal\ghi_plans\Plugin\EndpointQuery\PlanProjectSearchQuery
+   * @var \Drupal\ghi_plans\Plugin\FabricQuery\ProjectQuery
    */
-  public $projectSearchQuery;
+  public $projectQuery;
 
   /**
    * {@inheritdoc}
@@ -39,7 +40,7 @@ class OrganizationProjectCounter extends ConfigurationContainerItemPluginBase {
   public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition): OrganizationProjectCounter {
     /** @var self $instance */
     $instance = parent::create($container, $configuration, $plugin_id, $plugin_definition);
-    $instance->projectSearchQuery = $instance->endpointQueryManager->createInstance('plan_project_search_query');
+    $instance->projectQuery = $instance->fabricQueryManager->createInstance('project');
     return $instance;
   }
 
@@ -68,9 +69,10 @@ class OrganizationProjectCounter extends ConfigurationContainerItemPluginBase {
    *   An array of project objects.
    */
   private function getProjects() {
+    $plan_object = $this->getContextValue('plan_object');
     $base_object = $this->getContextValue('base_object');
     $organization = $this->getContextValue('organization');
-    return $this->projectSearchQuery->getOrganizationProjects($organization, $base_object);
+    return $this->projectQuery->getProjectsForPlan($plan_object, $base_object instanceof BaseObjectChildInterface ? $base_object : NULL, $organization->id());
   }
 
   /**

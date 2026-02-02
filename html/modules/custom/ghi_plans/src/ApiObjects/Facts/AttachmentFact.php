@@ -35,6 +35,9 @@ class AttachmentFact extends ApiObjectBase {
     'optionOverallCumulReach',
   ];
 
+  /**
+   * Define the fact items used in queries.
+   */
   const GRAPHQL_FACTS_ITEMS = [
     'Id',
     'AttachmentId',

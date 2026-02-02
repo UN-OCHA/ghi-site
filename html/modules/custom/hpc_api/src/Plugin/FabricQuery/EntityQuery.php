@@ -3,7 +3,8 @@
 namespace Drupal\hpc_api\Plugin\FabricQuery;
 
 use Drupal\Core\StringTranslation\TranslatableMarkup;
-use Drupal\hpc_api\Attribute\FabricQuery;
+use Drupal\hpc_api\Attribute\FabricQuery as AttributeFabricQuery;
+use Drupal\hpc_api\Query\FabricQuery;
 use Drupal\hpc_api\Query\FabricQueryBase;
 
 /**
@@ -12,38 +13,11 @@ use Drupal\hpc_api\Query\FabricQueryBase;
  * Under the hood, this will do entity type specific queries to get data from
  * fabric.
  */
-#[FabricQuery(
+#[AttributeFabricQuery(
   id: 'entity',
   label: new TranslatableMarkup('Entity query'),
 )]
 class EntityQuery extends FabricQueryBase {
-
-  /**
-   * Retrieve data about an entity.
-   *
-   * @param int $entity_type_id
-   *   The id of the entity type.
-   * @param int $entity_id
-   *   The entity id.
-   *
-   * @return object|null
-   *   The result object if any.
-   */
-  public function getEntityData(int $entity_type_id, int $entity_id): ?object {
-    $query_definitions = $this->getEntityQueryDefinitions();
-    $entity_type = $this->getEntityTypeById($entity_type_id);
-    $query_definition = $query_definitions[$entity_type->getName()] ?? NULL;
-    if (!$query_definition) {
-      return NULL;
-    }
-    $query = $this->getEntityQuery($entity_type_id, $entity_id);
-    if (!$query) {
-      return NULL;
-    }
-    $data = $this->fabricClient->query($query);
-    $items = $data ? $this->getItems($data, $query_definition['namespace'], $query_definition['primary_key']) : [];
-    return $items[$entity_id] ?? NULL;
-  }
 
   /**
    * Get entity query definitions.
@@ -63,8 +37,8 @@ class EntityQuery extends FabricQueryBase {
         'Description',
         'EntityTypeId',
         'PlanId',
+        'CoordinationEntityId',
         'HpcEntityPrototypeId',
-        'HpcVersionId',
         'IsLocked',
         'CustomReference',
         'ComposedReference',
@@ -123,19 +97,24 @@ class EntityQuery extends FabricQueryBase {
           'Name',
           'ProjectCode',
           'Description',
-          'Objective',
           'StartDate',
           'EndDate',
-          'CurrentRequestedFunds',
+          'Objective',
+          'VisibilityGroupId',
           'ImplementingPartners',
           'ImplementationStatus',
-          'PgSqlPdf',
-          'VisibilityGroupId',
+          'CurrentRequestedFunds',
           'RecordStatus',
           'ActiveUntil',
+          'Source',
+          'SourceId',
+          'PlanId',
           'CreatedAt',
           'UpdatedAt',
           'IsLocked',
+          'PgSqlPdf',
+          'HpcId',
+          'HpcVersionId',
         ],
       ],
       'Location' => [
@@ -172,6 +151,23 @@ class EntityQuery extends FabricQueryBase {
           'IsLocked',
           'CollectiveInd',
           'IsVerified',
+          'RecordStatus',
+          'ActiveUntil',
+          'CreatedAt',
+          'UpdatedAt',
+        ],
+      ],
+      'Sector' => [
+        'namespace' => 'sectors',
+        'primary_key' => 'Id',
+        'items' => [
+          'Id',
+          'Name',
+          'SectorType',
+          'SectorCode',
+          'Description',
+          'VisibilityGroupId',
+          'IsLocked',
           'RecordStatus',
           'ActiveUntil',
           'CreatedAt',
@@ -217,6 +213,21 @@ class EntityQuery extends FabricQueryBase {
       'SpecificObjective' => $logframe_entity,
       'ClusterObjective' => $logframe_entity,
       'ClusterActivity' => $logframe_entity,
+      'Contact' => [
+        'namespace' => 'contacts',
+        'primary_key' => 'Id',
+        'items' => [
+          'Id',
+          'Name',
+          'Email',
+          'Phone',
+          'IsLocked',
+          'RecordStatus',
+          'ActiveUntil',
+          'CreatedAt',
+          'UpdatedAt',
+        ],
+      ],
     ];
   }
 
@@ -228,10 +239,10 @@ class EntityQuery extends FabricQueryBase {
    * @param int $entity_id
    *   The entity id.
    *
-   * @return string|null
+   * @return \Drupal\hpc_api\Query\FabricQuery|null
    *   The query payload for fabric.
    */
-  public function getEntityQuery(int $entity_type_id, int $entity_id): ?string {
+  public function getEntityQuery(int $entity_type_id, int $entity_id): ?FabricQuery {
     $query_definitions = $this->getEntityQueryDefinitions();
     $entity_type = $this->getEntityTypeById($entity_type_id);
     $query_definition = $query_definitions[$entity_type->getName()] ?? NULL;
@@ -240,8 +251,8 @@ class EntityQuery extends FabricQueryBase {
     }
     $namespace = $query_definition['namespace'];
     $primary_key = $query_definition['primary_key'];
-    $items = implode(' ', $query_definition['items']);
-    return "{$namespace} (filter: { {$primary_key}: { eq: {$entity_id} } }) { items { {$items} }}";
+    $items = $query_definition['items'];
+    return $this->fabricClient->createQuery($namespace, $items, [$primary_key => $entity_id]);
   }
 
 }
