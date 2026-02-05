@@ -78,6 +78,7 @@ services:
   browser:
     hostname: ghi-test-browser
     container_name: ghi-test-browser
+    platform: linux/amd64
     image: selenium/standalone-chrome:103.0
     shm_size: 2gb
     volumes:

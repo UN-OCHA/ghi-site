@@ -133,7 +133,7 @@ jobs:
             docker compose -f .github/tests/docker-compose.yml exec -T drupal chmod -R 777 /srv/www/html/build/logs
             docker compose -f .github/tests/docker-compose.yml exec -T drupal mkdir -p /srv/www/html/sites/simpletest/browser_output
             docker compose -f .github/tests/docker-compose.yml exec -T drupal chmod -R 777 /srv/www/html/sites/simpletest
-            docker compose -f .github/tests/docker-compose.yml exec -T -u appuser -w /srv/www -e XDEBUG_MODE=coverage -e BROWSERTEST_OUTPUT_DIRECTORY=/tmp -e BROWSERTEST_OUTPUT_BASE_URL=http://127.0.0.1:8081 -e DTT_BASE_URL=http://127.0.0.1 -e SIMPLETEST_BASE_URL=http://127.0.0.1 -e SIMPLETEST_DB=mysql://ghi:ghi@mysql/ghi drupal ./vendor/bin/paraunit coverage --clover /srv/www/html/build/logs/clover.xml -c /srv/www
+            docker compose -f .github/tests/docker-compose.yml exec -T -u appuser -w /srv/www -e XDEBUG_MODE=coverage -e BROWSERTEST_OUTPUT_DIRECTORY=/tmp -e BROWSERTEST_OUTPUT_BASE_URL=http://127.0.0.1:8081 -e DTT_BASE_URL=http://ghi-test-site -e SIMPLETEST_BASE_URL=http://ghi-test-site -e SIMPLETEST_DB=mysql://ghi:ghi@mysql/ghi drupal ./vendor/bin/phpunit --coverage-clover /srv/www/html/build/logs/clover.xml -c /srv/www
         env:
           fail-fast: true
 
@@ -168,7 +168,14 @@ jobs:
         uses: cafuego/command-output@main
         with:
           run: |
-            docker compose -f tests/docker-compose.yml exec -T drupal grep -i fatal /var/log/php/error.log
+            docker compose -f .github/tests/docker-compose.yml exec -T drupal grep -i fatal /var/log/php/error.log
+
+      - name: Docker browser logs
+        id: browserlog
+        uses: cafuego/command-output@main
+        with:
+          run: |
+            docker compose -f .github/tests/docker-compose.yml logs browser
 
       - name: Find Comment
         uses: peter-evans/find-comment@v2
@@ -200,6 +207,9 @@ jobs:
             </details>
             <details><summary>PHP Logs</summary>
             <code>${{ steps.phplog.outputs.stdout }}</code>
+            </details>
+            <details><summary>Docker browser Logs</summary>
+            <code>${{ steps.browserlog.outputs.stdout }}</code>
             </details>
 
             *Pusher: @${{ github.actor }}, Action: `${{ github.event_name }}`, Workflow: `${{ github.workflow }}`*
