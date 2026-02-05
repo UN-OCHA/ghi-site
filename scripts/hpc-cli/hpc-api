@@ -46,7 +46,7 @@ api-backend() {
 api-public() {
   url=$1
   url_with_credentials=${url/https:\/\//https:/\/$HPC_BASIC_AUTH_USER:$HPC_BASIC_AUTH_PASS@}
-  jr "$url_with_credentials"
+  curl -s "$url_with_credentials" | jq '.'
 }
 
 # Calls to non-public endpoints.
