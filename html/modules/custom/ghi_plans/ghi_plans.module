@@ -252,18 +252,6 @@ function ghi_plans_migrate_governing_entity_prepare_row(Row $row, MigrateSourceI
   // original id.
   $row->setSourceProperty('plan_entity_id', $plan_object->id());
 
-  // Retrieve the sector that this GVE is associated with. This helps lookups
-  // later on.
-  /** @var \Drupal\hpc_api\Query\FabricQueryManager $query_manager */
-  $query_manager = \Drupal::service('plugin.manager.fabric_query_manager');
-  /** @var \Drupal\ghi_plans\Plugin\FabricQuery\PlanQuery $plan_query */
-  $plan_query = $query_manager->createInstance('plan');
-  $sector_type = $plan_query->getEntityTypeByName('Sector');
-  $field_cluster_type = $plan_query->getEntityTypeByName('FieldCluster');
-  $relationships = $plan_query->getRelationshipItems($sector_type->id(), $field_cluster_type->id(), NULL, $raw_data->Id);
-  $sector_ids = array_map(fn ($item) => $item->getSourceId(), $relationships);
-  $row->setSourceProperty('sector_ids', $sector_ids ?: NULL);
-
   // Use the truncated description as the name if the name is empty.
   if (empty($raw_data->Name) && !empty($raw_data->Description)) {
     $row->setSourceProperty('name', Unicode::truncate($raw_data->Description, 255, TRUE, TRUE));

@@ -5,11 +5,11 @@ namespace Drupal\ghi_plans\Plugin\FabricQuery;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\ghi_base_objects\Entity\BaseObjectChildInterface;
 use Drupal\ghi_plans\ApiObjects\Organization;
+use Drupal\ghi_plans\ApiObjects\Partials\PlanProjectCluster;
 use Drupal\ghi_plans\ApiObjects\Project;
 use Drupal\ghi_plans\Entity\GoverningEntity;
 use Drupal\ghi_plans\Entity\Plan;
 use Drupal\ghi_plans\Traits\ProjectTrait;
-use Drupal\hpc_api\ApiObjects\Types\Sector;
 use Drupal\hpc_api\Attribute\FabricQuery;
 use Drupal\hpc_api\Query\EndpointQuery;
 use Drupal\hpc_api\Query\FabricQueryBase;
@@ -48,7 +48,7 @@ class ProjectQuery extends FabricQueryBase {
     }
 
     $this->addOrganizationsToProjectItems($items);
-    $this->addSectorsToProjectItems($items);
+    $this->addFieldClustersToProjectItems($items);
     return count($items) == 1 ? new Project($items[0]) : NULL;
   }
 
@@ -82,7 +82,7 @@ class ProjectQuery extends FabricQueryBase {
 
     // Fetch organizations and sectors.
     $this->addOrganizationsToProjectItems($items);
-    $this->addSectorsToProjectItems($items);
+    $this->addFieldClustersToProjectItems($items);
     return $this->buildResultObjects($items, Project::class);
   }
 
@@ -121,7 +121,7 @@ class ProjectQuery extends FabricQueryBase {
     $project_ids = array_map(fn ($item) => $item->getSourceId(), $relationships);
     $projects = $this->getProjectsById($project_ids, $plan);
     if ($context_base_object instanceof GoverningEntity) {
-      $projects = array_filter($projects, fn ($project) => in_array($context_base_object->getSectorId(), $project->getSectorIds()));
+      $projects = array_filter($projects, fn ($project) => in_array($context_base_object->getSourceId(), $project->getClusterIds()));
     }
     if ($organization_id !== NULL) {
       $projects = array_filter($projects, fn ($project) => array_key_exists($organization_id, $project->getOrganizations()));
@@ -256,20 +256,28 @@ class ProjectQuery extends FabricQueryBase {
   /**
    * Add sectors to the given project items.
    *
-   * @param array $items
+   * @param array $projects
    *   An array of fabric result items.
    */
-  private function addSectorsToProjectItems(array &$items) {
-    $project_ids = array_keys($items);
-    $project_type = $this->getEntityTypeByName('Project');
-    $sector_type = $this->getEntityTypeByName('Sector');
-    $relationships = $this->getRelationshipItems($project_type->id(), $sector_type->id(), $project_ids);
-    $sectors = $this->getSectors();
-    foreach ($relationships as $item) {
-      $project_id = $item->getSourceId();
-      $sector_id = $item->getTargetId();
-      $items[$project_id]->sectors = $items[$project_id]->sectors ?? [];
-      $items[$project_id]->sectors[$sector_id] = new Sector($sectors[$sector_id]);
+  private function addFieldClustersToProjectItems(array &$projects) {
+    if (empty($projects)) {
+      return;
+    }
+    $project_ids = array_keys($projects);
+    // phpcs:disable Squiz.Arrays.ArrayDeclaration.KeySpecified
+    $items = $this->fabricClient->createQuery('projectFieldClusters', [
+      'Id',
+      'ProjectId',
+      'coordinationEntity' => PlanProjectCluster::GRAPHQL_DIMENSION_ITEMS,
+    ])
+      ->setFilter('ProjectId', $project_ids)
+      ->setOrderBy(['ProjectId' => 'ASC'])
+      ->execute() ?: [];
+    // phpcs:enable Squiz.Arrays.ArrayDeclaration.KeySpecified
+    foreach ($items as $item) {
+      $project_id = $item->ProjectId;
+      $projects[$project_id]->clusters = $projects[$project_id]->clusters ?? [];
+      $projects[$project_id]->clusters[$item->coordinationEntity->Id] = new PlanProjectCluster($item->coordinationEntity);
     }
   }
 
