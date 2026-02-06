@@ -261,7 +261,7 @@ abstract class FabricQueryBase extends PluginBase implements FabricQueryPluginIn
       'entityTypes' => [EntityType::class, ['Id', 'Name', 'Alias']],
       'genders' => [Gender::class, $properties],
       'healthInterventionCategories' => [HealthInterventionCategory::class, $properties],
-      'metricTypes' => [MetricType::class, ['Id', 'Name', 'OtherName']],
+      'metricTypes' => [MetricType::class, ['Id', 'Name', 'OtherName', 'HPCType']],
       'populationStatuses' => [PopulationStatus::class, $properties],
       'resourceTypes' => [ResourceType::class, $properties],
       'sectors' => [Sector::class, ['Id', 'Name', 'SectorType', 'SectorCode']],

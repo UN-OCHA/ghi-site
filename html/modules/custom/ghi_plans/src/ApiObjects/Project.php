@@ -3,8 +3,6 @@
 namespace Drupal\ghi_plans\ApiObjects;
 
 use Drupal\ghi_base_objects\ApiObjects\BaseObject;
-use Drupal\ghi_plans\ApiObjects\Partials\PlanProjectCluster;
-use Drupal\ghi_plans\Entity\GoverningEntity;
 use Drupal\hpc_api\Traits\SimpleCacheTrait;
 
 /**
@@ -63,7 +61,7 @@ class Project extends BaseObject {
       'name' => $data->Name,
       'code' => $data->ProjectCode,
       'plan_id' => $data->PlanId ?? NULL,
-      'sectors' => $data->sectors ?? [],
+      'clusters' => $data->clusters ?? [],
       'published' => !empty($data->currentPublishedVersionId),
       'requirements' => $data->CurrentRequestedFunds,
       'location_ids' => $data->locationIds->ids ?? [],
@@ -115,52 +113,13 @@ class Project extends BaseObject {
   }
 
   /**
-   * Get the project sectors.
-   *
-   * @return \Drupal\hpc_api\ApiObjects\Types\Sector[]
-   *   An array of sectors for this project.
-   */
-  public function getSectors() {
-    return $this->sectors ?? [];
-  }
-
-  /**
-   * Get the project cluster ids.
-   *
-   * @return int[]
-   *   An array of cluster ids for this project.
-   */
-  public function getSectorIds() {
-    return array_keys($this->getSectors() ?? []);
-  }
-
-  /**
    * Get the project clusters.
    *
    * @return \Drupal\ghi_plans\ApiObjects\Partials\PlanProjectCluster[]
    *   An array of clusters for this project.
    */
   public function getClusters() {
-    if (!$this->getPlanId()) {
-      return [];
-    }
-    if (is_array($this->clusters)) {
-      return $this->clusters;
-    }
-    /** @var \Drupal\ghi_plans\Entity\GoverningEntity[] $governing_entities */
-    $governing_entities = \Drupal::entityTypeManager()->getStorage('base_object')->loadByProperties([
-      'type' => GoverningEntity::BUNDLE,
-      'field_plan.entity:base_object.field_original_id.value' => $this->getPlanId(),
-    ]);
-    $sector_ids = $this->getSectorIds();
-    $relevant_entities = array_filter($governing_entities, fn ($entity) => in_array($entity->getSectorId(), $sector_ids));
-    $this->clusters = array_map(fn ($entity) => new PlanProjectCluster((object) [
-      'Id' => $entity->getSourceId(),
-      'Name' => $entity->label(),
-      // @todo Retrieve icon.
-      'Icon' => NULL,
-    ]), $relevant_entities);
-    return $this->clusters;
+    return $this->map->clusters;
   }
 
   /**

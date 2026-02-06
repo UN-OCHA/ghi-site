@@ -237,13 +237,15 @@ class FabricClient {
    *
    * @param \Drupal\hpc_api\Query\FabricQuery $query
    *   The query to execute.
+   * @param string $key_property
+   *   The property to use as a key.
    *
    * @return false|array
    *   The result from the fabric query or FALSE on failure.
    */
-  public function execute(FabricQuery $query): false|array {
+  public function execute(FabricQuery $query, string $key_property = 'Id'): false|array {
     $data = $this->query($query);
-    return is_object($data) ? $this->getItems($data, $query->getQueryName()) : FALSE;
+    return is_object($data) ? $this->getItems($data, $query->getQueryName(), $key_property) : FALSE;
   }
 
   /**

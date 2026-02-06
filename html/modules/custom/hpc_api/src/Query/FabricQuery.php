@@ -271,11 +271,14 @@ class FabricQuery {
   /**
    * Execute the current query.
    *
+   * @param string $key_property
+   *   The property to use as a key.
+   *
    * @return false|array
    *   The result from the fabric query or FALSE on failure.
    */
-  public function execute(): false|array {
-    return $this->getFabricClient()->execute($this);
+  public function execute(string $key_property = 'Id'): false|array {
+    return $this->getFabricClient()->execute($this, $key_property);
   }
 
   /**
