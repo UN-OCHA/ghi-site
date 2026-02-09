@@ -26,7 +26,7 @@ class AttachmentPrototypeQuery extends FabricQueryBase {
    *   The result from the fabric query or FALSE on failure.
    */
   private function queryWithFilters($filters): false|object|array {
-    return $this->fabricClient->createQuery('attachmentPrototypes', AttachmentPrototype::GRAPHQL_DIMENSION_ITEMS)
+    return $this->fabricClient->createQuery('attachmentPrototypes', AttachmentPrototype::getGraphQlItems())
       ->setFilters($filters + [
         'RecordStatus' => 'Active',
       ])

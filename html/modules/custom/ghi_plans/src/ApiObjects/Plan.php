@@ -22,7 +22,7 @@ class Plan extends BaseObject implements PlanEntityInterface {
   /**
    * Define the dimension items used in queries.
    */
-  const GRAPHQL_DIMENSION_ITEMS = [
+  const GRAPHQL_ITEMS = [
     'Id',
     'Name',
     'ShortName',
@@ -42,12 +42,13 @@ class Plan extends BaseObject implements PlanEntityInterface {
     'Description',
     'FocusedLocationName',
     'FocusedLocationId',
+    'CurrentReportingPeriodId',
     // phpcs:disable Squiz.Arrays.ArrayDeclaration.KeySpecified
     'planPeriod' => ['items' => ['period' => ['CalendarYear']]],
-    'planLocation' => ['items' => ['location' => Country::GRAPHQL_DIMENSION_ITEMS]],
+    'planLocation' => ['items' => ['location' => Country::GRAPHQL_ITEMS]],
     'planOrganization' => [
       'filter' => ['RecordStatus' => 'Active'],
-      'items' => ['organization' => Organization::GRAPHQL_DIMENSION_ITEMS],
+      'items' => ['organization' => Organization::GRAPHQL_ITEMS],
     ],
     // phpcs:enable Squiz.Arrays.ArrayDeclaration.KeySpecified
   ];
@@ -74,12 +75,13 @@ class Plan extends BaseObject implements PlanEntityInterface {
       'plan_type' => $data->PlanType,
       'plan_cluster_type' => $data->PlanClusterType ?? NULL,
       'plan_costing_type' => $data->PlanCosting,
+      'reporting_periods' => $data->ReportingPeriods ?? [],
       'start_date' => $data->StartDate ? $this->reformatDate($data->StartDate) : NULL,
       'end_date' => $data->EndDate ? $this->reformatDate($data->EndDate) : NULL,
       'created_date' => ($data->CreatedAt ?? NULL) ? $this->getTimestamp($data->CreatedAt) : NULL,
       'updated_date' => ($data->UpdatedAt ?? NULL) ? $this->getTimestamp($data->UpdatedAt) : NULL,
       'document_published_date' => $data->DocumentPublishDate ? $this->reformatDate($data->DocumentPublishDate) : NULL,
-      'last_published_period' => NULL,
+      'last_published_period' => $data->CurrentReportingPeriodId ?? NULL,
       'is_released' => $data->IsReleased ?? FALSE,
       'is_restricted' => $data->IsRestricted ?? FALSE,
       'is_part_of_gho' => $data->IsPartOfGHO ?? FALSE,

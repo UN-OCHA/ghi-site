@@ -98,13 +98,10 @@ class FabricClient {
   }
 
   /**
-   * Set if cache should be used.
-   *
-   * @param bool $status
-   *   TRUE if cache should be used (default) or FALSE otherwise.
+   * Disable caching.
    */
-  public function setUseCache($status = TRUE) {
-    $this->useCache = $status;
+  public function disableCache() {
+    $this->useCache = FALSE;
   }
 
   /**

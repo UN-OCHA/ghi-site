@@ -9,7 +9,9 @@ use Drupal\ghi_base_objects\Entity\BaseObjectChildInterface;
 use Drupal\ghi_base_objects\Entity\BaseObjectInterface;
 use Drupal\ghi_base_objects\Helpers\BaseObjectHelper;
 use Drupal\ghi_plans\ApiObjects\Facts\AttachmentFact;
+use Drupal\ghi_plans\ApiObjects\Facts\MeasurementFact;
 use Drupal\ghi_plans\ApiObjects\Measurements\Measurement;
+use Drupal\ghi_plans\ApiObjects\PlanReportingPeriod;
 use Drupal\ghi_plans\ApiObjects\Prototypes\AttachmentPrototype;
 use Drupal\ghi_plans\Entity\Plan;
 use Drupal\ghi_plans\Exceptions\InvalidAttachmentTypeException;
@@ -59,7 +61,7 @@ class DataAttachment extends AttachmentBase implements DataAttachmentInterface {
   /**
    * Define the dimension items used in queries.
    */
-  const GRAPHQL_DIMENSION_ITEMS = [
+  const GRAPHQL_ITEMS = [
     'Id',
     'Name',
     'PlanId',
@@ -183,10 +185,14 @@ class DataAttachment extends AttachmentBase implements DataAttachmentInterface {
   }
 
   /**
-   * Get the source entity type.
-   *
-   * @return string|null
-   *   The source entity type.
+   * {@inheritdoc}
+   */
+  public function getSourceEntityId() {
+    return $this->source->entity_id;
+  }
+
+  /**
+   * {@inheritdoc}
    */
   public function getSourceEntityType() {
     return $this->source->entity_type;
@@ -204,16 +210,6 @@ class DataAttachment extends AttachmentBase implements DataAttachmentInterface {
       'planEntity' => $this->t('Plan entity'),
       'governingEntity' => $this->t('Governing entity'),
     };
-  }
-
-  /**
-   * Get the source entity id.
-   *
-   * @return string|null
-   *   The source entity id.
-   */
-  public function getSourceEntityId() {
-    return $this->source->entity_id;
   }
 
   /**
@@ -459,7 +455,32 @@ class DataAttachment extends AttachmentBase implements DataAttachmentInterface {
    *   The attachment prototype object.
    */
   public function getPrototype(): ?AttachmentPrototype {
-    return $this->getPrototypeData();
+    if ($this->prototype instanceof AttachmentPrototype) {
+      return $this->prototype;
+    }
+    $attachment = $this->getRawData();
+
+    // First see if we can extract the prototype from the plan. This is better
+    // for performance when we need to do this for multiple attachments
+    // belonging to the same plan (which is the usual case) because the
+    // requests are cached.
+    $query_handler = $this->getAttachmentPrototypeQuery();
+    if (!$query_handler) {
+      return NULL;
+    }
+    $plan_id = $attachment->PlanId ?? NULL;
+    $prototype_id = $attachment->AttachmentPrototypeId ?? ($attachment->attachmentPrototypeId ?? NULL);
+    if ($plan_id && $prototype_id && $prototype = $query_handler->getPrototypeByPlanAndId($plan_id, $prototype_id)) {
+      return $prototype;
+    }
+
+    // If that didn't work, we query the prototype data directly.
+    $prototype = $prototype_id ? $query_handler->getPrototype($prototype_id) : NULL;
+    if (!$prototype instanceof AttachmentPrototype) {
+      throw new \Exception(sprintf('Failed to extract prototype for attachment %s', $attachment->Id));
+    }
+    $this->prototype = $prototype;
+    return $this->prototype;
   }
 
   /**
@@ -1104,7 +1125,7 @@ class DataAttachment extends AttachmentBase implements DataAttachmentInterface {
   public function getTotals(): array {
     $data = $this->getRawData();
     // Extract the values.
-    return array_map(fn ($item) => new AttachmentFact($item), $data->totals ?? []);
+    return array_map(fn ($item) => !empty($item->MeasurementId) ? new MeasurementFact($item) : new AttachmentFact($item), $data->totals ?? []);
   }
 
   /**
@@ -1131,25 +1152,48 @@ class DataAttachment extends AttachmentBase implements DataAttachmentInterface {
   }
 
   /**
-   * Get the all measurements.
+   * Get all measurements.
    *
    * @return \Drupal\ghi_plans\ApiObjects\Measurements\Measurement[]|null
    *   An array of measurement objects or NULL.
    */
   public function getMeasurements() {
+    $measurements = &drupal_static($this->getRawData()->Id . '::' . __METHOD__);
+    if ($measurements) {
+      return $measurements;
+    }
     $attachment = $this->getRawData();
-    if (!$attachment || !is_object($attachment)) {
+    if (empty($attachment->measurements)) {
       return NULL;
     }
-    $measurements = [];
 
-    if (empty($measurements)) {
-      return NULL;
-    }
-    ArrayHelper::sortObjectsByNumericProperty($measurements, 'planReportingPeriodId', EndpointQuery::SORT_DESC);
-    return array_map(function ($measurement) {
+    $measurements = array_map(function ($measurement) {
       return new Measurement($measurement);
-    }, array_values($measurements));
+    }, $attachment->measurements);
+    ArrayHelper::sortObjectsByMethod($measurements, 'getReportingPeriodId', EndpointQuery::SORT_DESC);
+    return $measurements;
+  }
+
+  /**
+   * Get a single measurement object for the given period id.
+   *
+   * @param int|string $period_id
+   *   The period id for the measurement or the string 'latest'.
+   *
+   * @return \Drupal\ghi_plans\ApiObjects\Measurements\Measurement|null
+   *   A measurement object or NULL.
+   */
+  public function getMeasurement($period_id = 'latest'): ?Measurement {
+    $measurements = $this->getMeasurements();
+    if ($period_id == 'latest') {
+      return reset($measurements);
+    }
+    foreach ($measurements as $measurement) {
+      if ($measurement->getReportingPeriodId() == $period_id) {
+        return $measurement;
+      }
+    }
+    return NULL;
   }
 
   /**
@@ -1170,7 +1214,7 @@ class DataAttachment extends AttachmentBase implements DataAttachmentInterface {
       return NULL;
     }
     $measurements = array_filter($measurements, function ($measurement) use ($latest_published_period_id) {
-      return $measurement->reporting_period == $latest_published_period_id;
+      return $measurement->getReportingPeriodId() == $latest_published_period_id;
     });
     return !empty($measurements) ? reset($measurements) : NULL;
   }
@@ -1230,38 +1274,10 @@ class DataAttachment extends AttachmentBase implements DataAttachmentInterface {
   }
 
   /**
-   * Extract prototype information from an attachment.
-   *
-   * Not all endpoints include the prototype in the response, which is why we
-   * provide a work around to infer the prototype from the attachment object
-   * itself. This does not contain all the prototype information. Calling
-   * classes should assure that they use the correct endpoint if full prototype
-   * data is required.
-   *
-   * @return \Drupal\ghi_plans\ApiObjects\Prototypes\AttachmentPrototype
-   *   An attachment prototype object.
-   *
-   * @throws \Exception
-   *   If the prototype cannot be inferred.
-   */
-  protected function getPrototypeData() {
-    if ($this->prototype instanceof AttachmentPrototype) {
-      return $this->prototype;
-    }
-    $attachment = $this->getRawData();
-    $prototype = self::fetchPrototypeForAttachment($attachment);
-    if (!$prototype instanceof AttachmentPrototype) {
-      throw new \Exception(sprintf('Failed to extract prototype for attachment %s', $attachment->Id));
-    }
-    $this->prototype = $prototype;
-    return $this->prototype;
-  }
-
-  /**
    * Get a single specified reporting period object.
    *
-   * @param int $period_id
-   *   The reporting period id.
+   * @param int|string $period_id
+   *   The reporting period id or the string 'latest'.
    *
    * @return \Drupal\ghi_plans\ApiObjects\PlanReportingPeriod|null
    *   A reporting period object or NULL.
@@ -1278,8 +1294,8 @@ class DataAttachment extends AttachmentBase implements DataAttachmentInterface {
    *
    * @param \Drupal\ghi_plans\ApiObjects\PlanReportingPeriod[]|null $reporting_periods
    *   The initial array of reporting periods or NULL.
-   * @param string $monitoring_period
-   *   A monitoring period identifier or 'latest'.
+   * @param int|string $monitoring_period
+   *   A monitoring period id or the string 'latest'.
    *
    * @return \Drupal\ghi_plans\ApiObjects\PlanReportingPeriod[]
    *   An array of reporting period objects.
@@ -1288,10 +1304,12 @@ class DataAttachment extends AttachmentBase implements DataAttachmentInterface {
     if ($reporting_periods === NULL) {
       $reporting_periods = $this->getPlanReportingPeriods($this->getPlanId(), TRUE);
     }
-    if (is_array($reporting_periods) && $monitoring_period != 'latest') {
-      while (!empty($reporting_periods) && array_key_last($reporting_periods) != $monitoring_period) {
-        array_pop($reporting_periods);
-      }
+    assert(is_array($reporting_periods));
+    if ($monitoring_period == 'latest') {
+      return $reporting_periods;
+    }
+    while (!empty($reporting_periods) && array_key_last($reporting_periods) != $monitoring_period) {
+      array_pop($reporting_periods);
     }
     return $reporting_periods;
   }
@@ -1330,7 +1348,7 @@ class DataAttachment extends AttachmentBase implements DataAttachmentInterface {
    * @return \Drupal\ghi_plans\ApiObjects\PlanReportingPeriod|null
    *   A reporting period object or NULL.
    */
-  protected function fetchReportingPeriodForAttachment() {
+  protected function fetchReportingPeriodForAttachment(): ?PlanReportingPeriod {
     $plan_id = $this->getPlanId();
     if (!$plan_id) {
       return NULL;
@@ -1339,23 +1357,7 @@ class DataAttachment extends AttachmentBase implements DataAttachmentInterface {
     if (!$measurement) {
       return NULL;
     }
-    /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\PlanReportingPeriodsQuery $planReportingPeriodsQuery */
-    $planReportingPeriodsQuery = $this->getEndpointQueryManager()->createInstance('plan_reporting_periods_query');
-    if (!$planReportingPeriodsQuery) {
-      return NULL;
-    }
-    $planReportingPeriodsQuery->setPlaceholder('plan_id', $plan_id);
-    return $planReportingPeriodsQuery->getReportingPeriod($measurement->getReportingPeriodId());
-  }
-
-  /**
-   * Get the endpoint query manager.
-   *
-   * @return \Drupal\hpc_api\Query\EndpointQueryManager
-   *   The endpoint query manager service.
-   */
-  private static function getEndpointQueryManager() {
-    return \Drupal::service('plugin.manager.endpoint_query_manager');
+    return $this->getReportingPeriod($measurement->getReportingPeriodId());
   }
 
   /**
@@ -1461,18 +1463,15 @@ class DataAttachment extends AttachmentBase implements DataAttachmentInterface {
    *   The data point value.
    */
   public function getValueForDataPoint($data_point_index, $monitoring_period = 'latest', $cumulative_logic = TRUE) {
+
     $value = NULL;
-    if ($monitoring_period) {
-      $value = $this->getMeasurementMetricValue($data_point_index, $monitoring_period);
+    if ($monitoring_period && $this->isMeasurementIndex($data_point_index)) {
+      $measurement = $this->getMeasurement($monitoring_period);
+      return $measurement?->getDataPointValue($data_point_index) ?? NULL;
     }
-    if (!$monitoring_period || (!$value && !$this->isMeasurementIndex($data_point_index))) {
-      // If a monitoring period has been specified but there is no value,
-      // that's either because a measurement is not yet available or because
-      // there is an issue with the data in RPM, where the metric values
-      // haven't been copied over to the measurements. That last issue is why
-      // we do this check.
-      $value = $this->values[$data_point_index] ?? NULL;
-    }
+
+    $metric_type = $this->getPrototype()->getOriginalFields()[$data_point_index]?->type;
+    $value = $this->values[$metric_type] ?? NULL;
 
     $field = $this->getFieldByIndex($data_point_index);
     if ($value !== NULL || !$field) {
@@ -1492,6 +1491,7 @@ class DataAttachment extends AttachmentBase implements DataAttachmentInterface {
 
     }
     return $value;
+
   }
 
   /**

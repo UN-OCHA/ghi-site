@@ -38,7 +38,7 @@ class ProjectQuery extends FabricQueryBase {
    *   An project object or NULL.
    */
   public function getProject($project_id, ?Plan $plan_context = NULL): ?Project {
-    $items = $this->fabricClient->createQuery('projects', Project::GRAPHQL_DIMENSION_ITEMS)
+    $items = $this->fabricClient->createQuery('projects', Project::getGraphQlItems())
       ->setFilter('Id', $project_id)
       ->execute() ?: [];
     $items = count($items) == 1 ? [reset($items)] : [];
@@ -71,7 +71,7 @@ class ProjectQuery extends FabricQueryBase {
       }
       return $projects;
     }
-    $items = $this->fabricClient->createQuery('projects', Project::GRAPHQL_DIMENSION_ITEMS)
+    $items = $this->fabricClient->createQuery('projects', Project::getGraphQlItems())
       ->setFilter('Id', $project_ids)
       ->setOrderBy(['ProjectCode' => 'ASC'])
       ->execute() ?: [];
@@ -233,17 +233,35 @@ class ProjectQuery extends FabricQueryBase {
    *   An array of fabric result items.
    */
   private function addOrganizationsToProjectItems(array &$items) {
+    if (empty($items)) {
+      return;
+    }
+    if (count($items) > 100) {
+      // We need to do multiple queries.
+      for ($i = 0; $i < ceil(count($items) / 100); $i++) {
+        $subset = array_slice($items, $i * 100, 100);
+        $this->addOrganizationsToProjectItems($subset);
+      }
+      return;
+    }
     $project_ids = array_keys($items);
+
     $project_type = $this->getEntityTypeByName('Project');
     $organization_type = $this->getEntityTypeByName('Organization');
     $relationships = $this->getRelationshipItems($project_type->id(), $organization_type->id(), $project_ids);
 
     $organization_ids = array_unique(array_map(fn ($item) => $item->getTargetId(), $relationships));
     sort($organization_ids);
-    $organizations = $organization_ids ? ($this->fabricClient->createQuery('organizations')
-      ->setFilter('Id', $organization_ids)
-      ->setItems(Organization::GRAPHQL_DIMENSION_ITEMS)
-      ->execute() ?: []) : [];
+
+    // We need to do multiple queries.
+    $organizations = [];
+    for ($i = 0; $i < ceil(count($organization_ids) / 100); $i++) {
+      $subset = array_slice($organization_ids, $i * 100, 100);
+      $organizations += $this->fabricClient->createQuery('organizations')
+        ->setFilter('Id', $subset)
+        ->setItems(Organization::getGraphQlItems())
+        ->execute() ?: [];
+    }
 
     foreach ($relationships as $item) {
       $project_id = $item->getSourceId();
@@ -268,7 +286,7 @@ class ProjectQuery extends FabricQueryBase {
     $items = $this->fabricClient->createQuery('projectFieldClusters', [
       'Id',
       'ProjectId',
-      'coordinationEntity' => PlanProjectCluster::GRAPHQL_DIMENSION_ITEMS,
+      'coordinationEntity' => PlanProjectCluster::getGraphQlItems(),
     ])
       ->setFilter('ProjectId', $project_ids)
       ->setOrderBy(['ProjectId' => 'ASC'])

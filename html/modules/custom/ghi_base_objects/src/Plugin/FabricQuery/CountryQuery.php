@@ -30,7 +30,7 @@ class CountryQuery extends FabricQueryBase {
     if ($this->countries !== NULL) {
       return;
     }
-    $items = $this->fabricClient->createQuery('locations', Country::GRAPHQL_DIMENSION_ITEMS)
+    $items = $this->fabricClient->createQuery('locations', Country::getGraphQlItems())
       ->setFilter('AdminLevel', 0)
       ->setOrderBy(['Name' => 'ASC'])
       ->execute();

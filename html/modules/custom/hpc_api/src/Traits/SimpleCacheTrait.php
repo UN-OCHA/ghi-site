@@ -55,7 +55,7 @@ trait SimpleCacheTrait {
    * @return mixed|void
    *   Either the stored data or nothing.
    */
-  public function cache($cache_key, $data = NULL, $reset = FALSE, $cache_base_time = NULL, $cache_tags = [], $lifetime = NULL) {
+  public function cache($cache_key, $data = NULL, $reset = FALSE, $cache_base_time = NULL, $cache_tags = [], $lifetime = NULL): mixed {
     $cache_store = &drupal_static(get_called_class() . '::' . __FUNCTION__, []);
 
     if ($data === NULL && $reset === TRUE) {

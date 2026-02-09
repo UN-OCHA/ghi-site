@@ -40,8 +40,26 @@ class FabricQueryForm extends FormBase {
     $query = $form_state->getValue('query');
     if (!empty($query)) {
       $fabric_client = $this->getFabricClient();
+      $fabric_client->disableCache();
       $error = NULL;
+
+      $start = microtime(TRUE);
       $result = $fabric_client->query($query, $error);
+      $duration = microtime(TRUE) - $start;
+
+      $form['meta'] = [
+        '#type' => 'details',
+        '#title' => $this->t('Meta'),
+        '#open' => TRUE,
+        'children' => [
+          '#type' => 'html_tag',
+          '#tag' => 'pre',
+          '#value' => $this->t('The query took @duration seconds', [
+            '@duration' => $duration,
+          ]),
+        ],
+      ];
+
       $form['result'] = [
         '#type' => 'details',
         '#title' => $this->t('Result'),

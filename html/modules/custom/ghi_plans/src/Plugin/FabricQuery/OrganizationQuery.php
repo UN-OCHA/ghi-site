@@ -33,7 +33,7 @@ class OrganizationQuery extends FabricQueryBase {
    *   An organization object or NULL.
    */
   public function getOrganization($organization_id): ?Organization {
-    $items = $this->fabricClient->createQuery('organizations', Organization::GRAPHQL_DIMENSION_ITEMS)
+    $items = $this->fabricClient->createQuery('organizations', Organization::getGraphQlItems())
       ->setFilter('Id', $organization_id)
       ->execute();
     $item = count($items) == 1 ? reset($items) : NULL;
@@ -62,7 +62,7 @@ class OrganizationQuery extends FabricQueryBase {
     $plan_id = $base_object instanceof Plan ? $base_object->getSourceId() : ($base_object instanceof BaseObjectChildInterface ? $base_object->getParentBaseObject()?->getSourceId() : NULL);
     $relationships = $this->getRelationshipItems(NULL, 18, NULL, $organization->id());
     $project_ids = array_map(fn ($item) => $item->getSourceId(), $relationships);
-    $items = $this->fabricClient->createQuery('projects', Project::GRAPHQL_DIMENSION_ITEMS)
+    $items = $this->fabricClient->createQuery('projects', Project::getGraphQlItems())
       ->setFilters(array_filter([
         'Id' => $project_ids,
         'PlanId' => $plan_id,

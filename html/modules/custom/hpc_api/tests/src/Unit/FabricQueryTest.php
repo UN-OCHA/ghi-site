@@ -16,6 +16,32 @@ class FabricQueryTest extends UnitTestCase {
   use PrivateMethodTrait;
 
   /**
+   * Data provider for testFilterValidation.
+   */
+  public function dataProviderFilterValidation() {
+    return [
+      [['Id' => []], TRUE],
+      [['Id' => 1, 'plans' => ['Id' => []]], TRUE],
+      [['Id' => 1], FALSE],
+    ];
+  }
+
+  /**
+   * Test filter validation.
+   *
+   * @group FabricQuery
+   * @dataProvider dataProviderFilterValidation
+   */
+  public function testFilterValidation($filters, $expect_exception) {
+    $fabric_query = new FabricQuery('test');
+    if ($expect_exception) {
+      $this->expectException(\InvalidArgumentException::class);
+    }
+    $result = $fabric_query->validateFilters($filters);
+    $this->assertEquals($expect_exception ? NULL : TRUE, $result);
+  }
+
+  /**
    * Data provider for testBuildFilterString.
    */
   public function dataProviderBuildFilterString() {

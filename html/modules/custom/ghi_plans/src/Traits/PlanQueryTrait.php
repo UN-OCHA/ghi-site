@@ -8,6 +8,7 @@ use Drupal\ghi_plans\Plugin\FabricQuery\AttachmentPrototypeQuery;
 use Drupal\ghi_plans\Plugin\FabricQuery\AttachmentQuery;
 use Drupal\ghi_plans\Plugin\FabricQuery\EntityPrototypeQuery;
 use Drupal\ghi_plans\Plugin\FabricQuery\EntityTypeQuery;
+use Drupal\ghi_plans\Plugin\FabricQuery\MeasurementQuery;
 use Drupal\ghi_plans\Plugin\FabricQuery\OrganizationQuery;
 use Drupal\ghi_plans\Plugin\FabricQuery\PlanEntityQuery;
 use Drupal\ghi_plans\Plugin\FabricQuery\PlanQuery;
@@ -85,6 +86,17 @@ trait PlanQueryTrait {
   protected static function getAttachmentPrototypeQuery(): ?AttachmentPrototypeQuery {
     $query = self::getQueryInstance('attachment_prototype');
     return $query instanceof AttachmentPrototypeQuery ? $query : NULL;
+  }
+
+  /**
+   * Get the measurement query.
+   *
+   * @return \Drupal\ghi_plans\Plugin\FabricQuery\MeasurementQuery|null
+   *   The measurement query or NULL.
+   */
+  protected static function getMeasurementQuery(): ?MeasurementQuery {
+    $query = self::getQueryInstance('measurement');
+    return $query instanceof MeasurementQuery ? $query : NULL;
   }
 
   /**

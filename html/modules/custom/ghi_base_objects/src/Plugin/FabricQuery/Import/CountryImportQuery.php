@@ -21,7 +21,7 @@ class CountryImportQuery extends FabricQueryBase implements ImportQueryInterface
    * {@inheritdoc}
    */
   public function getSourceData() {
-    return $this->fabricClient->createQuery('locations', Country::GRAPHQL_DIMENSION_ITEMS)
+    return $this->fabricClient->createQuery('locations', Country::getGraphQlItems())
       ->setFilter('AdminLevel', 0)
       ->setOrderBy(['Name' => 'ASC'])
       ->execute();
