@@ -34,7 +34,7 @@ class PlanEntityQuery extends FabricQueryBase {
   public function getEntity($entity_type, $entity_id): ?PlanEntityInterface {
     switch ($entity_type) {
       case 'governingEntity':
-        $items = $this->fabricClient->createQuery('coordinationEntities', GoverningEntity::GRAPHQL_DIMENSION_ITEMS)
+        $items = $this->fabricClient->createQuery('coordinationEntities', GoverningEntity::getGraphQlItems())
           ->setFilters([
             'Id' => $entity_id,
             'RecordStatus' => 'Active',
@@ -43,7 +43,7 @@ class PlanEntityQuery extends FabricQueryBase {
         return count($items) == 1 ? new GoverningEntity(reset($items)) : NULL;
 
       case 'planEntity':
-        $items = $this->fabricClient->createQuery('logframeEntities', PlanEntity::GRAPHQL_DIMENSION_ITEMS)
+        $items = $this->fabricClient->createQuery('logframeEntities', PlanEntity::getGraphQlItems())
           ->setFilters([
             'Id' => $entity_id,
             'RecordStatus' => 'Active',
@@ -78,7 +78,7 @@ class PlanEntityQuery extends FabricQueryBase {
     }
     switch ($entity_type) {
       case 'governingEntity':
-        $items = $this->fabricClient->createQuery('coordinationEntities', GoverningEntity::GRAPHQL_DIMENSION_ITEMS)
+        $items = $this->fabricClient->createQuery('coordinationEntities', GoverningEntity::getGraphQlItems())
           ->setFilters([
             'Id' => $entity_ids,
             'RecordStatus' => 'Active',
@@ -87,7 +87,7 @@ class PlanEntityQuery extends FabricQueryBase {
         return $this->buildResultObjects($items, GoverningEntity::class);
 
       case 'planEntity':
-        $items = $this->fabricClient->createQuery('logframeEntities', PlanEntity::GRAPHQL_DIMENSION_ITEMS)
+        $items = $this->fabricClient->createQuery('logframeEntities', PlanEntity::getGraphQlItems())
           ->setFilters([
             'Id' => $entity_ids,
             'RecordStatus' => 'Active',
@@ -136,14 +136,14 @@ class PlanEntityQuery extends FabricQueryBase {
 
     $queries = [];
     if ($fetch_coordination_entities) {
-      $queries[] = $this->fabricClient->createQuery('coordinationEntities', GoverningEntity::GRAPHQL_DIMENSION_ITEMS)
+      $queries[] = $this->fabricClient->createQuery('coordinationEntities', GoverningEntity::getGraphQlItems())
         ->setFilters($query_filter);
     }
     if ($fetch_logframe_entities) {
       if ($context_object instanceof EntityGoverningEntity) {
         $query_filter['CoordinationEntityId'] = $context_object->getSourceId();
       }
-      $queries[] = $this->fabricClient->createQuery('logframeEntities', PlanEntity::GRAPHQL_DIMENSION_ITEMS)
+      $queries[] = $this->fabricClient->createQuery('logframeEntities', PlanEntity::getGraphQlItems())
         ->setFilters($query_filter);
     }
     $data = $this->fabricClient->executeMultiple($queries);

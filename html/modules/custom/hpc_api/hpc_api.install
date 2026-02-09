@@ -95,9 +95,9 @@ function hpc_api_requirements($phase) {
     $requirements['hpc_api_cluster_icons']['severity'] = REQUIREMENT_OK;
     hpc_api_directory_requirements(IconQuery::IMPORT_DIR, $requirements['hpc_api_cluster_icons']);
 
-    /** @var \Drupal\hpc_api\Query\FabricQuery */
+    /** @var \Drupal\hpc_api\Query\FabricClient */
     $fabric_client = \Drupal::service('hpc_api.fabric_client');
-    $fabric_client->setUseCache(FALSE);
+    $fabric_client->disableCache();
     $requirements['fabric_graphql_access'] = [
       'title' => t('Fabric GraphQL: Access token'),
       'description' => t('An access token can be acquired from the Fabric GraphQL service.'),

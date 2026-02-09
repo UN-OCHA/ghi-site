@@ -14,7 +14,7 @@ class GoverningEntity extends EntityObjectBase {
   /**
    * Define the dimension items used in queries.
    */
-  const GRAPHQL_DIMENSION_ITEMS = [
+  const GRAPHQL_ITEMS = [
     'Id',
     'Name',
     'Description',
@@ -23,6 +23,9 @@ class GoverningEntity extends EntityObjectBase {
     'HpcEntityPrototypeId',
     'CustomReference',
     'ComposedReference',
+    // phpcs:disable Squiz.Arrays.ArrayDeclaration.KeySpecified
+    "coordinationEntityContact" => ['items' => ['contact' => ['Name', 'Email']]],
+    // phpcs:enable Squiz.Arrays.ArrayDeclaration.KeySpecified
   ];
 
   /**

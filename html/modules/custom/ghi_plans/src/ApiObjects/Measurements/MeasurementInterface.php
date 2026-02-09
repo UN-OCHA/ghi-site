@@ -10,6 +10,30 @@ use Drupal\hpc_api\ApiObjects\ApiObjectInterface;
 interface MeasurementInterface extends ApiObjectInterface {
 
   /**
+   * Extract the plan id from a measurement object.
+   *
+   * @return int|null
+   *   The plan ID if any can be found.
+   */
+  public function getPlanId();
+
+  /**
+   * Get the source entity type.
+   *
+   * @return string|null
+   *   The source entity type.
+   */
+  public function getSourceEntityType();
+
+  /**
+   * Get the source entity id.
+   *
+   * @return string|null
+   *   The source entity id.
+   */
+  public function getSourceEntityId();
+
+  /**
    * Get a reporting period id for the measurement.
    *
    * @return int

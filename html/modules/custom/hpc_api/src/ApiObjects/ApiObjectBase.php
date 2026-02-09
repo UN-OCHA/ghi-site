@@ -49,6 +49,20 @@ abstract class ApiObjectBase implements ApiObjectInterface, CacheableDependencyI
   /**
    * {@inheritdoc}
    */
+  public static function getGraphQlItems() {
+    try {
+      $items = (new \ReflectionClassConstant(get_called_class(), 'GRAPHQL_ITEMS'))->getValue();
+      assert(is_array($items));
+      return $items;
+    }
+    catch (\Exception $e) {
+      return [];
+    }
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function getRawData() {
     return $this->data ?: NULL;
   }

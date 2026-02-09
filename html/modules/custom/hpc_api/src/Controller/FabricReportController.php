@@ -50,9 +50,10 @@ class FabricReportController extends ControllerBase {
     ];
 
     $base_type_definitions = $query->getBaseTypeDefinitions();
-    foreach ($base_type_definitions as $query_key => $def) {
-      $items = $query->fetchBaseType($query_key) ?: [];
-      [, $properties] = $base_type_definitions[$query_key];
+    $base_types = $query->getBaseTypes();
+    foreach ($base_types as $query_key => $items) {
+      $class_name = $base_type_definitions[$query_key];
+      $properties = $class_name::getGraphQlItems();
       $rows = [];
       /** @var \Drupal\hpc_api\ApiObjects\Types\BaseType[] $items */
       foreach ($items as $item) {

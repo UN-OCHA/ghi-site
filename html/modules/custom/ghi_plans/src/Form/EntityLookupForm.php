@@ -45,8 +45,6 @@ class EntityLookupForm extends BaseLookupForm {
       '#value' => $this->t('Submit'),
     ];
 
-    $entity_query = $this->getPlanEntityQuery();
-    $entity_query?->setUseCache(FALSE);
     $entity_type = $form_state->getValue('entity_type');
     $entity_id = $form_state->getValue('entity_id');
     if (!$entity_id) {
@@ -54,10 +52,10 @@ class EntityLookupForm extends BaseLookupForm {
     }
 
     if ($entity_type == 'plan') {
-      $entity = $this->getPlanQuery()->getPlan($entity_id);
+      $entity = $this->getPlanQuery()?->disableCache()->getPlan($entity_id) ?? NULL;
     }
     else {
-      $entities = $this->getPlanEntityQuery()->getEntities($entity_type, [$entity_id]);
+      $entities = $this->getPlanEntityQuery()?->disableCache()->getEntities($entity_type, [$entity_id]) ?? [];
       $entity = reset($entities);
     }
 

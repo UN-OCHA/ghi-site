@@ -10,9 +10,9 @@ use Drupal\hpc_api\Traits\DateTimeTrait;
 use Drupal\hpc_api\Traits\SimpleCacheTrait;
 
 /**
- * Abstraction for attachment fact objects.
+ * Abstraction for API measurement fact objects.
  */
-class AttachmentFact extends ApiObjectBase {
+class MeasurementFact extends ApiObjectBase {
 
   use PlanReportingPeriodTrait;
   use SimpleCacheTrait;
@@ -31,10 +31,9 @@ class AttachmentFact extends ApiObjectBase {
    */
   const GRAPHQL_ITEMS = [
     'Id',
-    'AttachmentId',
+    'MeasurementId',
     'MetricTypeId',
     'PeriodId',
-    'SectorId',
     'LocationId',
     'GenderId',
     'AgeGroupId',
@@ -45,6 +44,7 @@ class AttachmentFact extends ApiObjectBase {
     'MaternalStatusId',
     'DisaggregationCategoryOtherId',
     'DeliveryModalityId',
+    'CalcMethodId',
     'CustomMetricName',
     'Description',
     'IsTotal',
@@ -58,10 +58,9 @@ class AttachmentFact extends ApiObjectBase {
     $fact = $this->getRawData();
     return (object) [
       'id' => $fact->Id,
-      'attachment_id' => $fact->AttachmentId,
+      'measurement_id' => $fact->MeasurementId,
       'metric_id' => $fact->MetricTypeId,
       'period_id' => $fact->PeriodId,
-      'sector_id' => $fact->SectorId,
       'location_id' => $fact->LocationId,
       'gender_id' => $fact->GenderId,
       'age_group_id' => $fact->AgeGroupId,
@@ -70,6 +69,7 @@ class AttachmentFact extends ApiObjectBase {
       'disability_status_id' => $fact->DisabilityStatusId,
       'health_intervention_category_id' => $fact->HealthInterventionCategoryId,
       'delivery_modality_id' => $fact->DeliveryModalityId,
+      'calc_method_id' => $fact->CalcMethodId,
       'custom_metric_name' => $fact->CustomMetricName,
       'description' => $fact->Description,
       'is_total' => $fact->IsTotal,

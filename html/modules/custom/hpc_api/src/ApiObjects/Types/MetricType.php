@@ -7,6 +7,8 @@ namespace Drupal\hpc_api\ApiObjects\Types;
  */
 class MetricType extends BaseType {
 
+  const GRAPHQL_ITEMS = ['Id', 'Name', 'OtherName', 'HPCType'];
+
   /**
    * {@inheritdoc}
    */
@@ -15,6 +17,7 @@ class MetricType extends BaseType {
     return (object) [
       'id' => $data->Id,
       'name' => $data->Name,
+      'machine_name' => $data->HPCType ?? NULL,
       'label' => $data->OtherName ?? NULL,
     ];
   }
@@ -26,7 +29,7 @@ class MetricType extends BaseType {
    *   The label.
    */
   public function getLabel(): string {
-    return $this->label ?: $this->getName();
+    return $this->map->label ?: $this->getName();
   }
 
   /**
@@ -36,6 +39,9 @@ class MetricType extends BaseType {
    *   The machine name for the metric.
    */
   public function getMachineName(): string {
+    if ($this->map->machine_name) {
+      return $this->map->machine_name;
+    }
     $map = [
       'Population' => 'totalPopulation',
     ];

@@ -19,6 +19,26 @@ class PlanReportingPeriod extends BaseObject {
   const FORMAT_DATE_SHORT = 'j M';
 
   /**
+   * Define the dimension items used in queries.
+   */
+  const GRAPHQL_ITEMS = [
+    'Id',
+    'StartDate',
+    'EndDate',
+    // 'ExpiryDate',
+    'PeriodNumber',
+    'PlanId',
+    'MeasurementsGenerated',
+    'RecordStatus',
+    // 'ActiveUntil',
+    // 'Source',
+    // 'SourceId',
+    // 'CreatedAt',
+    // 'UpdatedAt',
+    // 'IsLocked',
+  ];
+
+  /**
    * Map the raw data.
    *
    * @return object
@@ -27,12 +47,12 @@ class PlanReportingPeriod extends BaseObject {
   protected function map(): object {
     $data = $this->getRawData();
     return (object) [
-      'id' => $data->id,
-      'plan_id' => $data->planId,
-      'period_number' => $data->periodNumber,
-      'measurements_generated' => $data->measurementsGenerated,
-      'start_date' => $data->startDate,
-      'end_date' => $data->endDate,
+      'id' => $data->Id,
+      'plan_id' => $data->PlanId,
+      'period_number' => $data->PeriodNumber,
+      'measurements_generated' => $data->MeasurementsGenerated,
+      'start_date' => $data->StartDate,
+      'end_date' => $data->EndDate,
     ];
 
   }

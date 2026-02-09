@@ -9,6 +9,8 @@ use Drupal\hpc_api\ApiObjects\ApiObjectBase;
  */
 abstract class BaseType extends ApiObjectBase {
 
+  public const GRAPHQL_ITEMS = ['Id', 'Name', 'Description'];
+
   /**
    * {@inheritdoc}
    */
