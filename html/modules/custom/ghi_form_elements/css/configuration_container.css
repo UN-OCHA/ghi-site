@@ -58,8 +58,8 @@
   z-index: 3;
   padding: 0 1rem;
   width: 100%;
-  border-top: 1px solid var(--colorGinLayerBorder);
-  background-color: var(--colorGinAppBackground);
+  border-top: 1px solid var(--gin-border-color-layer);
+  background-color: var(--gin-bg-app);
 }
 .form-type--configuration_container .actions-wrapper > *:first-child {
   margin-right: 0 !important;

@@ -82,14 +82,14 @@
   // 'toastified' by gin_lb, but uses variables from the GIN theme that are not
   // available for non-logged-users.
   // From GIN theme for warnings.
-  --colorGinWarningLight: #efcf64;
-  --colorGinWarningBackground: #605328;
+  --gin-color-warning-light: #efcf64;
+  --gin-bg-warning: #605328;
   // From GIN theme for errors.
-  --colorGinDangerLight: #f39b9d;
-  --colorGinDangerBackground: #583333;
+  --gin-color-danger-light: #f39b9d;
+  --gin-bg-danger: #583333;
   // From GIN theme for status messages.
-  --colorGinGreenLight: #32cea4;
-  --colorGinGreenBackground: #145242;
+  --gin-color-green-light: #32cea4;
+  --gin-bg-green: #145242;
 }
 
 //——————————————————————————————————————————————————————————————————————————————

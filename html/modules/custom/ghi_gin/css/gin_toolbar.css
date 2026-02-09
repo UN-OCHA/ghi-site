@@ -48,7 +48,7 @@ body :not(.form-checkboxes):not(td):not(.tabledrag-cell-content__item):not(.medi
 body .glb-form-boolean--type-radio,
 body .glb-form-boolean--type-radio:hover {
   background-image: none;
-  background-color: var(--colorGinLayerBackground);
+  background-color: var(--gin-bg-layer);
   position: relative;
   top: 0.75rem;
   float: left;
@@ -68,7 +68,7 @@ body .glb-form-boolean--type-radio:disabled:hover {
 }
 body .glb-form-boolean--type-radio:checked:disabled,
 body .glb-form-boolean--type-radio:checked:disabled:hover {
-  box-shadow: inset 0 0 0 5px var(--colorGinDisabled) !important;
+  box-shadow: inset 0 0 0 5px var(--gin-color-disabled) !important;
 }
 body .glb-form-boolean--type-radio:checked:not(:disabled),
 body .glb-form-boolean--type-radio:checked:not(:disabled):hover,
@@ -89,10 +89,10 @@ body.layout-builder-ipe-editing .gin-secondary-toolbar {
   top: var(--gin-toolbar-height);
   left: 0;
   right: 0;
-  background-color: var(--colorGinLayerBackground);
+  background-color: var(--gin-bg-layer);
   box-shadow: -1px 0 3px 1px rgba(0,0,0,0.3333);
   -webkit-box-shadow: -1px 0 3px 1px rgba(0,0,0,0.3333);
-  color: var(--colorGinText);
+  color: var(--gin-color-text);
 }
 /* Make sure the main layout builder actions are right aligned */
 body.layout-builder-ipe-editing .gin-secondary-toolbar .gin-secondary-toolbar__layout-container {
