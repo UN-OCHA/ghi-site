@@ -7,6 +7,8 @@ namespace Drupal\hpc_api\ApiObjects\Types;
  */
 class EntityType extends BaseType {
 
+  const GRAPHQL_ITEMS = ['Id', 'Name', 'Alias'];
+
   /**
    * {@inheritdoc}
    */

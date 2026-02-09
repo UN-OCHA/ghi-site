@@ -39,4 +39,20 @@ interface DataAttachmentInterface extends AttachmentInterface {
    */
   public function getPlanId();
 
+  /**
+   * Get the source entity type.
+   *
+   * @return string|null
+   *   The source entity type.
+   */
+  public function getSourceEntityType();
+
+  /**
+   * Get the source entity id.
+   *
+   * @return string|null
+   *   The source entity id.
+   */
+  public function getSourceEntityId();
+
 }

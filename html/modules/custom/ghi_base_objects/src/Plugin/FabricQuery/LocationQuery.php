@@ -31,7 +31,7 @@ class LocationQuery extends FabricQueryBase {
    *   A location object.
    */
   public function getLocation($location_id): ?Location {
-    $items = $this->fabricClient->createQuery('locations', Location::GRAPHQL_DIMENSION_ITEMS, NULL, 1)
+    $items = $this->fabricClient->createQuery('locations', Location::getGraphQlItems(), NULL, 1)
       ->setFilter('Id', $location_id)
       ->execute();
     $item = count($items) == 1 ? reset($items) : NULL;

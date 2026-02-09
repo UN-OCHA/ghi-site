@@ -28,7 +28,7 @@ class EntityPrototypeQuery extends FabricQueryBase {
    */
   public function getPrototype(int $prototype_id): ?EntityPrototype {
     // Get the prototype data.
-    $prototypes = $this->fabricClient->createQuery('entityPrototypes', EntityPrototype::GRAPHQL_DIMENSION_ITEMS)
+    $prototypes = $this->fabricClient->createQuery('entityPrototypes', EntityPrototype::getGraphQlItems())
       ->setFilter('Id', $prototype_id)
       ->execute();
     if (empty($prototypes)) {
@@ -49,7 +49,7 @@ class EntityPrototypeQuery extends FabricQueryBase {
    */
   public function getPlanPrototype(int $plan_id): ?PlanPrototype {
     // Get the prototypes.
-    $prototypes = $this->fabricClient->createQuery('entityPrototypes', EntityPrototype::GRAPHQL_DIMENSION_ITEMS)
+    $prototypes = $this->fabricClient->createQuery('entityPrototypes', EntityPrototype::getGraphQlItems())
       ->setFilter('PlanId', $plan_id)
       ->execute();
     if (empty($prototypes)) {

@@ -7,6 +7,8 @@ namespace Drupal\hpc_api\ApiObjects\Types;
  */
 class Unit extends BaseType {
 
+  const GRAPHQL_ITEMS = ['Id', 'Name', 'NameFrench'];
+
   const TYPE_PERCENTAGE = 'percentage';
   const TYPE_AMOUNT = 'amount';
 

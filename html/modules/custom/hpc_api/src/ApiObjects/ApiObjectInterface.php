@@ -24,6 +24,14 @@ interface ApiObjectInterface {
   public function getRawData();
 
   /**
+   * Get the items used for GraphQL queries.
+   *
+   * @return array
+   *   An array with items used for GraphQL queries.
+   */
+  public static function getGraphQlItems();
+
+  /**
    * Represent this as an array.
    *
    * @return array

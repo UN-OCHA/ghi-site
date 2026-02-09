@@ -12,19 +12,19 @@ class EntityPrototype extends BaseObject {
   /**
    * Define the dimension items used in queries.
    */
-  const GRAPHQL_DIMENSION_ITEMS = "
-    Id
-    RefCode
-    Type
-    Value
-    PlanId
-    OrderNumber
-    CreatedAt
-    UpdatedAt
-    RecordStatus
-    Source
-    SourceId
-  ";
+  const GRAPHQL_ITEMS = [
+    'Id',
+    'RefCode',
+    'Type',
+    'Value',
+    'PlanId',
+    'OrderNumber',
+    'CreatedAt',
+    'UpdatedAt',
+    'RecordStatus',
+    'Source',
+    'SourceId',
+  ];
 
   /**
    * {@inheritdoc}

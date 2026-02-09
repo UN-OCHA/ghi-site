@@ -168,7 +168,8 @@ class IndicatorAttachment extends DataAttachment {
    *   TRUE if a calculation method from the API is used, FALSE otherwise.
    */
   private function isApiCalculated($index, $data_point_conf) {
-    if (array_key_exists('use_calculation_method', $data_point_conf) && $data_point_conf['use_calculation_method'] == FALSE) {
+    $use_calculation_method = $data_point_conf['use_calculation_method'] ?? FALSE;
+    if (!$use_calculation_method) {
       return FALSE;
     }
     $calculation_method = $this->getCalculationMethod();

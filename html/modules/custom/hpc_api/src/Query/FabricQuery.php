@@ -35,7 +35,7 @@ class FabricQuery {
    *
    * @var array
    */
-  private array $filters;
+  private array $filters = [];
 
   /**
    * The order of the results.
@@ -56,11 +56,14 @@ class FabricQuery {
    */
   public function __construct(?string $query_name = NULL, mixed $items = NULL, ?array $filters = NULL, ?int $limit = NULL) {
     $this->queryName = $query_name;
-    $this->filters = $filters ?? [];
     $this->limit = $limit ?? self::DEFAULT_LIMIT;
 
     if ($items !== NULL) {
       $this->setItems($items);
+    }
+
+    if ($filters !== NULL) {
+      $this->setFilters($filters);
     }
   }
 
@@ -92,13 +95,14 @@ class FabricQuery {
   /**
    * Set the filters.
    *
-   * @param array|string $filters
-   *   The filters, either as an array or a string.
+   * @param array $filters
+   *   The filters as an array.
    *
    * @return self
    *   Returns the client instance for chaining.
    */
   public function setFilters(array $filters): self {
+    $this->validateFilters($filters);
     $this->filters = $filters;
     return $this;
   }
@@ -115,8 +119,34 @@ class FabricQuery {
    *   Returns the client instance for chaining.
    */
   public function setFilter(string $key, $value): self {
+    $this->validateFilters([$key => $value]);
     $this->filters[$key] = $value;
     return $this;
+  }
+
+  /**
+   * Validate the given set of filters.
+   *
+   * @param array $filters
+   *   The filters as an array.
+   *
+   * @return bool
+   *   TRUE if validation passes, otherwise an exception is thrown.
+   *
+   * @throws InvalidArgumentException
+   */
+  public function validateFilters(array $filters) {
+    foreach ($filters as $value) {
+      if (is_array($value)) {
+        if (empty($value)) {
+          throw new \InvalidArgumentException('Empty arrays are not allowed as filter values.');
+        }
+        else {
+          $this->validateFilters($value);
+        }
+      }
+    }
+    return TRUE;
   }
 
   /**
@@ -216,7 +246,7 @@ class FabricQuery {
   }
 
   /**
-   * Build an filter string for graphql.
+   * Build a filter string for graphql.
    *
    * @param array|null $filter
    *   Optional array of filters for recursion.
@@ -279,6 +309,17 @@ class FabricQuery {
    */
   public function execute(string $key_property = 'Id'): false|array {
     return $this->getFabricClient()->execute($this, $key_property);
+  }
+
+  /**
+   * Disable caching.
+   *
+   * @return self
+   *   Returns the client instance for chaining.
+   */
+  public function disableCache() {
+    $this->getFabricClient()->disableCache();
+    return $this;
   }
 
   /**

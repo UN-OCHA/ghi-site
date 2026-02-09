@@ -1,0 +1,411 @@
+<?php
+
+namespace Drupal\ghi_plans\Plugin\FabricQuery;
+
+use Drupal\Core\Entity\ContentEntityInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\ghi_plans\ApiObjects\Facts\MeasurementFact;
+use Drupal\ghi_plans\ApiObjects\Measurements\Measurement;
+use Drupal\ghi_plans\ApiObjects\Measurements\MeasurementInterface;
+use Drupal\ghi_plans\ApiObjects\PlanEntityInterface;
+use Drupal\ghi_plans\Traits\AttachmentFilterTrait;
+use Drupal\hpc_api\Attribute\FabricQuery;
+use Drupal\hpc_api\Query\FabricQueryBase;
+
+/**
+ * Plugin implementation of the 'measurement' fabric query.
+ */
+#[FabricQuery(
+  id: 'measurement',
+  label: new TranslatableMarkup('Measurement query'),
+)]
+class MeasurementQuery extends FabricQueryBase {
+
+  use AttachmentFilterTrait;
+
+  /**
+   * Get an measurement by its id.
+   *
+   * @param int $measurement_id
+   *   The measurement id.
+   * @param int $reporting_period
+   *   The reporting period for which to load the measurement data.
+   *
+   * @return \Drupal\ghi_plans\ApiObjects\Measurements\MeasurementInterface|null
+   *   The measurement object or NULL if not found.
+   *
+   * @todo Add support for the reporting period.
+   */
+  public function getMeasurement(int $measurement_id, $reporting_period = NULL): ?MeasurementInterface {
+    $measurement = NULL;
+    $queries = [
+      $this->fabricClient->createQuery('measurements', Measurement::getGraphQlItems())
+        ->setFilter('Id', $measurement_id),
+      $this->fabricClient->createQuery('measurementFacts', MeasurementFact::getGraphQlItems())
+        ->setFilters([
+          'measurementId' => $measurement_id,
+          'IsTotal' => TRUE,
+        ]),
+    ];
+
+    $data = $this->fabricClient->executeMultiple($queries);
+    $measurements = $data['measurements'];
+
+    // Retrieving an measurement by id should yield a max of 1, so let's assert
+    // that.
+    assert(count($measurements) <= 1);
+
+    $measurement = reset($measurements);
+    if (!$measurement) {
+      return NULL;
+    }
+
+    $measurement->totals = $data['measurementFacts'];
+
+    return new Measurement($measurement);
+  }
+
+  /**
+   * Get measurements by id.
+   *
+   * @param array $measurement_ids
+   *   The measurement ids.
+   * @param bool $disaggregated
+   *   Whether to fecth disaggregated data or not.
+   *
+   * @return \Drupal\ghi_plans\ApiObjects\Measurements\MeasurementInterface[]
+   *   An array of measurement objects, keyed by the measurement id.
+   */
+  public function getMeasurementsById(array $measurement_ids, bool $disaggregated = FALSE) {
+    sort($measurement_ids);
+
+    $cache_key = $this->getCacheKey([
+      'measurement_ids' => $measurement_ids,
+      'disaggregated' => (int) $disaggregated,
+    ]);
+    $measurements = $this->getCache($cache_key);
+    if ($measurements) {
+      return $measurements;
+    }
+    $queries = [
+      $this->fabricClient->createQuery('measurements', Measurement::getGraphQlItems())
+        ->setFilter('Id', $measurement_ids),
+      $this->fabricClient->createQuery('measurementFacts', MeasurementFact::getGraphQlItems())
+        ->setFilters([
+          'MeasurementId' => $measurement_ids,
+          'IsTotal' => $disaggregated,
+        ]),
+    ];
+    $data = $this->fabricClient->executeMultiple($queries);
+    $measurements = $data['measurements'];
+    if (empty($measurements)) {
+      return [];
+    }
+    $measurement_facts = $data['measurementFacts'];
+    // If we have found measurements, also load the total facts.
+    $this->addMeasurementFacts($measurements, $measurement_facts);
+
+    $processed_measurements = array_map(fn ($measurement) => new Measurement($measurement), $measurements);
+    $this->setCache($cache_key, $processed_measurements);
+    return $processed_measurements;
+  }
+
+  /**
+   * Get measurement by object type and id, optionally filtered.
+   *
+   * @param string $entity_type
+   *   The entity type for an measurement, either "governingEntity" or
+   *   "planEntity".
+   * @param array|int $entity_ids
+   *   The entity ids that the measurement should belong to.
+   * @param array|string $measurement_types
+   *   An optional filter for the measurement type.
+   *
+   * @return \Drupal\ghi_plans\ApiObjects\Measurements\MeasurementInterface[]
+   *   An array of measurement objects, keyed by the measurement id.
+   */
+  public function getMeasurementsByObject($entity_type, $entity_ids, $measurement_types = NULL) {
+    $entity_ids = (array) $entity_ids;
+    $measurement_types = array_filter((array) $measurement_types);
+    sort($entity_ids);
+
+    $cache_key = $this->getCacheKey([
+      'entity_type' => $entity_type,
+      'entity_ids' => $entity_ids,
+    ] + $measurement_types);
+    $measurements = $this->getCache($cache_key);
+    if ($measurements) {
+      return $measurements;
+    }
+
+    $type_filter_value = $this->getEntityTypeFilterValue($entity_type);
+    $filters = array_filter([
+      'EntityMainType' => $type_filter_value,
+      'EntityId' => $entity_ids,
+      'MeasurementType' => $measurement_types ?: NULL,
+    ]);
+
+    $measurements = $this->fabricClient->createQuery('measurements', Measurement::getGraphQlItems())
+      ->setFilters($filters)
+      ->execute();
+    if (empty($measurements)) {
+      return [];
+    }
+
+    // If we have found measurements, also load the total facts.
+    $this->addMeasurementFacts($measurements);
+
+    $processed_measurements = array_map(fn ($measurement) => new Measurement($measurement), $measurements);
+    $this->setCache($cache_key, $processed_measurements);
+    return $processed_measurements;
+  }
+
+  /**
+   * Get all measurements.
+   *
+   * @param int $plan_id
+   *   The plan id.
+   * @param \Drupal\Core\Entity\ContentEntityInterface $context_object
+   *   The current context object.
+   * @param array $filter
+   *   Optional array for filtering the measurements. This supports specifically
+   *   to filter for "entity_type", the allowed values for that are: "plan"
+   *   (looking only at plan measurements), "plan_entity" and "governing_entity"
+   *   (to look only at measurements on the specific entity type).
+   *   Note: Filtering by entity type in this way has a lower priority for the
+   *   selection of entities than the passed in context object. So if the
+   *   context object is of type "plan_entity" and a $filter['entity_type'] is
+   *   set, then it will be ignored.
+   * @param bool $fetch_facts
+   *   Whether to fetch the measurement facts too.
+   *
+   * @return \Drupal\ghi_plans\ApiObjects\Measurements\MeasurementInterface[]
+   *   An array of measurement objects for the given context.
+   */
+  public function getMeasurementsForPlan(int $plan_id, ?ContentEntityInterface $context_object = NULL, array $filter = [], $fetch_facts = FALSE) {
+    $cache_key = $this->getCacheKey(array_filter([
+      'plan_id' => $plan_id,
+      'context_type' => $context_object?->bundle() ?? NULL,
+      'context_id' => $context_object?->id() ?? NULL,
+      'fetch_facts' => (int) $fetch_facts,
+    ] + $filter));
+    $measurements = $this->getCache($cache_key);
+    if ($measurements) {
+      return $measurements;
+    }
+
+    // Supported types of context objects.
+    $supported_contexts = [
+      'plan_entity',
+      'governing_entity',
+    ];
+
+    $type_filter_value = NULL;
+    if ($context_object && $entity_type = $supported_contexts[$context_object->bundle()] ?? NULL) {
+      $type_filter_value = $this->getEntityTypeFilterValue($entity_type);
+    }
+
+    $measurement_types = !empty($filter['MeasurementType']) ? (array) $filter['MeasurementType'] : NULL;
+    unset($filter['MeasurementType']);
+
+    $measurements = $this->fabricClient->createQuery('measurements', Measurement::getGraphQlItems())
+      ->setFilters(array_filter([
+        'PlanId' => $plan_id,
+        'EntityMainType' => $type_filter_value,
+        'MeasurementType' => $measurement_types,
+      ]))
+      ->execute();
+    if (empty($measurements)) {
+      return [];
+    }
+
+    // phpcs:disable
+    // if (!empty($filter)) {
+    //   $measurements = $this->filterAttachments($measurements, $filter);
+    // }
+    // phpcs:enable
+
+    if ($fetch_facts) {
+      $this->addMeasurementFacts($measurements);
+    }
+
+    $processed_measurements = array_map(fn ($measurement) => new Measurement($measurement), $measurements);
+    $this->setCache($cache_key, $processed_measurements);
+    return $processed_measurements;
+  }
+
+  /**
+   * Get measurements by plan.
+   *
+   * @param int[] $plan_ids
+   *   The plan ids.
+   * @param array|string $measurement_types
+   *   Optional array of measurement types for filtering.
+   *
+   * @return \Drupal\ghi_plans\ApiObjects\Measurements\MeasurementInterface[][]
+   *   An array of array of data measurements, keyed by the plan id and the
+   *   measurement id.
+   */
+  public function getMeasurementsByPlan(array $plan_ids, $measurement_types = NULL) {
+    $measurements = $this->getMeasurementsByObject('plan', $plan_ids, $measurement_types);
+    $measurements_by_plan = [];
+    foreach ($measurements as $measurement) {
+      $plan_id = $measurement->getPlanId();
+      $measurements_by_plan[$plan_id] = $measurements_by_plan[$plan_id] ?? [];
+      $measurements_by_plan[$plan_id][$measurement->id()] = $measurement;
+    }
+    return $measurements_by_plan;
+  }
+
+  /**
+   * Get measurements by clusters.
+   *
+   * @param int[] $cluster_ids
+   *   The cluster ids.
+   * @param array|string $measurement_types
+   *   Optional array of measurement types for filtering.
+   *
+   * @return \Drupal\ghi_plans\ApiObjects\Measurements\MeasurementInterface[][]
+   *   An array of array of data measurements, keyed by the cluster id and the
+   *   measurement id.
+   */
+  public function getMeasurementsByCluster(array $cluster_ids, $measurement_types = NULL) {
+    $measurements = $this->getMeasurementsByObject('governingEntity', $cluster_ids, $measurement_types);
+    $measurements_by_cluster = [];
+    foreach ($measurements as $measurement) {
+      if ($measurement->getSourceEntityType() != 'governingEntity') {
+        continue;
+      }
+      $cluster_id = $measurement->getSourceEntityId();
+      $measurements_by_cluster[$cluster_id] = $measurements_by_cluster[$cluster_id] ?? [];
+      $measurements_by_cluster[$cluster_id][$measurement->id()] = $measurement;
+    }
+    return $measurements_by_cluster;
+  }
+
+  /**
+   * Get measurements for the given set of entities.
+   *
+   * @param \Drupal\ghi_plans\ApiObjects\PlanEntityInterface[] $entities
+   *   The plan entity objects.
+   *
+   * @return \Drupal\ghi_plans\ApiObjects\Measurements\MeasurementInterface[]
+   *   An array of data measurements.
+   */
+  public function getMeasurementsForEntities(array $entities) {
+    if (empty($entities)) {
+      return [];
+    }
+
+    $entity_ids = [];
+    foreach ($entities as $entity) {
+      if (!$entity instanceof PlanEntityInterface) {
+        continue;
+      }
+      $entity_ids[$entity->getEntityType()] = $entity_ids[$entity->getEntityType()] ?? [];
+      $entity_ids[$entity->getEntityType()][] = $entity->id();
+    }
+
+    $measurements = [];
+
+    $filters = [];
+    foreach (array_keys($entity_ids) as $entity_type) {
+      $type_filter_value = $this->getEntityTypeFilterValue($entity_type);
+      if (!$type_filter_value) {
+        continue;
+      }
+      $filters[] = '{ EntityMainType: { eq: "' . $type_filter_value . '" } EntityId:  { in: [' . implode(',', $entity_ids[$entity_type]) . '] } }';
+    }
+
+    if (empty($filters)) {
+      return [];
+    }
+
+    $payload = "
+      measurements (first: 10000, filter: {
+        or: [" . implode('', $filters) . "]
+        MeasurementType:  { in: [\"Caseload\", \"Indicator\"] }
+      }) {
+        items {" . implode(' ', Measurement::getGraphQlItems()) . "}
+      }
+      ";
+    $data = $this->fabricClient->query($payload);
+    $measurements = $data ? $this->getItems($data, 'measurements') : [];
+    if (empty($measurements)) {
+      return [];
+    }
+
+    // If we have found measurements, also load the total facts.
+    $this->addMeasurementFacts($measurements);
+
+    $processed_measurements = array_map(fn ($measurement) => new Measurement($measurement), $measurements);
+    return $processed_measurements;
+  }
+
+  /**
+   * Add measurement facts to the given set of measurements.
+   *
+   * @param array $measurements
+   *   An array with raw measurement data from fabric.
+   * @param array|null $measurement_facts
+   *   An optional set of query result objects. If NULL, the facts will be
+   *   retrieved from fabric using the measurement ids as condition.
+   */
+  private function addMeasurementFacts(&$measurements, ?array $measurement_facts = NULL) {
+    if (!$measurement_facts) {
+      $measurement_ids = array_map(fn ($item) => $item->Id, $measurements);
+      $measurement_facts = $this->fabricClient->createQuery('measurementFacts', MeasurementFact::getGraphQlItems())
+        ->setFilters([
+          'MeasurementId' => $measurement_ids,
+          'IsTotal' => TRUE,
+        ])
+        ->execute();
+    }
+
+    foreach ($measurement_facts as $measurement_fact) {
+      $measurement_id = $measurement_fact->MeasurementId;
+      $measurements[$measurement_id]->totals = $measurements[$measurement_id]->totals ?? [];
+      $measurements[$measurement_id]->totals[$measurement_fact->Id] = $measurement_fact;
+    }
+  }
+
+  /**
+   * Get disaggregated data for an measurement.
+   *
+   * @param int $measurement_id
+   *   The measurement id.
+   *
+   * @return array
+   *   An array of facts representing raw disaggregation data.
+   */
+  public function getMeasurementDisaggregatedData(int $measurement_id): array {
+    // Get the measurement facts.
+    return $this->fabricClient->createQuery('measurementFacts', MeasurementFact::getGraphQlItems())
+      ->setFilters([
+        'MeasurementId' => $measurement_id,
+        'IsTotal' => FALSE,
+      ])
+      ->execute() ?: [];
+  }
+
+  /**
+   * Get the filter value for an entity type.
+   *
+   * @param string $entity_type
+   *   The entity type used internally in HA.
+   *
+   * @return string|null
+   *   The filter value for that entity type or NULL.
+   */
+  private function getEntityTypeFilterValue($entity_type): ?string {
+    return match ($entity_type) {
+      'plan' => 'Plan',
+      'planEntity' => 'LogframeEntity',
+      'plan_entity' => 'LogframeEntity',
+      'governingEntity' => 'CoordinationEntity',
+      'governing_entity' => 'CoordinationEntity',
+      default => NULL,
+    };
+  }
+
+}

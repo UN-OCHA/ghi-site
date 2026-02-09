@@ -13,7 +13,7 @@ class AttachmentPrototype extends ApiObjectBase {
   /**
    * Define the dimension items used in queries.
    */
-  const GRAPHQL_DIMENSION_ITEMS = [
+  const GRAPHQL_ITEMS = [
     'Id',
     'RefCode',
     'Type',

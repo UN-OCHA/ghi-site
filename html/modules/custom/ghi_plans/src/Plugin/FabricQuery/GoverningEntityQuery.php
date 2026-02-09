@@ -32,7 +32,7 @@ class GoverningEntityQuery extends FabricQueryBase {
   public function getGoverningEntity(int $governing_entity_id): ?GoverningEntity {
     // Get the governing entity.
     $queries = [
-      $this->fabricClient->createQuery('coordinationEntities', GoverningEntity::GRAPHQL_DIMENSION_ITEMS)
+      $this->fabricClient->createQuery('coordinationEntities', GoverningEntity::getGraphQlItems())
         ->setFilter('Id', $governing_entity_id),
       $this->fabricClient->createQuery('planFieldClusters', [
         'PlanId',

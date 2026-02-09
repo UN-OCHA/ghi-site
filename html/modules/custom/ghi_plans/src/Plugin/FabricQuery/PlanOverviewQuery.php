@@ -86,7 +86,7 @@ class PlanOverviewQuery extends FabricQueryBase {
       return;
     }
 
-    $plan_objects = $this->fabricClient->createQuery('plans', Plan::GRAPHQL_DIMENSION_ITEMS)
+    $plan_objects = $this->fabricClient->createQuery('plans', Plan::getGraphQlItems())
       ->setFilters([
         'planPeriod' => [
           'period' => [

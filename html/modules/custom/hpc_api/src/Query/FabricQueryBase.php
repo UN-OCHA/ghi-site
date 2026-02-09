@@ -131,13 +131,14 @@ abstract class FabricQueryBase extends PluginBase implements FabricQueryPluginIn
   }
 
   /**
-   * Set if cache should be used.
+   * Disable caching.
    *
-   * @param bool $status
-   *   TRUE if cache should be used (default) or FALSE otherwise.
+   * @return static
+   *   Returns the query instance for chaining.
    */
-  public function setUseCache($status = TRUE) {
-    $this->fabricClient->setUseCache($status);
+  public function disableCache(): static {
+    $this->fabricClient->disableCache();
+    return $this;
   }
 
   /**
@@ -170,8 +171,8 @@ abstract class FabricQueryBase extends PluginBase implements FabricQueryPluginIn
    * @return mixed
    *   The cached data if available.
    */
-  public function getCache($cache_key) {
-    return $this->cache($cache_key);
+  public function getCache($cache_key): mixed {
+    return $this->fabricClient->useCache() ? $this->cache($cache_key) : NULL;
   }
 
   /**
@@ -185,9 +186,12 @@ abstract class FabricQueryBase extends PluginBase implements FabricQueryPluginIn
    *   The cache key.
    * @param mixed $data
    *   The data to store for the cache key.
+   *
+   * @return mixed
+   *   Returns the cached data.
    */
-  public function setCache($cache_key, $data) {
-    $this->cache($cache_key, $data, FALSE, NULL, $this->getCacheTags());
+  public function setCache($cache_key, $data): mixed {
+    return $this->cache($cache_key, $data, FALSE, NULL, $this->getCacheTags());
   }
 
   /**
@@ -252,43 +256,22 @@ abstract class FabricQueryBase extends PluginBase implements FabricQueryPluginIn
    *   name and fetch properties as the value.
    */
   public function getBaseTypeDefinitions(): array {
-    // Most of the base types share the same properties.
-    $properties = ['Id', 'Name', 'Description'];
     $base_type_definitions = [
-      'ageGroups' => [AgeGroup::class, $properties],
-      'calcMethods' => [CalculationMethod::class, $properties],
-      'categoryTypes' => [CategoryType::class, $properties],
-      'entityTypes' => [EntityType::class, ['Id', 'Name', 'Alias']],
-      'genders' => [Gender::class, $properties],
-      'healthInterventionCategories' => [HealthInterventionCategory::class, $properties],
-      'metricTypes' => [MetricType::class, ['Id', 'Name', 'OtherName', 'HPCType']],
-      'populationStatuses' => [PopulationStatus::class, $properties],
-      'resourceTypes' => [ResourceType::class, $properties],
-      'sectors' => [Sector::class, ['Id', 'Name', 'SectorType', 'SectorCode']],
-      'settlementTypes' => [SettlementType::class, $properties],
-      'units' => [Unit::class, ['Id', 'Name', 'NameFrench']],
+      'ageGroups' => AgeGroup::class,
+      'calcMethods' => CalculationMethod::class,
+      'categoryTypes' => CategoryType::class,
+      'entityTypes' => EntityType::class,
+      'genders' => Gender::class,
+      'healthInterventionCategories' => HealthInterventionCategory::class,
+      'metricTypes' => MetricType::class,
+      'populationStatuses' => PopulationStatus::class,
+      'resourceTypes' => ResourceType::class,
+      'sectors' => Sector::class,
+      'settlementTypes' => SettlementType::class,
+      'units' => Unit::class,
     ];
     ksort($base_type_definitions);
     return $base_type_definitions;
-  }
-
-  /**
-   * Fetch a single base type from the Fabric backend.
-   *
-   * @param string $namespace
-   *   The query namespace.
-   *
-   * @return array|false
-   *   An array of result objects, or FALSE on failure.
-   */
-  public function fetchBaseType($namespace) {
-    $base_types = $this->getBaseTypeDefinitions();
-    if (empty($base_types[$namespace])) {
-      return FALSE;
-    }
-    [$class_name, $items] = $base_types[$namespace];
-    $objects = $this->fabricClient->createQuery($namespace, $items)->execute();
-    return $objects ? $this->buildResultObjects($objects, $class_name) : FALSE;
   }
 
   /**
@@ -298,20 +281,30 @@ abstract class FabricQueryBase extends PluginBase implements FabricQueryPluginIn
     if ($this->baseTypes !== NULL) {
       return;
     }
-    // Get the base type definitions, so we know what to query and what objetct
+    // Get the base type definitions, so we know what to query and which object
     // to build.
     $base_types = $this->getBaseTypeDefinitions();
 
-    $queries = array_map(fn($key, $def) => $this->fabricClient->createQuery($key, end($def)), array_keys($base_types), $base_types);
+    $queries = array_map(fn($key, $class) => $this->fabricClient->createQuery($key, $class::getGraphQlItems()), array_keys($base_types), $base_types);
     $data = $this->fabricClient->executeMultiple($queries);
     $this->baseTypes = [];
     if ($data === FALSE) {
       return;
     }
-    foreach ($base_types as $query_key => $def) {
-      $class_name = reset($def);
+    foreach ($base_types as $query_key => $class_name) {
       $this->baseTypes[$query_key] = !empty($data[$query_key]) ? $this->buildResultObjects($data[$query_key], $class_name) : [];
     }
+  }
+
+  /**
+   * Get all base types from the API.
+   *
+   * @return array
+   *   An array of arrays.
+   */
+  public function getBaseTypes(): array {
+    $this->fetchBaseTypes();
+    return $this->baseTypes ?? [];
   }
 
   /**
@@ -397,7 +390,7 @@ abstract class FabricQueryBase extends PluginBase implements FabricQueryPluginIn
     }
     $items = $this->fabricClient->createQuery('relationships')
       ->setFilters($filters)
-      ->setItems(Relationship::GRAPHQL_DIMENSION_ITEMS)
+      ->setItems(Relationship::getGraphQlItems())
       ->execute();
     return $items ? $this->buildResultObjects($items, Relationship::class) : [];
   }
