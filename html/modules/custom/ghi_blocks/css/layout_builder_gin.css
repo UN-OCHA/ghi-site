@@ -5,7 +5,7 @@
  *   probably frontend related.
  */
 input[type="checkbox"][disabled="disabled"] {
-  background-color: var(--colorGinDisabled) !important;
+  background-color: var(--gin-color-disabled) !important;
 }
 input[type="checkbox"][disabled="disabled"]:not(:checked) {
   background-image: none !important;
@@ -30,7 +30,7 @@ input[type="checkbox"][disabled="disabled"]:not(:checked) {
   position: absolute;
   outline-width: 1px !important;
   outline-style: solid !important;
-  outline-color: var(--colorGinFormElementBorder);
+  outline-color: var(--gin-border-color-form-element);
   border-radius: 2px;
   border: 0 !important;
   width: calc(100% + 2rem);
@@ -42,7 +42,7 @@ input[type="checkbox"][disabled="disabled"]:not(:checked) {
 }
 #layout-builder .layout-builder__section:hover:after {
   outline-width: 2px !important;
-  outline-color: var(--colorGinPrimary);
+  outline-color: var(--gin-color-primary);
 }
 #layout-builder .layout-builder__section:after {
   content: none !important;
@@ -51,17 +51,17 @@ input[type="checkbox"][disabled="disabled"]:not(:checked) {
 #layout-builder .layout-builder__section > .layout-builder__link {
   top: -1.5rem !important;
   display: block !important;
-  color: var(--colorGinFormElementBorder);
+  color: var(--gin-border-color-form-element);
 }
 #layout-builder .layout-builder__section .layout-builder__link--remove {
-  background-color: var(--colorGinFormElementBorder);
+  background-color: var(--gin-border-color-form-element);
   left: -10px;
 }
 #layout-builder .layout-builder__section .layout-builder__link--configure {
   left: 10px !important;
 }
 #layout-builder:hover .layout-builder__section:hover .layout-builder__link--configure:after {
-  background-color: var(--colorGinFormElementBorder);
+  background-color: var(--gin-border-color-form-element);
 }
 
 .layout-builder__section:hover:after {
@@ -91,7 +91,7 @@ input[type="checkbox"][disabled="disabled"]:not(:checked) {
   font-size: .79em
 }
 .glb-button.is-disabled {
-  color: var(--colorGinDisabledText) !important;
+  color: var(--gin-color-disabled-text) !important;
   cursor: not-allowed !important;
 }
 
