@@ -7,7 +7,7 @@ namespace Drupal\hpc_api\ApiObjects\Types;
  */
 class MetricType extends BaseType {
 
-  const GRAPHQL_ITEMS = ['Id', 'Name', 'OtherName', 'HPCType'];
+  const GRAPHQL_ITEMS = ['Id', 'Name', 'OtherName', 'NameFr', 'NameEs', 'HPCType'];
 
   /**
    * {@inheritdoc}
@@ -19,6 +19,10 @@ class MetricType extends BaseType {
       'name' => $data->Name,
       'machine_name' => $data->HPCType ?? NULL,
       'label' => $data->OtherName ?? NULL,
+      'locale' => (object) [
+        'fr' => $data->NameFr,
+        'es' => $data->NameEs,
+      ],
     ];
   }
 
@@ -46,6 +50,19 @@ class MetricType extends BaseType {
       'Population' => 'totalPopulation',
     ];
     return $map[$this->getName()] ?? lcfirst(str_replace(' ', '', $this->getName()));
+  }
+
+  /**
+   * Match a metric against the given string.
+   *
+   * @param string $string
+   *   The string to match for.
+   *
+   * @return bool
+   *   TRUE if string matches any of the labels, FALSE otherwise.
+   */
+  public function matches($string): bool {
+    return strtolower($string) == strtolower($this->map->locale->fr) || strtolower($string) == strtolower($this->map->locale->es) || strtolower($string) == strtolower($this->map->name);
   }
 
 }

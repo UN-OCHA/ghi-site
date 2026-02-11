@@ -346,16 +346,6 @@ class DataAttachment extends AttachmentBase implements DataAttachmentInterface {
   }
 
   /**
-   * Get the metric types from the totals.
-   *
-   * @return string[]
-   *   An array of metric type machine names used in the totals.
-   */
-  public function getTotalMetricTypes(): array {
-    return array_map(fn ($item) => $item->getMetric()->getMachineName(), $this->getTotals());
-  }
-
-  /**
    * Get the fields that represent goal metrics.
    *
    * @return string[]
