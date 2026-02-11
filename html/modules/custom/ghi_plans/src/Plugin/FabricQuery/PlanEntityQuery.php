@@ -34,22 +34,24 @@ class PlanEntityQuery extends FabricQueryBase {
   public function getEntity($entity_type, $entity_id): ?PlanEntityInterface {
     switch ($entity_type) {
       case 'governingEntity':
-        $items = $this->fabricClient->createQuery('coordinationEntities', GoverningEntity::getGraphQlItems())
+        $items = $this->fabricClient->createQuery('coordinationEntities', GoverningEntity::getGraphQlItems(), NULL, 1)
           ->setFilters([
             'Id' => $entity_id,
             'RecordStatus' => 'Active',
           ])
           ->execute();
-        return count($items) == 1 ? new GoverningEntity(reset($items)) : NULL;
+        $objects = $this->buildResultObjects($items, GoverningEntity::class);
+        return count($objects) == 1 ? reset($objects) : NULL;
 
       case 'planEntity':
-        $items = $this->fabricClient->createQuery('logframeEntities', PlanEntity::getGraphQlItems())
+        $items = $this->fabricClient->createQuery('logframeEntities', PlanEntity::getGraphQlItems(), NULL, 1)
           ->setFilters([
             'Id' => $entity_id,
             'RecordStatus' => 'Active',
           ])
           ->execute();
-        return count($items) == 1 ? new PlanEntity(reset($items)) : NULL;
+        $objects = $this->buildResultObjects($items, PlanEntity::class);
+        return count($objects) == 1 ? reset($objects) : NULL;
     }
 
     return NULL;

@@ -161,7 +161,7 @@ function ghi_blocks_preprocess_plan_operational_presence_map(&$variables) {
  */
 function ghi_blocks_preprocess_plan_cluster_contacts(&$variables) {
   foreach ($variables['contacts'] as $key => $contact) {
-    /** @var \Drupal\ghi_plans\ApiObjects\Attachments\ContactAttachment $contact */
+    /** @var \Drupal\ghi_plans\ApiObjects\Contact $contact */
     $variables['contacts'][$key] = $contact->toArray();
   }
 }

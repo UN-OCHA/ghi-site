@@ -34,7 +34,6 @@ class AttachmentPrototype extends ApiObjectBase {
   const LABEL_MAP = [
     'textwebcontent' => 'Text (web content)',
     'filewebcontent' => 'File (web content)',
-    'contact' => 'Contact',
     'cost' => 'Cost',
     'indicator' => 'Indicator',
     'caseload' => 'Caseload',
