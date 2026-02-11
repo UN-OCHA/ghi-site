@@ -35,6 +35,7 @@ class GoverningEntity extends EntityObjectBase {
   protected function map() {
     $data = $this->getRawData();
     $prototype = !empty($data->HpcEntityPrototypeId ?? NULL) ? PlanEntityHelper::getEntityPrototype($data->HpcEntityPrototypeId) : NULL;
+    $contacts = array_filter($data->coordinationEntityContact?->items ?? [], fn ($item) => !empty($item->contact));
 
     return (object) [
       'id' => $data->Id,
@@ -58,7 +59,7 @@ class GoverningEntity extends EntityObjectBase {
       'composed_reference' => $data->ComposedReference ?? NULL,
       'sort_key' => ($prototype?->getOrderNumber() ?? '') . ($data->CustomReference ?? NULL),
       'icon' => NULL,
-      'contacts' => array_map(fn ($item) => new Contact($item->contact), $data->coordinationEntityContact?->items ?? []),
+      'contacts' => array_map(fn ($item) => new Contact($item->contact), $contacts),
 
       // Legacy support.
       'custom_id' => $data->CustomReference,
