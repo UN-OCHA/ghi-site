@@ -113,7 +113,22 @@ class Measurement extends ApiObjectBase implements MeasurementInterface {
    */
   public function getDataPointValue($index) {
     // @todo Add calculated fields.
-    $metric_type = $this->getPrototype()->getOriginalFields()[$index]?->type;
+    $original_field = $this->getPrototype()->getOriginalFields()[$index];
+    $metric_type = $original_field?->type;
+
+    $field_types = $this->getPrototype()->getFieldTypes();
+    if (count(array_intersect($field_types, [$metric_type])) > 1) {
+      // There is uncertainty here, so we match for the label. The uncertainty
+      // comes from older attachments that have duplicated metric types,
+      // example attachment 38036, with 2 measure metrics of type "measure".
+      foreach ($this->getTotals() as $item) {
+        if (!$item->getMetric()->matches($original_field->name->en)) {
+          continue;
+        }
+        return $this->values[$item->getMetric()->getMachineName()] ?? NULL;
+      }
+    }
+
     return $this->values[$metric_type] ?? NULL;
   }
 
