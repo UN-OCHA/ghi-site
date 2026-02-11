@@ -35,10 +35,6 @@ class PlanClusterHeader extends GHIBlockBase implements MultiStepFormBlockInterf
   public static function metadata(): ?HPCBlockMetadata {
     return new HPCBlockMetadata(
       usesTitle: FALSE,
-      dataSources: [
-        'entities' => 'hpc_api:plan_entities_query',
-        'attachment' => 'hpc_api:attachment_query',
-      ],
       configForms: [
         'attachment' => [
           'title' => 'Attachment',
@@ -59,40 +55,17 @@ class PlanClusterHeader extends GHIBlockBase implements MultiStepFormBlockInterf
   public function buildContent() {
     // Retrieve the attachments.
     $conf = $this->getBlockConfig();
-    $attachment_id = $conf['attachment']['attachment_id'] ?? NULL;
-
-    /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\AttachmentQuery $attachment_query */
-    $attachment_query = $this->getQueryHandler('attachment');
-    $attachment = $attachment_id ? $attachment_query->getAttachment($attachment_id) : NULL;
 
     $base_object = $this->getCurrentBaseObject();
     $contacts = $base_object instanceof GoverningEntity ? $base_object->getSourceObject()?->getContacts() : NULL;
 
-    if (!$contacts && !$attachment) {
+    if (!$contacts) {
       return;
     }
 
     $build = [
       '#type' => 'container',
     ];
-
-    if ($attachment) {
-      $build[] = [
-        'attachment' => [
-          '#type' => 'html_tag',
-          '#tag' => 'div',
-          '#attributes' => [
-            'class' => [
-              'cluster-description',
-            ],
-          ],
-          'content' => [
-            '#type' => 'markup',
-            '#markup' => Markup::create($attachment->content),
-          ],
-        ],
-      ];
-    }
 
     if ($contacts) {
       $build[] = [
@@ -126,7 +99,7 @@ class PlanClusterHeader extends GHIBlockBase implements MultiStepFormBlockInterf
    * {@inheritdoc}
    */
   public function getDefaultSubform($is_new = FALSE) {
-    return 'attachment';
+    return 'display';
   }
 
   /**
@@ -135,10 +108,9 @@ class PlanClusterHeader extends GHIBlockBase implements MultiStepFormBlockInterf
   public function attachmentForm(array $form, FormStateInterface $form_state) {
     $options = [];
 
-    // Retrieve the attachments.
-    /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\PlanEntitiesQuery $query */
-    $query = $this->getQueryHandler('entities');
-    $attachments = $this->getCurrentPlanObject() ? $query->getWebContentTextAttachments($this->getCurrentBaseObject()) : NULL;
+    // Retrieve the attachments. Text attachments have been removed, just
+    // keeping this here for reference.
+    $attachments = NULL;
 
     if (!empty($attachments)) {
       foreach ($attachments as $attachment) {

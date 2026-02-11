@@ -7,7 +7,6 @@ use Drupal\ghi_plans\ApiObjects\Attachments\CaseloadAttachment;
 use Drupal\ghi_plans\ApiObjects\Attachments\FileAttachment;
 use Drupal\ghi_plans\ApiObjects\Attachments\FinancialAttachment;
 use Drupal\ghi_plans\ApiObjects\Attachments\IndicatorAttachment;
-use Drupal\ghi_plans\ApiObjects\Attachments\TextAttachment;
 use Drupal\ghi_plans\Exceptions\InvalidAttachmentTypeException;
 use Drupal\ghi_plans\Traits\PlanQueryTrait;
 
@@ -84,9 +83,6 @@ class AttachmentHelper {
 
       case 'filewebcontent':
         return new FileAttachment($attachment);
-
-      case 'textwebcontent':
-        return new TextAttachment($attachment);
 
       default:
         throw new InvalidAttachmentTypeException(sprintf('Unknown attachment type: %s', $attachment_type));
