@@ -2,6 +2,7 @@
 
 namespace Drupal\ghi_plans\ApiObjects\Entities;
 
+use Drupal\ghi_plans\ApiObjects\Contact;
 use Drupal\ghi_plans\Helpers\PlanEntityHelper;
 
 /**
@@ -24,7 +25,7 @@ class GoverningEntity extends EntityObjectBase {
     'CustomReference',
     'ComposedReference',
     // phpcs:disable Squiz.Arrays.ArrayDeclaration.KeySpecified
-    "coordinationEntityContact" => ['items' => ['contact' => ['Name', 'Email']]],
+    "coordinationEntityContact" => ['items' => ['contact' => Contact::GRAPHQL_ITEMS]],
     // phpcs:enable Squiz.Arrays.ArrayDeclaration.KeySpecified
   ];
 
@@ -57,6 +58,7 @@ class GoverningEntity extends EntityObjectBase {
       'composed_reference' => $data->ComposedReference ?? NULL,
       'sort_key' => ($prototype?->getOrderNumber() ?? '') . ($data->CustomReference ?? NULL),
       'icon' => NULL,
+      'contacts' => array_map(fn ($item) => new Contact($item->contact), $data->coordinationEntityContact?->items ?? []),
 
       // Legacy support.
       'custom_id' => $data->CustomReference,
@@ -123,6 +125,16 @@ class GoverningEntity extends EntityObjectBase {
    */
   public function getPrototypeName(): ?string {
     return $this->entity_prototype_name;
+  }
+
+  /**
+   * Get the contacts for this entity.
+   *
+   * @return \Drupal\ghi_plans\ApiObjects\Contact[]
+   *   An array of contact objects.
+   */
+  public function getContacts() {
+    return $this->map->contacts;
   }
 
 }

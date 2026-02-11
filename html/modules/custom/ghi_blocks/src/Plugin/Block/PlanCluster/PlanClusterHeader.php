@@ -9,6 +9,8 @@ use Drupal\ghi_blocks\Interfaces\MultiStepFormBlockInterface;
 use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
 use Drupal\Core\Block\Attribute\Block;
 use Drupal\Core\Plugin\Context\EntityContextDefinition;
+use Drupal\ghi_plans\Entity\GoverningEntity;
+use Drupal\ghi_plans\Traits\PlanQueryTrait;
 use Drupal\hpc_common\Plugin\HPCBlockMetadata;
 
 /**
@@ -24,6 +26,8 @@ use Drupal\hpc_common\Plugin\HPCBlockMetadata;
   ],
 )]
 class PlanClusterHeader extends GHIBlockBase implements MultiStepFormBlockInterface {
+
+  use PlanQueryTrait;
 
   /**
    * {@inheritdoc}
@@ -61,9 +65,8 @@ class PlanClusterHeader extends GHIBlockBase implements MultiStepFormBlockInterf
     $attachment_query = $this->getQueryHandler('attachment');
     $attachment = $attachment_id ? $attachment_query->getAttachment($attachment_id) : NULL;
 
-    /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\PlanEntitiesQuery $plan_entities_query */
-    $plan_entities_query = $this->getQueryHandler('entities');
-    $contacts = $plan_entities_query->getContactAttachments($this->getCurrentBaseObject());
+    $base_object = $this->getCurrentBaseObject();
+    $contacts = $base_object instanceof GoverningEntity ? $base_object->getSourceObject()?->getContacts() : NULL;
 
     if (!$contacts && !$attachment) {
       return;
