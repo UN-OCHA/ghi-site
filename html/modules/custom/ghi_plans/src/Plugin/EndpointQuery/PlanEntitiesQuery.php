@@ -221,26 +221,6 @@ class PlanEntitiesQuery extends EndpointQueryBase {
   }
 
   /**
-   * Get webcontent text attachments.
-   *
-   * @param \Drupal\Core\Entity\ContentEntityInterface $context_object
-   *   The current context object.
-   *
-   * @return \Drupal\ghi_plans\ApiObjects\Attachments\TextAttachment[]
-   *   An array of attachment objects for the given context.
-   */
-  public function getWebContentTextAttachments(ContentEntityInterface $context_object) {
-    $attachments = [];
-    foreach ($this->getAttachments($context_object, ['type' => 'textWebContent']) as $attachment) {
-      if (empty($attachment->attachmentVersion->value->content ?? '')) {
-        continue;
-      }
-      $attachments[$attachment->id] = AttachmentHelper::processAttachment($attachment);
-    }
-    return $attachments;
-  }
-
-  /**
    * Get available plan entities for the given context.
    *
    * @param \Drupal\Core\Entity\ContentEntityInterface $context_object
