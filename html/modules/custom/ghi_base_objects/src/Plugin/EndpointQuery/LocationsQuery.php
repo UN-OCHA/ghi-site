@@ -74,39 +74,6 @@ class LocationsQuery extends EndpointQueryBase {
   }
 
   /**
-   * Get a location inside a country.
-   *
-   * @param int $country_id
-   *   A country id known to the API.
-   * @param int $location_id
-   *   A location id known to the API.
-   *
-   * @return \Drupal\ghi_base_objects\ApiObjects\Location|null
-   *   A location.
-   */
-  public function getCountryLocation($country_id, $location_id) {
-    // First get the location.
-    $this->setPlaceholder('location_id', $location_id);
-    $this->endpointQuery->setEndpointArguments([
-      'maxLevel' => 0,
-      'includeExpired' => 'true',
-    ], function ($item) {
-      return $item !== NULL;
-    });
-    $data = $this->getData();
-    if (empty($data)) {
-      return NULL;
-    }
-    $location = new Location($data);
-    // Then get the country and make a simple sanity check.
-    $country = $this->getCountry($country_id, 0);
-    if (!$country || $country->id() || $location->getParentCountry()->id()) {
-      return NULL;
-    }
-    return $location;
-  }
-
-  /**
    * Get the coordinations for all locations of the country.
    *
    * @param int $country_id
@@ -155,7 +122,6 @@ class LocationsQuery extends EndpointQueryBase {
         continue;
       }
       $locations[$item->id] = new Location($item);
-      $locations[$item->id]->setParentCountry($country);
       $this->setCacheTags($locations[$item->id]->getCacheTags());
     }
 

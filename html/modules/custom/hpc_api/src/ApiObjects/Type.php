@@ -1,15 +1,16 @@
 <?php
 
-namespace Drupal\hpc_api\ApiObjects\Types;
-
-use Drupal\hpc_api\ApiObjects\ApiObjectBase;
+namespace Drupal\hpc_api\ApiObjects;
 
 /**
  * Base class for API type objects.
  */
-abstract class BaseType extends ApiObjectBase {
+abstract class Type extends ApiObjectBase implements TypeInterface {
 
-  public const GRAPHQL_ITEMS = ['Id', 'Name', 'Description'];
+  /**
+   * Define the dimension items used in queries.
+   */
+  const GRAPHQL_ITEMS = ['Id', 'Name', 'Description'];
 
   /**
    * {@inheritdoc}
@@ -24,20 +25,14 @@ abstract class BaseType extends ApiObjectBase {
   }
 
   /**
-   * Get the name of the type.
-   *
-   * @return string
-   *   The name.
+   * {@inheritdoc}
    */
   public function getName(): string {
     return $this->name;
   }
 
   /**
-   * Get the description of the type.
-   *
-   * @return string|null
-   *   The description.
+   * {@inheritdoc}
    */
   public function getDescription(): ?string {
     return $this->description;

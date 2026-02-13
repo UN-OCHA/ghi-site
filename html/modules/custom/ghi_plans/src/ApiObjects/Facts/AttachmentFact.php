@@ -122,27 +122,46 @@ class AttachmentFact extends ApiObjectBase {
   }
 
   /**
-   * Get the category ideas that a fact applies to.
+   * Get an identifier for the used categories.
    *
-   * @return int[]
-   *   An array of category ids.
+   * @return string|null
+   *   A category identifier string.
    */
-  public function getCategoryIds() {
+  public function getCategoryIdentifier(): ?string {
+    $categories = $this->getCategories();
+    if (empty($categories)) {
+      return NULL;
+    }
+    return implode(':', array_map(fn ($category) => $category->getUuid(), $categories));
+  }
+
+  /**
+   * Get the categories that a fact applies to.
+   *
+   * @return \Drupal\hpc_api\ApiObjects\CategoryInterface[]
+   *   An array of category.
+   */
+  public function getCategories() {
     $category_properties = [
-      'gender_id',
-      'age_group_id',
-      'population_status_id',
-      'settlement_type_id',
-      'disability_status_id',
-      'health_intervention_category_id',
-      'delivery_modality_id',
+      'age_group_id' => 'ageGroups',
+      'delivery_modality_id' => 'deliveryModalities',
+      'disability_status_id' => 'disabilityStatuses',
+      'gender_id' => 'genders',
+      'health_intervention_category_id' => 'healthInterventionCategories',
+      'population_status_id' => 'populationStatuses',
+      'settlement_type_id' => 'settlementTypes',
     ];
+    $category_query = $this->getCategoryQuery();
     $categories = [];
-    foreach ($category_properties as $property_name) {
+    foreach ($category_properties as $property_name => $namespace) {
       if (empty($this->map->$property_name)) {
         continue;
       }
-      $categories[$property_name] = $this->map->$property_name;
+      $category = $category_query->getCategory($namespace, $this->map->$property_name);
+      if (!$category) {
+        continue;
+      }
+      $categories[$category->id()] = $category;
     }
     return $categories;
   }

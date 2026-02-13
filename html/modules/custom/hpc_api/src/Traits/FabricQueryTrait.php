@@ -2,6 +2,8 @@
 
 namespace Drupal\hpc_api\Traits;
 
+use Drupal\hpc_api\Plugin\FabricQuery\BaseTypeQuery;
+use Drupal\hpc_api\Plugin\FabricQuery\CategoryQuery;
 use Drupal\hpc_api\Query\FabricQueryBase;
 
 /**
@@ -26,6 +28,28 @@ trait FabricQueryTrait {
       $queries[$plugin_id] = $query instanceof FabricQueryBase ? $query : NULL;
     }
     return $queries[$plugin_id];
+  }
+
+  /**
+   * Get the country query.
+   *
+   * @return \Drupal\hpc_api\Plugin\FabricQuery\BaseTypeQuery|null
+   *   The category query or NULL.
+   */
+  protected static function getBaseTypeQuery(): ?BaseTypeQuery {
+    $query = self::getQueryInstance('base_type');
+    return $query instanceof BaseTypeQuery ? $query : NULL;
+  }
+
+  /**
+   * Get the country query.
+   *
+   * @return \Drupal\hpc_api\Plugin\FabricQuery\CategoryQuery|null
+   *   The category query or NULL.
+   */
+  protected static function getCategoryQuery(): ?CategoryQuery {
+    $query = self::getQueryInstance('category');
+    return $query instanceof CategoryQuery ? $query : NULL;
   }
 
   /**

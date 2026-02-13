@@ -22,6 +22,7 @@ use Drupal\ghi_geojson\GeoJsonLocationInterface;
 use Drupal\ghi_plans\ApiObjects\Attachments\AttachmentInterface;
 use Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment;
 use Drupal\ghi_plans\Traits\AttachmentFilterTrait;
+use Drupal\ghi_plans\Traits\DisaggregatedDataTrait;
 use Drupal\ghi_plans\Traits\PlanReportingPeriodTrait;
 use Drupal\ghi_sections\Entity\SectionNodeInterface;
 use Drupal\ghi_subpages\Entity\SubpageNodeInterface;
@@ -43,11 +44,12 @@ use Drupal\hpc_downloads\Interfaces\HPCDownloadPNGInterface;
 )]
 class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterface, OverrideDefaultTitleBlockInterface, HPCDownloadPNGInterface, ConfigValidationInterface {
 
-  use PlanReportingPeriodTrait;
-  use BlockCommentTrait;
-  use GlobalMapTrait;
-  use ConfigValidationTrait;
   use AttachmentFilterTrait;
+  use BlockCommentTrait;
+  use ConfigValidationTrait;
+  use DisaggregatedDataTrait;
+  use GlobalMapTrait;
+  use PlanReportingPeriodTrait;
 
   const STYLE_CIRCLE = 'circle';
 
@@ -94,6 +96,9 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
     $focus_country = $this->getCurrentPlanObject()->getFocusCountry();
     if ($focus_country instanceof GeoJsonLocationInterface) {
       $outline_country = $focus_country->getGeoJsonLocationData();
+      // @todo Remove BC layer here when done connecting fabric.
+      $outline_country['location_id'] = $outline_country['id'];
+      $outline_country['location_name'] = $outline_country['name'];
     }
 
     if (empty($map['data'])) {
@@ -193,7 +198,7 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
     $configured_reporting_periods = $this->getConfiguredReportingPeriods($plan_id);
 
     $disaggregated_data = $attachment->getDisaggregatedData($reporting_period_id);
-    foreach ($disaggregated_data as $metric_index => $metric_item) {
+    foreach ($this->transformDisaggregatedMapData($disaggregated_data, $attachment) as $metric_index => $metric_item) {
       if ($attachment->metricItemIsEmpty($metric_item)) {
         continue;
       }
@@ -412,7 +417,6 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
         continue;
       }
       $location_data[$key] = $location['map_data'];
-
       $location['categories'] = array_filter($location['categories'], function ($category) {
         return $category['data'] !== NULL;
       });

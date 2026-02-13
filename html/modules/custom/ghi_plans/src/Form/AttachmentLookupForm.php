@@ -38,7 +38,7 @@ class AttachmentLookupForm extends BaseLookupForm {
     ];
 
     $attachment_id = $form_state->getValue('attachment_id');
-    if ($attachment_id && $attachment = $this->getAttachmentQuery()?->disableCache()?->getAttachment($attachment_id)) {
+    if ($attachment_id && $attachment = $this->getAttachmentQuery()?->getAttachment($attachment_id)) {
       if ($attachment instanceof DataAttachment) {
         $attachment->assureDisaggregatedData();
       }

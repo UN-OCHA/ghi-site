@@ -16,15 +16,13 @@ use Drupal\hpc_api\Query\FabricQueryBase;
 class BaseTypeQuery extends FabricQueryBase {
 
   /**
-   * Retrieve the base types.
+   * Get the base type defintions.
    *
    * @return array
-   *   An array of arrays, keyed by the query key for the base type, the values
-   *   are arrays of result objects.
+   *   An array mapping the graphql query name to the responsible class.
    */
-  public function getBaseTypes(): array {
-    $this->fetchBaseTypes();
-    return $this->baseTypes;
+  public function getBaseTypeDefinitions(): array {
+    return self::BASE_TYPES;
   }
 
 }

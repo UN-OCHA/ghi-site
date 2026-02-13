@@ -6,6 +6,7 @@ use Drupal\Core\Render\Markup;
 use Drupal\ghi_plans\ApiObjects\Facts\MeasurementFact;
 use Drupal\ghi_plans\ApiObjects\Prototypes\AttachmentPrototype;
 use Drupal\ghi_plans\Helpers\PlanEntityHelper;
+use Drupal\ghi_plans\Traits\DisaggregatedDataTrait;
 use Drupal\ghi_plans\Traits\PlanQueryTrait;
 use Drupal\hpc_api\ApiObjects\ApiObjectBase;
 
@@ -15,6 +16,7 @@ use Drupal\hpc_api\ApiObjects\ApiObjectBase;
 class Measurement extends ApiObjectBase implements MeasurementInterface {
 
   use PlanQueryTrait;
+  use DisaggregatedDataTrait;
 
   /**
    * The attachment prototype.
@@ -70,7 +72,6 @@ class Measurement extends ApiObjectBase implements MeasurementInterface {
       'composed_reference' => $measurement->ComposedReference ?? NULL,
       'description' => $measurement->Name ?? NULL,
       'values' => $this->extractValues(),
-      // 'disaggregated' => $this->extractDisaggregatedValues(),
       'unit' => ($measurement->UnitId ?? NULL) ? $query->getUnit($measurement->UnitId) : NULL,
       'monitoring_period' => $measurement->MeasurementPeriodId ?? NULL,
       'has_disaggregated_data' => !empty($measurement->HasDisaggregatedData),
@@ -163,6 +164,37 @@ class Measurement extends ApiObjectBase implements MeasurementInterface {
     $data = $this->getRawData();
     // Extract the values.
     return array_map(fn ($item) => new MeasurementFact($item), $data->totals ?? []);
+  }
+
+  /**
+   * Get the disaggregated data from the attachment.
+   *
+   * @return object
+   *   A disaggregated data object.
+   */
+  public function getDisaggregated(): object {
+    $this->assureDisaggregatedData();
+    $data = $this->getRawData();
+    $facts = array_map(fn ($item) => new MeasurementFact($item), $data->disaggregated ?? []);
+    return $this->buildDisaggregatedData($facts);
+  }
+
+  /**
+   * Assure that the disaggregated data for a measurement has been fetched.
+   */
+  public function assureDisaggregatedData() {
+    $data = $this->getRawData();
+    if (property_exists($data, 'disaggregated')) {
+      // Nothing to do.
+      return;
+    }
+    $attachment_query = $this->getAttachmentQuery();
+    $data->disaggregated = $attachment_query?->getMeasurementDisaggregatedData($this->id());
+    if (!$data) {
+      return;
+    }
+    $this->setRawData($data);
+    $this->updateMap();
   }
 
   /**

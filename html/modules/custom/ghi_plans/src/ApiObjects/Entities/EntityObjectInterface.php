@@ -97,4 +97,12 @@ interface EntityObjectInterface extends PlanEntityInterface {
    */
   public function getPlanId();
 
+  /**
+   * Get the sort key.
+   *
+   * @return string|int
+   *   The sort key.
+   */
+  public function getSortKey(): string|int;
+
 }

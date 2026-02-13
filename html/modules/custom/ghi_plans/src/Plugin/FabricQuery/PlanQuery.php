@@ -26,13 +26,6 @@ class PlanQuery extends FabricQueryBase {
   /**
    * The plan types.
    *
-   * @var \Drupal\hpc_api\ApiObjects\Types\PlanType[]|null
-   */
-  protected $planTypes = NULL;
-
-  /**
-   * The plan types.
-   *
    * @var \Drupal\hpc_api\ApiObjects\Types\PlanCostingType[]|null
    */
   protected $planCostingTypes = NULL;
@@ -152,7 +145,7 @@ class PlanQuery extends FabricQueryBase {
    */
   protected function getPlanTypeByName($name): ?PlanType {
     $this->fetchPlanTypes();
-    foreach ($this->planTypes as $plan_type) {
+    foreach ($this->getPlanTypes() as $plan_type) {
       if ($plan_type->getName() == $name) {
         return $plan_type;
       }

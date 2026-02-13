@@ -6,22 +6,25 @@ use Drupal\Component\Plugin\PluginBase;
 use Drupal\Core\Cache\Cache;
 use Drupal\Core\DependencyInjection\DependencySerializationTrait;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
+use Drupal\hpc_api\ApiObjects\ApiObjectNamespaceInterface;
+use Drupal\hpc_api\ApiObjects\Categories\AgeGroup;
+use Drupal\hpc_api\ApiObjects\Categories\DeliveryModality;
+use Drupal\hpc_api\ApiObjects\Categories\DisabilityStatus;
+use Drupal\hpc_api\ApiObjects\Categories\Gender;
+use Drupal\hpc_api\ApiObjects\Categories\HealthInterventionCategory;
+use Drupal\hpc_api\ApiObjects\Categories\PopulationStatus;
+use Drupal\hpc_api\ApiObjects\Categories\SettlementType;
+use Drupal\hpc_api\ApiObjects\PlanYear;
 use Drupal\hpc_api\ApiObjects\Relationship;
-use Drupal\hpc_api\ApiObjects\Types\AgeGroup;
 use Drupal\hpc_api\ApiObjects\Types\CalculationMethod;
 use Drupal\hpc_api\ApiObjects\Types\CategoryType;
 use Drupal\hpc_api\ApiObjects\Types\EntityType;
-use Drupal\hpc_api\ApiObjects\Types\Gender;
-use Drupal\hpc_api\ApiObjects\Types\HealthInterventionCategory;
 use Drupal\hpc_api\ApiObjects\Types\MetricType;
 use Drupal\hpc_api\ApiObjects\Types\PlanCostingType;
 use Drupal\hpc_api\ApiObjects\Types\PlanType;
-use Drupal\hpc_api\ApiObjects\Types\PlanYear;
-use Drupal\hpc_api\ApiObjects\Types\PopulationStatus;
 use Drupal\hpc_api\ApiObjects\Types\RelationshipType;
 use Drupal\hpc_api\ApiObjects\Types\ResourceType;
 use Drupal\hpc_api\ApiObjects\Types\Sector;
-use Drupal\hpc_api\ApiObjects\Types\SettlementType;
 use Drupal\hpc_api\ApiObjects\Types\Unit;
 use Drupal\hpc_api\Traits\SimpleCacheTrait;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -49,11 +52,34 @@ abstract class FabricQueryBase extends PluginBase implements FabricQueryPluginIn
   const CATEGORY_NAME_PLAN_COSTING = 'PlanCosting';
 
   /**
+   * Base types.
+   */
+  protected const BASE_TYPES = [
+    'calcMethods' => CalculationMethod::class,
+    'categoryTypes' => CategoryType::class,
+    'entityTypes' => EntityType::class,
+    'metricTypes' => MetricType::class,
+    'resourceTypes' => ResourceType::class,
+    'sectors' => Sector::class,
+    'units' => Unit::class,
+  ];
+
+  protected const CATEGORIES = [
+    'ageGroups' => AgeGroup::class,
+    'genders' => Gender::class,
+    'deliveryModalities' => DeliveryModality::class,
+    'disabilityStatuses' => DisabilityStatus::class,
+    'healthInterventionCategories' => HealthInterventionCategory::class,
+    'populationStatuses' => PopulationStatus::class,
+    'settlementTypes' => SettlementType::class,
+  ];
+
+  /**
    * The fabric query builder service.
    *
    * @var \Drupal\hpc_api\Query\FabricClient
    */
-  public $fabricClient;
+  protected $fabricClient;
 
   /**
    * The current user.
@@ -74,35 +100,35 @@ abstract class FabricQueryBase extends PluginBase implements FabricQueryPluginIn
    *
    * @var string[]
    */
-  protected $cacheTags = [];
+  private $cacheTags = [];
 
   /**
    * The base types.
    *
    * @var array|null
    */
-  protected $baseTypes = NULL;
+  private $baseTypes = NULL;
 
   /**
    * The plan years.
    *
    * @var array|null
    */
-  protected $planYears = NULL;
+  private $planYears = NULL;
 
   /**
    * The plan types.
    *
    * @var array|null
    */
-  protected $planTypes = NULL;
+  private $planTypes = NULL;
 
   /**
    * The plan costing types.
    *
    * @var array|null
    */
-  protected $planCostingTypes = NULL;
+  private $planCostingTypes = NULL;
 
   /**
    * {@inheritdoc}
@@ -240,38 +266,32 @@ abstract class FabricQueryBase extends PluginBase implements FabricQueryPluginIn
    *   An array of fabric result objects.
    * @param string $class_name
    *   The name of the class to use when bulding the objects.
+   * @param string $namespace
+   *   Optional namespace to pass on to the result object.
    *
    * @return array
    *   An array of objects.
    */
-  protected function buildResultObjects(array $items, $class_name): array {
-    return array_map(fn($item) => new $class_name($item), $items);
+  protected function buildResultObjects(array $items, $class_name, ?string $namespace = NULL): array {
+    return array_map(function ($item) use ($class_name, $namespace) {
+      $object = new $class_name($item);
+      if ($namespace && $object instanceof ApiObjectNamespaceInterface) {
+        $object->setNamespace($namespace);
+      }
+      return $object;
+    }, $items);
   }
 
   /**
-   * Get the base type defintions.
+   * Retrieve all base types.
    *
-   * @return array
-   *   An array with the graphql query name as the key and an array with class
-   *   name and fetch properties as the value.
+   * @return array|null
+   *   An array of arrays, keyed by the query key for the base type, the values
+   *   are arrays of result objects.
    */
-  public function getBaseTypeDefinitions(): array {
-    $base_type_definitions = [
-      'ageGroups' => AgeGroup::class,
-      'calcMethods' => CalculationMethod::class,
-      'categoryTypes' => CategoryType::class,
-      'entityTypes' => EntityType::class,
-      'genders' => Gender::class,
-      'healthInterventionCategories' => HealthInterventionCategory::class,
-      'metricTypes' => MetricType::class,
-      'populationStatuses' => PopulationStatus::class,
-      'resourceTypes' => ResourceType::class,
-      'sectors' => Sector::class,
-      'settlementTypes' => SettlementType::class,
-      'units' => Unit::class,
-    ];
-    ksort($base_type_definitions);
-    return $base_type_definitions;
+  public function getBaseTypes(): ?array {
+    $this->fetchBaseTypes();
+    return $this->baseTypes;
   }
 
   /**
@@ -283,7 +303,7 @@ abstract class FabricQueryBase extends PluginBase implements FabricQueryPluginIn
     }
     // Get the base type definitions, so we know what to query and which object
     // to build.
-    $base_types = $this->getBaseTypeDefinitions();
+    $base_types = self::BASE_TYPES;
 
     $queries = array_map(fn($key, $class) => $this->fabricClient->createQuery($key, $class::getGraphQlItems()), array_keys($base_types), $base_types);
     $data = $this->fabricClient->executeMultiple($queries);
@@ -294,17 +314,6 @@ abstract class FabricQueryBase extends PluginBase implements FabricQueryPluginIn
     foreach ($base_types as $query_key => $class_name) {
       $this->baseTypes[$query_key] = !empty($data[$query_key]) ? $this->buildResultObjects($data[$query_key], $class_name) : [];
     }
-  }
-
-  /**
-   * Get all base types from the API.
-   *
-   * @return array
-   *   An array of arrays.
-   */
-  public function getBaseTypes(): array {
-    $this->fetchBaseTypes();
-    return $this->baseTypes ?? [];
   }
 
   /**
@@ -596,6 +605,17 @@ abstract class FabricQueryBase extends PluginBase implements FabricQueryPluginIn
       }
     }
     return NULL;
+  }
+
+  /**
+   * Get the plan types.
+   *
+   * @return \Drupal\hpc_api\ApiObjects\Types\PlanType[]
+   *   An array of plan types.
+   */
+  public function getPlanTypes(): array {
+    $this->fetchPlanTypes();
+    return $this->planTypes ?? [];
   }
 
   /**
