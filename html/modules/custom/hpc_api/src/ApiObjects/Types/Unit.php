@@ -2,10 +2,12 @@
 
 namespace Drupal\hpc_api\ApiObjects\Types;
 
+use Drupal\hpc_api\ApiObjects\Type;
+
 /**
  * Class for unit objects.
  */
-class Unit extends BaseType {
+class Unit extends Type {
 
   const GRAPHQL_ITEMS = ['Id', 'Name', 'NameFrench'];
 

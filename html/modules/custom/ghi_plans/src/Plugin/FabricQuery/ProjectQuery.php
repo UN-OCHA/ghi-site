@@ -17,6 +17,8 @@ use Drupal\hpc_common\Helpers\ArrayHelper;
 
 /**
  * Plugin implementation of the 'project' fabric query.
+ *
+ * @todo Add filters to only load accepted projects.
  */
 #[FabricQuery(
   id: 'project',

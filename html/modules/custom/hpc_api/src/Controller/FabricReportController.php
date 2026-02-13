@@ -6,6 +6,7 @@ use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Component\Render\MarkupInterface;
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Render\Markup;
+use Drupal\hpc_api\Traits\FabricQueryTrait;
 use Drupal\hpc_common\Helpers\StringHelper;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -13,6 +14,8 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  * Controller class for a listing files and a delete callback.
  */
 class FabricReportController extends ControllerBase {
+
+  use FabricQueryTrait;
 
   /**
    * The endpoint query to retrieve API data.
@@ -37,25 +40,54 @@ class FabricReportController extends ControllerBase {
    *   A render array.
    */
   public function buildBaseTypeReport() {
-    /** @var \Drupal\hpc_api\Plugin\FabricQuery\BaseTypeQuery $query */
-    $query = $this->fabricQueryManager->createInstance('base_type');
+    $query = $this->getBaseTypeQuery();
+    $definitions = $query->getBaseTypeDefinitions();
+    $base_types = $query->getBaseTypes() ?? [];
+    return $this->buildReport('base types', $definitions, $base_types);
+  }
 
+  /**
+   * Build the content for the category report page.
+   *
+   * @return array
+   *   A render array.
+   */
+  public function buildCategoryReport() {
+    $query = $this->getCategoryQuery();
+    $definitions = $query->getCategoryDefinitions();
+    $categories = $query->getCategories() ?? [];
+    return $this->buildReport('categories', $definitions, $categories);
+  }
+
+  /**
+   * Build a report.
+   *
+   * @param string $label
+   *   The type label for the report.
+   * @param array $definitions
+   *   An array of definitions.
+   * @param array $collection
+   *   An array of arrays, keyed by the query key, values are the items.
+   *
+   * @return array
+   *   A render array.
+   */
+  private function buildReport($label, $definitions, $collection) {
     $build = [
       '#type' => 'container',
       'header' => [
         '#type' => 'html_tag',
         '#tag' => 'p',
-        '#value' => $this->t('This page lists all base types that are defined in the fabric data backend and that are known to this website.'),
+        '#value' => $this->t('This page lists all @report_type that are defined in the fabric data backend and that are known to this website.', [
+          '@report_type' => $label,
+        ]),
       ],
     ];
-
-    $base_type_definitions = $query->getBaseTypeDefinitions();
-    $base_types = $query->getBaseTypes();
-    foreach ($base_types as $query_key => $items) {
-      $class_name = $base_type_definitions[$query_key];
+    foreach ($collection as $query_key => $items) {
+      $class_name = $definitions[$query_key];
       $properties = $class_name::getGraphQlItems();
       $rows = [];
-      /** @var \Drupal\hpc_api\ApiObjects\Types\BaseType[] $items */
+      /** @var \Drupal\hpc_api\ApiObjectInterface[] $items */
       foreach ($items as $item) {
         $raw_data = $item->getRawData();
         $row = [];
@@ -82,7 +114,6 @@ class FabricReportController extends ControllerBase {
         ],
       ];
     }
-
     return $build;
   }
 

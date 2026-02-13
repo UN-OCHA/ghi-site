@@ -138,4 +138,11 @@ class GoverningEntity extends EntityObjectBase {
     return $this->map->contacts;
   }
 
+  /**
+   * {@inheritdoc}
+   */
+  public function getSortKey(): string|int {
+    return $this->sort_key;
+  }
+
 }

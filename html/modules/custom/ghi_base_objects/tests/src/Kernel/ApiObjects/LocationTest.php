@@ -161,32 +161,6 @@ class LocationTest extends BaseObjectKernelTestBase {
   }
 
   /**
-   * Test country-specific functionality.
-   */
-  public function testCountryFunctionality(): void {
-    // Test country (admin level 0).
-    $country_data = $this->createMockRawData([
-      'id' => 123,
-      'adminLevel' => 0,
-      'iso3' => 'USA',
-    ]);
-    $country_location = new Location($country_data);
-
-    $this->assertTrue($country_location->isCountry());
-    $this->assertEquals('USA', $country_location->getIso3());
-
-    // Test country (admin level 0).
-    $location_data = $this->createMockRawData([
-      'adminLevel' => 1,
-    ]);
-    $child_location = new Location($location_data);
-
-    $this->assertNull($child_location->getParentCountry());
-    $child_location->setParentCountry($country_location);
-    $this->assertEquals($country_location, $child_location->getParentCountry());
-  }
-
-  /**
    * Test location UUID generation.
    */
   public function testLocationUuidGeneration(): void {

@@ -3,6 +3,7 @@
 namespace Drupal\ghi_base_objects\Entity;
 
 use Drupal\ghi_base_objects\ApiObjects\Country;
+use Drupal\ghi_base_objects\Entity\Country as EntityCountry;
 
 /**
  * Provides an interface for defining base object that have a focus country.
@@ -14,10 +15,10 @@ interface BaseObjectFocusCountryInterface {
   /**
    * Get the focus country for the plan.
    *
-   * @return \Drupal\ghi_base_objects\Entity\BaseObjectInterface|null
+   * @return \Drupal\ghi_base_objects\Entity\Country|null
    *   The country base object or NULL.
    */
-  public function getFocusCountry();
+  public function getFocusCountry(): ?EntityCountry;
 
   /**
    * Get the focus country override for the plan.

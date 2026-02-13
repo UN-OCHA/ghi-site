@@ -39,6 +39,15 @@ hpc_api.reports.fabric.base_types:
     _permission: 'access site reports'
   options:
     _admin_route: TRUE
+hpc_api.reports.fabric.categories:
+  path: '/admin/reports/fabric/categories'
+  defaults:
+    _controller: '\Drupal\hpc_api\Controller\FabricReportController::buildCategoryReport'
+    _title: 'Categories'
+  requirements:
+    _permission: 'access site reports'
+  options:
+    _admin_route: TRUE
 hpc_api.reports.fabric.relationships:
   path: '/admin/reports/fabric/relationships'
   defaults:

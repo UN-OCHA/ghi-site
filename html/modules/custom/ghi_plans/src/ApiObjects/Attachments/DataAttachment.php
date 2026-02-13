@@ -3,7 +3,6 @@
 namespace Drupal\ghi_plans\ApiObjects\Attachments;
 
 use Drupal\Core\Cache\Cache;
-use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\ghi_base_objects\Entity\BaseObjectChildInterface;
 use Drupal\ghi_base_objects\Entity\BaseObjectInterface;
@@ -16,6 +15,7 @@ use Drupal\ghi_plans\ApiObjects\Prototypes\AttachmentPrototype;
 use Drupal\ghi_plans\Entity\Plan;
 use Drupal\ghi_plans\Exceptions\InvalidAttachmentTypeException;
 use Drupal\ghi_plans\Helpers\PlanEntityHelper;
+use Drupal\ghi_plans\Traits\DisaggregatedDataTrait;
 use Drupal\ghi_plans\Traits\PlanQueryTrait;
 use Drupal\ghi_plans\Traits\PlanReportingPeriodTrait;
 use Drupal\hpc_api\ApiObjects\Types\Unit;
@@ -29,11 +29,12 @@ use Drupal\hpc_common\Helpers\ArrayHelper;
  */
 class DataAttachment extends AttachmentBase implements DataAttachmentInterface {
 
+  use DateTimeTrait;
+  use DisaggregatedDataTrait;
+  use PlanQueryTrait;
   use PlanReportingPeriodTrait;
   use SimpleCacheTrait;
-  use DateTimeTrait;
   use StringTranslationTrait;
-  use PlanQueryTrait;
 
   /**
    * The source entity of an attachment.
@@ -107,7 +108,6 @@ class DataAttachment extends AttachmentBase implements DataAttachmentInterface {
       'composed_reference' => $attachment->ComposedReference ?? NULL,
       'description' => $attachment->Name ?? NULL,
       'values' => $this->extractValues(),
-      'disaggregated' => $this->extractDisaggregatedValues(),
       'unit' => ($attachment->UnitId ?? NULL) ? $query->getUnit($attachment->UnitId) : NULL,
       'monitoring_period' => $period ?? NULL,
       'has_disaggregated_data' => !empty($attachment->HasDisaggregatedData),
@@ -653,8 +653,8 @@ class DataAttachment extends AttachmentBase implements DataAttachmentInterface {
    */
   public function canBeMapped($reporting_period) {
     $disaggregated_data = $this->getDisaggregatedData($reporting_period, TRUE);
-    foreach ($disaggregated_data as $metric_item) {
-      if ($this->metricItemIsEmpty($metric_item)) {
+    foreach ($disaggregated_data->locations as $location) {
+      if (empty($location->totals)) {
         continue;
       }
       return TRUE;
@@ -674,25 +674,21 @@ class DataAttachment extends AttachmentBase implements DataAttachmentInterface {
    *   TRUE if the metric item can be considered empty, FALSE otherwise.
    */
   public function metricItemIsEmpty($metric_item): bool {
-    if (!array_key_exists('locations', $metric_item) || empty($metric_item['locations'])) {
-      return TRUE;
-    }
-    return empty(array_filter($metric_item['locations'], function ($location) {
-      return !empty($location['total']);
-    }));
+    // @todo See if this is still needed and if yes, then how.
+    return FALSE;
   }
 
   /**
    * Get the disaggregated data from the attachment.
    *
-   * @return \Drupal\ghi_plans\ApiObjects\Facts\AttachmentFact[]
-   *   An array of attachment fact objects.
+   * @return object
+   *   A disaggregated data object.
    */
-  public function getDisaggregated(): array {
+  public function getDisaggregated(): object {
     $this->assureDisaggregatedData();
     $data = $this->getRawData();
-    // Extract the values.
-    return array_map(fn ($item) => new AttachmentFact($item), $data->disaggregated ?? []);
+    $facts = array_map(fn ($item) => new AttachmentFact($item), $data->disaggregated ?? []);
+    return $this->buildDisaggregatedData($facts);
   }
 
   /**
@@ -750,10 +746,10 @@ class DataAttachment extends AttachmentBase implements DataAttachmentInterface {
    * @param bool $ignore_missing_location_ids
    *   Whether to ignore locations with missing ids.
    *
-   * @return array
-   *   A processed array of disaggregated data.
+   * @return object
+   *   An object with disaggregated data.
    */
-  public function getDisaggregatedData($reporting_period = 'latest', $filter_empty_locations = FALSE, $filter_empty_categories = FALSE, $ignore_missing_location_ids = FALSE) {
+  public function getDisaggregatedData($reporting_period = 'latest', $filter_empty_locations = FALSE, $filter_empty_categories = FALSE, $ignore_missing_location_ids = FALSE): ?object {
     // First check if we have already processed this data.
     $cache_key = $this->getCacheKey([
       'attachment_id' => $this->id(),
@@ -769,134 +765,67 @@ class DataAttachment extends AttachmentBase implements DataAttachmentInterface {
       return $cached_data;
     }
 
-    $this->assureDisaggregatedData();
+    // Get the disaggregated base data.
+    $disaggregated = $this->getDisaggregated();
+
+    // Get the disaggregated measurement data.
+    $measurement = $this->getMeasurement($reporting_period);
+    $disaggregated_measurements = $measurement->getDisaggregated();
+
+    // Load the locations that we actually need.
+    $location_ids = array_merge(array_keys($disaggregated->locations), array_keys($disaggregated_measurements->locations));
+    $locations = $this->getLocationQuery()->getLocations($location_ids);
+
     $cache_tags = [];
 
-    // No, so we need to do it now. Extract the base metrics and base data.
-    $base_metrics = $this->getBaseMetricTotals($reporting_period);
-    $base_data = $this->getBaseData($reporting_period);
-    if (empty($base_data)) {
-      return [];
-    }
+    $data = (object) [
+      'locations' => [],
+      'metrics' => $disaggregated->metrics,
+      'categories' => $disaggregated->categories,
+    ];
 
-    // Remove the first row (full country totals, always empty for some reason
-    // and not part of the locations array anyway).
-    array_shift($base_data->dataMatrix);
-
-    // Check if it's worth going on, no locations or no categories means we
-    // won't have anything meaningful to display, so we bail out.
-    $disaggregated_data = [];
-    if (empty($base_data->locations) && empty($base_data->categories)) {
-      return $this->cache($cache_key, FALSE);
-    }
-
-    $locations = $this->getLocations($base_data, $ignore_missing_location_ids);
-
-    // Shortcut to the data matrix and the categories.
-    $data_matrix = $base_data->dataMatrix;
-    $categories = $base_data->categories;
-
-    // Now $locations contains all locations that make up the data matrix,
-    // containing map coordinates where available.
-    // Now go through the properties and create a simplified version of the data
-    // matrix.
-    foreach ($base_metrics as $index => $property) {
-      $disaggregated_data[$index] = [
-        'metric' => $property,
-        'unit_type' => $this->getUnitType(),
-        'locations' => [],
-        'category_totals' => [],
-        'is_measurement' => $this->isMeasurementField($property->name->en),
+    // Base data (disaggregated target totals).
+    foreach ($locations as $location) {
+      if ($location->isCountry()) {
+        continue;
+      }
+      $location_id = $location->id();
+      // Base data (disaggregated target totals).
+      $data->locations[$location_id] = (object) [
+        'location' => $location->getGeoJsonLocationData(),
+        'totals' => $disaggregated->locations[$location_id]?->totals ?? [],
+        'categories' => $disaggregated->locations[$location_id]?->categories ?? [],
       ];
+      $cache_tags = Cache::mergeTags($cache_tags, $location->getCacheTags());
+    }
 
-      foreach ($locations as $location_index => $location) {
-        if (empty($location->map_data)) {
-          continue;
-        }
-        $cache_tags = Cache::mergeTags($cache_tags, $location->cache_meta_data->getCacheTags());
-
-        $disaggregated_data[$index]['locations'][$location_index] = (array) $location;
-        $disaggregated_data[$index]['locations'][$location_index] += [
-          'object_id' => $location->id,
-          'categories' => [],
-          'total' => NULL,
+    // Merge in the measurement data.
+    foreach ($locations as $location) {
+      if ($location->isCountry()) {
+        continue;
+      }
+      $location_id = $location->id();
+      if (empty($data->locations[$location_id])) {
+        $data->locations[$location_id] = (object) [
+          'location' => $location->getGeoJsonLocationData(),
+          'totals' => $disaggregated_measurements->locations[$location_id]?->totals ?? [],
+          'categories' => $disaggregated_measurements->locations[$location_id]?->categories ?? [],
         ];
-        $location_data_matrix = $data_matrix[$location_index];
-
-        $offset = 0;
-        foreach ($categories as $category) {
-          $disaggregated_data[$index]['locations'][$location_index]['categories'][$category->label] = [
-            'name' => $category->name,
-            'data' => array_key_exists($offset + $index, $location_data_matrix) ? $location_data_matrix[$offset + $index] : NULL,
-          ];
-          $offset += count($base_metrics);
-        }
-
-        $total = array_key_exists($offset + $index, $location_data_matrix) ? $location_data_matrix[$offset + $index] : NULL;
-        $total = $total !== NULL ? intval($total) : NULL;
-        $disaggregated_data[$index]['locations'][$location_index]['total'] = $total;
-        $disaggregated_data[$index]['locations'][$location_index]['map_data']['total'] = $total;
+        $cache_tags = Cache::mergeTags($cache_tags, $location->getCacheTags());
       }
-
-      foreach ($categories as $category_index => $category) {
-        $category_index = count($base_metrics) * $category_index + $index;
-        $first_row = reset($data_matrix);
-        $category_total = array_key_exists($category_index, $first_row) ? $first_row[$category_index] : NULL;
-        $category_total = $category_total !== NULL ? intval($category_total) : NULL;
-        if (!empty($category_total)) {
-          $disaggregated_data[$index]['category_totals'][$category->name] = $category_total;
+      else {
+        $data->locations[$location_id]->totals += $disaggregated_measurements->locations[$location_id]?->totals ?? [];
+        foreach ($disaggregated_measurements->locations[$location_id]?->categories ?? [] as $category_id => $values) {
+          $data->locations[$location_id]->categories[$category_id] = $data->locations[$location_id]->categories[$category_id] ?? [];
+          $data->locations[$location_id]->categories[$category_id] += $values;
         }
       }
     }
-
-    if ($filter_empty_locations) {
-      // Filter data points that are not relevant, which means all locations
-      // where the categories have no data and where there is no total for the
-      // location.
-      foreach ($disaggregated_data as $metric_index => $metric_items) {
-        foreach ($metric_items['locations'] as $location_index => $location_item) {
-          $has_data = count(array_filter($location_item['categories'], function ($category) {
-            return !empty($category['data']);
-          })) > 0;
-          if (!$has_data && empty($location_item['total'])) {
-            unset($disaggregated_data[$metric_index]['locations'][$location_index]);
-          }
-        }
-      }
-    }
-
-    if ($filter_empty_categories) {
-      // Filter data points that are not relevant, which means all categories
-      // which don't have data for any of the locations.
-      foreach ($disaggregated_data as $metric_index => $metric_items) {
-        if (empty($metric_items['locations'])) {
-          // No locations, so there aren't any categories either.
-          continue;
-        }
-
-        $empty_categories = [];
-        foreach ($categories as $category) {
-          $empty_categories[$category->label] = TRUE;
-        }
-
-        foreach ($metric_items['locations'] as $location_index => $location_item) {
-          foreach ($location_item['categories'] as $category_key => $category) {
-            if ($empty_categories[$category_key] === TRUE && !empty($category['data'])) {
-              $empty_categories[$category_key] = FALSE;
-            }
-          }
-        }
-
-        foreach ($metric_items['locations'] as $location_index => $location_item) {
-          foreach (array_keys(array_filter($empty_categories)) as $empty_category) {
-            unset($disaggregated_data[$metric_index]['locations'][$location_index]['categories'][$empty_category]);
-          }
-        }
-      }
-    }
+    $data->metrics += $disaggregated_measurements->metrics;
+    $data->categories += $disaggregated_measurements->categories;
 
     $this->setCacheTags($cache_tags);
-    return $this->cache($cache_key, $disaggregated_data, FALSE, NULL, $cache_tags);
+    return $this->cache($cache_key, $data, FALSE, NULL, $cache_tags);
   }
 
   /**
@@ -916,157 +845,25 @@ class DataAttachment extends AttachmentBase implements DataAttachmentInterface {
    */
   public function getDisaggregatedCategories($reporting_period, $property_index, $filter_empty_locations = FALSE, $filter_empty_categories = FALSE) {
     $disaggregated_data = $this->getDisaggregatedData($reporting_period, $filter_empty_locations, $filter_empty_categories);
-    $locations = $disaggregated_data[$property_index]['locations'];
-    $first_location = reset($locations);
-    if (empty($first_location['categories'])) {
-      return FALSE;
-    }
-    return array_map(function ($item) {
-      return $item['name'];
-    }, $first_location['categories']);
+    return $disaggregated_data->categories;
   }
 
   /**
    * Assure that the disaggregated data for an attachment has been fetched.
    */
   public function assureDisaggregatedData() {
-    $attachment_data = $this->getRawData();
-    if (property_exists($attachment_data, 'disaggregated')) {
+    $data = $this->getRawData();
+    if (property_exists($data, 'disaggregated')) {
       // Nothing to do.
       return;
     }
     $attachment_query = $this->getAttachmentQuery();
-    $attachment_data->disaggregated = $attachment_query?->getAttachmentDisaggregatedData($this->id());
-    if (!$attachment_data) {
+    $data->disaggregated = $attachment_query?->getAttachmentDisaggregatedData($this->id());
+    if (!$data) {
       return;
     }
-    $this->setRawData($attachment_data);
+    $this->setRawData($data);
     $this->updateMap();
-  }
-
-  /**
-   * Retrieve the base metrics of an attachment.
-   *
-   * If measurements are available, those will be used, otherwhise the normal
-   * metrics will be used.
-   */
-  private function getBaseMetricTotals($reporting_period = 'latest') {
-    $measurement = $this->getMeasurementByReportingPeriod($reporting_period);
-    if ($measurement && !empty($measurement->totals)) {
-      $base_metrics = $measurement->totals;
-    }
-    else {
-      $base_metrics = $this->getTotals();
-    }
-    return $base_metrics;
-  }
-
-  /**
-   * Retrieve the base data of an attachment.
-   *
-   * If measurements are available, those will be used, otherwhise the normal
-   * metrics data will be used.
-   */
-  private function getBaseData($reporting_period = 'latest') {
-    // @todo Fix
-    return NULL;
-    // phpcs:disable
-    $measurement = $this->getMeasurementByReportingPeriod($reporting_period);
-    if ($measurement && !empty($measurement->disaggregated)) {
-      $base_data = $measurement->disaggregated;
-    }
-    elseif (!empty($this->disaggregated)) {
-      $base_data = $this->disaggregated;
-    }
-    else {
-      return NULL;
-    }
-    return clone $base_data;
-    // phpcs:enable
-  }
-
-  /**
-   * Extract the country out of an array of locations.
-   */
-  private function getMainCountryFromLocations($locations) {
-    // This gives either an array with a single location that is the main
-    // country, or in case of some plans, like oPt 2017, which do not report the
-    // relationship between the countries properly, this gives the original
-    // locations array. The latter case is mitigated by the fact, that we assume
-    // that the first element is the main country.
-    $country_candidates = array_filter($locations, function ($location) {
-      return empty($location->parent) && !empty($location->id);
-    });
-    if (empty($country_candidates)) {
-      return NULL;
-    }
-    return reset($country_candidates);
-  }
-
-  /**
-   * Get the locations for the current attachment.
-   *
-   * @param object $base_data
-   *   The base data of the attachment.
-   * @param bool $ignore_missing_location_ids
-   *   Whether to ignore locations with missing ids.
-   *
-   * @return array
-   *   An array of location objects.
-   */
-  private function getLocations($base_data, $ignore_missing_location_ids) {
-    $plan_object = $this->getPlanObject();
-
-    // We extract the country from the locations array.
-    $country = $this->getMainCountryFromLocations($base_data->locations);
-    if (!$country && $focus_country = $this->getPlanObject()?->getFocusCountry() ?? NULL) {
-      // The disaggregation data doesn't seem to include the main country in the
-      // locations. Let's try to get it from the plan id.
-      $country = (object) [
-        'id' => $focus_country->id(),
-        'name' => $focus_country->getName(),
-      ];
-    }
-
-    // Then we remove the country from the locations array and create an array
-    // of location spot candidates.
-    $locations = array_filter($base_data->locations, function ($location) use ($country, $ignore_missing_location_ids) {
-      return (!empty($location->id) || $ignore_missing_location_ids) && (($location->id ?? NULL) != $country->id);
-    });
-    $location_ids = array_map(function ($location) {
-      return $location->id;
-    }, $locations);
-
-    $location_query = $this->getLocationQuery();
-
-    // See until which level of detail we should go for the attachment. This is
-    // stored as a configuration option on the plan base object, so let's look
-    // that up.
-    $max_level = $plan_object ? $plan_object->getMaxAdminLevel() : NULL;
-
-    // Then we get the coordinates for all locations that the API knows for this
-    // country. The coordinates are keyed by the location id.
-    /** @var \Drupal\ghi_base_objects\ApiObjects\Location[] $country_locations */
-    $country_locations = $country && $location_query ? $location_query->getLocationsForCountry($country->id, $max_level, $location_ids) : [];
-
-    foreach ($locations as $location_key => $location) {
-      $locations[$location_key]->country_id = $country->id;
-      if (empty($location->id)) {
-        continue;
-      }
-      $_location = !empty($country_locations[$location->id]) ? $country_locations[$location->id] : NULL;
-      if (empty($_location)) {
-        continue;
-      }
-      $locations[$location_key]->map_data = $_location->getGeoJsonLocationData();
-      $locations[$location_key]->map_data['object_id'] = $location->id;
-      $locations[$location_key]->map_data['total'] = 0;
-      $locations[$location_key]->cache_meta_data = CacheableMetadata::createFromObject($_location);
-
-      // @see https://humanitarian.atlassian.net/browse/HPC-9838?focusedCommentId=201540
-      $locations[$location_key]->name = $locations[$location_key]->map_data['name'];
-    }
-    return $locations;
   }
 
   /**
@@ -1079,29 +876,6 @@ class DataAttachment extends AttachmentBase implements DataAttachmentInterface {
     $values = [];
     foreach ($this->getTotals() as $item) {
       $values[$item->getMetric()->getMachineName()] = $item->getValue();
-    }
-    return $values;
-  }
-
-  /**
-   * Extract the disaggregated values from an attachment.
-   *
-   * @return array
-   *   Array with values for each metric and measurement data point, grouped by
-   *   location and various categories.
-   */
-  protected function extractDisaggregatedValues() {
-    $values = [];
-    $categories = [];
-    foreach ($this->getDisaggregated() as $item) {
-      $location_id = $item->getLocationId();
-      $values[$location_id] = $values[$location_id] ?? [];
-      $values[$location_id][$item->getMetric()->getMachineName()] = $item->getValue();
-      $categories[$location_id] = $categories[$location_id] ?? [];
-      $categories[$location_id] = array_merge($categories[$location_id], $item->getCategoryIds());
-    }
-    foreach (array_keys($values) as $location_id) {
-      $values[$location_id]['category_ids'] = $categories[$location_id];
     }
     return $values;
   }

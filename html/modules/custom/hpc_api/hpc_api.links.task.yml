@@ -20,6 +20,11 @@ hpc_api.fabric_report.base_types:
   base_route: hpc_api.fabric_report
   title: 'Base types'
   weight: 1
+hpc_api.fabric_report.categories:
+  route_name: hpc_api.reports.fabric.categories
+  base_route: hpc_api.fabric_report
+  title: 'Categories'
+  weight: 1
 hpc_api.fabric_report.relationships:
   route_name: hpc_api.reports.fabric.relationships
   base_route: hpc_api.fabric_report

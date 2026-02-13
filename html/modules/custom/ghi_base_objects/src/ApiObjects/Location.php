@@ -20,7 +20,10 @@ class Location extends BaseObject implements GeoJsonLocationInterface {
     'Id',
     'Name',
     'ISO3',
+    'CountryId',
+    'CountryISO3',
     'Pcode',
+    'AdminLevel',
     'Latitude',
     'Longitude',
     'RecordStatus',
@@ -40,15 +43,16 @@ class Location extends BaseObject implements GeoJsonLocationInterface {
   protected function map() {
     $data = $this->getRawData();
     return (object) [
-      'id' => $data->id,
-      'name' => $data->name ?: 'Admin area ' . $data->externalId,
-      'admin_level' => $data->adminLevel,
-      'pcode' => $data->pcode,
-      'iso3' => $data->iso3,
-      'latLng' => [(string) $data->latitude, (string) $data->longitude],
-      'parent_id' => $data->parentId,
-      'status' => $data->status,
-      'valid_on' => $data->validOn ? substr($data->validOn, 0, strlen($data->validOn) - 3) : NULL,
+      'id' => $data->Id,
+      'name' => $data->Name,
+      'admin_level' => $data->AdminLevel,
+      'pcode' => $data->Pcode ?? NULL,
+      'iso3' => $data->ISO3 ?? NULL,
+      'country_id' => $data->CountryId,
+      'country_iso3' => $data->CountryISO3 ?? NULL,
+      'latLng' => [(string) $data->Latitude, (string) $data->Longitude],
+      'valid_on' => ($data->ActiveUntil ?? NULL) ? substr($data->ActiveUntil, 0, strlen($data->ActiveUntil) - 3) : NULL,
+      'status' => strtolower($data->RecordStatus ?? ''),
     ];
   }
 
@@ -71,30 +75,10 @@ class Location extends BaseObject implements GeoJsonLocationInterface {
   }
 
   /**
-   * Set the parent country for a location.
-   *
-   * @param \Drupal\ghi_base_objects\ApiObjects\Location $country
-   *   The parent country.
-   */
-  public function setParentCountry(Location $country) {
-    $this->parentCountry = $country;
-  }
-
-  /**
-   * Get the parent country for a location.
-   *
-   * @return \Drupal\ghi_base_objects\ApiObjects\Location|null
-   *   The parent country.
-   */
-  public function getParentCountry() {
-    return $this->parentCountry ?? $this->fetchParentCountry();
-  }
-
-  /**
    * {@inheritdoc}
    */
   public function getIso3(): ?string {
-    return $this->isCountry() ? $this->iso3 : $this->getParentCountry()?->getIso3();
+    return $this->isCountry() ? $this->iso3 : ($this->country_iso3 ?? NULL);
   }
 
   /**
@@ -183,26 +167,6 @@ class Location extends BaseObject implements GeoJsonLocationInterface {
     return $this->toArray() + [
       'filepath' => $this->getGeoJsonFileUrl($this),
     ];
-  }
-
-  /**
-   * Fetch the parent country recursively.
-   *
-   * @param int $parent_id
-   *   A location id.
-   *
-   * @return \Drupal\ghi_base_objects\ApiObjects\Location|null
-   *   A location object or NULL.
-   */
-  private function fetchParentCountry($parent_id = NULL) {
-    $parent_location = NULL;
-    $parent_id = $parent_id ?? $this->parent_id;
-    while (!empty($parent_id)) {
-      $parent_location = $this->locationQuery()->getLocation($parent_id);
-      $parent_id = $parent_location?->parent_id;
-    }
-    $this->parentCountry = $parent_location;
-    return $parent_location?->getAdminLevel() == 0 ? $parent_location : NULL;
   }
 
   /**
