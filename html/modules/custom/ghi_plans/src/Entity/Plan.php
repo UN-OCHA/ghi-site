@@ -9,6 +9,7 @@ use Drupal\ghi_base_objects\ApiObjects\Country;
 use Drupal\ghi_base_objects\Entity\BaseObject;
 use Drupal\ghi_base_objects\Entity\BaseObjectFocusCountryInterface;
 use Drupal\ghi_base_objects\Entity\BaseObjectMetaDataInterface;
+use Drupal\ghi_base_objects\Entity\Country as EntityCountry;
 use Drupal\ghi_plans\ApiObjects\Attachments\CaseloadAttachmentInterface;
 use Drupal\ghi_plans\ApiObjects\Attachments\FinancialAttachment;
 use Drupal\ghi_plans\Traits\AttachmentFilterTrait;
@@ -77,13 +78,40 @@ class Plan extends BaseObject implements BaseObjectMetaDataInterface, BaseObject
   }
 
   /**
+   * Get the main country for a plan.
+   *
+   * @return \Drupal\ghi_base_objects\Entity\Country|null
+   *   A country base object or NULL.
+   */
+  public function getMainCountry(): ?EntityCountry {
+    $focus_country = $this->getFocusCountry();
+    if ($focus_country) {
+      return $focus_country;
+    }
+    $countries = $this->getCountries();
+    $country = reset($countries);
+    return $country instanceof EntityCountry ? $country : NULL;
+  }
+
+  /**
    * {@inheritdoc}
    */
-  public function getFocusCountry() {
+  public function getCountries() {
     if (!$this->hasField('field_focus_country')) {
       return NULL;
     }
-    return $this->get('field_focus_country')->entity;
+    return $this->get('field_focus_country')->referencedEntities();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getFocusCountry(): ?EntityCountry {
+    if (!$this->hasField('field_focus_country')) {
+      return NULL;
+    }
+    $country = $this->get('field_focus_country')->entity;
+    return $country instanceof EntityCountry ? $country : NULL;
   }
 
   /**

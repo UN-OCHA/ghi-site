@@ -100,17 +100,6 @@ trait PlanQueryTrait {
   }
 
   /**
-   * Get the location query.
-   *
-   * @return \Drupal\ghi_base_objects\Plugin\FabricQuery\LocationQuery|null
-   *   The location query or NULL.
-   */
-  protected static function getLocationQuery(): ?LocationQuery {
-    $query = self::getQueryInstance('organization');
-    return $query instanceof LocationQuery ? $query : NULL;
-  }
-
-  /**
    * Get the organization query.
    *
    * @return \Drupal\ghi_plans\Plugin\FabricQuery\OrganizationQuery|null
@@ -141,6 +130,17 @@ trait PlanQueryTrait {
   protected static function getCountryQuery(): ?CountryQuery {
     $query = self::getQueryInstance('country');
     return $query instanceof CountryQuery ? $query : NULL;
+  }
+
+  /**
+   * Get the location query.
+   *
+   * @return \Drupal\ghi_base_objects\Plugin\FabricQuery\LocationQuery|null
+   *   The location query or NULL.
+   */
+  protected static function getLocationQuery(): ?LocationQuery {
+    $query = self::getQueryInstance('location');
+    return $query instanceof LocationQuery ? $query : NULL;
   }
 
 }

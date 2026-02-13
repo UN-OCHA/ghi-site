@@ -2,10 +2,12 @@
 
 namespace Drupal\hpc_api\ApiObjects\Types;
 
+use Drupal\hpc_api\ApiObjects\Type;
+
 /**
  * Class for metric type objects.
  */
-class MetricType extends BaseType {
+class MetricType extends Type {
 
   const GRAPHQL_ITEMS = ['Id', 'Name', 'OtherName', 'NameFr', 'NameEs', 'HPCType'];
 

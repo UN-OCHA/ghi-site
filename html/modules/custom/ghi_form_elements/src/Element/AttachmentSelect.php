@@ -9,6 +9,7 @@ use Drupal\Core\Render\Element;
 use Drupal\Core\Render\Element\FormElementBase;
 use Drupal\Core\Render\Markup;
 use Drupal\ghi_form_elements\Traits\AjaxElementTrait;
+use Drupal\ghi_plans\ApiObjects\Entities\EntityObjectInterface;
 use Drupal\ghi_plans\Traits\AttachmentFilterTrait;
 use Drupal\ghi_plans\Traits\PlanQueryTrait;
 use Drupal\hpc_api\Helpers\ArrayHelper;
@@ -242,7 +243,7 @@ class AttachmentSelect extends FormElementBase {
     $attachment_filter = array_filter([
       'source.entity_type' => $defaults['entity_type'] ?? NULL,
       'type' => $defaults['attachment_type'] ?? NULL,
-      'prototype.id' => $defaults['attachment_prototype'] ? (int) $defaults['attachment_prototype'] : NULL,
+      'attachment_prototype_id' => $defaults['attachment_prototype'] ? (int) $defaults['attachment_prototype'] : NULL,
     ]);
     if (!empty($element['#entity_ids'])) {
       $attachment_filter['source.entity_id'] = $element['#entity_ids'];
@@ -254,13 +255,14 @@ class AttachmentSelect extends FormElementBase {
     foreach (ArrayHelper::filterArray($attachments, $attachment_filter) as $attachment) {
       /** @var \Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment $attachment */
       $entities_in_selection[$attachment->source->entity_id] = TRUE;
+      $source_entity = $attachment->getSourceEntity();
       $attachment_options[$attachment->id] = [
-        'id' => $attachment->id,
-        'composed_reference' => $attachment->composed_reference,
-        'type' => $attachment->type,
-        'prototype' => $attachment->prototype->name,
-        'description' => $attachment->description,
-        'sort_key' => $attachment->getSourceEntity()?->sort_key,
+        'id' => $attachment->id(),
+        'composed_reference' => $attachment->getComposedReference(),
+        'type' => $attachment->getType(),
+        'prototype' => $attachment->getPrototype()->getName(),
+        'description' => $attachment->getDescription(),
+        'sort_key' => $source_entity instanceof EntityObjectInterface ? $source_entity->getSortKey() : NULL,
       ];
 
       if (!empty($element['#disagg_warning'])) {

@@ -2,10 +2,12 @@
 
 namespace Drupal\hpc_api\ApiObjects\Types;
 
+use Drupal\hpc_api\ApiObjects\Type;
+
 /**
  * Class for entity type objects.
  */
-class EntityType extends BaseType {
+class EntityType extends Type {
 
   const GRAPHQL_ITEMS = ['Id', 'Name', 'Alias'];
 

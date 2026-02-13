@@ -373,6 +373,9 @@ class AttachmentQuery extends FabricQueryBase {
    *   An array of attachment objects, keyed by the attachment id.
    */
   private function processAttachments(array $attachments, ?array $data = NULL) {
+    $attachment_ids = array_map(fn ($item) => $item->Id, $attachments);
+    $attachments = array_combine($attachment_ids, $attachments);
+
     // If we have found attachments, also load the total facts.
     $this->addAttachmentFacts($attachments, $data['attachmentFacts'] ?? NULL);
 
@@ -393,15 +396,13 @@ class AttachmentQuery extends FabricQueryBase {
    */
   private function addAttachmentFacts(&$attachments, ?array $attachment_facts = NULL) {
     if (!$attachment_facts) {
-      $attachment_ids = array_map(fn ($item) => $item->Id, $attachments);
       $attachment_facts = $this->fabricClient->createQuery('attachmentFacts', AttachmentFact::getGraphQlItems())
         ->setFilters([
-          'AttachmentId' => $attachment_ids,
+          'AttachmentId' => array_keys($attachments),
           'IsTotal' => TRUE,
         ])
         ->execute();
     }
-
     foreach ($attachment_facts as $attachment_fact) {
       $attachment_id = $attachment_fact->AttachmentId;
       $attachments[$attachment_id]->totals = $attachments[$attachment_id]->totals ?? [];
@@ -481,6 +482,25 @@ class AttachmentQuery extends FabricQueryBase {
     return $this->fabricClient->createQuery('attachmentFacts', AttachmentFact::getGraphQlItems())
       ->setFilters([
         'AttachmentId' => $attachment_id,
+        'IsTotal' => FALSE,
+      ])
+      ->execute() ?: [];
+  }
+
+  /**
+   * Get disaggregated data for a measurement.
+   *
+   * @param int $measurement_id
+   *   The measurement id.
+   *
+   * @return array
+   *   An array of facts representing raw disaggregation data.
+   */
+  public function getMeasurementDisaggregatedData(int $measurement_id): array {
+    // Get the measurement facts.
+    return $this->fabricClient->createQuery('measurementFacts', MeasurementFact::getGraphQlItems())
+      ->setFilters([
+        'MeasurementId' => $measurement_id,
         'IsTotal' => FALSE,
       ])
       ->execute() ?: [];

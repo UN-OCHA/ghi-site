@@ -22,10 +22,10 @@ class LocationQuery extends FabricQueryBase {
   const MAX_LEVEL = 5;
 
   /**
-   * Get a location.
+   * Get a location by id.
    *
    * @param int $location_id
-   *   A location id known to the API.
+   *   A location id to load.
    *
    * @return \Drupal\ghi_base_objects\ApiObjects\Location|null
    *   A location object.
@@ -36,6 +36,31 @@ class LocationQuery extends FabricQueryBase {
       ->execute();
     $item = count($items) == 1 ? reset($items) : NULL;
     return $item ? new Location($item) : NULL;
+  }
+
+  /**
+   * Get locations by id.
+   *
+   * @param int[] $location_ids
+   *   The location ids to load.
+   *
+   * @return \Drupal\ghi_base_objects\ApiObjects\Location[]
+   *   An array of location objects.
+   */
+  public function getLocations($location_ids) {
+    if (count($location_ids) > 100) {
+      // We need to do multiple queries.
+      $entities = [];
+      for ($i = 0; $i < ceil(count($location_ids) / 100); $i++) {
+        $subset = array_slice($location_ids, $i * 100, 100);
+        $entities = $entities + $this->getLocations($subset);
+      }
+      return $entities;
+    }
+    $items = $this->fabricClient->createQuery('locations', Location::getGraphQlItems())
+      ->setFilter('Id', $location_ids)
+      ->execute();
+    return $this->buildResultObjects($items, Location::class);
   }
 
   /**
@@ -51,9 +76,16 @@ class LocationQuery extends FabricQueryBase {
    * @return \Drupal\ghi_base_objects\ApiObjects\Location[]
    *   An array of location objects keyed by the location id.
    */
-  public function getLocationsForCountry(int $country_id, int $max_level, $limit_location_ids = NULL) {
-
-    return [];
+  public function getLocationsForCountry(int $country_id, int $max_level = 3, $limit_location_ids = NULL) {
+    $location = $this->getLocation($country_id);
+    $payload = '
+      executeGetLocationsByCountryAndLevel (
+        CountryName: "' . $location->getName() . '",
+        MaxAdminLevel: ' . $max_level . '
+      ) { Id }';
+    $data = $this->fabricClient->query($payload);
+    $location_ids = array_map(fn ($item) => $item->Id, $data->executeGetLocationsByCountryAndLevel);
+    return $this->getLocations($location_ids);
   }
 
 }

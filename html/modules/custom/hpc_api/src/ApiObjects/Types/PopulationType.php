@@ -2,9 +2,11 @@
 
 namespace Drupal\hpc_api\ApiObjects\Types;
 
+use Drupal\hpc_api\ApiObjects\Type;
+
 /**
  * Class for population type objects.
  */
-class PopulationType extends BaseType {
+class PopulationType extends Type {
 
 }

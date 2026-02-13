@@ -7,7 +7,7 @@ use Drupal\hpc_api\Attribute\FabricQuery;
 use Drupal\hpc_api\Query\FabricQueryBase;
 
 /**
- * Plugin implementation of the 'plan' fabric query.
+ * Plugin implementation of the 'entity_type' fabric query.
  */
 #[FabricQuery(
   id: 'entity_type',

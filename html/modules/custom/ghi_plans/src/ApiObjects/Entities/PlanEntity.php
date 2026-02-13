@@ -167,13 +167,10 @@ class PlanEntity extends EntityObjectBase {
   }
 
   /**
-   * Get the order number.
-   *
-   * @return int
-   *   The order number.
+   * {@inheritdoc}
    */
-  public function getOrderNumber(): int {
-    return $this->order_number;
+  public function getSortKey(): string|int {
+    return $this->sort_key;
   }
 
   /**
