@@ -97,10 +97,10 @@ class Plan extends BaseObject implements BaseObjectMetaDataInterface, BaseObject
    * {@inheritdoc}
    */
   public function getCountries() {
-    if (!$this->hasField('field_focus_country')) {
+    if (!$this->hasField('field_country')) {
       return NULL;
     }
-    return $this->get('field_focus_country')->referencedEntities();
+    return $this->get('field_country')->referencedEntities();
   }
 
   /**

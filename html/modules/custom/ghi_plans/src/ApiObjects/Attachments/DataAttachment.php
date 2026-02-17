@@ -770,11 +770,11 @@ class DataAttachment extends AttachmentBase implements DataAttachmentInterface {
 
     // Get the disaggregated measurement data.
     $measurement = $this->getMeasurement($reporting_period);
-    $disaggregated_measurements = $measurement->getDisaggregated();
+    $disaggregated_measurements = $measurement?->getDisaggregated();
 
     // Load the locations that we actually need.
-    $location_ids = array_merge(array_keys($disaggregated->locations), array_keys($disaggregated_measurements->locations));
-    $locations = $this->getLocationQuery()->getLocations($location_ids);
+    $location_ids = array_merge(array_keys($disaggregated->locations), array_keys($disaggregated_measurements?->locations ?? []));
+    $locations = !empty($location_ids) ? $this->getLocationQuery()->getLocations($location_ids) : [];
 
     $cache_tags = [];
 
@@ -799,30 +799,32 @@ class DataAttachment extends AttachmentBase implements DataAttachmentInterface {
       $cache_tags = Cache::mergeTags($cache_tags, $location->getCacheTags());
     }
 
-    // Merge in the measurement data.
-    foreach ($locations as $location) {
-      if ($location->isCountry()) {
-        continue;
-      }
-      $location_id = $location->id();
-      if (empty($data->locations[$location_id])) {
-        $data->locations[$location_id] = (object) [
-          'location' => $location->getGeoJsonLocationData(),
-          'totals' => $disaggregated_measurements->locations[$location_id]?->totals ?? [],
-          'categories' => $disaggregated_measurements->locations[$location_id]?->categories ?? [],
-        ];
-        $cache_tags = Cache::mergeTags($cache_tags, $location->getCacheTags());
-      }
-      else {
-        $data->locations[$location_id]->totals += $disaggregated_measurements->locations[$location_id]?->totals ?? [];
-        foreach ($disaggregated_measurements->locations[$location_id]?->categories ?? [] as $category_id => $values) {
-          $data->locations[$location_id]->categories[$category_id] = $data->locations[$location_id]->categories[$category_id] ?? [];
-          $data->locations[$location_id]->categories[$category_id] += $values;
+    // Merge in the measurement data if available.
+    if ($disaggregated_measurements) {
+      foreach ($locations as $location) {
+        if ($location->isCountry()) {
+          continue;
+        }
+        $location_id = $location->id();
+        if (empty($data->locations[$location_id])) {
+          $data->locations[$location_id] = (object) [
+            'location' => $location->getGeoJsonLocationData(),
+            'totals' => $disaggregated_measurements->locations[$location_id]?->totals ?? [],
+            'categories' => $disaggregated_measurements->locations[$location_id]?->categories ?? [],
+          ];
+          $cache_tags = Cache::mergeTags($cache_tags, $location->getCacheTags());
+        }
+        else {
+          $data->locations[$location_id]->totals += $disaggregated_measurements->locations[$location_id]?->totals ?? [];
+          foreach ($disaggregated_measurements->locations[$location_id]?->categories ?? [] as $category_id => $values) {
+            $data->locations[$location_id]->categories[$category_id] = $data->locations[$location_id]->categories[$category_id] ?? [];
+            $data->locations[$location_id]->categories[$category_id] += $values;
+          }
         }
       }
+      $data->metrics += $disaggregated_measurements->metrics;
+      $data->categories += $disaggregated_measurements->categories;
     }
-    $data->metrics += $disaggregated_measurements->metrics;
-    $data->categories += $disaggregated_measurements->categories;
 
     $this->setCacheTags($cache_tags);
     return $this->cache($cache_key, $data, FALSE, NULL, $cache_tags);
@@ -949,6 +951,9 @@ class DataAttachment extends AttachmentBase implements DataAttachmentInterface {
    */
   public function getMeasurement($period_id = 'latest'): ?Measurement {
     $measurements = $this->getMeasurements();
+    if (!$measurements) {
+      return NULL;
+    }
     if ($period_id == 'latest') {
       return reset($measurements);
     }
@@ -1227,7 +1232,6 @@ class DataAttachment extends AttachmentBase implements DataAttachmentInterface {
    *   The data point value.
    */
   public function getValueForDataPoint($data_point_index, $monitoring_period = 'latest', $cumulative_logic = TRUE) {
-
     $value = NULL;
     if ($monitoring_period && $this->isMeasurementIndex($data_point_index)) {
       $measurement = $this->getMeasurement($monitoring_period);
