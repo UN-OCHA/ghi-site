@@ -30,7 +30,7 @@ class LocationQuery extends FabricQueryBase {
    * @return \Drupal\ghi_base_objects\ApiObjects\Location|null
    *   A location object.
    */
-  public function getLocation($location_id): ?Location {
+  public function getLocation(int $location_id): ?Location {
     $items = $this->fabricClient->createQuery('locations', Location::getGraphQlItems(), NULL, 1)
       ->setFilter('Id', $location_id)
       ->execute();
@@ -47,7 +47,10 @@ class LocationQuery extends FabricQueryBase {
    * @return \Drupal\ghi_base_objects\ApiObjects\Location[]
    *   An array of location objects.
    */
-  public function getLocations($location_ids) {
+  public function getLocations($location_ids): array {
+    if (empty($location_ids)) {
+      return [];
+    }
     if (count($location_ids) > 100) {
       // We need to do multiple queries.
       $entities = [];
@@ -70,22 +73,17 @@ class LocationQuery extends FabricQueryBase {
    *   The country id.
    * @param int $max_level
    *   A maximum level of nested locations to retrieve.
-   * @param int[] $limit_location_ids
-   *   Optional: An array of location ids to limit the result to.
    *
    * @return \Drupal\ghi_base_objects\ApiObjects\Location[]
    *   An array of location objects keyed by the location id.
    */
-  public function getLocationsForCountry(int $country_id, int $max_level = 3, $limit_location_ids = NULL) {
-    $location = $this->getLocation($country_id);
-    $payload = '
-      executeGetLocationsByCountryAndLevel (
-        CountryName: "' . $location->getName() . '",
-        MaxAdminLevel: ' . $max_level . '
-      ) { Id }';
-    $data = $this->fabricClient->query($payload);
-    $location_ids = array_map(fn ($item) => $item->Id, $data->executeGetLocationsByCountryAndLevel);
-    return $this->getLocations($location_ids);
+  public function getLocationsForCountry(int $country_id, int $max_level = 3) {
+    $items = $this->fabricClient->createQuery('locations', Location::getGraphQlItems())
+      ->setFilter('CountryId', $country_id)
+      ->setFilter('AdminLevel', range(1, $max_level))
+      ->setFilter('RecordStatus', 'Active')
+      ->execute();
+    return $this->buildResultObjects($items, Location::class);
   }
 
 }

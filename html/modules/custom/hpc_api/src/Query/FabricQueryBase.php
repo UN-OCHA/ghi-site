@@ -100,35 +100,35 @@ abstract class FabricQueryBase extends PluginBase implements FabricQueryPluginIn
    *
    * @var string[]
    */
-  private $cacheTags = [];
+  protected $cacheTags = [];
 
   /**
    * The base types.
    *
    * @var array|null
    */
-  private $baseTypes = NULL;
+  protected $baseTypes = NULL;
 
   /**
    * The plan years.
    *
    * @var array|null
    */
-  private $planYears = NULL;
+  protected $planYears = NULL;
 
   /**
    * The plan types.
    *
    * @var array|null
    */
-  private $planTypes = NULL;
+  protected $planTypes = NULL;
 
   /**
    * The plan costing types.
    *
    * @var array|null
    */
-  private $planCostingTypes = NULL;
+  protected $planCostingTypes = NULL;
 
   /**
    * {@inheritdoc}

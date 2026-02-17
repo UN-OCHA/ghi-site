@@ -218,9 +218,11 @@ class PlanOperationalPresenceMap extends GHIBlockBase implements MultiStepFormBl
 
     // Process the locations.
     foreach ($locations as $location) {
-      $objects = $objects_by_location[$location->location_id] ?? [];
+      $objects = $objects_by_location[$location->id()] ?? [];
       $location_data = (object) $location->getGeoJsonLocationData();
-      $location_data->object_id = $location->location_id;
+      $location_data->location_id = $location->id();
+      $location_data->location_name = $location->getName();
+      $location_data->object_id = $location->id();
       $location_data->object_count = count($objects);
       $location_data->modal_content = $this->buildModalContent($location, $objects, $selected_view, $fts_link);
 
@@ -520,6 +522,8 @@ class PlanOperationalPresenceMap extends GHIBlockBase implements MultiStepFormBl
     $modal_content = [
       'id' => $location->id(),
       'name' => $location->getName(),
+      'location_id' => $location->id(),
+      'location_name' => $location->getName(),
       'admin_level' => $location->getAdminLevel(),
       'pcode' => $location->getPcode(),
       'title_heading' => $this->t('Admin area @admin_level', [
@@ -861,7 +865,7 @@ class PlanOperationalPresenceMap extends GHIBlockBase implements MultiStepFormBl
       $clusters = $this->getOrganizationClusters($organization);
       $location_ids = [];
       foreach ($projects as $project) {
-        $location_ids = array_merge($location_ids, $project->location_ids);
+        $location_ids = array_merge($location_ids, $project->getLocationIds());
       }
       $location_ids = array_unique($location_ids);
       return [
@@ -910,14 +914,14 @@ class PlanOperationalPresenceMap extends GHIBlockBase implements MultiStepFormBl
     $plan_locations = &drupal_static(__FUNCTION__, []);
     if (empty($plan_locations[$plan_object->id()])) {
       // Prepare the locations.
-      $country_id = $plan_object->field_country->entity->field_original_id->value ?? NULL;
+      $country_id = $plan_object->getMainCountry()?->getSourceId() ?? NULL;
       $max_admin_level = max($plan_object->getMaxAdminLevel(), 3);
 
       /** @var \Drupal\ghi_base_objects\Plugin\FabricQuery\LocationQuery $location_query */
       $location_query = $this->getQueryHandler('locations');
-      $locations = $location_query->getLocationsForCountry($country_id, $max_admin_level);
+      $locations = $country_id ? $location_query->getLocationsForCountry($country_id, $max_admin_level) : [];
 
-      // Filter out all locations which do not have a GEOJSON file.
+      // Filter out all locations without GEOJSON files.
       $locations = array_filter($locations, function ($location) {
         return $location->hasGeoJsonFile();
       });

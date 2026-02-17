@@ -3,6 +3,7 @@
 namespace Drupal\ghi_plans\Traits;
 
 use Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment;
+use Drupal\hpc_common\Helpers\ArrayHelper;
 
 /**
  * Trait for working with disaggregated data.
@@ -25,7 +26,7 @@ trait DisaggregatedDataTrait {
     foreach ($facts as $item) {
       $location_id = $item->getLocationId();
       $metric = $item->getMetric();
-      $disaggregation_id = $item->getCategoryIdentifier();
+      $disaggregation_id = $item->getCombinedCategoryIdentifier();
 
       $locations[$location_id] = $locations[$location_id] ?? (object) [
         'totals' => [],
@@ -39,9 +40,7 @@ trait DisaggregatedDataTrait {
       }
 
       $metrics[$metric->id()] = $metrics[$metric->id()] ?? $metric;
-      foreach ($item->getCategories() as $category) {
-        $categories[$category->getUuid()] = $category;
-      }
+      $categories[$disaggregation_id] = $item->getCombinedCategoryLabel();
     }
     $disaggregated = (object) [
       'locations' => $locations,
@@ -77,16 +76,18 @@ trait DisaggregatedDataTrait {
           'type' => $metric->getMachineName(),
           'value' => array_sum(array_map(fn ($item) => $item->totals[$metric->id()], $metric_locations)),
         ],
+        'metric_object' => $metric,
         'unit_type' => $attachment->getUnitType(),
         'is_measurement' => FALSE,
         'locations' => array_map(function ($item) use ($metric, $data) {
           $categories = [];
-          foreach ($data->categories as $key => $category) {
-            $categories[$category->getName()] = [
-              'name' => $category->getName(),
+          foreach ($data->categories as $key => $category_label) {
+            $categories[$category_label] = [
+              'name' => $category_label,
               'data' => $item->categories[$key][$metric->id()] ?? 0,
             ];
           }
+          ArrayHelper::sortArrayByStringKey($categories, 'name');
           return [
             'id' => $item->location['id'],
             'name' => $item->location['name'],
@@ -102,6 +103,7 @@ trait DisaggregatedDataTrait {
         }, $metric_locations),
       ];
     }
+    ksort($transform);
     return $transform;
   }
 

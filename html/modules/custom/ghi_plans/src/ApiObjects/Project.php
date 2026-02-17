@@ -64,7 +64,7 @@ class Project extends BaseObject {
       'clusters' => $data->clusters ?? [],
       'published' => !empty($data->currentPublishedVersionId),
       'requirements' => $data->CurrentRequestedFunds,
-      'location_ids' => $data->locationIds->ids ?? [],
+      'location_ids' => $data->locationIds ?? [],
       'organizations' => $data->organizations ?? [],
       'target' => !empty($data->targets) ? array_sum(array_map(function ($item) {
         return $item->total;
