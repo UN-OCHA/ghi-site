@@ -202,7 +202,10 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
       if ($attachment->metricItemIsEmpty($metric_item)) {
         continue;
       }
-      $metric_label = $this->getMetricLabel($metric_index);
+      /** @var \Drupal\hpc_api\ApiObjects\Types\MetricType $metric_object */
+      $metric_object = $metric_item['metric_object'];
+      // @todo Add support for overridden labels via ::getMetricLabel().
+      $metric_label = $metric_object->getLabel($plan_base_object->getPlanLanguage());
       $metric_type = strtolower($metric_item['metric']->type);
       $metric_map_key = $metric_type . '-' . $metric_index;
       $metric_map_data = $this->prepareMetricItemMapData($metric_index, $metric_item, $decimal_format, $reporting_period_id ? $reporting_periods[$reporting_period_id] : NULL);
@@ -726,7 +729,7 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
    *   An attachment object.
    */
   private function getDefaultAttachment() {
-    $default_attachment = &drupal_static(__FUNCTION__, NULL);
+    $default_attachment = &drupal_static($this->getUuid() . '::' . __METHOD__, NULL);
     if ($default_attachment === NULL) {
       $conf = $this->getBlockConfig();
       $requested_attachment_id = $this->requestStack->getCurrentRequest()->request->get('attachment_id') ?? NULL;

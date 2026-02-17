@@ -49,8 +49,10 @@ class ProjectQuery extends FabricQueryBase {
       array_walk($items, fn (&$item) => $item->PlanId = $plan_context->getSourceId());
     }
 
+    // Fetch organizations, clusters and location ids.
     $this->addOrganizationsToProjectItems($items);
     $this->addFieldClustersToProjectItems($items);
+    $this->addLocationIdsToProjectItems($items);
     return count($items) == 1 ? new Project($items[0]) : NULL;
   }
 
@@ -82,9 +84,10 @@ class ProjectQuery extends FabricQueryBase {
       array_walk($items, fn (&$item) => $item->PlanId = $plan_context->getSourceId());
     }
 
-    // Fetch organizations and sectors.
+    // Fetch organizations, clusters and location ids.
     $this->addOrganizationsToProjectItems($items);
     $this->addFieldClustersToProjectItems($items);
+    $this->addLocationIdsToProjectItems($items);
     return $this->buildResultObjects($items, Project::class);
   }
 
@@ -171,7 +174,7 @@ class ProjectQuery extends FabricQueryBase {
     $projects = $this->getProjectsForPlan($plan, $context_base_object, $organization_id);
     $clusters = [];
     foreach ($projects as $project) {
-      $clusters += $project->getOrganizations();
+      $clusters += $project->getClusters();
     }
     ArrayHelper::sortObjectsByMethod($clusters, 'getName', EndpointQuery::SORT_ASC, SORT_STRING);
     return $clusters;
@@ -274,7 +277,7 @@ class ProjectQuery extends FabricQueryBase {
   }
 
   /**
-   * Add sectors to the given project items.
+   * Add clusters to the given project items.
    *
    * @param array $projects
    *   An array of fabric result items.
@@ -298,6 +301,34 @@ class ProjectQuery extends FabricQueryBase {
       $project_id = $item->ProjectId;
       $projects[$project_id]->clusters = $projects[$project_id]->clusters ?? [];
       $projects[$project_id]->clusters[$item->coordinationEntity->Id] = new PlanProjectCluster($item->coordinationEntity);
+    }
+  }
+
+  /**
+   * Add location ids to the given project items.
+   *
+   * @param array $projects
+   *   An array of fabric result items.
+   */
+  private function addLocationIdsToProjectItems(array &$projects) {
+    if (empty($projects)) {
+      return;
+    }
+    $project_ids = array_keys($projects);
+    // phpcs:disable Squiz.Arrays.ArrayDeclaration.KeySpecified
+    $items = $this->fabricClient->createQuery('projectLocations', [
+      'Id',
+      'ProjectId',
+      'LocationId',
+    ])
+      ->setFilter('ProjectId', $project_ids)
+      ->setOrderBy(['ProjectId' => 'ASC'])
+      ->execute() ?: [];
+    // phpcs:enable Squiz.Arrays.ArrayDeclaration.KeySpecified
+    foreach ($items as $item) {
+      $project_id = $item->ProjectId;
+      $projects[$project_id]->locationIds = $projects[$project_id]->locationIds ?? [];
+      $projects[$project_id]->locationIds[] = $item->LocationId;
     }
   }
 

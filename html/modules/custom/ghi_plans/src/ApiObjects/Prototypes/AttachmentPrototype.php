@@ -79,6 +79,9 @@ class AttachmentPrototype extends ApiObjectBase {
         return $item->name->en;
       }, $calculated_fields),
       'original_fields' => $all_fields,
+      'original_field_types' => array_map(function ($item) {
+        return $item->type;
+      }, $all_fields ?? []),
       'calculation_methods' => array_map(function ($item) {
         return strtolower($item);
       }, $value->calculationMethod ?? []),
@@ -143,6 +146,16 @@ class AttachmentPrototype extends ApiObjectBase {
    */
   public function getOriginalFields() {
     return $this->original_fields;
+  }
+
+  /**
+   * Get the original field types from the API.
+   *
+   * @return string[]
+   *   An array of field type strings.
+   */
+  public function getOriginalFieldTypes() {
+    return $this->original_field_types;
   }
 
   /**
