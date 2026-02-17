@@ -152,6 +152,11 @@ function ghi_plans_form_base_object_plan_edit_form_alter(&$form, FormStateInterf
     }
   }
 
+  if (!empty($form['field_requirements'])) {
+    $form['field_requirements']['#disabled'] = TRUE;
+    $form['field_requirements']['#attributes']['title'] = t('The requirements are set and updated automatically by a cron job.');
+  }
+
   // Better display of the plan coordinator in the form.
   if (!empty($form['field_plan_coordinator']) && $form['field_plan_coordinator']['#disabled']) {
     $form['field_plan_coordinator']['summary'] = [

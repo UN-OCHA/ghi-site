@@ -35,6 +35,14 @@ class Plan extends BaseObject implements BaseObjectMetaDataInterface, BaseObject
   /**
    * {@inheritdoc}
    */
+  public function save() {
+    $this->updateRequirements();
+    return parent::save();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function toUrl($rel = 'canonical', array $options = []) {
     // Allow to link to FTS.
     if ($rel == 'fts_summary') {
@@ -277,7 +285,12 @@ class Plan extends BaseObject implements BaseObjectMetaDataInterface, BaseObject
       }
     }
     elseif ($this->useProjectRequirements()) {
-      // @todo Implement project requirements.
+      $project_query = $this->getProjectQuery();
+      $projects = $project_query->getProjectsForPlan($this);
+      $requirements = 0;
+      foreach ($projects as $project) {
+        $requirements += $project->getRequirements();
+      }
     }
     $this->get('field_requirements')->setValue($requirements);
   }
