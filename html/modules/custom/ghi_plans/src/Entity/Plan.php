@@ -305,7 +305,7 @@ class Plan extends BaseObject implements BaseObjectMetaDataInterface, BaseObject
     if (!$this->hasField('field_requirements')) {
       return NULL;
     }
-    $requirements = $this->get('field_requirements')?->value;
+    $requirements = $this->get('field_requirements')->value;
     return $requirements !== NULL ? (float) $requirements : NULL;
   }
 
