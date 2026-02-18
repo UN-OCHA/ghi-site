@@ -7,7 +7,6 @@ use Drupal\ghi_base_objects\Plugin\FabricQuery\LocationQuery;
 use Drupal\ghi_plans\Plugin\FabricQuery\AttachmentPrototypeQuery;
 use Drupal\ghi_plans\Plugin\FabricQuery\AttachmentQuery;
 use Drupal\ghi_plans\Plugin\FabricQuery\EntityPrototypeQuery;
-use Drupal\ghi_plans\Plugin\FabricQuery\EntityTypeQuery;
 use Drupal\ghi_plans\Plugin\FabricQuery\MeasurementQuery;
 use Drupal\ghi_plans\Plugin\FabricQuery\OrganizationQuery;
 use Drupal\ghi_plans\Plugin\FabricQuery\PlanEntityQuery;
@@ -42,17 +41,6 @@ trait PlanQueryTrait {
   protected static function getPlanEntityQuery(): ?PlanEntityQuery {
     $query = self::getQueryInstance('plan_entity');
     return $query instanceof PlanEntityQuery ? $query : NULL;
-  }
-
-  /**
-   * Get the entity type query.
-   *
-   * @return \Drupal\ghi_plans\Plugin\FabricQuery\EntityTypeQuery|null
-   *   The entity type query or NULL.
-   */
-  protected static function getEntityTypeQuery(): ?EntityTypeQuery {
-    $query = self::getQueryInstance('entity_type');
-    return $query instanceof EntityTypeQuery ? $query : NULL;
   }
 
   /**

@@ -41,6 +41,28 @@ class OrganizationQuery extends FabricQueryBase {
   }
 
   /**
+   * Get the base data for a list of organizations.
+   *
+   * @param int[] $organization_ids
+   *   The organization ids.
+   *
+   * @return \Drupal\ghi_plans\ApiObjects\Organization[]
+   *   An array of organization objects.
+   */
+  public function getOrganizationsById(array $organization_ids): array {
+    if (empty($organization_ids)) {
+      return [];
+    }
+    if (count($organization_ids) > self::MAX_FILTER_COUNT_ARRAY) {
+      return $this->doChunkedQuery($organization_ids, fn ($ids): array => $this->getOrganizationsById($ids));
+    }
+    $items = $this->fabricClient->createQuery('organizations', Organization::getGraphQlItems())
+      ->setFilter('Id', $organization_ids)
+      ->execute() ?: [];
+    return $this->buildResultObjects($items, Organization::class);
+  }
+
+  /**
    * Get the projects for an organization.
    *
    * @param \Drupal\ghi_plans\ApiObjects\Organization $organization

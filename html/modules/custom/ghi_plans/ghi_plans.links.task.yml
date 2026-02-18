@@ -4,10 +4,10 @@ entity.base_object.plan_structure:
   title: Plan structure
   weight: 100
 
-hpc_api.fabric_report.entity_lookup:
-  route_name: ghi_plans.entity_lookup
+hpc_api.fabric_report.plan_entity_lookup:
+  route_name: ghi_plans.plan_entity_lookup
   base_route: hpc_api.fabric_report
-  title: 'Entity lookup'
+  title: 'Plan entity lookup'
   weight: 5
 hpc_api.fabric_report.attachment_lookup:
   route_name: ghi_plans.attachment_lookup

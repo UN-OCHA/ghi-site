@@ -4,11 +4,11 @@ namespace Drupal\ghi_plans\Plugin\FabricQuery;
 
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\ghi_base_objects\Entity\BaseObjectChildInterface;
-use Drupal\ghi_plans\ApiObjects\Organization;
 use Drupal\ghi_plans\ApiObjects\Partials\PlanProjectCluster;
 use Drupal\ghi_plans\ApiObjects\Project;
 use Drupal\ghi_plans\Entity\GoverningEntity;
 use Drupal\ghi_plans\Entity\Plan;
+use Drupal\ghi_plans\Traits\PlanQueryTrait;
 use Drupal\ghi_plans\Traits\ProjectTrait;
 use Drupal\hpc_api\Attribute\FabricQuery;
 use Drupal\hpc_api\Query\EndpointQuery;
@@ -26,6 +26,7 @@ use Drupal\hpc_common\Helpers\ArrayHelper;
 )]
 class ProjectQuery extends FabricQueryBase {
 
+  use PlanQueryTrait;
   use ProjectTrait;
 
   /**
@@ -39,7 +40,7 @@ class ProjectQuery extends FabricQueryBase {
    * @return \Drupal\ghi_plans\ApiObjects\Project|null
    *   An project object or NULL.
    */
-  public function getProject($project_id, ?Plan $plan_context = NULL): ?Project {
+  public function getProject(int $project_id, ?Plan $plan_context = NULL): ?Project {
     $items = $this->fabricClient->createQuery('projects', Project::getGraphQlItems())
       ->setFilter('Id', $project_id)
       ->execute() ?: [];
@@ -67,13 +68,12 @@ class ProjectQuery extends FabricQueryBase {
    * @return \Drupal\ghi_plans\ApiObjects\Project[]
    *   An array of project objects.
    */
-  public function getProjectsById($project_ids, ?Plan $plan_context = NULL): array {
-    if (count($project_ids) > 100) {
-      $projects = [];
-      foreach (array_chunk($project_ids, 100) as $chunk_ids) {
-        $projects = array_merge($projects, $this->getProjectsById($chunk_ids, $plan_context));
-      }
-      return $projects;
+  public function getProjectsById(array $project_ids, ?Plan $plan_context = NULL): array {
+    if (empty($project_ids)) {
+      return [];
+    }
+    if (count($project_ids) > self::MAX_FILTER_COUNT_ARRAY) {
+      return $this->doChunkedQuery($project_ids, fn ($ids): array => $this->getProjectsById($ids, $plan_context));
     }
     $items = $this->fabricClient->createQuery('projects', Project::getGraphQlItems())
       ->setFilter('Id', $project_ids)
@@ -124,7 +124,7 @@ class ProjectQuery extends FabricQueryBase {
     $plan_type = $this->getEntityTypeByName('Plan');
     $relationships = $this->getRelationshipItems($project_type->id(), $plan_type->id(), NULL, $plan->getSourceId());
     $project_ids = array_map(fn ($item) => $item->getSourceId(), $relationships);
-    $projects = $this->getProjectsById($project_ids, $plan);
+    $projects = !empty($project_ids) ? $this->getProjectsById($project_ids, $plan) : [];
     if ($context_base_object instanceof GoverningEntity) {
       $projects = array_filter($projects, fn ($project) => in_array($context_base_object->getSourceId(), $project->getClusterIds()));
     }
@@ -237,14 +237,14 @@ class ProjectQuery extends FabricQueryBase {
    * @param array $items
    *   An array of fabric result items.
    */
-  private function addOrganizationsToProjectItems(array &$items) {
+  private function addOrganizationsToProjectItems(array &$items): void {
     if (empty($items)) {
       return;
     }
-    if (count($items) > 100) {
+    if (count($items) > self::MAX_FILTER_COUNT_ARRAY) {
       // We need to do multiple queries.
-      for ($i = 0; $i < ceil(count($items) / 100); $i++) {
-        $subset = array_slice($items, $i * 100, 100);
+      for ($i = 0; $i < ceil(count($items) / self::MAX_FILTER_COUNT_ARRAY); $i++) {
+        $subset = array_slice($items, $i * self::MAX_FILTER_COUNT_ARRAY, self::MAX_FILTER_COUNT_ARRAY);
         $this->addOrganizationsToProjectItems($subset);
       }
       return;
@@ -258,21 +258,13 @@ class ProjectQuery extends FabricQueryBase {
     $organization_ids = array_unique(array_map(fn ($item) => $item->getTargetId(), $relationships));
     sort($organization_ids);
 
-    // We need to do multiple queries.
-    $organizations = [];
-    for ($i = 0; $i < ceil(count($organization_ids) / 100); $i++) {
-      $subset = array_slice($organization_ids, $i * 100, 100);
-      $organizations += $this->fabricClient->createQuery('organizations')
-        ->setFilter('Id', $subset)
-        ->setItems(Organization::getGraphQlItems())
-        ->execute() ?: [];
-    }
+    $organizations = $this->getOrganizationQuery()->getOrganizationsById($organization_ids);
 
     foreach ($relationships as $item) {
       $project_id = $item->getSourceId();
       $organization_id = $item->getTargetId();
       $items[$project_id]->organizations = $items[$project_id]->organizations ?? [];
-      $items[$project_id]->organizations[$organization_id] = new Organization($organizations[$organization_id]);
+      $items[$project_id]->organizations[$organization_id] = $organizations[$organization_id];
     }
   }
 
@@ -282,7 +274,7 @@ class ProjectQuery extends FabricQueryBase {
    * @param array $projects
    *   An array of fabric result items.
    */
-  private function addFieldClustersToProjectItems(array &$projects) {
+  private function addFieldClustersToProjectItems(array &$projects): void {
     if (empty($projects)) {
       return;
     }
@@ -310,7 +302,7 @@ class ProjectQuery extends FabricQueryBase {
    * @param array $projects
    *   An array of fabric result items.
    */
-  private function addLocationIdsToProjectItems(array &$projects) {
+  private function addLocationIdsToProjectItems(array &$projects): void {
     if (empty($projects)) {
       return;
     }

@@ -10,7 +10,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  *
  * @EndpointQuery(
  *   id = "funding_overview_query",
- *   label = @Translation("Plan overview query"),
+ *   label = @Translation("Plan funding overview query"),
  *   endpoint = {
  *     "public" = "public/plan/overview/{year}",
  *     "version" = "v2"

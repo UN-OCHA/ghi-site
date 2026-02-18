@@ -5,7 +5,9 @@ namespace Drupal\hpc_api\Controller;
 use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Component\Render\MarkupInterface;
 use Drupal\Core\Controller\ControllerBase;
+use Drupal\Core\Form\FormState;
 use Drupal\Core\Render\Markup;
+use Drupal\hpc_api\Form\EntityLookupForm;
 use Drupal\hpc_api\Traits\FabricQueryTrait;
 use Drupal\hpc_common\Helpers\StringHelper;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -177,7 +179,16 @@ class FabricReportController extends ControllerBase {
       }
     }
 
+    // Embed the form.
+    $form_state = new FormState();
+    $form_state->addBuildInfo('args', [$entity_type->getName(), $entity_id]);
+    $entity_lookup_form = $this->formBuilder()->buildForm(EntityLookupForm::class, $form_state);
+    $entity_lookup_form['#attributes']['class'][] = 'gin-layer-wrapper';
+
     return [
+      [
+        $entity_lookup_form,
+      ],
       [
         '#type' => 'details',
         '#title' => $this->t('Query'),
