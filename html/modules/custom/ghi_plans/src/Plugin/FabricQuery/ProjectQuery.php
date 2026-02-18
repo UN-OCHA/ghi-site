@@ -77,6 +77,7 @@ class ProjectQuery extends FabricQueryBase {
     }
     $items = $this->fabricClient->createQuery('projects', Project::getGraphQlItems())
       ->setFilter('Id', $project_ids)
+      ->setFilter('IsPublished', TRUE)
       ->setOrderBy(['ProjectCode' => 'ASC'])
       ->execute() ?: [];
 
