@@ -51,6 +51,8 @@ abstract class FabricQueryBase extends PluginBase implements FabricQueryPluginIn
   const CATEGORY_NAME_PLAN_TYPE = 'PlanType';
   const CATEGORY_NAME_PLAN_COSTING = 'PlanCosting';
 
+  const MAX_FILTER_COUNT_ARRAY = 100;
+
   /**
    * Base types.
    */
@@ -218,6 +220,28 @@ abstract class FabricQueryBase extends PluginBase implements FabricQueryPluginIn
    */
   public function setCache($cache_key, $data): mixed {
     return $this->cache($cache_key, $data, FALSE, NULL, $this->getCacheTags());
+  }
+
+  /**
+   * Do a chunked query to work around fabrics limitation of 100 filter values.
+   *
+   * @param scalar[] $values
+   *   An array of values. Typically a list of ids.
+   * @param callable $callback
+   *   A callback function that will be called with the value subset as the
+   *   only argument.
+   *
+   * @return array
+   *   An array of result objects.
+   */
+  protected function doChunkedQuery(array $values, callable $callback): array {
+    $items = [];
+    for ($i = 0; $i < ceil(count($values) / self::MAX_FILTER_COUNT_ARRAY); $i++) {
+      $subset = array_slice($values, $i * self::MAX_FILTER_COUNT_ARRAY, self::MAX_FILTER_COUNT_ARRAY);
+      $result = $callback($subset);
+      $items = $items + (is_array($result) ? $result : []);
+    }
+    return $items;
   }
 
   /**
@@ -429,10 +453,10 @@ abstract class FabricQueryBase extends PluginBase implements FabricQueryPluginIn
   /**
    * Get the available entity types.
    *
-   * @return \Drupal\hpc_api\ApiObjects\Types\EntityType
+   * @return \Drupal\hpc_api\ApiObjects\Types\EntityType|null
    *   The entity types.
    */
-  public function getEntityTypeById(int $id): EntityType {
+  public function getEntityTypeById(int $id): ?EntityType {
     $this->fetchBaseTypes();
     return $this->baseTypes['entityTypes'][$id] ?? NULL;
   }
@@ -675,41 +699,46 @@ abstract class FabricQueryBase extends PluginBase implements FabricQueryPluginIn
    * @return string|null
    *   The label if found NULL otherwise.
    */
-  public function lookupEntityLabel($entity_type_id, $entity_id): ?string {
+  public function lookupEntityLabel(int $entity_type_id, int $entity_id): ?string {
+    $labels = $this->lookupEntityLabels($entity_type_id, [$entity_id]);
+    return $labels[$entity_type_id][$entity_id] ?? NULL;
+  }
+
+  /**
+   * Lookup the label for an entity.
+   *
+   * @param int $entity_type_id
+   *   The id of the entity type.
+   * @param array $entity_ids
+   *   The entity ids.
+   *
+   * @return string[]
+   *   The label if found NULL otherwise.
+   */
+  public function lookupEntityLabels(int $entity_type_id, array $entity_ids): array {
     $entity_type = $this->getEntityTypeById($entity_type_id);
-    switch ($entity_type->getName()) {
-      case 'Plan':
-        return $this->getSingleEntityItem('plans', $entity_id)?->Name;
-
-      case 'Project':
-        $project = $this->getSingleEntityItem('projects', $entity_id, ['Id', 'Name', 'ProjectCode']);
-        return $project ? ($project->ProjectCode . ': ' . $project->Name) : NULL;
-
-      case 'Location':
-        return $this->getSingleEntityItem('locations', $entity_id)?->Name;
-
-      case 'Organization':
-        return $this->getSingleEntityItem('organizations', $entity_id)?->Name;
-
-      case 'Sector':
-        return $this->getSingleEntityItem('sectors', $entity_id)?->Name;
-
-      case 'FieldCluster':
-        return $this->getSingleEntityItem('coordinationEntities', $entity_id)?->Name;
-
-      case 'Period':
-        return $this->getSingleEntityItem('periods', $entity_id)?->Name;
-
-      case 'StrategicObjective':
-      case 'SpecificObjective':
-      case 'ClusterObjective':
-      case 'ClusterActivity':
-        return $this->getSingleEntityItem('logframeEntities', $entity_id)?->Name;
-
-      case 'Contact':
-        return $this->getSingleEntityItem('contacts', $entity_id)?->Name;
+    $simple_map = [
+      'Plan' => 'plans',
+      'Location' => 'locations',
+      'Organization' => 'organizations',
+      'Sector' => 'sectors',
+      'FieldCluster' => 'coordinationEntities',
+      'Period' => 'periods',
+      'StrategicObjective' => 'logframeEntities',
+      'SpecificObjective' => 'logframeEntities',
+      'ClusterObjective' => 'logframeEntities',
+      'ClusterActivity' => 'logframeEntities',
+      'Contact' => 'contacts',
+    ];
+    if (!empty($simple_map[$entity_type->getName()])) {
+      return array_map(fn ($item) => $item->Name, $this->getEntityItems($simple_map[$entity_type->getName()], $entity_ids) ?? []);
     }
-    return NULL;
+    elseif ($entity_type->getName() == 'Project') {
+      $projects = $this->getEntityItems('projects', $entity_ids, ['Id', 'Name', 'ProjectCode']) ?: [];
+      return array_map(fn ($item) => $item->ProjectCode . ': ' . $item->Name, $projects);
+    }
+
+    return [];
   }
 
   /**
@@ -717,20 +746,27 @@ abstract class FabricQueryBase extends PluginBase implements FabricQueryPluginIn
    *
    * @param string $namespace
    *   The graphql namespace.
-   * @param int $entity_id
+   * @param int[] $entity_ids
    *   The entity id to query for.
    * @param string[] $fields
    *   An array of field names to query.
    *
-   * @return object|null
-   *   The result object or NULL.
+   * @return array
+   *   An array of result objects.
    */
-  private function getSingleEntityItem($namespace, $entity_id, $fields = NULL): ?object {
+  private function getEntityItems(string $namespace, array $entity_ids, $fields = NULL): array {
+    if (empty($entity_ids)) {
+      return [];
+    }
+    if (count($entity_ids) > self::MAX_FILTER_COUNT_ARRAY) {
+      // We need to do multiple queries.
+      return $this->doChunkedQuery($entity_ids, fn ($ids): array => $this->getEntityItems($namespace, $ids, $fields));
+    }
     $items = $this->fabricClient->createQuery($namespace)
       ->setItems($fields ?? ['Id', 'Name'])
-      ->setFilter('Id', $entity_id)
+      ->setFilter('Id', $entity_ids)
       ->execute();
-    return count($items) == 1 ? reset($items) : NULL;
+    return $items ?: [];
   }
 
 }

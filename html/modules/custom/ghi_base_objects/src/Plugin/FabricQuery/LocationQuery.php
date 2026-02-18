@@ -51,14 +51,9 @@ class LocationQuery extends FabricQueryBase {
     if (empty($location_ids)) {
       return [];
     }
-    if (count($location_ids) > 100) {
+    if (count($location_ids) > self::MAX_FILTER_COUNT_ARRAY) {
       // We need to do multiple queries.
-      $entities = [];
-      for ($i = 0; $i < ceil(count($location_ids) / 100); $i++) {
-        $subset = array_slice($location_ids, $i * 100, 100);
-        $entities = $entities + $this->getLocations($subset);
-      }
-      return $entities;
+      return $this->doChunkedQuery($location_ids, fn ($ids): array => $this->getLocations($ids));
     }
     $items = $this->fabricClient->createQuery('locations', Location::getGraphQlItems())
       ->setFilter('Id', $location_ids)
