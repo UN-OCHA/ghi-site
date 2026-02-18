@@ -232,6 +232,17 @@ class EntityQuery extends FabricQueryBase {
   }
 
   /**
+   * Get options for entity queries.
+   *
+   * @return array
+   *   An array of entity query options. Keyed by the namespace, values are the
+   *   labels.
+   */
+  public function getEntityQueryOptions() {
+    return array_flip(array_map(fn ($item) => $item['namespace'], $this->getEntityQueryDefinitions()));
+  }
+
+  /**
    * Get the query used to query entity data.
    *
    * @param int $entity_type_id
@@ -240,7 +251,7 @@ class EntityQuery extends FabricQueryBase {
    *   The entity id.
    *
    * @return \Drupal\hpc_api\Query\FabricQuery|null
-   *   The query payload for fabric.
+   *   A fabric query object or NULL.
    */
   public function getEntityQuery(int $entity_type_id, int $entity_id): ?FabricQuery {
     $query_definitions = $this->getEntityQueryDefinitions();

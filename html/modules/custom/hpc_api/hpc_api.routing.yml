@@ -58,6 +58,15 @@ hpc_api.reports.fabric.relationships:
   options:
     _admin_route: TRUE
 hpc_api.reports.fabric.entity_lookup:
+  path: '/admin/reports/fabric/entity-lookup'
+  defaults:
+    _form: '\Drupal\hpc_api\Form\EntityLookupForm'
+    _title: 'Entity lookup'
+  requirements:
+    _permission: 'access site reports'
+  options:
+    _admin_route: TRUE
+hpc_api.reports.fabric.entity_lookup_page:
   path: '/admin/reports/fabric/entity-lookup/{entity_type_id}/{entity_id}'
   defaults:
     _controller: '\Drupal\hpc_api\Controller\FabricReportController::entityLookupPage'

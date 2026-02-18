@@ -69,14 +69,9 @@ class PlanEntityQuery extends FabricQueryBase {
    *   An array of entity objects.
    */
   public function getEntities($entity_type, $entity_ids): array {
-    if (count($entity_ids) > 100) {
+    if (count($entity_ids) > self::MAX_FILTER_COUNT_ARRAY) {
       // We need to do multiple queries.
-      $entities = [];
-      for ($i = 0; $i < ceil(count($entity_ids) / 100); $i++) {
-        $subset = array_slice($entity_ids, $i * 100, 100);
-        $entities = $entities + $this->getEntities($entity_type, $subset);
-      }
-      return $entities;
+      return $this->doChunkedQuery($entity_ids, fn ($ids): array => $this->getEntities($entity_type, $ids));
     }
     switch ($entity_type) {
       case 'governingEntity':

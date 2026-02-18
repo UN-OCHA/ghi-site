@@ -1238,8 +1238,8 @@ class DataAttachment extends AttachmentBase implements DataAttachmentInterface {
       return $measurement?->getDataPointValue($data_point_index) ?? NULL;
     }
 
-    $metric_type = $this->getPrototype()->getOriginalFields()[$data_point_index]?->type;
-    $value = $this->values[$metric_type] ?? NULL;
+    $metric_type = $this->getPrototype()->getOriginalFields()[$data_point_index]?->type ?? NULL;
+    $value = $metric_type ? ($this->values[$metric_type] ?? NULL) : NULL;
 
     $field = $this->getFieldByIndex($data_point_index);
     if ($value !== NULL || !$field) {

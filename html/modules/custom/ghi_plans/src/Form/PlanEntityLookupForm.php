@@ -5,9 +5,9 @@ namespace Drupal\ghi_plans\Form;
 use Drupal\Core\Form\FormStateInterface;
 
 /**
- * Provides a form to lookup entity data.
+ * Provides a form to lookup plan entity data.
  */
-class EntityLookupForm extends BaseLookupForm {
+class PlanEntityLookupForm extends BaseLookupForm {
 
   /**
    * {@inheritdoc}

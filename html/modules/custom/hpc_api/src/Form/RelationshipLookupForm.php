@@ -90,25 +90,46 @@ class RelationshipLookupForm extends FormBase {
     $entity_types = $query->getEntityTypes();
     $rows = [];
     if ($source_type || $target_type || $source_id || $target_id) {
+      $objects = [];
+
+      // Preload labels.
       foreach ($query->getRelationshipItems($source_type, $target_type, $source_id, $target_id) as $item) {
         $_source_type_id = $item->getSourceTypeId();
         $_source_id = $item->getSourceId();
         $_target_type_id = $item->getTargetTypeId();
         $_target_id = $item->getTargetId();
-        $source_label = $query->lookupEntityLabel($_source_type_id, $_source_id);
-        $target_label = $query->lookupEntityLabel($_target_type_id, $_target_id);
+        if ($_source_id && $_source_type_id) {
+          $objects[$_source_type_id][] = $_source_id;
+          $objects[$_source_type_id] = array_unique($objects[$_source_type_id]);
+        }
+        if ($_target_id && $_target_type_id) {
+          $objects[$_target_type_id][] = $_target_id;
+          $objects[$_target_type_id] = array_unique($objects[$_target_type_id]);
+        }
+      }
+      foreach ($objects as $_type_id => $_ids) {
+        $labels[$_type_id] = $query->lookupEntityLabels($_type_id, $_ids);
+      }
+
+      foreach ($query->getRelationshipItems($source_type, $target_type, $source_id, $target_id) as $item) {
+        $_source_type_id = $item->getSourceTypeId();
+        $_source_id = $item->getSourceId();
+        $_target_type_id = $item->getTargetTypeId();
+        $_target_id = $item->getTargetId();
+        $source_label = $labels[$_source_type_id][$_source_id] ?? NULL;
+        $target_label = $labels[$_target_type_id][$_target_id] ?? NULL;
 
         $source_label = $source_label ? ($source_label . ' (' . $_source_id . ')') : $_source_id;
         $target_label = $target_label ? ($target_label . ' (' . $_target_id . ')') : $_target_id;
 
-        $source_url = Url::fromRoute('hpc_api.reports.fabric.entity_lookup', [
+        $source_url = Url::fromRoute('hpc_api.reports.fabric.entity_lookup_page', [
           'entity_type_id' => $_source_type_id,
           'entity_id' => $_source_id,
         ]);
         if ($source_url) {
           $source_label = Link::fromTextAndUrl($source_label, $source_url)->toString();
         }
-        $target_url = Url::fromRoute('hpc_api.reports.fabric.entity_lookup', [
+        $target_url = Url::fromRoute('hpc_api.reports.fabric.entity_lookup_page', [
           'entity_type_id' => $_target_type_id,
           'entity_id' => $_target_id,
         ]);

@@ -4,6 +4,8 @@ namespace Drupal\hpc_api\Traits;
 
 use Drupal\hpc_api\Plugin\FabricQuery\BaseTypeQuery;
 use Drupal\hpc_api\Plugin\FabricQuery\CategoryQuery;
+use Drupal\hpc_api\Plugin\FabricQuery\EntityQuery;
+use Drupal\hpc_api\Plugin\FabricQuery\EntityTypeQuery;
 use Drupal\hpc_api\Query\FabricQueryBase;
 
 /**
@@ -31,7 +33,7 @@ trait FabricQueryTrait {
   }
 
   /**
-   * Get the country query.
+   * Get the base type query.
    *
    * @return \Drupal\hpc_api\Plugin\FabricQuery\BaseTypeQuery|null
    *   The category query or NULL.
@@ -39,6 +41,28 @@ trait FabricQueryTrait {
   protected static function getBaseTypeQuery(): ?BaseTypeQuery {
     $query = self::getQueryInstance('base_type');
     return $query instanceof BaseTypeQuery ? $query : NULL;
+  }
+
+  /**
+   * Get the entity query.
+   *
+   * @return \Drupal\hpc_api\Plugin\FabricQuery\EntityQuery|null
+   *   The category query or NULL.
+   */
+  protected static function getEntityQuery(): ?EntityQuery {
+    $query = self::getQueryInstance('entity');
+    return $query instanceof EntityQuery ? $query : NULL;
+  }
+
+  /**
+   * Get the entity type query.
+   *
+   * @return \Drupal\hpc_api\Plugin\FabricQuery\EntityTypeQuery|null
+   *   The entity type query or NULL.
+   */
+  protected static function getEntityTypeQuery(): ?EntityTypeQuery {
+    $query = self::getQueryInstance('entity_type');
+    return $query instanceof EntityTypeQuery ? $query : NULL;
   }
 
   /**

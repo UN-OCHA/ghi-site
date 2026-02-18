@@ -36,7 +36,7 @@ class MetricType extends Type {
    */
   public function getLabel(?string $langcode = 'en'): string {
     if (in_array($langcode, ['fr', 'es'])) {
-      return $this->map->locale[$langcode];
+      return $this->map->locale->$langcode;
     }
     return $this->map->label ?: $this->getName();
   }
