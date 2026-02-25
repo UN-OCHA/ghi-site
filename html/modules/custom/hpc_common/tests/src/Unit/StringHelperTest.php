@@ -11,30 +11,6 @@ use Drupal\hpc_common\Helpers\StringHelper;
 class StringHelperTest extends UnitTestCase {
 
   /**
-   * The string helper class.
-   *
-   * @var Drupal\hpc_common\Helpers\StringHelper
-   */
-  protected $stringHelper;
-
-  /**
-   * {@inheritdoc}
-   */
-  protected function setUp(): void {
-    parent::setUp();
-
-    $this->stringHelper = new StringHelper();
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  protected function tearDown(): void {
-    parent::tearDown();
-    unset($this->stringHelper);
-  }
-
-  /**
    * Data provider for makeCamelCase.
    */
   public function makeCamelCaseDataProvider() {
@@ -51,7 +27,7 @@ class StringHelperTest extends UnitTestCase {
    * @dataProvider makeCamelCaseDataProvider
    */
   public function testMakeCamelCase($string, $initial_lower_case, $result) {
-    $this->assertEquals($result, $this->stringHelper->makeCamelCase($string, $initial_lower_case));
+    $this->assertEquals($result, StringHelper::makeCamelCase($string, $initial_lower_case));
   }
 
   /**
@@ -117,7 +93,7 @@ class StringHelperTest extends UnitTestCase {
    * @dataProvider renderStringDataProvider
    */
   public function testRenderString($string, $is_export, $result) {
-    $this->assertEquals($result, $this->stringHelper->renderString($string, $is_export));
+    $this->assertEquals($result, StringHelper::renderString($string, $is_export));
   }
 
 }

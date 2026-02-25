@@ -286,36 +286,6 @@ class ApiEntityHelper {
   }
 
   /**
-   * Get the public name of an entity prototype.
-   *
-   * @param object $entity
-   *   An entity object.
-   * @param bool $plural
-   *   Flag for either singgular or plural label output.
-   *
-   * @return string
-   *   The label of the entity prototype.
-   */
-  public static function getEntityPrototypeName($entity, $plural = TRUE) {
-    $prototype = self::getEntityPrototype($entity);
-    $property = $plural ? 'plural' : 'singular';
-    return $prototype->value->name->en->$property;
-  }
-
-  /**
-   * Get the entity prototype from an entity.
-   *
-   * @param object $entity
-   *   An entity object.
-   *
-   * @return object
-   *   An entity prototype object.
-   */
-  public static function getEntityPrototype($entity) {
-    return $entity->entityPrototype;
-  }
-
-  /**
    * Extract plan data entities (plan or governing) by type.
    *
    * @param object $data

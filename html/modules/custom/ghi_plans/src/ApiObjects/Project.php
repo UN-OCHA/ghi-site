@@ -3,6 +3,7 @@
 namespace Drupal\ghi_plans\ApiObjects;
 
 use Drupal\ghi_base_objects\ApiObjects\BaseObject;
+use Drupal\ghi_plans\ApiObjects\Partials\PlanProjectCluster;
 use Drupal\hpc_api\Traits\SimpleCacheTrait;
 
 /**
@@ -65,8 +66,8 @@ class Project extends BaseObject {
       'clusters' => $data->clusters ?? [],
       'published' => !empty($data->IsPublished),
       'requirements' => $data->CurrentRequestedFunds,
-      'location_ids' => $data->locationIds ?? [],
-      'organizations' => $data->organizations ?? [],
+      'location_ids' => $data->locationIds ?? NULL,
+      'organizations' => $data->organizations ?? NULL,
       'target' => !empty($data->targets) ? array_sum(array_map(function ($item) {
         return $item->total;
       }, $data->targets)) : 0,
@@ -94,6 +95,16 @@ class Project extends BaseObject {
   }
 
   /**
+   * Whether the project is published or not.
+   *
+   * @return bool
+   *   TRUE if the project is published, FALSE otherwise.
+   */
+  public function isPublished(): bool {
+    return $this->map->published;
+  }
+
+  /**
    * Get the requirements.
    *
    * @return float
@@ -109,8 +120,8 @@ class Project extends BaseObject {
    * @return \Drupal\ghi_plans\ApiObjects\Organization[]
    *   An array of processed organization objects.
    */
-  public function getOrganizations() {
-    return $this->map->organizations;
+  public function getOrganizations(): array {
+    return array_filter($this->map->organizations ?? [], fn ($item) => is_object($item) && $item instanceof Organization);
   }
 
   /**
@@ -119,8 +130,8 @@ class Project extends BaseObject {
    * @return \Drupal\ghi_plans\ApiObjects\Partials\PlanProjectCluster[]
    *   An array of clusters for this project.
    */
-  public function getClusters() {
-    return $this->map->clusters;
+  public function getClusters(): array {
+    return array_filter($this->map->clusters ?? [], fn ($item) => is_object($item) && $item instanceof PlanProjectCluster);
   }
 
   /**
@@ -129,7 +140,7 @@ class Project extends BaseObject {
    * @return int[]
    *   An array of cluster ids for this project.
    */
-  public function getClusterIds() {
+  public function getClusterIds(): array {
     return array_keys($this->getClusters() ?? []);
   }
 
@@ -139,8 +150,8 @@ class Project extends BaseObject {
    * @return int[]
    *   An array of location ids for this project.
    */
-  public function getLocationIds() {
-    return $this->location_ids;
+  public function getLocationIds(): array {
+    return $this->location_ids ?? [];
   }
 
   /**
@@ -153,7 +164,7 @@ class Project extends BaseObject {
    *   TRUE if the current project lists the given organization, FALSE
    *   otherwise.
    */
-  public function hasOrganization(Organization $organization) {
+  public function hasOrganization(Organization $organization): bool {
     $organizations = $this->getOrganizations();
     return array_key_exists($organization->id, $organizations);
   }

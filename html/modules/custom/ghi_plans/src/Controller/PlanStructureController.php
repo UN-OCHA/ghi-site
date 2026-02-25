@@ -31,13 +31,16 @@ class PlanStructureController extends ControllerBase {
 
     $items = [];
     foreach (array_merge($plan_structure['plan_entities'], $plan_structure['governing_entities']) as $plan_object) {
+      if (!$plan_object instanceof EntityObjectInterface) {
+        continue;
+      }
       $group_items = [
         '#theme' => 'item_list',
         '#title' => $plan_object->label,
         '#items' => [],
       ];
       foreach ($ple_structure as $entity) {
-        if ($plan_object->entity_prototype_id != $entity->entity_prototype_id) {
+        if ($plan_object->getPrototypeId() != $entity->getPrototypeId()) {
           continue;
         }
         $title = $entity->getName() . ' ' . $entity->getCustomReference() . ' (' . $entity->getComposedReference() . ')';

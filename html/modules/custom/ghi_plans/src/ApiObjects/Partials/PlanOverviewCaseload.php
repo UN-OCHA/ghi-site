@@ -21,18 +21,16 @@ class PlanOverviewCaseload extends BaseObject implements CaseloadAttachmentInter
     $data = $this->getRawData();
 
     $calculated_fields = $data->calculatedFields ?? [];
-    if ($calculated_fields && !is_array($calculated_fields)) {
-      $calculated_fields = [
-        $calculated_fields->type => $calculated_fields,
-      ];
+    if ($calculated_fields && !is_array($calculated_fields) && is_object($calculated_fields)) {
+      $calculated_fields = [$calculated_fields];
     }
     $fields = array_merge($data->totals, $calculated_fields);
     return (object) [
       'id' => $data->Id,
       'custom_id' => $data->CustomReference,
       'plan_id' => $data->PlanId,
-      'original_fields' => $fields,
-      'original_field_types' => array_map(function ($item) {
+      'fields' => $fields,
+      'field_types' => array_map(function ($item) {
         return $item->type;
       }, $fields),
     ];
@@ -62,15 +60,29 @@ class PlanOverviewCaseload extends BaseObject implements CaseloadAttachmentInter
   /**
    * {@inheritdoc}
    */
-  public function getOriginalFields() {
-    return $this->original_fields;
+  public function getCustomIdWithRefCode(): string {
+    return 'PL' . $this->getCustomId();
   }
 
   /**
    * {@inheritdoc}
    */
-  public function getOriginalFieldTypes() {
-    return $this->original_field_types;
+  public function getComposedReference(): string {
+    return $this->getCustomIdWithRefCode();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getFields() {
+    return $this->fields;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getFieldTypes() {
+    return $this->field_types;
   }
 
   /**
@@ -78,6 +90,20 @@ class PlanOverviewCaseload extends BaseObject implements CaseloadAttachmentInter
    */
   public function getPlanId() {
     return $this->plan_id;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getSourceEntityType() {
+    return 'plan';
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getSourceEntityId() {
+    return $this->getPlanId();
   }
 
 }

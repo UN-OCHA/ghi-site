@@ -6,7 +6,6 @@ use Drupal\ghi_plans\ApiObjects\Entities\GoverningEntity;
 use Drupal\ghi_plans\ApiObjects\Entities\PlanEntity;
 use Drupal\ghi_plans\ApiObjects\Prototypes\EntityPrototype;
 use Drupal\ghi_plans\Traits\PlanQueryTrait;
-use Drupal\hpc_api\Query\EndpointQuery;
 use Drupal\hpc_common\Helpers\ArrayHelper;
 
 /**
@@ -28,10 +27,10 @@ class PlanEntityHelper {
    *   An intantiated API entity object.
    */
   public static function getObject($entity) {
-    if (property_exists($entity, 'planEntityVersion')) {
+    if (property_exists($entity, 'CoordinationEntityId')) {
       return new PlanEntity($entity);
     }
-    if (property_exists($entity, 'governingEntityVersion')) {
+    if (!property_exists($entity, 'CoordinationEntityId')) {
       return new GoverningEntity($entity);
     }
     return NULL;
@@ -55,7 +54,7 @@ class PlanEntityHelper {
     foreach ($entites as $entity) {
       $objects[$entity->id] = self::getObject($entity);
     }
-    ArrayHelper::sortObjectsByStringProperty($objects, 'sort_key', EndpointQuery::SORT_ASC);
+    ArrayHelper::sortObjectsByStringProperty($objects, 'sort_key', SORT_ASC);
     return $objects;
   }
 
@@ -77,7 +76,7 @@ class PlanEntityHelper {
     foreach ($entites as $entity) {
       $objects[$entity->id] = self::getObject($entity);
     }
-    ArrayHelper::sortObjectsByStringProperty($objects, 'sort_key', EndpointQuery::SORT_ASC);
+    ArrayHelper::sortObjectsByStringProperty($objects, 'sort_key', SORT_ASC);
     return $objects;
   }
 
@@ -93,7 +92,7 @@ class PlanEntityHelper {
    *   The plan entity object or NULL.
    */
   public static function getPlanEntity($entity_id, $version_argument = 'current'): ?PlanEntity {
-    $entity = self::getPlanEntityQuery()?->getEntity('planEntity', $entity_id) ?? NULL;
+    $entity = self::getEntityQuery()?->getEntity('planEntity', $entity_id) ?? NULL;
     return $entity instanceof PlanEntity ? $entity : NULL;
   }
 
@@ -109,7 +108,7 @@ class PlanEntityHelper {
    *   The governing entity object or NULL.
    */
   public static function getGoverningEntity($entity_id, $version_argument = 'current'): ?GoverningEntity {
-    $entity = self::getPlanEntityQuery()?->getEntity('governingEntity', $entity_id) ?? NULL;
+    $entity = self::getEntityQuery()?->getEntity('governingEntity', $entity_id) ?? NULL;
     return $entity instanceof GoverningEntity ? $entity : NULL;
   }
 

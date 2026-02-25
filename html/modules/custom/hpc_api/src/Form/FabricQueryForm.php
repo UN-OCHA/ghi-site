@@ -37,7 +37,7 @@ class FabricQueryForm extends FormBase {
       ],
     ];
 
-    $query = $form_state->getValue('query');
+    $query = stripslashes($form_state->getValue('query') ?? '');
     if (!empty($query)) {
       $fabric_client = $this->getFabricClient();
       $fabric_client->disableCache();

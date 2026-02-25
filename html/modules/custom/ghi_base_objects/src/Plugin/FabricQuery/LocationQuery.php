@@ -35,7 +35,12 @@ class LocationQuery extends FabricQueryBase {
       ->setFilter('Id', $location_id)
       ->execute();
     $item = count($items) == 1 ? reset($items) : NULL;
-    return $item ? new Location($item) : NULL;
+    if (!$item) {
+      return NULL;
+    }
+    $location = new Location($item);
+    $this->addObjectToStorage($location);
+    return $location;
   }
 
   /**
@@ -47,18 +52,20 @@ class LocationQuery extends FabricQueryBase {
    * @return \Drupal\ghi_base_objects\ApiObjects\Location[]
    *   An array of location objects.
    */
-  public function getLocations($location_ids): array {
+  public function getLocationsById($location_ids): array {
     if (empty($location_ids)) {
       return [];
     }
     if (count($location_ids) > self::MAX_FILTER_COUNT_ARRAY) {
       // We need to do multiple queries.
-      return $this->doChunkedQuery($location_ids, fn ($ids): array => $this->getLocations($ids));
+      return $this->doChunkedQuery($location_ids, fn ($ids): array => $this->getLocationsById($ids));
     }
     $items = $this->fabricClient->createQuery('locations', Location::getGraphQlItems())
       ->setFilter('Id', $location_ids)
       ->execute();
-    return $this->buildResultObjects($items, Location::class);
+    $locations = $this->buildResultObjects($items, Location::class);
+    $this->addObjectsToStorage($locations);
+    return $locations;
   }
 
   /**

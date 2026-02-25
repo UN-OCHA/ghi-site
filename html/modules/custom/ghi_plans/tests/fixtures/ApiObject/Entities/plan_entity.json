@@ -1,0 +1,15 @@
+{
+  "Id": 31315,
+  "Name": "Reduce morbidity and mortality among the most vulnerable people of all genders and diversities by addressing hunger, acute malnutrition, public health threats, outbreaks, abuse, violence, and exposure to explosive ordnance.",
+  "Description": null,
+  "PlanId": 1263,
+  "EntityTypeId": 36,
+  "CoordinationEntityId": null,
+  "HpcEntityPrototypeId": 4254,
+  "CustomReference": "1",
+  "ComposedReference": "SO1",
+  "SortOrder": 0,
+  "logframeEntityLink": {
+    "items": []
+  }
+}

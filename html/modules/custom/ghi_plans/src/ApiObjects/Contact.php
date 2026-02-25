@@ -35,4 +35,24 @@ class Contact extends BaseObject {
     ];
   }
 
+  /**
+   * Get the mail address.
+   *
+   * @return string
+   *   The mail address.
+   */
+  public function getMail() {
+    return $this->map->mail;
+  }
+
+  /**
+   * Get the agency.
+   *
+   * @return string
+   *   The agency.
+   */
+  public function getAgency() {
+    return $this->map->agency;
+  }
+
 }

@@ -3,7 +3,6 @@
 namespace Drupal\hpc_common\Helpers;
 
 use Drupal\Core\Url;
-use Drupal\hpc_api\Query\EndpointQuery;
 use Drupal\hpc_downloads\Interfaces\HPCDownloadPluginInterface;
 use Drupal\views\ViewExecutable;
 use Drupal\views\Views;
@@ -66,7 +65,7 @@ class ViewsHelper {
           }
           $displays[$view_id][$id] = $display;
         }
-        ArrayHelper::sortArray($displays[$view_id], 'position', EndpointQuery::SORT_ASC);
+        ArrayHelper::sortArray($displays[$view_id], 'position', SORT_ASC);
       }
     }
     return $displays[$view_id];

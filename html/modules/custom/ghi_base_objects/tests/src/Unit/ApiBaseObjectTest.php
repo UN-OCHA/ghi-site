@@ -4,16 +4,17 @@ namespace Drupal\Tests\ghi_base_objects\Unit;
 
 use Drupal\Tests\UnitTestCase;
 use Drupal\Tests\ghi_base_objects\Traits\BaseObjectTestTrait;
-use Drupal\ghi_base_objects_test\ApiObjects\CustomApiObject;
+use Drupal\Tests\hpc_api\Traits\PrivateAccessorTrait;
 
 /**
  * Tests the api base object class.
  *
  * @group ghi_base_objects
  */
-class ApiBaseObjectTest extends UnitTestCase {
+abstract class ApiBaseObjectTest extends UnitTestCase {
 
   use BaseObjectTestTrait;
+  use PrivateAccessorTrait;
 
   /**
    * {@inheritdoc}
@@ -24,32 +25,35 @@ class ApiBaseObjectTest extends UnitTestCase {
   ];
 
   /**
-   * Test common methods of ApiBaseObject classes.
+   * Assert that an API object implements required methods properly.
+   *
+   * @param object $api_object
+   *   The API object to test.
+   * @param string $expected_bundle
+   *   The expected bundle name.
    */
-  public function testApiBaseObject() {
-    $raw_data = (object) [
-      'Id' => 1,
-      'Name' => 'Custom object 1',
-    ];
-    $custom_object = new CustomApiObject($raw_data);
-    $this->assertEquals($raw_data, $custom_object->getRawData());
-    $this->assertEquals($raw_data->Id, $custom_object->id());
-    $this->assertEquals('customapiobject', $custom_object->getBundle());
-    $this->assertEquals($raw_data->Name, $custom_object->getName());
+  protected function assertApiObjectBasics($api_object, string $expected_bundle): void {
+    // Test basic interface methods.
+    $this->assertIsString($api_object->getName());
 
-    $custom_object->setCacheTags(['one', 'two']);
-    $this->assertEquals(['one', 'two'], $custom_object->getCacheTags());
+    $this->assertNull($api_object->getEntity());
+    $this->assertIsString($api_object->getShortName());
+    $this->assertEquals($api_object->getName(), $api_object->getShortName());
 
-    $this->assertEquals(['data' => serialize($raw_data)], $custom_object->__serialize());
+    $this->assertIsString($api_object->getBundle());
+    $this->assertEquals($expected_bundle, $api_object->getBundle());
 
-    $raw_data = (object) [
-      'Id' => 2,
-      'Name' => 'Custom object 2',
-    ];
-    $custom_object->__unserialize(['data' => serialize($raw_data)]);
-    $this->assertEquals($raw_data, $custom_object->getRawData());
-    $this->assertEquals($raw_data->Id, $custom_object->id());
-    $this->assertEquals($raw_data->Name, $custom_object->getName());
+    // Test ID and raw data access.
+    $this->assertIsInt($api_object->id());
+    $this->assertIsObject($api_object->getRawData());
+
+    // Test that toArray returns an array.
+    $this->assertIsArray($api_object->toArray());
+
+    // Test cache methods.
+    $this->assertIsArray($api_object->getCacheTags());
+    $this->assertIsArray($api_object->getCacheContexts());
+    $this->assertIsInt($api_object->getCacheMaxAge());
   }
 
 }

@@ -56,7 +56,7 @@ class PlanGoverningEntitiesTable extends GHIBlockBase implements ConfigurableTab
     return new HPCBlockMetadata(
       defaultTitle: 'Cluster overview',
       dataSources: [
-        'entities' => 'fabric_query:plan_entity',
+        'entities' => 'fabric_query:entity',
         'flow_search' => 'hpc_api:flow_search_query',
       ],
       configForms: [
@@ -425,9 +425,9 @@ class PlanGoverningEntitiesTable extends GHIBlockBase implements ConfigurableTab
    *   An array of governing entity objects, aka clusters.
    */
   private function getEntityObjects(): array {
-    /** @var \Drupal\ghi_plans\Plugin\FabricQuery\PlanEntityQuery $query */
+    /** @var \Drupal\ghi_plans\Plugin\FabricQuery\EntityQuery $query */
     $query = $this->getQueryHandler('entities');
-    $entities = $query?->getPlanEntities($this->getCurrentPlanId(), $this->getPageNode(), 'governing') ?? [];
+    $entities = $query?->getEntitiesForPlan($this->getCurrentPlanId(), $this->getPageNode(), 'governing') ?? [];
     $entities = array_filter($entities, fn (EntityObjectInterface $entity): bool => $entity instanceof GoverningEntity);
     return $entities;
   }

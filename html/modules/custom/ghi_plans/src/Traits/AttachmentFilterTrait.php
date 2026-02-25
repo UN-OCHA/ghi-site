@@ -3,7 +3,6 @@
 namespace Drupal\ghi_plans\Traits;
 
 use Drupal\ghi_plans\ApiObjects\Attachments\CaseloadAttachmentInterface;
-use Drupal\hpc_api\Query\EndpointQuery;
 use Drupal\hpc_common\Helpers\ArrayHelper;
 
 /**
@@ -109,7 +108,7 @@ trait AttachmentFilterTrait {
       // Or we try to find the real plan level caseload attachment by looking
       // for the ones with PiN data.
       $matching_caseloads = array_filter($caseloads, function ($_caseload) {
-        return in_array('inNeed', $_caseload->getOriginalFieldTypes());
+        return in_array('inNeed', $_caseload->getFieldTypes());
       });
       $caseload = !empty($matching_caseloads) ? reset($matching_caseloads) : NULL;
     }
@@ -117,7 +116,7 @@ trait AttachmentFilterTrait {
     // Or we try to deduce the suitable attachment by selecting the one with
     // the lowest custom reference.
     if ($caseload === NULL) {
-      ArrayHelper::sortObjectsByMethod($caseloads, 'getCustomId', EndpointQuery::SORT_ASC, SORT_STRING);
+      ArrayHelper::sortObjectsByMethod($caseloads, 'getCustomId', SORT_ASC, SORT_STRING);
       $caseload = count($caseloads) ? reset($caseloads) : NULL;
     }
     return $caseload;

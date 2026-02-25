@@ -1,0 +1,42 @@
+{
+  "Id": 35754,
+  "Name": null,
+  "PlanId": 1140,
+  "EntityId": 1140,
+  "EntityTypeId": 19,
+  "EntityMainType": "Plan",
+  "AttachmentType": "Financial",
+  "CustomReference": "1",
+  "HasDisaggregatedData": false,
+  "UnitId": null,
+  "CalculationMethodId": null,
+  "Description": null,
+  "VisibilityGroupId": 1,
+  "AttachmentPrototypeId": 5621,
+  "RecordStatus": "Active",
+  "UpdatedAt": "2022-10-05T09:03:31.000Z",
+  "totals": {
+    "17094": {
+      "Id": 17094,
+      "AttachmentId": 35754,
+      "MetricTypeId": 10,
+      "PeriodId": 44,
+      "SectorId": null,
+      "LocationId": null,
+      "GenderId": null,
+      "AgeGroupId": null,
+      "PopulationStatusId": null,
+      "SettlementTypeId": null,
+      "DisabilityStatusId": null,
+      "HealthInterventionCategoryId": null,
+      "MaternalStatusId": null,
+      "DisaggregationCategoryOtherId": null,
+      "DeliveryModalityId": null,
+      "CustomMetricName": null,
+      "Description": null,
+      "IsTotal": true,
+      "ValueNum": 344007921
+    }
+  },
+  "disaggregated": []
+}

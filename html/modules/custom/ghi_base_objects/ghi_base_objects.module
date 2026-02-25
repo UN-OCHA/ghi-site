@@ -37,8 +37,8 @@ function ghi_base_objects_help($route_name, RouteMatchInterface $route_match) {
  * Implements hook_entity_bundle_info_alter().
  */
 function ghi_base_objects_entity_bundle_info_alter(array &$bundles) {
-  $bundles['base_object'][Country::BUNDLE]['class'] = Country::class;
-  $bundles['base_object'][Country::BUNDLE]['label'] = t('Country');
+  $bundles['base_object']['country']['class'] = Country::class;
+  $bundles['base_object']['country']['label'] = t('Country');
 }
 
 /**

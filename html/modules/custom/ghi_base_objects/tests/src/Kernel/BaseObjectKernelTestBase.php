@@ -1,6 +1,6 @@
 <?php
 
-namespace Drupal\Tests\ghi_base_objects\Kernel\ApiObjects;
+namespace Drupal\Tests\ghi_base_objects\Kernel;
 
 use Drupal\KernelTests\KernelTestBase;
 use Drupal\Tests\ghi_base_objects\Traits\BaseObjectTestTrait;
@@ -89,21 +89,6 @@ abstract class BaseObjectKernelTestBase extends KernelTestBase {
     $this->assertIsArray($api_object->getCacheTags());
     $this->assertIsArray($api_object->getCacheContexts());
     $this->assertIsInt($api_object->getCacheMaxAge());
-  }
-
-  /**
-   * Test null/empty data handling for an API object.
-   *
-   * @param string $class_name
-   *   The API object class name.
-   */
-  protected function testNullEmptyDataHandling(string $class_name): void {
-    // Test with minimal data.
-    $minimal_data = $this->createMockRawData(['Id' => 1, 'Name' => '']);
-    $api_object = new $class_name($minimal_data);
-
-    $this->assertEquals(1, $api_object->id());
-    $this->assertIsString($api_object->getName());
   }
 
 }

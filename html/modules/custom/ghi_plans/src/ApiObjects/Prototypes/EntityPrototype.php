@@ -31,9 +31,10 @@ class EntityPrototype extends BaseObject {
    */
   protected function map() {
     $data = $this->getRawData();
-    $value = json_decode($data->Value ?? '');
+    $value = is_string($data->Value) ? json_decode($data->Value ?? '') : $data->Value;
     return (object) [
       'id' => $data->Id,
+      'name' => $value->name->en->singular,
       'ref_code' => $data->RefCode,
       'type' => strtoupper($data->Type),
       'plan_id' => $data->PlanId,
@@ -41,7 +42,7 @@ class EntityPrototype extends BaseObject {
       'name_singular' => $value->name->en->singular,
       'name_plural' => $value->name->en->plural,
       'can_support' => $value->canSupport ?? [],
-      'children' => $value->possibleChildren ?? [],
+      'children' => is_array($value->possibleChildren ?? NULL) ? $value->possibleChildren : [],
     ];
   }
 

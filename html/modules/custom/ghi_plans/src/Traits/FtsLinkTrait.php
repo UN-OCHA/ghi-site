@@ -32,12 +32,7 @@ trait FtsLinkTrait {
     $query_args = [];
     if (!empty($base_object) && is_object($base_object) && $base_object instanceof GoverningEntity) {
       // Cluster context.
-      $cluster_id = $base_object->getSourceId();
-      $cluster_query = \Drupal::service('plugin.manager.endpoint_query_manager')->createInstance('cluster_query');
-      $cluster = $cluster_query->getCluster($plan_id, $cluster_id);
-      if ($cluster && !empty($cluster->id) && !empty($cluster->name)) {
-        $query_args['f'] = ['destinationClusterIdName:' . $cluster->id . ':' . $cluster->name . ''];
-      }
+      $query_args['f'] = ['destinationClusterIdName:' . $base_object->getSourceId() . ':' . $base_object->label() . ''];
     }
     elseif ($base_object === NULL && $type != 'summary') {
       $query_args['f'] = ['destinationClusterIdName:!'];

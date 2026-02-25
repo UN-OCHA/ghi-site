@@ -49,7 +49,7 @@ class AttachmentLookupForm extends BaseLookupForm {
           '@type' => get_class($attachment),
         ]),
       ];
-      $form['attachment_data'] = [
+      $form['data'] = [
         '#type' => 'details',
         '#title' => $this->t('Processed data'),
         '#open' => TRUE,
@@ -59,7 +59,7 @@ class AttachmentLookupForm extends BaseLookupForm {
           '#value' => print_r($attachment->toArray(), TRUE),
         ],
       ];
-      $form['attachment_source_data'] = [
+      $form['source_data'] = [
         '#type' => 'details',
         '#title' => $this->t('Source data'),
         'children' => [
@@ -68,9 +68,18 @@ class AttachmentLookupForm extends BaseLookupForm {
           '#value' => print_r($attachment->getRawData(), TRUE),
         ],
       ];
+      $form['source_data_json'] = [
+        '#type' => 'details',
+        '#title' => $this->t('Source data (JSON)'),
+        'children' => [
+          '#type' => 'html_tag',
+          '#tag' => 'pre',
+          '#value' => json_encode($attachment->getRawData(), JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE),
+        ],
+      ];
 
       foreach ($this->getPublicMethodResults($attachment) as $method_name => $result) {
-        $form[$method_name] = [
+        $form['public_method_' . $method_name] = [
           '#type' => 'details',
           '#title' => $method_name,
           'children' => [

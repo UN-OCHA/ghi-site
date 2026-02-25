@@ -14,7 +14,6 @@ use Drupal\ghi_blocks\Interfaces\DeprecatedBlockInterface;
 use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
 use Drupal\ghi_plans\ApiObjects\Entities\PlanEntity;
 use Drupal\ghi_plans\Helpers\AttachmentHelper;
-use Drupal\hpc_api\Query\EndpointQuery;
 use Drupal\hpc_common\Plugin\HPCBlockMetadata;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -45,7 +44,7 @@ class PlanEntityTypes extends GHIBlockBase implements AutomaticTitleBlockInterfa
   public static function metadata(): ?HPCBlockMetadata {
     return new HPCBlockMetadata(
       dataSources: [
-        'entities' => 'fabric_query:plan_entity',
+        'entities' => 'fabric_query:entity',
       ]
     );
   }
@@ -254,10 +253,10 @@ class PlanEntityTypes extends GHIBlockBase implements AutomaticTitleBlockInterfa
         '#type' => 'select',
         '#title' => $this->t('Sort column'),
         '#options' => [
-          'id_' . EndpointQuery::SORT_ASC => $this->t('ID (asc)'),
-          'id_' . EndpointQuery::SORT_DESC => $this->t('ID (desc)'),
-          'description_' . EndpointQuery::SORT_ASC => $this->t('Description (asc)'),
-          'description_' . EndpointQuery::SORT_DESC => $this->t('Description (desc)'),
+          'id_' . SORT_ASC => $this->t('ID (asc)'),
+          'id_' . SORT_DESC => $this->t('ID (desc)'),
+          'description_' . SORT_ASC => $this->t('Description (asc)'),
+          'description_' . SORT_DESC => $this->t('Description (desc)'),
         ],
         '#default_value' => $defaults['sort_column'],
         '#states' => [
@@ -366,9 +365,9 @@ class PlanEntityTypes extends GHIBlockBase implements AutomaticTitleBlockInterfa
     if ($entity_ref_code) {
       $filter = ['ref_code' => $entity_ref_code];
     }
-    /** @var \Drupal\ghi_plans\Plugin\FabricQuery\PlanEntityQuery $query */
+    /** @var \Drupal\ghi_plans\Plugin\FabricQuery\EntityQuery $query */
     $query = $this->getQueryHandler('entities');
-    $entities = $query->getPlanEntities($plan_id, $context_object, 'plan', $filter);
+    $entities = $query->getEntitiesForPlan($plan_id, $context_object, 'plan', $filter);
     // This should give us only PlanEntity objects, but let's make sure.
     $entities = is_array($entities) ? array_filter($entities, function ($entity) {
       return $entity instanceof PlanEntity;
@@ -405,10 +404,10 @@ class PlanEntityTypes extends GHIBlockBase implements AutomaticTitleBlockInterfa
       uasort($items, function ($a, $b) use ($key, $sort) {
         $a_value = !empty($a[$key]) ? $a[$key] : 0;
         $b_value = !empty($b[$key]) ? $b[$key] : 0;
-        if ($sort == EndpointQuery::SORT_ASC) {
+        if ($sort == SORT_ASC) {
           return strnatcmp($a_value, $b_value);
         }
-        if ($sort == EndpointQuery::SORT_DESC) {
+        if ($sort == SORT_DESC) {
           return strnatcmp($b_value, $a_value);
         }
       });

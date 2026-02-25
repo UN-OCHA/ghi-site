@@ -6,6 +6,12 @@ services:
       - HPC_API_USER
       - HPC_API_PASS
       - HPC_API_KEY
+      - FABRIC_WORKSPACE_ID
+      - FABRIC_ENDPOINT_ID
+      - FABRIC_HOST
+      - FABRIC_TENANT_ID
+      - FABRIC_CLIENT_ID
+      - FABRIC_CLIENT_SECRET
       - CM_KEY
       - CM_WEBHOOK_SECRET
       - MAPBOX_TOKEN

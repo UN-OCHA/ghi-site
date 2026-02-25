@@ -3,8 +3,8 @@
 namespace Drupal\ghi_blocks\Traits;
 
 use Drupal\ghi_plans\Entity\Plan;
-use Drupal\ghi_plans\Plugin\EndpointQuery\ClusterQuery;
 use Drupal\ghi_plans\Plugin\EndpointQuery\FlowSearchQuery;
+use Drupal\ghi_plans\Plugin\FabricQuery\GoverningEntityQuery;
 
 /**
  * Helper trait for cluster restriction on configuration item plugins.
@@ -38,15 +38,15 @@ trait ConfigurationItemClusterRestrictTrait {
    *
    * @param array $cluster_restrict
    *   A cluster restriction to apply.
-   * @param \Drupal\ghi_plans\Plugin\EndpointQuery\ClusterQuery $cluster_query
-   *   A query object for the cluster endpoint.
+   * @param \Drupal\ghi_plans\Plugin\FabricQuery\GoverningEntityQuery $cluster_query
+   *   A query object for the governing entity query.
    * @param \Drupal\ghi_plans\Plugin\EndpointQuery\FlowSearchQuery $flow_search_query
    *   A query object for the plan cluster summary data.
    *
    * @return mixed|null
    *   The retrieved value.
    */
-  public function getClusterIdsByClusterRestrict(array $cluster_restrict, ClusterQuery $cluster_query, FlowSearchQuery $flow_search_query): ?array {
+  public function getClusterIdsByClusterRestrict(array $cluster_restrict, GoverningEntityQuery $cluster_query, FlowSearchQuery $flow_search_query): ?array {
     if ($cluster_restrict['type'] == 'none') {
       return NULL;
     }

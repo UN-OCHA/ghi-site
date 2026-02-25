@@ -2,6 +2,7 @@
 
 namespace Drupal\ghi_plans\ApiObjects\Prototypes;
 
+use Drupal\ghi_plans\Traits\PlanQueryTrait;
 use Drupal\hpc_api\ApiObjects\ApiObjectBase;
 use Drupal\hpc_common\Helpers\StringHelper;
 
@@ -9,6 +10,8 @@ use Drupal\hpc_common\Helpers\StringHelper;
  * Abstraction for API attachment prototype objects.
  */
 class AttachmentPrototype extends ApiObjectBase {
+
+  use PlanQueryTrait;
 
   /**
    * Define the dimension items used in queries.
@@ -32,7 +35,6 @@ class AttachmentPrototype extends ApiObjectBase {
   ];
 
   const LABEL_MAP = [
-    'textwebcontent' => 'Text (web content)',
     'filewebcontent' => 'File (web content)',
     'cost' => 'Cost',
     'indicator' => 'Indicator',
@@ -52,40 +54,61 @@ class AttachmentPrototype extends ApiObjectBase {
       $calculated_fields = reset($calculated_fields);
     }
     $calculated_fields = array_filter($calculated_fields);
-    $all_fields = array_merge(
+
+    $fields = array_merge(
       $metric_fields,
       $measurement_fields,
       $calculated_fields,
     );
+
     return (object) [
       'id' => $data->Id,
       'name' => $value->Name ?? NULL,
       'ref_code' => $data->RefCode,
       'type' => strtolower($data->Type),
-      'fields' => array_map(function ($item) {
-        return $item->name->en;
-      }, $all_fields),
-      'field_types' => array_map(function ($item) {
-        return StringHelper::camelCaseToUnderscoreCase($item->type);
-      }, $all_fields ?? []),
+      'fields' => $this->mapPrototypeFields($fields),
       'entity_ref_codes' => $value->entities ?? [],
-      'metric_fields' => array_map(function ($item) {
-        return $item->name->en;
-      }, $metric_fields),
-      'measurement_fields' => array_map(function ($item) {
-        return $item->name->en;
-      }, $measurement_fields),
-      'calculated_fields' => array_map(function ($item) {
-        return $item->name->en;
-      }, $calculated_fields),
-      'original_fields' => $all_fields,
-      'original_field_types' => array_map(function ($item) {
-        return $item->type;
-      }, $all_fields ?? []),
+      'metric_fields' => $this->mapPrototypeFields($metric_fields),
+      'measurement_fields' => $this->mapPrototypeFields($measurement_fields),
+      'calculated_fields' => $this->mapPrototypeFields($calculated_fields),
+      'original_fields' => $fields,
       'calculation_methods' => array_map(function ($item) {
         return strtolower($item);
       }, $value->calculationMethod ?? []),
     ];
+  }
+
+  /**
+   * Map the given fields to a simple type -> label list.
+   *
+   * @param array $fields
+   *   An array of field objects as given in the raw prototype data.
+   *
+   * @return string[]
+   *   An array of strings, key being the types, values the labels.
+   */
+  private function mapPrototypeFields(array $fields) {
+    $types = array_map(function ($item) {
+      return StringHelper::camelCaseToUnderscoreCase($item->type);
+    }, $fields ?? []);
+    $labels = array_map(function ($item) {
+      return $item->name->en;
+    }, $fields);
+
+    foreach ($types as $key => $type) {
+      if (count(array_intersect($types, [$type])) > 1) {
+        // There is uncertainty here, so we match for the label. The uncertainty
+        // comes from older attachments that have duplicated metric types,
+        // example attachment 38036, with 2 measure metrics of type "measure".
+        foreach ($this->getEntityTypeQuery()?->getMetricTypes() ?? [] as $metric_type) {
+          if (!$metric_type->matches($labels[$key])) {
+            continue;
+          }
+          $types[$key] = $metric_type->getMachineName();
+        }
+      }
+    }
+    return array_combine($types, $labels);
   }
 
   /**
@@ -135,7 +158,7 @@ class AttachmentPrototype extends ApiObjectBase {
    *   An array of field types, keyed by their index.
    */
   public function getFieldTypes() {
-    return $this->field_types;
+    return array_keys($this->fields);
   }
 
   /**
@@ -149,13 +172,13 @@ class AttachmentPrototype extends ApiObjectBase {
   }
 
   /**
-   * Get the original field types from the API.
+   * Get the fields that represent planning metrics.
    *
    * @return string[]
-   *   An array of field type strings.
+   *   An array of metric names.
    */
-  public function getOriginalFieldTypes() {
-    return $this->original_field_types;
+  public function getPlanningFields() {
+    return $this->metric_fields;
   }
 
   /**
@@ -164,24 +187,8 @@ class AttachmentPrototype extends ApiObjectBase {
    * @return string[]
    *   An array of metric names.
    */
-  public function getGoalMetricFields() {
-    $fields = $this->metric_fields;
-    return array_filter($this->fields, function ($field) use ($fields) {
-      return in_array($field, $fields);
-    });
-  }
-
-  /**
-   * Get the fields that represent measurement metrics.
-   *
-   * @return string[]
-   *   An array of metric names.
-   */
-  public function getMeasurementMetricFields() {
-    $measurements = $this->measurement_fields;
-    return array_filter($this->fields, function ($field) use ($measurements) {
-      return in_array($field, $measurements);
-    });
+  public function getMeasurementFields() {
+    return $this->measurement_fields;
   }
 
   /**
@@ -190,11 +197,8 @@ class AttachmentPrototype extends ApiObjectBase {
    * @return string[]
    *   An array of metric names.
    */
-  public function getCalculatedMetricFields() {
-    $calculated_fields = $this->calculated_fields;
-    return array_filter($this->fields, function ($field) use ($calculated_fields) {
-      return in_array($field, $calculated_fields);
-    });
+  public function getCalculatedFields() {
+    return $this->calculated_fields;
   }
 
   /**
@@ -210,30 +214,27 @@ class AttachmentPrototype extends ApiObjectBase {
   /**
    * Get the default label for the field with the given index.
    *
-   * @param int $index
-   *   The index of the field in the prototype.
+   * @param string $metric_type
+   *   The metric type of the field in the prototype.
    * @param string|null $langcode
    *   A language code.
    *
    * @return string|null
    *   The (translated) field label or NULL.
    */
-  public function getDefaultFieldLabel($index, $langcode = NULL) {
-    $field_types = $this->getFieldTypes();
-    if ($type = $field_types[$index]) {
-      // This is the place for special handling of some types.
-      switch ($type) {
-        case 'cumulative_reach':
-          return (string) $this->t('People reached', [], ['langcode' => $langcode]);
+  public function getDefaultFieldLabel(string $metric_type, $langcode = NULL) {
+    // This is the place for special handling of some types.
+    switch ($metric_type) {
+      case 'cumulative_reach':
+        return (string) $this->t('People reached', [], ['langcode' => $langcode]);
 
-        case 'periodical_measure':
-        case 'cumulative_measure':
-        case 'measure':
-          return (string) $this->t('Measure', [], ['langcode' => $langcode]);
-      }
+      case 'periodical_measure':
+      case 'cumulative_measure':
+      case 'measure':
+        return (string) $this->t('Measure', [], ['langcode' => $langcode]);
     }
     $fields = $this->getFields();
-    return $fields[$index] ?? NULL;
+    return $fields[$metric_type] ?? NULL;
   }
 
   /**

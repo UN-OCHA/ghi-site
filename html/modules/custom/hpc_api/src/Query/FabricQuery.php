@@ -139,7 +139,7 @@ class FabricQuery {
     foreach ($filters as $value) {
       if (is_array($value)) {
         if (empty($value)) {
-          throw new \InvalidArgumentException('Empty arrays are not allowed as filter values.');
+          throw new \InvalidArgumentException('Empty arrays are not allowed as filter values. Called in ' . get_called_class());
         }
         else {
           $this->validateFilters($value);

@@ -130,15 +130,15 @@ class PlanOverviewPlanMock extends PlanOverviewPlan {
   /**
    * {@inheritdoc}
    */
-  public function getCaseloadValue($metric_name): ?float {
+  public function getCaseloadValue(string $metric_type, ?string $metric_name = NULL): ?float {
     $raw_data = $this->getRawData();
     $map = [
-      'InNeed' => 'people_in_need',
-      'Target' => 'people_target',
+      'in_need' => 'people_in_need',
+      'target' => 'people_target',
       'reached_percent' => 'people_reached_percent',
-      'expectedReach' => 'estimated_reached',
+      'expected_reach' => 'estimated_reached',
     ];
-    if (!array_key_exists($metric_name, $map)) {
+    if (!array_key_exists($metric_type, $map)) {
       return NULL;
     }
     return (int) $raw_data->{$map[$metric_type]} ?? NULL;

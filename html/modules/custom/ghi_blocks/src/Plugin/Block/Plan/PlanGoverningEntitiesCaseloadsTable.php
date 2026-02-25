@@ -57,7 +57,7 @@ class PlanGoverningEntitiesCaseloadsTable extends GHIBlockBase implements Config
     return new HPCBlockMetadata(
       defaultTitle: 'Cluster caseloads',
       dataSources: [
-        'entities' => 'fabric_query:plan_entity',
+        'entities' => 'fabric_query:entity',
         'attachment' => 'fabric_query:attachment',
         'attachment_prototype' => 'fabric_query:attachment_prototype',
       ],

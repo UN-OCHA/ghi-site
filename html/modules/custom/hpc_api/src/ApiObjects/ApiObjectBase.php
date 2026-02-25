@@ -113,6 +113,24 @@ abstract class ApiObjectBase implements ApiObjectInterface, CacheableDependencyI
   /**
    * {@inheritdoc}
    */
+  public static function getObjectStorageKey(): string {
+    $parts = explode('\\', static::class);
+    $class_name = end($parts);
+    return lcfirst($class_name . 'ObjectStorage');
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function getObjectCollectionStorageKey(): string {
+    $parts = explode('\\', static::class);
+    $class_name = end($parts);
+    return lcfirst($class_name . 'ObjectCollectionStorage');
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function toArray() {
     $array = (array) $this->map ?? [];
     foreach ($array as $key => $item) {

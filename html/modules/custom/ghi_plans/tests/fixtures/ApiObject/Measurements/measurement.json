@@ -1,113 +1,104 @@
 {
-  "id": 139803,
-  "attachmentId": 41496,
-  "planReportingPeriodId": 2619,
-  "isCommentPublic": true,
-  "currentVersion": true,
-  "latestVersion": true,
-  "latestTaggedVersion": true,
-  "versionTags": [
-    "2.13",
-    "2.14",
-    "2.15"
-  ],
-  "createdAt": "2024-01-15T08:57:08.244Z",
-  "updatedAt": "2024-04-17T07:00:02.656Z",
-  "deletedAt": null,
-  "measurementVersion": {
-    "id": 301480,
-    "measurementId": 139803,
-    "currentVersion": true,
-    "latestVersion": true,
-    "latestTaggedVersion": true,
-    "versionTags": [
-      "2.14",
-      "2.15"
-    ],
-    "createdAt": "2024-04-17T06:54:14.055Z",
-    "updatedAt": "2024-04-17T07:00:02.974Z",
-    "value": {
-      "name": "header line 01",
-      "source": "June revision",
-      "metrics": {
-        "values": {
-          "totals": [
-            {
-              "name": {
-                "en": "In Need"
-              },
-              "type": "inNeed",
-              "value": 8689779
-            },
-            {
-              "name": {
-                "en": "Targeted"
-              },
-              "type": "target",
-              "value": 3099428
-            },
-            {
-              "name": {
-                "en": "Direct reach"
-              },
-              "type": "measure",
-              "value": 2004324
-            },
-            {
-              "name": {
-                "en": "Direct cumulative reach"
-              },
-              "type": "measure",
-              "value": 2004324
-            },
-            {
-              "name": {
-                "en": "Indirect reach"
-              },
-              "type": "measure",
-              "value": 2004324
-            },
-            {
-              "name": {
-                "en": "Indirect cumulative reach"
-              },
-              "type": "measure",
-              "value": 2004324
-            }
-          ]
-        },
-        "measureFields": [
-          {
-            "name": {
-              "en": "Direct reach"
-            },
-            "type": "measure"
-          },
-          {
-            "name": {
-              "en": "Direct cumulative reach"
-            },
-            "type": "measure"
-          },
-          {
-            "name": {
-              "en": "Indirect reach"
-            },
-            "type": "measure"
-          },
-          {
-            "name": {
-              "en": "Indirect cumulative reach"
-            },
-            "type": "measure"
-          }
-        ]
-      },
-      "asOfDate": "2023-06-13T22:00:00.000Z",
-      "description": "Education",
-      "attachmentType": "caseLoad",
-      "commentsMonitoring": "The data is measured following common data collection approaches"
+  "Id": 139803,
+  "Name": "Education",
+  "PlanId": 1117,
+  "AttachmentId": 41496,
+  "MeasurementPeriodId": 2619,
+  "EntityId": 6832,
+  "EntityTypeId": 10,
+  "EntityMainType": "CoordinationEntity",
+  "MeasurementType": "caseLoad",
+  "UnitId": null,
+  "CalculationMethodId": null,
+  "Description": null,
+  "VisibilityGroupId": 1,
+  "AttachmentPrototypeId": 5443,
+  "RecordStatus": "Active",
+  "UpdatedAt": "2024-09-13T17:08:48.000Z",
+  "totals": {
+    "2937076": {
+      "Id": 2937076,
+      "MeasurementId": 139803,
+      "MetricTypeId": 16,
+      "PeriodId": 44,
+      "LocationId": null,
+      "GenderId": null,
+      "AgeGroupId": null,
+      "PopulationStatusId": null,
+      "SettlementTypeId": null,
+      "DisabilityStatusId": null,
+      "HealthInterventionCategoryId": null,
+      "MaternalStatusId": null,
+      "DisaggregationCategoryOtherId": null,
+      "DeliveryModalityId": null,
+      "CalcMethodId": null,
+      "CustomMetricName": null,
+      "Description": null,
+      "IsTotal": true,
+      "ValueNum": 2004324
     },
-    "hasDisaggregatedData": true
+    "2937077": {
+      "Id": 2937077,
+      "MeasurementId": 139803,
+      "MetricTypeId": 14,
+      "PeriodId": 44,
+      "LocationId": null,
+      "GenderId": null,
+      "AgeGroupId": null,
+      "PopulationStatusId": null,
+      "SettlementTypeId": null,
+      "DisabilityStatusId": null,
+      "HealthInterventionCategoryId": null,
+      "MaternalStatusId": null,
+      "DisaggregationCategoryOtherId": null,
+      "DeliveryModalityId": null,
+      "CalcMethodId": null,
+      "CustomMetricName": null,
+      "Description": null,
+      "IsTotal": true,
+      "ValueNum": 2004324
+    },
+    "2937078": {
+      "Id": 2937078,
+      "MeasurementId": 139803,
+      "MetricTypeId": 17,
+      "PeriodId": 44,
+      "LocationId": null,
+      "GenderId": null,
+      "AgeGroupId": null,
+      "PopulationStatusId": null,
+      "SettlementTypeId": null,
+      "DisabilityStatusId": null,
+      "HealthInterventionCategoryId": null,
+      "MaternalStatusId": null,
+      "DisaggregationCategoryOtherId": null,
+      "DeliveryModalityId": null,
+      "CalcMethodId": null,
+      "CustomMetricName": null,
+      "Description": null,
+      "IsTotal": true,
+      "ValueNum": 2004324
+    },
+    "2937079": {
+      "Id": 2937079,
+      "MeasurementId": 139803,
+      "MetricTypeId": 15,
+      "PeriodId": 44,
+      "LocationId": null,
+      "GenderId": null,
+      "AgeGroupId": null,
+      "PopulationStatusId": null,
+      "SettlementTypeId": null,
+      "DisabilityStatusId": null,
+      "HealthInterventionCategoryId": null,
+      "MaternalStatusId": null,
+      "DisaggregationCategoryOtherId": null,
+      "DeliveryModalityId": null,
+      "CalcMethodId": null,
+      "CustomMetricName": null,
+      "Description": null,
+      "IsTotal": true,
+      "ValueNum": 2004324
+    }
   }
 }

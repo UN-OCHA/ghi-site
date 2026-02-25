@@ -3,13 +3,14 @@
 namespace Drupal\hpc_api\ApiObjects\Types;
 
 use Drupal\hpc_api\ApiObjects\Type;
+use Drupal\hpc_common\Helpers\StringHelper;
 
 /**
  * Class for metric type objects.
  */
 class MetricType extends Type {
 
-  const GRAPHQL_ITEMS = ['Id', 'Name', 'OtherName', 'NameFr', 'NameEs', 'HPCType'];
+  const GRAPHQL_ITEMS = ['Id', 'Name', 'OtherName', 'NameFr', 'NameEs', 'HPCType', 'LabelLookup'];
 
   /**
    * {@inheritdoc}
@@ -22,9 +23,10 @@ class MetricType extends Type {
       'machine_name' => $data->HPCType ?? NULL,
       'label' => $data->OtherName ?? NULL,
       'locale' => (object) [
-        'fr' => $data->NameFr,
-        'es' => $data->NameEs,
+        'fr' => $data->NameFr ?? NULL,
+        'es' => $data->NameEs ?? NULL,
       ],
+      'lookup' => !empty($data->LabelLookup) ? explode('|', trim($data->LabelLookup, '|')) : [],
     ];
   }
 
@@ -35,8 +37,8 @@ class MetricType extends Type {
    *   The label.
    */
   public function getLabel(?string $langcode = 'en'): string {
-    if (in_array($langcode, ['fr', 'es'])) {
-      return $this->map->locale->$langcode;
+    if (in_array($langcode, ['fr', 'es']) && $label = $this->map->locale->$langcode ?? NULL) {
+      return $label;
     }
     return $this->map->label ?: $this->getName();
   }
@@ -49,12 +51,9 @@ class MetricType extends Type {
    */
   public function getMachineName(): string {
     if ($this->map->machine_name) {
-      return $this->map->machine_name;
+      return StringHelper::camelCaseToUnderscoreCase($this->map->machine_name);
     }
-    $map = [
-      'Population' => 'totalPopulation',
-    ];
-    return $map[$this->getName()] ?? lcfirst(str_replace(' ', '', $this->getName()));
+    return StringHelper::camelCaseToUnderscoreCase(lcfirst(str_replace(' ', '', $this->getName())));
   }
 
   /**
@@ -67,7 +66,10 @@ class MetricType extends Type {
    *   TRUE if string matches any of the labels, FALSE otherwise.
    */
   public function matches($string): bool {
-    return strtolower($string) == strtolower($this->map->locale->fr) || strtolower($string) == strtolower($this->map->locale->es) || strtolower($string) == strtolower($this->map->name);
+    return strtolower($string) == strtolower($this->map->locale->fr ?? '')
+        || strtolower($string) == strtolower($this->map->locale->es ?? '')
+        || strtolower($string) == strtolower($this->map->name ?? '')
+        || in_array(strtolower($string), $this->map->lookup);
   }
 
 }

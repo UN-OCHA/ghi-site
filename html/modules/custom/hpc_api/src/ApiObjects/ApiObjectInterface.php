@@ -32,6 +32,14 @@ interface ApiObjectInterface {
   public static function getGraphQlItems();
 
   /**
+   * Get a storage key for all objects of the same type.
+   *
+   * @return string
+   *   A string representing the storage key for the type of object.
+   */
+  public static function getObjectStorageKey(): string;
+
+  /**
    * Represent this as an array.
    *
    * @return array

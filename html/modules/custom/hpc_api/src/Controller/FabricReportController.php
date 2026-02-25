@@ -131,8 +131,8 @@ class FabricReportController extends ControllerBase {
    *   The entity title or NULL.
    */
   public function entityTitle(int $entity_type_id, int $entity_id): MarkupInterface {
-    /** @var \Drupal\hpc_api\Plugin\FabricQuery\EntityQuery $query */
-    $query = $this->fabricQueryManager->createInstance('entity');
+    /** @var \Drupal\hpc_api\Plugin\FabricQuery\EntityLookupQuery $query */
+    $query = $this->fabricQueryManager->createInstance('entity_lookup');
     $entity_type = $query->getEntityTypeById($entity_type_id);
     return new FormattableMarkup('@type <em>@name</em>', [
       '@type' => $entity_type->getLabel(),
@@ -152,8 +152,8 @@ class FabricReportController extends ControllerBase {
    *   A render array.
    */
   public function entityLookupPage(int $entity_type_id, int $entity_id): array {
-    /** @var \Drupal\hpc_api\Plugin\FabricQuery\EntityQuery $query */
-    $query = $this->fabricQueryManager->createInstance('entity');
+    /** @var \Drupal\hpc_api\Plugin\FabricQuery\EntityLookupQuery $query */
+    $query = $this->fabricQueryManager->createInstance('entity_lookup');
     $entity_type = $query->getEntityTypeById($entity_type_id);
     if (!$entity_type) {
       throw new \InvalidArgumentException('Unknown entity type id');
@@ -204,6 +204,24 @@ class FabricReportController extends ControllerBase {
           $this->t('Value'),
         ],
         '#rows' => $rows,
+      ],
+      [
+        '#type' => 'details',
+        '#title' => $this->t('Source data'),
+        'children' => [
+          '#type' => 'html_tag',
+          '#tag' => 'pre',
+          '#value' => print_r($data, TRUE),
+        ],
+      ],
+      [
+        '#type' => 'details',
+        '#title' => $this->t('Source data (JSON)'),
+        'children' => [
+          '#type' => 'html_tag',
+          '#tag' => 'pre',
+          '#value' => json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE),
+        ],
       ],
     ];
   }
