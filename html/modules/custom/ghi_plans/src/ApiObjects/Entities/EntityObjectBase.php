@@ -2,14 +2,24 @@
 
 namespace Drupal\ghi_plans\ApiObjects\Entities;
 
-use Drupal\ghi_plans\ApiObjects\PlanEntityInterface;
+use Drupal\ghi_plans\ApiObjects\Prototypes\EntityPrototype;
+use Drupal\ghi_plans\Traits\PlanQueryTrait;
 use Drupal\hpc_api\ApiObjects\ApiObjectBase;
 use Drupal\hpc_api\Helpers\ArrayHelper;
 
 /**
  * Base class for API entity objects.
  */
-abstract class EntityObjectBase extends ApiObjectBase implements EntityObjectInterface, PlanEntityInterface {
+abstract class EntityObjectBase extends ApiObjectBase implements EntityObjectInterface {
+
+  use PlanQueryTrait;
+
+  /**
+   * The entity prototype.
+   *
+   * @var \Drupal\ghi_plans\ApiObjects\Prototypes\EntityPrototype
+   */
+  protected $prototype;
 
   /**
    * The mapped data for an object from the HPC API.
@@ -30,14 +40,14 @@ abstract class EntityObjectBase extends ApiObjectBase implements EntityObjectInt
    * {@inheritdoc}
    */
   public function getName() {
-    return $this->name;
+    return $this->map->name;
   }
 
   /**
    * {@inheritdoc}
    */
-  public function getDisplayName() {
-    return $this->display_name;
+  public function getGroupName(): ?string {
+    return $this->map->group_name ?? NULL;
   }
 
   /**
@@ -66,13 +76,6 @@ abstract class EntityObjectBase extends ApiObjectBase implements EntityObjectInt
   /**
    * {@inheritdoc}
    */
-  public function getEntityTypeRefCode(): string {
-    return $this->ref_code;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
   public function getCustomReference():string {
     return $this->custom_reference;
   }
@@ -88,7 +91,7 @@ abstract class EntityObjectBase extends ApiObjectBase implements EntityObjectInt
    * {@inheritdoc}
    */
   public function getTypeName() {
-    return $this->plural_name;
+    return $this->getPluralName();
   }
 
   /**
@@ -134,6 +137,78 @@ abstract class EntityObjectBase extends ApiObjectBase implements EntityObjectInt
    */
   public function getPlanId() {
     return $this->getRawData()->PlanId ?? NULL;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getPrototype(): ?EntityPrototype {
+    if ($this->prototype instanceof EntityPrototype) {
+      return $this->prototype;
+    }
+    $prototype_id = $this->getRawData()->HpcEntityPrototypeId;
+    if (empty($prototype_id)) {
+      return NULL;
+    }
+    return $this->getEntityPrototypeQuery()?->getPrototype($prototype_id) ?? NULL;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getEntityTypeRefCode(): ?string {
+    return $this->getPrototype()?->getRefCode();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getPrototypeId(): ?int {
+    return $this->getPrototype()?->id();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getPrototypeName(): ?string {
+    return $this->getPrototype()?->getNameSingular();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getSingularName(): string {
+    return $this->getPrototype()?->getNameSingular();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getPluralName(): string {
+    return $this->getPrototype()?->getNamePlural();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getOrderNumber(): ?int {
+    return $this->getPrototype()?->getOrderNumber();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getSortKey(): ?string {
+    return (string) ($this->getPrototype()?->getOrderNumber() ?? '') . ($this->getCustomReference()) ?? NULL;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function toArray(): array {
+    return parent::toArray() + [
+      'ref_code' => $this->getEntityTypeRefCode(),
+    ];
   }
 
 }

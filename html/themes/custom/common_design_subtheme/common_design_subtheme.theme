@@ -690,7 +690,7 @@ function common_design_subtheme_preprocess_table(&$vars) {
   }
 
   if (!empty($vars['block_id']) && $block_settings_sort = BlockSettings::getBlockSettings($vars['block_id'], 'sort')) {
-    $sorted = TableSort::sort($vars['header'], $vars['rows'], $block_settings_sort->column ?: 0, $block_settings_sort->dir ?: 'asc');
+    $sorted = TableSort::sort($vars['header'], $vars['rows'], $block_settings_sort->column ?: 0, $block_settings_sort->dir ?: SORT_ASC);
     if ($sorted) {
       $vars['attributes']['class'][] = 'sorted';
     }

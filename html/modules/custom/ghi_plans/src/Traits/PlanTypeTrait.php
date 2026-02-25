@@ -4,7 +4,6 @@ namespace Drupal\ghi_plans\Traits;
 
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\ghi_plans\Entity\PlanType;
-use Drupal\hpc_api\Query\EndpointQuery;
 use Drupal\hpc_common\Helpers\ArrayHelper;
 use Drupal\hpc_common\Helpers\TaxonomyHelper;
 
@@ -48,7 +47,7 @@ trait PlanTypeTrait {
       if (!empty($grouped_plans[$plan_type_key])) {
         ArrayHelper::sortObjectsByCallback($grouped_plans[$plan_type_key], function ($item) use ($use_shortname) {
           return $use_shortname ? $item->getShortName() : $item->getName();
-        }, EndpointQuery::SORT_ASC, SORT_STRING);
+        }, SORT_ASC, SORT_STRING);
       }
     }
 

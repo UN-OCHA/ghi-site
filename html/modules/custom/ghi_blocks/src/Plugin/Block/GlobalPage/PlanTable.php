@@ -193,15 +193,15 @@ class PlanTable extends GHIBlockBase implements HPCDownloadExcelInterface, HPCDo
       }
 
       // Setup the PiN values.
-      $in_need = $plan->getCaseloadValue('InNeed');
-      $target = $plan->getCaseloadValue('Target');
-      $latest_reached = $plan->getCaseloadValue('latestReach');
+      $in_need = $plan->getCaseloadValue('in_need');
+      $target = $plan->getCaseloadValue('target');
+      $latest_reached = $plan->getCaseloadValue('latest_reach');
 
       $reached_percent = !empty($latest_reached) && !empty($target) ? 100 / $target * $latest_reached : NULL;
       if ($plan instanceof PlanOverviewPlanMock) {
         $reached_percent = ((float) $plan->getCaseloadValue('reached_percent')) * 100;
       }
-      $expected_reach = $plan->getCaseloadValue('Expected Reach');
+      $expected_reach = $plan->getCaseloadValue('expected_reach', 'Expected Reach');
       $expected_reached = CommonHelper::calculateRatio($expected_reach, $target) * 100;
 
       // Setup the financial values.

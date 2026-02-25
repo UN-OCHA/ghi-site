@@ -42,13 +42,6 @@ class ProjectCounter extends ConfigurationContainerItemPluginBase {
   public $flowSearchQuery;
 
   /**
-   * The funding query.
-   *
-   * @var \Drupal\ghi_plans\Plugin\EndpointQuery\ClusterQuery
-   */
-  public $clusterQuery;
-
-  /**
    * The icon query.
    *
    * @var \Drupal\hpc_api\Plugin\EndpointQuery\IconQuery
@@ -62,7 +55,6 @@ class ProjectCounter extends ConfigurationContainerItemPluginBase {
     /** @var self $instance */
     $instance = parent::create($container, $configuration, $plugin_id, $plugin_definition);
     $instance->flowSearchQuery = $instance->endpointQueryManager->createInstance('flow_search_query');
-    $instance->clusterQuery = $instance->endpointQueryManager->createInstance('cluster_query');
     $instance->iconQuery = $instance->endpointQueryManager->createInstance('icon_query');
     return $instance;
   }

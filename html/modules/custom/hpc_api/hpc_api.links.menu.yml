@@ -26,7 +26,7 @@ hpc_api.fabric_report.base_types:
   parent: hpc_api.fabric_report
   weight: 1
 hpc_api.fabric_report.categories:
-  title: 'Base types'
+  title: 'Categories'
   description: 'List known categories.'
   route_name: hpc_api.reports.fabric.categories
   parent: hpc_api.fabric_report

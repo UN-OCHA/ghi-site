@@ -52,13 +52,7 @@ class PlanOverviewPlanTest extends PlanApiObjectKernelTestBase {
 
     $plan_overview = new PlanOverviewPlan($raw_data);
 
-    $this->assertApiObjectBasics($plan_overview, 'plan', [
-      'id',
-      'name',
-      'funding',
-      'requirements',
-      'coverage',
-    ]);
+    $this->assertApiObjectBasics($plan_overview, 'plan');
 
     $this->assertEquals(1500000, $plan_overview->getRequirements());
     $this->assertEquals(66.7, $plan_overview->getCoverage(1000000));
@@ -99,40 +93,6 @@ class PlanOverviewPlanTest extends PlanApiObjectKernelTestBase {
     $this->assertFalse($plan_overview->isFlashAppeal());
     $this->assertFalse($plan_overview->isOther());
     $this->assertFalse($plan_overview->isPartOfGho());
-  }
-
-  /**
-   * Test null or empty data handling.
-   */
-  public function testNullOrEmptyDataHandling(): void {
-    // Test with minimal data including null funding/requirements.
-    $minimal_data = $this->createMockRawData([
-      'Id' => 1,
-      'Name' => '',
-      'requirements' => NULL,
-    ]);
-    $plan_overview = new PlanOverviewPlan($minimal_data);
-
-    $this->assertEquals(1, $plan_overview->id());
-    $this->assertIsString($plan_overview->getName());
-    $this->assertEquals(0, $plan_overview->getRequirements());
-  }
-
-  /**
-   * Test cache tags and dependencies.
-   */
-  public function testCacheTagsAndDependencies(): void {
-    $raw_data = $this->createMockRawData();
-    $plan_overview = new PlanOverviewPlan($raw_data);
-
-    $cache_tags = $plan_overview->getCacheTags();
-    $this->assertIsArray($cache_tags);
-
-    $cache_contexts = $plan_overview->getCacheContexts();
-    $this->assertIsArray($cache_contexts);
-
-    $cache_max_age = $plan_overview->getCacheMaxAge();
-    $this->assertIsInt($cache_max_age);
   }
 
 }

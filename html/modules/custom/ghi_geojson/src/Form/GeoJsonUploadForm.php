@@ -185,7 +185,6 @@ class GeoJsonUploadForm extends WizardBase {
     ];
 
     /** @var \Drupal\file\Entity\File $upload_file */
-    $upload = $form_state->get('upload') ?: NULL;
     $upload_file = $form_state->get('upload_file') ?: NULL;
     $form['upload'] = [
       '#type' => 'file',

@@ -22,10 +22,12 @@ use Drupal\ghi_geojson\GeoJsonLocationInterface;
 use Drupal\ghi_plans\ApiObjects\Attachments\AttachmentInterface;
 use Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment;
 use Drupal\ghi_plans\Traits\AttachmentFilterTrait;
+use Drupal\ghi_plans\Traits\DataPointConfigBackwardsCompatibilityTrait;
 use Drupal\ghi_plans\Traits\DisaggregatedDataTrait;
 use Drupal\ghi_plans\Traits\PlanReportingPeriodTrait;
 use Drupal\ghi_sections\Entity\SectionNodeInterface;
 use Drupal\ghi_subpages\Entity\SubpageNodeInterface;
+use Drupal\hpc_api\ApiObjects\Types\MetricType;
 use Drupal\hpc_common\Plugin\HPCBlockMetadata;
 use Drupal\hpc_downloads\Interfaces\HPCDownloadPNGInterface;
 
@@ -47,6 +49,7 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
   use AttachmentFilterTrait;
   use BlockCommentTrait;
   use ConfigValidationTrait;
+  use DataPointConfigBackwardsCompatibilityTrait;
   use DisaggregatedDataTrait;
   use GlobalMapTrait;
   use PlanReportingPeriodTrait;
@@ -197,18 +200,19 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
     $reporting_period_id = $this->getCurrentReportingPeriod($plan_id);
     $configured_reporting_periods = $this->getConfiguredReportingPeriods($plan_id);
 
-    $disaggregated_data = $attachment->getDisaggregatedData($reporting_period_id);
-    foreach ($this->transformDisaggregatedMapData($disaggregated_data, $attachment) as $metric_index => $metric_item) {
-      if ($attachment->metricItemIsEmpty($metric_item)) {
+    $disaggregated_data = $this->transformDisaggregatedMapData($attachment->getDisaggregatedData($reporting_period_id), $attachment);
+
+    foreach (array_keys(array_values($attachment->getFields())) as $metric_index) {
+      $metric_item = $disaggregated_data[$metric_index] ?? NULL;
+      if (!$metric_item || $attachment->metricItemIsEmpty($metric_item)) {
         continue;
       }
       /** @var \Drupal\hpc_api\ApiObjects\Types\MetricType $metric_object */
       $metric_object = $metric_item['metric_object'];
-      // @todo Add support for overridden labels via ::getMetricLabel().
-      $metric_label = $metric_object->getLabel($plan_base_object->getPlanLanguage());
-      $metric_type = strtolower($metric_item['metric']->type);
+      $metric_type = $metric_object->getMachineName();
+      $metric_label = $this->getMetricLabel($metric_object, $plan_base_object->getPlanLanguage());
       $metric_map_key = $metric_type . '-' . $metric_index;
-      $metric_map_data = $this->prepareMetricItemMapData($metric_index, $metric_item, $decimal_format, $reporting_period_id ? $reporting_periods[$reporting_period_id] : NULL);
+      $metric_map_data = $this->prepareMetricItemMapData($metric_label, $metric_item, $decimal_format, $reporting_period_id ? $reporting_periods[$reporting_period_id] : NULL);
       $map['data'][$metric_map_key] = [
         'label' => $metric_label,
         'metric' => $metric_item['metric'],
@@ -234,7 +238,10 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
           /** @var \Drupal\ghi_plans\ApiObjects\PlanReportingPeriod $reporting_period */
           $reporting_period = $period_data['reporting_period'];
           foreach ($period_data['disaggregated_data'] as $metric_index => $metric_item) {
-            $metric_type = strtolower($metric_item['metric']->type);
+            /** @var \Drupal\hpc_api\ApiObjects\Types\MetricType $metric_object */
+            $metric_object = $metric_item['metric_object'];
+            $metric_type = $metric_object->getMachineName();
+            $metric_label = $this->getMetricLabel($metric_object, $plan_base_object->getPlanLanguage());
             $metric_map_key = $metric_type . '-' . $metric_index;
             if (empty($map['data'][$metric_map_key])) {
               continue;
@@ -248,7 +255,7 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
             if (!$attachment->isMeasurementField($metric_item['metric']->name->en)) {
               continue;
             }
-            $metric_map_data = $this->prepareMetricItemMapData($metric_index, $metric_item, $decimal_format, $reporting_period);
+            $metric_map_data = $this->prepareMetricItemMapData($metric_label, $metric_item, $decimal_format, $reporting_period);
             $map['data'][$metric_map_key]['variants'][$reporting_period->id()] = [
               'label' => $reporting_periods_rendered[$reporting_period->id()],
               'tab_label' => $reporting_period->getPeriodNumber(),
@@ -388,29 +395,48 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
   /**
    * Get the metric label for the given index.
    *
-   * @param int $metric_index
-   *   The index of the metric item in the attachments field list.
+   * @param \Drupal\hpc_api\ApiObjects\Types\MetricType $metric_object
+   *   The metric type object.
+   * @param string $langcode
+   *   The language code to use for translations.
    *
    * @return string
    *   The label of the metric.
    */
-  private function getMetricLabel($metric_index) {
+  private function getMetricLabel(MetricType $metric_object, string $langcode = 'en') {
     $conf = $this->getBlockConfig();
-    $attachment = $this->getDefaultAttachment();
-    $field = $attachment->getMetricFields()[$metric_index];
-    $metric_label = $field;
-    if (!empty($conf['map']['metric_labels']) && !empty($conf['map']['metric_labels'][$metric_index])) {
-      $metric_label = $conf['map']['metric_labels'][$metric_index];
+
+    $attachments = $this->getSelectedAttachments();
+    $attachment = !empty($attachments) ? reset($attachments) : NULL;
+
+    // Backwards compatible change for overridden metric labels, which use
+    // metric types instead of metric indexes now.
+    if (!empty($conf['map']['metric_labels']) && $prototype = $attachment?->getPrototype()) {
+      foreach ($conf['map']['metric_labels'] as $metric_index => $metric_label) {
+        if (!is_numeric($metric_index)) {
+          continue;
+        }
+        unset($conf['map']['metric_labels'][$metric_index]);
+        $metric_type = $this->getMetricTypeByIndex($metric_index, $prototype);
+        if ($metric_type) {
+          $conf['map']['metric_labels'][$metric_type] = $metric_label;
+        }
+      }
     }
-    return $metric_label;
+
+    $metric_label = NULL;
+    $metric_type = $metric_object->getMachineName();
+    if ($metric_type && !empty($conf['map']['metric_labels'][$metric_type])) {
+      $metric_label = $conf['map']['metric_labels'][$metric_type];
+    }
+    return $metric_label ?: $metric_object->getLabel($langcode);
   }
 
   /**
    * Prepare the data for full metric item, that includes locations and modals.
    */
-  private function prepareMetricItemMapData($metric_index, $metric_item, $decimal_format, $reporting_period = NULL) {
+  private function prepareMetricItemMapData($metric_label, $metric_item, $decimal_format, $reporting_period = NULL) {
     $locations = $metric_item['locations'];
-    $metric_label = $this->getMetricLabel($metric_index);
 
     $location_data = [];
     $modal_contents = [];
@@ -675,16 +701,16 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
       '#tree' => TRUE,
       '#group' => 'tabs',
     ];
-    foreach ($attachment->getMetricFields() as $metric_index => $metric_label) {
-      $form['metric_labels'][$metric_index] = [
+    foreach ($attachment->getFields() as $metric_type => $metric_label) {
+      $form['metric_labels'][$metric_type] = [
         '#type' => 'textfield',
-        '#title' => $this->t('Label for @type metrics', ['@type' => $metric_label]),
+        '#title' => $this->t('Label for metric @type', ['@type' => $metric_label]),
         '#description' => $this->t('You can override the label for this metric. Leave empty to use the default: <em>@default_label</em>.', [
           '@default_label' => $metric_label,
         ]),
         '#default_value' => $this->getDefaultFormValueFromFormState($form_state, [
           'metric_labels',
-          $metric_index,
+          $metric_type,
         ]),
       ];
     }
@@ -762,7 +788,7 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
   /**
    * Get all attachment objects for the current block instance.
    *
-   * @return \Drupal\ghi_plans\ApiObjects\Attachments\DataAttachments[]
+   * @return \Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment[]
    *   An array of attachment objects, keyed by the attachment id.
    */
   private function getSelectedAttachments() {
@@ -873,7 +899,7 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
 
     /** @var \Drupal\ghi_plans\Plugin\FabricQuery\PlanEntityQuery $query */
     $query = $this->getQueryHandler('entities');
-    $plan_entities += $query->getPlanEntities($plan_id, $this->getCurrentBaseObject()) ?? [];
+    $plan_entities += $query->getEntitiesForPlan($plan_id, $this->getCurrentBaseObject()) ?? [];
     return $plan_entities;
   }
 

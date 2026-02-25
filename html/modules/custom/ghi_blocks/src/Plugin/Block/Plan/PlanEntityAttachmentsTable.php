@@ -20,7 +20,6 @@ use Drupal\ghi_form_elements\Traits\ConfigurationContainerTrait;
 use Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment;
 use Drupal\ghi_plans\ApiObjects\Entities\PlanEntity;
 use Drupal\hpc_api\Helpers\ArrayHelper;
-use Drupal\hpc_api\Query\EndpointQuery;
 use Drupal\hpc_common\Plugin\HPCBlockMetadata;
 use Drupal\hpc_downloads\Interfaces\HPCDownloadExcelInterface;
 use Drupal\hpc_downloads\Interfaces\HPCDownloadPNGInterface;
@@ -60,7 +59,7 @@ class PlanEntityAttachmentsTable extends GHIBlockBase implements ConfigurableTab
     return new HPCBlockMetadata(
       defaultTitle: 'Indicator overview',
       dataSources: [
-        'entities' => 'fabric_query:plan_entity',
+        'entities' => 'fabric_query:entity',
         'attachment' => 'fabric_query:attachment',
         'attachment_prototype' => 'fabric_query:attachment_prototype',
       ],
@@ -286,7 +285,7 @@ class PlanEntityAttachmentsTable extends GHIBlockBase implements ConfigurableTab
       $entities[$entity->id()] = $entity;
     }
     // Sort the entities.
-    ArrayHelper::sortObjectsByStringProperty($entities, 'sort_key', EndpointQuery::SORT_ASC);
+    ArrayHelper::sortObjectsByStringProperty($entities, 'sort_key', SORT_ASC);
     return $entities;
   }
 
@@ -584,7 +583,7 @@ class PlanEntityAttachmentsTable extends GHIBlockBase implements ConfigurableTab
       $entities[$entity_id]['attachments'][] = $attachment;
     }
     uasort($entities, function ($_a, $_b) {
-      return strnatcmp($_a['entity']->sort_key, $_b['entity']->sort_key);
+      return strnatcmp($_a['entity']->getSortKey(), $_b['entity']->getSortKey());
     });
     $attachments = [];
     foreach ($entities as $_entity) {
@@ -609,7 +608,7 @@ class PlanEntityAttachmentsTable extends GHIBlockBase implements ConfigurableTab
 
     /** @var \Drupal\ghi_plans\Plugin\FabricQuery\AttachmentQuery $query */
     $query = $this->getQueryHandler('attachment');
-    $attachments = $query->getAttachmentsByObject('governingEntity', $entity_ids, $attachment_type) + $query->getAttachmentsByObject('planEntity', $entity_ids, $attachment_type);
+    $attachments = $query->getAttachmentsByObject(['governingEntity', 'planEntity'], $entity_ids, $attachment_type);
     // Filter out non-data attachments.
     $attachments = array_filter($attachments, function ($attachment) {
       return $attachment instanceof DataAttachment;

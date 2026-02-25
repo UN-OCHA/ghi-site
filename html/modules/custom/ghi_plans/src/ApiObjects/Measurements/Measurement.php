@@ -19,6 +19,13 @@ class Measurement extends ApiObjectBase implements MeasurementInterface {
   use DisaggregatedDataTrait;
 
   /**
+   * The facts representing the totals.
+   *
+   * @var \Drupal\ghi_plans\ApiObjects\Facts\MeasurementFact[]
+   */
+  protected $totals;
+
+  /**
    * The attachment prototype.
    *
    * @var \Drupal\ghi_plans\ApiObjects\Prototypes\AttachmentPrototype
@@ -58,6 +65,7 @@ class Measurement extends ApiObjectBase implements MeasurementInterface {
   protected function map() {
     $query = $this->getEntityTypeQuery();
     $measurement = $this->getRawData();
+    $this->processTotals((array) ($measurement->totals ?? []));
 
     $processed = (object) [
       'id' => $measurement->Id,
@@ -71,7 +79,7 @@ class Measurement extends ApiObjectBase implements MeasurementInterface {
       'custom_id' => $measurement->CustomReference ?? NULL,
       'composed_reference' => $measurement->ComposedReference ?? NULL,
       'description' => $measurement->Name ?? NULL,
-      'values' => $this->extractValues(),
+      'values' => $this->extractValues($this->totals),
       'unit' => ($measurement->UnitId ?? NULL) ? $query->getUnit($measurement->UnitId) : NULL,
       'monitoring_period' => $measurement->MeasurementPeriodId ?? NULL,
       'has_disaggregated_data' => !empty($measurement->HasDisaggregatedData),
@@ -112,24 +120,8 @@ class Measurement extends ApiObjectBase implements MeasurementInterface {
   /**
    * {@inheritdoc}
    */
-  public function getDataPointValue($index) {
+  public function getDataPointValue($metric_type) {
     // @todo Add calculated fields.
-    $original_field = $this->getPrototype()->getOriginalFields()[$index];
-    $metric_type = $original_field?->type;
-
-    $field_types = $this->getPrototype()->getFieldTypes();
-    if (count(array_intersect($field_types, [$metric_type])) > 1) {
-      // There is uncertainty here, so we match for the label. The uncertainty
-      // comes from older attachments that have duplicated metric types,
-      // example attachment 38036, with 2 measure metrics of type "measure".
-      foreach ($this->getTotals() as $item) {
-        if (!$item->getMetric()->matches($original_field->name->en)) {
-          continue;
-        }
-        return $this->values[$item->getMetric()->getMachineName()] ?? NULL;
-      }
-    }
-
     return $this->values[$metric_type] ?? NULL;
   }
 
@@ -141,36 +133,48 @@ class Measurement extends ApiObjectBase implements MeasurementInterface {
   }
 
   /**
+   * Process the totals.
+   *
+   * @param array $totals
+   *   An array of raw fact objects.
+   */
+  protected function processTotals(array $totals) {
+    $this->totals = array_map(fn ($item) => new MeasurementFact($item), $totals);
+  }
+
+  /**
    * Extract the metric values from an attachment.
+   *
+   * @param \Drupal\ghi_plans\ApiObjects\Facts\AttachmentFact[] $totals
+   *   The totals to use for value extraction.
    *
    * @return array
    *   Array with values for each metric and measurement data point.
    */
-  protected function extractValues(): array {
+  protected function extractValues(array $totals = []): array {
     $values = [];
-    foreach ($this->getTotals() as $item) {
+    foreach ($totals as $item) {
       $values[$item->getMetric()->getMachineName()] = $item->getValue();
     }
     return $values;
   }
 
   /**
-   * Get the totals from the attachment.
-   *
-   * @return \Drupal\ghi_plans\ApiObjects\Facts\AttachmentFact[]
-   *   An array of attachment fact objects.
+   * {@inheritdoc}
    */
-  public function getTotals(): array {
-    $data = $this->getRawData();
-    // Extract the values.
-    return array_map(fn ($item) => new MeasurementFact($item), $data->totals ?? []);
+  public function getValues() {
+    return $this->map->values;
   }
 
   /**
-   * Get the disaggregated data from the attachment.
-   *
-   * @return object
-   *   A disaggregated data object.
+   * {@inheritdoc}
+   */
+  public function getTotals(): array {
+    return $this->totals;
+  }
+
+  /**
+   * {@inheritdoc}
    */
   public function getDisaggregated(): object {
     $this->assureDisaggregatedData();
@@ -198,10 +202,7 @@ class Measurement extends ApiObjectBase implements MeasurementInterface {
   }
 
   /**
-   * Get the prototype for an attachment.
-   *
-   * @return \Drupal\ghi_plans\ApiObjects\Prototypes\AttachmentPrototype|null
-   *   The attachment prototype object.
+   * {@inheritdoc}
    */
   public function getPrototype(): ?AttachmentPrototype {
     if ($this->prototype instanceof AttachmentPrototype) {
@@ -215,10 +216,10 @@ class Measurement extends ApiObjectBase implements MeasurementInterface {
     // requests are cached.
     $query_handler = $this->getAttachmentPrototypeQuery();
     if (!$query_handler) {
-      return NULL;
+      throw new \Exception(sprintf('Failed to extract prototype for attachment %s', $measurement->Id));
     }
     $plan_id = $measurement->PlanId ?? NULL;
-    $prototype_id = $measurement->AttachmentPrototypeId ?? ($measurement->attachmentPrototypeId ?? NULL);
+    $prototype_id = $measurement->AttachmentPrototypeId ?? NULL;
     if ($plan_id && $prototype_id && $prototype = $query_handler->getPrototypeByPlanAndId($plan_id, $prototype_id)) {
       return $prototype;
     }

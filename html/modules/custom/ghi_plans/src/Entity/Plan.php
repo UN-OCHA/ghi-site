@@ -270,11 +270,12 @@ class Plan extends BaseObject implements BaseObjectMetaDataInterface, BaseObject
     if ($this->usePlanRequirements()) {
       $attachments = $attachments_query->getAttachmentsByObject('plan', [$this->getSourceId()], 'financial');
       $attachment = count($attachments) ? reset($attachments) : NULL;
+      assert($attachment instanceof FinancialAttachment);
       $requirements = $attachment?->getRequirements() ?? NULL;
     }
     elseif ($this->useClusterRequirements()) {
-      $plan_entity_query = $this->getPlanEntityQuery();
-      $clusters = $plan_entity_query->getPlanEntities($this->getSourceId(), NULL, 'governing');
+      $plan_entity_query = $this->getEntityQuery();
+      $clusters = $plan_entity_query->getEntitiesForPlan($this->getSourceId(), NULL, 'governing');
       $requirements = 0;
       $attachments = $attachments_query->getAttachmentsByObject('governingEntity', array_keys($clusters), 'financial');
       foreach ($attachments as $attachment) {

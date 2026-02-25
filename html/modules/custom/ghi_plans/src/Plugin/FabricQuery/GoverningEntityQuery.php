@@ -3,7 +3,6 @@
 namespace Drupal\ghi_plans\Plugin\FabricQuery;
 
 use Drupal\Core\StringTranslation\TranslatableMarkup;
-use Drupal\ghi_base_objects\ApiObjects\Country;
 use Drupal\ghi_plans\ApiObjects\Entities\GoverningEntity;
 use Drupal\ghi_plans\Traits\PlanQueryTrait;
 use Drupal\hpc_api\Attribute\FabricQuery;
@@ -21,45 +20,92 @@ class GoverningEntityQuery extends FabricQueryBase {
   use PlanQueryTrait;
 
   /**
-   * Get a plan by its id.
+   * Get a governing entity by id.
    *
-   * @param int $governing_entity_id
+   * @param int $entity_id
    *   The governing entity id.
    *
    * @return \Drupal\ghi_plans\ApiObjects\Entities\GoverningEntity|null
-   *   The plan object or NULL if not found.
+   *   The governing entity object or NULL if not found.
    */
-  public function getGoverningEntity(int $governing_entity_id): ?GoverningEntity {
+  public function getGoverningEntity(int $entity_id): ?GoverningEntity {
+    $governing_entity = $this->getObjectFromStorage($entity_id, GoverningEntity::getObjectStorageKey());
+    if ($governing_entity) {
+      return $governing_entity;
+    }
+
     // Get the governing entity.
-    $queries = [
-      $this->fabricClient->createQuery('coordinationEntities', GoverningEntity::getGraphQlItems())
-        ->setFilter('Id', $governing_entity_id),
-      $this->fabricClient->createQuery('planFieldClusters', [
-        'PlanId',
-        'PlanName',
-      ])->setFilter('ClusterId', $governing_entity_id),
-    ];
-    $data = $this->fabricClient->executeMultiple($queries);
-    $governing_entities_data = $data['coordinationEntities'][0] ?? NULL;
-    if ($governing_entities_data === NULL) {
+    $items = $this->fabricClient->createQuery('coordinationEntities', GoverningEntity::getGraphQlItems())
+      ->setFilters([
+        'Id' => $entity_id,
+        'RecordStatus' => 'Active',
+      ])
+      ->execute();
+    $item = count($items) == 1 ? reset($items) : NULL;
+    if (!$item) {
       return NULL;
     }
-    $governing_entities_data->plan = $data['planFieldClusters'][0] ?? NULL;
-    return new GoverningEntity($governing_entities_data);
+    $governing_entity = new GoverningEntity($item);
+    $this->addObjectToStorage($governing_entity);
+    return $governing_entity;
   }
 
   /**
-   * Lookup a country by name.
+   * Get governing entities by id.
    *
-   * @param string $name
-   *   The country name to look for.
+   * @param int[] $entity_ids
+   *   The governing entity ids.
    *
-   * @return \Drupal\ghi_base_objects\ApiObjects\Country|null
-   *   The country object or NULL.
+   * @return \Drupal\ghi_plans\ApiObjects\Entities\GoverningEntity[]
+   *   An array of governing entity objects.
    */
-  protected function lookupCountry(string $name): ?Country {
-    return $this->getCountryQuery()->getCountryByName($name);
+  public function getGoverningEntitiesById(array $entity_ids): array {
+    $entity_ids = array_unique($entity_ids);
+    $governing_entities = $this->getObjectsFromStorage($entity_ids, GoverningEntity::getObjectStorageKey());
+    if (count($governing_entities) == count($entity_ids)) {
+      return $governing_entities;
+    }
+    $entity_ids = array_diff($entity_ids, array_keys($governing_entities));
 
+    if (count($entity_ids) > self::MAX_FILTER_COUNT_ARRAY) {
+      // We need to do multiple queries.
+      return $this->doChunkedQuery($entity_ids, fn ($ids): array => $this->getGoverningEntitiesById($ids));
+    }
+
+    // Get the governing entity.
+    $items = $this->fabricClient->createQuery('coordinationEntities', GoverningEntity::getGraphQlItems())
+      ->setFilters([
+        'Id' => $entity_ids,
+        'RecordStatus' => 'Active',
+      ])
+      ->execute();
+    $governing_entities = $this->buildResultObjects($items, GoverningEntity::class);
+    $this->addObjectsToStorage($governing_entities);
+    return $governing_entities;
+  }
+
+  /**
+   * Get tagged clusters for the given plan id.
+   *
+   * @param int $plan_id
+   *   The plan id to query.
+   * @param string $cluster_tag
+   *   The cluster tag.
+   *
+   * @return \Drupal\ghi_plans\ApiObjects\Entities\GoverningEntity[]
+   *   An array of governing entity objects.
+   */
+  public function getTaggedClustersForPlan(int $plan_id, $cluster_tag) {
+    $items = $this->fabricClient->createQuery('coordinationEntities', GoverningEntity::getGraphQlItems())
+      ->setFilters([
+        'PlanId' => $plan_id,
+        'RecordStatus' => 'Active',
+      ])
+      ->execute();
+    $governing_entities = $this->buildResultObjects($items, GoverningEntity::class);
+    $this->addObjectsToStorage($governing_entities);
+    $governing_entities = array_filter($governing_entities, fn ($entity) => in_array($cluster_tag, $entity->getTags()));
+    return $governing_entities;
   }
 
 }

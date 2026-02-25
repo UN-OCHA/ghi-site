@@ -2,7 +2,7 @@
 
 namespace Drupal\Tests\ghi_plans\Kernel\ApiObjects;
 
-use Drupal\Tests\ghi_base_objects\Kernel\ApiObjects\BaseObjectKernelTestBase;
+use Drupal\Tests\ghi_base_objects\Kernel\BaseObjectKernelTestBase;
 
 /**
  * Base class for ghi_plans ApiObject kernel tests.

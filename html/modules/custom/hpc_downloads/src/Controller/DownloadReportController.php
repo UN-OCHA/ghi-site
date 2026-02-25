@@ -11,7 +11,6 @@ use Drupal\Core\Link;
 use Drupal\Core\Render\Markup;
 use Drupal\Core\StringTranslation\ByteSizeMarkup;
 use Drupal\Core\Url;
-use Drupal\hpc_api\Query\EndpointQuery;
 use Drupal\hpc_common\Helpers\ArrayHelper;
 use Drupal\hpc_downloads\DownloadRecord;
 use Drupal\hpc_downloads\Interfaces\HPCDownloadPluginInterface;
@@ -101,7 +100,7 @@ class DownloadReportController extends ControllerBase {
    */
   public function buildRecordListPage() {
     $records = DownloadRecord::loadRecords();
-    ArrayHelper::sortObjectsByProperty($records, 'id', EndpointQuery::SORT_DESC);
+    ArrayHelper::sortObjectsByProperty($records, 'id', SORT_DESC);
 
     $header = [
       $this->t('ID'),

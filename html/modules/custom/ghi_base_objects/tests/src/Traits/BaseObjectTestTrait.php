@@ -31,6 +31,8 @@ trait BaseObjectTestTrait {
    *     provided label.
    *   - field_plan: When not empty, this will create a plan field with the
    *     provided label.
+   * @param string[] $block_fields
+   *   (optional) List field names that should not be created.
    *
    * @return \Drupal\ghi_base_objects\Entity\BaseObjectTypeInterface
    *   A base object type.
@@ -38,7 +40,7 @@ trait BaseObjectTestTrait {
    * @see \Drupal\ghi_base_objects\Entity\BaseObjectTypeInterface
    * @see \Drupal\ghi_base_objects\Entity\BaseObjectType
    */
-  protected function createBaseObjectType(array $values = []) {
+  protected function createBaseObjectType(array $values = [], array $block_fields = []) {
     $values += [
       'id' => $this->randomMachineName(),
       'label' => $this->randomString(),
@@ -50,7 +52,9 @@ trait BaseObjectTestTrait {
     if ($base_object_type->isNew()) {
       $this->assertSame(SAVED_NEW, $base_object_type->save());
       $this->assertInstanceOf(BaseObjectTypeInterface::class, $base_object_type);
-      $this->createField('base_object', $base_object_type->id(), 'integer', 'field_original_id', 'Source id');
+      if (!in_array('field_original_id', $block_fields)) {
+        $this->createField('base_object', $base_object_type->id(), 'integer', 'field_original_id', 'Source id');
+      }
       if (!empty($values['field_year'])) {
         $this->createField('base_object', $base_object_type->id(), 'integer', 'field_year', $values['field_year']);
       }
@@ -60,6 +64,12 @@ trait BaseObjectTestTrait {
             'plan' => 'plan',
           ],
         ]);
+      }
+      foreach (array_diff_key($values, array_flip(['field_year', 'field_plan'])) as $field_name => $field) {
+        if (!str_starts_with($field_name, 'field_')) {
+          continue;
+        }
+        $this->createField('base_object', $base_object_type->id(), $field['type'], $field_name, $field['label']);
       }
     }
     return $base_object_type;

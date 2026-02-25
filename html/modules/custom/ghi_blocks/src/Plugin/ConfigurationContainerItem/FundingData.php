@@ -60,7 +60,7 @@ class FundingData extends ConfigurationContainerItemPluginBase {
   /**
    * The cluster query.
    *
-   * @var \Drupal\ghi_plans\Plugin\EndpointQuery\ClusterQuery
+   * @var \Drupal\ghi_plans\Plugin\FabricQuery\GoverningEntityQuery
    */
   public $clusterQuery;
 
@@ -86,7 +86,7 @@ class FundingData extends ConfigurationContainerItemPluginBase {
     $instance = parent::create($container, $configuration, $plugin_id, $plugin_definition);
     $instance->fundingSummaryQuery = $instance->endpointQueryManager->createInstance('plan_funding_summary_query');
     $instance->flowSearchQuery = $instance->endpointQueryManager->createInstance('flow_search_query');
-    $instance->clusterQuery = $instance->endpointQueryManager->createInstance('cluster_query');
+    $instance->clusterQuery = $instance->fabricQueryManager->createInstance('governing_entity');
     $instance->attachmentQuery = $instance->fabricQueryManager->createInstance('attachment');
     return $instance;
   }

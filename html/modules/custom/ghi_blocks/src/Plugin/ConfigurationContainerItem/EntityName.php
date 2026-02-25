@@ -79,11 +79,8 @@ class EntityName extends ConfigurationContainerItemPluginBase {
       return NULL;
     }
     $entity_name = $this->getValue();
-    if (empty($entity->icon)) {
-      return $entity_name;
-    }
+    $icon_embed = !empty($entity->icon) ? $this->iconQuery->getIconEmbedCode($entity->icon) : NULL;
 
-    $icon_embed = $this->iconQuery->getIconEmbedCode($entity->icon);
     $markup = [
       '#markup' => Markup::create($icon_embed . '<span class="name">' . $entity_name . '</span>'),
     ];

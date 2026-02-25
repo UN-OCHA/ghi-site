@@ -8,7 +8,7 @@ use Drupal\ghi_blocks\Interfaces\MultiStepFormBlockInterface;
 use Drupal\ghi_blocks\Interfaces\OverrideDefaultTitleBlockInterface;
 use Drupal\ghi_blocks\Plugin\Block\Plan\PlanGoverningEntitiesTable;
 use Drupal\ghi_plans\ApiObjects\Entities\GoverningEntity;
-use Drupal\ghi_plans\Plugin\FabricQuery\PlanEntityQuery;
+use Drupal\ghi_plans\Plugin\FabricQuery\EntityQuery;
 use Drupal\hpc_downloads\Interfaces\HPCDownloadExcelInterface;
 use Drupal\hpc_downloads\Interfaces\HPCDownloadPNGInterface;
 use Drupal\Tests\ghi_blocks\Kernel\PlanBlockKernelTestBase;
@@ -234,8 +234,8 @@ class PlanGoverningEntitiesTableTest extends PlanBlockKernelTestBase {
     $clusters = $clusters ?? [
       $this->createBaseObject(['type' => 'governing_entity']),
     ];
-    $plan_entity_query = $this->prophesize(PlanEntityQuery::class);
-    $plan_entity_query->getPlanEntities(Argument::cetera())->willReturn(array_map(function ($cluster) {
+    $plan_entity_query = $this->prophesize(EntityQuery::class);
+    $plan_entity_query->getEntitiesForPlan(Argument::cetera())->willReturn(array_map(function ($cluster) {
       return new GoverningEntity((object) [
         'Id' => $cluster->getSourceId(),
         'Name' => $cluster->label(),

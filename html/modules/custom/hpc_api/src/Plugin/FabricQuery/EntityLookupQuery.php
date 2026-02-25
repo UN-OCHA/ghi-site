@@ -14,10 +14,10 @@ use Drupal\hpc_api\Query\FabricQueryBase;
  * fabric.
  */
 #[AttributeFabricQuery(
-  id: 'entity',
+  id: 'entity_lookup',
   label: new TranslatableMarkup('Entity query'),
 )]
-class EntityQuery extends FabricQueryBase {
+class EntityLookupQuery extends FabricQueryBase {
 
   /**
    * Get entity query definitions.
@@ -110,6 +110,7 @@ class EntityQuery extends FabricQueryBase {
           'SourceId',
           'PlanId',
           'CreatedAt',
+          'IsPublished',
           'UpdatedAt',
           'IsLocked',
           'PgSqlPdf',

@@ -28,7 +28,7 @@ trait AttachmentTableTrait {
     /** @var \Drupal\ghi_plans\Plugin\FabricQuery\PlanEntityQuery $query */
     $query = $this->getQueryHandler('entities');
     $plan_id = $this->getCurrentPlanId();
-    return $query->getPlanEntities($plan_id, $this->getPageNode(), 'governing');
+    return $query->getEntitiesForPlan($plan_id, $this->getPageNode(), 'governing');
   }
 
   /**

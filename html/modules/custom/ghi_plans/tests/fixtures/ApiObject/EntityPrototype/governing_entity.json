@@ -1,0 +1,32 @@
+{
+  "Id": 4267,
+  "RefCode": "CL",
+  "Type": "GVE",
+  "Value": {
+    "name": {
+      "en": {
+        "singular": "Cluster",
+        "plural": "Clusters"
+      }
+    },
+    "possibleChildren": [
+      {
+        "refCode": "CO",
+        "cardinality": "0-N",
+        "id": 4269
+      },
+      {
+        "refCode": "CA",
+        "cardinality": "0-N",
+        "id": 4270
+      }
+    ]
+  },
+  "PlanId": 1266,
+  "OrderNumber": 1,
+  "CreatedAt": "2024-10-09T12:23:40.000Z",
+  "UpdatedAt": "2024-10-09T12:23:40.000Z",
+  "RecordStatus": "Active",
+  "Source": "HPC",
+  "SourceId": "4267"
+}

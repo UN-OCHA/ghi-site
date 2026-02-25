@@ -7,15 +7,12 @@ use Drupal\Core\Extension\ExtensionPathResolver;
 use Drupal\Core\Render\RendererInterface;
 use Drupal\Tests\UnitTestCase;
 use Drupal\hpc_common\Helpers\ThemeHelper;
-use Prophecy\PhpUnit\ProphecyTrait;
 use Twig\Environment;
 
 /**
  * @covers Drupal\hpc_common\Helpers\ThemeHelper
  */
 class ThemeHelperTest extends UnitTestCase {
-
-  use ProphecyTrait;
 
   /**
    * {@inheritdoc}

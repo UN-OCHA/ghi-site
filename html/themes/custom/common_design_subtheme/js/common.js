@@ -206,7 +206,8 @@
             let columnSelector = '#' + blockId + ' table.sortable th:nth-child(' + (blockTableSort.column + 1) + ')';
             let column = $(columnSelector).get(0);
             sorttable.innerSortFunction.apply(column, []);
-            if (blockTableSort.dir == 'desc') {
+            // In PHP: SORT_DESC = 3.
+            if (blockTableSort.dir == 3) {
               sorttable.innerSortFunction.apply(column, []);
             }
           }
@@ -224,7 +225,8 @@
                 settings: {
                   sort: {
                     column: $(element).index(),
-                    dir: $(element).hasClass('sorttable-sorted-reverse') ? 'desc' : 'asc'
+                    // In PHP: SORT_ASC = 4, SORT_DESC = 3.
+                    dir: $(element).hasClass('sorttable-sorted-reverse') ? 3 : 4
                   }
                 }
               });

@@ -5,7 +5,6 @@ namespace Drupal\hpc_common\Helpers;
 use Drupal\Component\Utility\Html;
 use Drupal\Component\Utility\UrlHelper;
 use Drupal\Core\Url;
-use Symfony\Component\HttpFoundation\RedirectResponse;
 
 /**
  * Helper class for common logic.
@@ -83,52 +82,6 @@ class CommonHelper {
     $is_castable_object = is_object($item) && method_exists($item, '__toString');
     $is_convertible_to_string = !$is_array && !is_object($item) && settype($item, 'string') !== FALSE;
     return !$is_array && ($is_castable_object || $is_convertible_to_string);
-  }
-
-  /**
-   * Check if the current request is ajax.
-   *
-   * @return bool
-   *   True for ajax requests, FALSE for non-ajax requests.
-   */
-  public static function isAjaxRequest() {
-    if (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest') {
-      return TRUE;
-    }
-    return FALSE;
-  }
-
-  /**
-   * Helper function to do a redirect.
-   *
-   * @param string $uri
-   *   The URI to redirect to.
-   * @param array $query_args
-   *   The query arguments to add.
-   * @param int $status
-   *   The redirect HTTP status.
-   * @param array $headers
-   *   Optional headers for the redirect response.
-   */
-  public static function redirect($uri, array $query_args, $status = 302, array $headers = []) {
-    $options = [];
-    if (!empty($query_args)) {
-      $options['query'] = $query_args;
-    }
-    $url = Url::fromUserInput($uri, $options)->toString();
-
-    // Taken from https://www.drupal.org/node/2023537
-    $response = new RedirectResponse($url, $status, $headers);
-    $request = \Drupal::request();
-    // Save the session so things like messages get saved.
-    if ($request->getSession()->isStarted()) {
-      $request->getSession()->save();
-    }
-    $response->prepare($request);
-    // Make sure to trigger kernel events.
-    \Drupal::service('kernel')->terminate($request, $response);
-    $response->send();
-    die();
   }
 
   /**
@@ -225,11 +178,11 @@ class CommonHelper {
    * @return string|null
    *   The final URL or NULL if it's not processable.
    */
-  public static function assureWellFormedUri($url) {
+  public static function assureWellFormedUri(string $url): ?string {
     if (empty($url)) {
       return NULL;
     }
-    if (strpos($url, 'http') !== 0) {
+    if (!str_starts_with($url, 'http')) {
       $url = 'http://' . $url;
     }
     try {

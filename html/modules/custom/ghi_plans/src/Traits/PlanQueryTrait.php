@@ -7,6 +7,8 @@ use Drupal\ghi_base_objects\Plugin\FabricQuery\LocationQuery;
 use Drupal\ghi_plans\Plugin\FabricQuery\AttachmentPrototypeQuery;
 use Drupal\ghi_plans\Plugin\FabricQuery\AttachmentQuery;
 use Drupal\ghi_plans\Plugin\FabricQuery\EntityPrototypeQuery;
+use Drupal\ghi_plans\Plugin\FabricQuery\EntityQuery;
+use Drupal\ghi_plans\Plugin\FabricQuery\GoverningEntityQuery;
 use Drupal\ghi_plans\Plugin\FabricQuery\MeasurementQuery;
 use Drupal\ghi_plans\Plugin\FabricQuery\OrganizationQuery;
 use Drupal\ghi_plans\Plugin\FabricQuery\PlanEntityQuery;
@@ -35,8 +37,30 @@ trait PlanQueryTrait {
   /**
    * Get the plan entity query.
    *
-   * @return \Drupal\ghi_plans\Plugin\FabricQuery\PlanEntityQuery
+   * @return \Drupal\ghi_plans\Plugin\FabricQuery\EntityQuery
    *   The plan entity query or NULL.
+   */
+  protected static function getEntityQuery(): ?EntityQuery {
+    $query = self::getQueryInstance('entity');
+    return $query instanceof EntityQuery ? $query : NULL;
+  }
+
+  /**
+   * Get the governing entity query.
+   *
+   * @return \Drupal\ghi_plans\Plugin\FabricQuery\GoverningEntityQuery
+   *   The governing entity query or NULL.
+   */
+  protected static function getGoverningEntityQuery(): ?GoverningEntityQuery {
+    $query = self::getQueryInstance('governing_entity');
+    return $query instanceof GoverningEntityQuery ? $query : NULL;
+  }
+
+  /**
+   * Get the plan entity query.
+   *
+   * @return \Drupal\ghi_plans\Plugin\FabricQuery\PlanEntityQuery
+   *   The governing entity query or NULL.
    */
   protected static function getPlanEntityQuery(): ?PlanEntityQuery {
     $query = self::getQueryInstance('plan_entity');

@@ -54,7 +54,7 @@ class EntityLookupForm extends FormBase {
    * {@inheritdoc}
    */
   public function validateForm(array &$form, FormStateInterface $form_state): void {
-    $entity_query = $this->getEntityQuery();
+    $entity_query = $this->getEntityLookupQuery();
     $entity_type = $entity_query->getEntityTypeByName($form_state->getValue('entity_type'));
     if (!$entity_type) {
       $form_state->setErrorByName('entity_type', $this->t('Invalid entity type'));
@@ -65,7 +65,7 @@ class EntityLookupForm extends FormBase {
    * {@inheritdoc}
    */
   public function submitForm(array &$form, FormStateInterface $form_state): void {
-    $entity_query = $this->getEntityQuery();
+    $entity_query = $this->getEntityLookupQuery();
     $entity_type = $entity_query->getEntityTypeByName($form_state->getValue('entity_type'));
     $entity_id = $form_state->getValue('entity_id');
     $form_state->setRedirectUrl(new Url('hpc_api.reports.fabric.entity_lookup_page', [
@@ -82,7 +82,7 @@ class EntityLookupForm extends FormBase {
    *   entity type.
    */
   private function getEntityTypeOptions(): array {
-    $entity_type_options = $this->getEntityQuery()->getEntityQueryOptions();
+    $entity_type_options = $this->getEntityLookupQuery()->getEntityQueryOptions();
     return array_combine($entity_type_options, $entity_type_options);
   }
 

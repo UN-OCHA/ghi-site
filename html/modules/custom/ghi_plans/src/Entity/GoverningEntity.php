@@ -6,8 +6,6 @@ use Drupal\ghi_base_objects\Entity\BaseObject;
 use Drupal\ghi_base_objects\Entity\BaseObjectChildInterface;
 use Drupal\ghi_plans\ApiObjects\Entities\GoverningEntity as EntitiesGoverningEntity;
 use Drupal\ghi_plans\Traits\PlanQueryTrait;
-use Drupal\hpc_api\Plugin\EndpointQuery\IconQuery;
-use Drupal\hpc_api\Query\EndpointQueryManager;
 
 /**
  * Bundle class for governing entity base objects.
@@ -69,11 +67,8 @@ class GoverningEntity extends BaseObject implements BaseObjectChildInterface {
    * @todo We might want to import the icon as part of the Drupal data model
    * too at some point to prevent unnecessary turn-arounds.
    */
-  public function getIconEmbedCode() {
-    $entity = $this->getSourceObject();
-    if ($entity && $icon = $entity->icon) {
-      return $this->getIconQuery()?->getIconEmbedCode($icon);
-    }
+  public function getIconEmbedCode(): ?string {
+    // @todo Update once the icons are in the data store.
     return NULL;
   }
 
@@ -84,30 +79,9 @@ class GoverningEntity extends BaseObject implements BaseObjectChildInterface {
    *   The entity object or NULL.
    */
   public function getSourceObject(): ?EntitiesGoverningEntity {
-    $entity = $this->getPlanEntityQuery()?->getEntity('governingEntity', $this->getSourceId());
+    $entity = $this->getEntityQuery()?->getEntity('governingEntity', $this->getSourceId());
     assert($entity === NULL || $entity instanceof EntitiesGoverningEntity);
     return $entity;
-  }
-
-  /**
-   * Get the icon query.
-   *
-   * @return \Drupal\hpc_api\Plugin\EndpointQuery\IconQuery|null
-   *   The icon query object.
-   */
-  private function getIconQuery(): ?IconQuery {
-    $endpoint_query_manager = self::getEndpointQueryManager();
-    return $endpoint_query_manager->hasDefinition('icon_query') ? $endpoint_query_manager->createInstance('icon_query') : NULL;
-  }
-
-  /**
-   * Get the endpoint query manager.
-   *
-   * @return \Drupal\hpc_api\Query\EndpointQueryManager
-   *   The endpoint query manager.
-   */
-  private static function getEndpointQueryManager(): EndpointQueryManager {
-    return \Drupal::service('plugin.manager.endpoint_query_manager');
   }
 
 }

@@ -1,0 +1,30 @@
+{
+  "Id": 4255,
+  "RefCode": "SP",
+  "Type": "PE",
+  "Value": {
+    "name": {
+      "en": {
+        "singular": "Specific Objective",
+        "plural": "Specific Objectives"
+      }
+    },
+    "description": {
+      "en": "Add the Specific Objectives below, including which Strategic \nObjective(s) each one will address. Use the Add Caseload button to add \nPeople in Need \\/ People Targeted for each Objective. Use the Add \nindicators button to add one or more Indicators to each Objective."
+    },
+    "canSupport": [
+      {
+        "refCode": "SO",
+        "cardinality": "0-N",
+        "id": 4254
+      }
+    ]
+  },
+  "PlanId": 1263,
+  "OrderNumber": 1,
+  "CreatedAt": "2024-10-07T11:40:07.000Z",
+  "UpdatedAt": "2024-10-07T11:40:07.000Z",
+  "RecordStatus": "Active",
+  "Source": "HPC",
+  "SourceId": "4255"
+}

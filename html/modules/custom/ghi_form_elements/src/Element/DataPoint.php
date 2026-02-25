@@ -11,6 +11,8 @@ use Drupal\ghi_form_elements\Helpers\FormElementHelper;
 use Drupal\ghi_form_elements\Traits\AjaxElementTrait;
 use Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment;
 use Drupal\ghi_plans\ApiObjects\Attachments\IndicatorAttachment;
+use Drupal\ghi_plans\Traits\DataPointConfigBackwardsCompatibilityTrait;
+use Drupal\hpc_common\Helpers\StringHelper;
 use Drupal\hpc_common\Helpers\ThemeHelper;
 
 /**
@@ -20,6 +22,7 @@ use Drupal\hpc_common\Helpers\ThemeHelper;
 class DataPoint extends FormElementBase {
 
   use AjaxElementTrait;
+  use DataPointConfigBackwardsCompatibilityTrait;
 
   /**
    * Global switch for widget support in data points.
@@ -123,7 +126,7 @@ class DataPoint extends FormElementBase {
       'calculation' => !empty($values['calculation']) ? $values['calculation'] : NULL,
       'data_points' => [
         0 => $values['data_points'][0] ?? [
-          'index' => array_key_first($attachment_prototype->getFields()),
+          'metric_type' => array_key_first($attachment_prototype->getFields()),
           'use_calculation_method' => NULL,
         ],
         1 => array_key_exists('data_points', $values) && array_key_exists(1, $values['data_points']) ? $values['data_points'][1] : NULL,
@@ -132,6 +135,7 @@ class DataPoint extends FormElementBase {
       'formatting' => !empty($values['formatting']) ? $values['formatting'] : array_key_first(DataAttachment::getFormattingOptions()),
       'widget' => !empty($values['widget']) ? $values['widget'] : 'none',
     ];
+    self::updateDataPointConfiguration($defaults, $attachment_prototype);
 
     $element['processing_wrapper'] = [
       '#type' => 'container',
@@ -191,7 +195,7 @@ class DataPoint extends FormElementBase {
         ],
       ],
     ];
-    $element['data_points'][0]['index'] = [
+    $element['data_points'][0]['metric_type'] = [
       '#type' => 'select',
       '#title' => $defaults['processing'] == 'single' ? t('Data point') : t('Data point #1'),
       '#options' => $data_point_options,
@@ -208,7 +212,7 @@ class DataPoint extends FormElementBase {
       0,
       'index',
     ]);
-    $measurement_fields = $attachment_prototype->getMeasurementMetricFields();
+    $measurement_fields = $attachment_prototype->getMeasurementFields();
     if (!empty($element['#select_monitoring_period'])) {
       $element['data_points'][0]['monitoring_period'] = [
         '#type' => 'monitoring_period',
@@ -267,7 +271,7 @@ class DataPoint extends FormElementBase {
         $element['data_points'][0]['use_calculation_method']['#attributes']['checked'] = 'checked';
       }
     }
-    $element['data_points'][1]['index'] = [
+    $element['data_points'][1]['metric_type'] = [
       '#type' => 'select',
       '#title' => t('Data point #2'),
       '#options' => $data_point_options,
@@ -344,8 +348,8 @@ class DataPoint extends FormElementBase {
       }
     }
 
-    $data_point_index = $defaults['data_points'][0]['index'] ?? NULL;
-    $default_label = $data_point_index !== NULL ? $attachment_prototype->getDefaultFieldLabel($data_point_index, $plan_object->getPlanLanguage()) : NULL;
+    $metric_type = $defaults['data_points'][0]['metric_type'] ?? NULL;
+    $default_label = $metric_type !== NULL ? $attachment_prototype->getDefaultFieldLabel($metric_type, $plan_object->getPlanLanguage()) : NULL;
     $element['label'] = [
       '#type' => 'textfield',
       '#title' => t('Label'),
@@ -420,12 +424,12 @@ class DataPoint extends FormElementBase {
     assert($attachment === NULL || $attachment instanceof DataAttachment);
     /** @var \Drupal\ghi_plans\ApiObjects\Prototypes\AttachmentPrototype $attachment_prototype */
     $attachment_prototype = $attachment?->getPrototype() ?? $element['#attachment_prototype'];
+    $options = array_combine($attachment_prototype->getFieldTypes(), $attachment_prototype->getFields());
     if (empty($element['#disable_empty_fields']) || empty($attachment)) {
-      return $attachment_prototype->getFields();
+      return $options;
     }
-    $options = [];
-    foreach ($attachment_prototype->getFields() as $key => $field) {
-      if ($attachment->values[$key] === NULL) {
+    foreach ($options as $key => $field) {
+      if ($attachment->values[StringHelper::makeCamelCase($key, TRUE)] === NULL) {
         $options[$field] = [];
       }
       else {

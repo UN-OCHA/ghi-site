@@ -260,12 +260,10 @@ class PlanOverviewQuery extends FabricQueryBase {
 
       $plan_caseloads[$plan->id()] = [];
 
-      foreach ($types as $type_key => $type) {
-        $label = is_scalar($type) ? $type : ($type['label'] ?? NULL);
-        $fallback = is_array($type) && !empty($type['fallback']) ? $type['fallback'] : NULL;
-        $value = $plan->getCaseloadValue($label, $fallback);
-        $caseload_totals[$type_key] += $value ?? 0;
-        $plan_caseloads[$plan->id()][$type_key] = $value;
+      foreach ($types as $type => $label) {
+        $value = $plan->getCaseloadValue($type, $label);
+        $caseload_totals[$type] += $value ?? 0;
+        $plan_caseloads[$plan->id()][$type] = $value;
       }
     }
 

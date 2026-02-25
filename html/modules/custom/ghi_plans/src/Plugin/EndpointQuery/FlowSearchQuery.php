@@ -224,7 +224,7 @@ class FlowSearchQuery extends EndpointQueryBase {
    */
   public function getClusterIds() {
     $data = $this->getClusterSummaryData();
-    return array_filter(array_map(fn ($cluster) => $cluster->id ?? NULL, $data->clusters ?? []));
+    return array_filter(array_map(fn ($cluster) => (int) $cluster->id ?? NULL, $data->clusters ?? []));
   }
 
   /**

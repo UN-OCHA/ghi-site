@@ -11,7 +11,6 @@ use Drupal\ghi_plans\Entity\Plan;
 use Drupal\ghi_plans\Traits\PlanQueryTrait;
 use Drupal\ghi_plans\Traits\ProjectTrait;
 use Drupal\hpc_api\Attribute\FabricQuery;
-use Drupal\hpc_api\Query\EndpointQuery;
 use Drupal\hpc_api\Query\FabricQueryBase;
 use Drupal\hpc_common\Helpers\ArrayHelper;
 
@@ -154,7 +153,7 @@ class ProjectQuery extends FabricQueryBase {
     foreach ($projects as $project) {
       $organizations += $project->getOrganizations();
     }
-    ArrayHelper::sortObjectsByMethod($organizations, 'getName', EndpointQuery::SORT_ASC, SORT_STRING);
+    ArrayHelper::sortObjectsByMethod($organizations, 'getName', SORT_ASC, SORT_STRING);
     return $organizations;
   }
 
@@ -177,7 +176,7 @@ class ProjectQuery extends FabricQueryBase {
     foreach ($projects as $project) {
       $clusters += $project->getClusters();
     }
-    ArrayHelper::sortObjectsByMethod($clusters, 'getName', EndpointQuery::SORT_ASC, SORT_STRING);
+    ArrayHelper::sortObjectsByMethod($clusters, 'getName', SORT_ASC, SORT_STRING);
     return $clusters;
   }
 
@@ -308,7 +307,6 @@ class ProjectQuery extends FabricQueryBase {
       return;
     }
     $project_ids = array_keys($projects);
-    // phpcs:disable Squiz.Arrays.ArrayDeclaration.KeySpecified
     $items = $this->fabricClient->createQuery('projectLocations', [
       'Id',
       'ProjectId',

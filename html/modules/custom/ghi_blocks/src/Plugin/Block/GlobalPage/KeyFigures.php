@@ -70,12 +70,10 @@ class KeyFigures extends GHIBlockBase implements MultiStepFormBlockInterface {
 
     // Get the values of people in need and target from the caseload totals.
     $types = [
-      'inNeed' => 'InNeed',
+      'in_need' => 'In Need',
       'target' => 'Target',
-      'reached' => [
-        'type' => 'latestReach',
-      ],
-      'expectedReach' => 'Expected reach',
+      'reached' => 'Latest reached',
+      'expected_reach' => 'Expected reach',
     ];
 
     $caseload_values = $plan_overview_query->getCaseloadTotalValues($types);
@@ -85,11 +83,11 @@ class KeyFigures extends GHIBlockBase implements MultiStepFormBlockInterface {
       'total_funding' => $funding,
       'total_requirements' => $requirements,
       'funding_progress' => $funding_progress,
-      'people_in_need' => $caseload_values['inNeed'],
+      'people_in_need' => $caseload_values['in_need'],
       'people_target' => $caseload_values['target'],
       'people_reached' => $caseload_values['reached'],
       'people_reached_percent' => CommonHelper::calculateRatio($caseload_values['reached_custom'], $caseload_values['target_custom']),
-      'people_expected_reach' => $caseload_values['expectedReach'],
+      'people_expected_reach' => $caseload_values['expected_reach'],
       'countries_affected' => $affected_countries,
       'plans_inside_gho' => $gho_plans,
     ];

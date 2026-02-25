@@ -55,7 +55,7 @@ class PlanEntityLookupForm extends BaseLookupForm {
       $entity = $this->getPlanQuery()?->disableCache()->getPlan($entity_id) ?? NULL;
     }
     else {
-      $entities = $this->getPlanEntityQuery()?->disableCache()->getEntities($entity_type, [$entity_id]) ?? [];
+      $entities = $this->getEntityQuery()?->disableCache()->getEntities($entity_type, [$entity_id]) ?? [];
       $entity = reset($entities);
     }
 
@@ -67,7 +67,7 @@ class PlanEntityLookupForm extends BaseLookupForm {
           '@type' => get_class($entity),
         ]),
       ];
-      $form['entity_data'] = [
+      $form['data'] = [
         '#type' => 'details',
         '#title' => $this->t('Processed data'),
         '#open' => TRUE,
@@ -77,7 +77,7 @@ class PlanEntityLookupForm extends BaseLookupForm {
           '#value' => print_r($entity->toArray(), TRUE),
         ],
       ];
-      $form['entity_source_data'] = [
+      $form['source_data'] = [
         '#type' => 'details',
         '#title' => $this->t('Source data'),
         'children' => [
@@ -86,9 +86,18 @@ class PlanEntityLookupForm extends BaseLookupForm {
           '#value' => print_r($entity->getRawData(), TRUE),
         ],
       ];
+      $form['source_data_json'] = [
+        '#type' => 'details',
+        '#title' => $this->t('Source data (JSON)'),
+        'children' => [
+          '#type' => 'html_tag',
+          '#tag' => 'pre',
+          '#value' => json_encode($entity->getRawData(), JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE),
+        ],
+      ];
 
       foreach ($this->getPublicMethodResults($entity) as $method_name => $result) {
-        $form[$method_name] = [
+        $form['public_method_' . $method_name] = [
           '#type' => 'details',
           '#title' => $method_name,
           'children' => [

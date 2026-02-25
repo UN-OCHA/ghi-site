@@ -13,57 +13,68 @@ class AttachmentPrototypeTest extends ApiObjectTestBase {
    * Test attachment prototype parsing of indicator prototypes.
    */
   public function testAttachmentPrototypeIndicator() {
-    $attachment_prototype = $this->getAttachmentPrototypeFromFixture('indicator');
-    $this->assertInstanceOf(AttachmentPrototype::class, $attachment_prototype);
-    $this->assertEquals('Indicator', $attachment_prototype->getName());
-    $this->assertEquals('indicator', $attachment_prototype->getType());
-    $this->assertEquals('Indicator', $attachment_prototype->getTypeLabel());
-    $this->assertCount(3, $attachment_prototype->getFields());
-    $this->assertNotEmpty($attachment_prototype->getFieldTypes());
-    $this->assertCount(1, $attachment_prototype->getGoalMetricFields());
-    $this->assertCount(2, $attachment_prototype->getMeasurementMetricFields());
-    $this->assertTrue($attachment_prototype->isIndicator());
-    $this->assertCount(5, $attachment_prototype->getCalculationMethods());
-    $this->assertEquals(['SO', 'CO', 'CA'], $attachment_prototype->getEntityRefCodes());
-    $this->assertTrue(AttachmentPrototype::isDataType($attachment_prototype->getRawData()));
+    $prototype = $this->getAttachmentPrototypeFromFixture('indicator');
+    $this->assertInstanceOf(AttachmentPrototype::class, $prototype);
+    $this->assertEquals('Indicator', $prototype->getName());
+    $this->assertEquals('indicator', $prototype->getType());
+    $this->assertEquals('Indicator', $prototype->getTypeLabel());
+    $this->assertEquals('IN', $prototype->getRefCode());
+    $this->assertCount(3, $prototype->getFields());
+    $this->assertNotEmpty($prototype->getFieldTypes());
+    $this->assertCount(1, $prototype->getPlanningFields());
+    $this->assertCount(2, $prototype->getMeasurementFields());
+    $this->assertEmpty($prototype->getCalculatedFields());
+    $this->assertTrue($prototype->isIndicator());
+    $this->assertCount(5, $prototype->getCalculationMethods());
+    $this->assertEquals(['SO', 'CO', 'CA'], $prototype->getEntityRefCodes());
+    $this->assertTrue(AttachmentPrototype::isDataType($prototype->getRawData()));
   }
 
   /**
    * Test attachment prototype parsing of caseload prototypes.
    */
   public function testAttachmentPrototypeCaseload() {
-    $attachment_prototype = $this->getAttachmentPrototypeFromFixture('caseload');
-    $this->assertInstanceOf(AttachmentPrototype::class, $attachment_prototype);
-    $this->assertEquals('Caseload', $attachment_prototype->getName());
-    $this->assertEquals('caseload', $attachment_prototype->getType());
-    $this->assertEquals('Caseload', $attachment_prototype->getTypeLabel());
-    $this->assertCount(5, $attachment_prototype->getFields());
-    $this->assertNotEmpty($attachment_prototype->getFieldTypes());
-    $this->assertCount(3, $attachment_prototype->getGoalMetricFields());
-    $this->assertCount(2, $attachment_prototype->getMeasurementMetricFields());
-    $this->assertFalse($attachment_prototype->isIndicator());
-    $this->assertEmpty($attachment_prototype->getCalculationMethods());
-    $this->assertEquals(['CL'], $attachment_prototype->getEntityRefCodes());
-    $this->assertTrue(AttachmentPrototype::isDataType($attachment_prototype->getRawData()));
+    $prototype = $this->getAttachmentPrototypeFromFixture('caseload');
+    $this->assertInstanceOf(AttachmentPrototype::class, $prototype);
+    $this->assertEquals('Caseload', $prototype->getName());
+    $this->assertEquals('caseload', $prototype->getType());
+    $this->assertEquals('Caseload', $prototype->getTypeLabel());
+    $this->assertEquals('BF', $prototype->getRefCode());
+    $this->assertCount(5, $prototype->getFields());
+    $this->assertNotEmpty($prototype->getFieldTypes());
+    $this->assertCount(5, $prototype->getOriginalFields());
+    $this->assertCount(3, $prototype->getPlanningFields());
+    $this->assertCount(2, $prototype->getMeasurementFields());
+    $this->assertEmpty($prototype->getCalculatedFields());
+    $this->assertFalse($prototype->isIndicator());
+    $this->assertEmpty($prototype->getCalculationMethods());
+    $this->assertEquals(['CL'], $prototype->getEntityRefCodes());
+    $this->assertEquals('People reached', (string) $prototype->getDefaultFieldLabel('cumulative_reach'));
+    $this->assertEquals('Measure', (string) $prototype->getDefaultFieldLabel('periodical_measure'));
+    $this->assertEquals('Measure', (string) $prototype->getDefaultFieldLabel('cumulative_measure'));
+    $this->assertEquals(NULL, (string) $prototype->getDefaultFieldLabel('invalid_metric_type'));
+    $this->assertTrue(AttachmentPrototype::isDataType($prototype->getRawData()));
   }
 
   /**
    * Test attachment prototype parsing of cost prototypes.
    */
   public function testAttachmentPrototypeCost() {
-    $attachment_prototype = $this->getAttachmentPrototypeFromFixture('cost');
-    $this->assertInstanceOf(AttachmentPrototype::class, $attachment_prototype);
-    $this->assertEquals('Cost', $attachment_prototype->getName());
-    $this->assertEquals('cost', $attachment_prototype->getType());
-    $this->assertEquals('Cost', $attachment_prototype->getTypeLabel());
-    $this->assertEmpty($attachment_prototype->getFields());
-    $this->assertEmpty($attachment_prototype->getFieldTypes());
-    $this->assertEmpty($attachment_prototype->getGoalMetricFields());
-    $this->assertEmpty($attachment_prototype->getMeasurementMetricFields());
-    $this->assertFalse($attachment_prototype->isIndicator());
-    $this->assertEmpty($attachment_prototype->getCalculationMethods());
-    $this->assertEquals(['PL', 'CL'], $attachment_prototype->getEntityRefCodes());
-    $this->assertFalse(AttachmentPrototype::isDataType($attachment_prototype->getRawData()));
+    $prototype = $this->getAttachmentPrototypeFromFixture('cost');
+    $this->assertInstanceOf(AttachmentPrototype::class, $prototype);
+    $this->assertEquals('Cost', $prototype->getName());
+    $this->assertEquals('cost', $prototype->getType());
+    $this->assertEquals('Cost', $prototype->getTypeLabel());
+    $this->assertEquals('CS', $prototype->getRefCode());
+    $this->assertEmpty($prototype->getFields());
+    $this->assertEmpty($prototype->getFieldTypes());
+    $this->assertEmpty($prototype->getPlanningFields());
+    $this->assertEmpty($prototype->getMeasurementFields());
+    $this->assertEmpty($prototype->getCalculatedFields());
+    $this->assertFalse($prototype->isIndicator());
+    $this->assertEmpty($prototype->getCalculationMethods());
+    $this->assertEquals(['PL', 'CL'], $prototype->getEntityRefCodes());
+    $this->assertFalse(AttachmentPrototype::isDataType($prototype->getRawData()));
   }
 
   /**
@@ -76,9 +87,9 @@ class AttachmentPrototypeTest extends ApiObjectTestBase {
    *   The attachment prototype object.
    */
   private function getAttachmentPrototypeFromFixture($type) {
-    $attachment_data = $this->getApiObjectFixture('AttachmentPrototype', $type);
-    $this->assertNotEmpty($attachment_data);
-    return new AttachmentPrototype($attachment_data);
+    $data = $this->getApiObjectFixture('AttachmentPrototype', $type);
+    $this->assertNotEmpty($data);
+    return new AttachmentPrototype($data);
   }
 
 }

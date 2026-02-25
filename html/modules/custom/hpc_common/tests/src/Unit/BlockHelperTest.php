@@ -7,21 +7,11 @@ use Drupal\Core\DependencyInjection\ContainerBuilder;
 use Drupal\Tests\UnitTestCase;
 use Drupal\hpc_common\Helpers\BlockHelper;
 use Drupal\hpc_common\Plugin\HPCBlockBase;
-use Prophecy\PhpUnit\ProphecyTrait;
 
 /**
  * @covers Drupal\hpc_common\Helpers\BlockHelper
  */
 class BlockHelperTest extends UnitTestCase {
-
-  use ProphecyTrait;
-
-  /**
-   * The block helper class.
-   *
-   * @var \Drupal\hpc_common\Helpers\BlockHelper
-   */
-  protected $blockHelper;
 
   /**
    * {@inheritdoc}
@@ -42,19 +32,6 @@ class BlockHelperTest extends UnitTestCase {
     $container = new ContainerBuilder();
     $container->set('plugin.manager.block', $block_manager->reveal());
     \Drupal::setContainer($container);
-
-    $this->blockHelper = new BlockHelper();
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  protected function tearDown(): void {
-    parent::tearDown();
-    unset($this->blockHelper);
-
-    $container = new ContainerBuilder();
-    \Drupal::setContainer($container);
   }
 
   /**
@@ -69,7 +46,7 @@ class BlockHelperTest extends UnitTestCase {
     $hpc_block->getPluginId()->willReturn('country_snapshot');
     $hpc_block->getUuid()->willReturn('Med485-UIsdc98');
 
-    $this->assertEquals('country_snapshot:Med485-UIsdc98', $this->blockHelper->getStorageId($hpc_block->reveal()));
+    $this->assertEquals('country_snapshot:Med485-UIsdc98', BlockHelper::getStorageId($hpc_block->reveal()));
   }
 
   /**
@@ -78,7 +55,7 @@ class BlockHelperTest extends UnitTestCase {
    * @group BlockHelper
    */
   public function testGetPluginUuidFromStorageId() {
-    $this->assertEquals('fedced4844-ref484', $this->blockHelper->getPluginUuidFromStorageId('plan_top_donors:fedced4844-ref484'));
+    $this->assertEquals('fedced4844-ref484', BlockHelper::getPluginUuidFromStorageId('plan_top_donors:fedced4844-ref484'));
   }
 
   /**
@@ -87,7 +64,7 @@ class BlockHelperTest extends UnitTestCase {
    * @group BlockHelper
    */
   public function testGetPluginIdFromStorageId() {
-    $this->assertEquals('plan_top_donors', $this->blockHelper->getPluginIdFromStorageId('plan_top_donors:fedced4844-ref484'));
+    $this->assertEquals('plan_top_donors', BlockHelper::getPluginIdFromStorageId('plan_top_donors:fedced4844-ref484'));
   }
 
   /**
@@ -101,7 +78,7 @@ class BlockHelperTest extends UnitTestCase {
       'title' => 'Nigeria 2018',
     ];
 
-    $this->assertEquals($definition, $this->blockHelper->getPluginDefinitionFromStorageId('plan_snapshot:fedced4844-ref484'));
+    $this->assertEquals($definition, BlockHelper::getPluginDefinitionFromStorageId('plan_snapshot:fedced4844-ref484'));
   }
 
 }

@@ -7,28 +7,16 @@ use Drupal\Core\Session\AccountProxyInterface;
 use Drupal\Tests\UnitTestCase;
 use Drupal\hpc_common\Helpers\UserHelper;
 use Prophecy\Argument;
-use Prophecy\PhpUnit\ProphecyTrait;
 
 /**
  * @covers Drupal\hpc_common\Helpers\UserHelper
  */
 class UserHelperTest extends UnitTestCase {
 
-  use ProphecyTrait;
-
   /**
-   * The user helper class.
-   *
-   * @var \Drupal\hpc_common\Helpers\UserHelper
+   * Mock the current user.
    */
-  protected $userHelper;
-
-  /**
-   * {@inheritdoc}
-   */
-  protected function setUp(): void {
-    parent::setUp();
-
+  private function mockCurrentUser($any_permissions) {
     // Mock current user service.
     $current_user = $this->prophesize(AccountProxyInterface::class);
 
@@ -38,24 +26,11 @@ class UserHelperTest extends UnitTestCase {
       ['authenticated', 'administrator']
     );
     // Mock hasPermission.
-    $current_user->hasPermission(Argument::any())->willReturn(FALSE);
+    $current_user->hasPermission(Argument::any())->willReturn($any_permissions);
 
     // Set container.
     $container = new ContainerBuilder();
     $container->set('current_user', $current_user->reveal());
-    \Drupal::setContainer($container);
-
-    $this->userHelper = new UserHelper();
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  protected function tearDown(): void {
-    parent::tearDown();
-    unset($this->userHelper);
-
-    $container = new ContainerBuilder();
     \Drupal::setContainer($container);
   }
 
@@ -65,8 +40,13 @@ class UserHelperTest extends UnitTestCase {
    * @group UserHelper
    */
   public function testIsAdministrator() {
-    $this->assertEquals(FALSE, $this->userHelper->isAdministrator());
-    $this->assertEquals(TRUE, $this->userHelper->isAdministrator());
+    $this->mockCurrentUser(FALSE);
+    $this->assertEquals(FALSE, UserHelper::isAdministrator());
+    $this->assertEquals(TRUE, UserHelper::isAdministrator());
+
+    $this->mockCurrentUser(TRUE);
+    $this->assertEquals(TRUE, UserHelper::isAdministrator());
+    $this->assertEquals(TRUE, UserHelper::isAdministrator());
   }
 
 }

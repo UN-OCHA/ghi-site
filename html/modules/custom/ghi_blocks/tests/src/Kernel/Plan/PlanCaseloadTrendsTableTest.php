@@ -276,9 +276,9 @@ class PlanCaseloadTrendsTableTest extends PlanBlockKernelTestBase {
     $plugin->setQueryHandler('plan_funding', $plan_funding_query->reveal());
 
     $caseload = $this->prophesize(CaseloadAttachment::class);
-    $caseload->getValueByMetricName('InNeed')->willReturn(300);
-    $caseload->getValueByMetricName('Target')->willReturn(100);
-    $caseload->getCaseloadValue('latestReach')->willReturn(80);
+    $caseload->getCaseloadValue('in_need')->willReturn(300);
+    $caseload->getCaseloadValue('target')->willReturn(100);
+    $caseload->getCaseloadValue('latest_reach')->willReturn(80);
 
     $financial = $this->prophesize(FinancialAttachment::class);
     $financial->getRequirements()->willReturn(3000);

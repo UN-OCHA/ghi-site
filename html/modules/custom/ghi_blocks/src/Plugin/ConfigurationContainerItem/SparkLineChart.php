@@ -11,6 +11,7 @@ use Drupal\ghi_form_elements\Helpers\FormElementHelper;
 use Drupal\ghi_plans\ApiObjects\Prototypes\AttachmentPrototype;
 use Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment;
 use Drupal\ghi_plans\ApiObjects\Attachments\IndicatorAttachment;
+use Drupal\ghi_plans\Traits\DataPointConfigBackwardsCompatibilityTrait;
 use Drupal\hpc_common\Helpers\ThemeHelper;
 
 /**
@@ -22,6 +23,8 @@ use Drupal\hpc_common\Helpers\ThemeHelper;
   description: new TranslatableMarkup('This item displays a spark line chart for multiple periods of a measurement data point.'),
 )]
 class SparkLineChart extends ConfigurationContainerItemPluginBase {
+
+  use DataPointConfigBackwardsCompatibilityTrait;
 
   const ITEM_TYPE = 'chart';
 
@@ -46,7 +49,7 @@ class SparkLineChart extends ConfigurationContainerItemPluginBase {
     $element['data_point_wrapper']['data_point'] = [
       '#type' => 'select',
       '#title' => $this->t('Data point'),
-      '#options' => $attachment_prototype->getMeasurementMetricFields(),
+      '#options' => $attachment_prototype->getMeasurementFields(),
       '#default_value' => $this->getSubmittedValue($element, $form_state, 'data_point'),
       '#parents' => array_merge($element['#parents'], ['data_point']),
     ];
@@ -100,6 +103,23 @@ class SparkLineChart extends ConfigurationContainerItemPluginBase {
   }
 
   /**
+   * Get the configured data point.
+   *
+   * Contains BC logic to update mretric indexes to metric types on the fly.
+   *
+   * @return string
+   *   The configured data point in the form of the selected metric type.
+   */
+  private function getConfiguredDataPoint() {
+    $data_point = $this->get('data_point');
+    $prototype = $this->getAttachmentObject()?->getPrototype();
+    if (is_numeric($data_point) && $prototype) {
+      $data_point = $this->getMetricTypeByIndex($data_point, $prototype);
+    }
+    return $data_point;
+  }
+
+  /**
    * {@inheritdoc}
    */
   public function getDefaultLabel() {
@@ -112,12 +132,12 @@ class SparkLineChart extends ConfigurationContainerItemPluginBase {
     if (!$attachment_prototype instanceof AttachmentPrototype) {
       return NULL;
     }
-    $data_point_options = $attachment_prototype->getMeasurementMetricFields();
-    $data_point_index = $this->get('data_point') ?? array_key_first($data_point_options);
+    $options = $attachment_prototype->getMeasurementFields();
+    $metric_type = $this->getConfiguredDataPoint() ?? array_key_first($options);
 
     /** @var \Drupal\ghi_plans\Entity\Plan $plan_object */
     $plan_object = $this->getContextValue('plan_object') ?? NULL;
-    return $attachment_prototype->getDefaultFieldLabel($data_point_index, $plan_object?->getPlanLanguage());
+    return $attachment_prototype->getDefaultFieldLabel($metric_type, $plan_object?->getPlanLanguage());
   }
 
   /**
@@ -158,16 +178,17 @@ class SparkLineChart extends ConfigurationContainerItemPluginBase {
       return NULL;
     }
     $reporting_periods = $this->getReportingPeriods();
+    $data_point = $this->getConfiguredDataPoint();
 
     $data_point_conf = [
       'processing' => 'single',
       'calculation' => 'substraction',
       'data_points' => [
         0 => [
-          'index' => $this->get('data_point'),
+          'metric_type' => $data_point,
           'monitoring_period' => array_key_last($reporting_periods),
         ],
-        1 => ['index' => 0],
+        1 => ['metric_type' => NULL],
       ],
       'formatting' => 'auto',
       'widget' => 'none',
@@ -190,11 +211,11 @@ class SparkLineChart extends ConfigurationContainerItemPluginBase {
     $plan_object = $this->getContextValue('plan_object');
 
     // Get the configuration.
-    $data_point = $this->get('data_point');
+    $data_point = $this->getConfiguredDataPoint();
     $show_baseline = $this->get('show_baseline');
     $use_calculation_method = $this->get('use_calculation_method');
     $baseline = $show_baseline ? $this->get('baseline') : NULL;
-    $options = $attachment->getMetricFields();
+    $options = $attachment->getFields();
     $decimal_format = $plan_object->getDecimalFormat();
 
     // Get the monitoring periods.
@@ -292,7 +313,7 @@ class SparkLineChart extends ConfigurationContainerItemPluginBase {
    * @return \Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment|null
    *   The attachment object.
    */
-  private function getAttachmentObject() {
+  private function getAttachmentObject(): ?DataAttachment {
     $attachment = $this->getContextValue('attachment');
     return $attachment instanceof DataAttachment ? $attachment : NULL;
   }

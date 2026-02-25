@@ -13,21 +13,11 @@ use Drupal\hpc_common\Helpers\NodeHelper;
 use Drupal\node\Entity\Node;
 use Drupal\node\NodeStorageInterface;
 use Prophecy\Argument;
-use Prophecy\PhpUnit\ProphecyTrait;
 
 /**
  * @covers Drupal\hpc_common\Helpers\NodeHelper
  */
 class NodeHelperTest extends UnitTestCase {
-
-  use ProphecyTrait;
-
-  /**
-   * The node helper class.
-   *
-   * @var \Drupal\hpc_common\Helpers\NodeHelper
-   */
-  protected $nodeHelper;
 
   /**
    * An entity object.
@@ -88,8 +78,6 @@ class NodeHelperTest extends UnitTestCase {
     // Set container.
     $container = new ContainerBuilder();
     \Drupal::setContainer($container);
-
-    $this->nodeHelper = new NodeHelper();
   }
 
   /**
@@ -97,7 +85,6 @@ class NodeHelperTest extends UnitTestCase {
    */
   protected function tearDown(): void {
     parent::tearDown();
-    unset($this->nodeHelper);
     unset($this->entity);
     unset($this->entityTypeManager);
     unset($this->node);
@@ -106,70 +93,6 @@ class NodeHelperTest extends UnitTestCase {
 
     $container = new ContainerBuilder();
     \Drupal::setContainer($container);
-  }
-
-  /**
-   * Data provider for getFieldCount.
-   */
-  public function getFieldCountDataProvider() {
-    return [
-      ['field_first_name', ['Test1', 'Test2'], 2],
-      ['field_string', 'returning only string', 0],
-    ];
-  }
-
-  /**
-   * Test getting the field count from an entity.
-   *
-   * @group NodeHelper
-   * @dataProvider getFieldCountDataProvider
-   */
-  public function testGetFieldCount($field_name, $field_value, $result) {
-    // Mock field.
-    $field = $this->prophesize(FieldItemListInterface::class);
-    $field->getValue()->willReturn($field_value);
-    $this->entity->hasField($field_name)->willReturn(TRUE);
-    $this->entity->get($field_name)->willReturn($field->reveal());
-
-    $this->assertEquals($result, $this->nodeHelper->getFieldCount($this->entity->reveal(), $field_name));
-  }
-
-  /**
-   * Data provider for getFieldProperty.
-   */
-  public function getFieldPropertyDataProvider() {
-    $field_data_values_array = [
-      0 => [
-        'last_name' => 'Gates',
-        'country' => 'USA',
-      ],
-      1 => [
-        'last_name' => 'Ambani',
-        'country' => 'India',
-      ],
-    ];
-    return [
-      ['field_data', $field_data_values_array, 0, 'last_name', 'Gates'],
-      ['field_data', $field_data_values_array, 1, 'country', 'India'],
-      ['field_data', $field_data_values_array, 5, 'country', NULL],
-      ['field_country', [], NULL, NULL, NULL],
-    ];
-  }
-
-  /**
-   * Test getting a field property from an entity.
-   *
-   * @group NodeHelper
-   * @dataProvider getFieldPropertyDataProvider
-   */
-  public function testGetFieldProperty($field_name, $field_value, $delta, $property, $result) {
-    // Mock field.
-    $field = $this->prophesize(FieldItemListInterface::class);
-    $field->getValue()->willReturn($field_value);
-    $this->entity->hasField($field_name)->willReturn(TRUE);
-    $this->entity->get($field_name)->willReturn($field->reveal());
-
-    $this->assertEquals($result, $this->nodeHelper->getFieldProperty($this->entity->reveal(), $field_name, $delta, $property));
   }
 
   /**
@@ -217,7 +140,7 @@ class NodeHelperTest extends UnitTestCase {
     // Add to container.
     \Drupal::getContainer()->set('entity_type.manager', $this->entityTypeManager);
 
-    $this->assertEquals($result, $this->nodeHelper->getNodeIdFromOriginalId($original_id, $bundle));
+    $this->assertEquals($result, NodeHelper::getNodeIdFromOriginalId($original_id, $bundle));
   }
 
   /**
@@ -265,7 +188,7 @@ class NodeHelperTest extends UnitTestCase {
     // Add to container.
     \Drupal::getContainer()->set('entity_type.manager', $this->entityTypeManager);
 
-    $this->assertEquals($result, $this->nodeHelper->getNodeFromOriginalId($original_id, $bundle));
+    $this->assertEquals($result, NodeHelper::getNodeFromOriginalId($original_id, $bundle));
   }
 
   /**
@@ -309,7 +232,7 @@ class NodeHelperTest extends UnitTestCase {
     \Drupal::getContainer()->set('entity_type.manager', $this->entityTypeManager);
     \Drupal::getContainer()->set('entity_type.repository', $entity_type_repository->reveal());
 
-    $this->assertEquals($original_id, $this->nodeHelper->getOriginalIdFromNodeId($nid));
+    $this->assertEquals($original_id, NodeHelper::getOriginalIdFromNodeId($nid));
   }
 
   /**
@@ -361,7 +284,7 @@ class NodeHelperTest extends UnitTestCase {
     // Add to container.
     \Drupal::getContainer()->set('entity_type.manager', $this->entityTypeManager);
 
-    $this->assertEquals($result, $this->nodeHelper->getTitleFromOriginalId($original_id, $bundle));
+    $this->assertEquals($result, NodeHelper::getTitleFromOriginalId($original_id, $bundle));
   }
 
   /**
@@ -416,7 +339,7 @@ class NodeHelperTest extends UnitTestCase {
     \Drupal::getContainer()->set('entity_type.manager', $this->entityTypeManager);
     \Drupal::getContainer()->set('entity_type.repository', $entity_type_repository->reveal());
 
-    $this->assertEquals($result, $this->nodeHelper->getOriginalIdFromTitle($title, $bundle));
+    $this->assertEquals($result, NodeHelper::getOriginalIdFromTitle($title, $bundle));
   }
 
   /**
@@ -461,7 +384,7 @@ class NodeHelperTest extends UnitTestCase {
     \Drupal::getContainer()->set('entity_type.manager', $this->entityTypeManager);
     \Drupal::getContainer()->set('entity_type.repository', $entity_type_repository->reveal());
 
-    $this->assertEquals(['0' => $node1->reveal(), '1' => $node2->reveal(), '2' => $node3->reveal()], $this->nodeHelper->getNodesFromTitle('Test Title', 'Test bundle'));
+    $this->assertEquals(['0' => $node1->reveal(), '1' => $node2->reveal(), '2' => $node3->reveal()], NodeHelper::getNodesFromTitle('Test Title', 'Test bundle'));
   }
 
 }
