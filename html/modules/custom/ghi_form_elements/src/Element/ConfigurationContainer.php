@@ -15,7 +15,6 @@ use Drupal\ghi_form_elements\ConfigurationContainerItemCustomActionsInterface;
 use Drupal\ghi_form_elements\ConfigurationContainerItemPluginInterface;
 use Drupal\ghi_form_elements\Traits\AjaxElementTrait;
 use Drupal\ghi_form_elements\Traits\ConfigurationContainerGroup;
-use Drupal\hpc_api\Query\EndpointQuery;
 use Drupal\hpc_common\Helpers\ArrayHelper;
 use Drupal\hpc_common\Helpers\StringHelper;
 
@@ -250,7 +249,7 @@ class ConfigurationContainer extends FormElementBase {
    *   The array of items to set.
    */
   public static function setItems(array $element, FormStateInterface $form_state, $items) {
-    ArrayHelper::sortArrayByNumericKey($items, 'weight', EndpointQuery::SORT_ASC);
+    ArrayHelper::sortArrayByNumericKey($items, 'weight', SORT_ASC);
     self::set($element, $form_state, 'items', $items);
     $form_state->setTemporaryValue($element['#parents'], $items);
     $form_state->setValue($element['#parents'], $items);
@@ -258,7 +257,7 @@ class ConfigurationContainer extends FormElementBase {
     if (self::isInnerContainerElement($element)) {
       // Also update the items stored on the parent.
       $parent_items = self::parentGet($element, $form_state, 'items');
-      ArrayHelper::sortArrayByNumericKey($parent_items, 'weight', EndpointQuery::SORT_ASC);
+      ArrayHelper::sortArrayByNumericKey($parent_items, 'weight', SORT_ASC);
 
       $id = self::parentGet($element, $form_state, 'edit_item');
       $item_key = self::getItemIndexById($parent_items, $id);

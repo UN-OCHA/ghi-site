@@ -17,6 +17,7 @@ use Drupal\ghi_plans\ApiObjects\Prototypes\AttachmentPrototype;
 use Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment;
 use Drupal\ghi_plans\ApiObjects\Plan as ApiObjectsPlan;
 use Drupal\ghi_plans\ApiObjects\PlanEntityInterface;
+use Drupal\ghi_plans\Entity\GoverningEntity;
 use Drupal\ghi_plans\Entity\Plan;
 use Drupal\ghi_sections\Entity\SectionNodeInterface;
 use Drupal\ghi_subpages\Entity\LogframeSubpage;
@@ -451,7 +452,7 @@ class LogframeManager implements ContainerInjectionInterface {
     $field_types = $attachment_prototype->getFieldTypes();
     $in_need = array_search('in_need', $field_types);
     $target = array_search('target', $field_types);
-    $measure_fields = $attachment_prototype->getMeasurementMetricFields();
+    $measure_fields = $attachment_prototype->getMeasurementFields();
     $measure_keys = array_keys($measure_fields);
     $measure = count($measure_keys) ? ($measure_keys[1] ?? end($measure_keys)) : NULL;
     $available_fields = [
@@ -640,8 +641,8 @@ class LogframeManager implements ContainerInjectionInterface {
     $parent = $node->getParentNode();
     if (!$parent instanceof SectionNodeInterface && $parent instanceof BaseObjectAwareEntityInterface) {
       $context_base_object = $parent->getBaseObject();
-      $ref_codes = $context_base_object?->getSourceObject()?->getValidRefCodes() ?? NULL;
-      if ($ref_codes) {
+      $ref_codes = $context_base_object instanceof GoverningEntity && $context_base_object?->getSourceObject()?->getValidRefCodes() ?? NULL;
+      if (is_array($ref_codes)) {
         $entity_types = array_intersect_key($entity_types, array_flip($ref_codes));
       }
     }
@@ -735,9 +736,9 @@ class LogframeManager implements ContainerInjectionInterface {
       }
     }
 
-    /** @var \Drupal\ghi_plans\Plugin\FabricQuery\PlanEntityQuery $query */
-    $query = $this->fabricQueryManager->createInstance('plan_entity');
-    $entities = $entities + ($query->getPlanEntities($base_object->getSourceId(), $base_object, NULL, $filter) ?? []);
+    /** @var \Drupal\ghi_plans\Plugin\FabricQuery\EntityQuery $query */
+    $query = $this->fabricQueryManager->createInstance('entity');
+    $entities = $entities + ($query->getEntitiesForPlan($base_object->getSourceId(), $base_object, NULL, $filter) ?? []);
     // This should give us only PlanEntity objects, but let's make sure.
     $entities = is_array($entities) ? array_filter($entities, function ($entity) {
       return $entity instanceof PlanEntityInterface;

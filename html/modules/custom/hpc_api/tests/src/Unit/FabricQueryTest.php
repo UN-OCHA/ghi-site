@@ -4,7 +4,7 @@ namespace Drupal\Tests\hpc_api\Unit;
 
 use Drupal\Tests\UnitTestCase;
 use Drupal\hpc_api\Query\FabricQuery;
-use Drupal\Tests\hpc_api\Traits\PrivateMethodTrait;
+use Drupal\Tests\hpc_api\Traits\PrivateAccessorTrait;
 
 /**
  * @covers Drupal\hpc_api\Query\FabricQuery
@@ -13,7 +13,7 @@ use Drupal\Tests\hpc_api\Traits\PrivateMethodTrait;
  */
 class FabricQueryTest extends UnitTestCase {
 
-  use PrivateMethodTrait;
+  use PrivateAccessorTrait;
 
   /**
    * Data provider for testFilterValidation.

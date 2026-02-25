@@ -41,23 +41,25 @@ class DisaggregationModalController extends ControllerBase {
   /**
    * Get the title for the modal.
    */
-  private function modalTitle(DataAttachment $attachment, $metric, $reporting_period_id) {
-    $metrics = $attachment->getMetricFields();
+  private function modalTitle(DataAttachment $attachment, $metric_index, $reporting_period_id) {
+    $fields = array_values($attachment->getFields());
+    $field = $fields[$metric_index] ?? NULL;
+    $metric_type = $attachment->getFieldTypes()[$metric_index] ?? NULL;
     $entity = $attachment->getSourceEntity();
     $icon = $entity instanceof GoverningEntity ? $entity->icon : NULL;
     $icon_embed = $icon ? $this->iconQuery->getIconEmbedCode($icon) : NULL;
 
     $formatted_period = NULL;
-    if ($attachment->isMeasurementField($metrics[$metric]) && $reporting_period = $attachment->getReportingPeriod($reporting_period_id)) {
+    if ($metric_type && $attachment->isMeasurementField($metric_type) && $reporting_period = $attachment->getReportingPeriod($reporting_period_id)) {
       $formatted_period = new FormattableMarkup('<span class="title-additional-info">@formatted_period</span>', [
-        '@formatted_period' => match ($attachment->isCummulativeReachField($metric)) {
+        '@formatted_period' => match ($attachment->isCumulativeReachField($metric_type)) {
           TRUE => $reporting_period->format('Monitoring period: @data_range_cumulative'),
           FALSE => $reporting_period->format('Monitoring period @period_number: @date_range'),
         },
       ]);
     }
 
-    return Markup::create($icon_embed . $entity->getName() . ' | ' . $metrics[$metric] . $formatted_period);
+    return Markup::create($icon_embed . $entity->getName() . ' | ' . $field . $formatted_period);
   }
 
   /**
@@ -152,7 +154,7 @@ class DisaggregationModalController extends ControllerBase {
 
     // All locations have the same categories, so take the first one and
     // extract them to create the header.
-    $categories = $attachment->getDisaggregatedCategories($reporting_period, $metric, TRUE, TRUE);
+    $categories = $attachment->getDisaggregatedCategories($reporting_period, TRUE, TRUE);
 
     // Build the table.
     $header = [

@@ -43,7 +43,7 @@ class MeasurementQuery extends FabricQueryBase {
         ->setFilter('Id', $measurement_id),
       $this->fabricClient->createQuery('measurementFacts', MeasurementFact::getGraphQlItems())
         ->setFilters([
-          'measurementId' => $measurement_id,
+          'MeasurementId' => $measurement_id,
           'IsTotal' => TRUE,
         ]),
     ];

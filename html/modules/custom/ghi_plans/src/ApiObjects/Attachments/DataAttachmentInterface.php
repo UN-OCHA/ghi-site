@@ -10,10 +10,10 @@ interface DataAttachmentInterface extends AttachmentInterface {
   /**
    * Get the fields used in an attachment.
    *
-   * @return object[]
-   *   An array of field objects as provided by the API.
+   * @return string[]
+   *   An array of field labels as provided by the API.
    */
-  public function getOriginalFields();
+  public function getFields();
 
   /**
    * Get the field types used in an attachment.
@@ -21,7 +21,7 @@ interface DataAttachmentInterface extends AttachmentInterface {
    * @return string[]
    *   An array of field types as strings.
    */
-  public function getOriginalFieldTypes();
+  public function getFieldTypes();
 
   /**
    * Get the custom id of the attachment.
@@ -30,6 +30,22 @@ interface DataAttachmentInterface extends AttachmentInterface {
    *   The custom id of the attachment.
    */
   public function getCustomId();
+
+  /**
+   * Get the custom id prefixed with the ref code.
+   *
+   * @return string
+   *   The custom id prefixed with the ref code.
+   */
+  public function getCustomIdWithRefCode(): string;
+
+  /**
+   * Get the composed reference.
+   *
+   * @return string
+   *   The composed reference.
+   */
+  public function getComposedReference(): string;
 
   /**
    * Extract the plan id from an attachment object.

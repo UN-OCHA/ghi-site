@@ -5,6 +5,7 @@ namespace Drupal\ghi_plans\ApiObjects;
 use Drupal\ghi_base_objects\ApiObjects\BaseObject;
 use Drupal\ghi_base_objects\ApiObjects\Country;
 use Drupal\ghi_plans\Entity\Plan as EntityPlan;
+use Drupal\ghi_plans\Traits\PlanQueryTrait;
 use Drupal\hpc_api\ApiObjects\Types\PlanCostingType;
 use Drupal\hpc_api\ApiObjects\Types\PlanType;
 use Drupal\hpc_api\Traits\DateTimeTrait;
@@ -16,6 +17,7 @@ use Drupal\hpc_common\Helpers\StringHelper;
 class Plan extends BaseObject implements PlanEntityInterface {
 
   use DateTimeTrait;
+  use PlanQueryTrait;
 
   const ENTITY_REF_CODE = 'PL';
 
@@ -64,6 +66,8 @@ class Plan extends BaseObject implements PlanEntityInterface {
    */
   protected function map() {
     $data = $this->getRawData();
+    $plan_query = $this->getPlanQuery();
+
     // Make sure we have proper objects for the plan types.
     return (object) [
       'id' => $data->Id,
@@ -72,10 +76,10 @@ class Plan extends BaseObject implements PlanEntityInterface {
       'short_name' => $data->ShortName ?? NULL,
       'subtitle' => $data->PlanSubTitle ?? NULL,
       'comments' => $data->Description ?? NULL,
-      'plan_type' => $data->PlanType,
+      'plan_type' => ($data->PlanType ?? NULL) ? $plan_query->getPlanTypeByName($data->PlanType) : NULL,
       'plan_cluster_type' => $data->PlanClusterType ?? NULL,
-      'plan_costing_type' => $data->PlanCosting,
-      'reporting_periods' => $data->ReportingPeriods ?? [],
+      'plan_costing_type' => ($data->PlanCosting ?? NULL) ? $plan_query->getPlanCostingTypeByName($data->PlanCosting) : NULL,
+      'reporting_periods' => $data->planReportingPeriods ?? [],
       'start_date' => $data->StartDate ? $this->reformatDate($data->StartDate) : NULL,
       'end_date' => $data->EndDate ? $this->reformatDate($data->EndDate) : NULL,
       'created_date' => ($data->CreatedAt ?? NULL) ? $this->getTimestamp($data->CreatedAt) : NULL,
@@ -88,7 +92,7 @@ class Plan extends BaseObject implements PlanEntityInterface {
       'langcode' => $data->PlanLanguageCode ?? 'en',
       'countries' => array_map(fn ($item) => new Country($item->location), $data->planLocation?->items ?? []),
       'organizations' => array_map(fn ($item) => new Organization($item->organization), $data->planOrganization?->items ?? []),
-      'focus_country' => $data->FocusCountry,
+      'focus_country' => ($data->FocusedLocationName ?? NULL) ? $plan_query->lookupCountry($data->FocusedLocationName) : NULL,
     ];
   }
 
@@ -284,11 +288,11 @@ class Plan extends BaseObject implements PlanEntityInterface {
   /**
    * Get the latest published reporting period.
    *
-   * @return int
+   * @return int|null
    *   The last published reporting period.
    */
-  public function getLastPublishedReportingPeriodId() {
-    return $this->last_published_period;
+  public function getLastPublishedReportingPeriodId(): ?int {
+    return $this->map->last_published_period ?? NULL;
   }
 
   /**

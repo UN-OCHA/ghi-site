@@ -5,6 +5,8 @@ namespace Drupal\ghi_plans\ApiObjects\Partials;
 use Drupal\ghi_base_objects\ApiObjects\BaseObject;
 use Drupal\ghi_base_objects\ApiObjects\Country;
 use Drupal\ghi_plans\ApiObjects\Attachments\CaseloadAttachment;
+use Drupal\ghi_plans\ApiObjects\Attachments\CaseloadAttachmentInterface;
+use Drupal\ghi_plans\ApiObjects\PlanReportingPeriod;
 use Drupal\ghi_plans\Entity\Plan;
 use Drupal\ghi_plans\Traits\AttachmentFilterTrait;
 use Drupal\ghi_plans\Traits\PlanReportingPeriodTrait;
@@ -256,29 +258,23 @@ class PlanOverviewPlan extends BaseObject {
   /**
    * Get a caseload value.
    *
+   * @param string $metric_type
+   *   The metric type.
    * @param string $metric_name
    *   The english metric name.
    *
    * @return int
    *   The caseload value if found.
    */
-  public function getCaseloadValue($metric_name): ?float {
+  public function getCaseloadValue(string $metric_type, ?string $metric_name = NULL): ?float {
     if (!$this->hasCaseloads()) {
       return NULL;
     }
 
     foreach ($this->caseloads as $caseload) {
-      $totals = $caseload->getTotals();
-      if (empty($totals)) {
-        continue;
-      }
-      foreach ($totals as $total) {
-        if (!$total->getMetric()) {
-          continue;
-        }
-        if ($total->getMetric()->getName() == $metric_name) {
-          return $total->getValue();
-        }
+      $value = $caseload->getCaseloadValue($metric_type, $metric_name);
+      if ($value !== NULL) {
+        return $value;
       }
     }
     return NULL;
@@ -293,9 +289,9 @@ class PlanOverviewPlan extends BaseObject {
    * @return array
    *   An array of caseload fields.
    */
-  public function getPlanCaseloadFields($attachment_id = NULL) {
+  public function getPlanCaseloadFields($attachment_id = NULL): array {
     $caseload = $this->getPlanCaseload($attachment_id);
-    return $caseload?->getOriginalFields() ?? [];
+    return $caseload?->getFields() ?? [];
   }
 
   /**
@@ -307,7 +303,7 @@ class PlanOverviewPlan extends BaseObject {
    * @return \Drupal\ghi_plans\ApiObjects\Attachments\CaseloadAttachmentInterface|null
    *   A caseload object or NULL.
    */
-  public function getPlanCaseload($attachment_id = NULL) {
+  public function getPlanCaseload($attachment_id = NULL): ?CaseloadAttachmentInterface {
     return $this->findPlanCaseload($this->caseloads, $attachment_id ?? $this->getEntity()?->getPlanCaseloadId());
   }
 
@@ -317,7 +313,7 @@ class PlanOverviewPlan extends BaseObject {
    * @return \Drupal\ghi_plans\ApiObjects\PlanReportingPeriod|null
    *   The reporting period object or NULL.
    */
-  public function getLastPublishedReportingPeriod() {
+  public function getLastPublishedReportingPeriod(): ?PlanReportingPeriod {
     $period_id = $this->getRawData()->lastPublishedReportingPeriodId;
     if (!$period_id) {
       return NULL;
@@ -331,7 +327,7 @@ class PlanOverviewPlan extends BaseObject {
    * @return \Drupal\ghi_base_objects\ApiObjects\Country[]
    *   An array of country objects, keyed by the country id.
    */
-  public function getCountries() {
+  public function getCountries(): array {
     $countries = [];
     if (empty($this->getRawData()->planLocation?->items)) {
       return $countries;
@@ -346,10 +342,10 @@ class PlanOverviewPlan extends BaseObject {
   /**
    * Get the country for a plan.
    *
-   * @return \Drupal\ghi_base_objects\ApiObjects\Country
-   *   A country object.
+   * @return \Drupal\ghi_base_objects\ApiObjects\Country|null
+   *   A country object or NULL.
    */
-  public function getCountry() {
+  public function getCountry(): ?Country {
     $countries = $this->getCountries();
     return count($countries) ? reset($countries) : NULL;
   }

@@ -6,7 +6,6 @@ use Drupal\Core\DependencyInjection\ContainerBuilder;
 use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\Tests\UnitTestCase;
 use Drupal\hpc_common\Helpers\RequestHelper;
-use Prophecy\PhpUnit\ProphecyTrait;
 use Symfony\Component\HttpFoundation\ParameterBag;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
@@ -15,15 +14,6 @@ use Symfony\Component\HttpFoundation\RequestStack;
  * @covers Drupal\hpc_common\Helpers\RequestHelper
  */
 class RequestHelperTest extends UnitTestCase {
-
-  use ProphecyTrait;
-
-  /**
-   * The request helper class.
-   *
-   * @var \Drupal\hpc_common\Helpers\RequestHelper
-   */
-  protected $requestHelper;
 
   /**
    * A route match object.
@@ -38,24 +28,7 @@ class RequestHelperTest extends UnitTestCase {
   protected function setUp(): void {
     parent::setUp();
 
-    // Mock route.
-    $this->route = $this->prophesize(RouteMatchInterface::class);
-
     // Set container.
-    $container = new ContainerBuilder();
-    \Drupal::setContainer($container);
-
-    $this->requestHelper = new RequestHelper();
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  protected function tearDown(): void {
-    parent::tearDown();
-    unset($this->requestHelper);
-    unset($this->route);
-
     $container = new ContainerBuilder();
     \Drupal::setContainer($container);
   }
@@ -89,12 +62,12 @@ class RequestHelperTest extends UnitTestCase {
    */
   public function testGetCurrentRouteArguments($result) {
     // Mock route method.
-    $this->route->getParameters()->willReturn(new ParameterBag($result));
+    $route = $this->prophesize(RouteMatchInterface::class);
+    $route->getParameters()->willReturn(new ParameterBag($result));
 
     // Add to container.
-    \Drupal::getContainer()->set('current_route_match', $this->route->reveal());
-
-    $this->assertEquals($result, $this->requestHelper->getCurrentRouteArguments());
+    \Drupal::getContainer()->set('current_route_match', $route->reveal());
+    $this->assertEquals($result, RequestHelper::getCurrentRouteArguments());
   }
 
   /**
@@ -161,7 +134,7 @@ class RequestHelperTest extends UnitTestCase {
     // Add to container.
     \Drupal::getContainer()->set('request_stack', $request_stack->reveal());
 
-    $this->assertEquals($result, $this->requestHelper->getQueryArgument($name, $arguments));
+    $this->assertEquals($result, RequestHelper::getQueryArgument($name, $arguments));
   }
 
 }

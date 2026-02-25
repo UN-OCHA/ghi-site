@@ -4,7 +4,7 @@ namespace Drupal\hpc_api\Traits;
 
 use Drupal\hpc_api\Plugin\FabricQuery\BaseTypeQuery;
 use Drupal\hpc_api\Plugin\FabricQuery\CategoryQuery;
-use Drupal\hpc_api\Plugin\FabricQuery\EntityQuery;
+use Drupal\hpc_api\Plugin\FabricQuery\EntityLookupQuery;
 use Drupal\hpc_api\Plugin\FabricQuery\EntityTypeQuery;
 use Drupal\hpc_api\Query\FabricQueryBase;
 
@@ -36,7 +36,7 @@ trait FabricQueryTrait {
    * Get the base type query.
    *
    * @return \Drupal\hpc_api\Plugin\FabricQuery\BaseTypeQuery|null
-   *   The category query or NULL.
+   *   The base type query or NULL.
    */
   protected static function getBaseTypeQuery(): ?BaseTypeQuery {
     $query = self::getQueryInstance('base_type');
@@ -46,12 +46,12 @@ trait FabricQueryTrait {
   /**
    * Get the entity query.
    *
-   * @return \Drupal\hpc_api\Plugin\FabricQuery\EntityQuery|null
-   *   The category query or NULL.
+   * @return \Drupal\hpc_api\Plugin\FabricQuery\EntityLookupQuery|null
+   *   The entity lookup query or NULL.
    */
-  protected static function getEntityQuery(): ?EntityQuery {
-    $query = self::getQueryInstance('entity');
-    return $query instanceof EntityQuery ? $query : NULL;
+  protected static function getEntityLookupQuery(): ?EntityLookupQuery {
+    $query = self::getQueryInstance('entity_lookup');
+    return $query instanceof EntityLookupQuery ? $query : NULL;
   }
 
   /**

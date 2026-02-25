@@ -31,28 +31,16 @@ class PlanEntity extends EntityObjectBase {
    */
   protected function map() {
     $data = $this->getRawData();
-    $prototype = !empty($data->HpcEntityPrototypeId ?? NULL) ? PlanEntityHelper::getEntityPrototype($data->HpcEntityPrototypeId) : NULL;
     return (object) [
       'id' => $data->Id,
-      'name' => $prototype?->getNameSingular(),
-      'group_name' => $prototype?->getNamePlural(),
-      'display_name' => $prototype?->getNameSingular(),
-      'singular_name' => $prototype?->getNameSingular(),
-      'plural_name' => $prototype?->getNamePlural(),
       'description' => $data->Name,
       // phpcs:disable
       // @todo Retrieve and store the support information.
       // 'support' => !empty($_entity_version->value->support) ? (array) $_entity_version->value->support : NULL,
       // phpcs:enable
-      'ref_code' => $prototype?->getRefCode(),
-      'entity_type' => $prototype?->getType(),
-      'entity_prototype_id' => $prototype?->id(),
-      'order_number' => $data->SortOrder ?? $prototype?->getOrderNumber(),
       'parent_id' => $this->getParentId(),
       'governing_entity_parent_id' => $data->CoordinationEntityId ?? NULL,
       'custom_reference' => $data->CustomReference,
-      'composed_reference' => $data->ComposedReference ?: ($prototype?->getRefCode() . $data->CustomReference),
-      'sort_key' => $data->SortOrder ?? (($prototype?->getOrderNumber() ?? '') . ($data->CustomReference) ?? NULL),
 
       // Legacy support.
       'custom_id' => $data->CustomReference,
@@ -75,12 +63,8 @@ class PlanEntity extends EntityObjectBase {
    * @return int
    *   The id of the direct parent.
    */
-  public function getParentId() {
-    $entity = $this->getRawData();
-    if (!$entity) {
-      return NULL;
-    }
-    $items = $entity->logframeEntityLink?->items ?? [];
+  public function getParentId(): ?int {
+    $items = $this->getRawData()->logframeEntityLink?->items ?? [];
     if (empty($items)) {
       return NULL;
     }
@@ -93,12 +77,8 @@ class PlanEntity extends EntityObjectBase {
    * @return int[]
    *   The ids of the parents.
    */
-  public function getParentIds() {
-    $entity = $this->getRawData();
-    if (!$entity) {
-      return [];
-    }
-    $items = $entity->logframeEntityLink?->items ?? [];
+  public function getParentIds(): array {
+    $items = $this->getRawData()->logframeEntityLink?->items ?? [];
     if (empty($items)) {
       return [];
     }
@@ -112,16 +92,25 @@ class PlanEntity extends EntityObjectBase {
    *   The plan entity parents keyed by their entity ids.
    */
   public function getPlanEntityParents() {
-    $entity = $this->getRawData();
-    if (!$entity) {
-      return [];
-    }
-    $parent_ids = $this->getParentIds();
     $parents = [];
-    foreach ($parent_ids as $entity_id) {
+    foreach ($this->getParentIds() as $entity_id) {
       $parents[$entity_id] = PlanEntityHelper::getPlanEntity($entity_id);
     }
     return array_filter($parents);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getName() {
+    return $this->getPrototype()?->getNameSingular() ?? $this->getDescription();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getDisplayName(): ?string {
+    return $this->getPrototype()?->getNameSingular() ?? NULL;
   }
 
   /**
@@ -130,22 +119,22 @@ class PlanEntity extends EntityObjectBase {
    * @return string
    *   The group name, e.g. "Strategic Objectives".
    */
-  public function getGroupName() {
-    return $this->group_name;
+  public function getGroupName(): ?string {
+    return $this->getPrototype()?->getNamePlural();
   }
 
   /**
    * {@inheritdoc}
    */
-  public function getFullName() {
+  public function getFullName(): string {
     $parent_entity = $this->getParentGoverningEntity();
     if (!$parent_entity) {
-      return $this->t('@type @custom_reference', [
+      return (string) $this->t('@type @custom_reference', [
         '@type' => $this->getName(),
         '@custom_reference' => $this->getCustomReference(),
       ]);
     }
-    return $this->t('@parent: @type @custom_reference', [
+    return (string) $this->t('@parent: @type @custom_reference', [
       '@parent' => $parent_entity->getCustomReference() . ' ' . $parent_entity->getPrototypeName(),
       '@type' => $this->getName(),
       '@custom_reference' => $this->getCustomReference(),
@@ -155,22 +144,23 @@ class PlanEntity extends EntityObjectBase {
   /**
    * {@inheritdoc}
    */
-  public function getSingularName(): string {
-    return $this->map->singular_name;
+  public function getComposedReference() {
+    $data = $this->getRawData();
+    return $data->ComposedReference ?: ($this->getEntityTypeRefCode() . $this->getCustomReference());
   }
 
   /**
    * {@inheritdoc}
    */
-  public function getPluralName(): string {
-    return $this->map->plural_name;
+  public function getOrderNumber(): ?int {
+    return $this->getRawData()->SortOrder ?? parent::getOrderNumber();
   }
 
   /**
    * {@inheritdoc}
    */
-  public function getSortKey(): string|int {
-    return $this->sort_key;
+  public function getSortKey(): ?string {
+    return $this->getRawData()->SortOrder ?? parent::getSortKey();
   }
 
   /**

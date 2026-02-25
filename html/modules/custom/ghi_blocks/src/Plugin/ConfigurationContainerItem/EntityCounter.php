@@ -10,6 +10,7 @@ use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\ghi_blocks\Traits\ConfigurationItemValuePreviewTrait;
 use Drupal\ghi_form_elements\Attribute\ConfigurationContainerItem;
 use Drupal\ghi_form_elements\ConfigurationContainerItemPluginBase;
+use Drupal\ghi_plans\ApiObjects\Entities\EntityObjectInterface;
 use Drupal\ghi_plans\Entity\Plan;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -32,11 +33,11 @@ class EntityCounter extends ConfigurationContainerItemPluginBase {
   use ConfigurationItemValuePreviewTrait;
 
   /**
-   * The plan entities query.
+   * The entities query.
    *
-   * @var \Drupal\ghi_plans\Plugin\FabricQuery\PlanEntityQuery
+   * @var \Drupal\ghi_plans\Plugin\FabricQuery\EntityQuery
    */
-  public $planEntityQuery;
+  public $entityQuery;
 
   /**
    * The icon query.
@@ -52,7 +53,7 @@ class EntityCounter extends ConfigurationContainerItemPluginBase {
     /** @var self $instance */
     $instance = parent::create($container, $configuration, $plugin_id, $plugin_definition);
     $instance->iconQuery = $instance->endpointQueryManager->createInstance('icon_query');
-    $instance->planEntityQuery = $instance->fabricQueryManager->createInstance('plan_entity');
+    $instance->entityQuery = $instance->fabricQueryManager->createInstance('entity');
     return $instance;
   }
 
@@ -193,7 +194,7 @@ class EntityCounter extends ConfigurationContainerItemPluginBase {
     $entities = $this->getMatchingEntities();
     if (!empty($entities)) {
       usort($entities, function ($a, $b) {
-        return strnatcmp($a->sort_key, $b->sort_key);
+        return strnatcmp($a->getSortKey(), $b->getSortKey());
       });
       $items = array_map(function ($item) {
         return Markup::create($item->name . '<br /> ' . $item->description);
@@ -228,21 +229,21 @@ class EntityCounter extends ConfigurationContainerItemPluginBase {
    *
    * @param string $entity_type
    *   The entity type.
-   * @param int $entity_prototype
-   *   The entity prototype.
+   * @param int $entity_prototype_id
+   *   The entity prototype id.
    *
-   * @return array
+   * @return \Drupal\ghi_plans\ApiObjects\Entities\EntityObjectInterface[]
    *   An array of entity objects.
    */
-  private function getMatchingEntities($entity_type = NULL, $entity_prototype = NULL) {
+  private function getMatchingEntities($entity_type = NULL, $entity_prototype_id = NULL) {
     $entity_type = $entity_type ?? $this->get('entity_type');
-    $entity_prototype = $entity_prototype ?? $this->get('entity_prototype');
+    $entity_prototype_id = $entity_prototype_id ?? $this->get('entity_prototype');
     $entities = $this->getEntities($entity_type);
-    if (empty($entities)) {
-      return [];
+    if ($entity_prototype_id === NULL) {
+      return $entities;
     }
-    return array_filter($entities, function ($entity) use ($entity_prototype) {
-      return $entity->entity_prototype_id == $entity_prototype;
+    return array_filter($entities, function (EntityObjectInterface $entity) use ($entity_prototype_id) {
+      return $entity->getPrototypeId() == $entity_prototype_id;
     });
   }
 
@@ -262,7 +263,7 @@ class EntityCounter extends ConfigurationContainerItemPluginBase {
     if (!$base_object instanceof ContentEntityInterface || !$plan_object instanceof Plan) {
       return [];
     }
-    return $this->planEntityQuery->getPlanEntities($plan_object->getSourceId(), $base_object, $entity_type) ?? [];
+    return $this->entityQuery->getEntitiesForPlan($plan_object->getSourceId(), $base_object, $entity_type) ?? [];
   }
 
   /**
@@ -291,7 +292,7 @@ class EntityCounter extends ConfigurationContainerItemPluginBase {
     $entity_prototype_options = [];
     $weight = [];
     foreach ($this->getEntities($entity_type) ?? [] as $entity) {
-      $prototype_id = $entity->entity_prototype_id;
+      $prototype_id = $entity->getPrototypeId();
       if (empty($entity_prototype_options[$prototype_id])) {
         $name = $entity->plural_name;
         $entity_prototype_options[$prototype_id] = $name;

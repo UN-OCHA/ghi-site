@@ -6,6 +6,7 @@ use Drupal\Component\Plugin\PluginBase;
 use Drupal\Core\Cache\Cache;
 use Drupal\Core\DependencyInjection\DependencySerializationTrait;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
+use Drupal\hpc_api\ApiObjects\ApiObjectInterface;
 use Drupal\hpc_api\ApiObjects\ApiObjectNamespaceInterface;
 use Drupal\hpc_api\ApiObjects\Categories\AgeGroup;
 use Drupal\hpc_api\ApiObjects\Categories\DeliveryModality;
@@ -220,6 +221,94 @@ abstract class FabricQueryBase extends PluginBase implements FabricQueryPluginIn
    */
   public function setCache($cache_key, $data): mixed {
     return $this->cache($cache_key, $data, FALSE, NULL, $this->getCacheTags());
+  }
+
+  /**
+   * Add an item to the object storage.
+   *
+   * @param \Drupal\hpc_api\ApiObjects\ApiObjectInterface $object
+   *   The object to store.
+   */
+  protected function addObjectToStorage(ApiObjectInterface $object): void {
+    $storage = $this->cache($object->getObjectStorageKey()) ?? [];
+    $storage[$object->id()] = $object;
+    $this->cache($object->getObjectStorageKey(), $storage);
+  }
+
+  /**
+   * Add multiple items to the object storage.
+   *
+   * @param \Drupal\hpc_api\ApiObjects\ApiObjectInterface[] $objects
+   *   The objects to store.
+   */
+  protected function addObjectsToStorage(array $objects): void {
+    foreach ($objects as $object) {
+      $this->addObjectToStorage($object);
+    }
+  }
+
+  /**
+   * Get an item from the object storage.
+   *
+   * @param int $id
+   *   The if of the object to fetch.
+   * @param string $storage_key
+   *   The storage key identifier from which to load the object.
+   *
+   * @return \Drupal\hpc_api\ApiObjects\ApiObjectInterface|null
+   *   The object if found, NULL otherwise.
+   */
+  protected function getObjectFromStorage(int $id, string $storage_key): ?ApiObjectInterface {
+    $storage = $this->cache($storage_key) ?? [];
+    return $storage[$id] ?? NULL;
+  }
+
+  /**
+   * Get multiple items from the object storage.
+   *
+   * @param int[] $ids
+   *   An array of object ids to fetch.
+   * @param string $storage_key
+   *   The storage key identifier from which to load the object.
+   *
+   * @return \Drupal\hpc_api\ApiObjects\ApiObjectInterface[]
+   *   An array of objects.
+   */
+  protected function getObjectsFromStorage(array $ids, string $storage_key): array {
+    $storage = $this->cache($storage_key) ?? [];
+    return array_intersect_key($storage, array_flip($ids));
+  }
+
+  /**
+   * Add an object collection to the object storage using a custom key.
+   *
+   * @param \Drupal\hpc_api\ApiObjects\ApiObjectInterface[] $objects
+   *   The objects to store.
+   * @param string $storage_key
+   *   The storage key identifier for the objects.
+   * @param string $collection_key
+   *   The collection key identifier for the objects.
+   */
+  protected function addObjectCollectionToStorage(array $objects, string $storage_key, string $collection_key): void {
+    $storage = $this->cache($storage_key) ?? [];
+    foreach ($objects as $object) {
+      assert($object instanceof ApiObjectInterface);
+      $storage[$collection_key][$object->getRawData()->$collection_key] = $storage[$collection_key][$object->getRawData()->$collection_key] ?? [];
+      $storage[$collection_key][$object->getRawData()->$collection_key][$object->id()] = $object;
+      $this->addObjectToStorage($object);
+    }
+    $this->cache($storage_key, $storage);
+  }
+
+  /**
+   * Get an object collection from the object storage using a custom key.
+   *
+   * @return \Drupal\hpc_api\ApiObjects\ApiObjectInterface[]
+   *   An array of objects.
+   */
+  protected function getObjectCollectionFromStorage(string $storage_key, string $collection_key, int|string $key): array {
+    $storage = $this->cache($storage_key) ?? [];
+    return $storage[$collection_key][$key] ?? [];
   }
 
   /**
@@ -640,6 +729,17 @@ abstract class FabricQueryBase extends PluginBase implements FabricQueryPluginIn
   public function getPlanTypes(): array {
     $this->fetchPlanTypes();
     return $this->planTypes ?? [];
+  }
+
+  /**
+   * Get the plan types.
+   *
+   * @return \Drupal\hpc_api\ApiObjects\Types\PlanCostingType[]
+   *   An array of plan costing types.
+   */
+  public function getPlanCostingTypes(): array {
+    $this->fetchPlanCostingTypes();
+    return $this->planCostingTypes ?? [];
   }
 
   /**

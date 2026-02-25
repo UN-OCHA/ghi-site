@@ -3,7 +3,6 @@
 namespace Drupal\common_design_subtheme;
 
 use Drupal\Core\Template\Attribute;
-use Drupal\hpc_api\Query\EndpointQuery;
 
 /**
  * Class for handling table sorting.
@@ -25,7 +24,7 @@ class TableSort {
    * @param string $direction
    *   The sort direction as a string.
    */
-  public static function sort(array &$header, array &$rows, int $column, ?string $direction = 'asc') {
+  public static function sort(array &$header, array &$rows, int $column, ?string $direction = SORT_ASC) {
     $sort_factor = 1;
     $key = array_keys($header)[$column];
     if (!empty($header[$key]['attributes']) && $header[$key]['attributes'] instanceof Attribute) {
@@ -42,10 +41,10 @@ class TableSort {
         $sort_factor = -1;
 
       }
-      $attributes->addClass($direction == 'asc' ? 'sorttable-sorted' : 'sorttable-sorted-reverse');
+      $attributes->addClass($direction == SORT_ASC ? 'sorttable-sorted' : 'sorttable-sorted-reverse');
     }
 
-    $sort_factor = $sort_factor * ($direction == strtolower(EndpointQuery::SORT_ASC) ? 1 : -1);
+    $sort_factor = $sort_factor * ($direction == SORT_ASC ? 1 : -1);
     usort($rows, function ($a, $b) use ($column, $sort_factor) {
       $content_a = self::extractValue($a, $column);
       $content_b = self::extractValue($b, $column);

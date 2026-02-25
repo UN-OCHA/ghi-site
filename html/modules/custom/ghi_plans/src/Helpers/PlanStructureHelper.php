@@ -27,9 +27,9 @@ class PlanStructureHelper {
    */
   public static function getPlanEntityStructure(int $plan_id) {
 
-    $plan_entity_query = self::getPlanEntityQuery();
-    $plan_entities = $plan_entity_query->getPlanEntities($plan_id, NULL, 'plan');
-    $governing_entities = $plan_entity_query->getPlanEntities($plan_id, NULL, 'governing');
+    $plan_entity_query = self::getEntityQuery();
+    $plan_entities = $plan_entity_query->getEntitiesForPlan($plan_id, NULL, 'plan');
+    $governing_entities = $plan_entity_query->getEntitiesForPlan($plan_id, NULL, 'governing');
 
     $remove_ids = [];
     $ple_structure = [];

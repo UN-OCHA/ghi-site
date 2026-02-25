@@ -75,17 +75,17 @@ class AttachmentHelperTest extends ApiObjectTestBase {
    */
   public function testGetCustomAttachmentId() {
     $attachment = $this->getMockBuilder(DataAttachment::class)->disableOriginalConstructor()->getMock();
-    $attachment->method('__get')->with('custom_id')->willReturn('custom_id_VALUE');
+    $attachment->method('getCustomId')->willReturn('custom_id_VALUE');
     /** @var \Drupal\ghi_plans\ApiObjects\Attachments\AttachmentInterface $attachment */
     $this->assertEquals('custom_id_VALUE', AttachmentHelper::getCustomAttachmentId($attachment, 'custom_id'));
 
     $attachment = $this->getMockBuilder(DataAttachment::class)->disableOriginalConstructor()->getMock();
-    $attachment->method('__get')->with('custom_id_prefixed_refcode')->willReturn('custom_id_prefixed_refcode_VALUE');
+    $attachment->method('getCustomIdWithRefCode')->willReturn('custom_id_prefixed_refcode_VALUE');
     /** @var \Drupal\ghi_plans\ApiObjects\Attachments\AttachmentInterface $attachment */
     $this->assertEquals('custom_id_prefixed_refcode_VALUE', AttachmentHelper::getCustomAttachmentId($attachment, 'custom_id_prefixed_refcode'));
 
     $attachment = $this->getMockBuilder(DataAttachment::class)->disableOriginalConstructor()->getMock();
-    $attachment->method('__get')->with('composed_reference')->willReturn('composed_reference_VALUE');
+    $attachment->method('getComposedReference')->willReturn('composed_reference_VALUE');
     /** @var \Drupal\ghi_plans\ApiObjects\Attachments\AttachmentInterface $attachment */
     $this->assertEquals('composed_reference_VALUE', AttachmentHelper::getCustomAttachmentId($attachment, 'composed_reference'));
 

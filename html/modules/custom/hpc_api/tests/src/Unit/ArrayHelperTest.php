@@ -4,7 +4,6 @@ namespace Drupal\Tests\hpc_api\Unit;
 
 use Drupal\hpc_api\Helpers\ArrayHelper;
 use Drupal\Tests\UnitTestCase;
-use Drupal\hpc_api\Query\EndpointQuery;
 
 /**
  * @covers Drupal\hpc_api\Helpers\ArrayHelper
@@ -137,10 +136,10 @@ class ArrayHelperTest extends UnitTestCase {
     ];
 
     return [
-      [$array, 'total', EndpointQuery::SORT_ASC, SORT_NUMERIC, ['apple', 'orange', 'strawberry']],
-      [$array, 'total', EndpointQuery::SORT_DESC, SORT_NUMERIC, ['strawberry', 'orange', 'apple']],
-      [$array, 'name', EndpointQuery::SORT_ASC, SORT_STRING, ['apple', 'orange', 'strawberry']],
-      [$array, 'name', EndpointQuery::SORT_DESC, SORT_STRING, ['strawberry', 'orange', 'apple']],
+      [$array, 'total', SORT_ASC, SORT_NUMERIC, ['apple', 'orange', 'strawberry']],
+      [$array, 'total', SORT_DESC, SORT_NUMERIC, ['strawberry', 'orange', 'apple']],
+      [$array, 'name', SORT_ASC, SORT_STRING, ['apple', 'orange', 'strawberry']],
+      [$array, 'name', SORT_DESC, SORT_STRING, ['strawberry', 'orange', 'apple']],
     ];
   }
 
@@ -169,8 +168,8 @@ class ArrayHelperTest extends UnitTestCase {
     ];
 
     return [
-      [$array, 'total', EndpointQuery::SORT_ASC, 100, [0, 2, 1]],
-      [$array, 'total', EndpointQuery::SORT_DESC, 100, [1, 2, 0]],
+      [$array, 'total', SORT_ASC, 100, [0, 2, 1]],
+      [$array, 'total', SORT_DESC, 100, [1, 2, 0]],
     ];
   }
 
@@ -216,8 +215,8 @@ class ArrayHelperTest extends UnitTestCase {
     ];
 
     return [
-      [$array, 'organizations', EndpointQuery::SORT_ASC, [1, 0, 3, 2]],
-      [$array, 'organizations', EndpointQuery::SORT_DESC, [2, 3, 0, 1]],
+      [$array, 'organizations', SORT_ASC, [1, 0, 3, 2]],
+      [$array, 'organizations', SORT_DESC, [2, 3, 0, 1]],
     ];
   }
 
@@ -264,8 +263,8 @@ class ArrayHelperTest extends UnitTestCase {
     ];
 
     return [
-      [$array, 'Gender Marker', EndpointQuery::SORT_ASC, [1, 0, 2]],
-      [$array, 'Gender Marker', EndpointQuery::SORT_DESC, [2, 0, 1]],
+      [$array, 'Gender Marker', SORT_ASC, [1, 0, 2]],
+      [$array, 'Gender Marker', SORT_DESC, [2, 0, 1]],
     ];
   }
 
@@ -389,10 +388,10 @@ class ArrayHelperTest extends UnitTestCase {
     ];
 
     return [
-      [$array, 'cost', EndpointQuery::SORT_ASC, SORT_NUMERIC, [1, 0, 2]],
-      [$array, 'cost', EndpointQuery::SORT_DESC, SORT_NUMERIC, [2, 0, 1]],
-      [$array, 'item', EndpointQuery::SORT_ASC, SORT_STRING, [2, 0, 1]],
-      [$array, 'item', EndpointQuery::SORT_DESC, SORT_STRING, [1, 0, 2]],
+      [$array, 'cost', SORT_ASC, SORT_NUMERIC, [1, 0, 2]],
+      [$array, 'cost', SORT_DESC, SORT_NUMERIC, [2, 0, 1]],
+      [$array, 'item', SORT_ASC, SORT_STRING, [2, 0, 1]],
+      [$array, 'item', SORT_DESC, SORT_STRING, [1, 0, 2]],
     ];
   }
 
@@ -436,10 +435,10 @@ class ArrayHelperTest extends UnitTestCase {
     ];
 
     return [
-      [$array, 'getCost', EndpointQuery::SORT_ASC, SORT_NUMERIC, [1, 0, 2]],
-      [$array, 'getCost', EndpointQuery::SORT_DESC, SORT_NUMERIC, [2, 0, 1]],
-      [$array, 'getItem', EndpointQuery::SORT_ASC, SORT_STRING, [2, 0, 1]],
-      [$array, 'getItem', EndpointQuery::SORT_DESC, SORT_STRING, [1, 0, 2]],
+      [$array, 'getCost', SORT_ASC, SORT_NUMERIC, [1, 0, 2]],
+      [$array, 'getCost', SORT_DESC, SORT_NUMERIC, [2, 0, 1]],
+      [$array, 'getItem', SORT_ASC, SORT_STRING, [2, 0, 1]],
+      [$array, 'getItem', SORT_DESC, SORT_STRING, [1, 0, 2]],
     ];
   }
 

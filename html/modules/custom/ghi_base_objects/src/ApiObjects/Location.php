@@ -96,17 +96,6 @@ class Location extends BaseObject implements GeoJsonLocationInterface {
   }
 
   /**
-   * Get the location children.
-   *
-   * @return array
-   *   An array of raw location objects.
-   */
-  public function getChildren() {
-    $data = $this->getRawData();
-    return $data->children ?? [];
-  }
-
-  /**
    * Get the lat/lng coordinates.
    *
    * @return array
@@ -174,18 +163,6 @@ class Location extends BaseObject implements GeoJsonLocationInterface {
    */
   public function getCacheTags() {
     return Cache::mergeTags($this->cacheTags, [$this->getUuid()]);
-  }
-
-  /**
-   * Get the locations query.
-   *
-   * @return \Drupal\ghi_base_objects\Plugin\FabricQuery\LocationsQuery
-   *   The locations query.
-   */
-  public static function locationQuery() {
-    /** @var \Drupal\hpc_api\Query\FabricQueryManager $endpoint_query_manager */
-    $query_manager = \Drupal::service('plugin.manager.fabric_query_manager');
-    return $query_manager->createInstance('location');
   }
 
 }

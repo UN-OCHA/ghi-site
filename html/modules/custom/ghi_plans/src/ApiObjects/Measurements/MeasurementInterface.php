@@ -2,6 +2,7 @@
 
 namespace Drupal\ghi_plans\ApiObjects\Measurements;
 
+use Drupal\ghi_plans\ApiObjects\Prototypes\AttachmentPrototype;
 use Drupal\hpc_api\ApiObjects\ApiObjectInterface;
 
 /**
@@ -56,5 +57,37 @@ interface MeasurementInterface extends ApiObjectInterface {
    *   The comment set for the measurement.
    */
   public function getComment();
+
+  /**
+   * Get all values for this measurement.
+   *
+   * @return bool
+   *   TRUE if there is data, FALSE otherwise.
+   */
+  public function getValues();
+
+  /**
+   * Get the totals from the measurement.
+   *
+   * @return \Drupal\ghi_plans\ApiObjects\Facts\MeasurementFact[]
+   *   An array of measurement fact objects.
+   */
+  public function getTotals(): array;
+
+  /**
+   * Get the disaggregated data from the attachment.
+   *
+   * @return object
+   *   A disaggregated data object.
+   */
+  public function getDisaggregated(): object;
+
+  /**
+   * Get the prototype for an attachment.
+   *
+   * @return \Drupal\ghi_plans\ApiObjects\Prototypes\AttachmentPrototype|null
+   *   The attachment prototype object.
+   */
+  public function getPrototype(): ?AttachmentPrototype;
 
 }

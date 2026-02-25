@@ -6,13 +6,37 @@
   "EntityTypeId": 35,
   "EntityMainType": "LogframeEntity",
   "AttachmentType": "Indicator",
-  "CustomReference": 1,
+  "CustomReference": "1",
   "HasDisaggregatedData": false,
   "UnitId": 1,
-  "CalculationMethodId": ,
+  "CalculationMethodId": null,
   "Description": null,
   "VisibilityGroupId": 1,
   "AttachmentPrototypeId": 5399,
   "RecordStatus": "Active",
-  "UpdatedAt": "2024-03-18T10:52:40.000Z"
+  "UpdatedAt": "2024-03-18T10:52:40.000Z",
+  "totals": {
+    "2601564": {
+      "Id": 2601564,
+      "AttachmentId": 38544,
+      "MetricTypeId": 5,
+      "PeriodId": 44,
+      "SectorId": null,
+      "LocationId": 36,
+      "GenderId": null,
+      "AgeGroupId": null,
+      "PopulationStatusId": null,
+      "SettlementTypeId": null,
+      "DisabilityStatusId": null,
+      "HealthInterventionCategoryId": null,
+      "MaternalStatusId": null,
+      "DisaggregationCategoryOtherId": null,
+      "DeliveryModalityId": null,
+      "CustomMetricName": null,
+      "Description": null,
+      "IsTotal": true,
+      "ValueNum": 183000
+    }
+  },
+  "disaggregated": []
 }

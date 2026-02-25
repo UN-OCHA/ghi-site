@@ -16,7 +16,6 @@ use Drupal\ghi_blocks\Traits\ManagedFileBlockTrait;
 use Drupal\ghi_form_elements\Traits\ConfigurationContainerTrait;
 use Drupal\ghi_form_elements\Traits\CustomLinkTrait;
 use Drupal\hpc_common\Plugin\HPCBlockMetadata;
-use Drupal\hpc_api\Query\EndpointQuery;
 use Drupal\hpc_common\Helpers\ArrayHelper;
 
 /**
@@ -67,7 +66,7 @@ class LinkCarousel extends GHIBlockBase implements ConfigurableTableBlockInterfa
 
     $context = $this->getBlockContext();
     $carousel_items = [];
-    ArrayHelper::sortArrayByNumericKey($conf['items'], 'weight', EndpointQuery::SORT_ASC);
+    ArrayHelper::sortArrayByNumericKey($conf['items'], 'weight', SORT_ASC);
     foreach ($conf['items'] as $item) {
 
       /** @var \Drupal\ghi_blocks\Plugin\ConfigurationContainerItem\CarouselItem $item_type */

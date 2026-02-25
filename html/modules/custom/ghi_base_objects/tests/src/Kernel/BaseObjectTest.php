@@ -20,6 +20,7 @@ class BaseObjectTest extends KernelTestBase {
    */
   protected static $modules = [
     'field',
+    'text',
     'user',
     'migrate',
     'ghi_base_objects',
@@ -50,6 +51,22 @@ class BaseObjectTest extends KernelTestBase {
     $this->assertEquals('base_object_name', $base_object->getName());
     $base_object->setName('new name');
     $this->assertEquals('new name', $base_object->getName());
+    $this->assertEquals('new name', $base_object->getShortName());
+  }
+
+  /**
+   * Tests base object short name methods.
+   */
+  public function testBaseObjectShortName() {
+    $base_object_type = $this->createBaseObjectType([
+      'id' => 'plan',
+      'field_short_name' => ['type' => 'text', 'label' => 'Short name'],
+    ]);
+    $base_object = $this->createBaseObject([
+      'type' => $base_object_type->id(),
+      'field_short_name' => 'Plan short name',
+    ]);
+    $this->assertEquals('Plan short name', $base_object->getShortName());
   }
 
   /**
@@ -118,6 +135,21 @@ class BaseObjectTest extends KernelTestBase {
       'field_original_id' => NULL,
     ]);
     $this->assertNull($base_object->getSourceId());
+  }
+
+  /**
+   * Tests base object source id methods if the field does not exist.
+   */
+  public function testBaseObjectSourceIdMissingField() {
+    $base_object_type = $this->createBaseObjectType([
+      'id' => 'plan',
+    ], ['field_original_id']);
+    $base_object = $this->createBaseObject([
+      'type' => $base_object_type->id(),
+      'name' => 'base_object_name',
+    ]);
+    $this->assertEquals(NULL, $base_object->getSourceId());
+    $this->assertEquals('plan--', $base_object->getUniqueIdentifier());
   }
 
   /**

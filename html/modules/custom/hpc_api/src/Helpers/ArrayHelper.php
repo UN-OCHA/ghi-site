@@ -2,8 +2,6 @@
 
 namespace Drupal\hpc_api\Helpers;
 
-use Drupal\hpc_api\Query\EndpointQuery;
-
 /**
  * Helper class for array handling.
  */
@@ -172,7 +170,7 @@ class ArrayHelper {
    *   The sort direction.
    */
   public static function sortArrayByNumericKey(array &$data, $order, $sort) {
-    $sort_factor = $sort == EndpointQuery::SORT_DESC ? -1 : 1;
+    $sort_factor = $sort == SORT_DESC ? -1 : 1;
     uasort($data, function ($a, $b) use ($order, $sort_factor) {
       $a_value = $a[$order] ?? 0;
       $b_value = $b[$order] ?? 0;
@@ -190,8 +188,8 @@ class ArrayHelper {
    * @param string $sort
    *   The sort direction.
    */
-  public static function sortArrayByStringKey(array &$data, $order, $sort = EndpointQuery::SORT_ASC) {
-    $sort_factor = $sort == EndpointQuery::SORT_DESC ? -1 : 1;
+  public static function sortArrayByStringKey(array &$data, $order, $sort = SORT_ASC) {
+    $sort_factor = $sort == SORT_DESC ? -1 : 1;
     uasort($data, function ($a, $b) use ($order, $sort_factor) {
       $a_value = $a[$order] ?? '';
       $b_value = $b[$order] ?? '';
@@ -212,7 +210,7 @@ class ArrayHelper {
    *   The total value for the progress calculation.
    */
   public static function sortArrayByProgress(array &$data, $order, $sort, $total) {
-    $sort_factor = $sort == EndpointQuery::SORT_DESC ? -1 : 1;
+    $sort_factor = $sort == SORT_DESC ? -1 : 1;
     uasort($data, function ($a, $b) use ($sort_factor, $order, $total) {
       $a_funding = !empty($a[$order]) ? $a[$order] : 0;
       $b_funding = !empty($b[$order]) ? $b[$order] : 0;
@@ -245,7 +243,7 @@ class ArrayHelper {
    *   The sort direction.
    */
   public static function sortArrayByCompositeArrayKey(array &$data, $order, $sort) {
-    $sort_factor = $sort == EndpointQuery::SORT_DESC ? -1 : 1;
+    $sort_factor = $sort == SORT_DESC ? -1 : 1;
     uasort($data, function ($a, $b) use ($order, $sort_factor) {
       // Now prepare the data. The sort key can potentially contain multiple
       // entries. What we do is this:
@@ -289,7 +287,7 @@ class ArrayHelper {
    *   The property to use for sorting.
    */
   public static function sortArrayByObjectListProperty(array &$data, $order, $sort, $object_list = 'fields', $search_property = 'name', $value_property = 'value') {
-    $sort_factor = $sort == EndpointQuery::SORT_DESC ? -1 : 1;
+    $sort_factor = $sort == SORT_DESC ? -1 : 1;
     uasort($data, function ($a, $b) use ($order, $sort_factor, $object_list, $search_property, $value_property) {
       if (!empty($a[$object_list]) && !empty($b[$object_list])) {
         $x = '';
@@ -446,8 +444,8 @@ class ArrayHelper {
    * @param int $sort_type
    *   The sort direction, either SORT_NUMERIC or SORT_STRING.
    */
-  public static function sortObjectsByMethod(array &$array, string $method, $sort = EndpointQuery::SORT_ASC, $sort_type = SORT_NUMERIC) {
-    $sort_factor = $sort == EndpointQuery::SORT_DESC ? -1 : 1;
+  public static function sortObjectsByMethod(array &$array, string $method, $sort = SORT_ASC, $sort_type = SORT_NUMERIC) {
+    $sort_factor = $sort == SORT_DESC ? -1 : 1;
     uasort($array, function ($a, $b) use ($method, $sort_factor, $sort_type) {
       $default = $sort_type == SORT_NUMERIC ? 0 : '';
       $a_value = method_exists($a, $method) ? (call_user_func([$a, $method]) ?? $default) : $default;
@@ -468,8 +466,8 @@ class ArrayHelper {
    * @param int $sort_type
    *   The sort direction, either SORT_NUMERIC or SORT_STRING.
    */
-  public static function sortObjectsByCallback(array &$array, callable $callback, $sort = EndpointQuery::SORT_ASC, $sort_type = SORT_NUMERIC) {
-    $sort_factor = $sort == EndpointQuery::SORT_DESC ? -1 : 1;
+  public static function sortObjectsByCallback(array &$array, callable $callback, $sort = SORT_ASC, $sort_type = SORT_NUMERIC) {
+    $sort_factor = $sort == SORT_DESC ? -1 : 1;
     uasort($array, function ($a, $b) use ($callback, $sort_factor, $sort_type) {
       $default = $sort_type == SORT_NUMERIC ? 0 : '';
       $a_value = $callback($a) ?? $default;
@@ -490,7 +488,7 @@ class ArrayHelper {
    * @param int $sort_type
    *   The sort direction, either SORT_NUMERIC or SORT_STRING.
    */
-  public static function sortObjectsByProperty(array &$array, $property, $sort = EndpointQuery::SORT_ASC, $sort_type = SORT_NUMERIC) {
+  public static function sortObjectsByProperty(array &$array, $property, $sort = SORT_ASC, $sort_type = SORT_NUMERIC) {
     switch ($sort_type) {
       case SORT_NUMERIC:
         self::sortObjectsByNumericProperty($array, $property, $sort);
@@ -515,8 +513,8 @@ class ArrayHelper {
    * @param string $sort
    *   The sort direction.
    */
-  public static function sortObjectsByNumericProperty(array &$array, $property, $sort = EndpointQuery::SORT_ASC) {
-    $sort_factor = $sort == EndpointQuery::SORT_DESC ? -1 : 1;
+  public static function sortObjectsByNumericProperty(array &$array, $property, $sort = SORT_ASC) {
+    $sort_factor = $sort == SORT_DESC ? -1 : 1;
     uasort($array, function ($a, $b) use ($property, $sort_factor) {
       $a_value = method_exists($a, $property) ? ($a->$property() ?? 0) : (!empty($a->$property) ? $a->$property : 0);
       $b_value = method_exists($b, $property) ? ($b->$property() ?? 0) : (!empty($b->$property) ? $b->$property : 0);
@@ -534,14 +532,14 @@ class ArrayHelper {
    * @param string $sort
    *   The sort direction.
    */
-  public static function sortObjectsByStringProperty(array &$array, $property, $sort = EndpointQuery::SORT_ASC) {
+  public static function sortObjectsByStringProperty(array &$array, $property, $sort = SORT_ASC) {
     uasort($array, function ($a, $b) use ($property, $sort) {
       $a_value = method_exists($a, $property) ? ($a->$property() ?? '') : (!empty($a->$property) ? $a->$property : '');
       $b_value = method_exists($b, $property) ? ($b->$property() ?? '') : (!empty($b->$property) ? $b->$property : '');
-      if ($sort == EndpointQuery::SORT_ASC) {
+      if ($sort == SORT_ASC) {
         return strcasecmp($a_value, $b_value);
       }
-      if ($sort == EndpointQuery::SORT_DESC) {
+      if ($sort == SORT_DESC) {
         return strcasecmp($b_value, $a_value);
       }
     });

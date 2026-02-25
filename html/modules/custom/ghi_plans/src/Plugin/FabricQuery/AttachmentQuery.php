@@ -9,6 +9,7 @@ use Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment;
 use Drupal\ghi_plans\ApiObjects\Facts\AttachmentFact;
 use Drupal\ghi_plans\ApiObjects\Facts\MeasurementFact;
 use Drupal\ghi_plans\ApiObjects\Measurements\Measurement;
+use Drupal\ghi_plans\ApiObjects\Plan;
 use Drupal\ghi_plans\ApiObjects\PlanEntityInterface;
 use Drupal\ghi_plans\Helpers\AttachmentHelper;
 use Drupal\ghi_plans\Traits\AttachmentFilterTrait;
@@ -34,20 +35,14 @@ class AttachmentQuery extends FabricQueryBase {
    *
    * @param int $attachment_id
    *   The attachment id.
-   * @param int $reporting_period
-   *   The reporting period for which to load the attachment data.
    *
    * @return \Drupal\ghi_plans\ApiObjects\Attachments\AttachmentInterface|null
    *   The attachment object or NULL if not found.
    *
    * @todo Add support for the reporting period.
    */
-  public function getAttachment(int $attachment_id, $reporting_period = NULL): ?AttachmentInterface {
-    $cache_key = $this->getCacheKey([
-      'attachment_id' => $attachment_id,
-      'reporting_period' => $reporting_period,
-    ]);
-    $attachment = $this->getCache($cache_key);
+  public function getAttachment(int $attachment_id): ?AttachmentInterface {
+    $attachment = $this->getObjectFromStorage($attachment_id, DataAttachment::getObjectStorageKey());
     if ($attachment) {
       return $attachment;
     }
@@ -78,7 +73,8 @@ class AttachmentQuery extends FabricQueryBase {
 
     $attachments = $this->processAttachments($attachments, $data);
     $attachment = reset($attachments);
-    return $this->cache($cache_key, $attachment);
+    $this->addObjectToStorage($attachment);
+    return $attachment;
   }
 
   /**
@@ -86,30 +82,26 @@ class AttachmentQuery extends FabricQueryBase {
    *
    * @param array $attachment_ids
    *   The attachment ids.
-   * @param bool $disaggregated
-   *   Whether to fecth disaggregated data or not.
    *
    * @return \Drupal\ghi_plans\ApiObjects\Attachments\AttachmentInterface[]
    *   The matching (processed) attachment objects, keyed by the attachment id.
    */
-  public function getAttachmentsById(array $attachment_ids, bool $disaggregated = FALSE) {
-    sort($attachment_ids);
-
-    $cache_key = $this->getCacheKey([
-      'attachment_ids' => $attachment_ids,
-      'disaggregated' => (int) $disaggregated,
-    ]);
-    $attachments = $this->getCache($cache_key);
-    if ($attachments) {
+  public function getAttachmentsById(array $attachment_ids) {
+    $attachment_ids = array_unique($attachment_ids);
+    $attachments = $this->getObjectsFromStorage($attachment_ids, DataAttachment::getObjectStorageKey());
+    if (count($attachments) == count($attachment_ids)) {
       return $attachments;
     }
+    $attachment_ids = array_diff($attachment_ids, array_keys($attachments));
+    sort($attachment_ids);
+
     $queries = [
       $this->fabricClient->createQuery('attachments', DataAttachment::getGraphQlItems())
         ->setFilter('Id', $attachment_ids),
       $this->fabricClient->createQuery('attachmentFacts', AttachmentFact::getGraphQlItems())
         ->setFilters([
           'AttachmentId' => $attachment_ids,
-          'IsTotal' => $disaggregated,
+          'IsTotal' => TRUE,
         ]),
       $this->fabricClient->createQuery('measurements', Measurement::getGraphQlItems())
         ->setFilters([
@@ -117,18 +109,15 @@ class AttachmentQuery extends FabricQueryBase {
         ]),
     ];
     $data = $this->fabricClient->executeMultiple($queries);
-    if (empty($data['attachments'])) {
-      return $this->setCache($cache_key, []);
-    }
-
-    $attachments = $this->processAttachments($data['attachments'], $data);
-    return $this->setCache($cache_key, $attachments);
+    $attachments = $this->processAttachments($data['attachments'] ?? [], $data);
+    $this->addObjectsToStorage($attachments);
+    return $attachments;
   }
 
   /**
    * Get attachments by object type and id, optionally filtered.
    *
-   * @param string $entity_type
+   * @param array|string $entity_type
    *   The entity type for an attachment, either "governingEntity" or
    *   "planEntity".
    * @param array|int $entity_ids
@@ -140,6 +129,7 @@ class AttachmentQuery extends FabricQueryBase {
    *   The matching (processed) attachment objects, keyed by the attachment id.
    */
   public function getAttachmentsByObject($entity_type, $entity_ids, $attachment_types = NULL) {
+    $entity_types = (array) $entity_type;
     $entity_ids = (array) $entity_ids;
     if (empty($entity_ids)) {
       return [];
@@ -148,7 +138,7 @@ class AttachmentQuery extends FabricQueryBase {
     sort($entity_ids);
 
     $cache_key = $this->getCacheKey([
-      'entity_type' => $entity_type,
+      'entity_type' => $entity_types,
       'entity_ids' => $entity_ids,
     ] + $attachment_types);
     $attachments = $this->getCache($cache_key);
@@ -156,9 +146,9 @@ class AttachmentQuery extends FabricQueryBase {
       return $attachments;
     }
 
-    $type_filter_value = $this->getEntityTypeFilterValue($entity_type);
+    $type_filter_values = array_map(fn ($item) => $this->getEntityTypeFilterValue($item), $entity_types);
     $filters = array_filter([
-      'EntityMainType' => $type_filter_value,
+      'EntityMainType' => $type_filter_values,
       'EntityId' => $entity_ids,
       'AttachmentType' => $attachment_types ?: NULL,
     ]);
@@ -171,6 +161,7 @@ class AttachmentQuery extends FabricQueryBase {
     }
 
     $attachments = $this->processAttachments($attachments);
+    $this->addObjectsToStorage($attachments);
     return $this->setCache($cache_key, $attachments);
   }
 
@@ -236,6 +227,7 @@ class AttachmentQuery extends FabricQueryBase {
     }
 
     $attachments = $this->processAttachments($attachments);
+    $this->addObjectsToStorage($attachments);
     return $this->setCache($cache_key, $attachments);
   }
 
@@ -304,6 +296,7 @@ class AttachmentQuery extends FabricQueryBase {
     }
 
     $attachments = $this->processAttachments($attachments);
+    $this->addObjectsToStorage($attachments);
     return $this->setCache($cache_key, $attachments);
   }
 
@@ -421,9 +414,9 @@ class AttachmentQuery extends FabricQueryBase {
    */
   private function addMeasurements(&$attachments, ?array $measurements = NULL) {
     $plan_query = $this->getPlanQuery();
-    $plan_ids = array_map(fn ($item) => $item->PlanId, $attachments);
+    $plan_ids = array_unique(array_map(fn ($item) => $item->PlanId, $attachments));
     $plans = $plan_query->getPlansById($plan_ids);
-    $current_monitoring_period_ids = array_map(fn ($item) => $item->getLastPublishedReportingPeriodId(), $plans);
+    $current_monitoring_period_ids = array_filter(array_map(fn (Plan $item): ?int => $item->getLastPublishedReportingPeriodId(), $plans));
     if (!$measurements) {
       $attachment_ids = array_map(fn ($item) => $item->Id, $attachments);
       $measurements = $this->fabricClient->createQuery('measurements', Measurement::getGraphQlItems())
@@ -462,6 +455,8 @@ class AttachmentQuery extends FabricQueryBase {
       $attachments[$attachment_id]->measurements[$measurement_id]->totals[$fact_id] = $measurement_fact;
 
       if (in_array($period_id, $current_monitoring_period_ids)) {
+        // Merge the measurement facts of the current monitoring period into
+        // the attachment totals.
         $attachments[$attachment_id]->totals = $attachments[$attachment_id]->totals ?? [];
         $attachments[$attachment_id]->totals[$fact_id] = $measurement_fact;
       }

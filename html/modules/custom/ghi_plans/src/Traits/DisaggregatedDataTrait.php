@@ -40,7 +40,9 @@ trait DisaggregatedDataTrait {
       }
 
       $metrics[$metric->id()] = $metrics[$metric->id()] ?? $metric;
-      $categories[$disaggregation_id] = $item->getCombinedCategoryLabel();
+      if ($disaggregation_id) {
+        $categories[$disaggregation_id] = $item->getCombinedCategoryLabel();
+      }
     }
     $disaggregated = (object) [
       'locations' => $locations,
@@ -65,8 +67,9 @@ trait DisaggregatedDataTrait {
    */
   public function transformDisaggregatedMapData(object $data, DataAttachment $attachment): array {
     $transform = [];
-    foreach (array_values($data->metrics) as $index => $metric) {
+    foreach (array_values($data->metrics) as $metric) {
       /** @var \Drupal\hpc_api\ApiObjects\Types\MetricType $metric */
+      $index = array_flip($attachment->getFieldTypes())[$metric->getMachineName()];
       $metric_locations = array_filter($data->locations, fn($item) => array_key_exists($metric->id(), $item->totals));
       $transform[$index] = [
         'metric' => (object) [

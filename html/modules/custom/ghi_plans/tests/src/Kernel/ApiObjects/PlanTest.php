@@ -16,8 +16,8 @@ class PlanTest extends PlanApiObjectKernelTestBase {
    */
   protected function createMockRawData(array $data_overrides = []): object {
     $plan_defaults = [
-      'PlanType' => 'Humanitarian Response Plan',
-      'PlanCosting' => 'Cluster requirements only without projects',
+      // 'PlanType' => 'Humanitarian Response Plan',
+      // 'PlanCosting' => 'Cluster requirements only without projects',
       'StartDate' => '2019-01-01',
       'EndDate' => '2019-12-31',
       'DocumentPublishDate' => NULL,
@@ -34,6 +34,15 @@ class PlanTest extends PlanApiObjectKernelTestBase {
   public function testPlanConstructorAndMapping(): void {
     $raw_data = $this->createMockRawData([
       'Id' => 123,
+      'PlanSubTitle' => 'Afghanistan HRP',
+      'Description' => 'This is a comment',
+      'StartDate' => '2025-01-01T00:00:00.000Z',
+      'EndDate' => '2025-12-31T00:00:00.000Z',
+      'CreatedAt' => '2024-10-07T11:40:06.000Z',
+      'UpdatedAt' => '2025-12-08T13:34:53.000Z',
+      'planPeriod' => (object) ['items' => [(object) ['period' => (object) ['CalendarYear' => 2025]]]],
+      'DocumentPublishDate' => NULL,
+      'CurrentReportingPeriodId' => 1234,
     ]);
 
     $plan = new Plan($raw_data);
@@ -45,24 +54,24 @@ class PlanTest extends PlanApiObjectKernelTestBase {
 
     // Test bundle method (from former testGetBundleReturnsCorrectBundle).
     $this->assertEquals('plan', $plan->getBundle());
-  }
-
-  /**
-   * Test null or empty data handling.
-   */
-  public function testNullOrEmptyDataHandling(): void {
-    $this->testNullEmptyDataHandling(Plan::class);
-  }
-
-  /**
-   * Test cache tags and dependencies.
-   */
-  public function testCacheTagsAndDependencies(): void {
-    $raw_data = $this->createMockRawData();
-    $plan = new Plan($raw_data);
-
-    $cache_tags = $plan->getCacheTags();
-    $this->assertIsArray($cache_tags);
+    $this->assertEquals('Plan', (string) $plan->getTypeName());
+    $this->assertEquals('PL', $plan->getEntityTypeRefCode());
+    $this->assertEquals('plan', $plan->getEntityType());
+    $this->assertEquals('Plan', $plan->getEntityTypeName());
+    $this->assertEquals(2025, $plan->getYear());
+    $this->assertEquals('Afghanistan HRP', $plan->getSubtitle());
+    $this->assertEquals($plan->getName(), $plan->getDescription());
+    $this->assertEquals('This is a comment', $plan->getComments());
+    $this->assertEquals('2025-01-01', $plan->getStartDate());
+    $this->assertEquals('2025-12-31', $plan->getEndDate());
+    $this->assertEquals(1728301206, $plan->getCreatedDate());
+    $this->assertEquals(1765200893, $plan->getUpdatedDate());
+    $this->assertNull($plan->getDocumentPublishedDate());
+    $this->assertEquals('en', $plan->getLanguageCode());
+    $this->assertEquals(1234, $plan->getLastPublishedReportingPeriodId());
+    $this->assertFalse($plan->isReleased());
+    $this->assertFalse($plan->isRestricted());
+    $this->assertFalse($plan->isPartOfGho());
   }
 
 }

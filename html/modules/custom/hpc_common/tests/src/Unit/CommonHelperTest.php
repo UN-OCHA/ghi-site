@@ -2,37 +2,17 @@
 
 namespace Drupal\Tests\hpc_common\Unit;
 
+use Drupal\Core\DependencyInjection\ContainerBuilder;
+use Drupal\Core\Extension\ExtensionPathResolver;
+use Drupal\Core\Render\RendererInterface;
 use Drupal\Tests\UnitTestCase;
 use Drupal\hpc_common\Helpers\CommonHelper;
+use Twig\Environment;
 
 /**
  * @covers Drupal\hpc_common\Helpers\CommonHelper
  */
 class CommonHelperTest extends UnitTestCase {
-
-  /**
-   * The common helper class.
-   *
-   * @var \Drupal\hpc_common\Helpers\CommonHelper
-   */
-  protected $commonHelper;
-
-  /**
-   * {@inheritdoc}
-   */
-  protected function setUp(): void {
-    parent::setUp();
-
-    $this->commonHelper = new CommonHelper();
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  protected function tearDown(): void {
-    parent::tearDown();
-    unset($this->commonHelper);
-  }
 
   /**
    * Data provider for calculateRatio.
@@ -52,7 +32,59 @@ class CommonHelperTest extends UnitTestCase {
    * @dataProvider calculateRatioDataProvider
    */
   public function testCalculateRatio($value1, $value2, $round, $result) {
-    $this->assertEquals($result, $this->commonHelper->calculateRatio($value1, $value2, $round));
+    $this->assertEquals($result, CommonHelper::calculateRatio($value1, $value2, $round));
+  }
+
+  /**
+   * Data provider for renderValue.
+   */
+  public function renderValueDataProvider() {
+    return [
+      ['100000', 'amount', 'hpc_amount', [], NULL, NULL, FALSE, 100000],
+      ['100000', 'amount', 'hpc_amount', ['scale' => 'full'], NULL, NULL, FALSE, 100000],
+      ['', 'amount', 'hpc_amount', [], NULL, NULL, FALSE, '<span class="empty pending">Pending</span>'],
+      ['', 'amount', 'hpc_amount', [], 'Pending', NULL, FALSE, '<span class="empty pending">Pending</span>'],
+      [NULL, 'amount', 'hpc_amount', [], NULL, 'No data', FALSE, '<span class="empty not-available">No data</span>'],
+      [NULL, 'amount', 'hpc_amount', [], NULL, NULL, TRUE, '<span class="empty not-available"></span>'],
+    ];
+  }
+
+  /**
+   * Test calculating ratio.
+   *
+   * @group CommonHelper
+   * @dataProvider renderValueDataProvider
+   */
+  public function testRenderValue($value, $theme_key, $theme_function, $theme_args, $pending_string, $not_available_string, $is_export, $result) {
+
+    // Mock renderer service.
+    $renderer = $this->prophesize(RendererInterface::class);
+    $twig = $this->prophesize(Environment::class);
+    $path_resolver = $this->prophesize(ExtensionPathResolver::class);
+    $path_resolver->getPath('module', 'hpc_common')->willReturn('path');
+
+    // Mock render.
+    $build = [
+      '#theme' => $theme_function,
+      '#' . $theme_key => $value,
+    ];
+    foreach ($theme_args as $arg => $val) {
+      $build['#' . $arg] = $val;
+    }
+    $renderer->hasRenderContext()->willReturn(TRUE);
+    $renderer->render($build)->willReturn($value);
+
+    $twig->isDebug()->willReturn(FALSE);
+
+    // Set container.
+    $container = new ContainerBuilder();
+    $container->set('renderer', $renderer->reveal());
+    $container->set('twig', $twig->reveal());
+    $container->set('extension.path.resolver', $path_resolver->reveal());
+    $container->set('string_translation', $this->getStringTranslationStub());
+    \Drupal::setContainer($container);
+
+    $this->assertEquals($result, CommonHelper::renderValue($value, $theme_key, $theme_function, $theme_args, $pending_string, $not_available_string, $is_export));
   }
 
   /**
@@ -75,7 +107,7 @@ class CommonHelperTest extends UnitTestCase {
    * @dataProvider canBeCastToStringDataProvider
    */
   public function testCanBeCastToString($item, $result) {
-    $this->assertEquals($result, $this->commonHelper->canBeCastToString($item));
+    $this->assertEquals($result, CommonHelper::canBeCastToString($item));
   }
 
   /**
@@ -96,7 +128,7 @@ class CommonHelperTest extends UnitTestCase {
    * @dataProvider removeDiacriticsDataProvider
    */
   public function testRemoveDiacritics($string, $result) {
-    $this->assertEquals($result, $this->commonHelper->removeDiacritics($string));
+    $this->assertEquals($result, CommonHelper::removeDiacritics($string));
   }
 
   /**
@@ -116,7 +148,7 @@ class CommonHelperTest extends UnitTestCase {
    * @dataProvider sanitizeDisplayKeyDataProvider
    */
   public function testSanitizeDisplayKey($string, $result) {
-    $this->assertEquals($result, $this->commonHelper->sanitizeDisplayKey($string));
+    $this->assertEquals($result, CommonHelper::sanitizeDisplayKey($string));
   }
 
   /**
@@ -136,7 +168,7 @@ class CommonHelperTest extends UnitTestCase {
    * @dataProvider sanitizeLabelDataProvider
    */
   public function testSanitizeLabel($label, $result) {
-    $this->assertEquals($result, $this->commonHelper->sanitizeLabel($label));
+    $this->assertEquals($result, CommonHelper::sanitizeLabel($label));
   }
 
   /**
@@ -153,6 +185,15 @@ class CommonHelperTest extends UnitTestCase {
           'query' => [
             'name' => 'hardik',
           ],
+        ],
+      ],
+      ['/appeals/645/summary',
+        [
+          2 => NULL,
+        ],
+        [
+          'path' => 'appeals/645',
+          'query' => [],
         ],
       ],
       ['/countries/1/donors/2018?page=/appeals/645/flows&order=id',
@@ -175,7 +216,34 @@ class CommonHelperTest extends UnitTestCase {
    * @dataProvider replaceInUrlDataProvider
    */
   public function testReplaceInUrl($url, $replacements, $result) {
-    $this->assertEquals($result, $this->commonHelper->replaceInUrl($url, $replacements));
+    $this->assertEquals($result, CommonHelper::replaceInUrl($url, $replacements));
+  }
+
+  /**
+   * Data provider for assureWellFormedUri.
+   */
+  public function assureWellFormedUriDataProvider() {
+    return [
+      [
+        '', NULL,
+      ],
+      [
+        'google.com', 'http://google.com',
+      ],
+      [
+        'https://', NULL,
+      ],
+    ];
+  }
+
+  /**
+   * Test replacing placehlders in the URL.
+   *
+   * @group CommonHelper
+   * @dataProvider assureWellFormedUriDataProvider
+   */
+  public function testAssureWellFormedUri($url, $expected) {
+    $this->assertEquals($expected, CommonHelper::assureWellFormedUri($url));
   }
 
 }

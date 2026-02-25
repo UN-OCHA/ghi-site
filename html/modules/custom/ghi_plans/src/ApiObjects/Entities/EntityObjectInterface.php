@@ -3,6 +3,7 @@
 namespace Drupal\ghi_plans\ApiObjects\Entities;
 
 use Drupal\ghi_plans\ApiObjects\PlanEntityInterface;
+use Drupal\ghi_plans\ApiObjects\Prototypes\EntityPrototype;
 
 /**
  * Interface for API entity objects.
@@ -42,12 +43,20 @@ interface EntityObjectInterface extends PlanEntityInterface {
   public function getDisplayName();
 
   /**
+   * Get the name of the hierarchical group that this entity belongs to.
+   *
+   * @return string
+   *   The group name, e.g. "Strategic Objectives".
+   */
+  public function getGroupName(): ?string;
+
+  /**
    * Get the full name for an object for admin purposes.
    *
    * @return string
    *   The full name.
    */
-  public function getFullName();
+  public function getFullName(): string;
 
   /**
    * Get the singular name.
@@ -71,15 +80,15 @@ interface EntityObjectInterface extends PlanEntityInterface {
    * @return string
    *   The custom reference.
    */
-  public function getCustomReference():string;
+  public function getCustomReference(): string;
 
   /**
    * Get the entity type ref code.
    *
-   * @return string
+   * @return string|null
    *   The entity type ref code.
    */
-  public function getEntityTypeRefCode():string;
+  public function getEntityTypeRefCode(): ?string;
 
   /**
    * Get tags for an entity.
@@ -98,11 +107,40 @@ interface EntityObjectInterface extends PlanEntityInterface {
   public function getPlanId();
 
   /**
+   * Get the entity prototype.
+   *
+   * @return \Drupal\ghi_plans\ApiObjects\Prototypes\EntityPrototype|null
+   *   An entity prototype object or NULL.
+   */
+  public function getPrototype(): ?EntityPrototype;
+
+  /**
+   * Get the prototype id.
+   *
+   * @return int|null
+   *   The prototype id.
+   */
+  public function getPrototypeId(): ?int;
+
+  /**
+   * Get the prototype name.
+   *
+   * @return string|null
+   *   The prototype name.
+   */
+  public function getPrototypeName(): ?string;
+
+  /**
+   * Get the order number from the prototype.
+   */
+  public function getOrderNumber(): ?int;
+
+  /**
    * Get the sort key.
    *
-   * @return string|int
+   * @return string|null
    *   The sort key.
    */
-  public function getSortKey(): string|int;
+  public function getSortKey(): ?string;
 
 }

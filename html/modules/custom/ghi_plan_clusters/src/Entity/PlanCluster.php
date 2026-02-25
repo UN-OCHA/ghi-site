@@ -33,13 +33,13 @@ class PlanCluster extends SubpageNode implements PlanClusterInterface {
   /**
    * {@inheritdoc}
    */
-  public function getIcon() {
+  public function getIcon(): ?array {
     $governing_entity = $this->getBaseObject();
     if (!$governing_entity instanceof GoverningEntity) {
       return NULL;
     }
     $icon = $governing_entity->getIconEmbedCode();
-    return ['#markup' => Markup::create($icon)];
+    return $icon ? ['#markup' => Markup::create($icon)] : NULL;
   }
 
   /**

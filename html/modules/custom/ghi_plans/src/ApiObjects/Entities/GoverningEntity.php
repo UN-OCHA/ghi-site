@@ -3,7 +3,6 @@
 namespace Drupal\ghi_plans\ApiObjects\Entities;
 
 use Drupal\ghi_plans\ApiObjects\Contact;
-use Drupal\ghi_plans\Helpers\PlanEntityHelper;
 
 /**
  * Abstraction class for API governing entity objects.
@@ -24,6 +23,7 @@ class GoverningEntity extends EntityObjectBase {
     'HpcEntityPrototypeId',
     'CustomReference',
     'ComposedReference',
+    'HPCTags',
     // phpcs:disable Squiz.Arrays.ArrayDeclaration.KeySpecified
     "coordinationEntityContact" => ['items' => ['contact' => Contact::GRAPHQL_ITEMS]],
     // phpcs:enable Squiz.Arrays.ArrayDeclaration.KeySpecified
@@ -34,32 +34,19 @@ class GoverningEntity extends EntityObjectBase {
    */
   protected function map() {
     $data = $this->getRawData();
-    $prototype = !empty($data->HpcEntityPrototypeId ?? NULL) ? PlanEntityHelper::getEntityPrototype($data->HpcEntityPrototypeId) : NULL;
     $contacts = array_filter($data->coordinationEntityContact?->items ?? [], fn ($item) => !empty($item->contact));
-
     return (object) [
       'id' => $data->Id,
       'name' => ($data->ComposedReference ?? '') . ': ' . $data->Name,
       'group_name' => ($data->ComposedReference ?? '') . ': ' . $data->Name,
-      'display_name' => ($data->ComposedReference ?? '') . ': ' . $data->Name,
-      'singular_name' => $prototype?->getNameSingular(),
-      'plural_name' => $prototype?->getNamePlural(),
       'description' => $data->Description ?: NULL,
       'entity_name' => $data->Name,
       'plan_id' => $data->PlanId ?? NULL,
-      'ref_code' => $prototype?->getRefCode() ?? NULL,
-      'ref_codes_children' => array_map(function ($child) {
-        return $child->refCode;
-      }, $prototype?->getChildren() ?: []),
-      'entity_type' => $prototype?->getType() ?? NULL,
-      'entity_prototype_name' => $prototype?->getNameSingular(),
-      'entity_prototype_id' => $prototype?->id(),
-      'order_number' => 0,
       'custom_reference' => $data->CustomReference,
       'composed_reference' => $data->ComposedReference ?? NULL,
-      'sort_key' => ($prototype?->getOrderNumber() ?? '') . ($data->CustomReference ?? NULL),
       'icon' => NULL,
-      'contacts' => array_map(fn ($item) => new Contact($item->contact), $contacts),
+      'contacts' => array_map(fn ($item): Contact => new Contact($item->contact), $contacts),
+      'tags' => !empty($data->HPCTags) ? explode('|', $data->HPCTags) : [],
 
       // Legacy support.
       'custom_id' => $data->CustomReference,
@@ -69,15 +56,15 @@ class GoverningEntity extends EntityObjectBase {
   /**
    * {@inheritdoc}
    */
-  public function getDisplayName() {
-    return $this->entity_name;
+  public function getDisplayName(): ?string {
+    return $this->map->entity_name;
   }
 
   /**
    * {@inheritdoc}
    */
-  public function getFullName() {
-    return $this->t('@type @name (@custom_reference)', [
+  public function getFullName(): string {
+    return (string) $this->t('@type @name (@custom_reference)', [
       '@type' => $this->getPrototypeName(),
       '@name' => $this->getName(),
       '@custom_reference' => $this->getCustomReference(),
@@ -85,17 +72,15 @@ class GoverningEntity extends EntityObjectBase {
   }
 
   /**
-   * {@inheritdoc}
+   * Get the ref codes of all supported children.
+   *
+   * @return string[]
+   *   An array of ref code strings.
    */
-  public function getSingularName(): string {
-    return $this->map->singular_name;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function getPluralName(): string {
-    return $this->map->plural_name;
+  protected function getChildrenRefCodes() {
+    return array_map(function ($child) {
+      return $child->refCode;
+    }, $this->getPrototype()?->getChildren() ?: []);
   }
 
   /**
@@ -108,7 +93,7 @@ class GoverningEntity extends EntityObjectBase {
    *   An array of ref codes.
    */
   public function getValidRefCodes($include_children = TRUE) {
-    return array_merge([$this->getEntityTypeRefCode()], $this->ref_codes_children);
+    return array_merge([$this->getEntityTypeRefCode()], $this->getChildrenRefCodes());
   }
 
   /**
@@ -119,30 +104,23 @@ class GoverningEntity extends EntityObjectBase {
   }
 
   /**
-   * Get the prototype name.
-   *
-   * @return string|null
-   *   The prototype name.
-   */
-  public function getPrototypeName(): ?string {
-    return $this->entity_prototype_name;
-  }
-
-  /**
    * Get the contacts for this entity.
    *
    * @return \Drupal\ghi_plans\ApiObjects\Contact[]
    *   An array of contact objects.
    */
-  public function getContacts() {
+  public function getContacts(): array {
     return $this->map->contacts;
   }
 
   /**
-   * {@inheritdoc}
+   * Get the tags.
+   *
+   * @return string[]
+   *   An array of tag names.
    */
-  public function getSortKey(): string|int {
-    return $this->sort_key;
+  public function getTags(): array {
+    return $this->map->tags ?: [];
   }
 
 }

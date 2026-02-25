@@ -41,7 +41,7 @@ class Organization extends BaseObject {
       'id' => $data->Id ?? ($data->id ?? NULL),
       'name' => $data->Name ?? ($data->name ?? NULL),
       'abbreviation' => $data->Abbreviation ?? ($data->abbreviation ?? NULL),
-      'url' => CommonHelper::assureWellFormedUri($data->url ?? NULL),
+      'url' => CommonHelper::assureWellFormedUri($data->Url ?? ''),
     ];
   }
 

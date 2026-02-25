@@ -26,16 +26,16 @@ use Drupal\migrate\Row;
  * Implements hook_entity_bundle_info_alter().
  */
 function ghi_plans_entity_bundle_info_alter(array &$bundles) {
-  $bundles['base_object'][Plan::BUNDLE]['class'] = Plan::class;
-  $bundles['base_object'][Plan::BUNDLE]['label'] = t('Plan');
-  $bundles['base_object'][GoverningEntity::BUNDLE]['class'] = GoverningEntity::class;
-  $bundles['base_object'][GoverningEntity::BUNDLE]['label'] = t('Governing Entity');
-  $bundles['base_object'][PlanEntity::BUNDLE]['class'] = PlanEntity::class;
-  $bundles['base_object'][PlanEntity::BUNDLE]['label'] = t('Plan Entity');
-  $bundles['taxonomy_term'][PlanType::BUNDLE]['class'] = PlanType::class;
-  $bundles['taxonomy_term'][PlanType::BUNDLE]['label'] = t('Plan type');
-  $bundles['taxonomy_term'][PlanCostingType::BUNDLE]['class'] = PlanCostingType::class;
-  $bundles['taxonomy_term'][PlanCostingType::BUNDLE]['label'] = t('Plan costing');
+  $bundles['base_object']['plan']['class'] = Plan::class;
+  $bundles['base_object']['plan']['label'] = t('Plan');
+  $bundles['base_object']['governing_entity']['class'] = GoverningEntity::class;
+  $bundles['base_object']['governing_entity']['label'] = t('Governing Entity');
+  $bundles['base_object']['plan_entity']['class'] = PlanEntity::class;
+  $bundles['base_object']['plan_entity']['label'] = t('Plan Entity');
+  $bundles['taxonomy_term']['plan_type']['class'] = PlanType::class;
+  $bundles['taxonomy_term']['plan_type']['label'] = t('Plan type');
+  $bundles['taxonomy_term']['plan_costing']['class'] = PlanCostingType::class;
+  $bundles['taxonomy_term']['plan_costing']['label'] = t('Plan costing');
 }
 
 /**

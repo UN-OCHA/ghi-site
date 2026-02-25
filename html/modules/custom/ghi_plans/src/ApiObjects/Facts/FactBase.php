@@ -120,7 +120,7 @@ abstract class FactBase extends ApiObjectBase {
       if (empty($this->map->$property_name)) {
         continue;
       }
-      $category = $category_query->getCategory($namespace, $this->map->$property_name);
+      $category = $category_query?->getCategory($namespace, $this->map->$property_name);
       if (!$category) {
         continue;
       }

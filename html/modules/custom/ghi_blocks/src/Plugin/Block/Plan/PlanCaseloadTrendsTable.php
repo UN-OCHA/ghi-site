@@ -64,7 +64,7 @@ class PlanCaseloadTrendsTable extends GHIBlockBase implements OverrideDefaultTit
       defaultTitle: 'Evolution of the humanitarian response',
       dataSources: [
         'attachment' => 'fabric_query:attachment',
-        'entity' => 'fabric_query:plan_entity',
+        'entity' => 'fabric_query:entity',
         'plan_funding' => 'hpc_api:plan_funding_summary_query',
       ]
     );
@@ -466,9 +466,9 @@ class PlanCaseloadTrendsTable extends GHIBlockBase implements OverrideDefaultTit
       // the same type.
       $plan_type_label = $plan_types[$plan_year][$plan_type] > 1 ? $plan_type . ' - ' . $plan->getShortName() : $plan_type;
 
-      $in_need = $caseload?->getValueByMetricName('InNeed');
-      $target = $caseload?->getValueByMetricName('Target');
-      $reached = $caseload?->getCaseloadValue('latestReach');
+      $in_need = $caseload?->getCaseloadValue('in_need');
+      $target = $caseload?->getCaseloadValue('target');
+      $reached = $caseload?->getCaseloadValue('latest_reach');
 
       // See if there is a section for this plan.
       $section = $this->sectionManager->loadSectionForBaseObject($plan);

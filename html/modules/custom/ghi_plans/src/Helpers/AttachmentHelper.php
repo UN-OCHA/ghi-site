@@ -2,8 +2,8 @@
 
 namespace Drupal\ghi_plans\Helpers;
 
-use Drupal\ghi_plans\ApiObjects\Attachments\AttachmentInterface;
 use Drupal\ghi_plans\ApiObjects\Attachments\CaseloadAttachment;
+use Drupal\ghi_plans\ApiObjects\Attachments\DataAttachmentInterface;
 use Drupal\ghi_plans\ApiObjects\Attachments\FileAttachment;
 use Drupal\ghi_plans\ApiObjects\Attachments\FinancialAttachment;
 use Drupal\ghi_plans\ApiObjects\Attachments\IndicatorAttachment;
@@ -106,7 +106,7 @@ class AttachmentHelper {
   /**
    * Get a custom attachment id based on the given id type.
    *
-   * @param \Drupal\ghi_plans\ApiObjects\Attachments\AttachmentInterface $attachment
+   * @param \Drupal\ghi_plans\ApiObjects\Attachments\DataAttachmentInterface $attachment
    *   The attachment object.
    * @param string $id_type
    *   The id type.
@@ -114,7 +114,7 @@ class AttachmentHelper {
    * @return string
    *   The custom id.
    */
-  public static function getCustomAttachmentId(AttachmentInterface $attachment, $id_type) {
+  public static function getCustomAttachmentId(DataAttachmentInterface $attachment, $id_type) {
     switch ($id_type) {
       case 'custom_id':
         return $attachment->getCustomId();

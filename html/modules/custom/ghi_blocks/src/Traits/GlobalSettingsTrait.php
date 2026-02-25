@@ -8,7 +8,6 @@ use Drupal\Core\Url;
 use Drupal\ghi_plans\ApiObjects\Mocks\PlanOverviewPlanMock;
 use Drupal\ghi_plans\Traits\PlanTypeTrait;
 use Drupal\ghi_sections\SectionManager;
-use Drupal\hpc_api\Query\EndpointQuery;
 use Drupal\hpc_common\Helpers\ArrayHelper;
 
 /**
@@ -95,7 +94,7 @@ trait GlobalSettingsTrait {
     }
     else {
       // Otherwise sort by plan name only.
-      ArrayHelper::sortObjectsByProperty($plans, 'getName', EndpointQuery::SORT_ASC, SORT_STRING);
+      ArrayHelper::sortObjectsByProperty($plans, 'getName', SORT_ASC, SORT_STRING);
     }
   }
 

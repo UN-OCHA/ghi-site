@@ -27,12 +27,6 @@ class EndpointQuery {
   use DependencySerializationTrait;
   use SimpleCacheTrait;
 
-  const SORT_ASC = 'ASC';
-  const SORT_DESC = 'DESC';
-
-  const SORT_METHOD_NUMERIC = 'numeric';
-  const SORT_METHOD_STRING = 'string';
-
   const AUTH_METHOD_NONE = 'none';
   const AUTH_METHOD_BASIC = 'basic_auth';
   const AUTH_METHOD_API_KEY = 'api_key';
@@ -186,8 +180,8 @@ class EndpointQuery {
     $this->useCache = TRUE;
     $this->cacheBaseTime = NULL;
     $this->orderBy = NULL;
-    $this->sort = self::SORT_ASC;
-    $this->sortMethod = self::SORT_METHOD_NUMERIC;
+    $this->sort = SORT_ASC;
+    $this->sortMethod = SORT_NUMERIC;
     $this->authMethod = self::AUTH_METHOD_BASIC;
   }
 
@@ -205,8 +199,8 @@ class EndpointQuery {
     }
     $this->endpointArgs = !empty($arguments['query_args']) ? $arguments['query_args'] : [];
     $this->orderBy = !empty($arguments['order_by']) ? $arguments['order_by'] : NULL;
-    $this->sort = !empty($arguments['sort']) ? $arguments['sort'] : self::SORT_ASC;
-    $this->sortMethod = !empty($arguments['sort_method']) ? $arguments['sort_method'] : self::SORT_METHOD_NUMERIC;
+    $this->sort = !empty($arguments['sort']) ? $arguments['sort'] : SORT_ASC;
+    $this->sortMethod = !empty($arguments['sort_method']) ? $arguments['sort_method'] : SORT_NUMERIC;
     $this->setAuthMethod(!empty($arguments['auth_method']) ? $arguments['auth_method'] : self::AUTH_METHOD_BASIC);
     $this->setUseCache(array_key_exists('cache', $arguments) ? (bool) $arguments['cache'] : $this->useCache());
     $this->setCacheBaseTime(array_key_exists('cache_base_time', $arguments) ? (int) $arguments['cache_base_time'] : 0);
@@ -433,18 +427,18 @@ class EndpointQuery {
 
     if ($order_by !== NULL && $object_list && !empty($object_list[0]->$order_by)) {
       uasort($object_list, function ($a, $b) use ($order_by, $sort, $sort_method) {
-        if ($sort_method == self::SORT_METHOD_NUMERIC) {
+        if ($sort_method == SORT_NUMERIC) {
           // Sort numeric values.
-          if ($sort == self::SORT_ASC) {
+          if ($sort == SORT_ASC) {
             return $a->$order_by > $b->$order_by;
           }
-          if ($sort == self::SORT_DESC) {
+          if ($sort == SORT_DESC) {
             return $a->$order_by < $b->$order_by;
           }
         }
         else {
           // Sort string values, case insensitive.
-          return $sort == self::SORT_ASC ? strcasecmp($a->$order_by, $b->$order_by) : strcasecmp($b->$order_by, $a->$order_by);
+          return $sort == SORT_ASC ? strcasecmp($a->$order_by, $b->$order_by) : strcasecmp($b->$order_by, $a->$order_by);
         }
       });
       if ($original_key) {

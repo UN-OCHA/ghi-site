@@ -183,6 +183,19 @@ class AttachmentData extends ConfigurationContainerItemPluginBase {
   }
 
   /**
+   * Get the data point configuration.
+   *
+   * @return array
+   *   A configuration array.
+   */
+  private function getDataPointConfig() {
+    $conf = $this->get('data_point');
+    $attachment = $this->getAttachmentObject();
+    $attachment->handleKnownConfigIssues($conf);
+    return $conf;
+  }
+
+  /**
    * Get a default label.
    *
    * @return string|null
@@ -190,21 +203,21 @@ class AttachmentData extends ConfigurationContainerItemPluginBase {
    */
   public function getDefaultLabel() {
     $attachment = $this->getAttachmentObject();
-    $data_point_conf = $this->get('data_point');
-    $data_point_index = $data_point_conf ? $data_point_conf['data_points'][0]['index'] : NULL;
-    if (!$attachment || $data_point_index === NULL) {
+    $conf = $this->getDataPointConfig();
+    $metric_type = $conf ? $conf['data_points'][0]['metric_type'] : NULL;
+    if (!$attachment || $metric_type === NULL) {
       return NULL;
     }
-    return $attachment->getPrototype()->getDefaultFieldLabel($data_point_index, $attachment->getPlanLanguage());
+    return $attachment->getPrototype()->getDefaultFieldLabel($metric_type, $attachment->getPlanLanguage());
   }
 
   /**
    * {@inheritdoc}
    */
   public function getLabel() {
-    $data_point_conf = $this->get('data_point');
-    if (array_key_exists('label', $data_point_conf) && !empty($data_point_conf['label'])) {
-      return trim($data_point_conf['label']);
+    $conf = $this->getDataPointConfig();
+    if (array_key_exists('label', $conf) && !empty($conf['label'])) {
+      return trim($conf['label']);
     }
     return parent::getLabel();
   }
@@ -225,12 +238,12 @@ class AttachmentData extends ConfigurationContainerItemPluginBase {
     if (!$attachment) {
       return NULL;
     }
-    $data_point_conf = $this->get('data_point');
-    $build = $attachment->formatValue($data_point_conf);
+    $data_point = $this->getDataPointConfig();
+    $build = $attachment->formatValue($data_point);
 
-    $data_point_index = $data_point_conf['data_points'][0]['index'];
-    $property = $attachment->getFieldTypes()[$data_point_index] ?? NULL;
-    if ($attachment->isCalculatedIndex($data_point_index) && $source = $attachment->getSourceTypeForCalculatedField($data_point_index)) {
+    $metric_type = $data_point['data_points'][0]['metric_type'];
+    $property = $metric_type;
+    if ($attachment->isCalculatedField($metric_type) && $source = $attachment->getSourceTypeForCalculatedField($metric_type)) {
       $property = StringHelper::camelCaseToUnderscoreCase($source);
     }
 

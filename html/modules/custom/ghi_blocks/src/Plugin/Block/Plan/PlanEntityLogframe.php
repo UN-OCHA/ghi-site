@@ -32,7 +32,6 @@ use Drupal\ghi_plans\Helpers\AttachmentHelper;
 use Drupal\ghi_sections\Entity\SectionNodeInterface;
 use Drupal\ghi_subpages\Entity\LogframeSubpage;
 use Drupal\ghi_subpages\Entity\SubpageNodeInterface;
-use Drupal\hpc_api\Query\EndpointQuery;
 use Drupal\hpc_common\Helpers\ArrayHelper;
 use Drupal\hpc_common\Helpers\BlockHelper;
 use Drupal\hpc_common\Plugin\HPCBlockMetadata;
@@ -72,7 +71,7 @@ class PlanEntityLogframe extends GHIBlockBase implements MultiStepFormBlockInter
   public static function metadata(): ?HPCBlockMetadata {
     return new HPCBlockMetadata(
       dataSources: [
-        'entities' => 'fabric_query:plan_entity',
+        'entities' => 'fabric_query:entity',
         'plan' => 'fabric_query:plan',
         'attachment' => 'fabric_query:attachment',
         'attachment_prototype' => 'fabric_query:attachment_prototype',
@@ -959,10 +958,10 @@ class PlanEntityLogframe extends GHIBlockBase implements MultiStepFormBlockInter
         '#title' => $this->t('Sort column'),
         '#title_display' => 'invisible',
         '#options' => [
-          'id_' . EndpointQuery::SORT_ASC => $this->t('ID (asc)'),
-          'id_' . EndpointQuery::SORT_DESC => $this->t('ID (desc)'),
-          'description_' . EndpointQuery::SORT_ASC => $this->t('Description (asc)'),
-          'description_' . EndpointQuery::SORT_DESC => $this->t('Description (desc)'),
+          'id_' . SORT_ASC => $this->t('ID (asc)'),
+          'id_' . SORT_DESC => $this->t('ID (desc)'),
+          'description_' . SORT_ASC => $this->t('Description (asc)'),
+          'description_' . SORT_DESC => $this->t('Description (desc)'),
         ],
         '#default_value' => $defaults['sort_column'],
         '#states' => [
@@ -1120,9 +1119,9 @@ class PlanEntityLogframe extends GHIBlockBase implements MultiStepFormBlockInter
       $filter = ['ref_code' => $entity_ref_code];
     }
 
-    /** @var \Drupal\ghi_plans\Plugin\FabricQuery\PlanEntityQuery $query */
+    /** @var \Drupal\ghi_plans\Plugin\FabricQuery\EntityQuery $query */
     $query = $this->getQueryHandler('entities');
-    $entities = $query->getPlanEntities($this->getCurrentPlanId(), $context_object, NULL, $filter);
+    $entities = $query->getEntitiesForPlan($this->getCurrentPlanId(), $context_object, NULL, $filter);
     // This should give us plan and governing entity objects only, but let's
     // make sure.
     $entities = is_array($entities) ? array_filter($entities, function ($entity) {
@@ -1170,10 +1169,10 @@ class PlanEntityLogframe extends GHIBlockBase implements MultiStepFormBlockInter
       uasort($entities, function ($a, $b) use ($key, $sort, $conf) {
         $a_value = $key == 'id' ? $this->getPlanEntityId($a, $conf) : (!empty(($a)->{$key}) ? ($a)->{$key} : 0);
         $b_value = $key == 'id' ? $this->getPlanEntityId($b, $conf) : (!empty(($b)->{$key}) ? ($b)->{$key} : 0);
-        if ($sort == EndpointQuery::SORT_ASC) {
+        if ($sort == SORT_ASC) {
           return strnatcmp($a_value, $b_value);
         }
-        if ($sort == EndpointQuery::SORT_DESC) {
+        if ($sort == SORT_DESC) {
           return strnatcmp($b_value, $a_value);
         }
       });

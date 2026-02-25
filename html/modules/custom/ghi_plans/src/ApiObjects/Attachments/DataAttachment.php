@@ -15,26 +15,35 @@ use Drupal\ghi_plans\ApiObjects\Prototypes\AttachmentPrototype;
 use Drupal\ghi_plans\Entity\Plan;
 use Drupal\ghi_plans\Exceptions\InvalidAttachmentTypeException;
 use Drupal\ghi_plans\Helpers\PlanEntityHelper;
+use Drupal\ghi_plans\Traits\DataPointConfigBackwardsCompatibilityTrait;
 use Drupal\ghi_plans\Traits\DisaggregatedDataTrait;
 use Drupal\ghi_plans\Traits\PlanQueryTrait;
 use Drupal\ghi_plans\Traits\PlanReportingPeriodTrait;
 use Drupal\hpc_api\ApiObjects\Types\Unit;
-use Drupal\hpc_api\Query\EndpointQuery;
 use Drupal\hpc_api\Traits\DateTimeTrait;
 use Drupal\hpc_api\Traits\SimpleCacheTrait;
 use Drupal\hpc_common\Helpers\ArrayHelper;
+use Drupal\hpc_common\Helpers\StringHelper;
 
 /**
  * Abstraction for API data attachment objects.
  */
 class DataAttachment extends AttachmentBase implements DataAttachmentInterface {
 
+  use DataPointConfigBackwardsCompatibilityTrait;
   use DateTimeTrait;
   use DisaggregatedDataTrait;
   use PlanQueryTrait;
   use PlanReportingPeriodTrait;
   use SimpleCacheTrait;
   use StringTranslationTrait;
+
+  /**
+   * The facts representing the totals.
+   *
+   * @var \Drupal\ghi_plans\ApiObjects\Facts\AttachmentFact[]
+   */
+  protected $totals;
 
   /**
    * The source entity of an attachment.
@@ -93,7 +102,8 @@ class DataAttachment extends AttachmentBase implements DataAttachmentInterface {
     $query = $this->getEntityTypeQuery();
 
     $attachment = $this->getRawData();
-    $period = $this->fetchReportingPeriodForAttachment();
+    $period = $this->map?->monitoring_period ?? $this->fetchReportingPeriodForAttachment();
+    $this->processTotals((array) ($attachment->totals ?? []));
 
     $processed = (object) [
       'id' => $attachment->Id,
@@ -107,7 +117,7 @@ class DataAttachment extends AttachmentBase implements DataAttachmentInterface {
       'custom_id' => $attachment->CustomReference ?? NULL,
       'composed_reference' => $attachment->ComposedReference ?? NULL,
       'description' => $attachment->Name ?? NULL,
-      'values' => $this->extractValues(),
+      'values' => $this->extractValues($this->totals ?? []),
       'unit' => ($attachment->UnitId ?? NULL) ? $query->getUnit($attachment->UnitId) : NULL,
       'monitoring_period' => $period ?? NULL,
       'has_disaggregated_data' => !empty($attachment->HasDisaggregatedData),
@@ -145,20 +155,14 @@ class DataAttachment extends AttachmentBase implements DataAttachmentInterface {
   }
 
   /**
-   * Get the custom id prefixed with the ref code.
-   *
-   * @return string
-   *   The custom id prefixed with the ref code.
+   * {@inheritdoc}
    */
   public function getCustomIdWithRefCode(): string {
     return $this->getPrototype()->getRefCode() . $this->getCustomId();
   }
 
   /**
-   * Get the composed reference.
-   *
-   * @return string
-   *   The composed reference.
+   * {@inheritdoc}
    */
   public function getComposedReference(): string {
     return $this->getCustomIdWithRefCode();
@@ -231,7 +235,7 @@ class DataAttachment extends AttachmentBase implements DataAttachmentInterface {
       $this->sourceEntity = $this->getPlanQuery()?->getPlan($source_id);
     }
     else {
-      $this->sourceEntity = $this->getPlanEntityQuery()?->getEntity($source_type, $source_id);
+      $this->sourceEntity = $this->getEntityQuery()?->getEntity($source_type, $source_id);
     }
     return $this->sourceEntity;
   }
@@ -269,34 +273,12 @@ class DataAttachment extends AttachmentBase implements DataAttachmentInterface {
   /**
    * {@inheritdoc}
    */
-  public function getOriginalFields() {
-    return $this->getPrototype()?->getOriginalFields() ?? [];
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function getOriginalFieldTypes() {
-    return array_map(function ($item) {
-      return $item->type;
-    }, $this->getOriginalFields());
-  }
-
-  /**
-   * Get the fields.
-   *
-   * @return array
-   *   An array of field labels, keyed by their index.
-   */
   public function getFields() {
     return $this->getPrototype()?->getFields() ?? [];
   }
 
   /**
-   * Get the field types.
-   *
-   * @return string[]
-   *   An array of field types, keyed by their index.
+   * {@inheritdoc}
    */
   public function getFieldTypes() {
     return $this->getPrototype()?->getFieldTypes() ?? [];
@@ -308,17 +290,12 @@ class DataAttachment extends AttachmentBase implements DataAttachmentInterface {
    * @param string $type
    *   The type of data point to retrieve.
    *
-   * @return object
-   *   The field as retrieved from the API.
+   * @return string
+   *   The field label as retrieved from the API.
    */
-  public function getFieldByType($type) {
-    $candidates = array_filter($this->getOriginalFields(), function ($item) use ($type) {
-      return (strtolower($item->type) == strtolower($type));
-    });
-    if (count($candidates) != 1) {
-      return NULL;
-    }
-    return reset($candidates);
+  public function getFieldByType($type): string {
+    $fields = $this->getFields();
+    return $fields[$type] ?? NULL;
   }
 
   /**
@@ -331,18 +308,8 @@ class DataAttachment extends AttachmentBase implements DataAttachmentInterface {
    *   The field if found.
    */
   public function getFieldByIndex($index) {
-    $fields = $this->getOriginalFields();
+    $fields = array_values($this->getFields());
     return $fields[$index] ?? NULL;
-  }
-
-  /**
-   * Get the metric fields.
-   *
-   * @return string[]
-   *   An array of metric names.
-   */
-  public function getMetricFields() {
-    return $this->getFields();
   }
 
   /**
@@ -351,11 +318,8 @@ class DataAttachment extends AttachmentBase implements DataAttachmentInterface {
    * @return string[]
    *   An array of metric names.
    */
-  public function getGoalMetricFields() {
-    $measurements = $this->getPrototype()?->getMeasurementMetricFields() ?? [];
-    return array_filter($this->getFields(), function ($field) use ($measurements) {
-      return !in_array($field, $measurements);
-    });
+  public function getPlanningFields() {
+    return $this->getPrototype()?->getPlanningFields() ?? [];
   }
 
   /**
@@ -364,11 +328,8 @@ class DataAttachment extends AttachmentBase implements DataAttachmentInterface {
    * @return string[]
    *   An array of metric names.
    */
-  public function getMeasurementMetricFields() {
-    $measurements = $this->getPrototype()?->getMeasurementMetricFields() ?? [];
-    return array_filter($this->getFields(), function ($field) use ($measurements) {
-      return in_array($field, $measurements);
-    });
+  public function getMeasurementFields() {
+    return $this->getPrototype()?->getMeasurementFields() ?? [];
   }
 
   /**
@@ -377,28 +338,22 @@ class DataAttachment extends AttachmentBase implements DataAttachmentInterface {
    * @return string[]
    *   An array of metric names.
    */
-  public function getCalculatedMetricFields() {
-    $calculated_fields = $this->getPrototype()?->getCalculatedMetricFields() ?? [];
-    return array_filter($this->getFields(), function ($field) use ($calculated_fields) {
-      return in_array($field, $calculated_fields);
-    });
+  public function getCalculatedFields() {
+    return $this->getPrototype()?->getCalculatedFields() ?? [];
   }
 
   /**
    * Get the source property for the calculated field.
    *
-   * @param int $index
-   *   The index of the data point in the list of all fields.
+   * @param string $metric_type
+   *   The metric type of the data point.
    *
    * @return string|null
    *   The source field type of the calculated field.
    */
-  public function getSourceTypeForCalculatedField($index) {
-    if (!$this->isCalculatedIndex($index)) {
-      return NULL;
-    }
-    $original_fields = $this->getOriginalFields();
-    return $original_fields[$index]?->source ?? NULL;
+  public function getSourceTypeForCalculatedField($metric_type) {
+    $original_fields = $this->getPrototype()?->getOriginalFields() ?? [];
+    return $original_fields[$metric_type]?->source ?? NULL;
   }
 
   /**
@@ -483,67 +438,42 @@ class DataAttachment extends AttachmentBase implements DataAttachmentInterface {
    *   TRUE if the index represents a measurement, FALSE otherwise.
    */
   public function isMeasurementIndex($index) {
-    // We prefer looking at the prototype, if that fails, look directly at what
-    // is in the attachmentVersion.
-    $measurement_fields = $this->getPrototype()?->getMeasurementMetricFields() ?? $this->getMeasurementMetricFields();
-    return array_key_exists($index, $measurement_fields);
+    $field_types = $this->getFieldTypes();
+    return !empty($field_types[$index]) ? $this->isMeasurementField($field_types[$index]) : FALSE;
   }
 
   /**
    * Check if the given field label represens a measurement metric.
    *
-   * @param string $field_label
-   *   The field label.
+   * @param string $field_type
+   *   The field type.
    *
    * @return bool
    *   TRUE if the field is a measurement, FALSE otherwise.
    */
-  public function isMeasurementField($field_label) {
-    return in_array($field_label, $this->getMeasurementMetricFields());
-  }
-
-  /**
-   * Check if the given data point index represens a measurement metric.
-   *
-   * @param int $index
-   *   The index of the data point to check.
-   *
-   * @return bool
-   *   TRUE if the index represents a measurement, FALSE otherwise.
-   */
-  public function isCalculatedIndex($index) {
-    return array_key_exists($index, $this->getCalculatedMetricFields());
+  public function isMeasurementField($field_type) {
+    return array_key_exists($field_type, $this->getMeasurementFields());
   }
 
   /**
    * Check if the given field label represens a calculated metric.
    *
-   * @param string $field_label
-   *   The field label.
+   * @param string $metric_type
+   *   The metric type.
    *
    * @return bool
    *   TRUE if the field is a calculated metric, FALSE otherwise.
    */
-  public function isCalculatedField($field_label) {
-    return in_array($field_label, $this->getCalculatedMetricFields());
-  }
-
-  /**
-   * Check if the given data point index represents a calculated metric.
-   *
-   * @param int $index
-   *   The index of the data point to check.
-   *
-   * @return bool
-   *   TRUE if the index represents a calculated metric, FALSE otherwise.
-   */
-  public function isCalculatedMeasurementIndex($index) {
-    $calculated_fields = $this->getCalculatedMetricFields();
-    $fields = $this->getOriginalFields();
-    if (!array_key_exists($index, $calculated_fields) || !array_key_exists($index, $fields)) {
+  public function isCalculatedField($metric_type) {
+    if (!array_key_exists($metric_type, $this->getCalculatedFields())) {
       return FALSE;
     }
-    $source = $this->getSourceTypeForCalculatedField($index);
+    $fields = $this->getPrototype()->getOriginalFields();
+    $field = $fields[$metric_type];
+    if (!$field) {
+      return FALSE;
+    }
+    $source = $this->getSourceTypeForCalculatedField($metric_type);
     if (!$source) {
       return FALSE;
     }
@@ -551,7 +481,7 @@ class DataAttachment extends AttachmentBase implements DataAttachmentInterface {
     if (!$source_field) {
       return FALSE;
     }
-    return $this->isMeasurementField($source_field->name->en);
+    return $this->isMeasurementField($source_field);
   }
 
   /**
@@ -563,8 +493,8 @@ class DataAttachment extends AttachmentBase implements DataAttachmentInterface {
    * @return bool
    *   TRUE if the type should be considered cumulative reach, FALSE otherwise.
    */
-  private function isCumulativeReachFieldType($type) {
-    return in_array($type, self::CUMULATIVE_REACH_FIELDS);
+  private function isCumulativeReachFieldType(string $type): bool {
+    return in_array(StringHelper::makeCamelCase($type, TRUE), self::CUMULATIVE_REACH_FIELDS);
   }
 
   /**
@@ -576,7 +506,7 @@ class DataAttachment extends AttachmentBase implements DataAttachmentInterface {
    * @return bool
    *   TRUE if data entry is still pending, FALSE otherwise.
    */
-  public function isPendingDataEntry() {
+  public function isPendingDataEntry(): bool {
     return empty($this->getPlanReportingPeriods($this->getPlanId(), TRUE));
   }
 
@@ -589,7 +519,7 @@ class DataAttachment extends AttachmentBase implements DataAttachmentInterface {
    * @return bool
    *   TRUE if the value should be considered NULL, FALSE otherwise.
    */
-  public function isNullValue($value) {
+  public function isNullValue($value): bool {
     return empty($value) && $value !== 0 && $value !== "0";
   }
 
@@ -629,7 +559,7 @@ class DataAttachment extends AttachmentBase implements DataAttachmentInterface {
    *   TRUE if there is data, FALSE otherwise.
    */
   public function hasValues() {
-    return !empty($this->getTotals());
+    return !empty($this->map->values);
   }
 
   /**
@@ -687,7 +617,7 @@ class DataAttachment extends AttachmentBase implements DataAttachmentInterface {
   public function getDisaggregated(): object {
     $this->assureDisaggregatedData();
     $data = $this->getRawData();
-    $facts = array_map(fn ($item) => new AttachmentFact($item), $data->disaggregated ?? []);
+    $facts = array_map(fn ($item) => new AttachmentFact($item), (array) ($data->disaggregated ?? []));
     return $this->buildDisaggregatedData($facts);
   }
 
@@ -774,7 +704,7 @@ class DataAttachment extends AttachmentBase implements DataAttachmentInterface {
 
     // Load the locations that we actually need.
     $location_ids = array_merge(array_keys($disaggregated->locations), array_keys($disaggregated_measurements?->locations ?? []));
-    $locations = !empty($location_ids) ? $this->getLocationQuery()->getLocations($location_ids) : [];
+    $locations = !empty($location_ids) ? ($this->getLocationQuery()?->getLocationsById($location_ids) ?? []) : [];
 
     $cache_tags = [];
 
@@ -835,8 +765,6 @@ class DataAttachment extends AttachmentBase implements DataAttachmentInterface {
    *
    * @param int|string $reporting_period
    *   Either the id of a period, or the string latest.
-   * @param int $property_index
-   *   The index of the metric property.
    * @param bool $filter_empty_locations
    *   Whether to exclude empty locations.
    * @param bool $filter_empty_categories
@@ -845,7 +773,7 @@ class DataAttachment extends AttachmentBase implements DataAttachmentInterface {
    * @return array
    *   Array with a list of category objects as retrieved from the API.
    */
-  public function getDisaggregatedCategories($reporting_period, $property_index, $filter_empty_locations = FALSE, $filter_empty_categories = FALSE) {
+  public function getDisaggregatedCategories($reporting_period = 'latest', $filter_empty_locations = FALSE, $filter_empty_categories = FALSE) {
     $disaggregated_data = $this->getDisaggregatedData($reporting_period, $filter_empty_locations, $filter_empty_categories);
     return $disaggregated_data->categories;
   }
@@ -869,14 +797,30 @@ class DataAttachment extends AttachmentBase implements DataAttachmentInterface {
   }
 
   /**
+   * Process the totals.
+   *
+   * @param array $totals
+   *   An array of raw fact objects.
+   */
+  protected function processTotals(array $totals) {
+    if ($this->totals !== NULL || empty($totals)) {
+      return;
+    }
+    $this->totals = array_map(fn ($item) => !empty($item->MeasurementId) ? new MeasurementFact($item) : new AttachmentFact($item), $totals);
+  }
+
+  /**
    * Extract the metric values from an attachment.
+   *
+   * @param \Drupal\ghi_plans\ApiObjects\Facts\AttachmentFact[] $totals
+   *   The totals to use for value extraction.
    *
    * @return array
    *   Array with values for each metric and measurement data point.
    */
-  protected function extractValues(): array {
+  protected function extractValues(array $totals = []): array {
     $values = [];
-    foreach ($this->getTotals() as $item) {
+    foreach ($totals as $item) {
       $values[$item->getMetric()->getMachineName()] = $item->getValue();
     }
     return $values;
@@ -889,39 +833,14 @@ class DataAttachment extends AttachmentBase implements DataAttachmentInterface {
    *   An array of attachment fact objects.
    */
   public function getTotals(): array {
-    $data = $this->getRawData();
-    // Extract the values.
-    return array_map(fn ($item) => !empty($item->MeasurementId) ? new MeasurementFact($item) : new AttachmentFact($item), $data->totals ?? []);
-  }
-
-  /**
-   * Get the metrics from the given attachment.
-   *
-   * This fetches either the metrics from the attachment, or from a measurement
-   * if a published one is already present.
-   *
-   * @return \Drupal\ghi_plans\ApiObjects\Facts\AttachmentFact[]
-   *   An array attachment fact objects.
-   */
-  protected function getMetrics(): array {
-    // Get the totals from the attachment by default.
-    return $this->getTotals();
-    // phpcs:disable
-    // // If there are measurements, look at the most recent one and get the
-    // // metrics from there.
-    // $measurement = self::getCurrentMeasurement();
-    // if ($measurement) {
-    //   $metrics = $measurement->metrics;
-    // }
-    // return $metrics;
-    // phpcs:enable
+    return $this->totals ?: [];
   }
 
   /**
    * Get all measurements.
    *
-   * @return \Drupal\ghi_plans\ApiObjects\Measurements\Measurement[]|null
-   *   An array of measurement objects or NULL.
+   * @return \Drupal\ghi_plans\ApiObjects\Measurements\Measurement[]
+   *   An array of measurement objects.
    */
   public function getMeasurements() {
     $measurements = &drupal_static($this->getRawData()->Id . '::' . __METHOD__);
@@ -930,13 +849,13 @@ class DataAttachment extends AttachmentBase implements DataAttachmentInterface {
     }
     $attachment = $this->getRawData();
     if (empty($attachment->measurements)) {
-      return NULL;
+      return [];
     }
 
     $measurements = array_map(function ($measurement) {
       return new Measurement($measurement);
-    }, $attachment->measurements);
-    ArrayHelper::sortObjectsByMethod($measurements, 'getReportingPeriodId', EndpointQuery::SORT_DESC);
+    }, (array) $attachment->measurements);
+    ArrayHelper::sortObjectsByMethod($measurements, 'getReportingPeriodId', SORT_DESC);
     return $measurements;
   }
 
@@ -971,21 +890,25 @@ class DataAttachment extends AttachmentBase implements DataAttachmentInterface {
    * @return \Drupal\ghi_plans\ApiObjects\Measurements\Measurement|null
    *   The measurement object or NULL.
    */
-  public function getCurrentMeasurement() {
+  public function getCurrentMeasurement(): ?Measurement {
     // Get all measurements.
     $measurements = $this->getMeasurements();
     if (empty($measurements)) {
       return NULL;
     }
-    // Limit this to the published measurements.
+
+    // Find the latest reporting period id from the plan.
     $latest_published_period_id = $this->getPlanId() ? $this->getLatestPublishedReportingPeriod($this->getPlanId()) : NULL;
     if (!$latest_published_period_id) {
       return NULL;
     }
-    $measurements = array_filter($measurements, function ($measurement) use ($latest_published_period_id) {
-      return $measurement->getReportingPeriodId() == $latest_published_period_id;
-    });
-    return !empty($measurements) ? reset($measurements) : NULL;
+    // And find the measurement for that period.
+    foreach ($measurements as $measurement) {
+      if ($measurement->getReportingPeriodId() == $latest_published_period_id) {
+        return $measurement;
+      }
+    }
+    return NULL;
   }
 
   /**
@@ -997,7 +920,7 @@ class DataAttachment extends AttachmentBase implements DataAttachmentInterface {
    * @return \Drupal\ghi_plans\ApiObjects\Measurements\Measurement|null
    *   The measurement object or NULL.
    */
-  protected function getMeasurementByReportingPeriod($reporting_period = 'latest') {
+  protected function getMeasurementByReportingPeriod($reporting_period = 'latest'): ?Measurement {
     if ($reporting_period == 'latest') {
       return $this->getCurrentMeasurement();
     }
@@ -1015,17 +938,17 @@ class DataAttachment extends AttachmentBase implements DataAttachmentInterface {
   /**
    * Get a metric from the measurement specified by the reporting period.
    *
-   * @param int $data_point
-   *   The data point index.
+   * @param string $metric_type
+   *   The metric type of the data point.
    * @param int|string $reporting_period
    *   The id of the reporting period or the string 'latest'.
    *
    * @return int|float|null
    *   The value of the metric for the specified reporting period.
    */
-  public function getMeasurementMetricValue($data_point, $reporting_period = 'latest') {
+  public function getMeasurementMetricValue($metric_type, $reporting_period = 'latest') {
     $measurement = $this->getMeasurementByReportingPeriod($reporting_period);
-    return $measurement?->getDataPointValue($data_point) ?? NULL;
+    return $measurement?->getDataPointValue($metric_type) ?? NULL;
   }
 
   /**
@@ -1084,34 +1007,6 @@ class DataAttachment extends AttachmentBase implements DataAttachmentInterface {
   }
 
   /**
-   * Fetch prototype data from the API.
-   *
-   * @param object $attachment
-   *   The attachment object from the API.
-   *
-   * @return \Drupal\ghi_plans\ApiObjects\Prototypes\AttachmentPrototype|null
-   *   An attachment prototype object.
-   */
-  protected function fetchPrototypeForAttachment($attachment) {
-    // First see if we can extract the prototype from the plan. This is better
-    // for performance when we need to do this for multiple attachments
-    // belonging to the same plan (which is the usual case) because the
-    // requests are cached.
-    $query_handler = $this->getAttachmentPrototypeQuery();
-    if (!$query_handler) {
-      return NULL;
-    }
-    $plan_id = $attachment->PlanId ?? ($attachment->planId ?? NULL);
-    $prototype_id = $attachment->AttachmentPrototypeId ?? ($attachment->attachmentPrototypeId ?? NULL);
-    if ($plan_id && $prototype_id && $prototype = $query_handler->getPrototypeByPlanAndId($plan_id, $prototype_id)) {
-      return $prototype;
-    }
-
-    // If that didn't work, we query the prototype data directly.
-    return $prototype_id ? $query_handler->getPrototype($prototype_id) : NULL;
-  }
-
-  /**
    * Fetch the reporting period for the given attachment.
    *
    * @return \Drupal\ghi_plans\ApiObjects\PlanReportingPeriod|null
@@ -1130,6 +1025,42 @@ class DataAttachment extends AttachmentBase implements DataAttachmentInterface {
   }
 
   /**
+   * Get all current values for this attachment.
+   *
+   * @return array
+   *   An array of values keyed by the metric type.
+   */
+  public function getPlanningValues() {
+    return array_filter($this->map->values, fn ($metric_type) => !$this->isMeasurementField($metric_type), ARRAY_FILTER_USE_KEY);
+  }
+
+  /**
+   * Get all current values for this attachment.
+   *
+   * @return array
+   *   An array of values keyed by the metric type.
+   */
+  public function getCurrentValues() {
+    return $this->map->values;
+  }
+
+  /**
+   * Get all measurement values for this attachment.
+   *
+   * @return array
+   *   An array of arrays, first level keys are the reporting periods, second
+   *   level are the values per metric type.
+   */
+  public function getMeasurementValues() {
+    $values = [];
+    foreach ($this->getMeasurements() as $measurement) {
+      $values[$measurement->getReportingPeriodId()] = $measurement->getValues() + $this->getPlanningValues();
+    }
+    ksort($values);
+    return $values;
+  }
+
+  /**
    * Get a value for a data point.
    *
    * @param array $conf
@@ -1143,9 +1074,12 @@ class DataAttachment extends AttachmentBase implements DataAttachmentInterface {
    */
   public function getValue(array $conf) {
     $this->handleKnownConfigIssues($conf);
+    if (empty($conf['data_points'][0]['metric_type'])) {
+      return NULL;
+    }
     switch ($conf['processing']) {
       case 'single':
-        return $this->getSingleValue($conf['data_points'][0]['index'], NULL, $conf['data_points'][0]);
+        return $this->getSingleValue($conf['data_points'][0]['metric_type'], NULL, $conf['data_points'][0]);
 
       case 'calculated':
         return $this->getCalculatedValue($conf);
@@ -1156,14 +1090,73 @@ class DataAttachment extends AttachmentBase implements DataAttachmentInterface {
   }
 
   /**
-   * Get a single value for a data point.
+   * Get a specific data point value by type in an attachment.
+   *
+   * @param string $metric_type
+   *   The metric type of the data point.
+   * @param int|string $monitoring_period
+   *   The id of the monitoring period or the string 'latest'.
+   * @param bool $cumulative_logic
+   *   Whether additional logic for data points of type cumulativeReach should
+   *   be applied. This must be set to TRUE if called for example from
+   *   self::getValuesForAllReportingPeriods() to prevent infinite recursion.
+   *
+   * @return mixed
+   *   The data point value.
+   */
+  public function getValueByMetricType(string $metric_type, $monitoring_period = 'latest', $cumulative_logic = TRUE) {
+    $value = NULL;
+    if ($monitoring_period && $this->isMeasurementField($metric_type)) {
+      $measurement = $this->getMeasurement($monitoring_period);
+      return $measurement?->getDataPointValue($metric_type) ?? NULL;
+    }
+    $value = $this->values[$metric_type] ?? NULL;
+
+    if ($this->isCumulativeReachFieldType($metric_type) && $cumulative_logic) {
+      // We have some specific logic for data points of type cumulativeReach.
+      // If the current reporting period reports these as NULL, we want to
+      // fetch the last non-NULL value from the other reporting periods of the
+      // same attachment, if available.
+      $reporting_periods = $this->getPlanReportingPeriods($this->getPlanId(), TRUE);
+      $period = $this->getLastNonEmptyReportingPeriod($metric_type, $reporting_periods);
+      if ($period && ($monitoring_period == 'latest' || $monitoring_period == array_key_last($reporting_periods)) && $period->id() != $monitoring_period) {
+        $value = $this->getValueByMetricType($metric_type, $period->id());
+      }
+
+    }
+    return $value;
+  }
+
+  /**
+   * Get a specific data point value by index in an attachment.
    *
    * @param int $index
-   *   The data point index.
+   *   The index of the data point.
+   * @param int|string $monitoring_period
+   *   The id of the monitoring period or the string 'latest'.
+   * @param bool $cumulative_logic
+   *   Whether additional logic for data points of type cumulativeReach should
+   *   be applied. This must be set to TRUE if called for example from
+   *   self::getValuesForAllReportingPeriods() to prevent infinite recursion.
+   *
+   * @return mixed
+   *   The data point value.
+   */
+  public function getValueByIndex($index, $monitoring_period = 'latest', $cumulative_logic = TRUE) {
+    $metric_type = array_values($this->getFieldTypes())[$index] ?? NULL;
+    return $metric_type ? $this->getValueByMetricType($metric_type, $monitoring_period, $cumulative_logic) : NULL;
+
+  }
+
+  /**
+   * Get a single value for a data point.
+   *
+   * @param string $metric_type
+   *   The metric type.
    * @param \Drupal\ghi_plans\ApiObjects\PlanReportingPeriod[] $reporting_periods
    *   An optional array of reporting period objects. If not provided, all
    *   reporting periods from the plan will be used.
-   * @param array $data_point_conf
+   * @param array $conf
    *   An optional array with configuration for the specific data point to
    *   show.
    *
@@ -1171,8 +1164,8 @@ class DataAttachment extends AttachmentBase implements DataAttachmentInterface {
    *   The data point value, extracted from the attachment according to the
    *   given configuration.
    */
-  public function getSingleValue($index, ?array $reporting_periods = NULL, $data_point_conf = []) {
-    return $this->getValueForDataPoint($index, $data_point_conf['monitoring_period'] ?? NULL);
+  public function getSingleValue(string $metric_type, ?array $reporting_periods = NULL, $conf = []) {
+    return $this->getValueByMetricType($metric_type, $conf['monitoring_period'] ?? NULL);
   }
 
   /**
@@ -1189,8 +1182,8 @@ class DataAttachment extends AttachmentBase implements DataAttachmentInterface {
    *   given configuration.
    */
   private function getCalculatedValue(array $conf, ?array $reporting_periods = NULL) {
-    $value_1 = (float) $this->getSingleValue($conf['data_points'][0]['index'], $reporting_periods, $conf['data_points'][0]);
-    $value_2 = (float) $this->getSingleValue($conf['data_points'][1]['index'], $reporting_periods, $conf['data_points'][1]);
+    $value_1 = (float) $this->getSingleValue($conf['data_points'][0]['metric_type'], $reporting_periods, $conf['data_points'][0]);
+    $value_2 = (float) $this->getSingleValue($conf['data_points'][1]['metric_type'], $reporting_periods, $conf['data_points'][1]);
 
     switch ($conf['calculation']) {
       case 'addition':
@@ -1217,56 +1210,10 @@ class DataAttachment extends AttachmentBase implements DataAttachmentInterface {
   }
 
   /**
-   * Get a specific value for a data point in an attachment.
-   *
-   * @param int $data_point_index
-   *   The index of the data point.
-   * @param int|string $monitoring_period
-   *   The id of the monitoring period or the string 'latest'.
-   * @param bool $cumulative_logic
-   *   Whether additional logic for data points of type cummulativeReach should
-   *   be applied. This must be set to TRUE if called for example from
-   *   self::getValuesForAllReportingPeriods() to prevent infinite recursion.
-   *
-   * @return mixed
-   *   The data point value.
-   */
-  public function getValueForDataPoint($data_point_index, $monitoring_period = 'latest', $cumulative_logic = TRUE) {
-    $value = NULL;
-    if ($monitoring_period && $this->isMeasurementIndex($data_point_index)) {
-      $measurement = $this->getMeasurement($monitoring_period);
-      return $measurement?->getDataPointValue($data_point_index) ?? NULL;
-    }
-
-    $metric_type = $this->getPrototype()->getOriginalFields()[$data_point_index]?->type ?? NULL;
-    $value = $metric_type ? ($this->values[$metric_type] ?? NULL) : NULL;
-
-    $field = $this->getFieldByIndex($data_point_index);
-    if ($value !== NULL || !$field) {
-      return $value;
-    }
-
-    if ($this->isCumulativeReachFieldType($field->type) && $cumulative_logic) {
-      // We have some specific logic for data points of type cummulativeReach.
-      // If the current reporting period reports these as NULL, we want to
-      // fetch the last non-NULL value from the other reporting periods of the
-      // same attachment, if available.
-      $reporting_periods = $this->getPlanReportingPeriods($this->getPlanId(), TRUE);
-      $period = $this->getLastNonEmptyReportingPeriod($data_point_index, $reporting_periods);
-      if ($period && ($monitoring_period == 'latest' || $monitoring_period == array_key_last($reporting_periods)) && $period->id() != $monitoring_period) {
-        $value = $this->getValueForDataPoint($data_point_index, $period->id());
-      }
-
-    }
-    return $value;
-
-  }
-
-  /**
    * Get the values for all reporting periods of a data point.
    *
-   * @param int $index
-   *   The data point index.
+   * @param string $metric_type
+   *   The metric type.
    * @param bool $filter_empty
    *   Whether the values should be filtered.
    * @param bool $filter_null
@@ -1279,13 +1226,13 @@ class DataAttachment extends AttachmentBase implements DataAttachmentInterface {
    *   The data point values, extracted from the attachment according to the
    *   given configuration.
    */
-  public function getValuesForAllReportingPeriods($index, $filter_empty = FALSE, $filter_null = FALSE, $reporting_periods = NULL) {
+  public function getValuesForAllReportingPeriods($metric_type, $filter_empty = FALSE, $filter_null = FALSE, $reporting_periods = NULL) {
     if ($reporting_periods === NULL) {
       $reporting_periods = $this->getPlanReportingPeriods($this->getPlanId(), TRUE);
     }
     $values = [];
     foreach ($reporting_periods as $reporting_period) {
-      $value = $this->getValueForDataPoint($index, $reporting_period->id(), FALSE);
+      $value = $this->getValueByMetricType($metric_type, $reporting_period->id(), FALSE);
       if (empty($value) && $filter_empty) {
         continue;
       }
@@ -1300,8 +1247,8 @@ class DataAttachment extends AttachmentBase implements DataAttachmentInterface {
   /**
    * Get the last reporting period with a non-empty value.
    *
-   * @param int $index
-   *   The data point index.
+   * @param string $metric_type
+   *   The metric type.
    * @param \Drupal\ghi_plans\ApiObjects\PlanReportingPeriod[] $reporting_periods
    *   An optional array of reporting period objects. If not provided, all
    *   reporting periods from the plan will be used.
@@ -1309,11 +1256,11 @@ class DataAttachment extends AttachmentBase implements DataAttachmentInterface {
    * @return \Drupal\ghi_plans\ApiObjects\PlanReportingPeriod|null
    *   The monitoring period object or NULL if not found.
    */
-  public function getLastNonEmptyReportingPeriod($index, $reporting_periods = NULL) {
+  public function getLastNonEmptyReportingPeriod($metric_type, $reporting_periods = NULL) {
     if ($reporting_periods === NULL) {
       $reporting_periods = $this->getPlanReportingPeriods($this->getPlanId(), TRUE);
     }
-    $values = $this->getValuesForAllReportingPeriods($index, TRUE, TRUE, $reporting_periods);
+    $values = $this->getValuesForAllReportingPeriods($metric_type, TRUE, TRUE, $reporting_periods);
     $last_reporting_period_id = array_key_last($values);
     return $reporting_periods[$last_reporting_period_id] ?? NULL;
   }
@@ -1349,10 +1296,9 @@ class DataAttachment extends AttachmentBase implements DataAttachmentInterface {
       $build['#reporting_period'] = $conf['data_points'][0]['monitoring_period'];
     }
 
-    $data_point_index = $conf['data_points'][0]['index'];
-    $field = $this->getFieldByIndex($data_point_index);
-    if ($field && $this->isCumulativeReachFieldType($field->type)) {
-      $period = $this->getLastNonEmptyReportingPeriod($data_point_index);
+    $metric_type = $conf['data_points'][0]['metric_type'];
+    if ($metric_type && $this->isCumulativeReachFieldType($metric_type)) {
+      $period = $this->getLastNonEmptyReportingPeriod($metric_type);
       $build['#reporting_period'] = $period?->id ?? $build['#reporting_period'];
     }
 
@@ -1371,23 +1317,23 @@ class DataAttachment extends AttachmentBase implements DataAttachmentInterface {
   }
 
   /**
-   * Check if the given field index represents cummulative reach data.
+   * Check if the given field metric type represents cumulative reach data.
    *
-   * This can either be if the index repesents a cummulative reach field
-   * directly, or if the field is a calculated field with a cummulative reach
+   * This can either be if the metric type repesents a cumulative reach field
+   * directly, or if the field is a calculated field with a cumulative reach
    * field as its source.
    *
-   * @param int $index
-   *   A metric index.
+   * @param string $metric_type
+   *   A metric type.
    *
    * @return bool
-   *   TRUE if the given field index represents data coming from a cummulative
-   *   reach field, FALSE otherwise.
+   *   TRUE if the given field metric type represents data coming from a
+   *   cumulative reach field, FALSE otherwise.
    */
-  public function isCummulativeReachField($index) {
-    $field = $this->getFieldByIndex($index);
-    $cumulative_reach_field = $field ? $this->isCumulativeReachFieldType($field->type) : FALSE;
-    $cumulative_reach_source = $field ? $this->isCalculatedMeasurementIndex($index) && $this->isCumulativeReachFieldType($field->source) : FALSE;
+  public function isCumulativeReachField($metric_type) {
+    $cumulative_reach_field = $this->isCumulativeReachFieldType($metric_type);
+    $field = $this->getPrototype()?->getOriginalFields()[$metric_type] ?? NULL;
+    $cumulative_reach_source = $this->isCalculatedField($metric_type) && $field && $this->isCumulativeReachFieldType($field->source);
     return $cumulative_reach_field || $cumulative_reach_source;
   }
 
@@ -1401,8 +1347,12 @@ class DataAttachment extends AttachmentBase implements DataAttachmentInterface {
    *   Either a build array for the tooltip, or NULL.
    */
   public function getTooltip($conf) {
-    $index = $conf['data_points'][0]['index'];
-    $value = $this->getSingleValue($index, NULL, $conf['data_points'][0]);
+    $this->handleKnownConfigIssues($conf);
+    $metric_type = $conf['data_points'][0]['metric_type'];
+    if (empty($metric_type)) {
+      return NULL;
+    }
+    $value = $this->getSingleValue($metric_type, NULL, $conf['data_points'][0]);
     if ($this->isNullValue($value)) {
       return NULL;
     }
@@ -1411,10 +1361,10 @@ class DataAttachment extends AttachmentBase implements DataAttachmentInterface {
     // period for this data point.
     $monitoring_period_id = $conf['data_points'][0]['monitoring_period'] ?? NULL;
     $format_string = NULL;
-    if ($this->isCummulativeReachField($index)) {
+    if ($this->isCumulativeReachFieldType($metric_type)) {
       $format_string = '@data_range_cumulative';
       if ($monitoring_period_id == 'latest') {
-        $monitoring_period_id = $this->getLastNonEmptyReportingPeriod($index)?->id() ?? $monitoring_period_id;
+        $monitoring_period_id = $this->getLastNonEmptyReportingPeriod($metric_type)?->id() ?? $monitoring_period_id;
       }
     }
     $monitoring_tooltip = $this->isMeasurement($conf) ? $this->formatMonitoringPeriod('icon', $monitoring_period_id, $format_string) : NULL;
@@ -1447,14 +1397,14 @@ class DataAttachment extends AttachmentBase implements DataAttachmentInterface {
       return TRUE;
     }
     $data_points = $conf['data_points'];
-    $data_point_1 = $data_points[0]['index'];
-    $data_point_2 = $data_points[1]['index'];
+    $data_point_1 = $data_points[0]['metric_type'];
+    $data_point_2 = $data_points[1]['metric_type'];
     switch ($conf['processing']) {
       case 'single':
-        return $this->isMeasurementIndex($data_point_1);
+        return $this->isMeasurementField($data_point_1);
 
       case 'calculated':
-        return $this->isMeasurementIndex($data_point_1) || $this->isMeasurementIndex($data_point_2);
+        return $this->isMeasurementField($data_point_1) || $this->isMeasurementField($data_point_2);
 
     }
     return FALSE;
@@ -1472,14 +1422,14 @@ class DataAttachment extends AttachmentBase implements DataAttachmentInterface {
    */
   protected function isCalculatedMeasurement(array $conf) {
     $data_points = $conf['data_points'];
-    $data_point_1 = $data_points[0]['index'];
-    $data_point_2 = $data_points[1]['index'];
+    $data_point_1 = $data_points[0]['metric_type'];
+    $data_point_2 = $data_points[1]['metric_type'];
     switch ($conf['processing']) {
       case 'single':
-        return $this->isCalculatedMeasurementIndex($data_point_1);
+        return $this->isCalculatedField($data_point_1);
 
       case 'calculated':
-        return $this->isCalculatedMeasurementIndex($data_point_1) || $this->isCalculatedMeasurementIndex($data_point_2);
+        return $this->isCalculatedField($data_point_1) || $this->isCalculatedField($data_point_2);
 
     }
     return FALSE;
@@ -1684,8 +1634,11 @@ class DataAttachment extends AttachmentBase implements DataAttachmentInterface {
    * @param array $conf
    *   A configuration object for a data point.
    */
-  private function handleKnownConfigIssues(array &$conf) {
+  public function handleKnownConfigIssues(array &$conf) {
     // Sanity check to cope with invalid configuration.
+    if ($prototype = $this->getPrototype()) {
+      $this->updateDataPointConfiguration($conf, $prototype);
+    }
     if (!empty($conf['data_points'][0]['monitoring_period']) && is_object($conf['data_points'][0]['monitoring_period'])) {
       $conf['data_points'][0]['monitoring_period'] = $conf['data_points'][0]['monitoring_period']->monitoring_period ?? 'latest';
     }
