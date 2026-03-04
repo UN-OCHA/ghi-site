@@ -12,6 +12,7 @@ dependencies:
     - field.field.base_object.plan.field_footnotes
     - field.field.base_object.plan.field_is_part_of_gho
     - field.field.base_object.plan.field_language
+    - field.field.base_object.plan.field_latest_published_period_id
     - field.field.base_object.plan.field_link_to_fts
     - field.field.base_object.plan.field_max_admin_level
     - field.field.base_object.plan.field_operations_category
@@ -59,6 +60,7 @@ third_party_settings:
         - field_language
         - field_plan_cluster_type
         - field_description
+        - field_latest_published_period_id
       label: 'Plan Properties'
       region: content
       parent_name: group_tabs
@@ -258,6 +260,13 @@ content:
     weight: 17
     region: content
     settings: {  }
+    third_party_settings: {  }
+  field_latest_published_period_id:
+    type: number
+    weight: 20
+    region: content
+    settings:
+      placeholder: ''
     third_party_settings: {  }
   field_link_to_fts:
     type: boolean_checkbox

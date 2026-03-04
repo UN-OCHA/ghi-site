@@ -57,6 +57,7 @@ class PlanGoverningEntitiesTable extends GHIBlockBase implements ConfigurableTab
       defaultTitle: 'Cluster overview',
       dataSources: [
         'entities' => 'fabric_query:entity',
+        'attachment' => 'fabric_query:attachment',
         'flow_search' => 'hpc_api:flow_search_query',
       ],
       configForms: [
@@ -144,7 +145,13 @@ class PlanGoverningEntitiesTable extends GHIBlockBase implements ConfigurableTab
       return strnatcasecmp($a->getDisplayName(), $b->getDisplayName());
     });
 
+    $entity_ids = array_map(fn ($item) => $item->id(), $entities);
+    /** @var \Drupal\ghi_plans\Plugin\FabricQuery\AttachmentQuery $attachments_query */
+    $attachments_query = $this->getQueryHandler('attachment');
+    $attachments_query->getAttachmentsByObject('governingEntity', $entity_ids, ['financial']);
+
     $rows = [];
+    $subpage_nodes = $this->subpageManager->loadSubpagesForBaseObjects($objects);
     foreach ($entities as $entity) {
       $base_object = $objects[$entity->id()] ?? NULL;
       if (!$base_object) {
@@ -152,8 +159,8 @@ class PlanGoverningEntitiesTable extends GHIBlockBase implements ConfigurableTab
       }
 
       // Set the context.
-      $subpage_node = $this->subpageManager->loadSubpageForBaseObject($base_object);
-      if ($conf['base']['hide_unpublished_clusters'] && !$subpage_node->isPublished()) {
+      $subpage_node = $subpage_nodes[$base_object->id()];
+      if ($conf['base']['hide_unpublished_clusters'] && !$subpage_node?->isPublished()) {
         continue;
       }
 
@@ -170,6 +177,7 @@ class PlanGoverningEntitiesTable extends GHIBlockBase implements ConfigurableTab
 
         // Then add the value to the row.
         $cell = $item_type->getTableCell();
+
         if ($item_type->getColumnType() == 'amount') {
           $cell['data-progress-group'] = 'amount-' . $key;
         }

@@ -238,6 +238,7 @@ function ghi_plans_migrate_plan_prepare_row(Row $row, MigrateSourceInterface $so
   $row->setSourceProperty('plan_coordinator', $plan_organizations);
   $row->setSourceProperty('countries', $countries);
   $row->setSourceProperty('focus_country_id', $plan->getFocusCountry()?->id());
+  $row->setSourceProperty('latest_published_period_id', $plan->getLastPublishedReportingPeriodId());
 
   unset($plan);
 }

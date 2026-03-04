@@ -39,7 +39,7 @@ class LocationQuery extends FabricQueryBase {
       return NULL;
     }
     $location = new Location($item);
-    $this->addObjectToStorage($location);
+    $this->objectStore->addObject($location);
     return $location;
   }
 
@@ -64,7 +64,7 @@ class LocationQuery extends FabricQueryBase {
       ->setFilter('Id', $location_ids)
       ->execute();
     $locations = $this->buildResultObjects($items, Location::class);
-    $this->addObjectsToStorage($locations);
+    $this->objectStore->addObjects($locations);
     return $locations;
   }
 

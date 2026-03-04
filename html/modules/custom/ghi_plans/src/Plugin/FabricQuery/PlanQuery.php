@@ -40,7 +40,7 @@ class PlanQuery extends FabricQueryBase {
    *   The plan object or NULL if not found.
    */
   public function getPlan(int $plan_id): ?Plan {
-    $plan = $this->getObjectFromStorage($plan_id, Plan::getObjectStorageKey());
+    $plan = $this->objectStore->getObject($plan_id, Plan::getObjectStorageKey());
     if ($plan) {
       return $plan;
     }
@@ -52,7 +52,6 @@ class PlanQuery extends FabricQueryBase {
         ->setFilter('PlanId', $plan_id),
     ];
     $data = $this->fabricClient->executeMultiple($queries);
-
     $plan_data = count($data['plans']) ? reset($data['plans']) : NULL;
     if ($plan_data === NULL) {
       return NULL;
@@ -60,10 +59,10 @@ class PlanQuery extends FabricQueryBase {
 
     // Add the reporting periods.
     $plan_data->planReportingPeriods = array_map(fn ($period) => new PlanReportingPeriod($period), $data['planReportingPeriods'] ?? []);
-    $this->addObjectCollectionToStorage($plan_data->planReportingPeriods, PlanReportingPeriod::getObjectCollectionStorageKey(), 'PlanId');
+    $this->objectStore->addObjectCollection($plan_data->planReportingPeriods, PlanReportingPeriod::getObjectStorageKey(), 'PlanId');
 
     $plan = new Plan($plan_data);
-    $this->addObjectToStorage($plan);
+    $this->objectStore->addObject($plan);
     return $plan;
   }
 
@@ -78,7 +77,7 @@ class PlanQuery extends FabricQueryBase {
    */
   public function getPlansById(array $plan_ids): array {
     $plan_ids = array_unique($plan_ids);
-    $plans = $this->getObjectsFromStorage($plan_ids, Plan::getObjectStorageKey());
+    $plans = $this->objectStore->getObjects($plan_ids, Plan::getObjectStorageKey());
     if (count($plans) == count($plan_ids)) {
       return $plans;
     }
@@ -101,11 +100,70 @@ class PlanQuery extends FabricQueryBase {
     foreach ($data['plans'] as $item) {
       // Add the reporting periods.
       $item->planReportingPeriods = array_map(fn ($period) => new PlanReportingPeriod($period), array_filter($data['planReportingPeriods'] ?? [], fn ($period) => $period->PlanId == $item->Id));
-      $this->addObjectCollectionToStorage($item->planReportingPeriods, PlanReportingPeriod::getObjectCollectionStorageKey(), 'PlanId');
+      $this->objectStore->addObjectCollection($item->planReportingPeriods, PlanReportingPeriod::getObjectStorageKey(), 'PlanId');
 
       $plans[$item->Id] = new Plan($item);
-      $this->addObjectToStorage($plans[$item->Id]);
     }
+    $this->objectStore->addObjects($plans);
+    return $plans;
+  }
+
+  /**
+   * Get plans by year.
+   *
+   * @param int $year
+   *   The year for which to fetch plans.
+   *
+   * @return \Drupal\ghi_plans\ApiObjects\Plan[]
+   *   An array of plan objects.
+   */
+  public function getPlansByYear(int $year): array {
+    $plans = $this->objectStore->getObjectCollection(Plan::getObjectStorageKey(), 'year', $year);
+    if (!empty($plans)) {
+      return $plans;
+    }
+    $items = $this->fabricClient->createQuery('plans', ['Id'])
+      ->setFilters([
+        'planPeriod' => [
+          'period' => [
+            'PeriodType' => 'Year',
+            'CalendarYear' => $year,
+          ],
+        ],
+      ])
+      ->execute();
+    $plan_ids = $this->extractIdsFromRawData($items);
+    $plans = $this->getPlansById($plan_ids);
+    $this->objectStore->addObjectCollection($plans, Plan::getObjectStorageKey(), 'year');
+    return $plans;
+  }
+
+  /**
+   * Get plans by id.
+   *
+   * @return \Drupal\ghi_plans\ApiObjects\Plan[]
+   *   An array of plan objects.
+   */
+  public function getAllPlans(): array {
+    // Get the plan data.
+    $queries = [
+      $this->fabricClient->createQuery('plans', Plan::getGraphQlItems()),
+      $this->fabricClient->createQuery('planReportingPeriods', PlanReportingPeriod::getGraphQlItems()),
+    ];
+    $data = $this->fabricClient->executeMultiple($queries);
+    if (empty($data['plans'])) {
+      return [];
+    }
+
+    $plans = [];
+    foreach ($data['plans'] as $item) {
+      // Add the reporting periods.
+      $item->planReportingPeriods = array_map(fn ($period) => new PlanReportingPeriod($period), array_filter($data['planReportingPeriods'] ?? [], fn ($period) => $period->PlanId == $item->Id));
+      $this->objectStore->addObjectCollection($item->planReportingPeriods, PlanReportingPeriod::getObjectStorageKey(), 'PlanId');
+
+      $plans[$item->Id] = new Plan($item);
+    }
+    $this->objectStore->addObjects($plans);
     return $plans;
   }
 
@@ -119,7 +177,7 @@ class PlanQuery extends FabricQueryBase {
    *   An array of plan reporting periods.
    */
   public function getPlanReportingPeriods(int $plan_id) {
-    $reporting_periods = $this->getObjectCollectionFromStorage(PlanReportingPeriod::getObjectCollectionStorageKey(), 'PlanId', $plan_id);
+    $reporting_periods = $this->objectStore->getObjectCollection(PlanReportingPeriod::getObjectStorageKey(), 'PlanId', $plan_id);
     if ($reporting_periods) {
       return $reporting_periods;
     }
@@ -129,7 +187,7 @@ class PlanQuery extends FabricQueryBase {
       ->execute();
 
     $reporting_periods = array_map(fn ($item): PlanReportingPeriod => new PlanReportingPeriod($item), $items);
-    $this->addObjectCollectionToStorage($reporting_periods, PlanReportingPeriod::getObjectCollectionStorageKey(), 'PlanId');
+    $this->objectStore->addObjectCollection($reporting_periods, PlanReportingPeriod::getObjectStorageKey(), 'PlanId');
     return $reporting_periods;
   }
 
@@ -183,7 +241,7 @@ class PlanQuery extends FabricQueryBase {
     if (!$country instanceof Country) {
       return NULL;
     }
-    $this->addObjectToStorage($country);
+    $this->objectStore->addObject($country);
     return $country;
   }
 

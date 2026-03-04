@@ -16,12 +16,14 @@ class PlanTest extends PlanApiObjectKernelTestBase {
    */
   protected function createMockRawData(array $data_overrides = []): object {
     $plan_defaults = [
-      // 'PlanType' => 'Humanitarian Response Plan',
-      // 'PlanCosting' => 'Cluster requirements only without projects',
       'StartDate' => '2019-01-01',
       'EndDate' => '2019-12-31',
       'DocumentPublishDate' => NULL,
+      // Seeting some properties to NULL so that no additional queries are
+      // triggered.
       'FocusCountry' => NULL,
+      'PlanType' => NULL,
+      'PlanCosting' => NULL,
     ];
 
     $merged_overrides = array_merge($plan_defaults, $data_overrides);

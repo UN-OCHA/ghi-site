@@ -113,19 +113,33 @@ abstract class ApiObjectBase implements ApiObjectInterface, CacheableDependencyI
   /**
    * {@inheritdoc}
    */
-  public static function getObjectStorageKey(): string {
-    $parts = explode('\\', static::class);
-    $class_name = end($parts);
-    return lcfirst($class_name . 'ObjectStorage');
+  public static function getObjectLookupProperties(): array {
+    try {
+      $items = (new \ReflectionClassConstant(get_called_class(), 'LOOKUP_PROPERTIES'))->getValue();
+      assert(is_array($items));
+      return $items;
+    }
+    catch (\Exception $e) {
+      return [];
+    }
   }
 
   /**
    * {@inheritdoc}
    */
-  public static function getObjectCollectionStorageKey(): string {
+  public static function getObjectStorageKey(): string {
+    try {
+      $object_storage_key = (new \ReflectionClassConstant(get_called_class(), 'OBJECT_STORAGE_KEY'))->getValue();
+      if ($object_storage_key) {
+        return $object_storage_key;
+      }
+    }
+    catch (\Exception $e) {
+      // Fail silently.
+    }
     $parts = explode('\\', static::class);
     $class_name = end($parts);
-    return lcfirst($class_name . 'ObjectCollectionStorage');
+    return ucfirst(strtolower($class_name) . 'ObjectStorage');
   }
 
   /**

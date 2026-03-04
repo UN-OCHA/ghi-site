@@ -468,6 +468,20 @@ class Plan extends BaseObject implements BaseObjectMetaDataInterface, BaseObject
   }
 
   /**
+   * Get the id of the last published reporting period.
+   *
+   * @return int|null
+   *   The id or NULL.
+   */
+  public function getLastPublishedReportingPeriodId(): ?int {
+    if (!$this->hasField('field_latest_published_period_id')) {
+      return NULL;
+    }
+    $value = $this->get('field_latest_published_period_id')->value ?? NULL;
+    return is_int($value) ? $value : NULL;
+  }
+
+  /**
    * Get the plan status label.
    *
    * @return string|null

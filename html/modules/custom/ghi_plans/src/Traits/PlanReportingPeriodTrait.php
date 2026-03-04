@@ -2,8 +2,9 @@
 
 namespace Drupal\ghi_plans\Traits;
 
-use Drupal\ghi_plans\ApiObjects\Plan;
+use Drupal\ghi_base_objects\Helpers\BaseObjectHelper;
 use Drupal\ghi_plans\ApiObjects\PlanReportingPeriod;
+use Drupal\ghi_plans\Entity\Plan;
 use Drupal\hpc_common\Helpers\ArrayHelper;
 
 /**
@@ -67,7 +68,7 @@ trait PlanReportingPeriodTrait {
    *   The id of the latest published reporting period or NULL.
    */
   public static function getLatestPublishedReportingPeriod(int $plan_id): ?int {
-    $plan = self::getPlanQuery()?->getPlan($plan_id);
+    $plan = BaseObjectHelper::getBaseObjectFromOriginalId($plan_id, 'plan');
     return $plan instanceof Plan ? $plan->getLastPublishedReportingPeriodId() : NULL;
   }
 

@@ -4,9 +4,7 @@ namespace Drupal\hpc_api\Plugin\migrate_plus\data_fetcher;
 
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
-use Drupal\hpc_api\Helpers\ApiEntityHelper;
 use Drupal\hpc_api\Helpers\QueryHelper;
-use Drupal\hpc_api\Query\EndpointQuery;
 use Drupal\migrate\MigrateException;
 use Drupal\migrate_plus\Attribute\DataFetcher;
 use Drupal\migrate_plus\Plugin\migrate_plus\data_fetcher\Http;
@@ -233,46 +231,6 @@ class ApiHttp extends Http implements ContainerFactoryPluginInterface {
    */
   private function processEntities(array $data, $type) {
     $entities = [];
-    if (!in_array($type, ['plan', 'governing'])) {
-      return $entities;
-    }
-
-    $endpoint_args = [
-      'api_version' => 'v2',
-      'auth_method' => EndpointQuery::AUTH_METHOD_API_KEY,
-      'query_args' => [
-        'content' => 'entities',
-        'disaggregation' => 'false',
-      ],
-      'cache_base_time' => $this->configuration['cache_base_time'] ?? NULL,
-    ];
-
-    ini_set('memory_limit', '512M');
-    set_time_limit(0);
-    foreach ($data as $item) {
-      $has_published_version = FALSE;
-      if (!empty($item['planTags'])) {
-        $published_versions = array_filter($item['planTags'], function ($version) {
-          return $version['public'] == TRUE;
-        });
-        $has_published_version = !empty($published_versions);
-      }
-
-      $this->endpointQuery->setArguments($endpoint_args);
-      $this->endpointQuery->setEndpoint('plan/' . $item['id']);
-
-      if ($has_published_version) {
-        // If we have a public plan version, let's fetch it's entities.
-        $this->endpointQuery->setEndpointArgument('version', 'current');
-      }
-      $plan_data = $this->endpointQuery->getData();
-      if (!$plan_data) {
-        continue;
-      }
-      $_entities = ApiEntityHelper::getProcessedPlanEntitesByType($plan_data, $type);
-      $entities = array_merge($entities, $_entities);
-    }
-
     return $entities;
   }
 

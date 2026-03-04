@@ -96,6 +96,20 @@ class DataAttachment extends AttachmentBase implements DataAttachmentInterface {
   ];
 
   /**
+   * Define the properties used for storage lookups.
+   */
+  const LOOKUP_PROPERTIES = [
+    'Name',
+    'PlanId',
+    'EntityId',
+    'EntityTypeId',
+    'EntityMainType',
+    'AttachmentType',
+  ];
+
+  const OBJECT_STORAGE_KEY = 'AttachmentObjectStorage';
+
+  /**
    * {@inheritdoc}
    */
   protected function map() {
@@ -409,18 +423,18 @@ class DataAttachment extends AttachmentBase implements DataAttachmentInterface {
     // for performance when we need to do this for multiple attachments
     // belonging to the same plan (which is the usual case) because the
     // requests are cached.
-    $query_handler = $this->getAttachmentPrototypeQuery();
-    if (!$query_handler) {
+    $attachment_prototype_query = $this->getAttachmentPrototypeQuery();
+    if (!$attachment_prototype_query) {
       return NULL;
     }
     $plan_id = $attachment->PlanId ?? NULL;
     $prototype_id = $attachment->AttachmentPrototypeId ?? ($attachment->attachmentPrototypeId ?? NULL);
-    if ($plan_id && $prototype_id && $prototype = $query_handler->getPrototypeByPlanAndId($plan_id, $prototype_id)) {
+    if ($plan_id && $prototype_id && $prototype = $attachment_prototype_query->getPrototypeByPlanAndId($plan_id, $prototype_id)) {
       return $prototype;
     }
 
     // If that didn't work, we query the prototype data directly.
-    $prototype = $prototype_id ? $query_handler->getPrototype($prototype_id) : NULL;
+    $prototype = $prototype_id ? $attachment_prototype_query->getPrototype($prototype_id) : NULL;
     if (!$prototype instanceof AttachmentPrototype) {
       throw new \Exception(sprintf('Failed to extract prototype for attachment %s', $attachment->Id));
     }
@@ -891,6 +905,10 @@ class DataAttachment extends AttachmentBase implements DataAttachmentInterface {
    *   The measurement object or NULL.
    */
   public function getCurrentMeasurement(): ?Measurement {
+    $plan_id = $this->getPlanId();
+    if (!$plan_id) {
+      return NULL;
+    }
     // Get all measurements.
     $measurements = $this->getMeasurements();
     if (empty($measurements)) {
@@ -898,7 +916,7 @@ class DataAttachment extends AttachmentBase implements DataAttachmentInterface {
     }
 
     // Find the latest reporting period id from the plan.
-    $latest_published_period_id = $this->getPlanId() ? $this->getLatestPublishedReportingPeriod($this->getPlanId()) : NULL;
+    $latest_published_period_id = $this->getLatestPublishedReportingPeriod($plan_id);
     if (!$latest_published_period_id) {
       return NULL;
     }
@@ -1013,10 +1031,6 @@ class DataAttachment extends AttachmentBase implements DataAttachmentInterface {
    *   A reporting period object or NULL.
    */
   protected function fetchReportingPeriodForAttachment(): ?PlanReportingPeriod {
-    $plan_id = $this->getPlanId();
-    if (!$plan_id) {
-      return NULL;
-    }
     $measurement = $this->getCurrentMeasurement();
     if (!$measurement) {
       return NULL;

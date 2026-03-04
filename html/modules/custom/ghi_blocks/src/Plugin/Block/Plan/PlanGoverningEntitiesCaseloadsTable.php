@@ -147,7 +147,7 @@ class PlanGoverningEntitiesCaseloadsTable extends GHIBlockBase implements Config
     }
 
     // Filter for the configured attachment prototype id.
-    $attachments = $this->filterAttachmentsByPrototype($attachments, $prototype->id);
+    $attachments = $this->filterAttachmentsByPrototype($attachments, $prototype->id());
 
     // Group by entity.
     $grouped_attachments = $this->groupAttachmentsByEntityId($attachments);
@@ -448,7 +448,7 @@ class PlanGoverningEntitiesCaseloadsTable extends GHIBlockBase implements Config
   /**
    * Filter the given set of attachments by the given prototype id.
    *
-   * @param object[] $attachments
+   * @param \Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment[] $attachments
    *   The attachments to filter.
    * @param int $prototype_id
    *   The prototype id to filter for.
@@ -458,7 +458,7 @@ class PlanGoverningEntitiesCaseloadsTable extends GHIBlockBase implements Config
    */
   private function filterAttachmentsByPrototype(array $attachments, $prototype_id) {
     return array_filter($attachments, function ($attachment) use ($prototype_id) {
-      return $attachment->prototype->id == $prototype_id;
+      return $attachment->getPrototype()?->id() == $prototype_id;
     });
   }
 
