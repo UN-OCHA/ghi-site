@@ -69,14 +69,14 @@ trait AttachmentTableTrait {
     if (!$prototype_id) {
       return NULL;
     }
-    /** @var \Drupal\ghi_plans\Plugin\FabricQuery\AttachmentPrototypeQuery $query */
-    $query = $this->getQueryHandler('attachment_prototype');
+    /** @var \Drupal\ghi_plans\Plugin\FabricQuery\AttachmentPrototypeQuery $query_handler */
+    $query_handler = $this->getQueryHandler('attachment_prototype');
     $plan_id = $this->getCurrentPlanId();
     if ($plan_id) {
-      return $query->getPrototypeByPlanAndId($this->getCurrentPlanId(), $prototype_id);
+      return $query_handler->getPrototypeByPlanAndId($this->getCurrentPlanId(), $prototype_id);
     }
     else {
-      return $query->getPrototype($prototype_id);
+      return $query_handler->getPrototype($prototype_id);
     }
   }
 

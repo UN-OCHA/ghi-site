@@ -17,6 +17,9 @@ services:
   plugin.manager.fabric_query_manager:
     class: Drupal\hpc_api\Query\FabricQueryManager
     arguments: ['@container.namespaces', '@cache.discovery', '@module_handler', '@hpc_api.fabric_client']
+  hpc_api.object_store:
+    class: Drupal\hpc_api\ObjectStore
+    arguments: ['@container.namespaces', '@cache.discovery', '@module_handler', '@hpc_api.fabric_client']
   hpc_api.query_profile_subscriber:
     class: Drupal\hpc_api\EventSubscriber\QueryProfileSubscriber
     arguments: []

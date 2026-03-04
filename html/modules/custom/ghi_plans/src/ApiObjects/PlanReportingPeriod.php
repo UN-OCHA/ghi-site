@@ -39,6 +39,13 @@ class PlanReportingPeriod extends BaseObject {
   ];
 
   /**
+   * Define the properties used for storage lookups.
+   */
+  const LOOKUP_PROPERTIES = [
+    'PlanId',
+  ];
+
+  /**
    * Map the raw data.
    *
    * @return object

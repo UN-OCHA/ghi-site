@@ -4,8 +4,6 @@ namespace Drupal\ghi_plans\Plugin\FabricQuery;
 
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
-use Drupal\ghi_plans\ApiObjects\Entities\GoverningEntity;
-use Drupal\ghi_plans\ApiObjects\Entities\PlanEntity;
 use Drupal\ghi_plans\ApiObjects\PlanEntityInterface;
 use Drupal\ghi_plans\Entity\GoverningEntity as EntityGoverningEntity;
 use Drupal\ghi_plans\Traits\PlanQueryTrait;
@@ -89,40 +87,27 @@ class EntityQuery extends FabricQueryBase {
    *   An array of plan entity objects for the given context or NULL.
    */
   public function getEntitiesForPlan(int $plan_id, ?ContentEntityInterface $context_object = NULL, $entity_type = NULL, ?array $filters = NULL) {
-    $cache_key = $this->getCacheKey(array_filter([
-      'plan_id' => $plan_id,
-      'id' => $context_object ? $context_object->id() : NULL,
-      'entity_type' => $entity_type,
-    ] + ($filters ?? [])));
-
-    $plan_entities = $this->getCache($cache_key);
-    if ($plan_entities) {
-      return $plan_entities;
-    }
-
     $fetch_coordination_entities = $entity_type === NULL || $entity_type == 'governing';
     $fetch_logframe_entities = $entity_type === NULL || $entity_type == 'plan';
+    $context_object_id = $context_object instanceof EntityGoverningEntity ? $context_object->getSourceId() : NULL;
 
-    $query_filter = [
-      'PlanId' => $plan_id,
-      'RecordStatus' => 'Active',
-    ];
-
-    $queries = [];
+    $coordination_entities = $logframe_entities = [];
     if ($fetch_coordination_entities) {
-      $queries[] = $this->fabricClient->createQuery('coordinationEntities', GoverningEntity::getGraphQlItems())
-        ->setFilters($query_filter);
+      $coordination_entities = $this->getGoverningEntityQuery()->getGoverningEntitiesByPlanId($plan_id);
+      // Filter by context.
+      if ($context_object_id) {
+        $_filters = ['id' => $context_object_id];
+        $coordination_entities = array_filter($coordination_entities, fn($entity) => array_intersect_key($entity->toArray(), $_filters) == $_filters);
+      }
     }
     if ($fetch_logframe_entities) {
-      if ($context_object instanceof EntityGoverningEntity) {
-        $query_filter['CoordinationEntityId'] = $context_object->getSourceId();
+      $logframe_entities = $this->getPlanEntityQuery()->getPlanEntitiesByPlanId($plan_id);
+      // Filter by context.
+      if ($context_object_id) {
+        $_filters = ['governing_entity_parent_id' => $context_object_id];
+        $logframe_entities = array_filter($logframe_entities, fn($entity) => array_intersect_key($entity->toArray(), $_filters) == $_filters);
       }
-      $queries[] = $this->fabricClient->createQuery('logframeEntities', PlanEntity::getGraphQlItems())
-        ->setFilters($query_filter);
     }
-    $data = $this->fabricClient->executeMultiple($queries);
-    $coordination_entities = $this->buildResultObjects($data['coordinationEntities'] ?? [], GoverningEntity::class);
-    $logframe_entities = $this->buildResultObjects($data['logframeEntities'] ?? [], PlanEntity::class);
     /** @var \Drupal\ghi_plans\ApiObjects\Entities\EntityObjectInterface[] $plan_entities */
     $plan_entities = $coordination_entities + $logframe_entities;
 
@@ -130,8 +115,6 @@ class EntityQuery extends FabricQueryBase {
     if (!empty($filters)) {
       $plan_entities = array_filter($plan_entities, fn($entity) => array_intersect_key($entity->toArray(), $filters) == $filters);
     }
-
-    $this->setCache($cache_key, $plan_entities);
     return $plan_entities;
   }
 

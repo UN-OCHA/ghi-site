@@ -29,7 +29,7 @@ class PlanEntityQuery extends FabricQueryBase {
    *   The plan entity object or NULL if not found.
    */
   public function getPlanEntity(int $entity_id): ?PlanEntity {
-    $entity = $this->getObjectFromStorage($entity_id, PlanEntity::getObjectStorageKey());
+    $entity = $this->objectStore->getObject($entity_id, PlanEntity::getObjectStorageKey());
     if ($entity) {
       return $entity;
     }
@@ -46,7 +46,7 @@ class PlanEntityQuery extends FabricQueryBase {
       return NULL;
     }
     $entity = new PlanEntity($item);
-    $this->addObjectToStorage($entity);
+    $this->objectStore->addObject($entity);
     return $entity;
   }
 
@@ -61,7 +61,7 @@ class PlanEntityQuery extends FabricQueryBase {
    */
   public function getPlanEntitiesById(array $entity_ids): array {
     $entity_ids = array_unique($entity_ids);
-    $entities = $this->getObjectsFromStorage($entity_ids, PlanEntity::getObjectStorageKey());
+    $entities = $this->objectStore->getObjects($entity_ids, PlanEntity::getObjectStorageKey());
     if (count($entities) == count($entity_ids)) {
       return $entities;
     }
@@ -80,7 +80,33 @@ class PlanEntityQuery extends FabricQueryBase {
       ])
       ->execute();
     $entities = $this->buildResultObjects($items, PlanEntity::class);
-    $this->addObjectsToStorage($entities);
+    $this->objectStore->addObjects($entities);
+    return $entities;
+  }
+
+  /**
+   * Get plan entities by plan id.
+   *
+   * @param int $plan_id
+   *   The plan entity.
+   *
+   * @return \Drupal\ghi_plans\ApiObjects\Entities\PlanEntity[]
+   *   An array of plan entities.
+   */
+  public function getPlanEntitiesByPlanId($plan_id) {
+    $entities = $this->objectStore->getObjectCollection(PlanEntity::getObjectStorageKey(), 'PlanId', $plan_id);
+    if (!empty($entities)) {
+      return $entities;
+    }
+    // Query entities.
+    $items = $this->fabricClient->createQuery('logframeEntities', PlanEntity::getGraphQlItems())
+      ->setFilters([
+        'PlanId' => $plan_id,
+        'RecordStatus' => 'Active',
+      ])
+      ->execute();
+    $entities = $this->buildResultObjects($items, PlanEntity::class);
+    $this->objectStore->addObjectCollection($entities, PlanEntity::getObjectStorageKey(), 'PlanId');
     return $entities;
   }
 

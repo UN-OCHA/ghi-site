@@ -86,6 +86,7 @@ process:
     message: 'Plan end date is missing'
   field_document_published_on: document_published_on
   field_plan_coordinator: plan_coordinator
+  field_latest_published_period_id: latest_published_period_id
 destination:
   plugin: 'entity:base_object'
   overwrite_properties:
@@ -109,6 +110,7 @@ destination:
     - field_plan_date_range
     - field_document_published_on
     - field_plan_coordinator
+    - field_latest_published_period_id
 idMap: {  }
 migration_dependencies:
   required:

@@ -90,6 +90,25 @@ class SubpageManager extends BaseSubpageManager {
   }
 
   /**
+   * Load all subpage nodes for the given base objects.
+   *
+   * @param \Drupal\ghi_base_objects\Entity\BaseObjectInterface[] $base_objects
+   *   The base objects for which to load a dedicated subpage.
+   *
+   * @return \Drupal\node\NodeInterface[]
+   *   An array of node objects.
+   */
+  public function loadSubpagesForBaseObjects(array $base_objects) {
+    /** @var \Drupal\ghi_subpages\Entity\SubpageNodeInterface[] $nodes */
+    $nodes = $this->entityTypeManager->getStorage('node')->loadByProperties([
+      'type' => $this->getSubpageTypes(),
+      'field_base_object' => array_map(fn ($base_object) => $base_object->id(), $base_objects),
+    ]);
+    $base_object_ids = array_map(fn ($node) => $node->get('field_base_object')->target_id, $nodes);
+    return array_combine($base_object_ids, $nodes);
+  }
+
+  /**
    * Get all subpage nodes for a base node.
    *
    * @param \Drupal\node\NodeInterface $node

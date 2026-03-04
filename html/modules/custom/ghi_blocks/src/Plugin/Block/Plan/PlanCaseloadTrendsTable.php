@@ -65,6 +65,7 @@ class PlanCaseloadTrendsTable extends GHIBlockBase implements OverrideDefaultTit
       dataSources: [
         'attachment' => 'fabric_query:attachment',
         'entity' => 'fabric_query:entity',
+        'plan' => 'fabric_query:plan',
         'plan_funding' => 'hpc_api:plan_funding_summary_query',
       ]
     );
@@ -438,6 +439,9 @@ class PlanCaseloadTrendsTable extends GHIBlockBase implements OverrideDefaultTit
     /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\PlanFundingSummaryQuery $funding_query */
     $funding_query = $this->getQueryHandler('plan_funding');
 
+    /** @var \Drupal\ghi_plans\Plugin\FabricQuery\PlanQuery $plan_query */
+    $plan_query = $this->getQueryHandler('plan');
+
     // Collect the plan types per year to see if we need to add information to
     // distinguish different plans in the same year.
     $plan_data = [];
@@ -448,8 +452,16 @@ class PlanCaseloadTrendsTable extends GHIBlockBase implements OverrideDefaultTit
       $plan_types[$plan_year][$plan_type] = !empty($plan_types[$plan_year][$plan_type]) ? $plan_types[$plan_year][$plan_type] + 1 : 1;
     }
 
+    // Extract plan ids and preload the caseload data.
     $plan_ids = array_filter(array_map(fn (Plan $plan): ?int => $plan->getSourceId(), $related_plans));
     $caseloads_by_plan = $attachments_query?->getAttachmentsByPlan($plan_ids, 'caseload') ?? [];
+
+    // Prefetch all plan objects from the API, because the
+    // PlanReportingPeriodTrait::getLatestPublishedReportingPeriod() will load
+    // these to fetch the last published reporting period.
+    // @todo See if it makes sense to import the last published reporting
+    // period and store it in the plan base objects.
+    $plan_query->getPlansById($plan_ids);
 
     foreach ($related_plans as $plan) {
       $plan_id = $plan->getSourceId();

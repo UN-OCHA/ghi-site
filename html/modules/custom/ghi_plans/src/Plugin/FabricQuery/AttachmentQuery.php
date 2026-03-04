@@ -16,7 +16,6 @@ use Drupal\ghi_plans\Traits\AttachmentFilterTrait;
 use Drupal\ghi_plans\Traits\PlanQueryTrait;
 use Drupal\hpc_api\Attribute\FabricQuery;
 use Drupal\hpc_api\Query\FabricQueryBase;
-use Drupal\hpc_common\Helpers\ArrayHelper;
 
 /**
  * Plugin implementation of the 'attachment' fabric query.
@@ -42,7 +41,7 @@ class AttachmentQuery extends FabricQueryBase {
    * @todo Add support for the reporting period.
    */
   public function getAttachment(int $attachment_id): ?AttachmentInterface {
-    $attachment = $this->getObjectFromStorage($attachment_id, DataAttachment::getObjectStorageKey());
+    $attachment = $this->objectStore->getObject($attachment_id, DataAttachment::getObjectStorageKey());
     if ($attachment) {
       return $attachment;
     }
@@ -73,7 +72,7 @@ class AttachmentQuery extends FabricQueryBase {
 
     $attachments = $this->processAttachments($attachments, $data);
     $attachment = reset($attachments);
-    $this->addObjectToStorage($attachment);
+    $this->objectStore->addObject($attachment);
     return $attachment;
   }
 
@@ -88,7 +87,10 @@ class AttachmentQuery extends FabricQueryBase {
    */
   public function getAttachmentsById(array $attachment_ids) {
     $attachment_ids = array_unique($attachment_ids);
-    $attachments = $this->getObjectsFromStorage($attachment_ids, DataAttachment::getObjectStorageKey());
+    if (count($attachment_ids) > self::MAX_FILTER_COUNT_ARRAY) {
+      return $this->doChunkedQuery($attachment_ids, fn ($ids): array => $this->getAttachmentsById($ids));
+    }
+    $attachments = $this->objectStore->getObjects($attachment_ids, DataAttachment::getObjectStorageKey());
     if (count($attachments) == count($attachment_ids)) {
       return $attachments;
     }
@@ -110,7 +112,7 @@ class AttachmentQuery extends FabricQueryBase {
     ];
     $data = $this->fabricClient->executeMultiple($queries);
     $attachments = $this->processAttachments($data['attachments'] ?? [], $data);
-    $this->addObjectsToStorage($attachments);
+    $this->objectStore->addObjects($attachments);
     return $attachments;
   }
 
@@ -130,39 +132,47 @@ class AttachmentQuery extends FabricQueryBase {
    */
   public function getAttachmentsByObject($entity_type, $entity_ids, $attachment_types = NULL) {
     $entity_types = (array) $entity_type;
-    $entity_ids = (array) $entity_ids;
+    $entity_ids = array_unique((array) $entity_ids);
     if (empty($entity_ids)) {
       return [];
     }
-    $attachment_types = array_filter((array) $attachment_types);
+    $attachment_types = array_map(fn ($item) => ucfirst(strtolower($item)), array_filter((array) $attachment_types));
     sort($entity_ids);
 
-    $cache_key = $this->getCacheKey([
-      'entity_type' => $entity_types,
-      'entity_ids' => $entity_ids,
-    ] + $attachment_types);
-    $attachments = $this->getCache($cache_key);
-    if ($attachments) {
-      return $attachments;
-    }
-
+    // Prepare the filters.
     $type_filter_values = array_map(fn ($item) => $this->getEntityTypeFilterValue($item), $entity_types);
-    $filters = array_filter([
+    $query_filters = array_filter([
       'EntityMainType' => $type_filter_values,
       'EntityId' => $entity_ids,
-      'AttachmentType' => $attachment_types ?: NULL,
     ]);
 
-    $attachments = $this->fabricClient->createQuery('attachments', DataAttachment::getGraphQlItems())
-      ->setFilters($filters)
-      ->execute();
-    if (empty($attachments)) {
-      return $this->setCache($cache_key, []);
+    // Try to get the requested attachments from the object store.
+    $attachments = $this->objectStore->getObjects($entity_ids, DataAttachment::getObjectStorageKey(), 'EntityId', $query_filters);
+
+    $requested_ids = $this->objectStore->getRequestedIds(DataAttachment::getObjectStorageKey(), __FUNCTION__);
+    $entity_ids = array_diff($entity_ids, $requested_ids);
+    if (!empty($entity_ids)) {
+
+      // Keep track of what we have already requested.
+      $this->objectStore->addRequestedIds(DataAttachment::getObjectStorageKey(), $entity_ids, __FUNCTION__);
+
+      // Do the query.
+      $query_filters['EntityId'] = $entity_ids;
+      $items = $this->fabricClient->createQuery('attachments', DataAttachment::getGraphQlItems())
+        ->setFilters($query_filters)
+        ->execute();
+      if (!empty($items)) {
+        // Process the results.
+        $attachments += $this->processAttachments($items);
+      }
     }
 
-    $attachments = $this->processAttachments($attachments);
-    $this->addObjectsToStorage($attachments);
-    return $this->setCache($cache_key, $attachments);
+    // Store the results.
+    $this->objectStore->addObjects($attachments);
+    if (!empty($attachment_types)) {
+      $this->filterObjects($attachments, ['AttachmentType' => $attachment_types]);
+    }
+    return $attachments;
   }
 
   /**
@@ -186,49 +196,35 @@ class AttachmentQuery extends FabricQueryBase {
    *   An array of attachment objects for the given context.
    */
   public function getAttachmentsForPlan(int $plan_id, ?ContentEntityInterface $context_object = NULL, array $filter = []) {
-    $cache_key = $this->getCacheKey(array_filter([
-      'plan_id' => $plan_id,
-      'context_type' => $context_object?->bundle() ?? NULL,
-      'context_id' => $context_object?->id() ?? NULL,
-    ] + $filter));
-    $attachments = $this->getCache($cache_key);
-    if ($attachments) {
-      return $attachments;
-    }
-
-    // Supported types of context objects.
-    $supported_contexts = [
-      'plan_entity',
-      'governing_entity',
-    ];
-
     $type_filter_value = NULL;
-    if ($context_object && $entity_type = $supported_contexts[$context_object->bundle()] ?? NULL) {
+    $supported_contexts = ['plan_entity', 'governing_entity'];
+    if ($context_object && $entity_type = ($supported_contexts[$context_object->bundle()] ?? NULL)) {
       $type_filter_value = $this->getEntityTypeFilterValue($entity_type);
     }
+    $query_filters = array_filter([
+      'PlanId' => $plan_id,
+      'EntityMainType' => $type_filter_value,
+    ]);
 
-    $attachment_types = !empty($filter['AttachmentType']) ? (array) $filter['AttachmentType'] : NULL;
-    unset($filter['AttachmentType']);
-
-    $attachments = $this->fabricClient->createQuery('attachments', DataAttachment::getGraphQlItems())
-      ->setFilters(array_filter([
-        'PlanId' => $plan_id,
-        'EntityMainType' => $type_filter_value,
-        'AttachmentType' => $attachment_types,
-      ]))
-      ->execute();
-
+    // Try to get the requested attachments from the object store.
+    $attachments = $this->objectStore->getObjectCollection(DataAttachment::getObjectStorageKey(), 'attachments_by_plan', $plan_id);
     if (empty($attachments)) {
-      return $this->setCache($cache_key, []);
+      $attachments = $this->fabricClient->createQuery('attachments', DataAttachment::getGraphQlItems())
+        ->setFilters($query_filters)
+        ->execute();
+    }
+
+    if (!is_array($attachments) || empty($attachments)) {
+      return [];
     }
 
     if (!empty($filter)) {
-      $attachments = $this->filterAttachments($attachments, $filter);
+      $attachments = $this->filterObjects($attachments, $filter);
     }
 
     $attachments = $this->processAttachments($attachments);
-    $this->addObjectsToStorage($attachments);
-    return $this->setCache($cache_key, $attachments);
+    $this->objectStore->addObjectCollection($attachments, DataAttachment::getObjectStorageKey(), 'attachments_by_plan');
+    return $attachments;
   }
 
   /**
@@ -241,63 +237,23 @@ class AttachmentQuery extends FabricQueryBase {
    *   An array of data attachments.
    */
   public function getAttachmentsForEntities(array $entities) {
+    $entities = array_filter($entities, fn($entity) => $entity instanceof PlanEntityInterface);
     if (empty($entities)) {
       return [];
     }
 
-    ArrayHelper::sortObjectsByMethod($entities, 'id');
-    $entity_ids = array_map(fn ($entity) => $entity->id(), $entities);
-
-    $cache_key = $this->getCacheKey([
-      'entity_ids' => $entity_ids,
-    ]);
-    $attachments = $this->getCache($cache_key);
-    if ($attachments) {
-      return $attachments;
-    }
-
     $entity_ids = [];
     foreach ($entities as $entity) {
-      if (!$entity instanceof PlanEntityInterface) {
-        continue;
-      }
       $entity_ids[$entity->getEntityType()] = $entity_ids[$entity->getEntityType()] ?? [];
       $entity_ids[$entity->getEntityType()][] = $entity->id();
     }
 
+    $attachment_types = ['Caseload', 'Indicator'];
     $attachments = [];
-
-    $filters = [];
     foreach (array_keys($entity_ids) as $entity_type) {
-      $type_filter_value = $this->getEntityTypeFilterValue($entity_type);
-      if (!$type_filter_value) {
-        continue;
-      }
-      $filters[] = '{ EntityMainType: { eq: "' . $type_filter_value . '" } EntityId:  { in: [' . implode(',', $entity_ids[$entity_type]) . '] } }';
+      $attachments += $this->getAttachmentsByObject($entity_type, $entity_ids[$entity_type], $attachment_types);
     }
-
-    if (empty($filters)) {
-      return $this->setCache($cache_key, []);
-    }
-
-    $payload = "
-      attachments (first: 10000, filter: {
-        or: [" . implode('', $filters) . "]
-        AttachmentType:  { in: [\"Caseload\", \"Indicator\"] }
-      }) {
-        items {" . implode(' ', DataAttachment::getGraphQlItems()) . "}
-      }
-      ";
-    $data = $this->fabricClient->query($payload);
-    $attachments = $data ? $this->getItems($data, 'attachments') : [];
-    if (empty($attachments)) {
-      $this->setCache($cache_key, $attachments);
-      return [];
-    }
-
-    $attachments = $this->processAttachments($attachments);
-    $this->addObjectsToStorage($attachments);
-    return $this->setCache($cache_key, $attachments);
+    return $attachments;
   }
 
   /**
@@ -366,7 +322,7 @@ class AttachmentQuery extends FabricQueryBase {
    *   An array of attachment objects, keyed by the attachment id.
    */
   private function processAttachments(array $attachments, ?array $data = NULL) {
-    $attachment_ids = array_map(fn ($item) => $item->Id, $attachments);
+    $attachment_ids = $this->extractIdsFromRawData($attachments);
     $attachments = array_combine($attachment_ids, $attachments);
 
     // If we have found attachments, also load the total facts.
@@ -413,43 +369,44 @@ class AttachmentQuery extends FabricQueryBase {
    *   be retrieved from fabric using the attachment ids as condition.
    */
   private function addMeasurements(&$attachments, ?array $measurements = NULL) {
-    $plan_query = $this->getPlanQuery();
-    $plan_ids = array_unique(array_map(fn ($item) => $item->PlanId, $attachments));
-    $plans = $plan_query->getPlansById($plan_ids);
-    $current_monitoring_period_ids = array_filter(array_map(fn (Plan $item): ?int => $item->getLastPublishedReportingPeriodId(), $plans));
     if (!$measurements) {
-      $attachment_ids = array_map(fn ($item) => $item->Id, $attachments);
-      $measurements = $this->fabricClient->createQuery('measurements', Measurement::getGraphQlItems())
-        ->setFilters([
-          'AttachmentId' => $attachment_ids,
-        ])
-        ->execute();
+      $attachment_ids = $this->extractIdsFromRawData($attachments);
+      $measurements = $this->getMeasurementQuery()->getMeasurementsByAttachmentId($attachment_ids);
+    }
+    else {
+      $measurement_ids = $this->extractIdsFromRawData($measurements);
+      $measurements = $this->getMeasurementQuery()->getMeasurementsById($measurement_ids);
     }
 
+    /** @var \Drupal\ghi_plans\ApiObjects\Measurements\MeasurementInterface[] $measurements */
     if (empty($measurements)) {
       return;
     }
 
-    $measurement_ids = array_map(fn ($item) => $item->Id, $measurements);
-    $measurement_facts = $this->fabricClient->createQuery('measurementFacts', MeasurementFact::getGraphQlItems())
-      ->setFilters([
-        'MeasurementId' => $measurement_ids,
-        'IsTotal' => TRUE,
-      ])
-      ->execute();
+    $measurement_ids = $this->extractIds($measurements);
+    $measurement_facts = $this->getMeasurementQuery()->getMeasurementFactsByMeasurementId($measurement_ids);
+
+    if (empty($measurement_facts)) {
+      return;
+    }
+
+    $plan_query = $this->getPlanQuery();
+    $plan_ids = array_unique(array_map(fn ($item) => $item->PlanId, $attachments));
+    $plans = $plan_query->getPlansById($plan_ids);
+    $current_monitoring_period_ids = array_filter(array_map(fn (Plan $item): ?int => $item->getLastPublishedReportingPeriodId(), $plans));
 
     foreach ($measurements as $measurement) {
-      $attachment_id = $measurement->AttachmentId;
+      $attachment_id = $measurement->getAttachmentId();
       $attachments[$attachment_id]->measurements = $attachments[$attachment_id]->measurements ?? [];
-      $attachments[$attachment_id]->measurements[$measurement->Id] = $measurement;
+      $attachments[$attachment_id]->measurements[$measurement->id()] = $measurement->getRawData();
     }
 
     foreach ($measurement_facts as $measurement_fact) {
       $fact_id = $measurement_fact->Id;
       $measurement_id = $measurement_fact->MeasurementId;
       $measurement = $measurements[$measurement_id];
-      $period_id = $measurement->MeasurementPeriodId;
-      $attachment_id = $measurement->AttachmentId;
+      $period_id = $measurement->getReportingPeriodId();
+      $attachment_id = $measurement->getAttachmentId();
 
       $attachments[$attachment_id]->measurements[$measurement_id]->totals = $attachments[$attachment_id]->measurements[$measurement_id]->totals ?? [];
       $attachments[$attachment_id]->measurements[$measurement_id]->totals[$fact_id] = $measurement_fact;

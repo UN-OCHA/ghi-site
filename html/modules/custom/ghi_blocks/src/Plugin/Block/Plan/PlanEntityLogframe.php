@@ -75,6 +75,7 @@ class PlanEntityLogframe extends GHIBlockBase implements MultiStepFormBlockInter
         'plan' => 'fabric_query:plan',
         'attachment' => 'fabric_query:attachment',
         'attachment_prototype' => 'fabric_query:attachment_prototype',
+        'entity_prototype' => 'fabric_query:entity_prototype',
       ],
       configForms: [
         'entities' => [
@@ -183,6 +184,9 @@ class PlanEntityLogframe extends GHIBlockBase implements MultiStepFormBlockInter
 
     // See if we should use lazy loading for the tables.
     $lazy_load = $this->config('ghi_blocks.logframe_settings')->get('lazy_load');
+
+    // Preload the attachments to reduce the number of queries.
+    $this->getAttachmentsForEntities($entities);
 
     // Assemble the list.
     $rendered_items = [];
@@ -1119,9 +1123,16 @@ class PlanEntityLogframe extends GHIBlockBase implements MultiStepFormBlockInter
       $filter = ['ref_code' => $entity_ref_code];
     }
 
+    $plan_id = $this->getCurrentPlanId();
+
+    // Preload the entity prototypes.
+    $entity_prototype_query = $this->getQueryHandler('entity_prototype');
+    /** @var \Drupal\ghi_plans\Plugin\FabricQuery\EntityPrototypeQuery $entity_prototype_query */
+    $entity_prototype_query->getPlanPrototype($plan_id);
+
     /** @var \Drupal\ghi_plans\Plugin\FabricQuery\EntityQuery $query */
     $query = $this->getQueryHandler('entities');
-    $entities = $query->getEntitiesForPlan($this->getCurrentPlanId(), $context_object, NULL, $filter);
+    $entities = $query->getEntitiesForPlan($plan_id, $context_object, NULL, $filter);
     // This should give us plan and governing entity objects only, but let's
     // make sure.
     $entities = is_array($entities) ? array_filter($entities, function ($entity) {

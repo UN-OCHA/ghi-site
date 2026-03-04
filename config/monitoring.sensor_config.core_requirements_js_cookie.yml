@@ -1,0 +1,20 @@
+uuid: f3d846d4-d7ad-4142-83e4-bd0abc1f10be
+langcode: en
+status: true
+dependencies:
+  module:
+    - js_cookie
+id: core_requirements_js_cookie
+label: 'Module js_cookie'
+description: 'Requirements of the js_cookie module'
+category: Requirements
+plugin_id: core_requirements
+result_class: null
+value_label: null
+value_type: no_value
+caching_time: 3600
+settings:
+  module: js_cookie
+  exclude_keys: {  }
+thresholds:
+  type: none

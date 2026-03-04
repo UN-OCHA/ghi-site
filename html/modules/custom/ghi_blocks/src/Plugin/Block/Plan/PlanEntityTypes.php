@@ -88,7 +88,7 @@ class PlanEntityTypes extends GHIBlockBase implements AutomaticTitleBlockInterfa
     // Get the entities to render.
     $entities = $this->getRenderableEntities();
     $first_entity = !empty($entities) ? reset($entities) : NULL;
-    return $first_entity ? $first_entity->plural_name : NULL;
+    return $first_entity ? $first_entity->getPrototype()->getNamePlural() : NULL;
   }
 
   /**

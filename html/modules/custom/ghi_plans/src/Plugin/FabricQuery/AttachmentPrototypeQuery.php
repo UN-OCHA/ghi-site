@@ -44,15 +44,24 @@ class AttachmentPrototypeQuery extends FabricQueryBase {
    *   The attachment prototype object or NULL if not found.
    */
   public function getPrototype(int $prototype_id): ?AttachmentPrototype {
+    $prototype = $this->objectStore->getObject($prototype_id, AttachmentPrototype::getObjectStorageKey());
+    if ($prototype) {
+      return $prototype;
+    }
+
     // Get the attachment data.
-    $prototypes = $this->queryWithFilters([
+    $items = $this->queryWithFilters([
       'Id' => $prototype_id,
     ]);
-    if (empty($prototypes)) {
+    if (empty($items)) {
       return NULL;
     }
-    $prototype = reset($prototypes);
-    return $prototype ? new AttachmentPrototype($prototype) : NULL;
+    $item = reset($items);
+    $prototype = $item ? new AttachmentPrototype($item) : NULL;
+    if ($prototype) {
+      $this->objectStore->addObject($prototype);
+    }
+    return $prototype;
   }
 
   /**
@@ -65,14 +74,23 @@ class AttachmentPrototypeQuery extends FabricQueryBase {
    *   The attachment prototype object or NULL if not found.
    */
   public function getPrototypes(array $prototype_ids): array {
+    $prototype_ids = array_unique($prototype_ids);
+    $prototypes = $this->objectStore->getObjects($prototype_ids, AttachmentPrototype::getObjectStorageKey());
+    if (count($prototypes) == count($prototype_ids)) {
+      return $prototypes;
+    }
+    $prototype_ids = array_diff($prototype_ids, array_keys($prototypes));
+
     // Get the attachment data.
-    $prototypes = $this->queryWithFilters([
+    $items = $this->queryWithFilters([
       'Id' => $prototype_ids,
     ]);
-    if (empty($prototypes)) {
+    if (empty($items)) {
       return [];
     }
-    return array_map(fn ($prototype): AttachmentPrototype => new AttachmentPrototype($prototype), $prototypes);
+    $prototypes = array_map(fn ($prototype): AttachmentPrototype => new AttachmentPrototype($prototype), $items);
+    $this->objectStore->addObjects($prototypes);
+    return $prototypes;
   }
 
   /**
@@ -87,15 +105,9 @@ class AttachmentPrototypeQuery extends FabricQueryBase {
    *   The processed attachment prototype object.
    */
   public function getPrototypeByPlanAndId(int $plan_id, int $prototype_id): ?AttachmentPrototype {
-    // Get the attachment data.
-    $prototypes = $this->queryWithFilters([
-      'PlanId' => $plan_id,
-    ]);
-    if (empty($prototypes)) {
-      return NULL;
-    }
-    $prototype = $prototypes[$prototype_id] ?? NULL;
-    return $prototype ? new AttachmentPrototype($prototype) : NULL;
+    // Get the attachment data prototypes.
+    $prototypes = $this->getDataPrototypesForPlan($plan_id);
+    return $prototypes[$prototype_id] ?? NULL;
   }
 
   /**
@@ -108,12 +120,47 @@ class AttachmentPrototypeQuery extends FabricQueryBase {
    *   An array of attachment prototype objects.
    */
   public function getDataPrototypesForPlan($plan_id) {
+    $prototypes = $this->objectStore->getObjectCollection(AttachmentPrototype::getObjectStorageKey(), 'PlanId', $plan_id);
+    if (!empty($prototypes)) {
+      return $prototypes;
+    }
     // Get the attachment data.
-    $prototypes = $this->queryWithFilters([
+    $items = $this->queryWithFilters([
       'PlanId' => $plan_id,
       'Type' => AttachmentPrototype::DATA_TYPES,
     ]);
-    return $this->buildResultObjects($prototypes, AttachmentPrototype::class);
+    $prototypes = $this->buildResultObjects($items, AttachmentPrototype::class);
+    $this->objectStore->addObjectCollection($prototypes, AttachmentPrototype::getObjectStorageKey(), 'PlanId');
+    return $prototypes;
+  }
+
+  /**
+   * Get all data attachment prototypes for the given plan.
+   *
+   * @param int[] $plan_ids
+   *   The plan ids.
+   *
+   * @return \Drupal\ghi_plans\ApiObjects\Prototypes\AttachmentPrototype[][]
+   *   An array of arrays of attachment prototype objects, keyed by plan id.
+   */
+  public function getDataPrototypesForPlans(array $plan_ids) {
+    sort($plan_ids);
+    // Get the attachment data.
+    $items = $this->queryWithFilters([
+      'PlanId' => $plan_ids,
+      'Type' => AttachmentPrototype::DATA_TYPES,
+    ]);
+    /** @var \Drupal\ghi_plans\ApiObjects\Prototypes\AttachmentPrototype[] $prototypes */
+    $prototypes = $this->buildResultObjects($items, AttachmentPrototype::class);
+    $this->objectStore->addObjectCollection($prototypes, AttachmentPrototype::getObjectStorageKey(), 'PlanId');
+    $prototypes_by_plan = [];
+    foreach ($prototypes as $prototype) {
+      $plan_id = $prototype->getPlanId();
+      $prototypes_by_plan = [];
+      $prototypes_by_plan[$plan_id] = $prototypes_by_plan[$plan_id] ?? [];
+      $prototypes_by_plan[$plan_id][$prototype->id()] = $prototype;
+    }
+    return $prototypes_by_plan;
   }
 
 }
