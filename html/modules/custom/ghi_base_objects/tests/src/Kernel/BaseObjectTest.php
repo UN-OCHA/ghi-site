@@ -51,7 +51,7 @@ class BaseObjectTest extends KernelTestBase {
     $this->assertEquals('base_object_name', $base_object->getName());
     $base_object->setName('new name');
     $this->assertEquals('new name', $base_object->getName());
-    $this->assertEquals('new name', $base_object->getShortName());
+    $this->assertNull($base_object->getShortName());
   }
 
   /**

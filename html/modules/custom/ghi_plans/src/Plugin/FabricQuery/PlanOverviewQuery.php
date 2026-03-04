@@ -6,7 +6,6 @@ use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\ghi_plans\ApiObjects\Attachments\CaseloadAttachmentInterface;
 use Drupal\ghi_plans\ApiObjects\Attachments\FinancialAttachment;
 use Drupal\ghi_plans\ApiObjects\Partials\PlanOverviewPlan;
-use Drupal\ghi_plans\ApiObjects\Plan;
 use Drupal\hpc_api\Attribute\FabricQuery;
 use Drupal\hpc_api\Query\FabricQueryBase;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -37,9 +36,23 @@ class PlanOverviewQuery extends FabricQueryBase {
   /**
    * The attachment query.
    *
+   * @var \Drupal\ghi_plans\Plugin\FabricQuery\PlanQuery
+   */
+  private $planQuery = NULL;
+
+  /**
+   * The attachment query.
+   *
    * @var \Drupal\ghi_plans\Plugin\FabricQuery\AttachmentQuery
    */
   private $attachmentQuery = NULL;
+
+  /**
+   * The attachment prototype query.
+   *
+   * @var \Drupal\ghi_plans\Plugin\FabricQuery\AttachmentPrototypeQuery
+   */
+  private $attachmentPrototypeQuery = NULL;
 
   /**
    * {@inheritdoc}
@@ -47,7 +60,9 @@ class PlanOverviewQuery extends FabricQueryBase {
   public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition): PlanOverviewQuery {
     /** @var self */
     $instance = parent::create($container, $configuration, $plugin_id, $plugin_definition);
+    $instance->planQuery = $container->get('plugin.manager.fabric_query_manager')->createInstance('plan');
     $instance->attachmentQuery = $container->get('plugin.manager.fabric_query_manager')->createInstance('attachment');
+    $instance->attachmentPrototypeQuery = $container->get('plugin.manager.fabric_query_manager')->createInstance('attachment_prototype');
     return $instance;
   }
 
@@ -86,18 +101,10 @@ class PlanOverviewQuery extends FabricQueryBase {
       return;
     }
 
-    $plan_objects = $this->fabricClient->createQuery('plans', Plan::getGraphQlItems())
-      ->setFilters([
-        'planPeriod' => [
-          'period' => [
-            'PeriodType' => 'Year',
-            'CalendarYear' => $year,
-          ],
-        ],
-      ])
-      ->execute();
+    $plans = $this->planQuery->getPlansByYear($year);
+    $plan_ids = $this->extractIds($plans);
+    $this->attachmentPrototypeQuery->getDataPrototypesForPlans($plan_ids);
 
-    $plan_ids = array_map(fn ($plan_object) => $plan_object->Id, $plan_objects);
     $attachments = $this->attachmentQuery->getAttachmentsByObject('plan', $plan_ids, ['caseload', 'financial']);
     $caseloads_by_plan = [];
     $requirements_by_plan = [];
@@ -114,8 +121,9 @@ class PlanOverviewQuery extends FabricQueryBase {
       }
     }
 
-    foreach ($plan_objects as $plan_object) {
-      $plan_id = $plan_object->Id;
+    foreach ($plans as $plan) {
+      $plan_id = $plan->id();
+      $plan_object = $plan->getRawData();
       $plan_object->caseloads = $caseloads_by_plan[$plan_id] ?? [];
       $plan_object->requirements = !empty($requirements_by_plan[$plan_id]) ? reset($requirements_by_plan[$plan_id]) : 0;
       $plan = new PlanOverviewPlan($plan_object);

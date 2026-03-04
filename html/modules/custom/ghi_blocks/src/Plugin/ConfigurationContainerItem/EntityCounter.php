@@ -294,8 +294,7 @@ class EntityCounter extends ConfigurationContainerItemPluginBase {
     foreach ($this->getEntities($entity_type) ?? [] as $entity) {
       $prototype_id = $entity->getPrototypeId();
       if (empty($entity_prototype_options[$prototype_id])) {
-        $name = $entity->plural_name;
-        $entity_prototype_options[$prototype_id] = $name;
+        $entity_prototype_options[$prototype_id] = $entity->getPrototype()->getNamePlural();
         $weight[$prototype_id] = $entity->order_number;
       }
     }

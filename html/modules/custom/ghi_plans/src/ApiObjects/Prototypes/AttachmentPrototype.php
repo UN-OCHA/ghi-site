@@ -63,6 +63,7 @@ class AttachmentPrototype extends ApiObjectBase {
 
     return (object) [
       'id' => $data->Id,
+      'plan_id' => $data->PlanId,
       'name' => $value->Name ?? NULL,
       'ref_code' => $data->RefCode,
       'type' => strtolower($data->Type),
@@ -119,6 +120,16 @@ class AttachmentPrototype extends ApiObjectBase {
    */
   public function getName(): string {
     return $this->name ?? $this->getTypeLabel();
+  }
+
+  /**
+   * Get the plan id of the attachment prototype.
+   *
+   * @return int|null
+   *   The plan id of the attachment prototype.
+   */
+  public function getPlanId(): ?int {
+    return $this->plan_id ?? NULL;
   }
 
   /**

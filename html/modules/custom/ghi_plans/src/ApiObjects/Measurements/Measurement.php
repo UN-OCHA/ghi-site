@@ -75,6 +75,7 @@ class Measurement extends ApiObjectBase implements MeasurementInterface {
         'entity_id' => $measurement->EntityId ?? NULL,
         'plan_id' => $measurement->PlanId ?? NULL,
       ],
+      'attachment_id' => $measurement->AttachmentId,
       'attachment_prototype_id' => $measurement->AttachmentPrototypeId,
       'custom_id' => $measurement->CustomReference ?? NULL,
       'composed_reference' => $measurement->ComposedReference ?? NULL,
@@ -108,6 +109,13 @@ class Measurement extends ApiObjectBase implements MeasurementInterface {
    */
   public function getSourceEntityType() {
     return $this->source->entity_type;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getAttachmentId() {
+    return $this->map?->attachment_id;
   }
 
   /**
@@ -214,18 +222,18 @@ class Measurement extends ApiObjectBase implements MeasurementInterface {
     // for performance when we need to do this for multiple attachments
     // belonging to the same plan (which is the usual case) because the
     // requests are cached.
-    $query_handler = $this->getAttachmentPrototypeQuery();
-    if (!$query_handler) {
+    $attachment_prototype_query = $this->getAttachmentPrototypeQuery();
+    if (!$attachment_prototype_query) {
       throw new \Exception(sprintf('Failed to extract prototype for attachment %s', $measurement->Id));
     }
     $plan_id = $measurement->PlanId ?? NULL;
     $prototype_id = $measurement->AttachmentPrototypeId ?? NULL;
-    if ($plan_id && $prototype_id && $prototype = $query_handler->getPrototypeByPlanAndId($plan_id, $prototype_id)) {
+    if ($plan_id && $prototype_id && $prototype = $attachment_prototype_query->getPrototypeByPlanAndId($plan_id, $prototype_id)) {
       return $prototype;
     }
 
     // If that didn't work, we query the prototype data directly.
-    $prototype = $prototype_id ? $query_handler->getPrototype($prototype_id) : NULL;
+    $prototype = $prototype_id ? $attachment_prototype_query->getPrototype($prototype_id) : NULL;
     if (!$prototype instanceof AttachmentPrototype) {
       throw new \Exception(sprintf('Failed to extract prototype for attachment %s', $measurement->Id));
     }

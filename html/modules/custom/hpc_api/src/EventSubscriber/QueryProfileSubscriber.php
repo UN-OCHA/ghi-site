@@ -45,7 +45,7 @@ class QueryProfileSubscriber implements EventSubscriberInterface {
     }
     $call_times = QueryHelper::endpointCallTimeStorage();
     if (!empty($call_times)) {
-      arsort($call_times);
+      // arsort($call_times);
       $this->debugLogger->toFile($call_times);
     }
   }

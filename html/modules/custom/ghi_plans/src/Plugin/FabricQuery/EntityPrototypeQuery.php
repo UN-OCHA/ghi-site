@@ -27,15 +27,22 @@ class EntityPrototypeQuery extends FabricQueryBase {
    *   The entity prototype object or NULL if not found.
    */
   public function getPrototype(int $prototype_id): ?EntityPrototype {
+    $prototype = $this->objectStore->getObject($prototype_id, EntityPrototype::getObjectStorageKey());
+    if ($prototype) {
+      return $prototype;
+    }
+
     // Get the prototype data.
-    $prototypes = $this->fabricClient->createQuery('entityPrototypes', EntityPrototype::getGraphQlItems())
+    $items = $this->fabricClient->createQuery('entityPrototypes', EntityPrototype::getGraphQlItems())
       ->setFilter('Id', $prototype_id)
       ->execute();
-    if (empty($prototypes)) {
+    if (empty($items)) {
       return NULL;
     }
-    $prototype = reset($prototypes);
-    return $prototype ? new EntityPrototype($prototype) : NULL;
+    $item = reset($items);
+    $prototype = $item ? new EntityPrototype($item) : NULL;
+    $this->objectStore->addObject($prototype);
+    return $prototype;
   }
 
   /**
@@ -48,14 +55,19 @@ class EntityPrototypeQuery extends FabricQueryBase {
    *   The processed plan prototype object or NULL.
    */
   public function getPlanPrototype(int $plan_id): ?PlanPrototype {
-    // Get the prototypes.
-    $prototypes = $this->fabricClient->createQuery('entityPrototypes', EntityPrototype::getGraphQlItems())
-      ->setFilter('PlanId', $plan_id)
-      ->execute();
+    $prototypes = $this->objectStore->getObjectCollection(EntityPrototype::getObjectStorageKey(), 'PlanId', $plan_id);
+    if (empty($prototypes)) {
+      // Get the prototypes.
+      $items = $this->fabricClient->createQuery('entityPrototypes', EntityPrototype::getGraphQlItems())
+        ->setFilter('PlanId', $plan_id)
+        ->execute();
+      $prototypes = $this->buildResultObjects($items, EntityPrototype::class);
+    }
     if (empty($prototypes)) {
       return NULL;
     }
-    return new PlanPrototype($prototypes);
+    $this->objectStore->addObjectCollection($prototypes, EntityPrototype::getObjectStorageKey(), 'PlanId');
+    return new PlanPrototype(array_map(fn ($prototype) => $prototype->getRawData(), $prototypes));
   }
 
 }

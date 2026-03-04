@@ -197,10 +197,45 @@ class FundingData extends ConfigurationContainerItemPluginBase {
   }
 
   /**
-   * {@inheritdoc}
+   * Get the value of an item.
+   *
+   * @param string $data_type_key
+   *   The data type key.
+   * @param string $cluster_restrict
+   *   An array describing how to restrict by cluster..
+   *
+   * @return string|\Drupal\Component\Render\MarkupInterface
+   *   Return the rendered value.
    */
-  public function getValue($data_type_key = NULL, $scale = NULL, $cluster_restrict = NULL) {
-    $data_type = $this->getDataType($data_type_key ?: $this->get('data_type'));
+  public function getValue(?string $data_type_key = NULL, ?array $cluster_restrict = NULL) {
+    $values = &drupal_static(__CLASS__ . '::' . __METHOD__, []);
+
+    $data_type_key = $data_type_key ?: $this->get('data_type');
+    $cluster_restrict = $cluster_restrict ?: ($this->get('cluster_restrict') ?: NULL);
+
+    /** @var \Drupal\ghi_plans\ApiObjects\Entities\EntityObjectInterface $entity */
+    $entity = $this->getContextValue('entity');
+    /** @var \Drupal\ghi_plans\Entity\Plan $plan_object */
+    $plan_object = $this->getContextValue('plan_object');
+    $base_object = $this->getContextValue('base_object');
+    $cluster_context = $base_object && $base_object instanceof GoverningEntity ? $base_object : NULL;
+
+    if ($entity && $entity instanceof ApiObjectInterface) {
+      $cache_key = 'cluster::' . $entity->id() . '::' . $data_type_key;
+    }
+    elseif ($plan_object && !$cluster_context) {
+      $cache_key = 'plan' . $plan_object->id() . '::' . $data_type_key;
+    }
+    elseif ($cluster_context) {
+      $cache_key = 'cluster::' . $cluster_context->getSourceId() . '::' . $data_type_key;
+    }
+
+    if (array_key_exists($cache_key, $values)) {
+      return $values[$cache_key];
+    }
+    $values[$cache_key] = NULL;
+
+    $data_type = $this->getDataType($data_type_key);
     if (!$data_type) {
       return NULL;
     }
@@ -214,19 +249,12 @@ class FundingData extends ConfigurationContainerItemPluginBase {
     if (is_object($raw_data) && property_exists($raw_data, $property)) {
       return $raw_data->$property;
     }
-    /** @var \Drupal\ghi_plans\ApiObjects\Entities\EntityObjectInterface $entity */
-    $entity = $this->getContextValue('entity');
-    /** @var \Drupal\ghi_plans\Entity\Plan $plan_object */
-    $plan_object = $this->getContextValue('plan_object');
-    $base_object = $this->getContextValue('base_object');
-    $cluster_context = $base_object && $base_object instanceof GoverningEntity ? $base_object : NULL;
-    $cluster_restrict = $cluster_restrict ?: ($this->get('cluster_restrict') ?: NULL);
 
     $value = NULL;
     if ($entity && $entity instanceof ApiObjectInterface) {
       $value = $this->getValueForCluster($entity->id(), $property);
     }
-    if ($plan_object && !$cluster_context) {
+    elseif ($plan_object && !$cluster_context) {
       if (!empty($cluster_restrict) && !empty($cluster_restrict['type']) && $cluster_restrict['type'] != 'none') {
         $value = $this->getValueWithClusterRestrict($data_type, $cluster_restrict);
       }
@@ -235,10 +263,10 @@ class FundingData extends ConfigurationContainerItemPluginBase {
       }
     }
     elseif ($cluster_context) {
-      $cluster_id = $cluster_context->get('field_original_id')->value;
-      $value = $this->getValueForCluster($cluster_id, $property);
+      $value = $this->getValueForCluster($cluster_context->getSourceId(), $property);
     }
 
+    $values[$cache_key] = $value;
     return $value;
   }
 
@@ -254,28 +282,43 @@ class FundingData extends ConfigurationContainerItemPluginBase {
    *   The value.
    */
   public function getValueForPlan(Plan $plan, $property) {
+    $values = &drupal_static(__CLASS__ . '::' . __METHOD__, []);
     $plan_id = $plan->getSourceId();
+    $values[$plan_id] = $values[$plan_id] ?? [];
+
+    if (array_key_exists($property, $values[$plan_id])) {
+      return $values[$plan_id][$property];
+    }
     $this->fundingSummaryQuery->setPlaceholder('plan_id', $plan_id);
     switch ($property) {
       case 'current_requirements':
       case 'original_requirements':
-        return $plan->getRequirements();
+        $value = $plan->getRequirements();
+        break;
 
       case 'total_funding':
-        return $this->fundingSummaryQuery->getTotalFunding();
+        $value = $this->fundingSummaryQuery->getTotalFunding();
+        break;
 
       case 'outside_funding':
-        return $this->fundingSummaryQuery->getOutsideFunding();
+        $value = $this->fundingSummaryQuery->getOutsideFunding();
+        break;
 
       case 'funding_gap':
-        return $plan->getFundingGap($this->fundingSummaryQuery->getTotalFunding());
+        $value = $plan->getFundingGap($this->fundingSummaryQuery->getTotalFunding());
+        break;
 
       case 'funding_coverage':
-        return $plan->getCoverage($this->fundingSummaryQuery->getTotalFunding());
+        $value = $plan->getCoverage($this->fundingSummaryQuery->getTotalFunding());
+        break;
 
       default:
-        return $this->fundingSummaryQuery->get($property, 0);
+        $value = $this->fundingSummaryQuery->get($property, 0);
+        break;
     }
+
+    $values[$plan_id][$property] = $value;
+    return $value;
   }
 
   /**
@@ -290,25 +333,38 @@ class FundingData extends ConfigurationContainerItemPluginBase {
    *   The value.
    */
   public function getValueForCluster($cluster_id, $property) {
+    $values = &drupal_static(__CLASS__ . '::' . __METHOD__, []);
+    $values[$cluster_id] = $values[$cluster_id] ?? [];
+    if (array_key_exists($property, $values[$cluster_id])) {
+      return $values[$cluster_id][$property];
+    }
     switch ($property) {
       case 'current_requirements':
       case 'original_requirements':
-        return $this->getRequirements('governingEntity', $cluster_id);
+        $value = $this->getRequirements('governingEntity', $cluster_id);
+        break;
 
       case 'total_funding':
-        return $this->flowSearchQuery->getClusterTotalFunding($cluster_id);
+        $value = $this->flowSearchQuery->getClusterTotalFunding($cluster_id);
+        break;
 
       case 'funding_gap':
         $requirements = $this->getRequirements('governingEntity', $cluster_id);
-        return $this->flowSearchQuery->getClusterFundingGap($cluster_id, $requirements);
+        $value = $this->flowSearchQuery->getClusterFundingGap($cluster_id, $requirements);
+        break;
 
       case 'funding_coverage':
         $requirements = $this->getRequirements('governingEntity', $cluster_id);
-        return $this->flowSearchQuery->getClusterFundingCoverage($cluster_id, $requirements);
+        $value = $this->flowSearchQuery->getClusterFundingCoverage($cluster_id, $requirements);
+        break;
 
       default:
-        return $this->flowSearchQuery->getClusterPropertyById($cluster_id, $property, 0);
+        $value = $this->flowSearchQuery->getClusterPropertyById($cluster_id, $property, 0);
+        break;
     }
+
+    $values[$cluster_id][$property] = $value;
+    return $value;
   }
 
   /**
@@ -323,7 +379,16 @@ class FundingData extends ConfigurationContainerItemPluginBase {
    *   The retrieved value.
    */
   public function getValueWithClusterRestrict(array $data_type, array $cluster_restrict) {
+    $values = &drupal_static(__CLASS__ . '::' . __METHOD__, []);
+    /** @var \Drupal\ghi_plans\Entity\Plan $plan_object */
+    $plan_object = $this->getContextValue('plan_object');
+    $plan_id = $plan_object->getSourceId();
+    $values[$plan_id] = $values[$plan_id] ?? [];
+
     $property = $data_type['property'];
+    if (array_key_exists($property, $values[$plan_id])) {
+      return $values[$plan_id][$property];
+    }
 
     // Extract the actually used cluster from the funding data.
     $cluster_ids = $this->getClusterIdsByClusterRestrict($cluster_restrict, $this->clusterQuery, $this->flowSearchQuery);
@@ -340,7 +405,9 @@ class FundingData extends ConfigurationContainerItemPluginBase {
     $values = array_map(function ($cluster_id) use ($property) {
       return $this->getValueForCluster($cluster_id, $property);
     }, $cluster_ids);
-    return array_sum($values);
+    $value = array_sum($values);
+    $values[$plan_id][$property] = $value;
+    return $value;
   }
 
   /**
@@ -362,7 +429,7 @@ class FundingData extends ConfigurationContainerItemPluginBase {
     /** @var \Drupal\ghi_base_objects\Entity\BaseObjectInterface $base_object */
     $base_object = $this->getContextValue('base_object');
 
-    $rendered = $this->buildRenderArray($theme_function, $this->getValue($data_type_key, $scale, $cluster_restrict), [
+    $rendered = $this->buildRenderArray($theme_function, $this->getValue($data_type_key, $cluster_restrict), [
       'scale' => $scale,
       'decimal_format' => $plan_object->getDecimalFormat(),
     ] + $theme_options);

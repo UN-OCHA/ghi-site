@@ -29,7 +29,7 @@ class GoverningEntityQuery extends FabricQueryBase {
    *   The governing entity object or NULL if not found.
    */
   public function getGoverningEntity(int $entity_id): ?GoverningEntity {
-    $governing_entity = $this->getObjectFromStorage($entity_id, GoverningEntity::getObjectStorageKey());
+    $governing_entity = $this->objectStore->getObject($entity_id, GoverningEntity::getObjectStorageKey());
     if ($governing_entity) {
       return $governing_entity;
     }
@@ -46,7 +46,7 @@ class GoverningEntityQuery extends FabricQueryBase {
       return NULL;
     }
     $governing_entity = new GoverningEntity($item);
-    $this->addObjectToStorage($governing_entity);
+    $this->objectStore->addObject($governing_entity);
     return $governing_entity;
   }
 
@@ -61,7 +61,7 @@ class GoverningEntityQuery extends FabricQueryBase {
    */
   public function getGoverningEntitiesById(array $entity_ids): array {
     $entity_ids = array_unique($entity_ids);
-    $governing_entities = $this->getObjectsFromStorage($entity_ids, GoverningEntity::getObjectStorageKey());
+    $governing_entities = $this->objectStore->getObjects($entity_ids, GoverningEntity::getObjectStorageKey());
     if (count($governing_entities) == count($entity_ids)) {
       return $governing_entities;
     }
@@ -80,8 +80,34 @@ class GoverningEntityQuery extends FabricQueryBase {
       ])
       ->execute();
     $governing_entities = $this->buildResultObjects($items, GoverningEntity::class);
-    $this->addObjectsToStorage($governing_entities);
+    $this->objectStore->addObjects($governing_entities);
     return $governing_entities;
+  }
+
+  /**
+   * Get plan entities by plan id.
+   *
+   * @param int $plan_id
+   *   The plan entity.
+   *
+   * @return \Drupal\ghi_plans\ApiObjects\Entities\GoverningEntity[]
+   *   An array of governing entities.
+   */
+  public function getGoverningEntitiesByPlanId($plan_id) {
+    $entities = $this->objectStore->getObjectCollection(GoverningEntity::getObjectStorageKey(), 'PlanId', $plan_id);
+    if (!empty($entities)) {
+      return $entities;
+    }
+    // Query entities.
+    $items = $this->fabricClient->createQuery('coordinationEntities', GoverningEntity::getGraphQlItems())
+      ->setFilters([
+        'PlanId' => $plan_id,
+        'RecordStatus' => 'Active',
+      ])
+      ->execute();
+    $entities = $this->buildResultObjects($items, GoverningEntity::class);
+    $this->objectStore->addObjectCollection($entities, GoverningEntity::getObjectStorageKey(), 'PlanId');
+    return $entities;
   }
 
   /**
@@ -103,7 +129,7 @@ class GoverningEntityQuery extends FabricQueryBase {
       ])
       ->execute();
     $governing_entities = $this->buildResultObjects($items, GoverningEntity::class);
-    $this->addObjectsToStorage($governing_entities);
+    $this->objectStore->addObjects($governing_entities);
     $governing_entities = array_filter($governing_entities, fn ($entity) => in_array($cluster_tag, $entity->getTags()));
     return $governing_entities;
   }

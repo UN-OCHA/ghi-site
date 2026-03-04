@@ -186,6 +186,7 @@ class PlanTable extends GHIBlockBase implements HPCDownloadExcelInterface, HPCDo
     /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\FundingOverviewQuery $funding_query */
     $funding_query = $this->getQueryHandler('funding_overview');
     $plan_funding = $funding_query->getFundingByPlans();
+
     foreach ($plans as $plan) {
       $plan_entity = $plan->getEntity();
       if ($plan_entity) {

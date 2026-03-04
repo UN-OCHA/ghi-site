@@ -2,8 +2,11 @@
 
 namespace Drupal\ghi_plan_clusters\Entity;
 
+use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Render\Markup;
+use Drupal\Core\Routing\AdminContext;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
+use Drupal\ghi_plan_clusters\PlanClusterManager;
 use Drupal\ghi_plans\Entity\GoverningEntity;
 use Drupal\ghi_sections\Entity\SectionNodeInterface;
 use Drupal\ghi_subpages\Entity\SubpageNode;
@@ -107,7 +110,7 @@ class PlanCluster extends SubpageNode implements PlanClusterInterface {
   /**
    * {@inheritdoc}
    */
-  public function getBaseObject() {
+  public function getBaseObject(): ?GoverningEntity {
     if (!$this->hasField(self::BASE_OBJECT_FIELD_NAME)) {
       return NULL;
     }
@@ -118,7 +121,7 @@ class PlanCluster extends SubpageNode implements PlanClusterInterface {
   /**
    * {@inheritdoc}
    */
-  public static function getBaseObjectType() {
+  public static function getBaseObjectType(): ?EntityInterface {
     return \Drupal::entityTypeManager()->getStorage('base_object_type')->load('governing_entity');
   }
 
@@ -128,7 +131,7 @@ class PlanCluster extends SubpageNode implements PlanClusterInterface {
    * @return \Drupal\ghi_plan_clusters\PlanClusterManager
    *   The plan cluster manager service.
    */
-  private static function getPlanClusterManager() {
+  private static function getPlanClusterManager(): PlanClusterManager {
     return \Drupal::service('ghi_plan_clusters.manager');
   }
 
@@ -138,7 +141,7 @@ class PlanCluster extends SubpageNode implements PlanClusterInterface {
    * @return \Drupal\Core\Routing\AdminContext
    *   The admin context service.
    */
-  private static function getAdminContext() {
+  private static function getAdminContext(): AdminContext {
     return \Drupal::service('router.admin_context');
   }
 

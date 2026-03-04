@@ -1,0 +1,20 @@
+uuid: 90565b2a-7d12-4b7d-909e-29f5e2bf03d9
+langcode: en
+status: true
+dependencies:
+  module:
+    - user
+id: core_requirements_user
+label: 'Module user'
+description: 'Requirements of the user module'
+category: Requirements
+plugin_id: core_requirements
+result_class: null
+value_label: null
+value_type: no_value
+caching_time: 3600
+settings:
+  module: user
+  exclude_keys: {  }
+thresholds:
+  type: none

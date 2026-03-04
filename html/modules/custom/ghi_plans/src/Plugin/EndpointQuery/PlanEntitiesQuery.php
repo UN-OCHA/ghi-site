@@ -155,52 +155,6 @@ class PlanEntitiesQuery extends EndpointQueryBase {
   }
 
   /**
-   * Get data attachments.
-   *
-   * @param \Drupal\Core\Entity\ContentEntityInterface $context_object
-   *   The current context object.
-   * @param array $filter
-   *   Optional array for filtering the attachments.
-   *
-   * @return \Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment[]
-   *   An array of attachment objects for the given context.
-   */
-  public function getDataAttachments(?ContentEntityInterface $context_object = NULL, ?array $filter = NULL) {
-    $allowed_types = [
-      'caseload',
-      'indicator',
-    ];
-
-    if (empty($filter['type'])) {
-      $filter['type'] = $allowed_types;
-    }
-    else {
-      $filter['type'] = array_filter((array) $filter['type'], function ($item) use ($allowed_types) {
-        return in_array($item, $allowed_types);
-      });
-    }
-
-    // Map some filters from what the external caller should use, to what we
-    // use internally on the raw data before creating actual Attachment objects
-    // using AttachmentHelper::processAttachments.
-    if (!empty($filter['entity_type'])) {
-      $filter['objectType'] = $filter['entity_type'];
-      unset($filter['entity_type']);
-    }
-    if (!empty($filter['entity_id'])) {
-      $filter['objectId'] = $filter['entity_id'];
-      unset($filter['entity_id']);
-    }
-
-    if (!empty($filter['prototype_id'])) {
-      $filter['attachmentPrototype.id'] = $filter['prototype_id'];
-      unset($filter['prototype_id']);
-    }
-
-    return AttachmentHelper::processAttachments($this->getAttachments($context_object, $filter));
-  }
-
-  /**
    * Get webcontent file attachments.
    *
    * @param \Drupal\Core\Entity\ContentEntityInterface $context_object

@@ -27,6 +27,7 @@ use Drupal\hpc_api\ApiObjects\Types\RelationshipType;
 use Drupal\hpc_api\ApiObjects\Types\ResourceType;
 use Drupal\hpc_api\ApiObjects\Types\Sector;
 use Drupal\hpc_api\ApiObjects\Types\Unit;
+use Drupal\hpc_api\Traits\ObjectFilterTrait;
 use Drupal\hpc_api\Traits\SimpleCacheTrait;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -37,6 +38,7 @@ abstract class FabricQueryBase extends PluginBase implements FabricQueryPluginIn
 
   use SimpleCacheTrait;
   use DependencySerializationTrait;
+  use ObjectFilterTrait;
 
   /**
    * Entity types in Fabric.
@@ -83,6 +85,13 @@ abstract class FabricQueryBase extends PluginBase implements FabricQueryPluginIn
    * @var \Drupal\hpc_api\Query\FabricClient
    */
   protected $fabricClient;
+
+  /**
+   * The object store.
+   *
+   * @var \Drupal\hpc_api\ObjectStore
+   */
+  protected $objectStore;
 
   /**
    * The current user.
@@ -140,6 +149,7 @@ abstract class FabricQueryBase extends PluginBase implements FabricQueryPluginIn
     /** @var self $instance */
     $instance = new static($configuration, $plugin_id, $plugin_definition);
     $instance->fabricClient = $container->get('hpc_api.fabric_client');
+    $instance->objectStore = $container->get('hpc_api.object_store');
     $instance->user = $container->get('current_user');
     $instance->cache = $container->get('cache.data');
     return $instance;
@@ -224,94 +234,6 @@ abstract class FabricQueryBase extends PluginBase implements FabricQueryPluginIn
   }
 
   /**
-   * Add an item to the object storage.
-   *
-   * @param \Drupal\hpc_api\ApiObjects\ApiObjectInterface $object
-   *   The object to store.
-   */
-  protected function addObjectToStorage(ApiObjectInterface $object): void {
-    $storage = $this->cache($object->getObjectStorageKey()) ?? [];
-    $storage[$object->id()] = $object;
-    $this->cache($object->getObjectStorageKey(), $storage);
-  }
-
-  /**
-   * Add multiple items to the object storage.
-   *
-   * @param \Drupal\hpc_api\ApiObjects\ApiObjectInterface[] $objects
-   *   The objects to store.
-   */
-  protected function addObjectsToStorage(array $objects): void {
-    foreach ($objects as $object) {
-      $this->addObjectToStorage($object);
-    }
-  }
-
-  /**
-   * Get an item from the object storage.
-   *
-   * @param int $id
-   *   The if of the object to fetch.
-   * @param string $storage_key
-   *   The storage key identifier from which to load the object.
-   *
-   * @return \Drupal\hpc_api\ApiObjects\ApiObjectInterface|null
-   *   The object if found, NULL otherwise.
-   */
-  protected function getObjectFromStorage(int $id, string $storage_key): ?ApiObjectInterface {
-    $storage = $this->cache($storage_key) ?? [];
-    return $storage[$id] ?? NULL;
-  }
-
-  /**
-   * Get multiple items from the object storage.
-   *
-   * @param int[] $ids
-   *   An array of object ids to fetch.
-   * @param string $storage_key
-   *   The storage key identifier from which to load the object.
-   *
-   * @return \Drupal\hpc_api\ApiObjects\ApiObjectInterface[]
-   *   An array of objects.
-   */
-  protected function getObjectsFromStorage(array $ids, string $storage_key): array {
-    $storage = $this->cache($storage_key) ?? [];
-    return array_intersect_key($storage, array_flip($ids));
-  }
-
-  /**
-   * Add an object collection to the object storage using a custom key.
-   *
-   * @param \Drupal\hpc_api\ApiObjects\ApiObjectInterface[] $objects
-   *   The objects to store.
-   * @param string $storage_key
-   *   The storage key identifier for the objects.
-   * @param string $collection_key
-   *   The collection key identifier for the objects.
-   */
-  protected function addObjectCollectionToStorage(array $objects, string $storage_key, string $collection_key): void {
-    $storage = $this->cache($storage_key) ?? [];
-    foreach ($objects as $object) {
-      assert($object instanceof ApiObjectInterface);
-      $storage[$collection_key][$object->getRawData()->$collection_key] = $storage[$collection_key][$object->getRawData()->$collection_key] ?? [];
-      $storage[$collection_key][$object->getRawData()->$collection_key][$object->id()] = $object;
-      $this->addObjectToStorage($object);
-    }
-    $this->cache($storage_key, $storage);
-  }
-
-  /**
-   * Get an object collection from the object storage using a custom key.
-   *
-   * @return \Drupal\hpc_api\ApiObjects\ApiObjectInterface[]
-   *   An array of objects.
-   */
-  protected function getObjectCollectionFromStorage(string $storage_key, string $collection_key, int|string $key): array {
-    $storage = $this->cache($storage_key) ?? [];
-    return $storage[$collection_key][$key] ?? [];
-  }
-
-  /**
    * Do a chunked query to work around fabrics limitation of 100 filter values.
    *
    * @param scalar[] $values
@@ -393,6 +315,32 @@ abstract class FabricQueryBase extends PluginBase implements FabricQueryPluginIn
       }
       return $object;
     }, $items);
+  }
+
+  /**
+   * Extract ids from the given set of api objects.
+   *
+   * @param \Drupal\hpc_api\ApiObjects\ApiObjectInterface[] $objects
+   *   The objects.
+   *
+   * @return int[]
+   *   An array of ids.
+   */
+  protected function extractIds(array $objects) {
+    return array_map(fn (ApiObjectInterface $object): int => $object->id(), $objects);
+  }
+
+  /**
+   * Extract ids from the given set of api objects.
+   *
+   * @param array $objects
+   *   The objects with raw data.
+   *
+   * @return int[]
+   *   An array of ids.
+   */
+  protected function extractIdsFromRawData(array $objects) {
+    return array_map(fn ($object): int => $object->Id, $objects);
   }
 
   /**

@@ -35,6 +35,14 @@ interface MeasurementInterface extends ApiObjectInterface {
   public function getSourceEntityId();
 
   /**
+   * Get the attachment id.
+   *
+   * @return int
+   *   The attachment id.
+   */
+  public function getAttachmentId();
+
+  /**
    * Get a reporting period id for the measurement.
    *
    * @return int
