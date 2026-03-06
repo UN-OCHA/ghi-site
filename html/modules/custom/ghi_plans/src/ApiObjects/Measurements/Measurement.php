@@ -46,8 +46,9 @@ class Measurement extends ApiObjectBase implements MeasurementInterface {
     'EntityMainType',
     'MeasurementType',
     'UnitId',
-    'CalculationMethodId',
+    'CalculationMethod',
     'Description',
+    'Comments',
     'VisibilityGroupId',
     'AttachmentPrototypeId',
     'RecordStatus',
@@ -80,11 +81,12 @@ class Measurement extends ApiObjectBase implements MeasurementInterface {
       'custom_id' => $measurement->CustomReference ?? NULL,
       'composed_reference' => $measurement->ComposedReference ?? NULL,
       'description' => $measurement->Name ?? NULL,
+      'comment' => $measurement->Comments ?? NULL,
       'values' => $this->extractValues($this->totals),
       'unit' => ($measurement->UnitId ?? NULL) ? $query->getUnit($measurement->UnitId) : NULL,
       'monitoring_period' => $measurement->MeasurementPeriodId ?? NULL,
       'has_disaggregated_data' => !empty($measurement->HasDisaggregatedData),
-      'calculation_method' => ($measurement->CalculationMethodId ?? NULL) ? $query->getCalculationMethod($measurement->CalculationMethodId)?->getName() : NULL,
+      'calculation_method' => ($measurement->CalculationMethod ?? NULL),
     ];
 
     return $processed;
@@ -200,8 +202,8 @@ class Measurement extends ApiObjectBase implements MeasurementInterface {
       // Nothing to do.
       return;
     }
-    $attachment_query = $this->getAttachmentQuery();
-    $data->disaggregated = $attachment_query?->getMeasurementDisaggregatedData($this->id());
+    $measurement_query = $this->getMeasurementQuery();
+    $data->disaggregated = $measurement_query?->getMeasurementDisaggregatedData($this->id());
     if (!$data) {
       return;
     }

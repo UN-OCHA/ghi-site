@@ -36,7 +36,7 @@ class MeasurementQuery extends FabricQueryBase {
    *
    * @todo Add support for the reporting period.
    */
-  public function getMeasurement(int $measurement_id, $reporting_period = NULL): ?MeasurementInterface {
+  public function getMeasurement(int $measurement_id, ?int $reporting_period = NULL): ?MeasurementInterface {
     $measurement = NULL;
     $queries = [
       $this->fabricClient->createQuery('measurements', Measurement::getGraphQlItems())
@@ -76,7 +76,7 @@ class MeasurementQuery extends FabricQueryBase {
    * @return \Drupal\ghi_plans\ApiObjects\Measurements\MeasurementInterface[]
    *   An array of measurement objects, keyed by the measurement id.
    */
-  public function getMeasurementsById(array $measurement_ids, bool $disaggregated = FALSE) {
+  public function getMeasurementsById(array $measurement_ids, bool $disaggregated = FALSE): array {
     if (empty($measurement_ids)) {
       return [];
     }
@@ -118,13 +118,13 @@ class MeasurementQuery extends FabricQueryBase {
   /**
    * Get measurements by attachment id.
    *
-   * @param array $attachment_ids
+   * @param int[] $attachment_ids
    *   The attachment ids.
    *
    * @return \Drupal\ghi_plans\ApiObjects\Measurements\MeasurementInterface[]
    *   An array of measurement objects, keyed by the measurement id.
    */
-  public function getMeasurementsByAttachmentId(array $attachment_ids) {
+  public function getMeasurementsByAttachmentId(array $attachment_ids): array {
     $items = $this->fabricClient->createQuery('measurements', ['Id'])
       ->setFilters([
         'AttachmentId' => $attachment_ids,
@@ -148,7 +148,7 @@ class MeasurementQuery extends FabricQueryBase {
    * @return \Drupal\ghi_plans\ApiObjects\Measurements\MeasurementInterface[]
    *   An array of measurement objects, keyed by the measurement id.
    */
-  public function getMeasurementsByObject($entity_type, $entity_ids, $measurement_types = NULL) {
+  public function getMeasurementsByObject(string $entity_type, array|int $entity_ids, array|string $measurement_types = []): array {
     $entity_ids = (array) $entity_ids;
     $measurement_types = array_filter((array) $measurement_types);
     sort($entity_ids);
@@ -206,7 +206,7 @@ class MeasurementQuery extends FabricQueryBase {
    * @return \Drupal\ghi_plans\ApiObjects\Measurements\MeasurementInterface[]
    *   An array of measurement objects for the given context.
    */
-  public function getMeasurementsForPlan(int $plan_id, ?ContentEntityInterface $context_object = NULL, array $filter = [], $fetch_facts = FALSE) {
+  public function getMeasurementsForPlan(int $plan_id, ?ContentEntityInterface $context_object = NULL, array $filter = [], bool $fetch_facts = FALSE): array {
     $cache_key = $this->getCacheKey(array_filter([
       'plan_id' => $plan_id,
       'context_type' => $context_object?->bundle() ?? NULL,
@@ -253,7 +253,7 @@ class MeasurementQuery extends FabricQueryBase {
       $this->addMeasurementFacts($measurements);
     }
 
-    $processed_measurements = array_map(fn ($measurement) => new Measurement($measurement), $measurements);
+    $processed_measurements = array_map(fn (object $measurement): Measurement => new Measurement($measurement), $measurements);
     $this->setCache($cache_key, $processed_measurements);
     return $processed_measurements;
   }
@@ -270,7 +270,7 @@ class MeasurementQuery extends FabricQueryBase {
    *   An array of array of data measurements, keyed by the plan id and the
    *   measurement id.
    */
-  public function getMeasurementsByPlan(array $plan_ids, $measurement_types = NULL) {
+  public function getMeasurementsByPlan(array $plan_ids, array|string $measurement_types = []): array {
     $measurements = $this->getMeasurementsByObject('plan', $plan_ids, $measurement_types);
     $measurements_by_plan = [];
     foreach ($measurements as $measurement) {
@@ -293,7 +293,7 @@ class MeasurementQuery extends FabricQueryBase {
    *   An array of array of data measurements, keyed by the cluster id and the
    *   measurement id.
    */
-  public function getMeasurementsByCluster(array $cluster_ids, $measurement_types = NULL) {
+  public function getMeasurementsByCluster(array $cluster_ids, array|string $measurement_types = []): array {
     $measurements = $this->getMeasurementsByObject('governingEntity', $cluster_ids, $measurement_types);
     $measurements_by_cluster = [];
     foreach ($measurements as $measurement) {
@@ -316,7 +316,7 @@ class MeasurementQuery extends FabricQueryBase {
    * @return \Drupal\ghi_plans\ApiObjects\Measurements\MeasurementInterface[]
    *   An array of data measurements.
    */
-  public function getMeasurementsForEntities(array $entities) {
+  public function getMeasurementsForEntities(array $entities): array {
     if (empty($entities)) {
       return [];
     }
@@ -362,7 +362,7 @@ class MeasurementQuery extends FabricQueryBase {
     // If we have found measurements, also load the total facts.
     $this->addMeasurementFacts($measurements);
 
-    $processed_measurements = array_map(fn ($measurement) => new Measurement($measurement), $measurements);
+    $processed_measurements = array_map(fn (object $measurement): Measurement => new Measurement($measurement), $measurements);
     return $processed_measurements;
   }
 
@@ -377,7 +377,7 @@ class MeasurementQuery extends FabricQueryBase {
    * @return array
    *   An array of facts representing raw data.
    */
-  public function getMeasurementFactsByMeasurementId(array $measurement_ids, $disaggregated = FALSE) {
+  public function getMeasurementFactsByMeasurementId(array $measurement_ids, bool $disaggregated = FALSE) {
     if (empty($measurement_ids)) {
       return [];
     }
@@ -390,7 +390,7 @@ class MeasurementQuery extends FabricQueryBase {
         'IsTotal' => $disaggregated === FALSE,
       ])
       ->execute();
-    return $measurement_facts;
+    return $measurement_facts ?: [];
   }
 
   /**
@@ -402,7 +402,7 @@ class MeasurementQuery extends FabricQueryBase {
    *   An optional set of query result objects. If NULL, the facts will be
    *   retrieved from fabric using the measurement ids as condition.
    */
-  private function addMeasurementFacts(&$measurements, ?array $measurement_facts = NULL) {
+  private function addMeasurementFacts(array &$measurements, ?array $measurement_facts = NULL) {
     if (!$measurement_facts) {
       $measurement_ids = $this->extractIdsFromRawData($measurements);
       $measurement_facts = $this->getMeasurementFactsByMeasurementId($measurement_ids);
@@ -437,7 +437,7 @@ class MeasurementQuery extends FabricQueryBase {
    * @return string|null
    *   The filter value for that entity type or NULL.
    */
-  private function getEntityTypeFilterValue($entity_type): ?string {
+  private function getEntityTypeFilterValue(string $entity_type): ?string {
     return match ($entity_type) {
       'plan' => 'Plan',
       'planEntity' => 'LogframeEntity',

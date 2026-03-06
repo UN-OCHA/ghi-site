@@ -49,11 +49,9 @@ trait PlanReportingPeriodTrait {
    */
   public static function getPlanReportingPeriods($plan_id, $limit_to_published = FALSE): array {
     $periods = self::getPlanQuery()?->getPlanReportingPeriods($plan_id) ?? [];
-    if ($limit_to_published) {
-      $periods = array_filter($periods, function ($period) {
-        return $period->isPublished();
-      });
-    }
+    $periods = $limit_to_published ? array_filter($periods, function ($period) {
+      return $period->isPublished();
+    }) : $periods;
     ArrayHelper::sortObjectsByMethod($periods, 'getPeriodNumber');
     return $periods;
   }

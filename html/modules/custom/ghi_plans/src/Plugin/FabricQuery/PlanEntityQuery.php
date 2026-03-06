@@ -78,7 +78,8 @@ class PlanEntityQuery extends FabricQueryBase {
         'Id' => $entity_ids,
         'RecordStatus' => 'Active',
       ])
-      ->execute();
+      ->execute() ?: [];
+
     $entities = $this->buildResultObjects($items, PlanEntity::class);
     $this->objectStore->addObjects($entities);
     return $entities;
@@ -93,7 +94,7 @@ class PlanEntityQuery extends FabricQueryBase {
    * @return \Drupal\ghi_plans\ApiObjects\Entities\PlanEntity[]
    *   An array of plan entities.
    */
-  public function getPlanEntitiesByPlanId($plan_id) {
+  public function getPlanEntitiesByPlanId(int $plan_id): array {
     $entities = $this->objectStore->getObjectCollection(PlanEntity::getObjectStorageKey(), 'PlanId', $plan_id);
     if (!empty($entities)) {
       return $entities;
@@ -104,7 +105,7 @@ class PlanEntityQuery extends FabricQueryBase {
         'PlanId' => $plan_id,
         'RecordStatus' => 'Active',
       ])
-      ->execute();
+      ->execute() ?: [];
     $entities = $this->buildResultObjects($items, PlanEntity::class);
     $this->objectStore->addObjectCollection($entities, PlanEntity::getObjectStorageKey(), 'PlanId');
     return $entities;

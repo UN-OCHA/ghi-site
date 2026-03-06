@@ -72,7 +72,7 @@ class PlanOverviewQuery extends FabricQueryBase {
    * @param int $year
    *   The year.
    */
-  public function setYear(int $year) {
+  public function setYear(int $year): void {
     $this->year = $year;
   }
 
@@ -89,7 +89,7 @@ class PlanOverviewQuery extends FabricQueryBase {
   /**
    * Retrieve plan data.
    */
-  private function retrievePlans() {
+  private function retrievePlans(): void {
     // Several homepage blocks ask for plan funding during the same request.
     // Keep the processed response on the query instance after the first call.
     if ($this->plans !== NULL) {
@@ -140,7 +140,7 @@ class PlanOverviewQuery extends FabricQueryBase {
    * @return \Drupal\ghi_plans\ApiObjects\Partials\PlanOverviewPlan[]
    *   An array of plan overview plan objects keyed by plan id.
    */
-  public function getPlans($filter = TRUE) {
+  public function getPlans(bool $filter = TRUE): array {
     if ($this->plans === NULL) {
       $this->retrievePlans();
     }
@@ -164,7 +164,7 @@ class PlanOverviewQuery extends FabricQueryBase {
    * @return \Drupal\ghi_plans\ApiObjects\Partials\PlanOverviewPlan[]
    *   An array of GHO plans.
    */
-  public function getGhoPlans($filter = FALSE) {
+  public function getGhoPlans(bool $filter = FALSE): array {
     $plans = $this->getPlans($filter);
     if (empty($plans)) {
       return [];
@@ -199,7 +199,7 @@ class PlanOverviewQuery extends FabricQueryBase {
    * @return int
    *   The number of unique countries of all GHO plans.
    */
-  public function getNumerOfGhoCountries() {
+  public function getNumberOfGhoCountries(): int {
     // Get the GHO plans, but make sure they are not filtered for visibility.
     // The number of affected countries will appear only in the key figures
     // element, where we want the number of countries for all GHO plans
@@ -237,7 +237,7 @@ class PlanOverviewQuery extends FabricQueryBase {
    * @return array
    *   An array keyed by the type and valued by the total sum of that type
    */
-  public function getCaseloadTotalValues(array $types) {
+  public function getCaseloadTotalValues(array $types): array {
     // Get the GHO plans, but make sure they are not filtered for visibility.
     // The caseload totals will appear only in the key figures element, where
     // we want the full GHO figures independently of whether specific plans are
@@ -308,7 +308,7 @@ class PlanOverviewQuery extends FabricQueryBase {
    *   An array with the attachment ids of specific plan level caseload
    *   attachments, keyed by the plan id.
    */
-  private function getPlanCaseloadOverridesByPlanId() {
+  private function getPlanCaseloadOverridesByPlanId(): array {
     $plans = $this->getPlans();
     $caseload_overrides = [];
     if (empty($plans)) {
@@ -337,7 +337,7 @@ class PlanOverviewQuery extends FabricQueryBase {
    * @param \Drupal\ghi_plans\ApiObjects\Partials\PlanOverviewPlan[] $plans
    *   An array of plan objects.
    */
-  private function filterPlansByVisibilityOnGlobalPages(array &$plans) {
+  private function filterPlansByVisibilityOnGlobalPages(array &$plans): void {
     if (empty($plans)) {
       return;
     }

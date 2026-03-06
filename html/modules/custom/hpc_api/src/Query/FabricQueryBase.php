@@ -177,6 +177,7 @@ abstract class FabricQueryBase extends PluginBase implements FabricQueryPluginIn
    */
   public function disableCache(): static {
     $this->fabricClient->disableCache();
+    $this->objectStore->disable();
     return $this;
   }
 

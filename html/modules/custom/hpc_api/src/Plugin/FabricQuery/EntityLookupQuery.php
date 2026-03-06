@@ -3,8 +3,8 @@
 namespace Drupal\hpc_api\Plugin\FabricQuery;
 
 use Drupal\Core\StringTranslation\TranslatableMarkup;
-use Drupal\hpc_api\Attribute\FabricQuery as AttributeFabricQuery;
-use Drupal\hpc_api\Query\FabricQuery;
+use Drupal\hpc_api\Attribute\FabricQuery;
+use Drupal\hpc_api\Query\FabricQuery as QueryFabricQuery;
 use Drupal\hpc_api\Query\FabricQueryBase;
 
 /**
@@ -13,9 +13,9 @@ use Drupal\hpc_api\Query\FabricQueryBase;
  * Under the hood, this will do entity type specific queries to get data from
  * fabric.
  */
-#[AttributeFabricQuery(
+#[FabricQuery(
   id: 'entity_lookup',
-  label: new TranslatableMarkup('Entity query'),
+  label: new TranslatableMarkup('Entity lookup query'),
 )]
 class EntityLookupQuery extends FabricQueryBase {
 
@@ -254,7 +254,7 @@ class EntityLookupQuery extends FabricQueryBase {
    * @return \Drupal\hpc_api\Query\FabricQuery|null
    *   A fabric query object or NULL.
    */
-  public function getEntityQuery(int $entity_type_id, int $entity_id): ?FabricQuery {
+  public function getEntityQuery(int $entity_type_id, int $entity_id): ?QueryFabricQuery {
     $query_definitions = $this->getEntityQueryDefinitions();
     $entity_type = $this->getEntityTypeById($entity_type_id);
     $query_definition = $query_definitions[$entity_type->getName()] ?? NULL;

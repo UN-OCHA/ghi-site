@@ -167,9 +167,12 @@ abstract class ApiObjectTestBase extends ApiBaseObjectTest {
       return $locations;
     });
 
+    $plan_query = $this->prophesize(PlanQuery::class);
+    $plan_query->getPlanReportingPeriods(Argument::any())->willReturn([]);
+
     $fabric_query_manager->hasDefinition(Argument::any())->willReturn(TRUE);
     $fabric_query_manager->createInstance('entity_type')->willReturn($entity_type_query->reveal());
-    $fabric_query_manager->createInstance('plan')->willReturn($this->prophesize(PlanQuery::class)->reveal());
+    $fabric_query_manager->createInstance('plan')->willReturn($plan_query->reveal());
     $fabric_query_manager->createInstance('location')->willReturn($location_query->reveal());
     $fabric_query_manager->createInstance(Argument::any())->willReturn($this->prophesize(FabricQueryBase::class)->reveal());
 

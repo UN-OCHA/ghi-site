@@ -32,7 +32,7 @@ class OrganizationQuery extends FabricQueryBase {
    * @return \Drupal\ghi_plans\ApiObjects\Organization|null
    *   An organization object or NULL.
    */
-  public function getOrganization($organization_id): ?Organization {
+  public function getOrganization(int $organization_id): ?Organization {
     $items = $this->fabricClient->createQuery('organizations', Organization::getGraphQlItems())
       ->setFilter('Id', $organization_id)
       ->execute();
@@ -74,7 +74,7 @@ class OrganizationQuery extends FabricQueryBase {
    *   An array of project objects for the given organization.
    */
   public function getProjectsForOrganization(Organization $organization, ?BaseObjectInterface $base_object = NULL) {
-    $cache_key = $this->getCacheKey(array_filter($this->getCommonCacheKeys() + [
+    $cache_key = $this->getCacheKey(array_filter([
       'organization' => $organization->id(),
       'base_object' => $base_object ? $base_object->bundle() . ':' . $base_object->id() : 'none',
     ]));
@@ -89,7 +89,7 @@ class OrganizationQuery extends FabricQueryBase {
         'Id' => $project_ids,
         'PlanId' => $plan_id,
       ]))
-      ->execute();
+      ->execute() ?: [];
     $projects = $this->buildResultObjects($items, Project::class);
     $this->setCache($cache_key, $projects);
     return $projects;

@@ -58,7 +58,7 @@ class PlanQuery extends FabricQueryBase {
     }
 
     // Add the reporting periods.
-    $plan_data->planReportingPeriods = array_map(fn ($period) => new PlanReportingPeriod($period), $data['planReportingPeriods'] ?? []);
+    $plan_data->planReportingPeriods = array_map(fn (object $period): PlanReportingPeriod => new PlanReportingPeriod($period), $data['planReportingPeriods'] ?? []);
     $this->objectStore->addObjectCollection($plan_data->planReportingPeriods, PlanReportingPeriod::getObjectStorageKey(), 'PlanId');
 
     $plan = new Plan($plan_data);
@@ -176,7 +176,7 @@ class PlanQuery extends FabricQueryBase {
    * @return \Drupal\ghi_plans\ApiObjects\PlanReportingPeriod[]
    *   An array of plan reporting periods.
    */
-  public function getPlanReportingPeriods(int $plan_id) {
+  public function getPlanReportingPeriods(int $plan_id): array {
     $reporting_periods = $this->objectStore->getObjectCollection(PlanReportingPeriod::getObjectStorageKey(), 'PlanId', $plan_id);
     if ($reporting_periods) {
       return $reporting_periods;
@@ -200,7 +200,7 @@ class PlanQuery extends FabricQueryBase {
    * @return \Drupal\hpc_api\ApiObjects\Types\PlanType|null
    *   The plan type object or NULL.
    */
-  public function getPlanTypeByName($name): ?PlanType {
+  public function getPlanTypeByName(string $name): ?PlanType {
     foreach ($this->getPlanTypes() as $plan_type) {
       if ($plan_type->getName() == $name) {
         return $plan_type;
@@ -218,7 +218,7 @@ class PlanQuery extends FabricQueryBase {
    * @return \Drupal\hpc_api\ApiObjects\Types\PlanCostingType|null
    *   The plan costing type object or NULL.
    */
-  public function getPlanCostingTypeByName($name): ?PlanCostingType {
+  public function getPlanCostingTypeByName(string $name): ?PlanCostingType {
     foreach ($this->getPlanCostingTypes() as $plan_costing_type) {
       if ($plan_costing_type->getName() == $name) {
         return $plan_costing_type;

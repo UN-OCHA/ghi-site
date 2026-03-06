@@ -303,8 +303,9 @@ class PlanOverviewPlan extends BaseObject {
    * @return \Drupal\ghi_plans\ApiObjects\Attachments\CaseloadAttachmentInterface|null
    *   A caseload object or NULL.
    */
-  public function getPlanCaseload($attachment_id = NULL): ?CaseloadAttachmentInterface {
-    return $this->findPlanCaseload($this->caseloads, $attachment_id ?? $this->getEntity()?->getPlanCaseloadId());
+  public function getPlanCaseload(?int $attachment_id = NULL): ?CaseloadAttachmentInterface {
+    $attachment_id = $attachment_id ?? $this->getEntity()?->getPlanCaseloadId();
+    return $attachment_id ? $this->findPlanCaseload($this->caseloads, $attachment_id) : NULL;
   }
 
   /**
