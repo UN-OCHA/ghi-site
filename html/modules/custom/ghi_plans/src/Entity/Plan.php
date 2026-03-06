@@ -270,7 +270,7 @@ class Plan extends BaseObject implements BaseObjectMetaDataInterface, BaseObject
     if ($this->usePlanRequirements()) {
       $attachments = $attachments_query->getAttachmentsByObject('plan', [$this->getSourceId()], 'financial');
       $attachment = count($attachments) ? reset($attachments) : NULL;
-      assert($attachment instanceof FinancialAttachment);
+      assert($attachment instanceof FinancialAttachment || $attachment === NULL);
       $requirements = $attachment?->getRequirements() ?? NULL;
     }
     elseif ($this->useClusterRequirements()) {
@@ -478,7 +478,7 @@ class Plan extends BaseObject implements BaseObjectMetaDataInterface, BaseObject
       return NULL;
     }
     $value = $this->get('field_latest_published_period_id')->value ?? NULL;
-    return is_int($value) ? $value : NULL;
+    return $value !== NULL ? (int) $value : NULL;
   }
 
   /**

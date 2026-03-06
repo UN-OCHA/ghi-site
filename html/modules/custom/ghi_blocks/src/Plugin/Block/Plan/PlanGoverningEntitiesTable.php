@@ -159,7 +159,7 @@ class PlanGoverningEntitiesTable extends GHIBlockBase implements ConfigurableTab
       }
 
       // Set the context.
-      $subpage_node = $subpage_nodes[$base_object->id()];
+      $subpage_node = $subpage_nodes[$base_object->id()] ?? NULL;
       if ($conf['base']['hide_unpublished_clusters'] && !$subpage_node?->isPublished()) {
         continue;
       }

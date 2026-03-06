@@ -22,15 +22,15 @@ class AttachmentPrototypeQuery extends FabricQueryBase {
    * @param array $filters
    *   An associative array of filters.
    *
-   * @return false|object|array
-   *   The result from the fabric query or FALSE on failure.
+   * @return array
+   *   The result array from the fabric query or FALSE on failure.
    */
-  private function queryWithFilters($filters): false|object|array {
+  private function queryWithFilters($filters): array {
     return $this->fabricClient->createQuery('attachmentPrototypes', AttachmentPrototype::getGraphQlItems())
       ->setFilters($filters + [
         'RecordStatus' => 'Active',
       ])
-      ->execute();
+      ->execute() ?: [];
 
   }
 
@@ -85,9 +85,6 @@ class AttachmentPrototypeQuery extends FabricQueryBase {
     $items = $this->queryWithFilters([
       'Id' => $prototype_ids,
     ]);
-    if (empty($items)) {
-      return [];
-    }
     $prototypes = array_map(fn ($prototype): AttachmentPrototype => new AttachmentPrototype($prototype), $items);
     $this->objectStore->addObjects($prototypes);
     return $prototypes;
@@ -119,7 +116,7 @@ class AttachmentPrototypeQuery extends FabricQueryBase {
    * @return \Drupal\ghi_plans\ApiObjects\Prototypes\AttachmentPrototype[]
    *   An array of attachment prototype objects.
    */
-  public function getDataPrototypesForPlan($plan_id) {
+  public function getDataPrototypesForPlan(int $plan_id): array {
     $prototypes = $this->objectStore->getObjectCollection(AttachmentPrototype::getObjectStorageKey(), 'PlanId', $plan_id);
     if (!empty($prototypes)) {
       return $prototypes;
@@ -143,7 +140,7 @@ class AttachmentPrototypeQuery extends FabricQueryBase {
    * @return \Drupal\ghi_plans\ApiObjects\Prototypes\AttachmentPrototype[][]
    *   An array of arrays of attachment prototype objects, keyed by plan id.
    */
-  public function getDataPrototypesForPlans(array $plan_ids) {
+  public function getDataPrototypesForPlans(array $plan_ids): array {
     sort($plan_ids);
     // Get the attachment data.
     $items = $this->queryWithFilters([

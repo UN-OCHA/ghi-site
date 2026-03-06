@@ -7,12 +7,19 @@ use Drupal\hpc_api\Traits\ObjectFilterTrait;
 use Drupal\hpc_api\Traits\SimpleCacheTrait;
 
 /**
- * Class representing object store for Api objects.
+ * Class representing an object store for Api objects.
  */
 class ObjectStore {
 
   use SimpleCacheTrait;
   use ObjectFilterTrait;
+
+  /**
+   * Flag to inidicate if the object store should be used or not.
+   *
+   * @var bool
+   */
+  protected bool $enabled = TRUE;
 
   /**
    * Get the ids already requested, identified by key.
@@ -45,6 +52,9 @@ class ObjectStore {
    *   An array of ids.
    */
   public function getRequestedIds(string $storage_key, string $key) {
+    if (!$this->enabled) {
+      return [];
+    }
     $storage = $this->cache($storage_key) ?: [];
     return $storage['requested_ids'][$key] ?? [];
   }
@@ -96,6 +106,9 @@ class ObjectStore {
    *   The object if found, NULL otherwise.
    */
   public function getObject(int $key, string $storage_key): ?ApiObjectInterface {
+    if (!$this->enabled) {
+      return NULL;
+    }
     $storage = $this->cache($storage_key) ?: [];
     $storage['objects'] = $storage['objects'] ?? [];
     return $storage['objects'][$key] ?? NULL;
@@ -120,6 +133,9 @@ class ObjectStore {
    * @throws InvalidArgumentException
    */
   public function getObjects(array $keys, string $storage_key, ?string $property = NULL, array $filter = []): array {
+    if (!$this->enabled) {
+      return [];
+    }
     $storage = $this->cache($storage_key) ?: [];
     $storage['objects'] = $storage['objects'] ?? [];
     if ($property === NULL) {
@@ -184,10 +200,20 @@ class ObjectStore {
    *   An array of objects.
    */
   public function getObjectCollection(string $storage_key, string $collection_key, int|string $collection_value): array {
+    if (!$this->enabled) {
+      return [];
+    }
     $storage = $this->cache($storage_key) ?? [];
     $storage['collections'] = $storage['collections'] ?? [];
     $object_ids = $storage['collections'][$collection_key][$collection_value] ?? [];
     return !empty($object_ids) ? $this->getObjects($object_ids, $storage_key) : [];
+  }
+
+  /**
+   * Disable the object store.
+   */
+  public function disable(): void {
+    $this->enabled = FALSE;
   }
 
 }

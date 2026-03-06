@@ -82,7 +82,7 @@ class DataAttachment extends AttachmentBase implements DataAttachmentInterface {
     'CustomReference',
     'HasDisaggregatedData',
     'UnitId',
-    'CalculationMethodId',
+    'CalculationMethod',
     'Description',
     'VisibilityGroupId',
     'AttachmentPrototypeId',
@@ -135,7 +135,7 @@ class DataAttachment extends AttachmentBase implements DataAttachmentInterface {
       'unit' => ($attachment->UnitId ?? NULL) ? $query->getUnit($attachment->UnitId) : NULL,
       'monitoring_period' => $period ?? NULL,
       'has_disaggregated_data' => !empty($attachment->HasDisaggregatedData),
-      'calculation_method' => ($attachment->CalculationMethodId ?? NULL) ? $query->getCalculationMethod($attachment->CalculationMethodId)?->getName() : NULL,
+      'calculation_method' => ($attachment->CalculationMethod ?? NULL),
     ];
     $processed->calculation_method = is_string($processed->calculation_method) ? strtolower($processed->calculation_method) : NULL;
 
@@ -1087,20 +1087,31 @@ class DataAttachment extends AttachmentBase implements DataAttachmentInterface {
    * @throws \Drupal\ghi_plans\Exceptions\InvalidAttachmentTypeException
    */
   public function getValue(array $conf) {
+    $cache_key = $this->getCacheKey([
+      'attachment_id' => $this->id(),
+      'conf' => json_encode($conf),
+    ]);
+    $value = $this->cache($cache_key);
+    if ($value !== NULL) {
+      return $value;
+    }
     $this->handleKnownConfigIssues($conf);
     if (empty($conf['data_points'][0]['metric_type'])) {
       return NULL;
     }
     switch ($conf['processing']) {
       case 'single':
-        return $this->getSingleValue($conf['data_points'][0]['metric_type'], NULL, $conf['data_points'][0]);
+        $value = $this->getSingleValue($conf['data_points'][0]['metric_type'], NULL, $conf['data_points'][0]);
+        break;
 
       case 'calculated':
-        return $this->getCalculatedValue($conf);
+        $value = $this->getCalculatedValue($conf);
+        break;
 
       default:
         throw new InvalidAttachmentTypeException(sprintf('Unknown processing type: %s', $conf['processing']));
     }
+    return $this->cache($cache_key, $value);
   }
 
   /**

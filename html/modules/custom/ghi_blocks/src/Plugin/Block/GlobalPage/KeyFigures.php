@@ -77,7 +77,7 @@ class KeyFigures extends GHIBlockBase implements MultiStepFormBlockInterface {
     ];
 
     $caseload_values = $plan_overview_query->getCaseloadTotalValues($types);
-    $affected_countries = $plan_overview_query->getNumerOfGhoCountries();
+    $affected_countries = $plan_overview_query->getNumberOfGhoCountries();
     $gho_plans = count($plan_overview_query->getGhoPlans());
     return [
       'total_funding' => $funding,

@@ -9,6 +9,7 @@ use Drupal\ghi_plans\ApiObjects\Attachments\CaseloadAttachment;
 use Drupal\ghi_plans\ApiObjects\Attachments\FinancialAttachment;
 use Drupal\ghi_plans\Plugin\EndpointQuery\PlanFundingSummaryQuery;
 use Drupal\ghi_plans\Plugin\FabricQuery\AttachmentQuery;
+use Drupal\ghi_plans\Plugin\FabricQuery\PlanQuery;
 use Drupal\hpc_downloads\Interfaces\HPCDownloadExcelInterface;
 use Drupal\hpc_downloads\Interfaces\HPCDownloadPNGInterface;
 use Drupal\Tests\ghi_blocks\Kernel\PlanBlockKernelTestBase;
@@ -252,11 +253,15 @@ class PlanCaseloadTrendsTableTest extends PlanBlockKernelTestBase {
     $plan_funding_query = $this->prophesize(PlanFundingSummaryQuery::class);
     $attachment_query = $this->prophesize(AttachmentQuery::class);
 
+    $plan_query = $this->prophesize(PlanQuery::class);
+    $plan_query->getPlansById(Argument::any())->willReturn([]);
+
     $reflection = new \ReflectionClass($plugin);
     $property = $reflection->getProperty('queryHandlers');
     $property->setValue($plugin, [
       'plan_funding' => $plan_funding_query->reveal(),
       'attachment' => $attachment_query->reveal(),
+      'plan' => $plan_query->reveal(),
     ]);
 
     return $plugin;

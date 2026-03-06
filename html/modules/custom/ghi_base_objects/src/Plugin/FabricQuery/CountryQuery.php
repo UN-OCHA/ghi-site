@@ -33,7 +33,7 @@ class CountryQuery extends FabricQueryBase {
     $items = $this->fabricClient->createQuery('locations', Country::getGraphQlItems())
       ->setFilter('AdminLevel', 0)
       ->setOrderBy(['Name' => 'ASC'])
-      ->execute();
+      ->execute() ?: [];
     $this->countries = $this->buildResultObjects($items, Country::class);
   }
 

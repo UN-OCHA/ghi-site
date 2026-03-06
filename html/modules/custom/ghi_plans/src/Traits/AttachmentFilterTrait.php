@@ -19,7 +19,7 @@ trait AttachmentFilterTrait {
    * @return string
    *   The type used in the API.
    */
-  private function mapAttachmentType($type) {
+  private function mapAttachmentType($type): string {
     $type_map = [
       'caseload' => 'caseLoad',
     ];
@@ -35,7 +35,7 @@ trait AttachmentFilterTrait {
    * @return array
    *   A prepared filter array.
    */
-  private function prepareAttachmentFilter(array $filter) {
+  private function prepareAttachmentFilter(array $filter): array {
     if (empty($filter)) {
       return $filter;
     }
@@ -63,7 +63,7 @@ trait AttachmentFilterTrait {
    * @return array
    *   An array with the attachments who match the filter.
    */
-  public function filterAttachments(array $attachments, array $filter) {
+  public function filterAttachments(array $attachments, array $filter): array {
     return ArrayHelper::filterArray($attachments, $this->prepareAttachmentFilter($filter));
   }
 
@@ -84,7 +84,7 @@ trait AttachmentFilterTrait {
    * @return \Drupal\ghi_plans\ApiObjects\Attachments\CaseloadAttachmentInterface|null
    *   A caseload object or NULL.
    */
-  public function findPlanCaseload(array $caseloads, $attachment_id) {
+  public function findPlanCaseload(array $caseloads, int $attachment_id): ?CaseloadAttachmentInterface {
     $caseload = NULL;
 
     $caseloads = array_filter($caseloads, function ($_caseload) {

@@ -60,7 +60,7 @@ class EntityPrototypeQuery extends FabricQueryBase {
       // Get the prototypes.
       $items = $this->fabricClient->createQuery('entityPrototypes', EntityPrototype::getGraphQlItems())
         ->setFilter('PlanId', $plan_id)
-        ->execute();
+        ->execute() ?: [];
       $prototypes = $this->buildResultObjects($items, EntityPrototype::class);
     }
     if (empty($prototypes)) {
