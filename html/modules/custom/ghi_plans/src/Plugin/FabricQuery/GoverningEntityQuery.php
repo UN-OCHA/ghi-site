@@ -78,7 +78,8 @@ class GoverningEntityQuery extends FabricQueryBase {
         'Id' => $entity_ids,
         'RecordStatus' => 'Active',
       ])
-      ->execute();
+      ->execute() ?: [];
+
     $governing_entities = $this->buildResultObjects($items, GoverningEntity::class);
     $this->objectStore->addObjects($governing_entities);
     return $governing_entities;
@@ -93,7 +94,7 @@ class GoverningEntityQuery extends FabricQueryBase {
    * @return \Drupal\ghi_plans\ApiObjects\Entities\GoverningEntity[]
    *   An array of governing entities.
    */
-  public function getGoverningEntitiesByPlanId($plan_id) {
+  public function getGoverningEntitiesByPlanId(int $plan_id): array {
     $entities = $this->objectStore->getObjectCollection(GoverningEntity::getObjectStorageKey(), 'PlanId', $plan_id);
     if (!empty($entities)) {
       return $entities;
@@ -104,7 +105,8 @@ class GoverningEntityQuery extends FabricQueryBase {
         'PlanId' => $plan_id,
         'RecordStatus' => 'Active',
       ])
-      ->execute();
+      ->execute() ?: [];
+
     $entities = $this->buildResultObjects($items, GoverningEntity::class);
     $this->objectStore->addObjectCollection($entities, GoverningEntity::getObjectStorageKey(), 'PlanId');
     return $entities;
@@ -121,13 +123,13 @@ class GoverningEntityQuery extends FabricQueryBase {
    * @return \Drupal\ghi_plans\ApiObjects\Entities\GoverningEntity[]
    *   An array of governing entity objects.
    */
-  public function getTaggedClustersForPlan(int $plan_id, $cluster_tag) {
+  public function getTaggedClustersForPlan(int $plan_id, string $cluster_tag): array {
     $items = $this->fabricClient->createQuery('coordinationEntities', GoverningEntity::getGraphQlItems())
       ->setFilters([
         'PlanId' => $plan_id,
         'RecordStatus' => 'Active',
       ])
-      ->execute();
+      ->execute() ?: [];
     $governing_entities = $this->buildResultObjects($items, GoverningEntity::class);
     $this->objectStore->addObjects($governing_entities);
     $governing_entities = array_filter($governing_entities, fn ($entity) => in_array($cluster_tag, $entity->getTags()));

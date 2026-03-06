@@ -192,7 +192,7 @@ class ProjectQuery extends FabricQueryBase {
    *   An array of arrays. First level key is the organization id, second level
    *   key the project id and the value is a project object.
    */
-  public function getPlanProjectsByOrganization(Plan $plan, ?BaseObjectChildInterface $context_base_object = NULL) {
+  public function getPlanProjectsByOrganization(Plan $plan, ?BaseObjectChildInterface $context_base_object = NULL): array {
     $projects = $this->getProjectsForPlan($plan, $context_base_object);
     $organization_projects = $this->groupProjectsByOrganization($projects);
     return $organization_projects;
@@ -210,7 +210,7 @@ class ProjectQuery extends FabricQueryBase {
    *   An array of arrays. First level key is the organization id, second level
    *   key the cluster id and the value is a plan cluster object.
    */
-  public function getProjectClustersByOrganization(Plan $plan, ?BaseObjectChildInterface $context_base_object = NULL) {
+  public function getProjectClustersByOrganization(Plan $plan, ?BaseObjectChildInterface $context_base_object = NULL): array {
     $projects = $this->getProjectsForPlan($plan, $context_base_object);
     $clusters = [];
     foreach ($projects as $project) {

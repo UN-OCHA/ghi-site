@@ -30,6 +30,13 @@ hpc_api.reports.fabric.query:
     _title: 'Execute query'
   requirements:
     _permission: 'administer site configuration'
+hpc_api.reports.fabric.query_inspector:
+  path: '/admin/reports/fabric/query-inspector'
+  defaults:
+    _form: '\Drupal\hpc_api\Form\FabricQueryInspectorForm'
+    _title: 'Inspect fabric queries'
+  requirements:
+    _permission: 'administer site configuration'
 hpc_api.reports.fabric.base_types:
   path: '/admin/reports/fabric/base-types'
   defaults:

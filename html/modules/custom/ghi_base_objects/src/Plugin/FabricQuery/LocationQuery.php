@@ -2,7 +2,6 @@
 
 namespace Drupal\ghi_base_objects\Plugin\FabricQuery;
 
-use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\ghi_base_objects\ApiObjects\Location;
 use Drupal\hpc_api\Attribute\FabricQuery;
@@ -16,8 +15,6 @@ use Drupal\hpc_api\Query\FabricQueryBase;
   label: new TranslatableMarkup('Locations query'),
 )]
 class LocationQuery extends FabricQueryBase {
-
-  use StringTranslationTrait;
 
   const MAX_LEVEL = 5;
 
@@ -52,7 +49,7 @@ class LocationQuery extends FabricQueryBase {
    * @return \Drupal\ghi_base_objects\ApiObjects\Location[]
    *   An array of location objects.
    */
-  public function getLocationsById($location_ids): array {
+  public function getLocationsById(array $location_ids): array {
     if (empty($location_ids)) {
       return [];
     }
@@ -62,7 +59,7 @@ class LocationQuery extends FabricQueryBase {
     }
     $items = $this->fabricClient->createQuery('locations', Location::getGraphQlItems())
       ->setFilter('Id', $location_ids)
-      ->execute();
+      ->execute() ?: [];
     $locations = $this->buildResultObjects($items, Location::class);
     $this->objectStore->addObjects($locations);
     return $locations;
@@ -79,12 +76,12 @@ class LocationQuery extends FabricQueryBase {
    * @return \Drupal\ghi_base_objects\ApiObjects\Location[]
    *   An array of location objects keyed by the location id.
    */
-  public function getLocationsForCountry(int $country_id, int $max_level = 3) {
+  public function getLocationsForCountry(int $country_id, int $max_level = 3): array {
     $items = $this->fabricClient->createQuery('locations', Location::getGraphQlItems())
       ->setFilter('CountryId', $country_id)
       ->setFilter('AdminLevel', range(1, $max_level))
       ->setFilter('RecordStatus', 'Active')
-      ->execute();
+      ->execute() ?: [];
     return $this->buildResultObjects($items, Location::class);
   }
 

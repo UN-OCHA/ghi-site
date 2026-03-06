@@ -32,7 +32,7 @@ class EntityQuery extends FabricQueryBase {
    * @return \Drupal\ghi_plans\ApiObjects\PlanEntityInterface
    *   The entity object.
    */
-  public function getEntity($entity_type, $entity_id): ?PlanEntityInterface {
+  public function getEntity(string $entity_type, int $entity_id): ?PlanEntityInterface {
     switch ($entity_type) {
       case 'governingEntity':
         return $this->getGoverningEntityQuery()->getGoverningEntity($entity_id);
@@ -55,7 +55,7 @@ class EntityQuery extends FabricQueryBase {
    * @return \Drupal\ghi_plans\ApiObjects\PlanEntityInterface[]
    *   An array of entity objects.
    */
-  public function getEntities($entity_type, $entity_ids): array {
+  public function getEntities(string $entity_type, array $entity_ids): array {
     if (count($entity_ids) > self::MAX_FILTER_COUNT_ARRAY) {
       // We need to do multiple queries.
       return $this->doChunkedQuery($entity_ids, fn ($ids): array => $this->getEntities($entity_type, $ids));
@@ -86,7 +86,7 @@ class EntityQuery extends FabricQueryBase {
    * @return \Drupal\ghi_plans\ApiObjects\Entities\EntityObjectInterface[]|null
    *   An array of plan entity objects for the given context or NULL.
    */
-  public function getEntitiesForPlan(int $plan_id, ?ContentEntityInterface $context_object = NULL, $entity_type = NULL, ?array $filters = NULL) {
+  public function getEntitiesForPlan(int $plan_id, ?ContentEntityInterface $context_object = NULL, $entity_type = NULL, ?array $filters = NULL): array {
     $fetch_coordination_entities = $entity_type === NULL || $entity_type == 'governing';
     $fetch_logframe_entities = $entity_type === NULL || $entity_type == 'plan';
     $context_object_id = $context_object instanceof EntityGoverningEntity ? $context_object->getSourceId() : NULL;

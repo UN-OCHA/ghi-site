@@ -8,6 +8,7 @@ use Drupal\ghi_blocks\Interfaces\MultiStepFormBlockInterface;
 use Drupal\ghi_blocks\Interfaces\OverrideDefaultTitleBlockInterface;
 use Drupal\ghi_blocks\Plugin\Block\Plan\PlanGoverningEntitiesTable;
 use Drupal\ghi_plans\ApiObjects\Entities\GoverningEntity;
+use Drupal\ghi_plans\Plugin\FabricQuery\AttachmentQuery;
 use Drupal\ghi_plans\Plugin\FabricQuery\EntityQuery;
 use Drupal\hpc_downloads\Interfaces\HPCDownloadExcelInterface;
 use Drupal\hpc_downloads\Interfaces\HPCDownloadPNGInterface;
@@ -219,7 +220,18 @@ class PlanGoverningEntitiesTableTest extends PlanBlockKernelTestBase {
       ],
     ] : [];
     $contexts = $this->getPlanSectionContexts();
-    return $this->createBlockPlugin('plan_governing_entities_table', $configuration ?: [], $contexts);
+    $plugin = $this->createBlockPlugin('plan_governing_entities_table', $configuration ?: [], $contexts);
+
+    $attachment_query = $this->prophesize(AttachmentQuery::class);
+    $attachment_query->getAttachmentsByObject('governingEntity', Argument::any(), ['financial'])->willReturn([]);
+
+    $reflection = new \ReflectionClass($plugin);
+    $property = $reflection->getProperty('queryHandlers');
+    $property->setValue($plugin, [
+      'attachment' => $attachment_query->reveal(),
+    ]);
+
+    return $plugin;
   }
 
   /**
