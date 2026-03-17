@@ -1,0 +1,25 @@
+From 859237b5de9ef01db12cf4635dae9168ee0bc0db Mon Sep 17 00:00:00 2001
+From: Stef De Waele <dewaes1@cronos.be>
+Date: Fri, 6 Mar 2026 11:19:07 +0100
+Subject: [PATCH] Use client id instead of the plugin id.
+
+---
+ src/Service/LogoutService.php | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/Service/LogoutService.php b/src/Service/LogoutService.php
+index 0afe2cc..f22b54e 100644
+--- a/src/Service/LogoutService.php
++++ b/src/Service/LogoutService.php
+@@ -108,7 +108,7 @@ class LogoutService {
+       );
+     }
+ 
+-    $clientName = $provider?->getPlugin()?->getPluginId() ?? 'unknown';
++    $clientName = $provider?->id() ?? 'unknown';
+ 
+     $rsp = ['response' => &$response];
+     $context = ['client' => $clientName];
+-- 
+GitLab
+
