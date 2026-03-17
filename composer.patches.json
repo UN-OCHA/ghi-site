@@ -38,7 +38,8 @@
       "Issue #2844205: Provide hook_seckit_options_alter() D8": "./patches/2844205.mr.patch"
     },
     "drupal/openid_connect": {
-        "Handle case if user is in blocked state after SSO Authorization": "./patches/openid_connect-3390668-6.patch"
+        "Handle case if user is in blocked state after SSO Authorization": "./patches/openid_connect-3390668-6.patch",
+        "Incorrect context in hook_redirect_logout_alter": "./patches/openid_connect-3577436-191.patch"
     },
     "drupal/openid_connect_windows_aad": {
         "Failed to get authentication tokens for Windows Azure AD": "./patches/openid_connect_windows_aad-3346603-5.patch"
