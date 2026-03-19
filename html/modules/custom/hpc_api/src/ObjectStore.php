@@ -154,6 +154,23 @@ class ObjectStore {
   }
 
   /**
+   * Get all stored objects for the given storage key.
+   *
+   * @param string $storage_key
+   *   The storage key identifier from which to load the object.
+   *
+   * @return \Drupal\hpc_api\ApiObjects\ApiObjectInterface[]
+   *   An array of objects.
+   */
+  public function getAllObjects(string $storage_key) {
+    if (!$this->enabled) {
+      return [];
+    }
+    $storage = $this->cache($storage_key) ?: [];
+    return $storage['objects'] ?? [];
+  }
+
+  /**
    * Add an object collection to the object storage using a custom key.
    *
    * @param \Drupal\hpc_api\ApiObjects\ApiObjectInterface[] $objects
