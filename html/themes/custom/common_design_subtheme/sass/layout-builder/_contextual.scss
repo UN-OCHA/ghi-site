@@ -9,7 +9,7 @@
   border-radius: 2px;
   outline-width: 1px !important;
   outline-style: solid !important;
-  outline-color: var(--colorGinFormElementBorder);
+  outline-color: var(--gin-border-color-form-element);
   outline-offset: 0;
 
   &.content-width {
@@ -42,14 +42,14 @@
       a {
         padding: 0 0.25em 0 0.25em;
         padding-left: 20px;
-        color: var(--colorGinFormElementBorder) !important;
+        color: var(--gin-border-color-form-element) !important;
         background-color: transparent !important;
         font-size: 0.75em !important;
         line-height: 19px;
 
         &:focus,
         &:hover {
-          color: var(--colorGinPrimary) !important;
+          color: var(--gin-color-primary) !important;
           box-shadow: none;
         }
 
@@ -57,7 +57,7 @@
         &:hover::after {
           z-index: z-index(hidden);
           content: "";
-          background-color: var(--colorGinPrimary) !important;
+          background-color: var(--gin-color-primary) !important;
           background-repeat: no-repeat;
           background-position: center;
           background-size: 17px 17px;
@@ -70,7 +70,7 @@
           width: 17px;
           height: 17px;
           content: "&amp;";
-          background-color: var(--colorGinFormElementBorder);
+          background-color: var(--gin-border-color-form-element);
           mask-size: 17px 17px;
           mask-position: center;
           mask-repeat: no-repeat;
@@ -120,13 +120,13 @@
 #layout-builder .contextual-region.layout-builder-block:focus,
 #layout-builder .contextual-region.layout-builder-block:hover {
   outline-width: 2px !important;
-  outline-color: var(--colorGinPrimary);
+  outline-color: var(--gin-color-primary);
 
   ul.contextual-links {
     display: flex;
 
     li:hover a {
-      color: var(--colorGinPrimary) !important;
+      color: var(--gin-color-primary) !important;
     }
   }
 }

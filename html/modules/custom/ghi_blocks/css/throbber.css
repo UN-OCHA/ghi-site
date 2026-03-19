@@ -37,8 +37,8 @@
   border: 3px solid var(--cd-primary-color) !important;
   border-right: 3px solid var(--ghi-default-border-color) !important;
   border-radius: 50%;
-  background: var(--colorGinLayerBackground) !important;
-  color: var(--colorGinText) !important;
+  background: var(--gin-bg-layer) !important;
+  color: var(--gin-color-text) !important;
   -webkit-animation: ghi-throbber 0.75s linear infinite;
   animation: ghi-throbber 0.75s linear infinite;
   z-index: 1;

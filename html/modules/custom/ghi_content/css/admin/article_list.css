@@ -11,7 +11,7 @@
     font-weight: normal;
     position: absolute;
     bottom: -1.5rem;
-    color: var(--colorGinTextLight);
+    color: var(--gin-color-text-light);
     width: 300px;
     right: 0;
     text-align: right;

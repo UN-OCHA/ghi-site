@@ -554,20 +554,30 @@ function ghi_blocks_layout_builder_ipe_links_alter(array &$links, SectionStorage
   if (!$layout_tempstore_repository->has($section_storage)) {
     return;
   }
+  /** @var \Drupal\Core\Link $customize_link */
   $customize_link = $links['customize'];
+  /** @var \Drupal\Core\Link $discard_link */
   $discard_link = $links['discard'] ?? NULL;
+
+  // Remove the glb-button classes from the link attributes.
+  $customize_attributes = $customize_link->getUrl()->getOption('attributes');
+  $customize_attributes['class'] = array_filter($customize_attributes['class'], fn($class_name) => $class_name != 'glb-button');
+  $customize_link->getUrl()->setOption('attributes', $customize_attributes);
+
+  $discard_attributes = $discard_link->getUrl()->getOption('attributes');
+  $discard_attributes['class'] = array_filter($discard_attributes['class'], fn($class_name) => $class_name != 'glb-button');
+  $discard_link->getUrl()->setOption('attributes', $discard_attributes);
+
   $links['customize'] = [
     '#type' => 'dropbutton',
     '#links' => array_filter([
       'customize' => [
         'title' => $customize_link->getText(),
         'url' => $customize_link->getUrl(),
-        'attributes' => $customize_link->getUrl()->getOption('attributes'),
       ],
       'discard' => $discard_link ? [
         'title' => $discard_link->getText(),
         'url' => $discard_link->getUrl(),
-        'attributes' => $discard_link->getUrl()->getOption('attributes'),
       ] : NULL,
     ]),
     '#attached' => [
