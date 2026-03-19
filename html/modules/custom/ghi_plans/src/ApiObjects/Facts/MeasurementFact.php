@@ -39,7 +39,7 @@ class MeasurementFact extends FactBase {
     return (object) [
       'id' => $fact->Id,
       'measurement_id' => $fact->MeasurementId,
-      'attachment_id' => $fact->MeasurementId,
+      'attachment_id' => $fact->AttachmentId,
       'metric_id' => $fact->MetricTypeId,
       'location_id' => $fact->LocationId,
       'gender_id' => $fact->GenderId,

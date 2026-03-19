@@ -210,6 +210,7 @@ function ghi_plans_migrate_plan_prepare_row(Row $row, MigrateSourceInterface $so
   $query_manager = \Drupal::service('plugin.manager.fabric_query_manager');
   /** @var \Drupal\ghi_plans\Plugin\FabricQuery\PlanQuery $plan_query */
   $plan_query = $query_manager->createInstance('plan');
+  $plan_query->getAllPlans();
 
   $plan = $plan_query->getPlan($plan_id);
   if (!$plan) {

@@ -145,6 +145,10 @@ class PlanQuery extends FabricQueryBase {
    *   An array of plan objects.
    */
   public function getAllPlans(): array {
+    $retrieved = &drupal_static(__FUNCTION__, FALSE);
+    if ($retrieved) {
+      return $this->objectStore->getAllObjects(Plan::getObjectStorageKey());
+    }
     // Get the plan data.
     $queries = [
       $this->fabricClient->createQuery('plans', Plan::getGraphQlItems()),
@@ -164,6 +168,7 @@ class PlanQuery extends FabricQueryBase {
       $plans[$item->Id] = new Plan($item);
     }
     $this->objectStore->addObjects($plans);
+    $retrieved = TRUE;
     return $plans;
   }
 
