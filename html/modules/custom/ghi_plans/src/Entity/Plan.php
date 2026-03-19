@@ -35,14 +35,6 @@ class Plan extends BaseObject implements BaseObjectMetaDataInterface, BaseObject
   /**
    * {@inheritdoc}
    */
-  public function save() {
-    $this->updateRequirements();
-    return parent::save();
-  }
-
-  /**
-   * {@inheritdoc}
-   */
   public function toUrl($rel = 'canonical', array $options = []) {
     // Allow to link to FTS.
     if ($rel == 'fts_summary') {
