@@ -53,6 +53,18 @@ input[type="checkbox"][disabled="disabled"]:not(:checked) {
   display: block !important;
   color: var(--gin-border-color-form-element);
 }
+#layout-builder .layout-builder__section .layout-builder__link--add svg {
+  top: -8px;
+}
+#layout-builder .layout-builder__section .layout-builder__link--add svg path {
+  fill: var(--gin-color-primary);
+}
+#layout-builder .layout-builder__section .layout-builder__link--add:hover {
+  background-color: var(--gin-color-primary) !important;
+}
+#layout-builder .layout-builder__section .layout-builder__link--add:hover svg path {
+  fill: white !important;
+}
 #layout-builder .layout-builder__section .layout-builder__link--remove {
   background-color: var(--gin-border-color-form-element);
   left: -10px;
