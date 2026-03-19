@@ -304,7 +304,7 @@ class PlanOverviewPlan extends BaseObject {
    *   A caseload object or NULL.
    */
   public function getPlanCaseload(?int $attachment_id = NULL): ?CaseloadAttachmentInterface {
-    $attachment_id = $attachment_id ?? $this->getEntity()?->getPlanCaseloadId();
+    $attachment_id = ($attachment_id ?? $this->getEntity()?->getPlanCaseloadId()) ?? array_key_first($this->caseloads);
     return $attachment_id ? $this->findPlanCaseload($this->caseloads, $attachment_id) : NULL;
   }
 

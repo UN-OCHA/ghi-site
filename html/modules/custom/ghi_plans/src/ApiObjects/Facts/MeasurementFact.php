@@ -8,20 +8,13 @@ namespace Drupal\ghi_plans\ApiObjects\Facts;
 class MeasurementFact extends FactBase {
 
   /**
-   * The metric type used by the fact.
-   *
-   * @var \Drupal\hpc_api\ApiObjects\Types\MetricType
-   */
-  private $metric = NULL;
-
-  /**
    * Define the fact items used in queries.
    */
   const GRAPHQL_ITEMS = [
     'Id',
     'MeasurementId',
+    'AttachmentId',
     'MetricTypeId',
-    'PeriodId',
     'LocationId',
     'GenderId',
     'AgeGroupId',
@@ -46,8 +39,8 @@ class MeasurementFact extends FactBase {
     return (object) [
       'id' => $fact->Id,
       'measurement_id' => $fact->MeasurementId,
+      'attachment_id' => $fact->MeasurementId,
       'metric_id' => $fact->MetricTypeId,
-      'period_id' => $fact->PeriodId,
       'location_id' => $fact->LocationId,
       'gender_id' => $fact->GenderId,
       'age_group_id' => $fact->AgeGroupId,

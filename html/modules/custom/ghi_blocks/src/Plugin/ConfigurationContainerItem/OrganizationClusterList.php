@@ -80,7 +80,7 @@ class OrganizationClusterList extends ConfigurationContainerItemPluginBase {
   /**
    * Get the clusters for the current context.
    *
-   * @return array
+   * @return \Drupal\ghi_plans\ApiObjects\Partials\PlanProjectCluster[]
    *   An array of cluster objects.
    */
   private function getClusters() {

@@ -253,14 +253,7 @@ class PlanOverviewQuery extends FabricQueryBase {
     // Load the override settings per plan.
     $attachment_overrides = $this->getPlanCaseloadOverridesByPlanId();
 
-    // Since all plans are now populated with people in need and target values,
-    // the total GHO people in need and people targeted can be calculated by
-    // summing these plans caseload values for all plans that have
-    // isPartOfGho = true from this endpoint:
-    // https://api.hpc.tools/v2/plan/overview/{year}
     foreach ($plans as $plan) {
-
-      // Check caseLoads and respective totals property has value.
       $caseload_items = $plan->getPlanCaseloadFields($attachment_overrides[$plan->id()] ?? NULL);
       if (empty($caseload_items)) {
         continue;

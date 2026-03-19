@@ -31,7 +31,6 @@ class AttachmentDataTest extends UnitTestCase {
     $current_user = $this->prophesize(AccountProxyInterface::class);
 
     $container = new Container();
-    $container->set('attachment_query', $attachment_query->reveal());
     $container->set('entity_type.manager', $entity_type_manager->reveal());
     $container->set('plugin.manager.endpoint_query_manager', $endpoint_query_manager->reveal());
     $container->set('plugin.manager.fabric_query_manager', $fabric_query_manager->reveal());

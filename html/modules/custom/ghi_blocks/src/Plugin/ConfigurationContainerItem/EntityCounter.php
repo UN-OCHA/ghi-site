@@ -181,7 +181,7 @@ class EntityCounter extends ConfigurationContainerItemPluginBase {
    * Get a popover trigger.
    */
   private function getPopover() {
-
+    /** @var \Drupal\ghi_base_objects\ApiObjects\BaseObjectInterface $entity */
     $entity = $this->getContextValue('entity');
 
     // Get the icon if there is any.

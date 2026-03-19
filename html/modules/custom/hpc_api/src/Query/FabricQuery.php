@@ -93,6 +93,18 @@ class FabricQuery {
   }
 
   /**
+   * Assure that the given key property is part of the requested properties.
+   *
+   * @param string $property
+   *   The property to assure.
+   */
+  public function assureKeyProperty(string $property) {
+    if (!in_array($property, $this->items)) {
+      $this->items = array_merge([$property], $this->items);
+    }
+  }
+
+  /**
    * Set the filters.
    *
    * @param array $filters
