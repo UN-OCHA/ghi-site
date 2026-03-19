@@ -65,7 +65,7 @@ class HeroImageFormatter extends ResponsiveImageFormatter implements ContainerFa
    */
   public function viewElements(FieldItemListInterface $items, $langcode) {
 
-    // This all assumes to show web attachments for the moment, which obviously
+    // This all assumes to show file resources for the moment, which obviously
     // only works for plan sections.
     $element = [];
 

@@ -120,18 +120,46 @@ class MeasurementQuery extends FabricQueryBase {
    *
    * @param int[] $attachment_ids
    *   The attachment ids.
+   * @param bool $disaggregated
+   *   Whether to fecth disaggregated data or not.
    *
    * @return \Drupal\ghi_plans\ApiObjects\Measurements\MeasurementInterface[]
    *   An array of measurement objects, keyed by the measurement id.
    */
-  public function getMeasurementsByAttachmentId(array $attachment_ids): array {
-    $items = $this->fabricClient->createQuery('measurements', ['Id'])
-      ->setFilters([
-        'AttachmentId' => $attachment_ids,
-      ])
-      ->execute();
-    $measurement_ids = $this->extractIdsFromRawData($items);
-    return $this->getMeasurementsById($measurement_ids);
+  public function getMeasurementsByAttachmentId(array $attachment_ids, bool $disaggregated = FALSE): array {
+    if (count($attachment_ids) > self::MAX_FILTER_COUNT_ARRAY) {
+      return $this->doChunkedQuery($attachment_ids, fn ($ids): array => $this->getMeasurementsByAttachmentId($ids));
+    }
+    sort($attachment_ids);
+    $cache_key = $this->getCacheKey([
+      'attachment_ids' => $attachment_ids,
+      'disaggregated' => (int) $disaggregated,
+    ]);
+    $measurements = $this->getCache($cache_key);
+    if ($measurements) {
+      return $measurements;
+    }
+    $queries = [
+      $this->fabricClient->createQuery('measurements', Measurement::getGraphQlItems())
+        ->setFilter('AttachmentId', $attachment_ids),
+      $this->fabricClient->createQuery('measurementFacts', MeasurementFact::getGraphQlItems())
+        ->setFilters([
+          'AttachmentId' => $attachment_ids,
+          'IsTotal' => !$disaggregated,
+        ]),
+    ];
+    $data = $this->fabricClient->executeMultiple($queries);
+    $measurements = $data['measurements'];
+    if (empty($measurements)) {
+      return [];
+    }
+    $measurement_facts = $data['measurementFacts'];
+    // If we have found measurements, also load the total facts.
+    $this->addMeasurementFacts($measurements, $measurement_facts);
+
+    $processed_measurements = array_map(fn ($measurement) => new Measurement($measurement), $measurements);
+    $this->setCache($cache_key, $processed_measurements);
+    return $processed_measurements;
   }
 
   /**

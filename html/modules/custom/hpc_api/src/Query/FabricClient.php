@@ -241,6 +241,7 @@ class FabricClient {
    *   The result from the fabric query or FALSE on failure.
    */
   public function execute(FabricQuery $query, string $key_property = 'Id'): false|array {
+    $query->assureKeyProperty($key_property);
     $data = $this->query($query);
     return is_object($data) ? $this->getItems($data, $query->getQueryName(), $key_property) : FALSE;
   }

@@ -79,12 +79,12 @@ trait AttachmentFilterTrait {
    * @param \Drupal\ghi_plans\ApiObjects\Attachments\CaseloadAttachmentInterface[] $caseloads
    *   A list of caseload attachment objects.
    * @param int $attachment_id
-   *   An attachment id.
+   *   Optional attachment id.
    *
    * @return \Drupal\ghi_plans\ApiObjects\Attachments\CaseloadAttachmentInterface|null
    *   A caseload object or NULL.
    */
-  public function findPlanCaseload(array $caseloads, int $attachment_id): ?CaseloadAttachmentInterface {
+  public function findPlanCaseload(array $caseloads, ?int $attachment_id = NULL): ?CaseloadAttachmentInterface {
     $caseload = NULL;
 
     $caseloads = array_filter($caseloads, function ($_caseload) {

@@ -85,7 +85,7 @@ class Measurement extends ApiObjectBase implements MeasurementInterface {
       'values' => $this->extractValues($this->totals),
       'unit' => ($measurement->UnitId ?? NULL) ? $query->getUnit($measurement->UnitId) : NULL,
       'monitoring_period' => $measurement->MeasurementPeriodId ?? NULL,
-      'has_disaggregated_data' => !empty($measurement->HasDisaggregatedData),
+      'has_disaggregated_data' => TRUE,
       'calculation_method' => ($measurement->CalculationMethod ?? NULL),
     ];
 

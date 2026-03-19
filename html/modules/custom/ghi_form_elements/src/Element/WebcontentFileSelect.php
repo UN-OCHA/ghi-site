@@ -6,12 +6,15 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\Attribute\FormElement;
 use Drupal\Core\Render\Element;
 use Drupal\Core\Render\Element\FormElementBase;
+use Drupal\ghi_plans\Traits\PlanQueryTrait;
 
 /**
  * Provides a webcontent file select element.
  */
 #[FormElement('webcontent_file_select')]
 class WebcontentFileSelect extends FormElementBase {
+
+  use PlanQueryTrait;
 
   /**
    * {@inheritdoc}
@@ -38,12 +41,16 @@ class WebcontentFileSelect extends FormElementBase {
   }
 
   /**
-   * Process the attachment select form element.
+   * Process the webcontent file select form element.
    *
    * This is called during form build. Note that it is not possible to store
    * any arbitrary data inside the form_state object.
    */
   public static function processWebcontentFileSelect(array &$element, FormStateInterface $form_state) {
+    if (empty($element['#default_value']['resource_id']) && !empty($element['#default_value']['attachment_id'])) {
+      $element['#default_value']['resource_id'] = $element['#default_value']['attachment_id'];
+      unset($element['#default_value']['attachment_id']);
+    }
     /** @var \Drupal\ghi_base_objects\Entity\BaseObjectInterface $plan_object */
     $plan_object = $element['#plan_object'];
     if (!$plan_object) {
@@ -51,26 +58,26 @@ class WebcontentFileSelect extends FormElementBase {
       return $element;
     }
     /** @var \Drupal\ghi_base_objects\Entity\BaseObjectInterface $base_object */
-    $base_object = $element['#base_object'] ?: NULL;
-    $entity_query = self::getPlanEntitiesQuery($plan_object->getSourceId());
-    $attachments = $entity_query->getWebContentFileAttachments($base_object);
+    $base_object = $element['#base_object'] ?: $plan_object;
+    $resource_query = self::getResourceQuery();
+    $resources = $resource_query->getResourcesByObject($base_object->bundle(), $base_object->getSourceId());
     $states = $element['#states'] ?? [];
 
     $file_options = [];
-    if (!empty($attachments)) {
-      foreach ($attachments as $attachment) {
+    if (!empty($resources)) {
+      foreach ($resources as $resource) {
         // @todo Add check for image files before trying to show a preview.
-        $file_options[$attachment->id] = [
-          'id' => $attachment->id,
-          'title' => $attachment->title,
-          'file_name' => $attachment->file_name,
+        $file_options[$resource->id()] = [
+          'id' => $resource->id(),
+          'title' => $resource->getName(),
+          'file_name' => $resource->getName(),
           'preview' => [
             'data' => [
               '#theme' => 'imagecache_external',
               '#style_name' => 'thumbnail',
-              '#uri' => $attachment->url,
+              '#uri' => $resource->getUrl()->toString(),
               '#attributes' => [
-                'title' => $attachment->url,
+                'title' => $resource->getUrl()->toString(),
               ],
             ],
           ],
@@ -79,7 +86,7 @@ class WebcontentFileSelect extends FormElementBase {
     }
 
     $table_header = [
-      'id' => t('Attachment ID'),
+      'id' => t('Resource ID'),
       'title' => t('Title'),
       'file_name' => t('File name'),
       'preview' => t('Preview'),
@@ -88,14 +95,14 @@ class WebcontentFileSelect extends FormElementBase {
     // Set the defaults.
     $submitted_values = array_filter((array) $form_state->getValue($element['#parents']));
     $values = $submitted_values + (array) $element['#default_value'];
-    $default_attachment = !empty($values['attachment_id']) ? $values['attachment_id'] : ($element['#default_value'] ?? (count($attachments) ? array_key_first($attachments) : NULL));
-    $element['attachment_id'] = [
+    $default_value = !empty($values['resource_id']) ? $values['resource_id'] : ($element['#default_value']['resource_id'] ?? (count($resources) ? array_key_first($resources) : NULL));
+    $element['resource_id'] = [
       '#type' => 'tableselect',
       '#tree' => TRUE,
       '#header' => $table_header,
       '#validated' => TRUE,
       '#options' => $file_options,
-      '#default_value' => $default_attachment,
+      '#default_value' => $default_value,
       '#multiple' => FALSE,
       '#empty' => t('There are no images yet.'),
       '#required' => TRUE,
@@ -125,21 +132,6 @@ class WebcontentFileSelect extends FormElementBase {
    */
   private static function getEndpointQueryManager() {
     return \Drupal::service('plugin.manager.endpoint_query_manager');
-  }
-
-  /**
-   * Get the plan entities query service.
-   *
-   * @param int $plan_id
-   *   The plan id for which a query should be build.
-   *
-   * @return \Drupal\ghi_plans\Plugin\EndpointQuery\PlanEntitiesQuery
-   *   The plan entities query plugin.
-   */
-  public static function getPlanEntitiesQuery($plan_id) {
-    $query_handler = self::getEndpointQueryManager()->createInstance('plan_entities_query');
-    $query_handler->setPlaceholder('plan_id', $plan_id);
-    return $query_handler;
   }
 
 }

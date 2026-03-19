@@ -34,7 +34,7 @@ class FabricQueryInspectorForm extends FormBase {
 
     $method_options = $this->getMethodOptions($plugin);
     $method_name = $form_state->getValue('method_name') ?? NULL;
-    $method_name = $method_name && !empty($method_options[$method_name]) ? $method_name : array_key_first($method_options);
+    $method_name = ($method_name && !empty($method_options[$method_name])) ? $method_name : array_key_first($method_options);
 
     $wrapper_id = $this->getFormId() . '_wrapper';
     $form['#prefix'] = '<div id="' . $wrapper_id . '">';
@@ -189,6 +189,33 @@ class FabricQueryInspectorForm extends FormBase {
     }
 
     return $response;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function validateForm(array &$form, FormStateInterface $form_state): void {
+    $plugin_options = $this->getPluginOptions();
+    $plugin_id = $form_state->getValue('plugin_id') ?: array_key_first($plugin_options);
+    $plugin = $this->getFabricQuery($plugin_id);
+
+    $method_options = $this->getMethodOptions($plugin);
+    $method_name = $form_state->getValue('method_name') ?? NULL;
+    $method_name = ($method_name && !empty($method_options[$method_name])) ? $method_name : array_key_first($method_options);
+
+    $submitted_arguments = $form_state->getValue(['arguments', $method_name]);
+    $arguments = $plugin && $method_name ? $this->getArguments($plugin, $method_name) : [];
+    foreach ($arguments as $position => $argument) {
+      if (!$argument['required']) {
+        continue;
+      }
+      if (!empty($submitted_arguments[$position])) {
+        continue;
+      }
+      $form_state->setError($form['arguments'][$method_name][$position], $this->t('@field is required', [
+        '@field' => $form['arguments'][$method_name][$position]['#title'],
+      ]));
+    }
   }
 
   /**

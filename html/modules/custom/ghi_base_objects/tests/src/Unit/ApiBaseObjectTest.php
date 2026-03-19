@@ -7,7 +7,7 @@ use Drupal\Tests\ghi_base_objects\Traits\BaseObjectTestTrait;
 use Drupal\Tests\hpc_api\Traits\PrivateAccessorTrait;
 
 /**
- * Tests the api base object class.
+ * Base class for api object tests.
  *
  * @group ghi_base_objects
  */
