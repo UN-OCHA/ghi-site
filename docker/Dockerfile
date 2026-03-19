@@ -1,5 +1,5 @@
 # Build the code.
-FROM public.ecr.aws/unocha/php-k8s:8.3-stable AS builder
+FROM public.ecr.aws/unocha/php-k8s:8.4-stable AS builder
 
 ARG  BRANCH_ENVIRONMENT
 ENV  NODE_ENV=$BRANCH_ENVIRONMENT
@@ -20,7 +20,7 @@ RUN mkdir -m 0775 -p html/sites/default && \
 ################################################################################
 
 # Generate the image.
-FROM public.ecr.aws/unocha/php-k8s:8.3-stable
+FROM public.ecr.aws/unocha/php-k8s:8.4-stable
 
 ARG VCS_REF
 ARG VCS_URL
