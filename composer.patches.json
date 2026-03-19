@@ -29,7 +29,8 @@
       "Issue #3401986: The containers summary text should not be overwritten": "https://www.drupal.org/files/issues/2023-11-15/3401986-2.patch"
     },
     "drupal/page_manager": {
-      "Issue #3176661: Allow to edit page title when using Layout Builder variant": "https://www.drupal.org/files/issues/2022-11-15/page_manager-lb-title-3176661-15.patch"
+      "Issue #3176661: Allow to edit page title when using Layout Builder variant": "https://www.drupal.org/files/issues/2022-11-15/page_manager-lb-title-3176661-15.patch",
+      "Issue #3536704: [PHP8.4] Misc NULL deprecation warning on a few files": "https://www.drupal.org/files/issues/2026-03-07/page_manager-php8-4-deprecation-3536704-15.patch"
     },
     "drupal/publishcontent": {
       "Issue #2820867: Bulk operations actions skip 'publishcontent' defined permissions": "https://www.drupal.org/files/issues/2024-10-14/permissions-for-bulk-operations-2820867-9.patch"
@@ -56,7 +57,8 @@
     "drupal/webp": {
       "Issue #3325808: Webp Image not generated for styles using original image.": "https://git.drupalcode.org/project/webp/-/merge_requests/35.patch",
       "Issue #3281606: Rendering duplicate images when the original images have the same name but different extension": "https://git.drupalcode.org/project/webp/-/merge_requests/30.patch",
-      "Issue #3153137: Using Image Widget Crop in responsive images does not refresh webp image": "./patches/3153137-custom-fix-3281606.patch"
+      "Issue #3153137: Using Image Widget Crop in responsive images does not refresh webp image": "./patches/3153137-custom-fix-3281606.patch",
+      "Issue #3561953: PHP 8.4 implicit nullable & constructor parameter order issues in WebP FileDownloadController": "https://www.drupal.org/files/issues/2026-03-06/3561953-12.patch"
     }
   }
 }
