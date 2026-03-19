@@ -8,8 +8,9 @@ use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Field\FormatterInterface;
 use Drupal\Core\File\FileSystemInterface;
 use Drupal\Core\StreamWrapper\StreamWrapperManager;
+use Drupal\ghi_base_objects\Entity\BaseObjectInterface;
 use Drupal\ghi_base_objects\Helpers\BaseObjectHelper;
-use Drupal\hpc_api\Query\EndpointQueryManager;
+use Drupal\hpc_api\Query\FabricQueryManager;
 use Drupal\smugmug_api\Service\Image;
 
 /**
@@ -27,9 +28,9 @@ class HeroImageManager {
   /**
    * The attachment query.
    *
-   * @var \Drupal\ghi_plans\Plugin\EndpointQuery\PlanEntitiesQuery
+   * @var \Drupal\hpc_api\Plugin\FabricQuery\ResourceQuery
    */
-  public $entitiesQuery;
+  public $resourceQuery;
 
   /**
    * The SmugMug image service.
@@ -48,9 +49,9 @@ class HeroImageManager {
   /**
    * Constructs a manager class for hero images.
    */
-  public function __construct(EntityTypeManagerInterface $entity_type_manager, EndpointQueryManager $endpoint_query_manager, Image $smugmug_image, FileSystemInterface $file_system) {
+  public function __construct(EntityTypeManagerInterface $entity_type_manager, FabricQueryManager $fabric_query_manager, Image $smugmug_image, FileSystemInterface $file_system) {
     $this->entityTypeManager = $entity_type_manager;
-    $this->entitiesQuery = $endpoint_query_manager->createInstance('plan_entities_query');
+    $this->resourceQuery = $fabric_query_manager->createInstance('resource');
     $this->smugmugImage = $smugmug_image;
     $this->fileSystem = $file_system;
   }
@@ -65,7 +66,7 @@ class HeroImageManager {
    *   The item source as a string.
    */
   public function getDefaultItemSource(FieldItemListInterface $items) {
-    if ($this->getPlanWebContentAttachments($items)) {
+    if ($this->getHeroImageResources($items)) {
       return 'hpc_webcontent_file_attachment';
     }
     return 'none';
@@ -101,16 +102,20 @@ class HeroImageManager {
     $item_settings = $item && property_exists($item, 'settings') && is_array($item->settings) ? ($item->settings[$item_source] ?? []) : [];
     switch ($item_source) {
       case 'hpc_webcontent_file_attachment':
-        // Find the right attachment based on the configuration, or fallback to
-        // the first available attachment.
-        $attachments = $this->getPlanWebContentAttachments($items);
-        $attachment_id = $item_settings['attachment_id'] ?? array_key_first($attachments);
-        if ($attachment_id && !empty($attachments[$attachment_id])) {
-          /** @var \Drupal\ghi_plans\ApiObjects\Attachments\FileAttachment $attachment */
-          $attachment = $attachments[$attachment_id];
-          $image_url = $attachment->getUrl();
+
+        // Find the right resource based on the configuration, or fallback to
+        // the first available resource.
+        $resources = $this->getHeroImageResources($items);
+        $resource_id = $item_settings['resource_id'] ?? ($item_settings['attachment_id'] ?? NULL);
+        if (!$resource_id || empty($resources[$resource_id])) {
+          $resource_id = array_key_first($resources);
+        }
+
+        if ($resource_id && !empty($resources[$resource_id])) {
+          $resource = $resources[$resource_id];
+          $image_url = $resource->getUrl()->toString();
           $file_uri = imagecache_external_generate_path($image_url);
-          $credit = $attachment->getCredit();
+          $credit = $resource->getCredit();
         }
         break;
 
@@ -174,23 +179,21 @@ class HeroImageManager {
   }
 
   /**
-   * Get the webcontent file attachments of a plan if possible.
+   * Get the resources for the given items.
    *
    * @param \Drupal\Core\Field\FieldItemListInterface $items
    *   The field values to be rendered.
    *
-   * @return \Drupal\ghi_plans\ApiObjects\Attachments\FileAttachment[]
+   * @return \Drupal\hpc_api\ApiObjects\Resource[]
    *   An array of attachment objects.
    */
-  private function getPlanWebContentAttachments(FieldItemListInterface $items) {
+  private function getHeroImageResources(FieldItemListInterface $items): array {
     $entity = $items->getEntity();
     $base_object = BaseObjectHelper::getBaseObjectFromNode($entity, 'plan');
-    $plan_object = $base_object && $base_object->bundle() == 'plan' ? $base_object : NULL;
-    if (!$plan_object) {
+    if (!$base_object instanceof BaseObjectInterface) {
       return [];
     }
-    $this->entitiesQuery->setPlaceholder('plan_id', $plan_object->field_original_id->value);
-    return $this->entitiesQuery->getWebContentFileAttachments();
+    return $this->resourceQuery->getResourcesByObject($base_object->bundle(), $base_object->getSourceId());
   }
 
   /**

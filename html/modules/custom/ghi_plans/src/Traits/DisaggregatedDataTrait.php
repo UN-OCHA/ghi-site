@@ -61,11 +61,15 @@ trait DisaggregatedDataTrait {
    *   DataAttachment::getDisaggregatedData().
    * @param \Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment $attachment
    *   The attachment object to which the data belongs.
+   * @param bool $filter_empty_locations
+   *   Whether to exclude empty locations.
+   * @param bool $filter_empty_categories
+   *   Whether to exclude empty categories.
    *
    * @return array
    *   The transformed data.
    */
-  public function transformDisaggregatedMapData(object $data, DataAttachment $attachment): array {
+  public function transformDisaggregatedMapData(object $data, DataAttachment $attachment, $filter_empty_locations = FALSE, $filter_empty_categories = FALSE): array {
     $transform = [];
     foreach (array_values($data->metrics) as $metric) {
       /** @var \Drupal\hpc_api\ApiObjects\Types\MetricType $metric */
@@ -105,6 +109,12 @@ trait DisaggregatedDataTrait {
           ];
         }, $metric_locations),
       ];
+      if ($filter_empty_locations) {
+        $transform[$index]['locations'] = array_filter($transform[$index]['locations'], fn ($location) => !empty($location['total']));
+        if (empty($transform[$index]['locations'])) {
+          unset($transform[$index]);
+        }
+      }
     }
     ksort($transform);
     return $transform;

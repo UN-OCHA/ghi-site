@@ -7,6 +7,7 @@ use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\ghi_plans\ApiObjects\Attachments\AttachmentInterface;
 use Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment;
 use Drupal\ghi_plans\ApiObjects\Facts\AttachmentFact;
+use Drupal\ghi_plans\ApiObjects\Facts\MeasurementFact;
 use Drupal\ghi_plans\ApiObjects\Measurements\Measurement;
 use Drupal\ghi_plans\ApiObjects\Plan;
 use Drupal\ghi_plans\ApiObjects\PlanEntityInterface;
@@ -56,6 +57,11 @@ class AttachmentQuery extends FabricQueryBase {
       $this->fabricClient->createQuery('measurements', Measurement::getGraphQlItems())
         ->setFilters([
           'AttachmentId' => $attachment_id,
+        ]),
+      $this->fabricClient->createQuery('measurementFacts', MeasurementFact::getGraphQlItems())
+        ->setFilters([
+          'AttachmentId' => $attachment_id,
+          'IsTotal' => TRUE,
         ]),
     ];
 
@@ -107,6 +113,11 @@ class AttachmentQuery extends FabricQueryBase {
       $this->fabricClient->createQuery('measurements', Measurement::getGraphQlItems())
         ->setFilters([
           'AttachmentId' => $attachment_ids,
+        ]),
+      $this->fabricClient->createQuery('measurementFacts', MeasurementFact::getGraphQlItems())
+        ->setFilters([
+          'AttachmentId' => $attachment_ids,
+          'IsTotal' => TRUE,
         ]),
     ];
     $data = $this->fabricClient->executeMultiple($queries);

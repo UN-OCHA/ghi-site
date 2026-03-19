@@ -683,24 +683,15 @@ class DataAttachment extends AttachmentBase implements DataAttachmentInterface {
    *
    * @param int|string $reporting_period
    *   Either the id of a period, or the string latest.
-   * @param bool $filter_empty_locations
-   *   Whether to exclude empty locations.
-   * @param bool $filter_empty_categories
-   *   Whether to exclude empty categories.
-   * @param bool $ignore_missing_location_ids
-   *   Whether to ignore locations with missing ids.
    *
    * @return object
    *   An object with disaggregated data.
    */
-  public function getDisaggregatedData($reporting_period = 'latest', $filter_empty_locations = FALSE, $filter_empty_categories = FALSE, $ignore_missing_location_ids = FALSE): ?object {
+  public function getDisaggregatedData($reporting_period = 'latest'): ?object {
     // First check if we have already processed this data.
     $cache_key = $this->getCacheKey([
       'attachment_id' => $this->id(),
       'reporting_period' => $reporting_period,
-      'filter_empty_locations' => intval($filter_empty_locations),
-      'filter_empty_categories' => intval($filter_empty_categories),
-      'ignore_missing_location_ids' => intval($ignore_missing_location_ids),
       'updated' => $this->getLastUpdated(),
     ]);
 

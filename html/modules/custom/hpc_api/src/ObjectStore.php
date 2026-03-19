@@ -173,9 +173,6 @@ class ObjectStore {
       if (!$property_value && method_exists($object, $collection_key_method)) {
         $property_value = $object->$collection_key_method();
       }
-      if (!$property_value && method_exists($object, $collection_key_method)) {
-        $property_value = $object->$collection_key_method();
-      }
       if (!$property_value) {
         throw new \InvalidArgumentException('The collection key ' . $collection_key . ' is invalid on object of type ' . get_class($object));
       }

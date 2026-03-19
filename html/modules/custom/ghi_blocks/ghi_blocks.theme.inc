@@ -139,6 +139,14 @@ function ghi_blocks_preprocess_plan_attachment_map(&$variables) {
     $variables['attributes']['class'][] = Html::getClass('has-attachment-switcher');
   }
   $variables['attachment_select'] = $variables['attachment_switcher'] ?? '';
+  $variables['map_attributes'] = new Attribute([
+    'class' => [
+      'plan-attachment-map-wrapper',
+      'pane-' . $variables['chart_id'],
+      $variables['map_type'],
+    ],
+    'data-attachment-id' => $variables['attachment']?->id(),
+  ]);
 }
 
 /**

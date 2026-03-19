@@ -35,7 +35,7 @@ class OrganizationQuery extends FabricQueryBase {
   public function getOrganization(int $organization_id): ?Organization {
     $items = $this->fabricClient->createQuery('organizations', Organization::getGraphQlItems())
       ->setFilter('Id', $organization_id)
-      ->execute();
+      ->execute() ?: [];
     $item = count($items) == 1 ? reset($items) : NULL;
     return $item ? new Organization($item) : NULL;
   }

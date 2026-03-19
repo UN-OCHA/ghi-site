@@ -132,6 +132,7 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
       '#chart_id' => $chart_id,
       '#map_tabs' => $map['tabs'] ?? NULL,
       '#map_type' => $style,
+      '#attachment' => $attachment,
       '#attachment_switcher' => $attachment_switcher,
       '#legend' => $style == self::STYLE_CIRCLE ? FALSE : TRUE,
       '#attached' => [
@@ -200,8 +201,7 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
     $reporting_period_id = $this->getCurrentReportingPeriod($plan_id);
     $configured_reporting_periods = $this->getConfiguredReportingPeriods($plan_id);
 
-    $disaggregated_data = $this->transformDisaggregatedMapData($attachment->getDisaggregatedData($reporting_period_id), $attachment);
-
+    $disaggregated_data = $this->transformDisaggregatedMapData($attachment->getDisaggregatedData($reporting_period_id), $attachment, TRUE);
     foreach (array_keys(array_values($attachment->getFields())) as $metric_index) {
       $metric_item = $disaggregated_data[$metric_index] ?? NULL;
       if (!$metric_item || $attachment->metricItemIsEmpty($metric_item)) {

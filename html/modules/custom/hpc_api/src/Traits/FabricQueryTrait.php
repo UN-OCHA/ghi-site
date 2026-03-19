@@ -6,6 +6,7 @@ use Drupal\hpc_api\Plugin\FabricQuery\BaseTypeQuery;
 use Drupal\hpc_api\Plugin\FabricQuery\CategoryQuery;
 use Drupal\hpc_api\Plugin\FabricQuery\EntityLookupQuery;
 use Drupal\hpc_api\Plugin\FabricQuery\EntityTypeQuery;
+use Drupal\hpc_api\Plugin\FabricQuery\ResourceQuery;
 use Drupal\hpc_api\Query\FabricQueryBase;
 
 /**
@@ -66,7 +67,7 @@ trait FabricQueryTrait {
   }
 
   /**
-   * Get the country query.
+   * Get the category query.
    *
    * @return \Drupal\hpc_api\Plugin\FabricQuery\CategoryQuery|null
    *   The category query or NULL.
@@ -74,6 +75,17 @@ trait FabricQueryTrait {
   protected static function getCategoryQuery(): ?CategoryQuery {
     $query = self::getQueryInstance('category');
     return $query instanceof CategoryQuery ? $query : NULL;
+  }
+
+  /**
+   * Get the resource query.
+   *
+   * @return \Drupal\hpc_api\Plugin\FabricQuery\ResourceQuery|null
+   *   The resource query or NULL.
+   */
+  protected static function getResourceQuery(): ?ResourceQuery {
+    $query = self::getQueryInstance('resource');
+    return $query instanceof ResourceQuery ? $query : NULL;
   }
 
   /**
