@@ -14,7 +14,7 @@
       "Issue #2585169: Unable to alter local actions prior to rendering": "https://www.drupal.org/files/issues/2024-12-19/2585169-63-10.4.x.patch"
     },
     "drupal/file_mdm": {
-      "Issue #3570037: Deprecated Error": "./patches/3570037.patch"
+      "Issue #3570037: Deprecated Error": "https://www.drupal.org/files/issues/2026-03-20/file_mdm-nullable-3570037-8.patch"
     },
     "drupal/geofield_map": {
       "Issue #3479680: Hide marker button when the map position is reset": "https://git.drupalcode.org/project/geofield_map/-/merge_requests/22.patch"
@@ -37,6 +37,9 @@
     },
     "drupal/publishcontent": {
       "Issue #2820867: Bulk operations actions skip 'publishcontent' defined permissions": "https://www.drupal.org/files/issues/2024-10-14/permissions-for-bulk-operations-2820867-9.patch"
+    },
+    "drupal/rabbit_hole": {
+      "Fix Multiple Implicit Nullable Parameters for PHP 8.4 Compatibility": "./patches/3516167-8-x-1.x-52.patch"
     },
     "drupal/seckit": {
       "Issue #2844205: Provide hook_seckit_options_alter() D8": "./patches/2844205.mr.patch"
