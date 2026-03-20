@@ -449,6 +449,7 @@ class AttachmentQuery extends FabricQueryBase {
         'AttachmentId' => $attachment_id,
         'IsTotal' => FALSE,
       ])
+      ->setLimit(100000)
       ->execute() ?: [];
   }
 
