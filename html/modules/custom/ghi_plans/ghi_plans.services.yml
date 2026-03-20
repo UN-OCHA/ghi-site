@@ -8,3 +8,9 @@ services:
     tags:
       - { name: paramconverter }
     lazy: true
+  metric_type_converter:
+    class: Drupal\ghi_plans\ParamConverter\MetricTypeConverter
+    arguments: ['@plugin.manager.fabric_query_manager']
+    tags:
+      - { name: paramconverter }
+    lazy: true

@@ -7,6 +7,7 @@ use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Render\Markup;
 use Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment;
 use Drupal\ghi_plans\ApiObjects\Entities\GoverningEntity;
+use Drupal\hpc_api\ApiObjects\Types\MetricType;
 use Drupal\hpc_api\Query\EndpointQueryManager;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -41,18 +42,17 @@ class DisaggregationModalController extends ControllerBase {
   /**
    * Get the title for the modal.
    */
-  private function modalTitle(DataAttachment $attachment, $metric_index, $reporting_period_id) {
-    $fields = array_values($attachment->getFields());
-    $field = $fields[$metric_index] ?? NULL;
-    $metric_type = $attachment->getFieldTypes()[$metric_index] ?? NULL;
+  private function modalTitle(DataAttachment $attachment, MetricType $metric_type, $reporting_period_id) {
+    $field = $attachment->getFieldByType($metric_type->getMachineName());
+    $metric_type_name = $metric_type->getMachineName();
     $entity = $attachment->getSourceEntity();
     $icon = $entity instanceof GoverningEntity ? $entity->icon : NULL;
     $icon_embed = $icon ? $this->iconQuery->getIconEmbedCode($icon) : NULL;
 
     $formatted_period = NULL;
-    if ($metric_type && $attachment->isMeasurementField($metric_type) && $reporting_period = $attachment->getReportingPeriod($reporting_period_id)) {
+    if ($metric_type_name && $attachment->isMeasurementField($metric_type_name) && $reporting_period = $attachment->getReportingPeriod($reporting_period_id)) {
       $formatted_period = new FormattableMarkup('<span class="title-additional-info">@formatted_period</span>', [
-        '@formatted_period' => match ($attachment->isCumulativeReachField($metric_type)) {
+        '@formatted_period' => match ($attachment->isCumulativeReachField($metric_type_name)) {
           TRUE => $reporting_period->format('Monitoring period: @data_range_cumulative'),
           FALSE => $reporting_period->format('Monitoring period @period_number: @date_range'),
         },
@@ -67,19 +67,19 @@ class DisaggregationModalController extends ControllerBase {
    *
    * @param \Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment $attachment
    *   The attachment object.
-   * @param int $metric
-   *   The index of the metric item.
+   * @param \Drupal\hpc_api\ApiObjects\Types\MetricType $metric_type
+   *   The metric type to show.
    * @param int $reporting_period
    *   The reporting period id for which to retrieve the data.
    *
    * @return array
    *   A render array.
    */
-  public function loadDisaggregationModalData(DataAttachment $attachment, $metric, $reporting_period) {
+  public function loadDisaggregationModalData(DataAttachment $attachment, MetricType $metric_type, $reporting_period) {
     $cid = implode('-', [
       __FUNCTION__,
       $attachment->id(),
-      $metric,
+      $metric_type->id(),
       $reporting_period,
     ]);
     $cache = $this->cache();
@@ -88,7 +88,7 @@ class DisaggregationModalController extends ControllerBase {
       $build = $cached_build->data;
     }
     else {
-      $build = $this->buildDisaggregationModalContent($attachment, $metric, $reporting_period);
+      $build = $this->buildDisaggregationModalContent($attachment, $metric_type, $reporting_period);
       $cache->set($cid, $build);
     }
     return [
@@ -96,7 +96,7 @@ class DisaggregationModalController extends ControllerBase {
       '#attached' => [
         'library' => ['ghi_blocks/modal'],
         'drupalSettings' => [
-          'ghi_modal_title' => $this->modalTitle($attachment, $metric, $reporting_period),
+          'ghi_modal_title' => $this->modalTitle($attachment, $metric_type, $reporting_period),
         ],
       ],
       'content' => $build,
@@ -108,15 +108,15 @@ class DisaggregationModalController extends ControllerBase {
    *
    * @param \Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment $attachment
    *   The attachment object.
-   * @param int $metric
-   *   The index of the metric item.
+   * @param \Drupal\hpc_api\ApiObjects\Types\MetricType $metric_type
+   *   The metric type to show.
    * @param int $reporting_period
    *   The reporting period id for which to retrieve the data.
    *
    * @return array
    *   A render array.
    */
-  private function buildDisaggregationModalContent(DataAttachment $attachment, $metric, $reporting_period) {
+  private function buildDisaggregationModalContent(DataAttachment $attachment, MetricType $metric_type, $reporting_period) {
 
     $unit_type = $attachment->getUnitType();
     $unit_defaults = [
@@ -132,11 +132,12 @@ class DisaggregationModalController extends ControllerBase {
 
     $t_options = ['langcode' => $plan_language];
 
-    // Retrieve disaggregated data form the attachment. The results is a
-    // multi-dimensional array keyed by the metric in the first level. Each
-    // metric contains the relevant location and category data.
-    $disaggregated_data = $attachment->getDisaggregatedData($reporting_period, TRUE, TRUE, TRUE);
-    if (empty($disaggregated_data[$metric])) {
+    // Retrieve disaggregated data form the attachment. The results is an
+    // object with the properties 'locations', 'categories' and 'metrics'.
+    // The latter two are for lookups, the actual data is contained in the
+    // items under 'locations'.
+    $disaggregated_data = $attachment->getDisaggregatedData($reporting_period);
+    if (empty($disaggregated_data->metrics[$metric_type->id()])) {
       return [
         '#type' => 'html_tag',
         '#tag' => 'p',
@@ -144,7 +145,7 @@ class DisaggregationModalController extends ControllerBase {
       ];
     }
 
-    if (empty($disaggregated_data[$metric]['locations'])) {
+    if (empty($disaggregated_data->locations)) {
       return [
         '#type' => 'html_tag',
         '#tag' => 'p',
@@ -152,8 +153,7 @@ class DisaggregationModalController extends ControllerBase {
       ];
     }
 
-    // All locations have the same categories, so take the first one and
-    // extract them to create the header.
+    // Get the categories.
     $categories = $attachment->getDisaggregatedCategories($reporting_period, TRUE, TRUE);
 
     // Build the table.
@@ -188,35 +188,35 @@ class DisaggregationModalController extends ControllerBase {
     $rows = [];
     $totals = [];
 
-    // Key by location ID.
-    $locations = [];
-    foreach ($disaggregated_data[$metric]['locations'] as $location) {
-      $locations[] = $location;
-    }
+    // Inital sorting by name.
+    usort($disaggregated_data->locations, fn ($loc_1, $loc_2) => strnatcasecmp($loc_1->location['name'], $loc_2->location['name']));
 
-    foreach ($locations as $location) {
+    // Get a shortcut to the actual location data.
+    $locations = array_map(fn ($location) => $location->location, $disaggregated_data->locations);
+
+    foreach ($disaggregated_data->locations as $location) {
       $row = [];
-      $parents = array_key_exists('id', $location) ? $this->getLocationParents($locations, $location['id']) : NULL;
+      $parents = array_key_exists('id', $location->location) ? $this->getLocationParents($locations, $location->location['id']) : NULL;
       if (!$parents || !is_array($parents)) {
-        $row[] = $location['name'];
+        $row[] = $location->location['name'];
       }
       else {
-        $parents[] = $location['name'];
+        $parents[] = $location->location['name'];
         $row[] = implode(' > ', $parents);
       }
 
-      if (!empty($location['categories'])) {
-        foreach ($location['categories'] as $key => $category) {
-          $totals[$key] = (int) ($totals[$key] ?? 0) + (int) ($category['data'] ?? 0);
+      if (!empty($location->categories)) {
+        foreach ($location->categories as $key => $category) {
+          $totals[$key] = (int) ($totals[$key] ?? 0) + (int) ($category[$metric_type->id()] ?? 0);
           $row[] = [
             'data' => [
               '#theme' => 'hpc_autoformat_value',
-              '#value' => $category['data'],
+              '#value' => $category[$metric_type->id()],
               '#unit_type' => $unit_type,
               '#unit_defaults' => $unit_defaults,
               '#decimal_format' => $decimal_format,
             ],
-            'data-sort-value' => $category['data'],
+            'data-sort-value' => $category[$metric_type->id()],
             'data-sort-type' => 'numeric',
             'data-column-type' => $unit_type,
             'data-formatting' => 'numeric-full',
@@ -252,8 +252,8 @@ class DisaggregationModalController extends ControllerBase {
       ],
       'class' => 'totals-row',
     ];
-    if (!empty($location['categories'])) {
-      foreach ($location['categories'] as $key => $category) {
+    if (!empty($location->categories)) {
+      foreach ($location->categories as $key => $category) {
         $total_row['data'][] = [
           'data' => [
             '#theme' => 'hpc_autoformat_value',
