@@ -13,7 +13,7 @@ use Prophecy\Argument;
  *
  * @group ghi_base_objects
  */
-class LocationTest extends ApiBaseObjectTest {
+class LocationTest extends ApiBaseObjectTestBase {
 
   /**
    * {@inheritdoc}

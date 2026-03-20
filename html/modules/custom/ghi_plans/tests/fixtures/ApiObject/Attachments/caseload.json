@@ -82,6 +82,7 @@
     "8700635": {
       "Id": 8700635,
       "MeasurementId": 138418,
+      "AttachmentId": 38529,
       "MetricTypeId": 16,
       "PeriodId": 44,
       "LocationId": null,
@@ -103,6 +104,7 @@
     "8700636": {
       "Id": 8700636,
       "MeasurementId": 138418,
+      "AttachmentId": 38529,
       "MetricTypeId": 14,
       "PeriodId": 44,
       "LocationId": null,
@@ -144,6 +146,7 @@
         "8700495": {
           "Id": 8700495,
           "MeasurementId": 112826,
+          "AttachmentId": 38529,
           "MetricTypeId": 16,
           "PeriodId": 44,
           "LocationId": null,
@@ -165,6 +168,7 @@
         "8700496": {
           "Id": 8700496,
           "MeasurementId": 112826,
+          "AttachmentId": 38529,
           "MetricTypeId": 14,
           "PeriodId": 44,
           "LocationId": null,
@@ -206,6 +210,7 @@
         "8700545": {
           "Id": 8700545,
           "MeasurementId": 122558,
+          "AttachmentId": 38529,
           "MetricTypeId": 14,
           "PeriodId": 44,
           "LocationId": null,
@@ -239,6 +244,8 @@
       "UnitId": null,
       "CalculationMethodId": null,
       "Description": null,
+      "IsCommentPublic": true,
+      "Comments": "Test comment",
       "VisibilityGroupId": 1,
       "AttachmentPrototypeId": 5403,
       "RecordStatus": "Active",
@@ -247,6 +254,7 @@
         "8700619": {
           "Id": 8700619,
           "MeasurementId": 132807,
+          "AttachmentId": 38529,
           "MetricTypeId": 16,
           "PeriodId": 44,
           "LocationId": null,
@@ -268,6 +276,7 @@
         "8700620": {
           "Id": 8700620,
           "MeasurementId": 132807,
+          "AttachmentId": 38529,
           "MetricTypeId": 14,
           "PeriodId": 44,
           "LocationId": null,
@@ -289,6 +298,7 @@
         "8700621": {
           "Id": 8700621,
           "MeasurementId": 132807,
+          "AttachmentId": 38529,
           "MetricTypeId": 20,
           "PeriodId": 44,
           "LocationId": null,
@@ -330,6 +340,7 @@
         "8700635": {
           "Id": 8700635,
           "MeasurementId": 138418,
+          "AttachmentId": 38529,
           "MetricTypeId": 16,
           "PeriodId": 44,
           "LocationId": null,
@@ -351,6 +362,7 @@
         "8700636": {
           "Id": 8700636,
           "MeasurementId": 138418,
+          "AttachmentId": 38529,
           "MetricTypeId": 14,
           "PeriodId": 44,
           "LocationId": null,
