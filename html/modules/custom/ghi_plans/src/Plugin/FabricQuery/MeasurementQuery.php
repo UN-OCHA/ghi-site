@@ -127,6 +127,9 @@ class MeasurementQuery extends FabricQueryBase {
    *   An array of measurement objects, keyed by the measurement id.
    */
   public function getMeasurementsByAttachmentId(array $attachment_ids, bool $disaggregated = FALSE): array {
+    if (empty($attachment_ids)) {
+      return [];
+    }
     if (count($attachment_ids) > self::MAX_FILTER_COUNT_ARRAY) {
       return $this->doChunkedQuery($attachment_ids, fn ($ids): array => $this->getMeasurementsByAttachmentId($ids));
     }

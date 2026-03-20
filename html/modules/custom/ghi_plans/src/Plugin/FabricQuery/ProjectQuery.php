@@ -122,6 +122,9 @@ class ProjectQuery extends FabricQueryBase {
   public function getProjectsForPlan(Plan $plan, ?BaseObjectChildInterface $context_base_object = NULL, ?int $organization_id = NULL): array {
     $project_type = $this->getEntityTypeByName('Project');
     $plan_type = $this->getEntityTypeByName('Plan');
+    if (!$project_type || !$plan_type) {
+      return [];
+    }
     $relationships = $this->getRelationshipItems($project_type->id(), $plan_type->id(), NULL, $plan->getSourceId());
     $project_ids = array_map(fn ($item) => $item->getSourceId(), $relationships);
     $projects = !empty($project_ids) ? $this->getProjectsById($project_ids, $plan) : [];
