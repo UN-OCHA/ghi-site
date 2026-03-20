@@ -1,0 +1,133 @@
+From b42d817394b13c07d475684727047b7bdacb0c8d Mon Sep 17 00:00:00 2001
+From: Nick Dickinson-Wilde <29811-NickWilde@users.noreply.drupalcode.org>
+Date: Sun, 8 Dec 2024 17:27:33 +0000
+Subject: [PATCH] Issue #3492414 by nickdickinsonwilde, akulsaxena: Nullable
+ types must be explicit
+
+---
+ file_mdm_exif/src/ExifTagMapper.php            | 2 +-
+ file_mdm_exif/src/ExifTagMapperInterface.php   | 5 +++--
+ file_mdm_exif/src/Plugin/FileMetadata/Exif.php | 2 +-
+ file_mdm_font/src/Plugin/FileMetadata/Font.php | 2 +-
+ src/FileMetadataException.php                  | 2 +-
+ src/Plugin/FileMetadata/GetImageSize.php       | 2 +-
+ src/Plugin/FileMetadataPluginInterface.php     | 6 +++---
+ 7 files changed, 11 insertions(+), 10 deletions(-)
+
+diff --git a/file_mdm_exif/src/ExifTagMapper.php b/file_mdm_exif/src/ExifTagMapper.php
+index d30c917..68eed0d 100644
+--- a/file_mdm_exif/src/ExifTagMapper.php
++++ b/file_mdm_exif/src/ExifTagMapper.php
+@@ -96,7 +96,7 @@ class ExifTagMapper implements ExifTagMapperInterface {
+     return ['ifd' => $ifd, 'tag' => $tag];
+   }
+ 
+-  public function getSupportedKeys(array $options = NULL): array {
++  public function getSupportedKeys(?array $options = NULL): array {
+     if (isset($options['ifds'])) {
+       return $this->getSupportedIfdsMap();
+     }
+diff --git a/file_mdm_exif/src/ExifTagMapperInterface.php b/file_mdm_exif/src/ExifTagMapperInterface.php
+index dea663c..60484f8 100644
+--- a/file_mdm_exif/src/ExifTagMapperInterface.php
++++ b/file_mdm_exif/src/ExifTagMapperInterface.php
+@@ -33,12 +33,13 @@ interface ExifTagMapperInterface {
+   /**
+    * Returns a list of default metadata 'keys' supported.
+    *
+-   * @param array $options
++   * @param array|null $options
+    *   (optional) If specified, restricts the results returned. By default, all
+    *   the available EXIF IFD/TAG combinations for any IFD are returned.
+    *   If $options contains ['ifds' => TRUE], the supported IFDs are returned.
+    *   If $options contains ['ifd' => $value], the IFD/TAG combinations
+    *   supported by the IFD specified by $value are returned.
++   *   If $options is NULL, no restrictions are applied.
+    *
+    * @return array
+    *   A simple array.
+@@ -51,6 +52,6 @@ interface ExifTagMapperInterface {
+    *     0 => the string identifier of the IFD.
+    *     1 => the string identifier of the TAG.
+    */
+-  public function getSupportedKeys(array $options = NULL): array;
++  public function getSupportedKeys(?array $options = NULL): array;
+ 
+ }
+diff --git a/file_mdm_exif/src/Plugin/FileMetadata/Exif.php b/file_mdm_exif/src/Plugin/FileMetadata/Exif.php
+index a98e048..b8c943c 100644
+--- a/file_mdm_exif/src/Plugin/FileMetadata/Exif.php
++++ b/file_mdm_exif/src/Plugin/FileMetadata/Exif.php
+@@ -49,7 +49,7 @@ class Exif extends FileMetadataPluginBase {
+     return $instance;
+   }
+ 
+-  public function getSupportedKeys(array $options = NULL): array {
++  public function getSupportedKeys(?array $options = NULL): array {
+     return $this->tagMapper->getSupportedKeys($options);
+   }
+ 
+diff --git a/file_mdm_font/src/Plugin/FileMetadata/Font.php b/file_mdm_font/src/Plugin/FileMetadata/Font.php
+index 50ca702..be4e079 100644
+--- a/file_mdm_font/src/Plugin/FileMetadata/Font.php
++++ b/file_mdm_font/src/Plugin/FileMetadata/Font.php
+@@ -23,7 +23,7 @@ use FontLib\Table\Type\name;
+ )]
+ class Font extends FileMetadataPluginBase {
+ 
+-  public function getSupportedKeys(array $options = NULL): array {
++  public function getSupportedKeys(?array $options = NULL): array {
+     return array_merge(['FontType', 'FontWeight'], array_values(name::$nameIdCodes));
+   }
+ 
+diff --git a/src/FileMetadataException.php b/src/FileMetadataException.php
+index f4cd308..4c5defb 100644
+--- a/src/FileMetadataException.php
++++ b/src/FileMetadataException.php
+@@ -9,7 +9,7 @@ namespace Drupal\file_mdm;
+  */
+ class FileMetadataException extends \Exception {
+ 
+-  public function __construct(string $message, string $plugin_id = NULL, string $method = NULL, \Exception $previous = NULL) {
++  public function __construct(string $message, ?string $plugin_id = NULL, ?string $method = NULL, ?\Exception $previous = NULL) {
+     $msg = $message;
+     $msg .= $plugin_id ? " (plugin: {$plugin_id})" : "";
+     $msg .= $method ? " (method: {$method})" : "";
+diff --git a/src/Plugin/FileMetadata/GetImageSize.php b/src/Plugin/FileMetadata/GetImageSize.php
+index fd6cadd..a7945c0 100644
+--- a/src/Plugin/FileMetadata/GetImageSize.php
++++ b/src/Plugin/FileMetadata/GetImageSize.php
+@@ -18,7 +18,7 @@ use Drupal\file_mdm\Plugin\Attribute\FileMetadata;
+ )]
+ class GetImageSize extends FileMetadataPluginBase {
+ 
+-  public function getSupportedKeys(array $options = NULL): array {
++  public function getSupportedKeys(?array $options = NULL): array {
+     return [0, 1, 2, 3, 'mime', 'channels', 'bits'];
+   }
+ 
+diff --git a/src/Plugin/FileMetadataPluginInterface.php b/src/Plugin/FileMetadataPluginInterface.php
+index 8349800..7464e64 100644
+--- a/src/Plugin/FileMetadataPluginInterface.php
++++ b/src/Plugin/FileMetadataPluginInterface.php
+@@ -84,14 +84,14 @@ interface FileMetadataPluginInterface extends ContainerFactoryPluginInterface, P
+   /**
+    * Returns a list of metadata keys supported by the plugin.
+    *
+-   * @param array $options
++   * @param array|null $options
+    *   (optional) Allows specifying additional options to control the list of
+-   *   metadata keys returned.
++   *   metadata keys returned. If NULL, no additional options are applied.
+    *
+    * @return array
+    *   A simple array of metadata keys supported.
+    */
+-  public function getSupportedKeys(array $options = NULL): array;
++  public function getSupportedKeys(?array $options = NULL): array;
+ 
+   /**
+    * Checks if file metadata has been already loaded.
+-- 
+GitLab
+
