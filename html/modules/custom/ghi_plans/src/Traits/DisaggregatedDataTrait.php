@@ -32,9 +32,16 @@ trait DisaggregatedDataTrait {
         'totals' => [],
         'categories' => [],
       ];
+      // Prepare the totals.
       $locations[$location_id]->totals[$metric->id()] = $locations[$location_id]->totals[$metric->id()] ?? 0;
-      $locations[$location_id]->totals[$metric->id()] += $item->getValue();
+      if (!$disaggregation_id) {
+        // The actual total value for a location is a fact without any
+        // categories, so the disaggregation id is empty.
+        $locations[$location_id]->totals[$metric->id()] += $item->getValue();
+      }
       if ($disaggregation_id) {
+        // If the disaggregation id is not empty, we use the item value for the
+        // category values.
         $locations[$location_id]->categories[$disaggregation_id] = $locations[$location_id]->categories[$disaggregation_id] ?? [];
         $locations[$location_id]->categories[$disaggregation_id][$metric->id()] = $item->getValue();
       }

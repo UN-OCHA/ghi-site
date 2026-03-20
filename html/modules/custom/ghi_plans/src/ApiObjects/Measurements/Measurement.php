@@ -132,7 +132,7 @@ class Measurement extends ApiObjectBase implements MeasurementInterface {
    */
   public function getDataPointValue($metric_type) {
     // @todo Add calculated fields.
-    return $this->values[$metric_type] ?? NULL;
+    return $this->map->values[$metric_type] ?? NULL;
   }
 
   /**

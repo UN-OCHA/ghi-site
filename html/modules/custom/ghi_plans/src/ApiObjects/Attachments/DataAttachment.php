@@ -483,7 +483,7 @@ class DataAttachment extends AttachmentBase implements DataAttachmentInterface {
       return FALSE;
     }
     $fields = $this->getPrototype()->getOriginalFields();
-    $field = $fields[$metric_type];
+    $field = $fields[$metric_type] ?? NULL;
     if (!$field) {
       return FALSE;
     }
