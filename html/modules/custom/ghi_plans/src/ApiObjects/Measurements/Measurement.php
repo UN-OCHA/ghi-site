@@ -204,10 +204,11 @@ class Measurement extends ApiObjectBase implements MeasurementInterface {
       return;
     }
     $measurement_query = $this->getMeasurementQuery();
-    $data->disaggregated = $measurement_query?->getMeasurementDisaggregatedData($this->id());
-    if (!$data) {
+    $disaggregated_data = $measurement_query?->getMeasurementDisaggregatedData($this->id());
+    if (!$disaggregated_data) {
       return;
     }
+    $data->disaggregated = $disaggregated_data;
     $this->setRawData($data);
     $this->updateMap();
   }

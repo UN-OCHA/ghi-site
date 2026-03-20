@@ -14,6 +14,7 @@ use Drupal\ghi_form_elements\Element\DataPoint as ElementDataPoint;
 use Drupal\ghi_plans\ApiObjects\Prototypes\AttachmentPrototype;
 use Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment;
 use Drupal\ghi_plans\Traits\DataPointConfigBackwardsCompatibilityTrait;
+use Drupal\ghi_plans\Traits\PlanQueryTrait;
 
 /**
  * Provides a data point item for configuration containers.
@@ -26,6 +27,7 @@ use Drupal\ghi_plans\Traits\DataPointConfigBackwardsCompatibilityTrait;
 class DataPoint extends ConfigurationContainerItemPluginBase {
 
   use DataPointConfigBackwardsCompatibilityTrait;
+  use PlanQueryTrait;
 
   /**
    * {@inheritdoc}
@@ -117,11 +119,11 @@ class DataPoint extends ConfigurationContainerItemPluginBase {
     }
     $config = $this->getPluginConfiguration();
     $build = $attachment->formatValue($conf);
-    $index = $conf['data_points'][0]['index'] ?? NULL;
-    if (is_int($index) && !empty($config['disaggregation_modal']) && $this->canShowDisaggregatedData($attachment, $conf)) {
+    $metric_type = $conf['data_points'][0]['metric_type'] ?? NULL;
+    if (is_string($metric_type) && !empty($config['disaggregation_modal']) && $this->canShowDisaggregatedData($attachment, $conf)) {
       $link_url = Url::fromRoute('ghi_plans.modal_content.dissaggregation', [
         'attachment' => $attachment->id(),
-        'metric' => $index,
+        'metric_type' => $metric_type,
         'reporting_period' => $build['#reporting_period'] ?: 'latest',
       ]);
       $link_url->setOptions([

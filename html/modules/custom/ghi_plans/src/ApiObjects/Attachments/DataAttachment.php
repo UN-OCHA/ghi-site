@@ -715,8 +715,8 @@ class DataAttachment extends AttachmentBase implements DataAttachmentInterface {
 
     $data = (object) [
       'locations' => [],
-      'metrics' => $disaggregated->metrics,
-      'categories' => $disaggregated->categories,
+      'metrics' => $disaggregated->metrics + ($disaggregated_measurements?->metrics ?? []),
+      'categories' => $disaggregated->categories + ($disaggregated_measurements?->categories ?? []),
     ];
 
     // Base data (disaggregated target totals).
@@ -793,10 +793,11 @@ class DataAttachment extends AttachmentBase implements DataAttachmentInterface {
       return;
     }
     $attachment_query = $this->getAttachmentQuery();
-    $data->disaggregated = $attachment_query?->getAttachmentDisaggregatedData($this->id());
-    if (!$data) {
+    $disaggregated_data = $attachment_query?->getAttachmentDisaggregatedData($this->id());
+    if (!$disaggregated_data) {
       return;
     }
+    $data->disaggregated = $disaggregated_data;
     $this->setRawData($data);
     $this->updateMap();
   }

@@ -535,6 +535,25 @@ abstract class FabricQueryBase extends PluginBase implements FabricQueryPluginIn
   }
 
   /**
+   * Get a metric type by it's machine name.
+   *
+   * @param string $machine_name
+   *   The id of the metric type.
+   *
+   * @return \Drupal\hpc_api\ApiObjects\Types\MetricType|null
+   *   The metric type object or NULL if not found.
+   */
+  public function getMetricTypeByMachineName(string $machine_name): ?MetricType {
+    $metric_types = $this->getMetricTypes();
+    foreach ($metric_types as $metric_type) {
+      if ($metric_type->getMachineName() == $machine_name) {
+        return $metric_type;
+      }
+    }
+    return NULL;
+  }
+
+  /**
    * Get the available sectors.
    *
    * @return \Drupal\hpc_api\ApiObjects\Types\Sector[]
