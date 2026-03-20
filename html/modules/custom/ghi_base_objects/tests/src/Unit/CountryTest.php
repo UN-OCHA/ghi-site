@@ -10,7 +10,7 @@ use Drupal\Tests\ghi_geojson\Traits\GeoJsonTestTrait;
  *
  * @group ghi_base_objects
  */
-class CountryTest extends ApiBaseObjectTest {
+class CountryTest extends ApiBaseObjectTestBase {
 
   use GeoJsonTestTrait;
 

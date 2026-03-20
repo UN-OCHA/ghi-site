@@ -11,6 +11,8 @@
   "UnitId": null,
   "CalculationMethodId": null,
   "Description": null,
+  "IsCommentPublic": true,
+  "Comments": "The data is measured following common data collection approaches",
   "VisibilityGroupId": 1,
   "AttachmentPrototypeId": 5443,
   "RecordStatus": "Active",
@@ -19,6 +21,7 @@
     "2937076": {
       "Id": 2937076,
       "MeasurementId": 139803,
+      "AttachmentId": 41496,
       "MetricTypeId": 16,
       "PeriodId": 44,
       "LocationId": null,
@@ -40,6 +43,7 @@
     "2937077": {
       "Id": 2937077,
       "MeasurementId": 139803,
+      "AttachmentId": 41496,
       "MetricTypeId": 14,
       "PeriodId": 44,
       "LocationId": null,
@@ -61,6 +65,7 @@
     "2937078": {
       "Id": 2937078,
       "MeasurementId": 139803,
+      "AttachmentId": 41496,
       "MetricTypeId": 17,
       "PeriodId": 44,
       "LocationId": null,
@@ -82,6 +87,7 @@
     "2937079": {
       "Id": 2937079,
       "MeasurementId": 139803,
+      "AttachmentId": 41496,
       "MetricTypeId": 15,
       "PeriodId": 44,
       "LocationId": null,
