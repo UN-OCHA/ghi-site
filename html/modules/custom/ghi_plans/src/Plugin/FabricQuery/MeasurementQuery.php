@@ -420,6 +420,7 @@ class MeasurementQuery extends FabricQueryBase {
         'MeasurementId' => $measurement_ids,
         'IsTotal' => $disaggregated === FALSE,
       ])
+      ->setLimit(100000)
       ->execute();
     return $measurement_facts ?: [];
   }
