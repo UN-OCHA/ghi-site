@@ -66,7 +66,7 @@ class AttachmentQuery extends FabricQueryBase {
     ];
 
     $data = $this->fabricClient->executeMultiple($queries);
-    $attachments = $data['attachments'];
+    $attachments = $data['attachments'] ?? [];
 
     if (empty($attachments)) {
       return NULL;
@@ -120,7 +120,7 @@ class AttachmentQuery extends FabricQueryBase {
           'IsTotal' => TRUE,
         ]),
     ];
-    $data = $this->fabricClient->executeMultiple($queries);
+    $data = $this->fabricClient->executeMultiple($queries) ?: [];
     $attachments = $this->processAttachments($data['attachments'] ?? [], $data);
     $this->objectStore->addObjects($attachments);
     return $attachments;
@@ -354,6 +354,9 @@ class AttachmentQuery extends FabricQueryBase {
    *   retrieved from fabric using the attachment ids as condition.
    */
   private function addAttachmentFacts(&$attachments, ?array $attachment_facts = NULL) {
+    if (empty($attachments)) {
+      return;
+    }
     if (!$attachment_facts) {
       $attachment_facts = $this->fabricClient->createQuery('attachmentFacts', AttachmentFact::getGraphQlItems())
         ->setFilters([

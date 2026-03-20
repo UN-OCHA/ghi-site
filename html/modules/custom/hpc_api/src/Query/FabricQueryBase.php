@@ -370,9 +370,6 @@ abstract class FabricQueryBase extends PluginBase implements FabricQueryPluginIn
     $queries = array_map(fn($key, $class) => $this->fabricClient->createQuery($key, $class::getGraphQlItems()), array_keys($base_types), $base_types);
     $data = $this->fabricClient->executeMultiple($queries);
     $this->baseTypes = [];
-    if ($data === FALSE) {
-      return;
-    }
     foreach ($base_types as $query_key => $class_name) {
       $this->baseTypes[$query_key] = !empty($data[$query_key]) ? $this->buildResultObjects($data[$query_key], $class_name) : [];
     }
