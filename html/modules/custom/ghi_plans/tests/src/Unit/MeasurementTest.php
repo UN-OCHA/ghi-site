@@ -25,7 +25,7 @@ class MeasurementTest extends ApiObjectTestBase {
     $this->assertEmpty($measurement->getDisaggregated()->locations);
     $this->assertEmpty($measurement->getDisaggregated()->categories);
     $this->assertEmpty($measurement->getDisaggregated()->metrics);
-    $this->assertEmpty($measurement->getComment());
+    $this->assertNotEmpty($measurement->getComment());
     $this->assertNotEmpty($measurement->getPrototype());
   }
 
@@ -69,7 +69,7 @@ class MeasurementTest extends ApiObjectTestBase {
     $this->assertEquals('The data is measured following common data collection approaches', $measurement->getComment());
 
     $data = $measurement->getRawData();
-    $data->isCommentPublic = FALSE;
+    $data->IsCommentPublic = FALSE;
 
     $measurement = new Measurement($data);
     $this->assertEquals(NULL, $measurement->getComment());

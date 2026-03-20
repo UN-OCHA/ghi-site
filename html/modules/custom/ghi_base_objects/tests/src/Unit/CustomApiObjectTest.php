@@ -9,7 +9,7 @@ use Drupal\ghi_base_objects_test\ApiObjects\CustomApiObject;
  *
  * @group ghi_base_objects
  */
-class CustomApiObjectTest extends ApiBaseObjectTest {
+class CustomApiObjectTest extends ApiBaseObjectTestBase {
 
   /**
    * Test common methods of ApiBaseObject classes.

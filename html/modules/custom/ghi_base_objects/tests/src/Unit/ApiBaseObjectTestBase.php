@@ -11,7 +11,7 @@ use Drupal\Tests\hpc_api\Traits\PrivateAccessorTrait;
  *
  * @group ghi_base_objects
  */
-abstract class ApiBaseObjectTest extends UnitTestCase {
+abstract class ApiBaseObjectTestBase extends UnitTestCase {
 
   use BaseObjectTestTrait;
   use PrivateAccessorTrait;

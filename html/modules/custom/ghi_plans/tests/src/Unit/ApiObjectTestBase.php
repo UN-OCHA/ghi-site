@@ -18,13 +18,13 @@ use Drupal\hpc_api\ApiObjects\Types\Unit;
 use Drupal\hpc_api\Plugin\FabricQuery\EntityTypeQuery;
 use Drupal\hpc_api\Query\FabricQueryBase;
 use Drupal\hpc_common\Helpers\StringHelper;
-use Drupal\Tests\ghi_base_objects\Unit\ApiBaseObjectTest;
+use Drupal\Tests\ghi_base_objects\Unit\ApiBaseObjectTestBase;
 use Prophecy\Argument;
 
 /**
  * Tests for API objects.
  */
-abstract class ApiObjectTestBase extends ApiBaseObjectTest {
+abstract class ApiObjectTestBase extends ApiBaseObjectTestBase {
 
   /**
    * {@inheritdoc}

@@ -376,7 +376,7 @@ class AttachmentTest extends ApiObjectTestBase {
         'processing' => 'single',
         'formatting' => 'auto',
         'data_points' => [
-          0 => ['metric_type' => 'periodical_reach'],
+          0 => ['metric_type' => 'periodical_reach_does_not_exist'],
           1 => ['metric_type' => 'total_population'],
         ],
       ],
