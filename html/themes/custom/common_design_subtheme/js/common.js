@@ -171,18 +171,12 @@
       });
 
       if (typeof sorttable != 'undefined') {
-        if (context == document) {
-          sorttable.init();
-          once('sortable-table', 'table.sortable');
-        }
-        else {
-          once('sortable-table', 'table.sortable', context).forEach(element => {
-            if (context != document && !$(element).data('once').includes('sortable-table')) {
-              sorttable.makeSortable(element);
-            }
-          });
-        }
-        once('sortable-table', 'table.sortable.autosort', context).forEach(element => {
+        once('sortable-table-init', 'table.sortable', context).forEach(element => {
+          if (context != document || !$(element).data('once').includes('sortable-table-init')) {
+            sorttable.makeSortable(element);
+          }
+        });
+        once('sortable-table-autosort', 'table.sortable.autosort', context).forEach(element => {
           if (context != document) {
             sorttable.makeSortable(element);
           }
