@@ -197,7 +197,7 @@ class EntityCounter extends ConfigurationContainerItemPluginBase {
         return strnatcmp($a->getSortKey(), $b->getSortKey());
       });
       $items = array_map(function ($item) {
-        return Markup::create($item->name . '<br /> ' . $item->description);
+        return Markup::create($item->getName() . '<br /> ' . $item->getDescription());
       }, $entities);
       $popover_content = [
         '#theme' => 'item_list',
