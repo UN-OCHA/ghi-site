@@ -30,6 +30,8 @@ popover:
       css/popover.css: {}
   js:
     js/popover.js: {}
+  dependencies:
+    - hpc_common/tippy.js
 toggle:
   js:
     js/toggle.js: {}

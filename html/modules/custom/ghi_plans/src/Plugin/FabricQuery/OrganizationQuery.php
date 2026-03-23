@@ -33,11 +33,20 @@ class OrganizationQuery extends FabricQueryBase {
    *   An organization object or NULL.
    */
   public function getOrganization(int $organization_id): ?Organization {
+    $organization = $this->objectStore->getObject($organization_id, Organization::getObjectStorageKey());
+    if ($organization) {
+      return $organization;
+    }
     $items = $this->fabricClient->createQuery('organizations', Organization::getGraphQlItems())
       ->setFilter('Id', $organization_id)
       ->execute() ?: [];
     $item = count($items) == 1 ? reset($items) : NULL;
-    return $item ? new Organization($item) : NULL;
+    if (!$item) {
+      return NULL;
+    }
+    $organization = new Organization($item);
+    $this->objectStore->addObject($organization);
+    return $organization;
   }
 
   /**
@@ -53,13 +62,21 @@ class OrganizationQuery extends FabricQueryBase {
     if (empty($organization_ids)) {
       return [];
     }
+    $organization_ids = array_unique($organization_ids);
+    $organizations = $this->objectStore->getObjects($organization_ids, Organization::getObjectStorageKey());
+    if (count($organizations) == count($organization_ids)) {
+      return $organizations;
+    }
+    $organization_ids = array_diff($organization_ids, array_keys($organizations));
     if (count($organization_ids) > self::MAX_FILTER_COUNT_ARRAY) {
       return $this->doChunkedQuery($organization_ids, fn ($ids): array => $this->getOrganizationsById($ids));
     }
     $items = $this->fabricClient->createQuery('organizations', Organization::getGraphQlItems())
       ->setFilter('Id', $organization_ids)
       ->execute() ?: [];
-    return $this->buildResultObjects($items, Organization::class);
+    $organizations = $this->buildResultObjects($items, Organization::class);
+    $this->objectStore->addObjects($organizations);
+    return $organizations;
   }
 
   /**

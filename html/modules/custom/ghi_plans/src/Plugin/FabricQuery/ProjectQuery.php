@@ -266,6 +266,9 @@ class ProjectQuery extends FabricQueryBase {
     foreach ($relationships as $item) {
       $project_id = $item->getSourceId();
       $organization_id = $item->getTargetId();
+      if (empty($organizations[$organization_id])) {
+        continue;
+      }
       $items[$project_id]->organizations = $items[$project_id]->organizations ?? [];
       $items[$project_id]->organizations[$organization_id] = $organizations[$organization_id];
     }
