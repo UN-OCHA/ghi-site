@@ -255,7 +255,7 @@ class Paragraph extends ContentBlockBase implements OptionalTitleBlockInterface,
     $build = [
       '#type' => 'container',
       '#title' => $title,
-      '#attributes' => [
+      '#block_attributes' => [
         'data-paragraph-id' => $paragraph->getId(),
       ] + $block_attributes,
       'content' => [
@@ -365,7 +365,7 @@ class Paragraph extends ContentBlockBase implements OptionalTitleBlockInterface,
         }
       }
       $matches = [];
-      preg_match_all('/gho-paragraph-promoted/', $paragraph->getRendered(), $matches);
+      preg_match_all('/' . self::PROMOTED_CLASS . '/', $paragraph->getRendered(), $matches);
       if (!empty($matches)) {
         $theme_components[] = 'common_design_subtheme/gho-promoted-paragraph';
       }
@@ -945,9 +945,9 @@ class Paragraph extends ContentBlockBase implements OptionalTitleBlockInterface,
    * {@inheritdoc}
    */
   public static function trustedCallbacks() {
-    return [
+    return array_merge(parent::trustedCallbacks(), [
       'preparePreviewParagraph',
-    ];
+    ]);
   }
 
   /**

@@ -7,7 +7,7 @@ use Drupal\hpc_common\Helpers\ArrayHelper;
 /**
  * Class representing a Fabric GraphQL query.
  */
-class FabricQuery {
+class FabricQuery implements \Stringable {
 
   /**
    * The default limit for queries.
@@ -52,11 +52,19 @@ class FabricQuery {
   private $limit;
 
   /**
+   * The after value.
+   *
+   * @var string
+   */
+  private $after;
+
+  /**
    * Constructs a new fabric client object.
    */
   public function __construct(?string $query_name = NULL, mixed $items = NULL, ?array $filters = NULL, ?int $limit = NULL) {
     $this->queryName = $query_name;
     $this->limit = $limit ?? self::DEFAULT_LIMIT;
+    $this->after = NULL;
 
     if ($items !== NULL) {
       $this->setItems($items);
@@ -176,6 +184,20 @@ class FabricQuery {
   }
 
   /**
+   * Set after.
+   *
+   * @param string $after
+   *   The after value.
+   *
+   * @return self
+   *   Returns the client instance for chaining.
+   */
+  public function setAfter(string $after): self {
+    $this->after = $after;
+    return $this;
+  }
+
+  /**
    * Set the order by.
    *
    * @param array $order_by
@@ -210,10 +232,11 @@ class FabricQuery {
 
     $arguments = array_filter([
       'first: ' . $this->limit,
+      $this->after ? 'after: "' . $this->after . '"' : NULL,
       !empty($filter_string) ? 'filter: { ' . $filter_string . ' }' : NULL,
       !empty($order_string) ? 'orderBy: { ' . $order_string . ' }' : NULL,
     ]);
-    return $this->queryName . ' ( ' . implode(', ', $arguments) . ' ) { items { ' . $item_string . ' } }';
+    return $this->queryName . ' ( ' . implode(', ', $arguments) . ' ) { items { ' . $item_string . ' } endCursor hasNextPage }';
   }
 
   /**
@@ -226,6 +249,13 @@ class FabricQuery {
    */
   public function toString() {
     return $this->buildQueryString();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function __toString() {
+    return $this->toString();
   }
 
   /**

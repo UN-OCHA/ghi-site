@@ -5,6 +5,7 @@ namespace Drupal\Tests\ghi_blocks\Unit;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Session\AccountProxyInterface;
 use Drupal\ghi_blocks\Plugin\ConfigurationContainerItem\AttachmentData;
+use Drupal\ghi_plans\Plugin\FabricQuery\AttachmentPrototypeQuery;
 use Drupal\ghi_plans\Plugin\FabricQuery\AttachmentQuery;
 use Drupal\hpc_api\Query\EndpointQueryManager;
 use Drupal\hpc_api\Query\FabricQueryManager;
@@ -23,10 +24,12 @@ class AttachmentDataTest extends UnitTestCase {
    */
   public function testAttachmentDataValidation() {
     $attachment_query = $this->prophesize(AttachmentQuery::class);
+    $attachment_prototype_query = $this->prophesize(AttachmentPrototypeQuery::class);
     $entity_type_manager = $this->prophesize(EntityTypeManagerInterface::class);
     $endpoint_query_manager = $this->prophesize(EndpointQueryManager::class);
     $fabric_query_manager = $this->prophesize(FabricQueryManager::class);
     $fabric_query_manager->createInstance('attachment')->willReturn($attachment_query->reveal());
+    $fabric_query_manager->createInstance('attachment_prototype')->willReturn($attachment_prototype_query->reveal());
     $string_translation = $this->getStringTranslationStub();
     $current_user = $this->prophesize(AccountProxyInterface::class);
 

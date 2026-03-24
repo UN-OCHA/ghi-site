@@ -1,6 +1,6 @@
 uuid: 79520001-c4ab-4a7c-9d50-fd35254bb604
 langcode: en
-status: true
+status: false
 dependencies: {  }
 id: opcache_string_buffer
 label: 'OPcache interned string buffer'

@@ -7,13 +7,13 @@
       if (!$section_switcher.length) {
         return;
       }
-      $homepageBlock = $section_switcher.parents('.ghi-block-global-homepages.has-year-switcher');
+      $homepageBlock = $section_switcher.parents('.ghi-block-global-homepages');
       if (!$homepageBlock.length) {
         return;
       }
       let block_uuid = $homepageBlock.attr('id').replace('block-', '');
 
-      once('section-switcher', '.ghi-block.has-year-switcher .section-switcher-wrapper ul li a', context).forEach((item) => {
+      once('section-switcher', '.ghi-block .section-switcher-wrapper ul li a', context).forEach((item) => {
         let ajax_url = '/load-block/global_homepages/' + block_uuid + '?current_uri=' + $(item).attr('href');
         $(item).attr('original-href', $(item).attr('href'));
         $(item).attr('href', ajax_url);

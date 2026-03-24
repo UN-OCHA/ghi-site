@@ -1,6 +1,6 @@
 uuid: 57857d76-4a58-4e88-bd64-81919d177d2d
 langcode: en
-status: true
+status: false
 dependencies:
   module:
     - ghi_geojson

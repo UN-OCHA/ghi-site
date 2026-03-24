@@ -44,7 +44,8 @@ class PlanTest extends PlanApiObjectKernelTestBase {
       'UpdatedAt' => '2025-12-08T13:34:53.000Z',
       'planPeriod' => (object) ['items' => [(object) ['period' => (object) ['CalendarYear' => 2025]]]],
       'DocumentPublishDate' => NULL,
-      'CurrentReportingPeriodId' => 1234,
+      'CurrentReportingPeriodId' => 1235,
+      'LastPublishedReportingPeriodId' => 1234,
     ]);
 
     $plan = new Plan($raw_data);

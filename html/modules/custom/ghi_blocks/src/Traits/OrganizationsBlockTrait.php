@@ -56,7 +56,7 @@ trait OrganizationsBlockTrait {
     $plan_object = $this->getCurrentPlanObject();
     $projects = &drupal_static(__FUNCTION__, []);
     if (empty($projects[$organization->id()])) {
-      $projects[$organization->id()] = $this->getProjectQuery()->getProjectsForPlan($plan_object, NULL, $organization->id());
+      $projects[$organization->id()] = $this->getProjectQuery()->getProjectsForPlanId($plan_object->getSourceId(), NULL, $organization->id());
     }
     return $projects[$organization->id()];
   }

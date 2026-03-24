@@ -5,7 +5,7 @@ namespace Drupal\ghi_plans\Controller;
 use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Render\Markup;
-use Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment;
+use Drupal\ghi_plans\ApiObjects\Attachments\Attachment;
 use Drupal\ghi_plans\ApiObjects\Entities\GoverningEntity;
 use Drupal\hpc_api\ApiObjects\Types\MetricType;
 use Drupal\hpc_api\Query\EndpointQueryManager;
@@ -42,7 +42,7 @@ class DisaggregationModalController extends ControllerBase {
   /**
    * Get the title for the modal.
    */
-  private function modalTitle(DataAttachment $attachment, MetricType $metric_type, $reporting_period_id) {
+  private function modalTitle(Attachment $attachment, MetricType $metric_type, $reporting_period_id) {
     $field = $attachment->getFieldByType($metric_type->getMachineName());
     $metric_type_name = $metric_type->getMachineName();
     $entity = $attachment->getSourceEntity();
@@ -65,7 +65,7 @@ class DisaggregationModalController extends ControllerBase {
   /**
    * Load content for a disaggregation modal window.
    *
-   * @param \Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment $attachment
+   * @param \Drupal\ghi_plans\ApiObjects\Attachments\Attachment $attachment
    *   The attachment object.
    * @param \Drupal\hpc_api\ApiObjects\Types\MetricType $metric_type
    *   The metric type to show.
@@ -75,7 +75,7 @@ class DisaggregationModalController extends ControllerBase {
    * @return array
    *   A render array.
    */
-  public function loadDisaggregationModalData(DataAttachment $attachment, MetricType $metric_type, $reporting_period) {
+  public function loadDisaggregationModalData(Attachment $attachment, MetricType $metric_type, $reporting_period) {
     $cid = implode('-', [
       __FUNCTION__,
       $attachment->id(),
@@ -106,7 +106,7 @@ class DisaggregationModalController extends ControllerBase {
   /**
    * Build content for a disaggregation modal window.
    *
-   * @param \Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment $attachment
+   * @param \Drupal\ghi_plans\ApiObjects\Attachments\Attachment $attachment
    *   The attachment object.
    * @param \Drupal\hpc_api\ApiObjects\Types\MetricType $metric_type
    *   The metric type to show.
@@ -116,7 +116,7 @@ class DisaggregationModalController extends ControllerBase {
    * @return array
    *   A render array.
    */
-  private function buildDisaggregationModalContent(DataAttachment $attachment, MetricType $metric_type, $reporting_period) {
+  private function buildDisaggregationModalContent(Attachment $attachment, MetricType $metric_type, $reporting_period) {
 
     $unit_type = $attachment->getUnitType();
     $unit_defaults = [

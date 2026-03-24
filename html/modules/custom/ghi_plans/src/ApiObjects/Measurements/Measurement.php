@@ -26,6 +26,13 @@ class Measurement extends ApiObjectBase implements MeasurementInterface {
   protected $totals;
 
   /**
+   * The disaggregated data.
+   *
+   * @var object
+   */
+  protected $disaggregated;
+
+  /**
    * The attachment prototype.
    *
    * @var \Drupal\ghi_plans\ApiObjects\Prototypes\AttachmentPrototype
@@ -59,6 +66,12 @@ class Measurement extends ApiObjectBase implements MeasurementInterface {
     // 'CreatedAt',
     'UpdatedAt',
     // 'IsLocked',
+    // phpcs:disable Squiz.Arrays.ArrayDeclaration.KeySpecified
+    'measurementFact' => [
+      'filter' => ['IsTotal' => TRUE],
+      'items' => MeasurementFact::GRAPHQL_ITEMS,
+    ],
+    // phpcs:enable Squiz.Arrays.ArrayDeclaration.KeySpecified
   ];
 
   /**
@@ -67,7 +80,7 @@ class Measurement extends ApiObjectBase implements MeasurementInterface {
   protected function map() {
     $query = $this->getEntityTypeQuery();
     $measurement = $this->getRawData();
-    $this->processTotals((array) ($measurement->totals ?? []));
+    $this->processTotals((array) ($measurement->measurementFact?->items ?? []));
 
     $processed = (object) [
       'id' => $measurement->Id,
@@ -188,29 +201,13 @@ class Measurement extends ApiObjectBase implements MeasurementInterface {
    * {@inheritdoc}
    */
   public function getDisaggregated(): object {
-    $this->assureDisaggregatedData();
-    $data = $this->getRawData();
-    $facts = array_map(fn ($item) => new MeasurementFact($item), $data->disaggregated ?? []);
-    return $this->buildDisaggregatedData($facts);
-  }
-
-  /**
-   * Assure that the disaggregated data for a measurement has been fetched.
-   */
-  public function assureDisaggregatedData() {
-    $data = $this->getRawData();
-    if (property_exists($data, 'disaggregated')) {
-      // Nothing to do.
-      return;
+    if (!$this->disaggregated) {
+      $measurement_query = $this->getMeasurementQuery();
+      $disaggregated_data = $measurement_query?->getMeasurementDisaggregatedData($this->id());
+      $facts = array_map(fn ($item) => new MeasurementFact($item), $disaggregated_data ?: []);
+      $this->disaggregated = $this->buildDisaggregatedData($facts);
     }
-    $measurement_query = $this->getMeasurementQuery();
-    $disaggregated_data = $measurement_query?->getMeasurementDisaggregatedData($this->id());
-    if (!$disaggregated_data) {
-      return;
-    }
-    $data->disaggregated = $disaggregated_data;
-    $this->setRawData($data);
-    $this->updateMap();
+    return $this->disaggregated;
   }
 
   /**

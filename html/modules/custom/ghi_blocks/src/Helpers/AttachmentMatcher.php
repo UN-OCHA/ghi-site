@@ -4,7 +4,7 @@ namespace Drupal\ghi_blocks\Helpers;
 
 use Drupal\ghi_plans\ApiObjects\Prototypes\AttachmentPrototype;
 use Drupal\ghi_plans\ApiObjects\Attachments\AttachmentInterface;
-use Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment;
+use Drupal\ghi_plans\ApiObjects\Attachments\Attachment;
 use Drupal\ghi_plans\Traits\PlanQueryTrait;
 
 /**
@@ -20,16 +20,16 @@ class AttachmentMatcher {
    * This checks the attachment type and the attachment source to find
    * attachments that correspond in their function.
    *
-   * @param \Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment $original_attachment
+   * @param \Drupal\ghi_plans\ApiObjects\Attachments\Attachment $original_attachment
    *   The original attachment to match against.
-   * @param \Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment[] $available_attachments
+   * @param \Drupal\ghi_plans\ApiObjects\Attachments\Attachment[] $available_attachments
    *   The attachments to match.
    *
-   * @return \Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment[]
+   * @return \Drupal\ghi_plans\ApiObjects\Attachments\Attachment[]
    *   The result set of matched attachments.
    */
-  public static function matchDataAttachments(AttachmentInterface $original_attachment, array $available_attachments) {
-    return array_filter($available_attachments, function (DataAttachment $attachment) use ($original_attachment) {
+  public static function matchAttachments(AttachmentInterface $original_attachment, array $available_attachments) {
+    return array_filter($available_attachments, function (Attachment $attachment) use ($original_attachment) {
       if ($original_attachment->getType() != $attachment->getType()) {
         // Check the attachment type, e.g. "caseload" vs "indicator".
         return FALSE;
@@ -54,15 +54,15 @@ class AttachmentMatcher {
    *
    * @param int $data_point_index
    *   The data point index to match.
-   * @param \Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment $attachment_1
+   * @param \Drupal\ghi_plans\ApiObjects\Attachments\Attachment $attachment_1
    *   The first or original attachment.
-   * @param \Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment $attachment_2
+   * @param \Drupal\ghi_plans\ApiObjects\Attachments\Attachment $attachment_2
    *   The second or new attachment.
    *
    * @return int
    *   Either the original index if no match can be found or a new index.
    */
-  public static function matchDataPointOnAttachments($data_point_index, DataAttachment $attachment_1, DataAttachment $attachment_2) {
+  public static function matchDataPointOnAttachments($data_point_index, Attachment $attachment_1, Attachment $attachment_2) {
     // Reload the prototypes, because depending on how the attachments have
     // been loaded, they might not have the full attachment prototype set up,
     // some are missing the calculated fields.

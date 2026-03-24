@@ -29,25 +29,8 @@ class GoverningEntityQuery extends FabricQueryBase {
    *   The governing entity object or NULL if not found.
    */
   public function getGoverningEntity(int $entity_id): ?GoverningEntity {
-    $governing_entity = $this->objectStore->getObject($entity_id, GoverningEntity::getObjectStorageKey());
-    if ($governing_entity) {
-      return $governing_entity;
-    }
-
-    // Get the governing entity.
-    $items = $this->fabricClient->createQuery('coordinationEntities', GoverningEntity::getGraphQlItems())
-      ->setFilters([
-        'Id' => $entity_id,
-        'RecordStatus' => 'Active',
-      ])
-      ->execute();
-    $item = count($items) == 1 ? reset($items) : NULL;
-    if (!$item) {
-      return NULL;
-    }
-    $governing_entity = new GoverningEntity($item);
-    $this->objectStore->addObject($governing_entity);
-    return $governing_entity;
+    $entities = $this->getGoverningEntitiesById([$entity_id]);
+    return !empty($entities) ? reset($entities) : NULL;
   }
 
   /**

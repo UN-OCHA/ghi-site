@@ -17,6 +17,7 @@ class Resource extends ApiObjectBase {
     'Name',
     'MimeType',
     'URL',
+    'Credit',
   ];
 
   /**
@@ -35,6 +36,7 @@ class Resource extends ApiObjectBase {
       'name' => $data->Name,
       'mimetype' => $data->MimeType,
       'url' => $data->URL,
+      'credit' => $data->Credit,
     ];
   }
 
@@ -75,7 +77,7 @@ class Resource extends ApiObjectBase {
    *   The credits as a string. Can be empty.
    */
   public function getCredit() {
-    return '';
+    return (string) $this->map->credit;
   }
 
 }

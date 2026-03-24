@@ -459,7 +459,7 @@ abstract class FabricQueryBase extends PluginBase implements FabricQueryPluginIn
     $items = $this->fabricClient->createQuery('relationships')
       ->setFilters($filters)
       ->setItems(Relationship::getGraphQlItems())
-      ->execute();
+      ->execute() ?? [];
     return $items ? $this->buildResultObjects($items, Relationship::class) : [];
   }
 

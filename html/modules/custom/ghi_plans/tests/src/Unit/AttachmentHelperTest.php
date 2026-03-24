@@ -2,7 +2,7 @@
 
 namespace Drupal\Tests\ghi_plans\Unit;
 
-use Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment;
+use Drupal\ghi_plans\ApiObjects\Attachments\Attachment;
 use Drupal\ghi_plans\Exceptions\InvalidAttachmentTypeException;
 use Drupal\ghi_plans\Helpers\AttachmentHelper;
 
@@ -74,17 +74,17 @@ class AttachmentHelperTest extends ApiObjectTestBase {
    * Test the getCustomAttachmentId method.
    */
   public function testGetCustomAttachmentId() {
-    $attachment = $this->getMockBuilder(DataAttachment::class)->disableOriginalConstructor()->getMock();
+    $attachment = $this->getMockBuilder(Attachment::class)->disableOriginalConstructor()->getMock();
     $attachment->method('getCustomId')->willReturn('custom_id_VALUE');
     /** @var \Drupal\ghi_plans\ApiObjects\Attachments\AttachmentInterface $attachment */
     $this->assertEquals('custom_id_VALUE', AttachmentHelper::getCustomAttachmentId($attachment, 'custom_id'));
 
-    $attachment = $this->getMockBuilder(DataAttachment::class)->disableOriginalConstructor()->getMock();
+    $attachment = $this->getMockBuilder(Attachment::class)->disableOriginalConstructor()->getMock();
     $attachment->method('getCustomIdWithRefCode')->willReturn('custom_id_prefixed_refcode_VALUE');
     /** @var \Drupal\ghi_plans\ApiObjects\Attachments\AttachmentInterface $attachment */
     $this->assertEquals('custom_id_prefixed_refcode_VALUE', AttachmentHelper::getCustomAttachmentId($attachment, 'custom_id_prefixed_refcode'));
 
-    $attachment = $this->getMockBuilder(DataAttachment::class)->disableOriginalConstructor()->getMock();
+    $attachment = $this->getMockBuilder(Attachment::class)->disableOriginalConstructor()->getMock();
     $attachment->method('getComposedReference')->willReturn('composed_reference_VALUE');
     /** @var \Drupal\ghi_plans\ApiObjects\Attachments\AttachmentInterface $attachment */
     $this->assertEquals('composed_reference_VALUE', AttachmentHelper::getCustomAttachmentId($attachment, 'composed_reference'));

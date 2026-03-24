@@ -61,6 +61,24 @@
     }
   }
 
+  .ghi-block-bigpipe-preview {
+    display: flex;
+    align-items: center;
+    min-height: 5rem;
+    margin-bottom: 1rem;
+    padding: 2rem 2rem 2rem 4rem;
+    border-radius: 2px;
+    background-color: var(--ghi-default-background-color);
+
+    .ajax-progress__throbber {
+      position: relative;
+      left: -2rem;
+    }
+    .preview-message {
+      font-size: var(--cd-font-size--default);
+    }
+  }
+
   body.page-node-type-article .layout__region--content > &.block:first-child {
     margin-top: 2.5rem;
   }

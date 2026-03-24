@@ -19,6 +19,7 @@ use Drupal\ghi_plans\Traits\DataPointConfigBackwardsCompatibilityTrait;
 use Drupal\ghi_plans\Traits\DisaggregatedDataTrait;
 use Drupal\ghi_plans\Traits\PlanQueryTrait;
 use Drupal\ghi_plans\Traits\PlanReportingPeriodTrait;
+use Drupal\hpc_api\ApiObjects\ApiObjectBase;
 use Drupal\hpc_api\ApiObjects\Types\Unit;
 use Drupal\hpc_api\Traits\DateTimeTrait;
 use Drupal\hpc_api\Traits\SimpleCacheTrait;
@@ -28,7 +29,7 @@ use Drupal\hpc_common\Helpers\StringHelper;
 /**
  * Abstraction for API data attachment objects.
  */
-class DataAttachment extends AttachmentBase implements DataAttachmentInterface {
+class Attachment extends ApiObjectBase implements AttachmentInterface {
 
   use DataPointConfigBackwardsCompatibilityTrait;
   use DateTimeTrait;
@@ -44,6 +45,20 @@ class DataAttachment extends AttachmentBase implements DataAttachmentInterface {
    * @var \Drupal\ghi_plans\ApiObjects\Facts\AttachmentFact[]
    */
   protected $totals;
+
+  /**
+   * The disaggregated data.
+   *
+   * @var object
+   */
+  protected $disaggregated;
+
+  /**
+   * The facts representing the totals.
+   *
+   * @var \Drupal\ghi_plans\ApiObjects\Measurements\Measurement[]
+   */
+  protected $measurements;
 
   /**
    * The source entity of an attachment.
@@ -93,6 +108,13 @@ class DataAttachment extends AttachmentBase implements DataAttachmentInterface {
     // 'CreatedAt',
     'UpdatedAt',
     // 'IsLocked',
+    // phpcs:disable Squiz.Arrays.ArrayDeclaration.KeySpecified
+    'attachmentFact' => [
+      'filter' => ['IsTotal' => TRUE],
+      'items' => AttachmentFact::GRAPHQL_ITEMS,
+    ],
+    'measurement' => ['items' => Measurement::GRAPHQL_ITEMS],
+    // phpcs:enable Squiz.Arrays.ArrayDeclaration.KeySpecified
   ];
 
   /**
@@ -117,7 +139,8 @@ class DataAttachment extends AttachmentBase implements DataAttachmentInterface {
 
     $attachment = $this->getRawData();
     $period = $this->map?->monitoring_period ?? $this->fetchReportingPeriodForAttachment();
-    $this->processTotals((array) ($attachment->totals ?? []));
+    $this->processTotals((array) ($attachment->attachmentFact?->items ?? []));
+    $this->processMeasurements((array) ($attachment->measurement?->items ?? []));
 
     $processed = (object) [
       'id' => $attachment->Id,
@@ -629,10 +652,13 @@ class DataAttachment extends AttachmentBase implements DataAttachmentInterface {
    *   A disaggregated data object.
    */
   public function getDisaggregated(): object {
-    $this->assureDisaggregatedData();
-    $data = $this->getRawData();
-    $facts = array_map(fn ($item) => new AttachmentFact($item), (array) ($data->disaggregated ?? []));
-    return $this->buildDisaggregatedData($facts);
+    if (!$this->disaggregated) {
+      $attachment_query = $this->getAttachmentQuery();
+      $disaggregated_data = $attachment_query?->getAttachmentDisaggregatedData($this->id());
+      $facts = array_map(fn ($item) => new AttachmentFact($item), (array) ($disaggregated_data ?: []));
+      $this->disaggregated = $this->buildDisaggregatedData($facts);
+    }
+    return $this->disaggregated;
   }
 
   /**
@@ -784,22 +810,21 @@ class DataAttachment extends AttachmentBase implements DataAttachmentInterface {
   }
 
   /**
-   * Assure that the disaggregated data for an attachment has been fetched.
+   * Process the totals.
+   *
+   * @param array $measurements
+   *   An array of raw measurement objects.
    */
-  public function assureDisaggregatedData() {
-    $data = $this->getRawData();
-    if (property_exists($data, 'disaggregated')) {
-      // Nothing to do.
+  protected function processMeasurements(array $measurements) {
+    if ($this->measurements !== NULL || empty($measurements)) {
       return;
     }
-    $attachment_query = $this->getAttachmentQuery();
-    $disaggregated_data = $attachment_query?->getAttachmentDisaggregatedData($this->id());
-    if (!$disaggregated_data) {
-      return;
+
+    $this->measurements = [];
+    foreach (array_map(fn ($item): Measurement => new Measurement($item), $measurements) as $measurement) {
+      $this->measurements[$measurement->id()] = $measurement;
     }
-    $data->disaggregated = $disaggregated_data;
-    $this->setRawData($data);
-    $this->updateMap();
+    ArrayHelper::sortObjectsByMethod($this->measurements, 'getReportingPeriodId', SORT_DESC);
   }
 
   /**
@@ -849,20 +874,7 @@ class DataAttachment extends AttachmentBase implements DataAttachmentInterface {
    *   An array of measurement objects.
    */
   public function getMeasurements() {
-    $measurements = &drupal_static($this->getRawData()->Id . '::' . __METHOD__);
-    if ($measurements) {
-      return $measurements;
-    }
-    $attachment = $this->getRawData();
-    if (empty($attachment->measurements)) {
-      return [];
-    }
-
-    $measurements = array_map(function ($measurement) {
-      return new Measurement($measurement);
-    }, (array) $attachment->measurements);
-    ArrayHelper::sortObjectsByMethod($measurements, 'getReportingPeriodId', SORT_DESC);
-    return $measurements;
+    return $this->measurements ?: [];
   }
 
   /**
@@ -1243,7 +1255,7 @@ class DataAttachment extends AttachmentBase implements DataAttachmentInterface {
    *   The data point values, extracted from the attachment according to the
    *   given configuration.
    */
-  public function getValuesForAllReportingPeriods($metric_type, $filter_empty = FALSE, $filter_null = FALSE, $reporting_periods = NULL) {
+  public function getValuesForAllReportingPeriods(string $metric_type, bool $filter_empty = FALSE, bool $filter_null = FALSE, ?array $reporting_periods = NULL) {
     if ($reporting_periods === NULL) {
       $reporting_periods = $this->getPlanReportingPeriods($this->getPlanId(), TRUE);
     }

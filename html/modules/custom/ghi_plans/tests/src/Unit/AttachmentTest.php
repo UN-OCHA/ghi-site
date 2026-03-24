@@ -6,7 +6,7 @@ use Drupal\ghi_base_objects\Entity\BaseObjectChildInterface;
 use Drupal\ghi_base_objects\Entity\BaseObjectInterface;
 use Drupal\ghi_plans\ApiObjects\Prototypes\AttachmentPrototype;
 use Drupal\ghi_plans\ApiObjects\Attachments\CaseloadAttachment;
-use Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment;
+use Drupal\ghi_plans\ApiObjects\Attachments\Attachment;
 use Drupal\ghi_plans\ApiObjects\Attachments\FinancialAttachment;
 use Drupal\ghi_plans\ApiObjects\Attachments\IndicatorAttachment;
 use Drupal\ghi_plans\ApiObjects\Facts\AttachmentFact;
@@ -21,12 +21,12 @@ use Drupal\hpc_api\ApiObjects\Types\MetricType;
 class AttachmentTest extends ApiObjectTestBase {
 
   /**
-   * Test data agnostic parts of DataAttachment.
+   * Test data agnostic parts of Attachment.
    */
   public function testAttachmentGenericData() {
-    /** @var \Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment $attachment */
+    /** @var \Drupal\ghi_plans\ApiObjects\Attachments\Attachment $attachment */
     $attachment = $this->getAttachmentFromFixture('caseload');
-    $this->assertInstanceOf(DataAttachment::class, $attachment);
+    $this->assertInstanceOf(Attachment::class, $attachment);
 
     // Null handling.
     $this->assertTrue($attachment->isNullValue(NULL));
@@ -35,19 +35,19 @@ class AttachmentTest extends ApiObjectTestBase {
     $this->assertFalse($attachment->isNullValue(0));
     $this->assertFalse($attachment->isNullValue('0'));
 
-    $processing_options = DataAttachment::getProcessingOptions();
+    $processing_options = Attachment::getProcessingOptions();
     $this->assertCount(2, $processing_options);
     $this->assertArrayHasKey('single', $processing_options);
     $this->assertArrayHasKey('calculated', $processing_options);
 
-    $calculation_options = DataAttachment::getCalculationOptions();
+    $calculation_options = Attachment::getCalculationOptions();
     $this->assertCount(4, $calculation_options);
     $this->assertArrayHasKey('addition', $calculation_options);
     $this->assertArrayHasKey('substraction', $calculation_options);
     $this->assertArrayHasKey('division', $calculation_options);
     $this->assertArrayHasKey('percentage', $calculation_options);
 
-    $formatting_options = DataAttachment::getFormattingOptions();
+    $formatting_options = Attachment::getFormattingOptions();
     $this->assertCount(6, $formatting_options);
     $this->assertArrayHasKey('auto', $formatting_options);
     $this->assertArrayHasKey('currency', $formatting_options);
@@ -56,7 +56,7 @@ class AttachmentTest extends ApiObjectTestBase {
     $this->assertArrayHasKey('percent', $formatting_options);
     $this->assertArrayHasKey('raw', $formatting_options);
 
-    $widget_options = DataAttachment::getWidgetOptions();
+    $widget_options = Attachment::getWidgetOptions();
     $this->assertCount(4, $widget_options);
     $this->assertArrayHasKey('none', $widget_options);
     $this->assertArrayHasKey('progressbar', $widget_options);
@@ -65,39 +65,39 @@ class AttachmentTest extends ApiObjectTestBase {
   }
 
   /**
-   * Test data agnostic parts of DataAttachment.
+   * Test data agnostic parts of Attachment.
    */
   public function testAttachmentEmptyData() {
-    /** @var \Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment $attachment */
+    /** @var \Drupal\ghi_plans\ApiObjects\Attachments\Attachment $attachment */
     $attachment = AttachmentHelper::processAttachment((object) [
       'Id' => 38529,
       'PlanId' => 1266,
       'AttachmentType' => 'Caseload',
       'AttachmentPrototypeId' => rand(1, 100),
     ]);
-    $this->assertInstanceOf(DataAttachment::class, $attachment);
+    $this->assertInstanceOf(Attachment::class, $attachment);
     $this->assertEmpty($attachment->getSourceEntity());
   }
 
   /**
-   * Test that missing measurements on DataAttachment does not create a loop.
+   * Test that missing measurements on Attachment does not create a loop.
    *
-   * This tests against a potential loop in DataAttachment::getMeasurements().
+   * This tests against a potential loop in Attachment::getMeasurements().
    */
   public function testAttachmentEmptyMeasurementLoop() {
-    /** @var \Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment $attachment */
+    /** @var \Drupal\ghi_plans\ApiObjects\Attachments\Attachment $attachment */
     $attachment = AttachmentHelper::processAttachment((object) [
       'Id' => 38529,
       'PlanId' => 1266,
       'AttachmentType' => 'Caseload',
       'AttachmentPrototypeId' => rand(1, 100),
     ]);
-    $this->assertInstanceOf(DataAttachment::class, $attachment);
+    $this->assertInstanceOf(Attachment::class, $attachment);
     $this->assertEmpty($attachment->getSourceEntity());
   }
 
   /**
-   * Test value extraction from DataAttachments.
+   * Test value extraction from Attachments.
    */
   public function testAttachmentExtractValues() {
     /** @var \Drupal\ghi_plans\ApiObjects\Attachments\CaseloadAttachment $attachment */
@@ -117,7 +117,7 @@ class AttachmentTest extends ApiObjectTestBase {
   }
 
   /**
-   * Test value retrieval from DataAttachments.
+   * Test value retrieval from Attachments.
    */
   public function testAttachmentGetDataValues() {
     /** @var \Drupal\ghi_plans\ApiObjects\Attachments\CaseloadAttachment $attachment */
@@ -422,14 +422,14 @@ class AttachmentTest extends ApiObjectTestBase {
   }
 
   /**
-   * Test value formatting from DataAttachments.
+   * Test value formatting from Attachments.
    *
    * @dataProvider dataProviderAttachmentFormatDataValues
    */
   public function testAttachmentFormatDataValues($conf, $expected) {
-    /** @var \Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment $attachment */
+    /** @var \Drupal\ghi_plans\ApiObjects\Attachments\Attachment $attachment */
     $attachment = $this->getAttachmentFromFixture('caseload');
-    $this->assertInstanceOf(DataAttachment::class, $attachment);
+    $this->assertInstanceOf(Attachment::class, $attachment);
     $build = $attachment->formatValue($conf);
     $this->assertEquals('container', $build['#type']);
     $this->assertArrayHasKey(0, $build);
@@ -438,15 +438,15 @@ class AttachmentTest extends ApiObjectTestBase {
   }
 
   /**
-   * Test disaggregated data of DataAttachment.
+   * Test disaggregated data of Attachment.
    *
    * This test is not complete because it would require a more complex data
    * setup and mocking of database queries and/or API requests.
    */
   public function testAttachmentDisaggregatedData() {
-    /** @var \Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment $attachment */
+    /** @var \Drupal\ghi_plans\ApiObjects\Attachments\Attachment $attachment */
     $attachment = $this->getAttachmentFromFixture('caseload');
-    $this->assertInstanceOf(DataAttachment::class, $attachment);
+    $this->assertInstanceOf(Attachment::class, $attachment);
 
     $disaggregated_data = $attachment->getDisaggregatedDataMultiple();
     $this->assertEmpty($disaggregated_data);

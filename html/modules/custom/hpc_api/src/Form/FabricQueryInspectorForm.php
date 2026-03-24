@@ -212,6 +212,9 @@ class FabricQueryInspectorForm extends FormBase {
       if (!empty($submitted_arguments[$position])) {
         continue;
       }
+      if (empty($form['arguments'][$method_name])) {
+        continue;
+      }
       $form_state->setError($form['arguments'][$method_name][$position], $this->t('@field is required', [
         '@field' => $form['arguments'][$method_name][$position]['#title'],
       ]));
@@ -341,6 +344,9 @@ class FabricQueryInspectorForm extends FormBase {
       }
       elseif ($type instanceof \ReflectionNamedType && $type->getName() == 'int') {
         $value = (int) $value;
+      }
+      else {
+        $value = NULL;
       }
     }
   }

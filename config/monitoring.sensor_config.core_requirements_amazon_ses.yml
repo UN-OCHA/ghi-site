@@ -1,6 +1,6 @@
 uuid: fde60237-fa1d-4a22-a7e3-bc462dc720b4
 langcode: en
-status: true
+status: false
 dependencies:
   module:
     - amazon_ses

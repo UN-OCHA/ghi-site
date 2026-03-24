@@ -10,6 +10,7 @@ use Drupal\Core\Plugin\Context\ContextDefinition;
 use Drupal\Core\Plugin\Context\EntityContextDefinition;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\Url;
+use Drupal\ghi_blocks\Plugin\Block\BlockCommentInterface;
 use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
 use Drupal\ghi_blocks\Traits\BlockCommentTrait;
 use Drupal\ghi_blocks\Traits\GlobalPlanOverviewBlockTrait;
@@ -41,7 +42,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
     'year' => new ContextDefinition(data_type: 'integer', label: new TranslatableMarkup("Year")),
   ]
 )]
-class PlanTable extends GHIBlockBase implements HPCDownloadExcelInterface, HPCDownloadPNGInterface {
+class PlanTable extends GHIBlockBase implements HPCDownloadExcelInterface, HPCDownloadPNGInterface, BlockCommentInterface {
 
   use GlobalPlanOverviewBlockTrait;
   use GlobalSettingsTrait;
@@ -80,6 +81,14 @@ class PlanTable extends GHIBlockBase implements HPCDownloadExcelInterface, HPCDo
     // Set our own properties.
     $instance->sectionManager = $container->get('ghi_sections.manager');
     return $instance;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getBlockComment(): ?string {
+    $conf = $this->getBlockConfig();
+    return $conf['table']['comment'] ?? NULL;
   }
 
   /**
@@ -130,12 +139,6 @@ class PlanTable extends GHIBlockBase implements HPCDownloadExcelInterface, HPCDo
       ],
       '#block_id' => $this->getBlockId(),
     ];
-
-    $comment = $this->buildBlockCommentRenderArray($conf['table']['comment'] ?? NULL);
-    if ($comment) {
-      $comment['#attributes']['class'][] = 'content-width';
-      $build['comment'] = $comment;
-    }
     return $build;
   }
 

@@ -10,6 +10,7 @@ use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\ghi_blocks\Interfaces\ConfigValidationInterface;
 use Drupal\ghi_blocks\Interfaces\ConfigurableTableBlockInterface;
 use Drupal\ghi_blocks\Interfaces\MultiStepFormBlockInterface;
+use Drupal\ghi_blocks\Plugin\Block\BlockCommentInterface;
 use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
 use Drupal\ghi_blocks\Plugin\ConfigurationContainerItem\LineBreak;
 use Drupal\ghi_blocks\Traits\BlockCommentTrait;
@@ -31,7 +32,7 @@ use Drupal\hpc_common\Plugin\HPCBlockMetadata;
     'plan_cluster' => new EntityContextDefinition('entity:base_object', new TranslatableMarkup('Cluster'), required: FALSE, constraints: ['Bundle' => 'governing_entity']),
   ],
 )]
-class PlanHeadlineFigures extends GHIBlockBase implements MultiStepFormBlockInterface, ConfigurableTableBlockInterface, ContainerFactoryPluginInterface, ConfigValidationInterface {
+class PlanHeadlineFigures extends GHIBlockBase implements MultiStepFormBlockInterface, ConfigurableTableBlockInterface, ContainerFactoryPluginInterface, ConfigValidationInterface, BlockCommentInterface {
 
   use ConfigurationContainerTrait;
   use ConfigurationContainerGroup;
@@ -67,6 +68,14 @@ class PlanHeadlineFigures extends GHIBlockBase implements MultiStepFormBlockInte
     // We just want to hide the label always.
     $this->configuration['label_display'] = FALSE;
     return NULL;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getBlockComment(): ?string {
+    $conf = $this->getBlockConfig();
+    return $conf['display']['comment'] ?? NULL;
   }
 
   /**
@@ -153,10 +162,7 @@ class PlanHeadlineFigures extends GHIBlockBase implements MultiStepFormBlockInte
       '#theme' => 'tab_container',
       '#tabs' => $tabs,
     ];
-    $comment = $this->buildBlockCommentRenderArray($conf['display']['comment'] ?? NULL);
-    if ($comment) {
-      $build['comment'] = $comment;
-    }
+
     $build['#block_attributes'] = [
       'class' => ['not-collapsible'],
     ];

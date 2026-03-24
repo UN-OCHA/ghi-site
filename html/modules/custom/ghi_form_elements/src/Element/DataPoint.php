@@ -9,7 +9,7 @@ use Drupal\Core\Render\Element;
 use Drupal\Core\Render\Element\FormElementBase;
 use Drupal\ghi_form_elements\Helpers\FormElementHelper;
 use Drupal\ghi_form_elements\Traits\AjaxElementTrait;
-use Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment;
+use Drupal\ghi_plans\ApiObjects\Attachments\Attachment;
 use Drupal\ghi_plans\ApiObjects\Attachments\IndicatorAttachment;
 use Drupal\ghi_plans\Traits\DataPointConfigBackwardsCompatibilityTrait;
 use Drupal\hpc_common\Helpers\StringHelper;
@@ -106,7 +106,7 @@ class DataPoint extends FormElementBase {
    */
   public static function processDataPoint(array &$element, FormStateInterface $form_state) {
     $attachment = $element['#attachment'] ?: NULL;
-    assert($attachment === NULL || $attachment instanceof DataAttachment);
+    assert($attachment === NULL || $attachment instanceof Attachment);
     /** @var \Drupal\ghi_plans\Entity\Plan $plan_object */
     $plan_object = $element['#plan_object'] ?? NULL;
     /** @var \Drupal\ghi_plans\ApiObjects\Prototypes\AttachmentPrototype $attachment_prototype */
@@ -122,7 +122,7 @@ class DataPoint extends FormElementBase {
     // Set the defaults.
     $values = (array) $form_state->getValue($element['#parents']) + (array) $element['#default_value'];
     $defaults = [
-      'processing' => !empty($values['processing']) ? $values['processing'] : array_key_first(DataAttachment::getProcessingOptions()),
+      'processing' => !empty($values['processing']) ? $values['processing'] : array_key_first(Attachment::getProcessingOptions()),
       'calculation' => !empty($values['calculation']) ? $values['calculation'] : NULL,
       'data_points' => [
         0 => $values['data_points'][0] ?? [
@@ -132,7 +132,7 @@ class DataPoint extends FormElementBase {
         1 => array_key_exists('data_points', $values) && array_key_exists(1, $values['data_points']) ? $values['data_points'][1] : NULL,
       ],
       'label' => !empty($values['label']) ? $values['label'] : '',
-      'formatting' => !empty($values['formatting']) ? $values['formatting'] : array_key_first(DataAttachment::getFormattingOptions()),
+      'formatting' => !empty($values['formatting']) ? $values['formatting'] : array_key_first(Attachment::getFormattingOptions()),
       'widget' => !empty($values['widget']) ? $values['widget'] : 'none',
     ];
     self::updateDataPointConfiguration($defaults, $attachment_prototype);
@@ -147,7 +147,7 @@ class DataPoint extends FormElementBase {
     $element['processing_wrapper']['processing'] = [
       '#type' => 'select',
       '#title' => t('Type'),
-      '#options' => DataAttachment::getProcessingOptions(),
+      '#options' => Attachment::getProcessingOptions(),
       '#default_value' => $defaults['processing'],
       '#parents' => array_merge($element['#parents'], ['processing']),
       '#ajax' => [
@@ -161,7 +161,7 @@ class DataPoint extends FormElementBase {
     $element['processing_wrapper']['calculation'] = [
       '#type' => 'select',
       '#title' => t('Calculation'),
-      '#options' => DataAttachment::getCalculationOptions(),
+      '#options' => Attachment::getCalculationOptions(),
       '#default_value' => $defaults['calculation'],
       '#parents' => array_merge($element['#parents'], ['calculation']),
       '#states' => [
@@ -363,7 +363,7 @@ class DataPoint extends FormElementBase {
     $element['formatting'] = [
       '#type' => 'select',
       '#title' => t('Formatting'),
-      '#options' => DataAttachment::getFormattingOptions(),
+      '#options' => Attachment::getFormattingOptions(),
       '#default_value' => $defaults['formatting'],
       '#ajax' => [
         'event' => 'change',
@@ -375,7 +375,7 @@ class DataPoint extends FormElementBase {
     $element['widget'] = [
       '#type' => 'select',
       '#title' => t('Mini widget'),
-      '#options' => DataAttachment::getWidgetOptions(),
+      '#options' => Attachment::getWidgetOptions(),
       '#default_value' => $defaults['widget'],
       '#ajax' => [
         'event' => 'change',
@@ -386,7 +386,7 @@ class DataPoint extends FormElementBase {
     ];
 
     // Add a preview if we have an attachment.
-    if ($attachment instanceof DataAttachment) {
+    if ($attachment instanceof Attachment) {
       $build = $attachment->formatValue($defaults);
       $element['value_preview'] = [
         '#type' => 'item',
@@ -421,7 +421,7 @@ class DataPoint extends FormElementBase {
    */
   public static function getDataPointOptions($element) {
     $attachment = $element['#attachment'] ?: NULL;
-    assert($attachment === NULL || $attachment instanceof DataAttachment);
+    assert($attachment === NULL || $attachment instanceof Attachment);
     /** @var \Drupal\ghi_plans\ApiObjects\Prototypes\AttachmentPrototype $attachment_prototype */
     $attachment_prototype = $attachment?->getPrototype() ?? $element['#attachment_prototype'];
     $options = array_combine($attachment_prototype->getFieldTypes(), $attachment_prototype->getFields());
