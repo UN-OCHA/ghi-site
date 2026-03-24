@@ -120,20 +120,7 @@ abstract class EndpointQueryBase extends PluginBase implements EndpointQueryPlug
   public function getData(array $placeholders = [], array $query_args = []) {
     $this->endpointQuery->setPlaceholders($placeholders);
     $this->endpointQuery->setEndpointArguments($query_args);
-
-    $cache_args = [
-      'endpoint' => $this->getFullEndpointUrl(),
-      'auth_method' => $this->endpointQuery->getAuthMethod(),
-    ];
-
-    // Cache the result in memory.
-    $cache_key = $this->getCacheKey($cache_args);
-    if ($data = $this->cache($cache_key)) {
-      return $data;
-    }
-    $data = $this->endpointQuery->getData();
-    $this->setCache($cache_key, $data);
-    return $data;
+    return $this->endpointQuery->getData();
   }
 
   /**

@@ -11,7 +11,7 @@
       "Issue #2329253: Allow the ChangedItem to skip updating the entity's changed timestamp when synchronizing (f.e. when migrating)": "https://www.drupal.org/files/issues/2024-07-30/2329253-10.x.patch",
       "Issue #?? (maybe #2837833): 'Required contexts without a value": "./patches/missing-context-value-in-layout-builder-admin.patch",
       "Issue #2190333: Make #group FAPI / render feature work on all form/render #types out of the box": "./patches/core-form-api-groups-2190333.patch",
-      "Issue #2230909: Simple decimals fail to pass validation": "./patches/2230909-14204.patch",
+      "Issue #2230909: Simple decimals fail to pass validation": "./patches/8282-10.6.x.patch",
       "Issue #2585169: Unable to alter local actions prior to rendering": "https://www.drupal.org/files/issues/2024-12-19/2585169-63-10.4.x.patch"
     },
     "drupal/file_mdm": {

@@ -1,5 +1,5 @@
 {
-    "_hash": "87f9a2e508ea8588b243ac6fe8294bafd989ba9a60fce1b2860d294242a1d3b4",
+    "_hash": "645e6218db108a0fe398c95e1fd018d3e0a27088a3c8b9ac3a0a383ee6e6596b",
     "patches": {
         "drupal/core": [
             {
@@ -105,8 +105,8 @@
             {
                 "package": "drupal/core",
                 "description": "Issue #2230909: Simple decimals fail to pass validation",
-                "url": "./patches/2230909-14204.patch",
-                "sha256": "2618bff4e0cd556f8fc91b796db0fec98af5daa170c8f7607a760173bed8ca45",
+                "url": "./patches/8282-10.6.x.patch",
+                "sha256": "7278cffd2694d08bea3fd7e152ec5c3e4c3ae125650f722741862855dc85cff6",
                 "depth": 2,
                 "extra": {
                     "provenance": "patches-file:composer.patches.json"

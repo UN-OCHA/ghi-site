@@ -69,9 +69,8 @@ class SectionContextManager {
     $context = new Context($this->getContextDefinition(), $this->getYearFromNode($entity));
 
     // We are reusing cache contexts.
-    $cacheContexts = $entity->getCacheContexts();
     $cacheability = new CacheableMetadata();
-    $cacheability->setCacheContexts($cacheContexts);
+    $cacheability->setCacheContexts($entity->getCacheContexts());
     $context->addCacheableDependency($cacheability);
     return $context;
   }

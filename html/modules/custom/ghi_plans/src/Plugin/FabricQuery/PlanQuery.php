@@ -40,30 +40,8 @@ class PlanQuery extends FabricQueryBase {
    *   The plan object or NULL if not found.
    */
   public function getPlan(int $plan_id): ?Plan {
-    $plan = $this->objectStore->getObject($plan_id, Plan::getObjectStorageKey());
-    if ($plan) {
-      return $plan;
-    }
-    // Get the plan data.
-    $queries = [
-      $this->fabricClient->createQuery('plans', Plan::getGraphQlItems(), NULL, 1)
-        ->setFilter('Id', $plan_id),
-      $this->fabricClient->createQuery('planReportingPeriods', PlanReportingPeriod::getGraphQlItems())
-        ->setFilter('PlanId', $plan_id),
-    ];
-    $data = $this->fabricClient->executeMultiple($queries);
-    $plan_data = count($data['plans']) ? reset($data['plans']) : NULL;
-    if ($plan_data === NULL) {
-      return NULL;
-    }
-
-    // Add the reporting periods.
-    $plan_data->planReportingPeriods = array_map(fn (object $period): PlanReportingPeriod => new PlanReportingPeriod($period), $data['planReportingPeriods'] ?? []);
-    $this->objectStore->addObjectCollection($plan_data->planReportingPeriods, PlanReportingPeriod::getObjectStorageKey(), 'PlanId');
-
-    $plan = new Plan($plan_data);
-    $this->objectStore->addObject($plan);
-    return $plan;
+    $plans = $this->getPlansById([$plan_id]);
+    return !empty($plans) ? reset($plans) : NULL;
   }
 
   /**

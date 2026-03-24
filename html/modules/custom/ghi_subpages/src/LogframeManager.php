@@ -14,7 +14,7 @@ use Drupal\ghi_base_objects\Helpers\BaseObjectHelper;
 use Drupal\ghi_blocks\Traits\AttachmentTableTrait;
 use Drupal\ghi_plan_clusters\Entity\PlanCluster;
 use Drupal\ghi_plans\ApiObjects\Prototypes\AttachmentPrototype;
-use Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment;
+use Drupal\ghi_plans\ApiObjects\Attachments\Attachment;
 use Drupal\ghi_plans\ApiObjects\Plan as ApiObjectsPlan;
 use Drupal\ghi_plans\ApiObjects\PlanEntityInterface;
 use Drupal\ghi_plans\Entity\GoverningEntity;
@@ -781,7 +781,7 @@ class LogframeManager implements ContainerInjectionInterface {
    * @param int $prototype_id
    *   An optional prototype id to filter for.
    *
-   * @return \Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment[]
+   * @return \Drupal\ghi_plans\ApiObjects\Attachments\Attachment[]
    *   An array of data attachments.
    */
   public function getAttachmentsForEntities(array $entities, $prototype_id = NULL) {
@@ -797,7 +797,7 @@ class LogframeManager implements ContainerInjectionInterface {
     $attachments = $query->getAttachmentsByObject('planEntity', $entity_ids);
     // Filter out non-data attachments.
     $attachments = array_filter($attachments, function ($attachment) use ($prototype_id) {
-      if (!$attachment instanceof DataAttachment) {
+      if (!$attachment instanceof Attachment) {
         return FALSE;
       }
       if ($prototype_id && $prototype_id == $attachment->getPrototype()->id()) {

@@ -24,6 +24,9 @@ trait ObjectFilterTrait {
       if (is_array($value)) {
         $objects = array_filter($objects, fn (ApiObjectInterface $object) => in_array($object->getRawData()->$key, $value));
       }
+      elseif (is_string($value)) {
+        $objects = array_filter($objects, fn (ApiObjectInterface $object) => strcasecmp($object->getRawData()->$key, $value) === 0);
+      }
       elseif (is_scalar($value)) {
         $objects = array_filter($objects, fn (ApiObjectInterface $object) => $object->getRawData()->$key == $value);
       }

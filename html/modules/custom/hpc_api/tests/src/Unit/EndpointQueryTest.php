@@ -10,12 +10,10 @@ use Drupal\Core\PageCache\ResponsePolicy\KillSwitch;
 use Drupal\Core\Session\AccountProxyInterface;
 use Drupal\Tests\UnitTestCase;
 use Drupal\hpc_api\ConfigService;
-use Drupal\hpc_api\Event\EndpointDataEvent;
 use Drupal\hpc_api\Query\EndpointQuery;
 use GuzzleHttp\Psr7\Response;
 use Prophecy\Argument;
 use Prophecy\PhpUnit\ProphecyTrait;
-use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
 /**
  * @covers Drupal\hpc_api\Query\EndpointQuery
@@ -99,10 +97,6 @@ class EndpointQueryTest extends UnitTestCase {
     // Mock kill switch.
     $kill_switch = $this->prophesize(KillSwitch::class)->reveal();
 
-    $event = $this->prophesize(EndpointDataEvent::class);
-    $event_dispatcher = $this->prophesize(EventDispatcherInterface::class);
-    $event_dispatcher->dispatch(Argument::any(), EndpointDataEvent::class)->willReturn($event->reveal());
-
     $config_service = new ConfigService($config_factory);
 
     // Set container.
@@ -113,7 +107,7 @@ class EndpointQueryTest extends UnitTestCase {
     $current_user = $this->prophesize(AccountProxyInterface::class)->reveal();
     $time = $this->prophesize(TimeInterface::class)->reveal();
 
-    $this->query = new OverrideEndpointQuery($config_service, $event_dispatcher->reveal(), $logger, $kill_switch, $http_client, $current_user, $time);
+    $this->query = new OverrideEndpointQuery($config_service, $logger, $kill_switch, $http_client, $current_user, $time);
   }
 
   /**

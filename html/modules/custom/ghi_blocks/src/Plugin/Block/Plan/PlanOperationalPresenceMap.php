@@ -98,6 +98,13 @@ class PlanOperationalPresenceMap extends GHIBlockBase implements MultiStepFormBl
   /**
    * {@inheritdoc}
    */
+  public function isEmpty(): bool {
+    return empty($this->getLocations());
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function buildContent() {
     $available_views = $this->getAvailableViews();
     $map_data = $this->getMapData();

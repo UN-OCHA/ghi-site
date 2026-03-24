@@ -9,13 +9,12 @@ use Drupal\Core\PageCache\ResponsePolicy\KillSwitch;
 use Drupal\Core\Session\AccountProxyInterface;
 use Drupal\Core\Url;
 use Drupal\hpc_api\ConfigService;
-use Drupal\hpc_api\Event\EndpointDataEvent;
 use Drupal\hpc_api\Helpers\QueryHelper;
 use Drupal\hpc_api\Traits\SimpleCacheTrait;
 use GuzzleHttp\ClientInterface;
+use GuzzleHttp\Promise\Utils;
 use JsonMachine\Items;
 use Psr\Http\Message\ResponseInterface;
-use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
 /**
  * Class representing an endpoint query.
@@ -39,13 +38,6 @@ class EndpointQuery {
    * @var \Drupal\hpc_api\ConfigService
    */
   protected $configService;
-
-  /**
-   * The event dispatcher service.
-   *
-   * @var \Symfony\Contracts\EventDispatcher\EventDispatcherInterface
-   */
-  protected $eventDispatcher;
 
   /**
    * The logger factory service.
@@ -165,9 +157,8 @@ class EndpointQuery {
   /**
    * Constructs a new EndpointQuery object.
    */
-  public function __construct(ConfigService $config_service, EventDispatcherInterface $event_dispatcher, LoggerChannelFactoryInterface $logger_factory, KillSwitch $kill_switch, ClientInterface $http_client, AccountProxyInterface $user, TimeInterface $time) {
+  public function __construct(ConfigService $config_service, LoggerChannelFactoryInterface $logger_factory, KillSwitch $kill_switch, ClientInterface $http_client, AccountProxyInterface $user, TimeInterface $time) {
     $this->configService = $config_service;
-    $this->eventDispatcher = $event_dispatcher;
     $this->loggerFactory = $logger_factory;
     $this->killSwitch = $kill_switch;
     $this->httpClient = $http_client;
@@ -338,6 +329,20 @@ class EndpointQuery {
   }
 
   /**
+   * Get the headers for a request.
+   *
+   * @return array
+   *   An array of headers.
+   */
+  public function getHeaders() {
+    $headers = $this->getAuthHeaders();
+    if ($this->configService->get('use_gzip_compression', FALSE)) {
+      $headers['Accept-Encoding'] = 'deflate,gzip';
+    }
+    return $headers;
+  }
+
+  /**
    * Execute the current query and preprocess the results.
    *
    * @return object|array|false
@@ -354,25 +359,39 @@ class EndpointQuery {
 
     // First check if statically cached data is available. Might come from
     // previous requests.
-    if (!$this->useCache() || !($response = $this->cache($cache_key, NULL, FALSE, $this->getCacheBaseTime()))) {
+    if (!$this->useCache() || !($response_data = $this->cache($cache_key, NULL, FALSE, $this->getCacheBaseTime()))) {
       // No cached data available, so we run the API request.
-      $result = $this->sendQuery();
-      if (empty($result) || !$result instanceof ResponseInterface) {
+      $response = $this->sendQuery();
+      if (empty($response) || !$response instanceof ResponseInterface) {
         return FALSE;
       }
-      if ($result->getStatusCode() != 200) {
-        $this->handleError($result, $endpoint_url);
+      if ($response->getStatusCode() != 200) {
+        $this->handleError($response, $endpoint_url);
         return FALSE;
       }
 
       // Store the result in the static cache variable.
-      if ($result->getStatusCode() == 200) {
+      if ($response->getStatusCode() == 200) {
         // Only cache the response, if the call returned successfully.
-        $response = (string) $result->getBody();
-        $this->cache($cache_key, $response, FALSE, NULL, $this->getCacheTags());
+        $response_data = (string) $response->getBody();
+        $this->cache($cache_key, $response_data, FALSE, NULL, $this->getCacheTags());
       }
     }
+    return $this->processResponseData($response_data, $cache_key);
+  }
 
+  /**
+   * Process the response data.
+   *
+   * @param string $response
+   *   The response data as a string.
+   * @param string $cache_key
+   *   The cache key.
+   *
+   * @return array|object|false
+   *   The processed data or FALSE.
+   */
+  private function processResponseData(string $response, string $cache_key) {
     if (empty($response)) {
       return [];
     }
@@ -389,9 +408,7 @@ class EndpointQuery {
     foreach ($json as $key => $item) {
       switch ($key) {
         case 'data':
-          $event = new EndpointDataEvent($this, $item);
-          $this->eventDispatcher->dispatch($event, EndpointDataEvent::class);
-          $data = $event->getData();
+          $data = $item;
           break;
 
         case 'meta':
@@ -459,45 +476,24 @@ class EndpointQuery {
   /**
    * Send an API query to the the given URL.
    *
-   * @param array $headers
-   *   An array of headers to send with the request.
-   *
    * @return \Psr\Http\Message\ResponseInterface
    *   A http response object on successful request or FALSE in case of a
    *   failure.
    *
    * @see Guzzle
    */
-  public function sendQuery(?array $headers = NULL) {
-    if ($headers == NULL) {
-      $headers = $this->getAuthHeaders();
-    }
-
-    if ($this->configService->get('use_gzip_compression', FALSE)) {
-      $headers['Accept-Encoding'] = 'deflate,gzip';
-    }
-
-    // Mark this as a backend call so it's not being cached as a public query.
-    if ($this->authMethod == self::AUTH_METHOD_API_KEY) {
-      $this->endpointArgs['hpc_backend'] = 1;
-    }
-
+  public function sendQuery() {
     $start = microtime(TRUE);
     try {
       $response = $this->httpClient->get($this->getFullEndpointUrl(), [
-        'headers' => $headers,
+        'headers' => $this->getHeaders(),
         'timeout' => $this->configService->get('timeout', 30),
           // @todo Check if we are the only ones who need this.
         'chunk_size_read' => 32768,
       ]);
     }
     catch (\Exception $e) {
-      if (method_exists($e, 'getResponse')) {
-        $response = $e->getResponse();
-      }
-      else {
-        $response = FALSE;
-      }
+      $response = method_exists($e, 'getResponse') ? $e->getResponse() : FALSE;
     }
 
     if (empty($response) || !$response instanceof ResponseInterface || $response->getStatusCode() != 200) {
@@ -510,8 +506,64 @@ class EndpointQuery {
 
     // Keep stats.
     QueryHelper::endpointCallTimeStorage($this->getFullEndpointUrl(), microtime(TRUE) - $start);
-
     return $response;
+  }
+
+  /**
+   * Query a pool of endpoints.
+   *
+   * @param string[] $endpoint_urls
+   *   An array of fully qualified endpoint urls.
+   */
+  public function queryPool($endpoint_urls) {
+    $query_options = [
+      'headers' => $this->getHeaders(),
+      'timeout' => $this->configService->get('timeout', 30),
+        // @todo Check if we are the only ones who need this.
+      'chunk_size_read' => 32768,
+    ];
+    $promises = [];
+    foreach ($endpoint_urls as $endpoint_url) {
+      $cache_key = $this->getCacheKey([
+        'endpoint' => $endpoint_url,
+        'auth_method' => $this->getAuthMethod(),
+        'headers' => $this->getAuthHeaders(),
+      ], NULL, 'query');
+
+      // First check if statically cached data is available. Might come from
+      // previous requests.
+      if ($this->useCache() && $this->cache($cache_key, NULL, FALSE, $this->getCacheBaseTime())) {
+        continue;
+      }
+      // No cached data available, so we run the API request.
+      $start = microtime(TRUE);
+      $promise = $this->httpClient->getAsync($endpoint_url, $query_options);
+      $promise->then(
+        function ($response) use ($cache_key, $endpoint_url, $start) {
+          QueryHelper::endpointCallTimeStorage($endpoint_url . ' (pooled query)', microtime(TRUE) - $start);
+
+          if (empty($response) || !$response instanceof ResponseInterface) {
+            return FALSE;
+          }
+          if ($response->getStatusCode() != 200) {
+            $this->handleError($response, $endpoint_url);
+            return FALSE;
+          }
+
+          // Store the result in the static cache variable.
+          if ($response->getStatusCode() == 200) {
+            // Only cache the response, if the call returned successfully.
+            $response_data = (string) $response->getBody();
+            $this->cache($cache_key, $response_data, FALSE, NULL, $this->getCacheTags());
+          }
+
+          $this->processResponseData($response, $cache_key);
+        },
+      );
+      $promises[] = $promise;
+    }
+
+    Utils::settle($promises)->wait();
   }
 
   /**

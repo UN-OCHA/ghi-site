@@ -22,7 +22,7 @@ use Drupal\ghi_blocks\Traits\ConfigValidationTrait;
 use Drupal\ghi_form_elements\Helpers\FormElementHelper;
 use Drupal\ghi_form_elements\Traits\ConfigurationContainerTrait;
 use Drupal\ghi_form_elements\Traits\CustomLinkTrait;
-use Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment;
+use Drupal\ghi_plans\ApiObjects\Attachments\Attachment;
 use Drupal\ghi_plans\ApiObjects\Entities\EntityObjectInterface;
 use Drupal\ghi_plans\ApiObjects\Entities\PlanEntity;
 use Drupal\ghi_plans\ApiObjects\Plan as ApiObjectsPlan;
@@ -169,6 +169,42 @@ class PlanEntityLogframe extends GHIBlockBase implements MultiStepFormBlockInter
   /**
    * {@inheritdoc}
    */
+  public function isEmpty(): bool {
+    return empty($this->getRenderableEntities());
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function build() {
+    $build = parent::build();
+    if (empty($build)) {
+      return $build;
+    }
+
+    // Add the links here already so that the custum link appears alongside
+    // the download link added in GHIBlockBase.
+    $build['links'] = [
+      '#type' => 'container',
+      '#attributes' => [
+        'class' => ['link-wrapper'],
+      ],
+    ];
+
+    $display_conf = $this->getBlockConfig()['display'];
+    $link = $this->getLinkFromConfiguration($display_conf['link'] ?? [], [
+      'section_node' => $this->getCurrentSectionNode(),
+      'page_node' => $this->getPageNode(),
+    ]);
+    if ($link) {
+      $build['links'][] = $link->toRenderable();
+    }
+    return $build;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function buildContent() {
     // Get the entities to render.
     $entities = $this->getRenderableEntities();
@@ -241,21 +277,6 @@ class PlanEntityLogframe extends GHIBlockBase implements MultiStepFormBlockInter
       ],
       '#gin_lb_theme_suggestions' => FALSE,
     ];
-    $build['links'] = [
-      '#type' => 'container',
-      '#attributes' => [
-        'class' => ['link-wrapper'],
-      ],
-    ];
-
-    $display_conf = $this->getBlockConfig()['display'];
-    $link = $this->getLinkFromConfiguration($display_conf['link'] ?? [], [
-      'section_node' => $this->getCurrentSectionNode(),
-      'page_node' => $this->getPageNode(),
-    ]);
-    if ($link) {
-      $build['links'][] = $link->toRenderable();
-    }
     return $build;
   }
 
@@ -407,6 +428,9 @@ class PlanEntityLogframe extends GHIBlockBase implements MultiStepFormBlockInter
       return TRUE;
     }
 
+    // Preload the attachments to reduce the number of queries.
+    $this->getAttachmentsForEntities($entities);
+
     foreach ($entities as $entity) {
       $tables = $this->buildTables($entity, $conf['tables']);
       foreach ($tables as $table) {
@@ -484,7 +508,7 @@ class PlanEntityLogframe extends GHIBlockBase implements MultiStepFormBlockInter
       /** @var \Drupal\ghi_plans\Plugin\FabricQuery\AttachmentQuery $query */
       $query = $this->getQueryHandler('attachment');
       $attachment = $query->getAttachment($attachment_id);
-      if (!$attachment instanceof DataAttachment) {
+      if (!$attachment instanceof Attachment) {
         continue;
       }
 
@@ -1280,7 +1304,7 @@ class PlanEntityLogframe extends GHIBlockBase implements MultiStepFormBlockInter
    * @param int $prototype_id
    *   An optional prototype id to filter for.
    *
-   * @return \Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment[]
+   * @return \Drupal\ghi_plans\ApiObjects\Attachments\Attachment[]
    *   An array of data attachments.
    */
   public function getAttachmentsForEntities(array $entities, $prototype_id = NULL) {
@@ -1294,7 +1318,7 @@ class PlanEntityLogframe extends GHIBlockBase implements MultiStepFormBlockInter
 
     // Filter out non-data attachments.
     $attachments = array_filter($attachments, function ($attachment) use ($prototype_id) {
-      if (!$attachment instanceof DataAttachment) {
+      if (!$attachment instanceof Attachment) {
         return FALSE;
       }
       if ($prototype_id && $prototype_id == $attachment->getPrototype()->id()) {
@@ -1332,9 +1356,9 @@ class PlanEntityLogframe extends GHIBlockBase implements MultiStepFormBlockInter
    * {@inheritdoc}
    */
   public static function trustedCallbacks() {
-    return [
+    return array_merge(parent::trustedCallbacks(), [
       'lazyBuildTables',
-    ];
+    ]);
   }
 
   /**

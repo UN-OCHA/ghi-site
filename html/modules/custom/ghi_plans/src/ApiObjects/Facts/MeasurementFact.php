@@ -26,8 +26,8 @@ class MeasurementFact extends FactBase {
     'DisaggregationCategoryOtherId',
     'DeliveryModalityId',
     'CustomMetricName',
-    'Description',
-    'IsTotal',
+    // 'Description',
+    // 'IsTotal',
     'ValueNum',
   ];
 
@@ -50,8 +50,8 @@ class MeasurementFact extends FactBase {
       'health_intervention_category_id' => $fact->HealthInterventionCategoryId,
       'delivery_modality_id' => $fact->DeliveryModalityId,
       'custom_metric_name' => $fact->CustomMetricName,
-      'description' => $fact->Description,
-      'is_total' => $fact->IsTotal,
+      // 'description' => $fact->Description,
+      // 'is_total' => $fact->IsTotal,
       'value' => $fact->ValueNum,
     ];
   }

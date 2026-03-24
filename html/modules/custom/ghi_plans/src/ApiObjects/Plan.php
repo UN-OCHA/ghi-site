@@ -45,6 +45,7 @@ class Plan extends BaseObject implements PlanEntityInterface {
     'FocusedLocationName',
     'FocusedLocationId',
     'CurrentReportingPeriodId',
+    'LastPublishedReportingPeriodId',
     // phpcs:disable Squiz.Arrays.ArrayDeclaration.KeySpecified
     'planPeriod' => ['items' => ['period' => ['CalendarYear']]],
     'planLocation' => ['items' => ['location' => Country::GRAPHQL_ITEMS]],
@@ -85,7 +86,7 @@ class Plan extends BaseObject implements PlanEntityInterface {
       'created_date' => ($data->CreatedAt ?? NULL) ? $this->getTimestamp($data->CreatedAt) : NULL,
       'updated_date' => ($data->UpdatedAt ?? NULL) ? $this->getTimestamp($data->UpdatedAt) : NULL,
       'document_published_date' => $data->DocumentPublishDate ? $this->reformatDate($data->DocumentPublishDate) : NULL,
-      'last_published_period' => $data->CurrentReportingPeriodId ?? NULL,
+      'last_published_period' => $data->LastPublishedReportingPeriodId ?? NULL,
       'is_released' => $data->IsReleased ?? FALSE,
       'is_restricted' => $data->IsRestricted ?? FALSE,
       'is_part_of_gho' => $data->IsPartOfGHO ?? FALSE,

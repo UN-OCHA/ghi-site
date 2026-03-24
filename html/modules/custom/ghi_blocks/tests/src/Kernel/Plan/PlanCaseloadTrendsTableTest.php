@@ -10,6 +10,7 @@ use Drupal\ghi_plans\ApiObjects\Attachments\FinancialAttachment;
 use Drupal\ghi_plans\Plugin\EndpointQuery\PlanFundingSummaryQuery;
 use Drupal\ghi_plans\Plugin\FabricQuery\AttachmentQuery;
 use Drupal\ghi_plans\Plugin\FabricQuery\PlanQuery;
+use Drupal\hpc_api\Query\EndpointQuery;
 use Drupal\hpc_downloads\Interfaces\HPCDownloadExcelInterface;
 use Drupal\hpc_downloads\Interfaces\HPCDownloadPNGInterface;
 use Drupal\Tests\ghi_blocks\Kernel\PlanBlockKernelTestBase;
@@ -114,6 +115,7 @@ class PlanCaseloadTrendsTableTest extends PlanBlockKernelTestBase {
    */
   public function testBuildDownloadData() {
     $plugin = $this->getBlockPlugin();
+    $this->injectApiQueryStubs($plugin);
     $table_data = $this->callPrivateMethod($plugin, 'buildTableData');
     $this->assertEquals($table_data, $plugin->buildDownloadData());
   }
@@ -211,6 +213,7 @@ class PlanCaseloadTrendsTableTest extends PlanBlockKernelTestBase {
    */
   public function testBlockBuild() {
     $plugin = $this->getBlockPlugin();
+    $this->injectApiQueryStubs($plugin);
     $build = $plugin->buildContent();
     $this->assertNotEmpty($build);
     $this->assertIsArray($build['#lazy_builder']);
@@ -274,11 +277,16 @@ class PlanCaseloadTrendsTableTest extends PlanBlockKernelTestBase {
    *   The plugin.
    */
   private function injectApiQueryStubs($plugin) {
+    $endpoint_query = $this->prophesize(EndpointQuery::class);
     $plan_funding_query = $this->prophesize(PlanFundingSummaryQuery::class);
     $plan_funding_query->getData(Argument::cetera())->willReturn([
       'total_funding' => 1000,
     ]);
-    $plugin->setQueryHandler('plan_funding', $plan_funding_query->reveal());
+    $plan_funding_query->setPlaceholder('plan_id', Argument::type('integer'))->willReturn(NULL);
+    $plan_funding_query->getFullEndpointUrl()->willReturn('https://api.hpc.tools/v2/fts/flow/plan/summary/' . rand(1, 10));
+    $plan_funding_query_mock = $plan_funding_query->reveal();
+    $plan_funding_query_mock->endpointQuery = $endpoint_query->reveal();
+    $plugin->setQueryHandler('plan_funding', $plan_funding_query_mock);
 
     $caseload = $this->prophesize(CaseloadAttachment::class);
     $caseload->getCaseloadValue('in_need')->willReturn(300);

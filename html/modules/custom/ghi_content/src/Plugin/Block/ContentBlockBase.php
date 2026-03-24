@@ -71,4 +71,14 @@ abstract class ContentBlockBase extends GHIBlockBase {
     return $this->remoteSource;
   }
 
+  /**
+   * {@inheritdoc}
+   */
+  protected function supportsLazyLoading() {
+    // Disable lazy loading to prevent issues with sub-articles. Lazy loading
+    // on narrative content blocks is not very important anyway, due to the
+    // small amount of API requests.
+    return FALSE;
+  }
+
 }

@@ -5,7 +5,7 @@ namespace Drupal\ghi_plans\ApiObjects\Attachments;
 /**
  * Abstraction for API caseload attachment objects.
  */
-class CaseloadAttachment extends DataAttachment implements CaseloadAttachmentInterface {
+class CaseloadAttachment extends Attachment implements CaseloadAttachmentInterface {
 
   /**
    * Get a caseload value.

@@ -36,7 +36,10 @@ class Homepages extends GHIBlockBase implements OverrideDefaultTitleBlockInterfa
    * {@inheritdoc}
    */
   public static function metadata(): ?HPCBlockMetadata {
-    return new HPCBlockMetadata(defaultTitle: 'Operations');
+    return new HPCBlockMetadata(
+      defaultTitle: 'Operations',
+      usesTitle: FALSE,
+    );
   }
 
   /**
@@ -72,9 +75,6 @@ class Homepages extends GHIBlockBase implements OverrideDefaultTitleBlockInterfa
     ];
     // Add a year switcher if available.
     if ($year_switcher = $this->buildHomepageYearSwitcher()) {
-      $build['#block_attributes'] = [
-        'class' => ['has-year-switcher'],
-      ];
       $build['title_wrapper']['title'][] = $year_switcher;
     }
     $build[] = $this->entityTypeManager->getViewBuilder('node')->view($homepage, 'embed');

@@ -8,7 +8,7 @@ use Drupal\ghi_form_elements\Attribute\ConfigurationContainerItem;
 use Drupal\ghi_form_elements\ConfigurationContainerItemPluginBase;
 use Drupal\ghi_form_elements\Helpers\FormElementHelper;
 use Drupal\ghi_plans\ApiObjects\Attachments\AttachmentInterface;
-use Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment;
+use Drupal\ghi_plans\ApiObjects\Attachments\Attachment;
 use Drupal\ghi_plans\Helpers\AttachmentHelper;
 
 /**
@@ -59,7 +59,7 @@ class AttachmentLabel extends ConfigurationContainerItemPluginBase {
   public function getDefaultLabel() {
     $attachment = $this->getContextValue('attachment');
     $label = NULL;
-    if ($attachment && $attachment instanceof DataAttachment) {
+    if ($attachment && $attachment instanceof Attachment) {
       $label = $attachment->getPrototype()?->getName();
     }
     if (!$label) {

@@ -37,6 +37,15 @@ ghi_blocks.map_config:
     _admin_route: TRUE
   requirements:
     _permission: 'administer ghi map config'
+ghi_blocks.block_config:
+  path: '/admin/config/ghi/blocks'
+  defaults:
+    _form: '\Drupal\ghi_blocks\Form\BlockSettingsForm'
+    _title: 'Block settings'
+  options:
+    _admin_route: TRUE
+  requirements:
+    _permission: 'administer ghi block config'
 ghi_blocks.logframe_config:
   path: '/admin/config/ghi/logframes'
   defaults:

@@ -4,6 +4,7 @@ namespace Drupal\ghi_plans\Plugin\FabricQuery;
 
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\ghi_base_objects\Entity\BaseObjectChildInterface;
+use Drupal\ghi_plans\ApiObjects\Organization;
 use Drupal\ghi_plans\ApiObjects\Partials\PlanProjectCluster;
 use Drupal\ghi_plans\ApiObjects\Project;
 use Drupal\ghi_plans\Entity\GoverningEntity;
@@ -40,20 +41,8 @@ class ProjectQuery extends FabricQueryBase {
    *   An project object or NULL.
    */
   public function getProject(int $project_id, ?Plan $plan_context = NULL): ?Project {
-    $items = $this->fabricClient->createQuery('projects', Project::getGraphQlItems())
-      ->setFilter('Id', $project_id)
-      ->execute() ?: [];
-    $items = count($items) == 1 ? [reset($items)] : [];
-
-    if ($plan_context) {
-      array_walk($items, fn (&$item) => $item->PlanId = $plan_context->getSourceId());
-    }
-
-    // Fetch organizations, clusters and location ids.
-    $this->addOrganizationsToProjectItems($items);
-    $this->addFieldClustersToProjectItems($items);
-    $this->addLocationIdsToProjectItems($items);
-    return count($items) == 1 ? new Project($items[0]) : NULL;
+    $projects = $this->getProjectsById([$project_id], $plan_context);
+    return !empty($projects) ? reset($projects) : NULL;
   }
 
   /**
@@ -103,14 +92,14 @@ class ProjectQuery extends FabricQueryBase {
    *   The number of projects.
    */
   public function getProjectCountForPlan(Plan $plan, ?BaseObjectChildInterface $context_base_object = NULL) {
-    return count($this->getProjectsForPlan($plan, $context_base_object));
+    return count($this->getProjectsForPlanId($plan->getSourceId(), $context_base_object));
   }
 
   /**
    * Get all projects for the given plan.
    *
-   * @param \Drupal\ghi_plans\Entity\Plan $plan
-   *   The plan object.
+   * @param int $plan_id
+   *   The plan id.
    * @param \Drupal\ghi_base_objects\Entity\BaseObjectChildInterface|null $context_base_object
    *   An optional context object, should be a cluster if given.
    * @param int|null $organization_id
@@ -119,21 +108,32 @@ class ProjectQuery extends FabricQueryBase {
    * @return \Drupal\ghi_plans\ApiObjects\Project[]
    *   An array of project objects.
    */
-  public function getProjectsForPlan(Plan $plan, ?BaseObjectChildInterface $context_base_object = NULL, ?int $organization_id = NULL): array {
-    $project_type = $this->getEntityTypeByName('Project');
-    $plan_type = $this->getEntityTypeByName('Plan');
-    if (!$project_type || !$plan_type) {
-      return [];
+  public function getProjectsForPlanId(int $plan_id, ?BaseObjectChildInterface $context_base_object = NULL, ?int $organization_id = NULL): array {
+    // Try to get the requested attachments from the object store.
+    $projects = $this->objectStore->getObjectCollection(Project::getObjectStorageKey(), 'PlanId', $plan_id);
+    if (empty($projects)) {
+      $items = $this->fabricClient->createQuery('projects', Project::getGraphQlItems())
+        ->setFilter('PlanId', $plan_id)
+        ->setFilter('IsPublished', TRUE)
+        ->setOrderBy(['ProjectCode' => 'ASC'])
+        ->execute() ?: [];
+
+      // Fetch organizations, clusters and location ids.
+      $this->addOrganizationsToProjectItems($items);
+      $this->addFieldClustersToProjectItems($items);
+      $this->addLocationIdsToProjectItems($items);
+      $projects = $this->buildResultObjects($items, Project::class);
+      $this->objectStore->addObjectCollection($projects, Project::getObjectStorageKey(), 'PlanId');
     }
-    $relationships = $this->getRelationshipItems($project_type->id(), $plan_type->id(), NULL, $plan->getSourceId());
-    $project_ids = array_map(fn ($item) => $item->getSourceId(), $relationships);
-    $projects = !empty($project_ids) ? $this->getProjectsById($project_ids, $plan) : [];
+
     if ($context_base_object instanceof GoverningEntity) {
       $projects = array_filter($projects, fn ($project) => in_array($context_base_object->getSourceId(), $project->getClusterIds()));
     }
+
     if ($organization_id !== NULL) {
       $projects = array_filter($projects, fn ($project) => array_key_exists($organization_id, $project->getOrganizations()));
     }
+
     return $projects;
   }
 
@@ -151,7 +151,7 @@ class ProjectQuery extends FabricQueryBase {
    *   An array of organization objects.
    */
   public function getProjectOrganizationsForPlan(Plan $plan, ?BaseObjectChildInterface $context_base_object = NULL, ?int $organization_id = NULL): array {
-    $projects = $this->getProjectsForPlan($plan, $context_base_object, $organization_id);
+    $projects = $this->getProjectsForPlanId($plan->getSourceId(), $context_base_object, $organization_id);
     $organizations = [];
     foreach ($projects as $project) {
       $organizations += $project->getOrganizations();
@@ -174,7 +174,7 @@ class ProjectQuery extends FabricQueryBase {
    *   An array of organization objects.
    */
   public function getProjectClustersForPlan(Plan $plan, ?BaseObjectChildInterface $context_base_object = NULL, ?int $organization_id = NULL): array {
-    $projects = $this->getProjectsForPlan($plan, $context_base_object, $organization_id);
+    $projects = $this->getProjectsForPlanId($plan->getSourceId(), $context_base_object, $organization_id);
     $clusters = [];
     foreach ($projects as $project) {
       $clusters += $project->getClusters();
@@ -196,7 +196,7 @@ class ProjectQuery extends FabricQueryBase {
    *   key the project id and the value is a project object.
    */
   public function getPlanProjectsByOrganization(Plan $plan, ?BaseObjectChildInterface $context_base_object = NULL): array {
-    $projects = $this->getProjectsForPlan($plan, $context_base_object);
+    $projects = $this->getProjectsForPlanId($plan->getSourceId(), $context_base_object);
     $organization_projects = $this->groupProjectsByOrganization($projects);
     return $organization_projects;
   }
@@ -214,7 +214,7 @@ class ProjectQuery extends FabricQueryBase {
    *   key the cluster id and the value is a plan cluster object.
    */
   public function getProjectClustersByOrganization(Plan $plan, ?BaseObjectChildInterface $context_base_object = NULL): array {
-    $projects = $this->getProjectsForPlan($plan, $context_base_object);
+    $projects = $this->getProjectsForPlanId($plan->getSourceId(), $context_base_object);
     $clusters = [];
     foreach ($projects as $project) {
       $project_organizations = $project->getOrganizations();
@@ -244,88 +244,44 @@ class ProjectQuery extends FabricQueryBase {
     if (empty($items)) {
       return;
     }
-    if (count($items) > self::MAX_FILTER_COUNT_ARRAY) {
-      // We need to do multiple queries.
-      for ($i = 0; $i < ceil(count($items) / self::MAX_FILTER_COUNT_ARRAY); $i++) {
-        $subset = array_slice($items, $i * self::MAX_FILTER_COUNT_ARRAY, self::MAX_FILTER_COUNT_ARRAY);
-        $this->addOrganizationsToProjectItems($subset);
-      }
-      return;
-    }
-    $project_ids = array_keys($items);
-
-    $project_type = $this->getEntityTypeByName('Project');
-    $organization_type = $this->getEntityTypeByName('Organization');
-    $relationships = $this->getRelationshipItems($project_type->id(), $organization_type->id(), $project_ids);
-
-    $organization_ids = array_unique(array_map(fn ($item) => $item->getTargetId(), $relationships));
-    sort($organization_ids);
-
-    $organizations = $this->getOrganizationQuery()->getOrganizationsById($organization_ids);
-
-    foreach ($relationships as $item) {
-      $project_id = $item->getSourceId();
-      $organization_id = $item->getTargetId();
-      if (empty($organizations[$organization_id])) {
-        continue;
-      }
-      $items[$project_id]->organizations = $items[$project_id]->organizations ?? [];
-      $items[$project_id]->organizations[$organization_id] = $organizations[$organization_id];
+    foreach ($items as &$item) {
+      $organizations = array_map(fn ($reference): Organization => new Organization($reference->organization), $item->projectOrganization->items);
+      $this->objectStore->addObjects($organizations);
+      $organization_ids = $this->extractIds($organizations);
+      $item->organizations = array_combine($organization_ids, $organizations);
     }
   }
 
   /**
    * Add clusters to the given project items.
    *
-   * @param array $projects
+   * @param array $items
    *   An array of fabric result items.
    */
-  private function addFieldClustersToProjectItems(array &$projects): void {
-    if (empty($projects)) {
+  private function addFieldClustersToProjectItems(array &$items): void {
+    if (empty($items)) {
       return;
     }
-    $project_ids = array_keys($projects);
-    // phpcs:disable Squiz.Arrays.ArrayDeclaration.KeySpecified
-    $items = $this->fabricClient->createQuery('projectFieldClusters', [
-      'Id',
-      'ProjectId',
-      'coordinationEntity' => PlanProjectCluster::getGraphQlItems(),
-    ])
-      ->setFilter('ProjectId', $project_ids)
-      ->setOrderBy(['ProjectId' => 'ASC'])
-      ->execute() ?: [];
-    // phpcs:enable Squiz.Arrays.ArrayDeclaration.KeySpecified
-    foreach ($items as $item) {
-      $project_id = $item->ProjectId;
-      $projects[$project_id]->clusters = $projects[$project_id]->clusters ?? [];
-      $projects[$project_id]->clusters[$item->coordinationEntity->Id] = new PlanProjectCluster($item->coordinationEntity);
+    foreach ($items as &$item) {
+      $clusters = array_map(fn ($reference): PlanProjectCluster => new PlanProjectCluster($reference->coordinationEntity), $item->projectFieldCluster->items);
+      $cluster_ids = $this->extractIds($clusters);
+      $item->clusters = array_combine($cluster_ids, $clusters);
     }
   }
 
   /**
    * Add location ids to the given project items.
    *
-   * @param array $projects
+   * @param array $items
    *   An array of fabric result items.
    */
-  private function addLocationIdsToProjectItems(array &$projects): void {
-    if (empty($projects)) {
+  private function addLocationIdsToProjectItems(array &$items): void {
+    if (empty($items)) {
       return;
     }
-    $project_ids = array_keys($projects);
-    $items = $this->fabricClient->createQuery('projectLocations', [
-      'Id',
-      'ProjectId',
-      'LocationId',
-    ])
-      ->setFilter('ProjectId', $project_ids)
-      ->setOrderBy(['ProjectId' => 'ASC'])
-      ->execute() ?: [];
-    // phpcs:enable Squiz.Arrays.ArrayDeclaration.KeySpecified
-    foreach ($items as $item) {
-      $project_id = $item->ProjectId;
-      $projects[$project_id]->locationIds = $projects[$project_id]->locationIds ?? [];
-      $projects[$project_id]->locationIds[] = $item->LocationId;
+    foreach ($items as &$item) {
+      $location_ids = array_map(fn ($reference) => $reference->LocationId, $item->projectLocation->items);
+      $item->locationIds = $location_ids;
     }
   }
 

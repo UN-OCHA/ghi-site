@@ -448,7 +448,7 @@ class PlanGoverningEntitiesCaseloadsTable extends GHIBlockBase implements Config
   /**
    * Filter the given set of attachments by the given prototype id.
    *
-   * @param \Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment[] $attachments
+   * @param \Drupal\ghi_plans\ApiObjects\Attachments\Attachment[] $attachments
    *   The attachments to filter.
    * @param int $prototype_id
    *   The prototype id to filter for.

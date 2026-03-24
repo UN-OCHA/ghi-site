@@ -1,6 +1,6 @@
 uuid: f3d846d4-d7ad-4142-83e4-bd0abc1f10be
 langcode: en
-status: true
+status: false
 dependencies:
   module:
     - js_cookie

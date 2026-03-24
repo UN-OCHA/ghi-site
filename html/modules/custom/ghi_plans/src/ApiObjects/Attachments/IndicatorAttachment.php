@@ -5,7 +5,7 @@ namespace Drupal\ghi_plans\ApiObjects\Attachments;
 /**
  * Abstraction for API data attachment objects.
  */
-class IndicatorAttachment extends DataAttachment {
+class IndicatorAttachment extends Attachment {
 
   /**
    * Define calculation methods.

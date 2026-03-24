@@ -12,16 +12,20 @@ trait SimpleCacheTrait {
    *
    * @param array $array
    *   The input array.
+   * @param string $called_class
+   *   Optional: The called class.
+   * @param string $called_method
+   *   Optional: The called method.
    *
    * @return string
    *   A cache key string.
    */
-  public static function getCacheKey(array $array) {
+  public static function getCacheKey(array $array, ?string $called_class = NULL, ?string $called_method = NULL) {
     // First sort the incoming arguments.
     ksort($array);
     // Then get information about the caller.
-    $called_class = array_key_last(array_flip(explode('\\', get_called_class())));
-    $called_method = debug_backtrace(!DEBUG_BACKTRACE_PROVIDE_OBJECT | DEBUG_BACKTRACE_IGNORE_ARGS, 2)[1]['function'];
+    $called_class = $called_class ?? array_key_last(array_flip(explode('\\', get_called_class())));
+    $called_method = $called_method ?? debug_backtrace(!DEBUG_BACKTRACE_PROVIDE_OBJECT | DEBUG_BACKTRACE_IGNORE_ARGS, 2)[1]['function'];
     $caller = $called_class . ':' . $called_method;
     // And finally, turn the array into a string, clean that up and encode to
     // limit character size.

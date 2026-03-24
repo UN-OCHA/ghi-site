@@ -126,6 +126,8 @@ class EntityLookupQuery extends FabricQueryBase {
           'Name',
           'AdminLevel',
           'ISO3',
+          'CountryId',
+          'CountryISO3',
           'Pcode',
           'Description',
           'Latitude',
