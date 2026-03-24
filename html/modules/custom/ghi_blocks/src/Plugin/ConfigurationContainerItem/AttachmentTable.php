@@ -13,7 +13,7 @@ use Drupal\ghi_form_elements\ConfigurationContainerItemPluginBase;
 use Drupal\ghi_form_elements\Traits\ConfigurationContainerItemCustomActionTrait;
 use Drupal\ghi_form_elements\Traits\ConfigurationContainerTrait;
 use Drupal\ghi_plans\ApiObjects\Prototypes\AttachmentPrototype;
-use Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment;
+use Drupal\ghi_plans\ApiObjects\Attachments\Attachment;
 use Drupal\ghi_plans\ApiObjects\Attachments\IndicatorAttachment;
 use Drupal\ghi_plans\ApiObjects\PlanEntityInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -61,7 +61,7 @@ class AttachmentTable extends ConfigurationContainerItemPluginBase implements Co
    * {@inheritdoc}
    */
   public function getRenderArray() {
-    /** @var \Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment[] $attachments */
+    /** @var \Drupal\ghi_plans\ApiObjects\Attachments\Attachment[] $attachments */
     $attachments = $this->getContextValue('attachments');
     $prototype = $this->getAttachmentPrototype();
     $prototype_id = $prototype->id();
@@ -375,7 +375,7 @@ class AttachmentTable extends ConfigurationContainerItemPluginBase implements Co
    * @param int $prototype_id
    *   An optional prototype id to filter for.
    *
-   * @return \Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment[]
+   * @return \Drupal\ghi_plans\ApiObjects\Attachments\Attachment[]
    *   An array of data attachments.
    */
   public function getAttachmentsForEntities(array $entities, $prototype_id = NULL) {
@@ -404,12 +404,12 @@ class AttachmentTable extends ConfigurationContainerItemPluginBase implements Co
    * @param \Drupal\ghi_plans\ApiObjects\PlanEntityInterface $plan_entity
    *   An optional plan entity object.
    *
-   * @return \Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment[]
+   * @return \Drupal\ghi_plans\ApiObjects\Attachments\Attachment[]
    *   An array of data attachments.
    */
   private function filterAttachments(array $attachments, $prototype_id = NULL, $plan_entity = NULL) {
     $attachments = array_filter($attachments, function ($attachment) use ($prototype_id, $plan_entity) {
-      if (!$attachment instanceof DataAttachment) {
+      if (!$attachment instanceof Attachment) {
         return FALSE;
       }
       if ($prototype_id && $prototype_id != $attachment->getPrototype()?->id()) {

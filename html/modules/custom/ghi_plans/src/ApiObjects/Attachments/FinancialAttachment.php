@@ -7,7 +7,7 @@ use Drupal\hpc_common\Helpers\CommonHelper;
 /**
  * Abstraction for API financial attachment objects.
  */
-class FinancialAttachment extends DataAttachment {
+class FinancialAttachment extends Attachment {
 
   /**
    * Get the requirements.

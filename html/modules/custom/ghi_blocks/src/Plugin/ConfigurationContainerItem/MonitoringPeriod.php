@@ -7,7 +7,7 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\ghi_form_elements\Attribute\ConfigurationContainerItem;
 use Drupal\ghi_form_elements\ConfigurationContainerItemPluginBase;
-use Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment;
+use Drupal\ghi_plans\ApiObjects\Attachments\Attachment;
 
 /**
  * Provides a monitoring period item for configuration containers.
@@ -77,12 +77,12 @@ class MonitoringPeriod extends ConfigurationContainerItemPluginBase {
   /**
    * Get the current attachment object.
    *
-   * @return \Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment|null
+   * @return \Drupal\ghi_plans\ApiObjects\Attachments\Attachment|null
    *   The attachment object.
    */
   private function getAttachmentObject() {
     $attachment = $this->getContextValue('attachment');
-    return $attachment instanceof DataAttachment ? $attachment : NULL;
+    return $attachment instanceof Attachment ? $attachment : NULL;
   }
 
 }

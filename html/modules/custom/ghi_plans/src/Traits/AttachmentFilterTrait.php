@@ -72,7 +72,7 @@ trait AttachmentFilterTrait {
    *
    * This is currently called from \Drupal\ghi_plans\Entity\Plan and from
    * \Drupal\ghi_plans\ApiObjects\Partials with different arguments. The former
-   * passes in an array of first-level DataAttachment objects, whereas the
+   * passes in an array of first-level Attachment objects, whereas the
    * latter passes in an array of partial attachment data coming from the plan
    * overview endpoint. This function tries to handle both.
    *

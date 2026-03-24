@@ -7,7 +7,7 @@ use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\Url;
 use Drupal\ghi_form_elements\Attribute\ConfigurationContainerItem;
 use Drupal\ghi_form_elements\ConfigurationContainerItemPluginBase;
-use Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment;
+use Drupal\ghi_plans\ApiObjects\Attachments\Attachment;
 
 /**
  * Provides a label/value item for configuration containers.
@@ -30,7 +30,7 @@ class LabelValue extends ConfigurationContainerItemPluginBase {
       '#title' => $this->t('Value'),
       '#default_value' => array_key_exists('value', $this->config) ? $this->config['value'] : NULL,
     ];
-    $formatting_options = DataAttachment::getFormattingOptions();
+    $formatting_options = Attachment::getFormattingOptions();
     unset($formatting_options['auto']);
     $element['formatting'] = [
       '#type' => 'select',

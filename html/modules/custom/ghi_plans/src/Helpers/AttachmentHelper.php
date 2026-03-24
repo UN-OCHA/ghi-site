@@ -2,9 +2,8 @@
 
 namespace Drupal\ghi_plans\Helpers;
 
+use Drupal\ghi_plans\ApiObjects\Attachments\AttachmentInterface;
 use Drupal\ghi_plans\ApiObjects\Attachments\CaseloadAttachment;
-use Drupal\ghi_plans\ApiObjects\Attachments\DataAttachmentInterface;
-use Drupal\ghi_plans\ApiObjects\Attachments\FileAttachment;
 use Drupal\ghi_plans\ApiObjects\Attachments\FinancialAttachment;
 use Drupal\ghi_plans\ApiObjects\Attachments\IndicatorAttachment;
 use Drupal\ghi_plans\Exceptions\InvalidAttachmentTypeException;
@@ -30,7 +29,8 @@ class AttachmentHelper {
     $processed = [];
     foreach ($attachments as $attachment) {
       try {
-        $attachment_object = self::processAttachment($attachment);
+        $attachment_data = $attachment instanceof AttachmentInterface ? $attachment->getRawData() : $attachment;
+        $attachment_object = self::processAttachment($attachment_data);
         if (!$attachment_object) {
           continue;
         }
@@ -59,30 +59,13 @@ class AttachmentHelper {
     $attachment_type = $attachment->AttachmentType ?? ($attachment->type ?? NULL);
     switch (strtolower($attachment_type)) {
       case 'caseload':
-        if (!empty($attachment->id)) {
-          // Backwards compatibility layer for objects originating from the HPC
-          // API. Reload them from fabric.
-          // @todo Remove after transition to fabric is finished.
-          $query = self::getAttachmentQuery();
-          return $query->getAttachment($attachment->id);
-        }
         return new CaseloadAttachment($attachment);
 
       case 'indicator':
-        if (!empty($attachment->id)) {
-          // Backwards compatibility layer for objects originating from the HPC
-          // API. Reload them from fabric.
-          // @todo Remove after transition to fabric is finished.
-          $query = self::getAttachmentQuery();
-          return $query->getAttachment($attachment->id);
-        }
         return new IndicatorAttachment($attachment);
 
       case 'financial':
         return new FinancialAttachment($attachment);
-
-      case 'filewebcontent':
-        return new FileAttachment($attachment);
 
       default:
         throw new InvalidAttachmentTypeException(sprintf('Unknown attachment type: %s', $attachment_type));
@@ -106,7 +89,7 @@ class AttachmentHelper {
   /**
    * Get a custom attachment id based on the given id type.
    *
-   * @param \Drupal\ghi_plans\ApiObjects\Attachments\DataAttachmentInterface $attachment
+   * @param \Drupal\ghi_plans\ApiObjects\Attachments\AttachmentInterface $attachment
    *   The attachment object.
    * @param string $id_type
    *   The id type.
@@ -114,7 +97,7 @@ class AttachmentHelper {
    * @return string
    *   The custom id.
    */
-  public static function getCustomAttachmentId(DataAttachmentInterface $attachment, $id_type) {
+  public static function getCustomAttachmentId(AttachmentInterface $attachment, $id_type) {
     switch ($id_type) {
       case 'custom_id':
         return $attachment->getCustomId();

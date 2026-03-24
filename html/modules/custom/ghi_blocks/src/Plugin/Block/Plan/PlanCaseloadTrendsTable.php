@@ -442,6 +442,9 @@ class PlanCaseloadTrendsTable extends GHIBlockBase implements OverrideDefaultTit
     /** @var \Drupal\ghi_plans\Plugin\FabricQuery\PlanQuery $plan_query */
     $plan_query = $this->getQueryHandler('plan');
 
+    // Pool of funding queries.
+    $funding_queries = [];
+
     // Collect the plan types per year to see if we need to add information to
     // distinguish different plans in the same year.
     $plan_data = [];
@@ -450,7 +453,14 @@ class PlanCaseloadTrendsTable extends GHIBlockBase implements OverrideDefaultTit
       $plan_year = $plan->getYear();
       $plan_type = $plan->getPlanType()->getAbbreviation();
       $plan_types[$plan_year][$plan_type] = !empty($plan_types[$plan_year][$plan_type]) ? $plan_types[$plan_year][$plan_type] + 1 : 1;
+
+      // Add to the pool the funding queries.
+      $funding_query->setPlaceholder('plan_id', $plan->getSourceId());
+      $funding_queries[] = $funding_query->getFullEndpointUrl();
     }
+
+    // Execute the pooled queries to fill the caches.
+    $funding_query->endpointQuery->queryPool($funding_queries);
 
     // Extract plan ids and preload the caseload data.
     $plan_ids = array_filter(array_map(fn (Plan $plan): ?int => $plan->getSourceId(), $related_plans));
@@ -472,6 +482,7 @@ class PlanCaseloadTrendsTable extends GHIBlockBase implements OverrideDefaultTit
       /** @var \Drupal\ghi_plans\ApiObjects\Attachments\CaseloadAttachment $caseload */
       $caseload = count($caseloads) > 1 ? $plan->getPlanCaseload($caseloads) : (!empty($caseloads) ? reset($caseloads) : NULL);
 
+      // Get the funding data. This should hit the cache already.
       $funding_data = $funding_query->getData(['plan_id' => $plan->getSourceId()]);
 
       // Setup the plan type label to distinguish years with multiple plans of
@@ -480,7 +491,7 @@ class PlanCaseloadTrendsTable extends GHIBlockBase implements OverrideDefaultTit
 
       $in_need = $caseload?->getCaseloadValue('in_need');
       $target = $caseload?->getCaseloadValue('target');
-      $reached = $caseload?->getCaseloadValue('latest_reach');
+      $reached = $caseload?->getCaseloadValue('latest_reach') ?? $caseload?->getCaseloadValue('cumulative_reach');
 
       // See if there is a section for this plan.
       $section = $this->sectionManager->loadSectionForBaseObject($plan);
@@ -588,9 +599,9 @@ class PlanCaseloadTrendsTable extends GHIBlockBase implements OverrideDefaultTit
    * {@inheritdoc}
    */
   public static function trustedCallbacks() {
-    return [
+    return array_merge(parent::trustedCallbacks(), [
       'lazyBuildTable',
-    ];
+    ]);
   }
 
 }

@@ -9,7 +9,7 @@ use Drupal\ghi_blocks\Helpers\AttachmentMatcher;
 use Drupal\ghi_blocks\Traits\PlanFootnoteTrait;
 use Drupal\ghi_form_elements\Attribute\ConfigurationContainerItem;
 use Drupal\ghi_form_elements\ConfigurationContainerItemPluginBase;
-use Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment;
+use Drupal\ghi_plans\ApiObjects\Attachments\Attachment;
 use Drupal\ghi_plans\Entity\Plan;
 use Drupal\ghi_plans\Traits\AttachmentFilterTrait;
 use Drupal\hpc_common\Helpers\StringHelper;
@@ -37,6 +37,13 @@ class AttachmentData extends ConfigurationContainerItemPluginBase {
   public $attachmentQuery;
 
   /**
+   * The attachment query.
+   *
+   * @var \Drupal\ghi_plans\Plugin\FabricQuery\AttachmentPrototypeQuery
+   */
+  public $attachmentPrototypeQuery;
+
+  /**
    * The current user account.
    *
    * @var \Drupal\Core\Session\AccountProxyInterface
@@ -50,6 +57,7 @@ class AttachmentData extends ConfigurationContainerItemPluginBase {
     /** @var self $instance */
     $instance = parent::create($container, $configuration, $plugin_id, $plugin_definition);
     $instance->attachmentQuery = $instance->fabricQueryManager->createInstance('attachment');
+    $instance->attachmentPrototypeQuery = $instance->fabricQueryManager->createInstance('attachment_prototype');
     $instance->currentUser = $container->get('current_user');
     return $instance;
   }
@@ -76,7 +84,7 @@ class AttachmentData extends ConfigurationContainerItemPluginBase {
     if (!empty($attachment_select['attachment_id'])) {
       $attachment_id = is_array($attachment_select['attachment_id']) ? reset($attachment_select['attachment_id']) : $attachment_select['attachment_id'];
       $attachment = $this->attachmentQuery->getAttachment($attachment_id);
-      assert($attachment === NULL || $attachment instanceof DataAttachment);
+      assert($attachment === NULL || $attachment instanceof Attachment);
       $errors = $attachment ? $this->validateAttachment($attachment) : [];
       $attachment = $attachment && empty($errors) ? $attachment : NULL;
       $attachment_select['attachment_id'] = $attachment?->id();
@@ -256,19 +264,30 @@ class AttachmentData extends ConfigurationContainerItemPluginBase {
   }
 
   /**
+   * {@inheritdoc}
+   */
+  public function getClasses() {
+    $classes = parent::getClasses();
+    if ($attachment = $this->getAttachmentObject()) {
+      $classes[] = 'attachment-' . $attachment->id();
+    }
+    return $classes;
+  }
+
+  /**
    * Get the attachment object for this item.
    *
-   * @return \Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment|null
+   * @return \Drupal\ghi_plans\ApiObjects\Attachments\Attachment|null
    *   The attachment object.
    */
-  private function getAttachmentObject($validate = TRUE): ?DataAttachment {
+  private function getAttachmentObject($validate = TRUE): ?Attachment {
     $attachment_id = $this->get(['attachment', 'attachment_id']);
     if (!$attachment_id) {
       return NULL;
     }
     // Cast this to a scalar if necessary.
     $attachment_id = is_array($attachment_id) ? array_key_first($attachment_id) : $attachment_id;
-    $attachment = $this->attachmentQuery->getAttachment($attachment_id, 'all');
+    $attachment = $this->attachmentQuery->getAttachment($attachment_id);
     if (!$attachment) {
       return NULL;
     }
@@ -281,13 +300,13 @@ class AttachmentData extends ConfigurationContainerItemPluginBase {
   /**
    * Validate the given attachment.
    *
-   * @param \Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment $attachment
+   * @param \Drupal\ghi_plans\ApiObjects\Attachments\Attachment $attachment
    *   The attachment to validate.
    *
    * @return array
    *   An array with validation errors.
    */
-  private function validateAttachment(DataAttachment $attachment): array {
+  private function validateAttachment(Attachment $attachment): array {
     $errors = [];
 
     /** @var \Drupal\ghi_plans\Entity\Plan $plan */
@@ -350,13 +369,11 @@ class AttachmentData extends ConfigurationContainerItemPluginBase {
 
     if ($original_attachment) {
       // Let's see if we can find an alternative attachment.
-      /** @var \Drupal\ghi_plans\Plugin\FabricQuery\AttachmentQuery $query */
-      $query = $this->fabricQueryManager->createInstance('attachment');
-      $attachments = $query->getAttachmentsForPlan($plan->getSourceId(), $this->getContextValue('base_object'), [
-        'caseload',
-        'indicator',
+      $attachments = $this->attachmentQuery->getAttachmentsForPlan($plan->getSourceId(), $this->getContextValue('base_object'), [
+        'Caseload',
+        'Indicator',
       ]);
-      $filtered_attachments = AttachmentMatcher::matchDataAttachments($original_attachment, $attachments);
+      $filtered_attachments = AttachmentMatcher::matchAttachments($original_attachment, $attachments);
 
       // Use the default plan caseload if available.
       $caseload_id = $plan->getPlanCaseloadId();

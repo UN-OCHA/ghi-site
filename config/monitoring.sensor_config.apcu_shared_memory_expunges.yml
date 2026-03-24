@@ -1,6 +1,6 @@
 uuid: 809ef987-c400-4a6c-b6b9-68c00e291993
 langcode: en
-status: true
+status: false
 dependencies: {  }
 id: apcu_shared_memory_expunges
 label: 'APCu Shared Memory expunges (resets)'

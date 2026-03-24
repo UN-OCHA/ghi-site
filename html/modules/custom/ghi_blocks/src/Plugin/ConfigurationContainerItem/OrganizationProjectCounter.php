@@ -72,7 +72,7 @@ class OrganizationProjectCounter extends ConfigurationContainerItemPluginBase {
     $plan_object = $this->getContextValue('plan_object');
     $base_object = $this->getContextValue('base_object');
     $organization = $this->getContextValue('organization');
-    return $this->projectQuery->getProjectsForPlan($plan_object, $base_object instanceof BaseObjectChildInterface ? $base_object : NULL, $organization->id());
+    return $this->projectQuery->getProjectsForPlanId($plan_object->getSourceId(), $base_object instanceof BaseObjectChildInterface ? $base_object : NULL, $organization->id());
   }
 
   /**

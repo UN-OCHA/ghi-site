@@ -69,34 +69,36 @@ function common_design_subtheme_theme_registry_alter(&$theme_registry) {
  * they might be inside a Paragraph type (by way of viewsreference module) and
  * thus need special treatment which can happen in Twig.
  *
- * @see https://api.drupal.org/api/drupal/core%21lib%21Drupal%21Core%21Render%21theme.api.php/function/hook_theme_suggestions_HOOK_alter/8.4.x
+ * @see https://api.drupal.org/api/drupal/core%21lib%21Drupal%21Core%21Render%21theme.api.php/function/hook_theme_suggestions_HOOK_alter/11.x
  */
-function common_design_subtheme_theme_suggestions_views_view_alter(&$suggestions, $variables) {
+function common_design_subtheme_theme_suggestions_views_view_alter(&$suggestions, $variables): void {
   $suggestions[] = sprintf('views_view__%s', $variables['view']->id());
   $suggestions[] = sprintf('views_view__%s__%s', $variables['view']->id(), $variables['view']->current_display);
 }
 
 /**
- * Implements hook_theme_suggestions_item_list_alter().
+ * Implements hook_theme_suggestions_HOOK_alter().
+ *
+ * @see https://api.drupal.org/api/drupal/core%21lib%21Drupal%21Core%21Render%21theme.api.php/function/hook_theme_suggestions_HOOK_alter/11.x
  */
-function common_design_subtheme_theme_suggestions_item_list_alter(array &$suggestions, array $variables, $hook) {
+function common_design_subtheme_theme_suggestions_item_list_alter(array &$suggestions, array $variables): void {
   $plugin_type = $variables['context']['plugin_type'] ?? NULL;
   $plugin_id = $variables['context']['plugin_id'] ?? NULL;
   if ($plugin_type) {
-    $suggestions[] = $hook . '__' . strtr($plugin_type, '-', '_');
+    $suggestions[] = 'item_list__' . strtr($plugin_type, '-', '_');
   }
   if ($plugin_id) {
-    $suggestions[] = $hook . '__' . strtr($plugin_id, '-', '_');
+    $suggestions[] = 'item_list__' . strtr($plugin_id, '-', '_');
   }
   if ($plugin_type && $plugin_id) {
-    $suggestions[] = $hook . '__' . strtr($plugin_type, '-', '_') . '__' . strtr($plugin_id, '-', '_');
+    $suggestions[] = 'item_list__' . strtr($plugin_type, '-', '_') . '__' . strtr($plugin_id, '-', '_');
   }
 }
 
 /**
  * Implements hook_form_alter().
  */
-function common_design_subtheme_form_alter(&$form, FormStateInterface $form_state, $form_id) {
+function common_design_subtheme_form_alter(&$form, FormStateInterface $form_state, $form_id): void {
 
   // To use this for Views exposed forms, copy the form alter hook into your
   // subtheme and add the relevant Views IDs to this array in your subtheme.
@@ -761,10 +763,24 @@ function common_design_subtheme_preprocess_page_navigation_item_list(&$variables
     $wrapper_classes = $item['value']['#attributes']['class'] ?? [];
     $is_megamenu = in_array('megamenu', $wrapper_classes);
     $item_header = $is_megamenu && !empty($item['value']['header']) ? $item['value']['header'] : NULL;
+    $unique_id = Html::getUniqueId('ghi-dropdown--' . $key);
+    $item['preview'] = [
+      '#type' => 'html_tag',
+      '#tag' => 'span',
+      '#attributes' => [
+        'id' => $unique_id,
+        'class' => [
+          'cd-dropdown__btn-label',
+          'cd-dropdown__btn-preview',
+        ],
+      ],
+      'label' => $item['value']['label'],
+    ];
     $item['value'] = [
       '#type' => 'html_tag',
       '#tag' => 'div',
       '#attributes' => [
+        'data-cd-replace' => $unique_id,
         'data-cd-component' => 'cd-dropdown',
         'data-cd-icon' => 'arrow-down',
         'class' => ['cd-dropdown'],

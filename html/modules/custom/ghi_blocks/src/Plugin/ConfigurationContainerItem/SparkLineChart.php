@@ -9,7 +9,7 @@ use Drupal\ghi_form_elements\Attribute\ConfigurationContainerItem;
 use Drupal\ghi_form_elements\ConfigurationContainerItemPluginBase;
 use Drupal\ghi_form_elements\Helpers\FormElementHelper;
 use Drupal\ghi_plans\ApiObjects\Prototypes\AttachmentPrototype;
-use Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment;
+use Drupal\ghi_plans\ApiObjects\Attachments\Attachment;
 use Drupal\ghi_plans\ApiObjects\Attachments\IndicatorAttachment;
 use Drupal\ghi_plans\Traits\DataPointConfigBackwardsCompatibilityTrait;
 use Drupal\hpc_common\Helpers\ThemeHelper;
@@ -126,7 +126,7 @@ class SparkLineChart extends ConfigurationContainerItemPluginBase {
     // Get the protoype, as that is where the labels come from.
     $attachment = $this->getContextValue('attachment');
     $attachment_prototype = $this->getContextValue('attachment_prototype');
-    if (!$attachment_prototype && $attachment instanceof DataAttachment) {
+    if (!$attachment_prototype && $attachment instanceof Attachment) {
       $attachment_prototype = $attachment->getPrototype();
     }
     if (!$attachment_prototype instanceof AttachmentPrototype) {
@@ -201,7 +201,7 @@ class SparkLineChart extends ConfigurationContainerItemPluginBase {
    */
   public function getRenderArray() {
     // Get some context.
-    /** @var \Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment $attachment */
+    /** @var \Drupal\ghi_plans\ApiObjects\Attachments\Attachment $attachment */
     $attachment = $this->getAttachmentObject();
     if (!$attachment) {
       return NULL;
@@ -310,12 +310,12 @@ class SparkLineChart extends ConfigurationContainerItemPluginBase {
   /**
    * Get the attachment object for this item.
    *
-   * @return \Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment|null
+   * @return \Drupal\ghi_plans\ApiObjects\Attachments\Attachment|null
    *   The attachment object.
    */
-  private function getAttachmentObject(): ?DataAttachment {
+  private function getAttachmentObject(): ?Attachment {
     $attachment = $this->getContextValue('attachment');
-    return $attachment instanceof DataAttachment ? $attachment : NULL;
+    return $attachment instanceof Attachment ? $attachment : NULL;
   }
 
 }

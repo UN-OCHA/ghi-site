@@ -1,6 +1,6 @@
 uuid: 5700695d-fb93-4f69-b52a-a0d05bef6696
 langcode: en
-status: true
+status: false
 dependencies: {  }
 id: apcu_shared_memory_size
 label: 'APCu Shared Memory size'

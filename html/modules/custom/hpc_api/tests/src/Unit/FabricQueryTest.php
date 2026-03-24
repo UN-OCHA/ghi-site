@@ -145,7 +145,7 @@ class FabricQueryTest extends UnitTestCase {
       ],
       NULL,
       NULL,
-      'plans ( first: 10000 ) { items { Id planPeriod { items { period { CalendarYear } } } } }',
+      'plans ( first: 10000 ) { items { Id planPeriod { items { period { CalendarYear } } } } endCursor hasNextPage }',
     ];
     $cases[] = [
       'plans',
@@ -155,7 +155,7 @@ class FabricQueryTest extends UnitTestCase {
       ],
       NULL,
       10,
-      'plans ( first: 10 ) { items { Id planPeriod { items { period { CalendarYear } } } } }',
+      'plans ( first: 10 ) { items { Id planPeriod { items { period { CalendarYear } } } } endCursor hasNextPage }',
     ];
     $cases[] = [
       'plans',
@@ -167,7 +167,7 @@ class FabricQueryTest extends UnitTestCase {
         'Id' => 1,
       ],
       NULL,
-      'plans ( first: 10000, filter: { Id: { eq: 1 } } ) { items { Id planPeriod { items { period { CalendarYear } } } } }',
+      'plans ( first: 10000, filter: { Id: { eq: 1 } } ) { items { Id planPeriod { items { period { CalendarYear } } } } endCursor hasNextPage }',
     ];
     $cases[] = [
       'plans',
@@ -180,7 +180,7 @@ class FabricQueryTest extends UnitTestCase {
         'RecordStatus' => 'Active',
       ],
       NULL,
-      'plans ( first: 10000, filter: { Id: { eq: 1 } RecordStatus: { eq: "Active" } } ) { items { Id planPeriod { items { period { CalendarYear } } } } }',
+      'plans ( first: 10000, filter: { Id: { eq: 1 } RecordStatus: { eq: "Active" } } ) { items { Id planPeriod { items { period { CalendarYear } } } } endCursor hasNextPage }',
     ];
     return $cases;
   }

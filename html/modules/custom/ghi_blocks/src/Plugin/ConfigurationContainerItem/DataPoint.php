@@ -12,7 +12,7 @@ use Drupal\ghi_form_elements\Attribute\ConfigurationContainerItem;
 use Drupal\ghi_form_elements\ConfigurationContainerItemPluginBase;
 use Drupal\ghi_form_elements\Element\DataPoint as ElementDataPoint;
 use Drupal\ghi_plans\ApiObjects\Prototypes\AttachmentPrototype;
-use Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment;
+use Drupal\ghi_plans\ApiObjects\Attachments\Attachment;
 use Drupal\ghi_plans\Traits\DataPointConfigBackwardsCompatibilityTrait;
 use Drupal\ghi_plans\Traits\PlanQueryTrait;
 
@@ -77,7 +77,7 @@ class DataPoint extends ConfigurationContainerItemPluginBase {
     // Get the protoype, as that is where the labels come from.
     $attachment = $this->getContextValue('attachment');
     $attachment_prototype = $this->getContextValue('attachment_prototype');
-    if (!$attachment_prototype && $attachment instanceof DataAttachment) {
+    if (!$attachment_prototype && $attachment instanceof Attachment) {
       $attachment_prototype = $attachment->getPrototype();
     }
     if (!$attachment_prototype instanceof AttachmentPrototype) {
@@ -186,7 +186,7 @@ class DataPoint extends ConfigurationContainerItemPluginBase {
   /**
    * Whether the given attachment can show disaggregated data.
    *
-   * @param \Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment $attachment
+   * @param \Drupal\ghi_plans\ApiObjects\Attachments\Attachment $attachment
    *   The attachment object.
    * @param array $conf
    *   The data point configuration.
@@ -194,7 +194,7 @@ class DataPoint extends ConfigurationContainerItemPluginBase {
    * @return bool
    *   TRUE if the attachment can show disaggregated data, FALSE otherwise.
    */
-  public function canShowDisaggregatedData(DataAttachment $attachment, array $conf) {
+  public function canShowDisaggregatedData(Attachment $attachment, array $conf) {
     return $this->getValue() && $attachment->hasDisaggregatedData() && $conf['processing'] == 'single';
   }
 
@@ -261,18 +261,21 @@ class DataPoint extends ConfigurationContainerItemPluginBase {
     else {
       $classes[] = Html::getClass($this->getPluginId() . '--formatting-' . $data_point_conf['formatting']);
     }
+    if ($attachment = $this->getContextValue('attachment')) {
+      $classes[] = 'attachment-' . $attachment->id();
+    }
     return $classes;
   }
 
   /**
    * Get the attachment object for this item.
    *
-   * @return \Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment|null
+   * @return \Drupal\ghi_plans\ApiObjects\Attachments\Attachment|null
    *   The attachment object or NULL.
    */
   private function getAttachmentObject() {
     $attachment = $this->getContextValue('attachment');
-    return $attachment instanceof DataAttachment ? $attachment : NULL;
+    return $attachment instanceof Attachment ? $attachment : NULL;
   }
 
 }

@@ -3,12 +3,12 @@
 namespace Drupal\ghi_plans\Form;
 
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment;
+use Drupal\Core\Security\TrustedCallbackInterface;
 
 /**
  * Provides a form to lookup attachment data.
  */
-class AttachmentLookupForm extends BaseLookupForm {
+class AttachmentLookupForm extends BaseLookupForm implements TrustedCallbackInterface {
 
   /**
    * {@inheritdoc}
@@ -39,9 +39,6 @@ class AttachmentLookupForm extends BaseLookupForm {
 
     $attachment_id = $form_state->getValue('attachment_id');
     if ($attachment_id && $attachment = $this->getAttachmentQuery()?->getAttachment($attachment_id)) {
-      if ($attachment instanceof DataAttachment) {
-        $attachment->assureDisaggregatedData();
-      }
       $form['attachment_type'] = [
         '#type' => 'html_tag',
         '#tag' => 'pre',
@@ -78,20 +75,58 @@ class AttachmentLookupForm extends BaseLookupForm {
         ],
       ];
 
-      foreach ($this->getPublicMethodResults($attachment) as $method_name => $result) {
-        $form['public_method_' . $method_name] = [
-          '#type' => 'details',
-          '#title' => $method_name,
-          'children' => [
-            '#type' => 'html_tag',
-            '#tag' => 'pre',
-            '#value' => empty($result) && $result !== 0 && $result !== FALSE ? 'no result' : print_r($result, TRUE),
+      foreach ($this->getPublicMethods($attachment) as $method_name) {
+        $lazy_build = [
+          '#lazy_builder' => [
+            static::class . '::lazyBuildPublicMethodResult',
+            [
+              $attachment->id(),
+              $method_name,
+            ],
           ],
+          '#create_placeholder' => TRUE,
+        ];
+        $form['public_method_' . $method_name] = [
+          '#markup' => \Drupal::service('renderer')->render($lazy_build),
         ];
       }
     }
 
     return $form;
+  }
+
+  /**
+   * Lazy build the result for a public method on an attachment object.
+   *
+   * @param int $attachment_id
+   *   The attachment id.
+   * @param string $method_name
+   *   The name of the method to call.
+   *
+   * @return array
+   *   A render array.
+   */
+  public static function lazyBuildPublicMethodResult(int $attachment_id, string $method_name) {
+    $attachment = self::getAttachmentQuery()?->getAttachment($attachment_id);
+    $result = self::getPublicMethodResult($attachment, $method_name);
+    return [
+      '#type' => 'details',
+      '#title' => $method_name,
+      'children' => [
+        '#type' => 'html_tag',
+        '#tag' => 'pre',
+        '#value' => empty($result) && $result !== 0 && $result !== FALSE ? 'no result' : print_r($result, TRUE),
+      ],
+    ];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function trustedCallbacks() {
+    return [
+      'lazyBuildPublicMethodResult',
+    ];
   }
 
   /**

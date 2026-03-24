@@ -14,13 +14,14 @@ use Drupal\ghi_blocks\Helpers\AttachmentMatcher;
 use Drupal\ghi_blocks\Interfaces\ConfigValidationInterface;
 use Drupal\ghi_blocks\Interfaces\MultiStepFormBlockInterface;
 use Drupal\ghi_blocks\Interfaces\OverrideDefaultTitleBlockInterface;
+use Drupal\ghi_blocks\Plugin\Block\BlockCommentInterface;
 use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
 use Drupal\ghi_blocks\Traits\BlockCommentTrait;
 use Drupal\ghi_blocks\Traits\ConfigValidationTrait;
 use Drupal\ghi_blocks\Traits\GlobalMapTrait;
 use Drupal\ghi_geojson\GeoJsonLocationInterface;
 use Drupal\ghi_plans\ApiObjects\Attachments\AttachmentInterface;
-use Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment;
+use Drupal\ghi_plans\ApiObjects\Attachments\Attachment;
 use Drupal\ghi_plans\Traits\AttachmentFilterTrait;
 use Drupal\ghi_plans\Traits\DataPointConfigBackwardsCompatibilityTrait;
 use Drupal\ghi_plans\Traits\DisaggregatedDataTrait;
@@ -44,7 +45,7 @@ use Drupal\hpc_downloads\Interfaces\HPCDownloadPNGInterface;
     'plan_cluster' => new EntityContextDefinition('entity:base_object', new TranslatableMarkup('Cluster'), required: FALSE, constraints: ['Bundle' => 'governing_entity']),
   ],
 )]
-class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterface, OverrideDefaultTitleBlockInterface, HPCDownloadPNGInterface, ConfigValidationInterface {
+class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterface, OverrideDefaultTitleBlockInterface, HPCDownloadPNGInterface, ConfigValidationInterface, BlockCommentInterface {
 
   use AttachmentFilterTrait;
   use BlockCommentTrait;
@@ -78,6 +79,22 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
         ],
       ]
     );
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function isEmpty(): bool {
+    $attachment = $this->getDefaultAttachment();
+    return (!$attachment || !$this->attachmentCanBeMapped($attachment));
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getBlockComment(): ?string {
+    $conf = $this->getBlockConfig();
+    return $conf['map']['common']['comment'] ?? NULL;
   }
 
   /**
@@ -147,11 +164,6 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
         'tags' => Cache::mergeTags($this->getCurrentBaseObject()->getCacheTags(), $this->getMapConfigCacheTags()),
       ],
     ];
-    $comment = $this->buildBlockCommentRenderArray($conf['map']['common']['comment'] ?? NULL);
-    if ($comment) {
-      $comment['#attributes']['class'][] = 'content-width';
-      $build['comment'] = $comment;
-    }
     CacheableMetadata::createFromRenderArray($map)->applyTo($build);
     return $build;
   }
@@ -166,7 +178,7 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
    *   TRUE if the given attachment can be mapped, FALSE otherwise.
    */
   private function attachmentCanBeMapped(AttachmentInterface $attachment) {
-    if (!$attachment instanceof DataAttachment) {
+    if (!$attachment instanceof Attachment) {
       return FALSE;
     }
     if (!$attachment->hasDisaggregatedData()) {
@@ -683,7 +695,10 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
       '#description' => $this->t('Specifiy at which zoom level the admin area labels become visible. Setting this to <em>0</em> will show them at any zoom level. Default is <em>6</em>.'),
       '#min' => 0,
       '#max' => 9,
-      '#default_value' => $this->getDefaultFormValueFromFormState($form_state, [
+      // With the following, the number validation fails for some obscure
+      // reason.
+      '#step' => 'any',
+      '#default_value' => (int) $this->getDefaultFormValueFromFormState($form_state, [
         'common',
         'label_min_zoom',
       ]) ?? 0,
@@ -751,7 +766,7 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
   /**
    * Get the default attachment to show on initial widget rendering.
    *
-   * @return \Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment
+   * @return \Drupal\ghi_plans\ApiObjects\Attachments\Attachment
    *   An attachment object.
    */
   private function getDefaultAttachment() {
@@ -772,7 +787,7 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
         $attachment = reset($attachments);
       }
       $default_attachment = $attachment;
-      if (!$attachment instanceof DataAttachment) {
+      if (!$attachment instanceof Attachment) {
         $default_attachment = FALSE;
       }
       elseif (!$this->attachmentCanBeMapped($attachment)) {
@@ -788,7 +803,7 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
   /**
    * Get all attachment objects for the current block instance.
    *
-   * @return \Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment[]
+   * @return \Drupal\ghi_plans\ApiObjects\Attachments\Attachment[]
    *   An array of attachment objects, keyed by the attachment id.
    */
   private function getSelectedAttachments() {
@@ -906,7 +921,7 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
   /**
    * Get the configured attachment ids if any.
    *
-   * @return \Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment[]
+   * @return \Drupal\ghi_plans\ApiObjects\Attachments\Attachment[]
    *   An array of attachment objects.
    */
   private function getConfiguredAttachments() {
@@ -920,7 +935,7 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
   /**
    * Get the available attachments.
    *
-   * @return \Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment[]
+   * @return \Drupal\ghi_plans\ApiObjects\Attachments\Attachment[]
    *   An array of attachment objects.
    */
   private function getAvailableAttachments() {
@@ -930,7 +945,10 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
     }
     /** @var \Drupal\ghi_plans\Plugin\FabricQuery\AttachmentQuery $query_handler */
     $query_handler = $this->getQueryHandler('attachment');
-    return $query_handler->getAttachmentsForPlan($plan_object->getSourceId(), $this->getCurrentBaseObject());
+    return $query_handler->getAttachmentsForPlan($plan_object->getSourceId(), $this->getCurrentBaseObject(), [
+      'Caseload',
+      'Indicator',
+    ]);
   }
 
   /**
@@ -999,10 +1017,10 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
         // context) and see if we can find comparable attachments in the new
         // context via $available_attachments.
         foreach ($configured_attachments as $attachment) {
-          if (!$attachment instanceof DataAttachment) {
+          if (!$attachment instanceof Attachment) {
             continue;
           }
-          $filtered_attachments = AttachmentMatcher::matchDataAttachments($attachment, $available_attachments);
+          $filtered_attachments = AttachmentMatcher::matchAttachments($attachment, $available_attachments);
           foreach ($filtered_attachments as $filtered_attachment) {
             $conf['attachments']['entity_attachments']['attachments']['attachment_id'][$filtered_attachment->id()] = $filtered_attachment->id();
             $conf['attachments']['entity_attachments']['entities']['entity_ids'][$filtered_attachment->source->entity_id] = $filtered_attachment->source->entity_id;

@@ -11,13 +11,13 @@ use Drupal\hpc_api\Helpers\QueryHelper;
 use Drupal\hpc_api\Traits\SimpleCacheTrait;
 use Drupal\hpc_common\Helpers\ArrayHelper;
 use GuzzleHttp\ClientInterface;
+use GuzzleHttp\Promise\Utils;
 use JsonMachine\Exception\JsonMachineException;
 use JsonMachine\Items;
 use League\OAuth2\Client\Provider\Exception\IdentityProviderException;
 use Microsoft\Kiota\Authentication\Oauth\ClientCredentialContext;
 use Microsoft\Kiota\Authentication\PhpLeagueAuthenticationProvider;
 use Psr\Http\Message\ResponseInterface;
-use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
 /**
  * Class representing an Fabric GraphQL client.
@@ -37,13 +37,6 @@ class FabricClient {
    * @var \Drupal\Core\Config\ConfigFactoryInterface
    */
   protected $configFactory;
-
-  /**
-   * The event dispatcher service.
-   *
-   * @var \Symfony\Contracts\EventDispatcher\EventDispatcherInterface
-   */
-  protected $eventDispatcher;
 
   /**
    * The logger factory service.
@@ -84,11 +77,17 @@ class FabricClient {
   protected $cacheBaseTime;
 
   /**
+   * Whether the last query was paginated.
+   *
+   * @var bool
+   */
+  private bool $paginated = FALSE;
+
+  /**
    * Constructs a new fabric query object.
    */
-  public function __construct(ConfigFactoryInterface $config_factory, EventDispatcherInterface $event_dispatcher, LoggerChannelFactoryInterface $logger_factory, KillSwitch $kill_switch, ClientInterface $http_client) {
+  public function __construct(ConfigFactoryInterface $config_factory, LoggerChannelFactoryInterface $logger_factory, KillSwitch $kill_switch, ClientInterface $http_client) {
     $this->configFactory = $config_factory;
-    $this->eventDispatcher = $event_dispatcher;
     $this->loggerFactory = $logger_factory;
     $this->killSwitch = $kill_switch;
     $this->httpClient = $http_client;
@@ -243,7 +242,17 @@ class FabricClient {
   public function execute(FabricQuery $query, string $key_property = 'Id'): false|array {
     $query->assureKeyProperty($key_property);
     $data = $this->query($query);
-    return is_object($data) ? $this->getItems($data, $query->getQueryName(), $key_property) : FALSE;
+    if (!is_object($data)) {
+      return FALSE;
+    }
+    $query_name = $query->getQueryName();
+    $items = $this->getItems($data, $query_name, $key_property);
+    if ($data->$query_name?->hasNextPage ?? FALSE && !empty($data->$query_name?->endCursor)) {
+      $query->setAfter($data->$query_name?->endCursor);
+      $items += $this->execute($query, $key_property);
+      $this->paginated = TRUE;
+    }
+    return $items;
   }
 
   /**
@@ -257,9 +266,62 @@ class FabricClient {
    */
   public function executeMultiple(array $queries): false|array {
     $query_strings = array_map(fn ($query) => $query->toString(), $queries);
-    $data = $this->query(implode(' ', $query_strings));
     $query_names = array_map(fn ($query) => $query->getQueryName(), $queries);
+
+    $data = $this->query(implode(' ', $query_strings));
     return is_object($data) ? array_map(fn ($query_name) => $this->getItems($data, $query_name), array_combine($query_names, $query_names)) : FALSE;
+  }
+
+  /**
+   * Query a pool of data queries asynchronously.
+   *
+   * @param array $queries
+   *   An array of queries, either a FabricQuery objects or strings.
+   */
+  public function poolDataQueries($queries) {
+    $access_token = $this->getAccessToken();
+    if (!$access_token) {
+      $error = 'No access token available for GraphQL request.';
+      $this->logError($error);
+      return FALSE;
+    }
+
+    $promises = [];
+    foreach ($queries as $query) {
+      $query = $query instanceof FabricQuery ? $query->toString() : $query;
+      $query = trim(str_replace("\n", " ", addslashes(trim($query))));
+      $query = !str_starts_with($query, 'query {') ? 'query { ' . $query . ' }' : $query;
+      $body = '{"query": "' . $query . '"}';
+
+      $post_args = [
+        'body' => $body,
+        'headers' => [
+          'Authorization' => 'Bearer ' . $access_token,
+          'Content-Type' => 'application/json',
+          'Accept' => 'application/json',
+        ],
+      ];
+
+      // See if we have a cached version already for this request.
+      $cache_key = $this->getCacheKey([
+        'url' => $this->getEndpointUrl(),
+        'body' => $post_args['body'],
+      ], NULL, 'query');
+      if ($this->useCache() && $this->cache($cache_key, NULL, FALSE, $this->getCacheBaseTime() ?? NULL)) {
+        continue;
+      }
+      $start = microtime(TRUE);
+      $promise = $this->httpClient->postAsync($this->getEndpointUrl(), $post_args);
+      $promise->then(
+        function ($response) use ($cache_key, $query, $start) {
+          QueryHelper::endpointCallTimeStorage(preg_replace('/\s+/', ' ', $query . ' (pooled query)'), microtime(TRUE) - $start);
+          $this->processResponse($response, $query, $cache_key);
+        },
+      );
+      $promises[] = $promise;
+    }
+
+    Utils::settle($promises)->wait();
   }
 
   /**
@@ -319,6 +381,23 @@ class FabricClient {
       return FALSE;
     }
 
+    return $this->processResponse($response, $query, $cache_key);
+  }
+
+  /**
+   * Process the GraphQl HTTP response.
+   *
+   * @param \Psr\Http\Message\ResponseInterface $response
+   *   A response object.
+   * @param string $query
+   *   The query string.
+   * @param string] $cache_key
+   *   A cache key to use for cache storage.
+   *
+   * @return object|false
+   *   An object holding the result data or FALSE on failure.
+   */
+  private function processResponse(ResponseInterface $response, string $query, string $cache_key): false|object {
     if (empty($response) || !$response instanceof ResponseInterface) {
       $this->logError("GraphQL response is empty or invalid for query: @query", [
         '@query' => $query,
@@ -359,7 +438,9 @@ class FabricClient {
 
       // Cast into an object and store in cache.
       $data = (object) iterator_to_array($data);
-      $this->cache($cache_key, $data, FALSE, NULL, $this->getCacheTags());
+      if (!$this->paginated) {
+        $this->cache($cache_key, $data, FALSE, NULL, $this->getCacheTags());
+      }
     }
     catch (JsonMachineException $e) {
       $error = $body;

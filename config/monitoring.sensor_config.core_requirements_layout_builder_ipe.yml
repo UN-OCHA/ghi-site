@@ -1,6 +1,6 @@
 uuid: 27e9002f-558f-4229-ab70-8bdb3fa8a6cd
 langcode: en
-status: true
+status: false
 dependencies:
   module:
     - layout_builder_ipe

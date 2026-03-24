@@ -111,7 +111,7 @@ class ProjectModalController extends ControllerBase {
     $plan_object = $this->getPlanObject($base_object);
     $cluster_context = $base_object instanceof BaseObjectChildInterface ? $base_object : NULL;
     $project_query = $this->getProjectQuery();
-    $projects = $project_query->getProjectsForPlan($plan_object, $cluster_context);
+    $projects = $project_query->getProjectsForPlanId($plan_object->getSourceId(), $cluster_context);
     $build = $this->getProjectTable($projects, $plan_object);
     return $this->returnBuild($build, $this->modalTitleBaseObject($base_object, $this->t('Projects', [], ['langcode' => $plan_object?->getPlanLanguage()])));
   }
@@ -171,7 +171,7 @@ class ProjectModalController extends ControllerBase {
 
     $cluster_context = $base_object instanceof BaseObjectChildInterface ? $base_object : NULL;
     $project_query = $this->getProjectQuery();
-    $projects = $project_query->getProjectsForPlan($plan_object, $cluster_context, $organization_id);
+    $projects = $project_query->getProjectsForPlanId($plan_object->getSourceId(), $cluster_context, $organization_id);
 
     $build = $this->getOrganizationProjectTable($projects, $plan_object);
     $title = $this->t('@organization_name | Projects', [

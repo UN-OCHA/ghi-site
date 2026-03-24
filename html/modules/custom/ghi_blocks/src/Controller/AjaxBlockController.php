@@ -4,24 +4,28 @@ namespace Drupal\ghi_blocks\Controller;
 
 use Drupal\Component\Plugin\Exception\ContextException;
 use Drupal\Component\Utility\Html;
+use Drupal\Core\Ajax\AjaxHelperTrait;
 use Drupal\Core\Ajax\AjaxResponse;
 use Drupal\Core\Ajax\OpenModalDialogCommand;
 use Drupal\Core\Ajax\ReplaceCommand;
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
 use Drupal\Core\Plugin\Context\EntityContext;
+use Drupal\Core\Url;
 use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
 use Drupal\hpc_common\Helpers\BlockHelper;
 use Drupal\layout_builder\Event\SectionComponentBuildRenderArrayEvent;
 use Drupal\layout_builder\LayoutBuilderEvents;
 use Drupal\layout_builder\LayoutEntityHelperTrait;
 use Symfony\Component\DependencyInjection\ContainerInterface;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 /**
  * Controller class for ajax interactions on blocks in GHI.
  */
 class AjaxBlockController extends ControllerBase implements ContainerInjectionInterface {
 
+  use AjaxHelperTrait;
   use LayoutEntityHelperTrait;
 
   /**
@@ -39,12 +43,20 @@ class AjaxBlockController extends ControllerBase implements ContainerInjectionIn
   protected $eventDispatcher;
 
   /**
+   * The router.
+   *
+   * @var \Drupal\Core\Routing\Router
+   */
+  protected $router;
+
+  /**
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container) {
     $instance = new static();
     $instance->currentRequest = $container->get('request_stack')->getCurrentRequest();
     $instance->eventDispatcher = $container->get('event_dispatcher');
+    $instance->router = $container->get('router.no_access_checks');
     return $instance;
   }
 
@@ -61,6 +73,17 @@ class AjaxBlockController extends ControllerBase implements ContainerInjectionIn
    */
   public function loadBlock($plugin_id, $block_uuid) {
     $uri = $this->currentRequest->query->get('current_uri') ?? NULL;
+
+    if (!$this->isAjax()) {
+      // Handle non-ajax request, e.g. when the manually selects to open the
+      // link in a new window/tab.
+      $url = $uri ? Url::fromUserInput($uri) : NULL;
+      if (!$uri || !$url || !$url->isRouted()) {
+        throw new NotFoundHttpException();
+      }
+      return $this->redirect($url->getRouteName(), $url->getRouteParameters());
+    }
+
     if (!$uri) {
       return $this->sendErrorResponse();
     }

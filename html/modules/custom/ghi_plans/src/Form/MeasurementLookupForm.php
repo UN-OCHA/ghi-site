@@ -3,12 +3,12 @@
 namespace Drupal\ghi_plans\Form;
 
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\ghi_plans\ApiObjects\Measurements\Measurement;
+use Drupal\Core\Security\TrustedCallbackInterface;
 
 /**
  * Provides a form to lookup measurement data.
  */
-class MeasurementLookupForm extends BaseLookupForm {
+class MeasurementLookupForm extends BaseLookupForm implements TrustedCallbackInterface {
 
   /**
    * {@inheritdoc}
@@ -39,9 +39,6 @@ class MeasurementLookupForm extends BaseLookupForm {
 
     $measurement_id = $form_state->getValue('measurement_id');
     if ($measurement_id && $measurement = $this->getMeasurementQuery()?->getMeasurement($measurement_id)) {
-      if ($measurement instanceof Measurement) {
-        $measurement->assureDisaggregatedData();
-      }
       $form['measurement_type'] = [
         '#type' => 'html_tag',
         '#tag' => 'pre',
@@ -78,20 +75,58 @@ class MeasurementLookupForm extends BaseLookupForm {
         ],
       ];
 
-      foreach ($this->getPublicMethodResults($measurement) as $method_name => $result) {
-        $form['public_method_' . $method_name] = [
-          '#type' => 'details',
-          '#title' => $method_name,
-          'children' => [
-            '#type' => 'html_tag',
-            '#tag' => 'pre',
-            '#value' => empty($result) && $result !== 0 && $result !== FALSE ? 'no result' : print_r($result, TRUE),
+      foreach ($this->getPublicMethods($measurement) as $method_name) {
+        $lazy_build = [
+          '#lazy_builder' => [
+            static::class . '::lazyBuildPublicMethodResult',
+            [
+              $measurement->id(),
+              $method_name,
+            ],
           ],
+          '#create_placeholder' => TRUE,
+        ];
+        $form['public_method_' . $method_name] = [
+          '#markup' => \Drupal::service('renderer')->render($lazy_build),
         ];
       }
     }
 
     return $form;
+  }
+
+  /**
+   * Lazy build the result for a public method on an attachment object.
+   *
+   * @param int $measurement_id
+   *   The $measurement id.
+   * @param string $method_name
+   *   The name of the method to call.
+   *
+   * @return array
+   *   A render array.
+   */
+  public static function lazyBuildPublicMethodResult(int $measurement_id, string $method_name) {
+    $measurement = self::getMeasurementQuery()?->getMeasurement($measurement_id);
+    $result = self::getPublicMethodResult($measurement, $method_name);
+    return [
+      '#type' => 'details',
+      '#title' => $method_name,
+      'children' => [
+        '#type' => 'html_tag',
+        '#tag' => 'pre',
+        '#value' => empty($result) && $result !== 0 && $result !== FALSE ? 'no result' : print_r($result, TRUE),
+      ],
+    ];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function trustedCallbacks() {
+    return [
+      'lazyBuildPublicMethodResult',
+    ];
   }
 
   /**

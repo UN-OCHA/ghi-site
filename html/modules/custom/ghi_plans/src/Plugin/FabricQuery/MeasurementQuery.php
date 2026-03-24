@@ -37,32 +37,8 @@ class MeasurementQuery extends FabricQueryBase {
    * @todo Add support for the reporting period.
    */
   public function getMeasurement(int $measurement_id, ?int $reporting_period = NULL): ?MeasurementInterface {
-    $measurement = NULL;
-    $queries = [
-      $this->fabricClient->createQuery('measurements', Measurement::getGraphQlItems())
-        ->setFilter('Id', $measurement_id),
-      $this->fabricClient->createQuery('measurementFacts', MeasurementFact::getGraphQlItems())
-        ->setFilters([
-          'MeasurementId' => $measurement_id,
-          'IsTotal' => TRUE,
-        ]),
-    ];
-
-    $data = $this->fabricClient->executeMultiple($queries);
-    $measurements = $data['measurements'];
-
-    // Retrieving an measurement by id should yield a max of 1, so let's assert
-    // that.
-    assert(count($measurements) <= 1);
-
-    $measurement = reset($measurements);
-    if (!$measurement) {
-      return NULL;
-    }
-
-    $measurement->totals = $data['measurementFacts'];
-
-    return new Measurement($measurement);
+    $measurements = $this->getMeasurementsById([$measurement_id]);
+    return !empty($measurements) ? reset($measurements) : NULL;
   }
 
   /**
@@ -70,49 +46,30 @@ class MeasurementQuery extends FabricQueryBase {
    *
    * @param array $measurement_ids
    *   The measurement ids.
-   * @param bool $disaggregated
-   *   Whether to fecth disaggregated data or not.
    *
    * @return \Drupal\ghi_plans\ApiObjects\Measurements\MeasurementInterface[]
    *   An array of measurement objects, keyed by the measurement id.
    */
-  public function getMeasurementsById(array $measurement_ids, bool $disaggregated = FALSE): array {
-    if (empty($measurement_ids)) {
-      return [];
-    }
+  public function getMeasurementsById(array $measurement_ids): array {
     if (count($measurement_ids) > self::MAX_FILTER_COUNT_ARRAY) {
       return $this->doChunkedQuery($measurement_ids, fn ($ids): array => $this->getMeasurementsById($ids));
     }
-    sort($measurement_ids);
-    $cache_key = $this->getCacheKey([
-      'measurement_ids' => $measurement_ids,
-      'disaggregated' => (int) $disaggregated,
-    ]);
-    $measurements = $this->getCache($cache_key);
-    if ($measurements) {
+    $measurements = $this->objectStore->getObjects($measurement_ids, Measurement::getObjectStorageKey());
+    if (count($measurements) == count($measurement_ids)) {
       return $measurements;
     }
-    $queries = [
-      $this->fabricClient->createQuery('measurements', Measurement::getGraphQlItems())
-        ->setFilter('Id', $measurement_ids),
-      $this->fabricClient->createQuery('measurementFacts', MeasurementFact::getGraphQlItems())
-        ->setFilters([
-          'MeasurementId' => $measurement_ids,
-          'IsTotal' => !$disaggregated,
-        ]),
-    ];
-    $data = $this->fabricClient->executeMultiple($queries);
-    $measurements = $data['measurements'];
-    if (empty($measurements)) {
-      return [];
-    }
-    $measurement_facts = $data['measurementFacts'];
-    // If we have found measurements, also load the total facts.
-    $this->addMeasurementFacts($measurements, $measurement_facts);
+    $measurement_ids = array_diff($measurement_ids, array_keys($measurements));
+    sort($measurement_ids);
 
-    $processed_measurements = array_map(fn ($measurement) => new Measurement($measurement), $measurements);
-    $this->setCache($cache_key, $processed_measurements);
-    return $processed_measurements;
+    if (!empty($measurement_ids)) {
+      $items = $this->fabricClient->createQuery('measurements', Measurement::getGraphQlItems())
+        ->setFilter('Id', $measurement_ids)
+        ->execute() ?: [];
+      $new_measurements = $this->buildResultObjects($items, Measurement::class);
+      $this->objectStore->addObjects($new_measurements);
+      $measurements += $new_measurements;
+    }
+    return $measurements;
   }
 
   /**
@@ -120,49 +77,29 @@ class MeasurementQuery extends FabricQueryBase {
    *
    * @param int[] $attachment_ids
    *   The attachment ids.
-   * @param bool $disaggregated
-   *   Whether to fecth disaggregated data or not.
    *
    * @return \Drupal\ghi_plans\ApiObjects\Measurements\MeasurementInterface[]
    *   An array of measurement objects, keyed by the measurement id.
    */
-  public function getMeasurementsByAttachmentId(array $attachment_ids, bool $disaggregated = FALSE): array {
-    if (empty($attachment_ids)) {
-      return [];
-    }
+  public function getMeasurementsByAttachmentId(array $attachment_ids): array {
     if (count($attachment_ids) > self::MAX_FILTER_COUNT_ARRAY) {
       return $this->doChunkedQuery($attachment_ids, fn ($ids): array => $this->getMeasurementsByAttachmentId($ids));
     }
-    sort($attachment_ids);
-    $cache_key = $this->getCacheKey([
-      'attachment_ids' => $attachment_ids,
-      'disaggregated' => (int) $disaggregated,
-    ]);
-    $measurements = $this->getCache($cache_key);
-    if ($measurements) {
+    $measurements = $this->objectStore->getObjects($attachment_ids, Measurement::getObjectStorageKey(), 'AttachmentId');
+    if (count($measurements) == count($attachment_ids)) {
       return $measurements;
     }
-    $queries = [
-      $this->fabricClient->createQuery('measurements', Measurement::getGraphQlItems())
-        ->setFilter('AttachmentId', $attachment_ids),
-      $this->fabricClient->createQuery('measurementFacts', MeasurementFact::getGraphQlItems())
-        ->setFilters([
-          'AttachmentId' => $attachment_ids,
-          'IsTotal' => !$disaggregated,
-        ]),
-    ];
-    $data = $this->fabricClient->executeMultiple($queries);
-    $measurements = $data['measurements'];
-    if (empty($measurements)) {
-      return [];
+    $attachment_ids = array_diff($attachment_ids, array_keys($measurements));
+    sort($attachment_ids);
+    if (!empty($attachment_ids)) {
+      $items = $this->fabricClient->createQuery('measurements', Measurement::getGraphQlItems())
+        ->setFilter('AttachmentId', $attachment_ids)
+        ->execute() ?: [];
+      $new_measurements = $this->buildResultObjects($items, Measurement::class);
+      $this->objectStore->addObjects($new_measurements);
+      $measurements += $new_measurements;
     }
-    $measurement_facts = $data['measurementFacts'];
-    // If we have found measurements, also load the total facts.
-    $this->addMeasurementFacts($measurements, $measurement_facts);
-
-    $processed_measurements = array_map(fn ($measurement) => new Measurement($measurement), $measurements);
-    $this->setCache($cache_key, $processed_measurements);
-    return $processed_measurements;
+    return $measurements;
   }
 
   /**
@@ -200,19 +137,13 @@ class MeasurementQuery extends FabricQueryBase {
       'MeasurementType' => $measurement_types ?: NULL,
     ]);
 
-    $measurements = $this->fabricClient->createQuery('measurements', Measurement::getGraphQlItems())
+    $items = $this->fabricClient->createQuery('measurements', Measurement::getGraphQlItems())
       ->setFilters($filters)
-      ->execute();
-    if (empty($measurements)) {
-      return [];
-    }
+      ->execute() ?: [];
+    $measurements = $this->buildResultObjects($items, Measurement::class);
 
-    // If we have found measurements, also load the total facts.
-    $this->addMeasurementFacts($measurements);
-
-    $processed_measurements = array_map(fn ($measurement) => new Measurement($measurement), $measurements);
-    $this->setCache($cache_key, $processed_measurements);
-    return $processed_measurements;
+    $this->setCache($cache_key, $measurements);
+    return $measurements;
   }
 
   /**
@@ -263,16 +194,14 @@ class MeasurementQuery extends FabricQueryBase {
     $measurement_types = !empty($filter['MeasurementType']) ? (array) $filter['MeasurementType'] : NULL;
     unset($filter['MeasurementType']);
 
-    $measurements = $this->fabricClient->createQuery('measurements', Measurement::getGraphQlItems())
+    $items = $this->fabricClient->createQuery('measurements', Measurement::getGraphQlItems())
       ->setFilters(array_filter([
         'PlanId' => $plan_id,
         'EntityMainType' => $type_filter_value,
         'MeasurementType' => $measurement_types,
       ]))
-      ->execute();
-    if (empty($measurements)) {
-      return [];
-    }
+      ->execute() ?: [];
+    $measurements = $this->buildResultObjects($items, Measurement::class);
 
     // phpcs:disable
     // if (!empty($filter)) {
@@ -280,13 +209,8 @@ class MeasurementQuery extends FabricQueryBase {
     // }
     // phpcs:enable
 
-    if ($fetch_facts) {
-      $this->addMeasurementFacts($measurements);
-    }
-
-    $processed_measurements = array_map(fn (object $measurement): Measurement => new Measurement($measurement), $measurements);
-    $this->setCache($cache_key, $processed_measurements);
-    return $processed_measurements;
+    $this->setCache($cache_key, $measurements);
+    return $measurements;
   }
 
   /**
@@ -385,16 +309,9 @@ class MeasurementQuery extends FabricQueryBase {
       }
       ";
     $data = $this->fabricClient->query($payload);
-    $measurements = $data ? $this->getItems($data, 'measurements') : [];
-    if (empty($measurements)) {
-      return [];
-    }
-
-    // If we have found measurements, also load the total facts.
-    $this->addMeasurementFacts($measurements);
-
-    $processed_measurements = array_map(fn (object $measurement): Measurement => new Measurement($measurement), $measurements);
-    return $processed_measurements;
+    $items = $data ? $this->getItems($data, 'measurements') : [];
+    $measurements = $this->buildResultObjects($items, Measurement::class);
+    return $measurements;
   }
 
   /**
@@ -420,31 +337,8 @@ class MeasurementQuery extends FabricQueryBase {
         'MeasurementId' => $measurement_ids,
         'IsTotal' => $disaggregated === FALSE,
       ])
-      ->setLimit(100000)
       ->execute();
     return $measurement_facts ?: [];
-  }
-
-  /**
-   * Add measurement facts to the given set of measurements.
-   *
-   * @param array $measurements
-   *   An array with raw measurement data from fabric.
-   * @param array|null $measurement_facts
-   *   An optional set of query result objects. If NULL, the facts will be
-   *   retrieved from fabric using the measurement ids as condition.
-   */
-  private function addMeasurementFacts(array &$measurements, ?array $measurement_facts = NULL) {
-    if (!$measurement_facts) {
-      $measurement_ids = $this->extractIdsFromRawData($measurements);
-      $measurement_facts = $this->getMeasurementFactsByMeasurementId($measurement_ids);
-    }
-
-    foreach ($measurement_facts as $measurement_fact) {
-      $measurement_id = $measurement_fact->MeasurementId;
-      $measurements[$measurement_id]->totals = $measurements[$measurement_id]->totals ?? [];
-      $measurements[$measurement_id]->totals[$measurement_fact->Id] = $measurement_fact;
-    }
   }
 
   /**

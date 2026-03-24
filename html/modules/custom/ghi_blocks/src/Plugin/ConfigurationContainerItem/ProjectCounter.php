@@ -15,7 +15,6 @@ use Drupal\ghi_blocks\Traits\ConfigurationItemValuePreviewTrait;
 use Drupal\ghi_form_elements\Attribute\ConfigurationContainerItem;
 use Drupal\ghi_form_elements\ConfigurationContainerItemPluginBase;
 use Drupal\ghi_plans\Traits\FtsLinkTrait;
-use Drupal\ghi_plans\Traits\PlanQueryTrait;
 use Drupal\hpc_common\Helpers\TaxonomyHelper;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -32,7 +31,13 @@ class ProjectCounter extends ConfigurationContainerItemPluginBase {
   use ConfigurationItemClusterRestrictTrait;
   use ConfigurationItemValuePreviewTrait;
   use FtsLinkTrait;
-  use PlanQueryTrait;
+
+  /**
+   * The project query.
+   *
+   * @var \Drupal\ghi_plans\Plugin\FabricQuery\ProjectQuery
+   */
+  public $projectQuery;
 
   /**
    * The funding query.
@@ -54,6 +59,7 @@ class ProjectCounter extends ConfigurationContainerItemPluginBase {
   public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition): ProjectCounter {
     /** @var self $instance */
     $instance = parent::create($container, $configuration, $plugin_id, $plugin_definition);
+    $instance->projectQuery = $instance->fabricQueryManager->createInstance('project');
     $instance->flowSearchQuery = $instance->endpointQueryManager->createInstance('flow_search_query');
     $instance->iconQuery = $instance->endpointQueryManager->createInstance('icon_query');
     return $instance;
@@ -181,10 +187,10 @@ class ProjectCounter extends ConfigurationContainerItemPluginBase {
     $base_object = $base_object instanceof BaseObjectChildInterface ? $base_object : NULL;
     switch ($data_type) {
       case 'projects_count':
-        return count($this->getProjectQuery()->getProjectsForPlan($plan_object, $base_object));
+        return count($this->projectQuery->getProjectsForPlanId($plan_object->getSourceId(), $base_object));
 
       case 'organizations_count':
-        return count($this->getProjectQuery()->getProjectOrganizationsForPlan($plan_object, $base_object));
+        return count($this->projectQuery->getProjectOrganizationsForPlan($plan_object, $base_object));
     }
   }
 

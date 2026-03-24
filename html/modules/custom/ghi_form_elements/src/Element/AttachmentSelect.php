@@ -131,11 +131,14 @@ class AttachmentSelect extends FormElementBase {
       'attachment_id' => !empty($values['attachment_id']) ? array_filter((array) $values['attachment_id']) : [],
     ];
 
+    // Assure integer values.
+    $entity_ids = array_map(fn ($value) => intval($value), $element['#entity_ids'] ?? []);
+
     // Get the list of attachments that this element can access.
     $element_context_filter = array_filter([
-      'EntityId' => $element['#entity_ids'] ?? NULL,
+      'EntityId' => $entity_ids ?: NULL,
       'EntityMainType' => $element['#entity_type'] ?? NULL,
-      'AttachmentType' => $element['#attachment_type'] ?? ['caseload', 'indicator'],
+      'AttachmentType' => $element['#attachment_type'] ?? ['Caseload', 'Indicator'],
     ]);
 
     // Get the attachments.
@@ -158,7 +161,7 @@ class AttachmentSelect extends FormElementBase {
     $entity_type_options = [];
     $attachment_type_options = [];
     $attachment_prototype_options = [];
-    /** @var \Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment[] $attachments */
+    /** @var \Drupal\ghi_plans\ApiObjects\Attachments\Attachment[] $attachments */
     foreach ($attachments as $attachment) {
       $source_type = $attachment->getSourceEntityType();
       $source_type_label = $attachment->getSourceEntityTypeLabel();
@@ -253,7 +256,7 @@ class AttachmentSelect extends FormElementBase {
     $attachment_options = [];
     $entities_in_selection = [];
     foreach (ArrayHelper::filterArray($attachments, $attachment_filter) as $attachment) {
-      /** @var \Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment $attachment */
+      /** @var \Drupal\ghi_plans\ApiObjects\Attachments\Attachment $attachment */
       $entities_in_selection[$attachment->source->entity_id] = TRUE;
       $source_entity = $attachment->getSourceEntity();
       $attachment_options[$attachment->id] = [

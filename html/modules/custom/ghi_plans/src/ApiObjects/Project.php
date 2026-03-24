@@ -40,6 +40,11 @@ class Project extends BaseObject {
     'PgSqlPdf',
     'HpcId',
     'HpcVersionId',
+    // phpcs:disable Squiz.Arrays.ArrayDeclaration.KeySpecified
+    'projectFieldCluster' => ['items' => ['coordinationEntity' => PlanProjectCluster::GRAPHQL_ITEMS]],
+    'projectOrganization' => ['items' => ['organization' => Organization::GRAPHQL_ITEMS]],
+    'projectLocation' => ['items' => ['LocationId']],
+    // phpcs:enable Squiz.Arrays.ArrayDeclaration.KeySpecified
   ];
 
   /**
@@ -151,7 +156,7 @@ class Project extends BaseObject {
    *   An array of location ids for this project.
    */
   public function getLocationIds(): array {
-    return $this->location_ids ?? [];
+    return $this->map->location_ids ?? [];
   }
 
   /**

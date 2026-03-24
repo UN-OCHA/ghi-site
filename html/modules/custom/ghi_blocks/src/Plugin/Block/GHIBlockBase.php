@@ -19,6 +19,7 @@ use Drupal\Core\Form\SubformState;
 use Drupal\Core\Form\SubformStateInterface;
 use Drupal\Core\Render\Element;
 use Drupal\Core\Render\Markup;
+use Drupal\Core\Security\TrustedCallbackInterface;
 use Drupal\Core\Url;
 use Drupal\ghi_base_objects\Entity\BaseObjectAwareEntityInterface;
 use Drupal\ghi_base_objects\Entity\BaseObjectChildInterface;
@@ -29,6 +30,7 @@ use Drupal\ghi_blocks\Interfaces\AutomaticTitleBlockInterface;
 use Drupal\ghi_blocks\Interfaces\MultiStepFormBlockInterface;
 use Drupal\ghi_blocks\Interfaces\OptionalTitleBlockInterface;
 use Drupal\ghi_blocks\Interfaces\OverrideDefaultTitleBlockInterface;
+use Drupal\ghi_blocks\Traits\BlockCommentTrait;
 use Drupal\ghi_blocks\Traits\VerticalTabsTrait;
 use Drupal\ghi_homepage\Entity\Homepage;
 use Drupal\ghi_plan_clusters\Entity\PlanCluster;
@@ -36,6 +38,7 @@ use Drupal\ghi_plans\Entity\Plan;
 use Drupal\ghi_sections\Entity\SectionNodeInterface;
 use Drupal\ghi_subpages\Entity\SubpageNodeInterface;
 use Drupal\hpc_api\Helpers\ProfileHelper;
+use Drupal\hpc_api\Traits\SimpleCacheTrait;
 use Drupal\hpc_common\Helpers\ArrayHelper;
 use Drupal\hpc_common\Helpers\BlockHelper;
 use Drupal\hpc_common\Helpers\UserHelper;
@@ -58,9 +61,11 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  * By inheriting from HPCBlockBase, we get most of the necessary data retrieval
  * logic for block panes and also most of the context gathering logic.
  */
-abstract class GHIBlockBase extends HPCBlockBase {
+abstract class GHIBlockBase extends HPCBlockBase implements TrustedCallbackInterface {
 
   use VerticalTabsTrait;
+  use SimpleCacheTrait;
+  use BlockCommentTrait;
 
   /**
    * The default form key for the configuration form.
@@ -136,11 +141,18 @@ abstract class GHIBlockBase extends HPCBlockBase {
   protected $controllerResolver;
 
   /**
-   * The route matcher.
+   * The route matcher service.
    *
    * @var \Drupal\Core\Routing\RouteMatchInterface
    */
   protected $routeMatch;
+
+  /**
+   * The patch matcher service.
+   *
+   * @var \Drupal\Core\Path\PathMatcherInterface
+   */
+  protected $pathMatcher;
 
   /**
    * The form submitter service.
@@ -173,6 +185,7 @@ abstract class GHIBlockBase extends HPCBlockBase {
     $instance->moduleHandler = $container->get('module_handler');
     $instance->controllerResolver = $container->get('controller_resolver');
     $instance->routeMatch = $container->get('current_route_match');
+    $instance->pathMatcher = $container->get('path.matcher');
     $instance->formSubmitter = $container->get('form_submitter');
     $instance->currentUser = $container->get('current_user');
 
@@ -353,8 +366,30 @@ abstract class GHIBlockBase extends HPCBlockBase {
   /**
    * {@inheritdoc}
    */
+  public static function trustedCallbacks() {
+    return [
+      'lazyBuildContent',
+    ];
+  }
+
+  /**
+   * Whether the block supports block-level lazy loading.
+   *
+   * @return bool
+   *   TRUE if the block supports lazy loading, FALSE otherwise.
+   */
+  protected function supportsLazyLoading() {
+    return TRUE;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function build() {
-    $plugin_configuration = $this->getConfiguration();
+    if ($this->isHidden() && !$this->isPreview()) {
+      // If the block is hidden and not in preview bail out.
+      return [];
+    }
 
     $build = [
       '#theme_wrappers' => [
@@ -362,52 +397,8 @@ abstract class GHIBlockBase extends HPCBlockBase {
           '#attributes' => ['class' => ['block-content']],
         ],
       ],
+      '#attributes' => [],
     ];
-
-    if ($this->isHidden() && !$this->isPreview()) {
-      // If the block is hidden and not in preview bail out.
-      return [];
-    }
-
-    // Otherwise build the full block. First get the actual block content.
-    $profile_key = ProfileHelper::profileStart(static::class . ':buildContent');
-    $build_content = $this->buildContent();
-    ProfileHelper::profileEnd($profile_key);
-    if (!$build_content) {
-      return $build_content ?? [];
-    }
-
-    // Handle the title display.
-    // @todo This is confusing and needs cleanup.
-    if ($this->shouldDisplayTitle() && empty($build_content['#title_processed'])) {
-      $build['#title'] = $this->label();
-      $display_label = $this->configuration['label_display'] ?? FALSE;
-      if ($this instanceof AutomaticTitleBlockInterface || $this instanceof OverrideDefaultTitleBlockInterface) {
-        $display_label = TRUE;
-      }
-      elseif (!empty($build_content['#title'])) {
-        $build['#title'] = $build_content['#title'];
-        unset($build_content['#title']);
-      }
-
-      if (!$display_label) {
-        unset($build['#title']);
-      }
-      $this->configuration['label_display'] = $display_label;
-    }
-
-    if (!empty($build_content['#theme']) && $build_content['#theme'] == 'item_list') {
-      $build_content['#context']['plugin_id'] = $this->getPluginId();
-    }
-
-    // Add the build content as a child. We make sure that the final $build
-    // always has proper element children instead of direct render arrays.
-    if (!count(Element::children($build_content))) {
-      $build[] = $build_content;
-    }
-    else {
-      $build += $build_content;
-    }
 
     // Add some classes for styling.
     $build['#attributes']['id'] = $this->getBlockId();
@@ -427,22 +418,13 @@ abstract class GHIBlockBase extends HPCBlockBase {
       }
     }
 
-    // Allow the plugin to define additional attributes for the block itself.
-    if (array_key_exists('#block_attributes', $build_content)) {
-      $build['#attributes'] = NestedArray::mergeDeep($build['#attributes'], $build_content['#block_attributes']);
-    }
-
-    // Allow the plugin to define attributes for it's wrapper.
-    if (array_key_exists('#wrapper_attributes', $build_content)) {
-      $build['#theme_wrappers']['container']['#attributes'] = NestedArray::mergeDeep($build['#theme_wrappers']['container']['#attributes'], $build_content['#wrapper_attributes']);
-    }
-
     $build['#title_attributes']['class'][] = 'block-title';
     if (empty($build['#region'])) {
       $build['#region'] = $this->getRegion();
     }
 
     // Prepare action links.
+    $plugin_configuration = $this->getConfiguration();
     $download_links = !empty($build['#download_links']) ? $build['#download_links'] : [];
     if ($this instanceof HPCDownloadPluginInterface && !empty($plugin_configuration['uuid'])) {
       $download_types = $this->getAvailableDownloadTypes();
@@ -463,6 +445,153 @@ abstract class GHIBlockBase extends HPCBlockBase {
     // in hooks.
     $build['#block_instance'] = $this;
 
+    if ($this instanceof BlockCommentInterface && $comment = $this->getBlockComment()) {
+      $build['comment'] = $this->buildBlockCommentRenderArray($comment);
+    }
+
+    // See if we should use lazy loading for the tables.
+    $lazy_load = $this->config('ghi_blocks.block_settings')->get('lazy_load') && $this->supportsLazyLoading();
+    $is_front_page_block = str_starts_with($this->getPluginId(), 'global_');
+    if ($lazy_load && !$this->isPreview() && !$is_front_page_block && !$this->isEmpty()) {
+      $build['content'] = [
+        '#lazy_builder' => [
+          static::class . '::lazyBuildContent',
+          [
+            $this->getPluginId(),
+            $this->getUuid(),
+            $this->getPageNode()?->toUrl()?->toString() ?? $this->getCurrentUri(),
+          ],
+        ],
+        '#create_placeholder' => TRUE,
+        '#cache' => [
+          'context' => $this->getCacheContexts(),
+        ],
+        '#lazy_builder_preview' => [
+          '#type' => 'container',
+          '#attributes' => [
+            'class' => ['ghi-block-bigpipe-preview'],
+          ],
+          'content' => [
+            [
+              '#type' => 'html_tag',
+              '#tag' => 'span',
+              '#attributes' => ['class' => ['ajax-progress__throbber']],
+            ],
+            [
+              '#type' => 'html_tag',
+              '#tag' => 'span',
+              '#attributes' => ['class' => ['preview-message']],
+              '#value' => $this->t('Loading content ...'),
+            ],
+          ],
+        ],
+      ];
+      return $build;
+    }
+
+    return $this->doBuildContent($build);
+  }
+
+  /**
+   * Lazy build callback for the block rendering.
+   *
+   * @param string $plugin_id
+   *   The plugin id of this block plugin.
+   * @param string $block_uuid
+   *   The uuid of this block plugins instance.
+   * @param string $uri
+   *   The current page uri.
+   *
+   * @return array
+   *   A render array representing the block content.
+   */
+  public static function lazyBuildContent($plugin_id, $block_uuid, $uri): array {
+    $block_instance = BlockHelper::getBlockInstance($uri, $plugin_id, $block_uuid);
+    if (!$block_instance instanceof self) {
+      return [];
+    }
+    return $block_instance->doBuildContent();
+  }
+
+  /**
+   * Do the actual block building.
+   *
+   * This is called either directly from ::build() or from the lazy builder
+   * callback.
+   *
+   * @param array $build
+   *   An initial render array.
+   *
+   * @return array
+   *   The full render array with the block content.
+   */
+  public function doBuildContent(?array $build = NULL): array {
+    $cache_key = $this->getCacheKey([
+      $this->getPluginId(),
+      $this->getUuid(),
+    ] + $this->getPageArguments());
+
+    $build = $build ?? [
+      '#attributes' => [],
+    ];
+
+    $build_content = $this->cache($cache_key);
+    if (!$build_content) {
+      // Build the full block. First get the actual block content.
+      $profile_key = ProfileHelper::profileStart(static::class . ':buildContent');
+      $build_content = $this->buildContent();
+      ProfileHelper::profileEnd($profile_key);
+      $this->cache($cache_key, $build_content);
+    }
+    if (!$build_content) {
+      return [];
+    }
+
+    // Handle the title display.
+    // @todo This is confusing and needs cleanup.
+    $display_label = $this->configuration['label_display'] && !empty($build_content['#title_processed']) ?? FALSE;
+    if ($this->shouldDisplayTitle() && empty($build_content['#title_processed'])) {
+      $build['#title'] = $this->label();
+      if ($this instanceof AutomaticTitleBlockInterface || $this instanceof OverrideDefaultTitleBlockInterface) {
+        $display_label = TRUE;
+      }
+      elseif (!empty($build_content['#title'])) {
+        $build['#title'] = $build_content['#title'];
+        unset($build_content['#title']);
+      }
+    }
+
+    // Make sure the title is hidden if necessary.
+    if (!$display_label || !empty($build_content['#title_processed'])) {
+      unset($build['#title']);
+      $display_label = FALSE;
+    }
+    $this->configuration['label_display'] = $display_label;
+
+    if (!empty($build_content['#theme']) && $build_content['#theme'] == 'item_list') {
+      $build_content['#context']['plugin_id'] = $this->getPluginId();
+    }
+
+    // Add the build content as a child. We make sure that the final $build
+    // always has proper element children instead of direct render arrays.
+    if (!count(Element::children($build_content))) {
+      $build[] = $build_content;
+    }
+    else {
+      $build += $build_content;
+    }
+
+    // Allow the plugin to define additional attributes for the block itself.
+    if (array_key_exists('#block_attributes', $build_content)) {
+      $build['#attributes'] = $build['#attributes'] ?? [];
+      $build['#attributes'] = NestedArray::mergeDeep($build['#attributes'], $build_content['#block_attributes']);
+    }
+
+    // Allow the plugin to define attributes for it's wrapper.
+    if (array_key_exists('#wrapper_attributes', $build_content)) {
+      $build['#theme_wrappers']['container']['#attributes'] = NestedArray::mergeDeep($build['#theme_wrappers']['container']['#attributes'], $build_content['#wrapper_attributes']);
+    }
+
     // Set the cache properties, merge in anything that the builder might have
     // set.
     $build['#cache'] = [
@@ -471,6 +600,16 @@ abstract class GHIBlockBase extends HPCBlockBase {
       'max-age' => Cache::mergeMaxAges($this->getCacheMaxAge(), $build_content['#cache']['max-age'] ?? Cache::PERMANENT),
     ];
     return $build;
+  }
+
+  /**
+   * Get a new instance of the fabric client.
+   *
+   * @return \Drupal\hpc_api\Query\FabricClient
+   *   The fabric client.
+   */
+  private static function getFabricClientInstance() {
+    return \Drupal::service('hpc_api.fabric_client');
   }
 
   /**
@@ -1199,6 +1338,16 @@ abstract class GHIBlockBase extends HPCBlockBase {
 
     // Make sure that we have a UUID.
     $this->configuration['uuid'] = $this->getUuid();
+  }
+
+  /**
+   * Check if a block can be considered empty.
+   *
+   * @return bool
+   *   TRUE if the block can be considered empty, FALSE otherwise.
+   */
+  public function isEmpty(): bool {
+    return FALSE;
   }
 
   /**

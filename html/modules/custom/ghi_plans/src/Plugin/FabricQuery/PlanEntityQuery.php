@@ -29,25 +29,8 @@ class PlanEntityQuery extends FabricQueryBase {
    *   The plan entity object or NULL if not found.
    */
   public function getPlanEntity(int $entity_id): ?PlanEntity {
-    $entity = $this->objectStore->getObject($entity_id, PlanEntity::getObjectStorageKey());
-    if ($entity) {
-      return $entity;
-    }
-
-    // Get the plan entity.
-    $items = $this->fabricClient->createQuery('logframeEntities', PlanEntity::getGraphQlItems())
-      ->setFilters([
-        'Id' => $entity_id,
-        'RecordStatus' => 'Active',
-      ])
-      ->execute();
-    $item = count($items) == 1 ? reset($items) : NULL;
-    if (!$item) {
-      return NULL;
-    }
-    $entity = new PlanEntity($item);
-    $this->objectStore->addObject($entity);
-    return $entity;
+    $entities = $this->getPlanEntitiesById([$entity_id]);
+    return !empty($entities) ? reset($entities) : NULL;
   }
 
   /**

@@ -2,7 +2,7 @@
 
 namespace Drupal\ghi_plans\Traits;
 
-use Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment;
+use Drupal\ghi_plans\ApiObjects\Attachments\Attachment;
 use Drupal\hpc_common\Helpers\ArrayHelper;
 
 /**
@@ -65,8 +65,8 @@ trait DisaggregatedDataTrait {
    *
    * @param object $data
    *   The disaggregated data received as build by
-   *   DataAttachment::getDisaggregatedData().
-   * @param \Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment $attachment
+   *   Attachment::getDisaggregatedData().
+   * @param \Drupal\ghi_plans\ApiObjects\Attachments\Attachment $attachment
    *   The attachment object to which the data belongs.
    * @param bool $filter_empty_locations
    *   Whether to exclude empty locations.
@@ -76,7 +76,7 @@ trait DisaggregatedDataTrait {
    * @return array
    *   The transformed data.
    */
-  public function transformDisaggregatedMapData(object $data, DataAttachment $attachment, $filter_empty_locations = FALSE, $filter_empty_categories = FALSE): array {
+  public function transformDisaggregatedMapData(object $data, Attachment $attachment, $filter_empty_locations = FALSE, $filter_empty_categories = FALSE): array {
     $transform = [];
     foreach (array_values($data->metrics) as $metric) {
       /** @var \Drupal\hpc_api\ApiObjects\Types\MetricType $metric */

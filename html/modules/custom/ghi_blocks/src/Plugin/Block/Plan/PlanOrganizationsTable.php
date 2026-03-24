@@ -84,6 +84,16 @@ class PlanOrganizationsTable extends GHIBlockBase implements ConfigurableTableBl
   }
 
   /**
+   * {@inheritdoc}
+   */
+  public function isEmpty(): bool {
+    $conf = $this->getBlockConfig();
+    $organizations = $this->getConfiguredOrganizations();
+    $columns = $this->getConfiguredItems($conf['table']['columns']);
+    return (empty($columns) || empty($organizations));
+  }
+
+  /**
    * Build the table data for this element.
    *
    * @return array
@@ -91,10 +101,8 @@ class PlanOrganizationsTable extends GHIBlockBase implements ConfigurableTableBl
    */
   private function buildTableData() {
     $conf = $this->getBlockConfig();
-
     $organizations = $this->getConfiguredOrganizations();
     $columns = $this->getConfiguredItems($conf['table']['columns']);
-
     if (empty($columns) || empty($organizations)) {
       return NULL;
     }
@@ -313,7 +321,7 @@ class PlanOrganizationsTable extends GHIBlockBase implements ConfigurableTableBl
       'page_node' => $this->getPageNode(),
       'plan_object' => $plan_object,
       'base_object' => $this->getCurrentBaseObject(),
-      'projects' => $project_query->getProjectsForPlan($plan_object, $cluster_context instanceof BaseObjectChildInterface ? $cluster_context : NULL),
+      'projects' => $project_query->getProjectsForPlanId($plan_object->getSourceId(), $cluster_context instanceof BaseObjectChildInterface ? $cluster_context : NULL),
     ];
   }
 

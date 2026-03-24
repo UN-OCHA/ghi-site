@@ -17,7 +17,7 @@ use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
 use Drupal\ghi_blocks\Traits\AttachmentTableTrait;
 use Drupal\ghi_form_elements\Helpers\FormElementHelper;
 use Drupal\ghi_form_elements\Traits\ConfigurationContainerTrait;
-use Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment;
+use Drupal\ghi_plans\ApiObjects\Attachments\Attachment;
 use Drupal\ghi_plans\ApiObjects\Entities\PlanEntity;
 use Drupal\hpc_api\Helpers\ArrayHelper;
 use Drupal\hpc_common\Plugin\HPCBlockMetadata;
@@ -184,7 +184,7 @@ class PlanEntityAttachmentsTable extends GHIBlockBase implements ConfigurableTab
       return NULL;
     }
 
-    /** @var \Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment[] $attachments */
+    /** @var \Drupal\ghi_plans\ApiObjects\Attachments\Attachment[] $attachments */
     if ($this->isGroupedTable()) {
       $attachments = $this->getAttachmentsForCurrentEntity();
     }
@@ -255,7 +255,7 @@ class PlanEntityAttachmentsTable extends GHIBlockBase implements ConfigurableTab
   private function getAttachmentsForCurrentEntity() {
     $attachments = $this->getSelectedAttachments() ?? [];
     $entity_id = $this->getCurrentEntityId();
-    $attachments = array_filter($attachments, function (DataAttachment $attachment) use ($entity_id) {
+    $attachments = array_filter($attachments, function (Attachment $attachment) use ($entity_id) {
       $entity = $attachment->getSourceEntity();
       if (!$entity) {
         return NULL;
@@ -544,7 +544,7 @@ class PlanEntityAttachmentsTable extends GHIBlockBase implements ConfigurableTab
   /**
    * Get the attachment objects selected for the current block.
    *
-   * @return \Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment[]
+   * @return \Drupal\ghi_plans\ApiObjects\Attachments\Attachment[]
    *   An array of attachment objects.
    */
   private function getSelectedAttachments() {
@@ -558,7 +558,7 @@ class PlanEntityAttachmentsTable extends GHIBlockBase implements ConfigurableTab
     $attachments = $query->getAttachmentsById($attachment_ids);
     // Filter out non-data attachments.
     $attachments = array_filter($attachments, function ($attachment) {
-      return $attachment instanceof DataAttachment && !empty($attachment->getSourceEntity());
+      return $attachment instanceof Attachment && !empty($attachment->getSourceEntity());
     });
     $this->groupAndSortAttachments($attachments);
     return $attachments;
@@ -567,7 +567,7 @@ class PlanEntityAttachmentsTable extends GHIBlockBase implements ConfigurableTab
   /**
    * Group and sort attachments.
    *
-   * @param \Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment[] $attachments
+   * @param \Drupal\ghi_plans\ApiObjects\Attachments\Attachment[] $attachments
    *   The attachments to group and sort.
    */
   private function groupAndSortAttachments(array &$attachments) {
@@ -587,7 +587,7 @@ class PlanEntityAttachmentsTable extends GHIBlockBase implements ConfigurableTab
     });
     $attachments = [];
     foreach ($entities as $_entity) {
-      uasort($_entity['attachments'], function (DataAttachment $attachment_a, DataAttachment $attachment_b) {
+      uasort($_entity['attachments'], function (Attachment $attachment_a, Attachment $attachment_b) {
         return strnatcmp($attachment_a->getTitle(), $attachment_b->getTitle());
       });
       $attachments = array_merge($attachments, $_entity['attachments']);
@@ -611,7 +611,7 @@ class PlanEntityAttachmentsTable extends GHIBlockBase implements ConfigurableTab
     $attachments = $query->getAttachmentsByObject(['governingEntity', 'planEntity'], $entity_ids, $attachment_type);
     // Filter out non-data attachments.
     $attachments = array_filter($attachments, function ($attachment) {
-      return $attachment instanceof DataAttachment;
+      return $attachment instanceof Attachment;
     });
     return $attachments;
   }
