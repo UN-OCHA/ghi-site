@@ -242,7 +242,7 @@ jobs:
           token: ${{ secrets.SLACK_BOT_TOKEN }}
           payload: |
             {
-              channel-id: '${{ vars.SLACK_CHANNEL }}'
+              "channel": "${{ vars.SLACK_CHANNEL }}",
               "text": "Tests failed for a pull request on ${{ github.repository }}",
               "attachments": [
                 {
