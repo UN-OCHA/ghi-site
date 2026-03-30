@@ -58,7 +58,7 @@
     "require": {
         "php": ">=8.4",
         "composer/installers": "^2.2",
-        "cweagans/composer-patches": "^1.7",
+        "cweagans/composer-patches": "^2.0",
         "drupal/active_tags": "^1.0",
         "drupal/admin_denied": "^2.0.0",
         "drupal/admin_toolbar": "^3.0",
@@ -227,12 +227,13 @@
       ]
     },
     "extra": {
-        "enable-patching": true,
-        "composer-exit-on-patch-failure": true,
-        "patchLevel": {
-            "drupal/core": "-p2"
+        "composer-patches": {
+            "patches-file": "composer.patches.json",
+            "exit-on-patch-failure": true,
+            "package-depths": {
+                "drupal/core": 2
+            }
         },
-        "patches-file": "composer.patches.json",
         "drupal-scaffold": {
             "locations": {
                 "web-root": "html/"

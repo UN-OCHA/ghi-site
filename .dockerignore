@@ -1,4 +1,19 @@
-.docksal
-.git
-.github
-vendor
+# Ignore everything except for the files necessary to build the codebase.
+*
+!assets
+!config
+!config_dev
+!docker
+!html/modules/custom
+!html/themes/custom
+!patches
+!scripts
+!composer.json
+!composer.lock
+!composer.patches.json
+!patches.lock.json
+!symfony.lock
+!load.environment.php
+
+# Ignore the node modules in the common design subtheme.
+html/themes/custom/common_design_subtheme/node_modules

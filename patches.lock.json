@@ -1,0 +1,347 @@
+{
+    "_hash": "114951bb39fcb9817e32a37adaf854edc000b965c78f5e628773304510bc97f1",
+    "patches": {
+        "drupal/core": [
+            {
+                "package": "drupal/core",
+                "description": "Issue #2820359: Add #element_submit and #limit_element_submit just like #element_validate and #limit_validation_errors",
+                "url": "patches/core-element-submit-2820359-121.patch",
+                "sha256": "70b50a5f3a3fb45395c320edc2b59ad98427bce7fc1cbfce409a9c6eaebe91d0",
+                "depth": 2,
+                "extra": {
+                    "provenance": "patches-file:composer.patches.json"
+                }
+            },
+            {
+                "package": "drupal/core",
+                "description": "Issue #2844620: Automatically split headers into multiple lines when they exceed 8k",
+                "url": "patches/core-automatically-split-headers-into-multiple-lines-when-they-exceed-8k-2844620.patch",
+                "sha256": "7d63c2832db9f98849fbebfa9e5d516154bf7ddf3fa477907eb898c9b55322fa",
+                "depth": 2,
+                "extra": {
+                    "provenance": "patches-file:composer.patches.json"
+                }
+            },
+            {
+                "package": "drupal/core",
+                "description": "Issue #3008924: Callers of LayoutEntityHelperTrait::getEntitySections() do not account for the view mode",
+                "url": "./patches/3008924-rerolled-24.patch",
+                "sha256": "42ff4bbbc8bfbc87b072107996bd3af1a04fce1aad89cc634a68d45ff606b91e",
+                "depth": 2,
+                "extra": {
+                    "provenance": "patches-file:composer.patches.json"
+                }
+            },
+            {
+                "package": "drupal/core",
+                "description": "Issue #2902481: Add GROUP_CONCAT aggregate function to views",
+                "url": "https://www.drupal.org/files/issues/2024-08-09/add_group_concat_aggregate-2902481-44.patch",
+                "sha256": "248299a0a10a59763744b211da2131e57c3a031423a238d601a3e4238c5d734a",
+                "depth": 2,
+                "extra": {
+                    "provenance": "patches-file:composer.patches.json"
+                }
+            },
+            {
+                "package": "drupal/core",
+                "description": "Issue #151311: Split 'administer permissions' into a new administer roles permissions",
+                "url": "https://www.drupal.org/files/issues/2023-01-19/split_administer_permissions_151311-72.patch",
+                "sha256": "a3d63a2fb48dd83f358716093332e64b8ece29523cec3083b8a9839eff0a4021",
+                "depth": 2,
+                "extra": {
+                    "provenance": "patches-file:composer.patches.json"
+                }
+            },
+            {
+                "package": "drupal/core",
+                "description": "Issue #2755791: Ajax error ajax.$form.ajaxSubmit() is not a function",
+                "url": "https://www.drupal.org/files/issues/2023-08-07/drupal-ajax-error-2755791-18_0.patch",
+                "sha256": "635be30cfcd8534215dbb6c778888e6414d03327ee64c62778cdbbfa3e5cdf80",
+                "depth": 2,
+                "extra": {
+                    "provenance": "patches-file:composer.patches.json"
+                }
+            },
+            {
+                "package": "drupal/core",
+                "description": "Issue #3001188: Make it possible to add relationships to layout builder",
+                "url": "./patches/3001188-make-it-possible-to-add-relationships-to-layout-builder.patch",
+                "sha256": "2a3d4b7436f7a56f13a59bcaf0e1face624b842633c59db9e87944813f33c2e1",
+                "depth": 2,
+                "extra": {
+                    "provenance": "patches-file:composer.patches.json"
+                }
+            },
+            {
+                "package": "drupal/core",
+                "description": "Issue #2329253: Allow the ChangedItem to skip updating the entity's changed timestamp when synchronizing (f.e. when migrating)",
+                "url": "https://www.drupal.org/files/issues/2024-07-30/2329253-10.x.patch",
+                "sha256": "316697156913cbfe5fd8017432f4f225c7516bd56da11b200c0b24a86e6a6594",
+                "depth": 2,
+                "extra": {
+                    "provenance": "patches-file:composer.patches.json"
+                }
+            },
+            {
+                "package": "drupal/core",
+                "description": "Issue #?? (maybe #2837833): 'Required contexts without a value",
+                "url": "./patches/missing-context-value-in-layout-builder-admin.patch",
+                "sha256": "b041fe6bccb52237a8b8544ff59fa9fea47b24ac159cf8f2b94c54f7fec0b9c7",
+                "depth": 2,
+                "extra": {
+                    "provenance": "patches-file:composer.patches.json"
+                }
+            },
+            {
+                "package": "drupal/core",
+                "description": "Issue #2190333: Make #group FAPI / render feature work on all form/render #types out of the box",
+                "url": "patches/core-form-api-groups-2190333.patch",
+                "sha256": "cadb63dc10950c244159e8e1445d214f67fb60dae761cb68cfe061a7895f2959",
+                "depth": 2,
+                "extra": {
+                    "provenance": "patches-file:composer.patches.json"
+                }
+            },
+            {
+                "package": "drupal/core",
+                "description": "Issue #2585169: Unable to alter local actions prior to rendering",
+                "url": "https://www.drupal.org/files/issues/2024-12-19/2585169-63-10.4.x.patch",
+                "sha256": "9995f49107320a8dd1d8c84ae7add1a543be50175a17bb447c3b9c335e010fde",
+                "depth": 2,
+                "extra": {
+                    "provenance": "patches-file:composer.patches.json"
+                }
+            }
+        ],
+        "drupal/file_mdm": [
+            {
+                "package": "drupal/file_mdm",
+                "description": "Issue #3570037: Deprecated Error",
+                "url": "https://www.drupal.org/files/issues/2026-03-20/file_mdm-nullable-3570037-8.patch",
+                "sha256": "e8594a1ac08db1c7298c350ea792e3a22d6eaf76cf8eb293f6186840410252e4",
+                "depth": 1,
+                "extra": {
+                    "provenance": "patches-file:composer.patches.json"
+                }
+            }
+        ],
+        "drupal/geofield_map": [
+            {
+                "package": "drupal/geofield_map",
+                "description": "Issue #3479680: Hide marker button when the map position is reset",
+                "url": "https://git.drupalcode.org/project/geofield_map/-/merge_requests/22.patch",
+                "sha256": "b2ff77346d75e8d2aa6521f560cc25a47521309b8389c85165388053cb6be064",
+                "depth": 1,
+                "extra": {
+                    "provenance": "patches-file:composer.patches.json"
+                }
+            }
+        ],
+        "drupal/gin_lb": [
+            {
+                "package": "drupal/gin_lb",
+                "description": "Issue #??: Add alter hook for template suggestions trigger",
+                "url": "./patches/hook_gin_lb_add_suggestions_alter-1.0.0-rc8.patch",
+                "sha256": "8779a0ea18a7e4c2c4884f68440bdc9c5f6d8f47acb69adc5e927566358891cc",
+                "depth": 1,
+                "extra": {
+                    "provenance": "patches-file:composer.patches.json"
+                }
+            }
+        ],
+        "drupal/gin_toolbar": [
+            {
+                "package": "drupal/gin_toolbar",
+                "description": "Issue #3121440: Add option for node local tasks in toolbar",
+                "url": "https://www.drupal.org/files/issues/2023-10-20/3121440-49.patch",
+                "sha256": "ad3a241722de6676511c2d1dcacae0bd3ece5912392e02c7cd0010b5ed1fb7da",
+                "depth": 1,
+                "extra": {
+                    "provenance": "patches-file:composer.patches.json"
+                }
+            }
+        ],
+        "drupal/google_tag": [
+            {
+                "package": "drupal/google_tag",
+                "description": "Issue #3388487: GoogleTagUpgradeManager may fail upgrade for some configurations",
+                "url": "https://www.drupal.org/files/issues/2024-01-30/google_tag-db_update_unset_values-3388487-6.patch",
+                "sha256": "d5b42acd4ca7a9fe694c38c7b18b8308c8c8e2413791d7068a58ae87169a92b7",
+                "depth": 1,
+                "extra": {
+                    "provenance": "patches-file:composer.patches.json"
+                }
+            }
+        ],
+        "drupal/image_widget_crop": [
+            {
+                "package": "drupal/image_widget_crop",
+                "description": "Issue #3401986: The containers summary text should not be overwritten",
+                "url": "https://www.drupal.org/files/issues/2023-11-15/3401986-2.patch",
+                "sha256": "dac66defbddda3923b37ff5a55eea1d259655cd6807338471a51d1ba509361da",
+                "depth": 1,
+                "extra": {
+                    "provenance": "patches-file:composer.patches.json"
+                }
+            }
+        ],
+        "drupal/page_manager": [
+            {
+                "package": "drupal/page_manager",
+                "description": "Issue #3176661: Allow to edit page title when using Layout Builder variant",
+                "url": "https://www.drupal.org/files/issues/2022-11-15/page_manager-lb-title-3176661-15.patch",
+                "sha256": "e8cf72b4f8a8a5d4f9cfce58fee23c727b4e48e4c4bb16a7e22ae6601b8e909e",
+                "depth": 1,
+                "extra": {
+                    "provenance": "patches-file:composer.patches.json"
+                }
+            },
+            {
+                "package": "drupal/page_manager",
+                "description": "Issue #3536704: [PHP8.4] Misc NULL deprecation warning on a few files",
+                "url": "https://www.drupal.org/files/issues/2026-03-07/page_manager-php8-4-deprecation-3536704-15.patch",
+                "sha256": "e97c945f609348108156ce95f691f63962ae994dea77f1c5303aa0b541b10c22",
+                "depth": 1,
+                "extra": {
+                    "provenance": "patches-file:composer.patches.json"
+                }
+            }
+        ],
+        "drupal/publishcontent": [
+            {
+                "package": "drupal/publishcontent",
+                "description": "Issue #2820867: Bulk operations actions skip 'publishcontent' defined permissions",
+                "url": "https://www.drupal.org/files/issues/2026-03-31/permissions-for-bulk-operations-2820867-12.patch",
+                "sha256": "6bd3326561f450069c798d46175bdb8f889d8ea98ad06d7fc25de23420f46744",
+                "depth": 1,
+                "extra": {
+                    "provenance": "patches-file:composer.patches.json"
+                }
+            }
+        ],
+        "drupal/rabbit_hole": [
+            {
+                "package": "drupal/rabbit_hole",
+                "description": "Fix Multiple Implicit Nullable Parameters for PHP 8.4 Compatibility",
+                "url": "./patches/3516167-8-x-1.x-52.patch",
+                "sha256": "f886ca76de0d2a8d9307cb523f56fa54dfc1282b1d9086c415713dded5d9c057",
+                "depth": 1,
+                "extra": {
+                    "provenance": "patches-file:composer.patches.json"
+                }
+            }
+        ],
+        "drupal/seckit": [
+            {
+                "package": "drupal/seckit",
+                "description": "Issue #2844205: Provide hook_seckit_options_alter() D8",
+                "url": "./patches/2844205.mr.patch",
+                "sha256": "497d876be5048113a25ff5474563519ba6917927578291ebaabac575a7e17330",
+                "depth": 1,
+                "extra": {
+                    "provenance": "patches-file:composer.patches.json"
+                }
+            }
+        ],
+        "drupal/openid_connect": [
+            {
+                "package": "drupal/openid_connect",
+                "description": "Handle case if user is in blocked state after SSO Authorization",
+                "url": "./patches/openid_connect-3390668-6.patch",
+                "sha256": "3dfdaf6593f62c629db9d4a8701ebb7bf8a6ae9f479c4d5d89e1799d37a5a422",
+                "depth": 1,
+                "extra": {
+                    "provenance": "patches-file:composer.patches.json"
+                }
+            },
+            {
+                "package": "drupal/openid_connect",
+                "description": "Incorrect context in hook_redirect_logout_alter",
+                "url": "./patches/openid_connect-3577436-191.patch",
+                "sha256": "c04ff5f48e1a4e495bc22329b203dd42b0e9cbaa9ec2f0f08e96697dc66c17db",
+                "depth": 1,
+                "extra": {
+                    "provenance": "patches-file:composer.patches.json"
+                }
+            }
+        ],
+        "drupal/openid_connect_windows_aad": [
+            {
+                "package": "drupal/openid_connect_windows_aad",
+                "description": "Failed to get authentication tokens for Windows Azure AD",
+                "url": "./patches/openid_connect_windows_aad-3346603-5.patch",
+                "sha256": "58e490a3bc1eaf6449ae204b3cdb0dd3e589b1209c124f4cac929da2d448472f",
+                "depth": 1,
+                "extra": {
+                    "provenance": "patches-file:composer.patches.json"
+                }
+            }
+        ],
+        "drupal/view_unpublished": [
+            {
+                "package": "drupal/view_unpublished",
+                "description": "Issue #2958568: Add a search api processor for view unpublished",
+                "url": "./patches/2958568-view-unpublished-search-api-access-18.patch",
+                "sha256": "5eeeb2d7fdc32f0d03287512faa81009f62aa621f2431894218ab8097b56a9a6",
+                "depth": 1,
+                "extra": {
+                    "provenance": "patches-file:composer.patches.json"
+                }
+            }
+        ],
+        "drupal/warmer": [
+            {
+                "package": "drupal/warmer",
+                "description": "Issue #3273547: No way to disable cron warming",
+                "url": "./patches/3273547.mr.patch",
+                "sha256": "cad7a48c4dd51168c945c4cfcebd8d64d9f5d779b2e24ced87e22c99fce7be82",
+                "depth": 1,
+                "extra": {
+                    "provenance": "patches-file:composer.patches.json"
+                }
+            }
+        ],
+        "drupal/webp": [
+            {
+                "package": "drupal/webp",
+                "description": "Issue #3325808: Webp Image not generated for styles using original image.",
+                "url": "https://git.drupalcode.org/project/webp/-/merge_requests/35.patch",
+                "sha256": "e1d97512e203ad1ad0c38567c67556907386e27facd035dc7aab4d4b33135a79",
+                "depth": 1,
+                "extra": {
+                    "provenance": "patches-file:composer.patches.json"
+                }
+            },
+            {
+                "package": "drupal/webp",
+                "description": "Issue #3281606: Rendering duplicate images when the original images have the same name but different extension",
+                "url": "patches/webp-duplicate-images-same-name-3281606-30.patch",
+                "sha256": "92fc286a5ac4c223800408d04ad12bc15db205256d6b5a2886f5b94a4981a451",
+                "depth": 1,
+                "extra": {
+                    "provenance": "patches-file:composer.patches.json"
+                }
+            },
+            {
+                "package": "drupal/webp",
+                "description": "Issue #3153137: Using Image Widget Crop in responsive images does not refresh webp image",
+                "url": "./patches/3153137-custom-fix-3281606.patch",
+                "sha256": "b730a0d7ea82c58d5f47183c8b171d71dac3ebb2015689a68930b25ccdc51fc7",
+                "depth": 1,
+                "extra": {
+                    "provenance": "patches-file:composer.patches.json"
+                }
+            },
+            {
+                "package": "drupal/webp",
+                "description": "Issue #3561953: PHP 8.4 implicit nullable & constructor parameter order issues in WebP FileDownloadController",
+                "url": "https://www.drupal.org/files/issues/2026-03-06/3561953-12.patch",
+                "sha256": "93e4f9290326c6be9f9cb8c345692f9935b7503b25034906f85cdb16e03f5314",
+                "depth": 1,
+                "extra": {
+                    "provenance": "patches-file:composer.patches.json"
+                }
+            }
+        ]
+    }
+}
