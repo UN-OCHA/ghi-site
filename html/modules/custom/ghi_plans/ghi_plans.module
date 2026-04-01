@@ -48,7 +48,7 @@ function ghi_plans_cron() {
   $query = $storage->getQuery();
   $query->accessCheck(FALSE);
   $query->condition('type', 'plan');
-  $query->sort('field_requirements_updated', 'DESC');
+  $query->sort('field_requirements_updated');
   $query->pager(50);
   $results = $query->execute();
   $plans = $storage->loadMultiple($results);
