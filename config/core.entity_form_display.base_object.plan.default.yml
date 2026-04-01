@@ -26,6 +26,7 @@ dependencies:
     - field.field.base_object.plan.field_plan_type
     - field.field.base_object.plan.field_released
     - field.field.base_object.plan.field_requirements
+    - field.field.base_object.plan.field_requirements_updated
     - field.field.base_object.plan.field_restricted
     - field.field.base_object.plan.field_short_name
     - field.field.base_object.plan.field_subtitle
@@ -409,4 +410,5 @@ content:
       placeholder: ''
     third_party_settings: {  }
 hidden:
+  field_requirements_updated: true
   langcode: true
