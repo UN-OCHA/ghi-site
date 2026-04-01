@@ -28,16 +28,8 @@ class LocationQuery extends FabricQueryBase {
    *   A location object.
    */
   public function getLocation(int $location_id): ?Location {
-    $items = $this->fabricClient->createQuery('locations', Location::getGraphQlItems(), NULL, 1)
-      ->setFilter('Id', $location_id)
-      ->execute();
-    $item = count($items) == 1 ? reset($items) : NULL;
-    if (!$item) {
-      return NULL;
-    }
-    $location = new Location($item);
-    $this->objectStore->addObject($location);
-    return $location;
+    $locations = $this->getLocationsById([$location_id]);
+    return !empty($locations) ? reset($locations) : NULL;
   }
 
   /**
@@ -53,16 +45,28 @@ class LocationQuery extends FabricQueryBase {
     if (empty($location_ids)) {
       return [];
     }
-    if (count($location_ids) > self::MAX_FILTER_COUNT_ARRAY) {
-      // We need to do multiple queries.
-      return $this->doChunkedQuery($location_ids, fn ($ids): array => $this->getLocationsById($ids));
+
+    $location_ids = array_unique($location_ids);
+    $locations = $this->objectStore->getObjects($location_ids, Location::getObjectStorageKey());
+    if (count($locations) == count($location_ids)) {
+      return $locations;
     }
-    $items = $this->fabricClient->createQuery('locations', Location::getGraphQlItems())
-      ->setFilter('Id', $location_ids)
-      ->execute() ?: [];
-    $locations = $this->buildResultObjects($items, Location::class);
-    $locations = array_filter($locations, fn ($location) => is_int($location->getRawData()->AdminLevel));
-    $this->objectStore->addObjects($locations);
+    $location_ids = array_diff($location_ids, array_keys($locations));
+    sort($location_ids);
+
+    if (!empty($location_ids)) {
+      if (count($location_ids) > self::MAX_FILTER_COUNT_ARRAY) {
+        // We need to do multiple queries.
+        return $this->doChunkedQuery($location_ids, fn ($ids): array => $this->getLocationsById($ids));
+      }
+      $items = $this->fabricClient->createQuery('locations', Location::getGraphQlItems())
+        ->setFilter('Id', $location_ids)
+        ->execute() ?: [];
+      $new_locations = $this->buildResultObjects($items, Location::class);
+      $new_locations = array_filter($new_locations, fn ($location) => is_int($location->getRawData()->AdminLevel));
+      $this->objectStore->addObjects($new_locations);
+      $locations += $new_locations;
+    }
     return $locations;
   }
 
@@ -83,7 +87,9 @@ class LocationQuery extends FabricQueryBase {
       ->setFilter('AdminLevel', range(1, $max_level))
       ->setFilter('RecordStatus', 'Active')
       ->execute() ?: [];
-    return $this->buildResultObjects($items, Location::class);
+    $locations = $this->buildResultObjects($items, Location::class);
+    $this->objectStore->addObjects($locations);
+    return $locations;
   }
 
 }

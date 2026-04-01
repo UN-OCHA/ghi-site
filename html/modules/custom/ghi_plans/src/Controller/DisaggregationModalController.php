@@ -136,7 +136,7 @@ class DisaggregationModalController extends ControllerBase {
     // object with the properties 'locations', 'categories' and 'metrics'.
     // The latter two are for lookups, the actual data is contained in the
     // items under 'locations'.
-    $disaggregated_data = $attachment->getDisaggregatedData($reporting_period);
+    $disaggregated_data = $attachment->getDisaggregatedData($reporting_period, $metric_type);
     if (empty($disaggregated_data->metrics[$metric_type->id()])) {
       return [
         '#type' => 'html_tag',
@@ -154,7 +154,7 @@ class DisaggregationModalController extends ControllerBase {
     }
 
     // Get the categories.
-    $categories = $attachment->getDisaggregatedCategories($reporting_period, TRUE, TRUE);
+    $categories = $disaggregated_data->categories;
 
     // Build the table.
     $header = [
@@ -193,7 +193,6 @@ class DisaggregationModalController extends ControllerBase {
 
     // Get a shortcut to the actual location data.
     $locations = array_map(fn ($location) => $location->location, $disaggregated_data->locations);
-
     foreach ($disaggregated_data->locations as $location) {
       $row = [];
       $parents = array_key_exists('id', $location->location) ? $this->getLocationParents($locations, $location->location['id']) : NULL;
@@ -205,18 +204,19 @@ class DisaggregationModalController extends ControllerBase {
         $row[] = implode(' > ', $parents);
       }
 
-      if (!empty($location->categories)) {
-        foreach ($location->categories as $key => $category) {
-          $totals[$key] = (int) ($totals[$key] ?? 0) + (int) ($category[$metric_type->id()] ?? 0);
+      if (!empty($categories)) {
+        foreach (array_keys($categories) as $key) {
+          $category_value = $location->categories[$key][$metric_type->id()] ?? NULL;
+          $totals[$key] = (int) ($totals[$key] ?? 0) + (int) ($category_value ?? 0);
           $row[] = [
             'data' => [
               '#theme' => 'hpc_autoformat_value',
-              '#value' => $category[$metric_type->id()],
+              '#value' => $category_value,
               '#unit_type' => $unit_type,
               '#unit_defaults' => $unit_defaults,
               '#decimal_format' => $decimal_format,
             ],
-            'data-sort-value' => $category[$metric_type->id()],
+            'data-sort-value' => $category_value,
             'data-sort-type' => 'numeric',
             'data-column-type' => $unit_type,
             'data-formatting' => 'numeric-full',
@@ -243,7 +243,10 @@ class DisaggregationModalController extends ControllerBase {
         $totals[0] = ($totals[0] ?? 0) + (int) $location['total'];
       }
 
-      $rows[] = $row;
+      $rows[] = [
+        'data' => $row,
+        'data-location-id' => $location->location['id'],
+      ];
     }
 
     $total_row = [
@@ -252,8 +255,8 @@ class DisaggregationModalController extends ControllerBase {
       ],
       'class' => 'totals-row',
     ];
-    if (!empty($location->categories)) {
-      foreach ($location->categories as $key => $category) {
+    if (!empty($categories)) {
+      foreach (array_keys($categories) as $key) {
         $total_row['data'][] = [
           'data' => [
             '#theme' => 'hpc_autoformat_value',
@@ -292,6 +295,7 @@ class DisaggregationModalController extends ControllerBase {
       '#header' => $header,
       '#rows' => $rows,
       '#sticky_rows' => [$total_row],
+      '#sticky' => TRUE,
       '#empty' => $this->t('We could not find suitable information to display here.', [], $t_options),
       '#sortable' => TRUE,
     ];

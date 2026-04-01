@@ -3,6 +3,7 @@
 namespace Drupal\ghi_plans\Traits;
 
 use Drupal\ghi_plans\ApiObjects\Attachments\Attachment;
+use Drupal\hpc_api\ApiObjects\Types\MetricType;
 use Drupal\hpc_common\Helpers\ArrayHelper;
 
 /**
@@ -56,8 +57,36 @@ trait DisaggregatedDataTrait {
       'metrics' => $metrics,
       'categories' => $categories,
     ];
-
     return $disaggregated;
+  }
+
+  /**
+   * Filter the given data by the given metric type.
+   *
+   * @param object $data
+   *   The disaggregated data to filter.
+   * @param \Drupal\hpc_api\ApiObjects\Types\MetricType $metric_type
+   *   The metric type to filter by.
+   *
+   * @return object
+   *   The filtered data.
+   */
+  public function filterDisaggregatedData($data, MetricType $metric_type) {
+    foreach ($data->locations as $location_id => &$location) {
+      if (empty($location->totals[$metric_type->id()])) {
+        unset($data->locations[$location_id]);
+      }
+      foreach ($location->categories as $category_id => $values) {
+        if (empty($values[$metric_type->id()])) {
+          unset($location->categories[$category_id]);
+        }
+        else {
+          $keep_categories[$category_id] = TRUE;
+        }
+      }
+    }
+    $data->categories = empty($keep_categories) ? [] : array_intersect_key($data->categories, $keep_categories);
+    return $data;
   }
 
   /**

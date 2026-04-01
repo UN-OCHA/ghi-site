@@ -78,7 +78,10 @@
 
       thead {
         th {
-          white-space: nowrap;
+          position: relative;
+          padding-right: 1rem;
+          vertical-align: bottom;
+          white-space: inherit;
           text-transform: uppercase;
           color: var(--ghi-default-text-color);
           border-bottom: 1px solid var(--cd-default-border-color);
@@ -93,7 +96,7 @@
         &.sorttable-sorted,
         &.sorttable-sorted-reverse {
           // Make room for the sortable icon.
-          padding-right: 5px;
+          padding-right: 1rem;
 
           & > span {
             display: inline-block;
@@ -106,9 +109,9 @@
         &:not(.sorttable-nosort)::after,
         &.sorttable-sorted::after,
         &.sorttable-sorted-reverse::after {
-          position: relative;
-          top: 4px;
-          left: 5px;
+          position: absolute;
+          right: 0;
+          bottom: 1.6rem;
           display: inline-block;
           width: 11px;
           height: 19px;
@@ -151,6 +154,10 @@
           &.empty.no-plan {
             opacity: 0.5;
           }
+        }
+
+        td {
+          padding: 1.5rem 1rem 1.5rem 2rem;
         }
 
         td:first-child.subrow {
