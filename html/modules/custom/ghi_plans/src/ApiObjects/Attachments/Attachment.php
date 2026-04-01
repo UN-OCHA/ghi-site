@@ -20,6 +20,7 @@ use Drupal\ghi_plans\Traits\DisaggregatedDataTrait;
 use Drupal\ghi_plans\Traits\PlanQueryTrait;
 use Drupal\ghi_plans\Traits\PlanReportingPeriodTrait;
 use Drupal\hpc_api\ApiObjects\ApiObjectBase;
+use Drupal\hpc_api\ApiObjects\Types\MetricType;
 use Drupal\hpc_api\ApiObjects\Types\Unit;
 use Drupal\hpc_api\Traits\DateTimeTrait;
 use Drupal\hpc_api\Traits\SimpleCacheTrait;
@@ -110,7 +111,7 @@ class Attachment extends ApiObjectBase implements AttachmentInterface {
     // 'IsLocked',
     // phpcs:disable Squiz.Arrays.ArrayDeclaration.KeySpecified
     'attachmentFact' => [
-      'filter' => ['IsTotal' => TRUE],
+      'filter' => ['IsTotal' => TRUE, 'LocationId' => NULL],
       'items' => AttachmentFact::GRAPHQL_ITEMS,
     ],
     'measurement' => ['items' => Measurement::GRAPHQL_ITEMS],
@@ -619,7 +620,7 @@ class Attachment extends ApiObjectBase implements AttachmentInterface {
    *   TRUE if the attachment can be mapped, FALSE otherwise.
    */
   public function canBeMapped($reporting_period) {
-    $disaggregated_data = $this->getDisaggregatedData($reporting_period, TRUE);
+    $disaggregated_data = $this->getDisaggregatedData($reporting_period);
     foreach ($disaggregated_data->locations as $location) {
       if (empty($location->totals)) {
         continue;
@@ -666,15 +667,13 @@ class Attachment extends ApiObjectBase implements AttachmentInterface {
    *
    * @param array $reporting_period_ids
    *   The reporting periods to process.
-   * @param bool $filter_empty_locations
-   *   Whether to exclude empty locations.
-   * @param bool $filter_empty_categories
-   *   Whether to exclude empty categories.
+   * @param \Drupal\hpc_api\ApiObjects\Types\MetricType $metric_type
+   *   Optional metric type to filter by.
    *
    * @return array
    *   An array of disaggregated data arrays per reporting period.
    */
-  public function getDisaggregatedDataMultiple(array $reporting_period_ids = [], $filter_empty_locations = FALSE, $filter_empty_categories = FALSE) {
+  public function getDisaggregatedDataMultiple(array $reporting_period_ids = [], ?MetricType $metric_type = NULL) {
     $map_data = [];
     $attachment_data = $this->getRawData();
     if (empty($attachment_data) || empty($reporting_period_ids)) {
@@ -692,7 +691,7 @@ class Attachment extends ApiObjectBase implements AttachmentInterface {
       if (!array_key_exists($reporting_period_id, $reporting_periods)) {
         continue;
       }
-      $disaggregated_data = $this->getDisaggregatedData($reporting_period_id, $filter_empty_locations, $filter_empty_categories);
+      $disaggregated_data = $this->getDisaggregatedData($reporting_period_id, $metric_type);
       if (empty($disaggregated_data)) {
         continue;
       }
@@ -709,11 +708,13 @@ class Attachment extends ApiObjectBase implements AttachmentInterface {
    *
    * @param int|string $reporting_period
    *   Either the id of a period, or the string latest.
+   * @param \Drupal\hpc_api\ApiObjects\Types\MetricType $metric_type
+   *   Optional metric type to filter by.
    *
    * @return object
    *   An object with disaggregated data.
    */
-  public function getDisaggregatedData($reporting_period = 'latest'): ?object {
+  public function getDisaggregatedData($reporting_period = 'latest', ?MetricType $metric_type = NULL): ?object {
     // First check if we have already processed this data.
     $cache_key = $this->getCacheKey([
       'attachment_id' => $this->id(),
@@ -721,92 +722,77 @@ class Attachment extends ApiObjectBase implements AttachmentInterface {
       'updated' => $this->getLastUpdated(),
     ]);
 
-    $cached_data = $this->cache($cache_key);
-    if ($cached_data !== NULL) {
-      return $cached_data;
-    }
+    // $data = $this->cache($cache_key);
+    $data = NULL;
+    if (!$data) {
+      // Get the disaggregated base data.
+      $disaggregated = $this->getDisaggregated();
+      // Get the disaggregated measurement data.
+      $measurement = $this->getMeasurement($reporting_period);
+      $disaggregated_measurements = $measurement?->getDisaggregated();
 
-    // Get the disaggregated base data.
-    $disaggregated = $this->getDisaggregated();
+      // Load the locations that we actually need.
+      $location_ids = array_merge(array_keys($disaggregated->locations), array_keys($disaggregated_measurements?->locations ?? []));
+      $locations = !empty($location_ids) ? ($this->getLocationQuery()?->getLocationsById($location_ids) ?? []) : [];
 
-    // Get the disaggregated measurement data.
-    $measurement = $this->getMeasurement($reporting_period);
-    $disaggregated_measurements = $measurement?->getDisaggregated();
+      $cache_tags = [];
 
-    // Load the locations that we actually need.
-    $location_ids = array_merge(array_keys($disaggregated->locations), array_keys($disaggregated_measurements?->locations ?? []));
-    $locations = !empty($location_ids) ? ($this->getLocationQuery()?->getLocationsById($location_ids) ?? []) : [];
-
-    $cache_tags = [];
-
-    $data = (object) [
-      'locations' => [],
-      'metrics' => $disaggregated->metrics + ($disaggregated_measurements?->metrics ?? []),
-      'categories' => $disaggregated->categories + ($disaggregated_measurements?->categories ?? []),
-    ];
-
-    // Base data (disaggregated target totals).
-    foreach ($locations as $location) {
-      if ($location->isCountry()) {
-        continue;
-      }
-      $location_id = $location->id();
-      // Base data (disaggregated target totals).
-      $data->locations[$location_id] = (object) [
-        'location' => $location->getGeoJsonLocationData(),
-        'totals' => $disaggregated->locations[$location_id]?->totals ?? [],
-        'categories' => $disaggregated->locations[$location_id]?->categories ?? [],
+      $data = (object) [
+        'locations' => [],
+        'metrics' => $disaggregated->metrics + ($disaggregated_measurements?->metrics ?? []),
+        'categories' => $disaggregated->categories + ($disaggregated_measurements?->categories ?? []),
       ];
-      $cache_tags = Cache::mergeTags($cache_tags, $location->getCacheTags());
-    }
 
-    // Merge in the measurement data if available.
-    if ($disaggregated_measurements) {
+      // Base data (disaggregated target totals).
       foreach ($locations as $location) {
         if ($location->isCountry()) {
           continue;
         }
         $location_id = $location->id();
-        if (empty($data->locations[$location_id])) {
-          $data->locations[$location_id] = (object) [
-            'location' => $location->getGeoJsonLocationData(),
-            'totals' => $disaggregated_measurements->locations[$location_id]?->totals ?? [],
-            'categories' => $disaggregated_measurements->locations[$location_id]?->categories ?? [],
-          ];
-          $cache_tags = Cache::mergeTags($cache_tags, $location->getCacheTags());
-        }
-        else {
-          $data->locations[$location_id]->totals += $disaggregated_measurements->locations[$location_id]?->totals ?? [];
-          foreach ($disaggregated_measurements->locations[$location_id]?->categories ?? [] as $category_id => $values) {
-            $data->locations[$location_id]->categories[$category_id] = $data->locations[$location_id]->categories[$category_id] ?? [];
-            $data->locations[$location_id]->categories[$category_id] += $values;
+        // Base data (disaggregated target totals).
+        $data->locations[$location_id] = (object) [
+          'location' => $location->getGeoJsonLocationData(),
+          'totals' => $disaggregated->locations[$location_id]?->totals ?? [],
+          'categories' => $disaggregated->locations[$location_id]?->categories ?? [],
+        ];
+        $cache_tags = Cache::mergeTags($cache_tags, $location->getCacheTags());
+      }
+
+      // Merge in the measurement data if available.
+      if ($disaggregated_measurements) {
+        foreach ($locations as $location) {
+          if ($location->isCountry()) {
+            continue;
+          }
+          $location_id = $location->id();
+          if (empty($data->locations[$location_id])) {
+            $data->locations[$location_id] = (object) [
+              'location' => $location->getGeoJsonLocationData(),
+              'totals' => $disaggregated_measurements->locations[$location_id]?->totals ?? [],
+              'categories' => $disaggregated_measurements->locations[$location_id]?->categories ?? [],
+            ];
+            $cache_tags = Cache::mergeTags($cache_tags, $location->getCacheTags());
+          }
+          else {
+            $data->locations[$location_id]->totals += $disaggregated_measurements->locations[$location_id]?->totals ?? [];
+            foreach ($disaggregated_measurements->locations[$location_id]?->categories ?? [] as $category_id => $values) {
+              $data->locations[$location_id]->categories[$category_id] = $data->locations[$location_id]->categories[$category_id] ?? [];
+              $data->locations[$location_id]->categories[$category_id] += $values;
+            }
           }
         }
+        $data->metrics += $disaggregated_measurements->metrics;
+        $data->categories += $disaggregated_measurements->categories;
       }
-      $data->metrics += $disaggregated_measurements->metrics;
-      $data->categories += $disaggregated_measurements->categories;
+
+      $this->setCacheTags($cache_tags);
+      $this->cache($cache_key, $data, FALSE, NULL, $cache_tags);
+    }
+    if ($metric_type) {
+      $this->filterDisaggregatedData($data, $metric_type);
     }
 
-    $this->setCacheTags($cache_tags);
-    return $this->cache($cache_key, $data, FALSE, NULL, $cache_tags);
-  }
-
-  /**
-   * Retrieve the categories used in the disaggregation.
-   *
-   * @param int|string $reporting_period
-   *   Either the id of a period, or the string latest.
-   * @param bool $filter_empty_locations
-   *   Whether to exclude empty locations.
-   * @param bool $filter_empty_categories
-   *   Whether to exclude empty categories.
-   *
-   * @return array
-   *   Array with a list of category objects as retrieved from the API.
-   */
-  public function getDisaggregatedCategories($reporting_period = 'latest', $filter_empty_locations = FALSE, $filter_empty_categories = FALSE) {
-    $disaggregated_data = $this->getDisaggregatedData($reporting_period, $filter_empty_locations, $filter_empty_categories);
-    return $disaggregated_data->categories;
+    return $data;
   }
 
   /**

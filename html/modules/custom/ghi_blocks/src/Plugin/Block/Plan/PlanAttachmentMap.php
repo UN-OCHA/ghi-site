@@ -244,7 +244,7 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
     // If more than one monitoring periods have been selected, add a a variant
     // drop-down.
     if (count($configured_reporting_periods) > 1) {
-      $disaggregated_data_multiple_periods = $attachment->getDisaggregatedDataMultiple($configured_reporting_periods, FALSE, FALSE);
+      $disaggregated_data_multiple_periods = $attachment->getDisaggregatedDataMultiple($configured_reporting_periods);
       if (!empty($disaggregated_data_multiple_periods)) {
         foreach ($disaggregated_data_multiple_periods as $period_data) {
           /** @var \Drupal\ghi_plans\ApiObjects\PlanReportingPeriod $reporting_period */

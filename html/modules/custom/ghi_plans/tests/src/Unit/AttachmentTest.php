@@ -460,10 +460,6 @@ class AttachmentTest extends ApiObjectTestBase {
     $this->assertObjectHasProperty('metrics', $disaggregated_data);
     $this->assertObjectHasProperty('categories', $disaggregated_data);
 
-    $this->assertIsArray($attachment->getDisaggregatedCategories());
-    $this->assertEquals($disaggregated_data->categories, $attachment->getDisaggregatedCategories());
-    $this->assertEmpty($attachment->getDisaggregatedCategories());
-
     $this->assertCount(2, $disaggregated_data->metrics);
     $this->assertEquals('In need', $disaggregated_data->metrics[3]->getName());
     $this->assertEquals('in_need', $disaggregated_data->metrics[3]->getMachineName());
@@ -477,29 +473,13 @@ class AttachmentTest extends ApiObjectTestBase {
     // Confirm the number of locations.
     $this->assertCount(214, $disaggregated_data->locations);
 
-    $disaggregated_data = $attachment->getDisaggregatedData('latest', TRUE, FALSE);
+    $disaggregated_data = $attachment->getDisaggregatedData('latest', $disaggregated_data->metrics[3]);
     $this->assertCount(2, $disaggregated_data->metrics);
     $this->assertCount(214, $disaggregated_data->locations);
 
-    $disaggregated_data = $attachment->getDisaggregatedData('latest', FALSE, TRUE);
+    $disaggregated_data = $attachment->getDisaggregatedData('latest', $disaggregated_data->metrics[5]);
     $this->assertCount(2, $disaggregated_data->metrics);
-    $this->assertCount(214, $disaggregated_data->locations);
-
-    $disaggregated_data = $attachment->getDisaggregatedData('latest', TRUE, TRUE);
-    $this->assertCount(2, $disaggregated_data->metrics);
-    $this->assertCount(214, $disaggregated_data->locations);
-
-    $disaggregated_data = $attachment->getDisaggregatedData('latest', TRUE, FALSE, TRUE);
-    $this->assertCount(2, $disaggregated_data->metrics);
-    $this->assertCount(214, $disaggregated_data->locations);
-
-    $disaggregated_data = $attachment->getDisaggregatedData('latest', FALSE, TRUE, TRUE);
-    $this->assertCount(2, $disaggregated_data->metrics);
-    $this->assertCount(214, $disaggregated_data->locations);
-
-    $disaggregated_data = $attachment->getDisaggregatedData('latest', TRUE, TRUE, TRUE);
-    $this->assertCount(2, $disaggregated_data->metrics);
-    $this->assertCount(214, $disaggregated_data->locations);
+    $this->assertCount(128, $disaggregated_data->locations);
   }
 
   /**

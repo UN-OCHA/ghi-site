@@ -300,7 +300,13 @@ class FabricQuery implements \Stringable {
     $filter = $filter ?? $this->filters;
     $strings = [];
     foreach (($filter ?? []) as $key => $value) {
-      if (is_numeric($value)) {
+      if (is_null($value)) {
+        $strings[] = $key . ': { isNull: true }';
+      }
+      elseif (is_string($value) && $value === 'NOT NULL') {
+        $strings[] = $key . ': { isNull: false }';
+      }
+      elseif (is_numeric($value)) {
         $strings[] = $key . ': { eq: ' . $value . ' }';
       }
       elseif (is_string($value)) {
