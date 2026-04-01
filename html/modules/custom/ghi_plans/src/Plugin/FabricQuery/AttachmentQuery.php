@@ -286,9 +286,8 @@ class AttachmentQuery extends FabricQueryBase {
     return $this->fabricClient->createQuery('attachmentFacts', AttachmentFact::getGraphQlItems())
       ->setFilters([
         'AttachmentId' => $attachment_id,
-        'IsTotal' => FALSE,
+        'LocationId' => 'NOT NULL',
       ])
-      ->setLimit(100000)
       ->execute() ?: [];
   }
 

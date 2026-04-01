@@ -68,7 +68,7 @@ class Measurement extends ApiObjectBase implements MeasurementInterface {
     // 'IsLocked',
     // phpcs:disable Squiz.Arrays.ArrayDeclaration.KeySpecified
     'measurementFact' => [
-      'filter' => ['IsTotal' => TRUE],
+      'filter' => ['IsTotal' => TRUE, 'LocationId' => NULL],
       'items' => MeasurementFact::GRAPHQL_ITEMS,
     ],
     // phpcs:enable Squiz.Arrays.ArrayDeclaration.KeySpecified
