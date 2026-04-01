@@ -7,6 +7,8 @@ namespace Drupal\hpc_api\Traits;
  */
 trait SimpleCacheTrait {
 
+  use DateTimeTrait;
+
   /**
    * Build a cache key from an associative array.
    *
@@ -107,16 +109,6 @@ trait SimpleCacheTrait {
    */
   private static function getCacheLifetime() {
     return \Drupal::config('hpc_api.settings')->get('cache_lifetime');
-  }
-
-  /**
-   * Get the time of the request.
-   *
-   * @return int
-   *   The unix timestamp of the request.
-   */
-  private static function getRequestTime() {
-    return \Drupal::time()->getRequestTime();
   }
 
 }

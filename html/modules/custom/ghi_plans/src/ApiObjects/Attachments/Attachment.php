@@ -212,7 +212,7 @@ class Attachment extends ApiObjectBase implements AttachmentInterface {
    *   A timestamp.
    */
   public function getLastUpdated() {
-    return $this->getTimestamp($this->getRawData()->UpdatedAt);
+    return self::getTimestamp($this->getRawData()->UpdatedAt);
   }
 
   /**

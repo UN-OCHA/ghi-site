@@ -26,6 +26,7 @@ dependencies:
     - field.field.base_object.plan.field_plan_type
     - field.field.base_object.plan.field_released
     - field.field.base_object.plan.field_requirements
+    - field.field.base_object.plan.field_requirements_updated
     - field.field.base_object.plan.field_restricted
     - field.field.base_object.plan.field_short_name
     - field.field.base_object.plan.field_subtitle
@@ -247,6 +248,25 @@ content:
       prefix_suffix: true
     third_party_settings: {  }
     weight: 28
+    region: content
+  field_requirements_updated:
+    type: timestamp
+    label: above
+    settings:
+      date_format: medium
+      custom_date_format: ''
+      timezone: ''
+      tooltip:
+        date_format: long
+        custom_date_format: ''
+      time_diff:
+        enabled: false
+        future_format: '@interval hence'
+        past_format: '@interval ago'
+        granularity: 2
+        refresh: 60
+    third_party_settings: {  }
+    weight: 31
     region: content
   field_restricted:
     type: boolean

@@ -40,11 +40,18 @@ function ghi_plans_entity_bundle_info_alter(array &$bundles) {
 
 /**
  * Implements hook_cron().
+ *
+ * Update the requirements for the plan.
  */
 function ghi_plans_cron() {
-  $plans = \Drupal::entityTypeManager()->getStorage('base_object')->loadByProperties([
-    'type' => 'plan',
-  ]);
+  $storage = \Drupal::entityTypeManager()->getStorage('base_object');
+  $query = $storage->getQuery();
+  $query->accessCheck(FALSE);
+  $query->condition('type', 'plan');
+  $query->sort('field_requirements_updated', 'DESC');
+  $query->pager(50);
+  $results = $query->execute();
+  $plans = $storage->loadMultiple($results);
   foreach ($plans as $plan) {
     if (!$plan instanceof Plan) {
       continue;
