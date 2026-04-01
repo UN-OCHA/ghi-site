@@ -509,6 +509,7 @@ class AttachmentTest extends ApiObjectTestBase {
     /** @var \Drupal\ghi_plans\ApiObjects\Attachments\CaseloadAttachment $attachment */
     $attachment = $this->getAttachmentFromFixture('caseload');
     $this->assertInstanceOf(CaseloadAttachment::class, $attachment);
+
     $this->assertEquals('BP1', $attachment->getTitle());
     $this->assertEquals('BP1', $attachment->getCustomIdWithRefCode());
     $this->assertEquals('BP1', $attachment->getComposedReference());
@@ -689,6 +690,10 @@ class AttachmentTest extends ApiObjectTestBase {
     }
     $attachment_prototype = new AttachmentPrototype($prototype);
     (new \ReflectionClass($attachment::class))->getProperty('prototype')->setValue($attachment, $attachment_prototype);
+
+    // Build the disaggregated data based on the facts.
+    $facts = array_map(fn ($item) => new AttachmentFact($item), (array) ($attachment->getRawData()->disaggregated ?: []));
+    $this->setPrivateProperty($attachment, 'disaggregated', $attachment->buildDisaggregatedData($facts));
 
     return $attachment;
   }
