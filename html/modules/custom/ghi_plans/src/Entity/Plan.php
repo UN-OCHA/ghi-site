@@ -16,6 +16,7 @@ use Drupal\ghi_plans\Traits\AttachmentFilterTrait;
 use Drupal\ghi_plans\Traits\FtsLinkTrait;
 use Drupal\ghi_plans\Traits\PlanQueryTrait;
 use Drupal\ghi_plans\Traits\PlanTypeTrait;
+use Drupal\hpc_api\Traits\DateTimeTrait;
 use Drupal\hpc_common\Helpers\CommonHelper;
 
 /**
@@ -27,6 +28,7 @@ class Plan extends BaseObject implements BaseObjectMetaDataInterface, BaseObject
   use FtsLinkTrait;
   use AttachmentFilterTrait;
   use PlanQueryTrait;
+  use DateTimeTrait;
 
   public const BUNDLE = 'plan';
   public const CLUSTER_TYPE_CLUSTER = 'cluster';
@@ -286,6 +288,9 @@ class Plan extends BaseObject implements BaseObjectMetaDataInterface, BaseObject
       }
     }
     $this->get('field_requirements')->setValue($requirements);
+    if ($this->hasField('field_requirements_updated')) {
+      $this->get('field_requirements_updated')->setValue(self::getRequestTime());
+    }
   }
 
   /**
