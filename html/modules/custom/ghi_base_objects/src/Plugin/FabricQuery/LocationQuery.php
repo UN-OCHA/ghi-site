@@ -61,6 +61,7 @@ class LocationQuery extends FabricQueryBase {
       ->setFilter('Id', $location_ids)
       ->execute() ?: [];
     $locations = $this->buildResultObjects($items, Location::class);
+    $locations = array_filter($locations, fn ($location) => is_int($location->getRawData()->AdminLevel));
     $this->objectStore->addObjects($locations);
     return $locations;
   }
