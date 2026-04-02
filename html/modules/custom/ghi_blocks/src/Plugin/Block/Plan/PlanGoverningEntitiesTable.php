@@ -91,6 +91,13 @@ class PlanGoverningEntitiesTable extends GHIBlockBase implements ConfigurableTab
   /**
    * {@inheritdoc}
    */
+  public function isEmpty(): bool {
+    return empty($this->getEntityObjects());
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function buildContent() {
     $table_data = $this->buildTableData();
     if (empty($table_data)) {
