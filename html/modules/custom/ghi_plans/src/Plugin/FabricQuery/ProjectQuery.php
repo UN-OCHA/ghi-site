@@ -109,22 +109,18 @@ class ProjectQuery extends FabricQueryBase {
    *   An array of project objects.
    */
   public function getProjectsForPlanId(int $plan_id, ?BaseObjectChildInterface $context_base_object = NULL, ?int $organization_id = NULL): array {
-    // Try to get the requested attachments from the object store.
-    $projects = $this->objectStore->getObjectCollection(Project::getObjectStorageKey(), 'PlanId', $plan_id);
-    if (empty($projects)) {
-      $items = $this->fabricClient->createQuery('projects', Project::getGraphQlItems())
-        ->setFilter('PlanId', $plan_id)
-        ->setFilter('IsPublished', TRUE)
-        ->setOrderBy(['ProjectCode' => 'ASC'])
-        ->execute() ?: [];
+    $items = $this->fabricClient->createQuery('projects', Project::getGraphQlItems())
+      ->setFilter('PlanId', $plan_id)
+      ->setFilter('IsPublished', TRUE)
+      ->setOrderBy(['ProjectCode' => 'ASC'])
+      ->execute() ?: [];
 
-      // Fetch organizations, clusters and location ids.
-      $this->addOrganizationsToProjectItems($items);
-      $this->addFieldClustersToProjectItems($items);
-      $this->addLocationIdsToProjectItems($items);
-      $projects = $this->buildResultObjects($items, Project::class);
-      $this->objectStore->addObjectCollection($projects, Project::getObjectStorageKey(), 'PlanId');
-    }
+    // Fetch organizations, clusters and location ids.
+    $this->addOrganizationsToProjectItems($items);
+    $this->addFieldClustersToProjectItems($items);
+    $this->addLocationIdsToProjectItems($items);
+    /** @var \Drupal\ghi_plans\ApiObjects\Project[] $projects */
+    $projects = $this->buildResultObjects($items, Project::class);
 
     if ($context_base_object instanceof GoverningEntity) {
       $projects = array_filter($projects, fn ($project) => in_array($context_base_object->getSourceId(), $project->getClusterIds()));
