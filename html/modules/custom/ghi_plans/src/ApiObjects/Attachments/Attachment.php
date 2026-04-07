@@ -654,9 +654,12 @@ class Attachment extends ApiObjectBase implements AttachmentInterface {
    */
   public function getDisaggregated(): object {
     if (!$this->disaggregated) {
-      $attachment_query = $this->getAttachmentQuery();
-      $disaggregated_data = $attachment_query?->getAttachmentDisaggregatedData($this->id());
-      $facts = array_map(fn ($item) => new AttachmentFact($item), (array) ($disaggregated_data ?: []));
+      $facts = [];
+      if ($this->hasDisaggregatedData()) {
+        $attachment_query = $this->getAttachmentQuery();
+        $disaggregated_data = $attachment_query?->getAttachmentDisaggregatedData($this->id());
+        $facts = array_map(fn ($item) => new AttachmentFact($item), (array) ($disaggregated_data ?: []));
+      }
       $this->disaggregated = $this->buildDisaggregatedData($facts);
     }
     return $this->disaggregated;
