@@ -242,7 +242,6 @@ class ProjectQuery extends FabricQueryBase {
     }
     foreach ($items as &$item) {
       $organizations = array_map(fn ($reference): Organization => new Organization($reference->organization), $item->projectOrganization->items);
-      $this->objectStore->addObjects($organizations);
       $organization_ids = $this->extractIds($organizations);
       $item->organizations = array_combine($organization_ids, $organizations);
     }

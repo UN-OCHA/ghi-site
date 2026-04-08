@@ -19,7 +19,7 @@ class ObjectStore {
    *
    * @var bool
    */
-  protected bool $enabled = FALSE;
+  protected bool $enabled = TRUE;
 
   /**
    * Get the ids already requested, identified by key.

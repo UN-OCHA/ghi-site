@@ -47,26 +47,16 @@ class LocationQuery extends FabricQueryBase {
     }
 
     $location_ids = array_unique($location_ids);
-    $locations = $this->objectStore->getObjects($location_ids, Location::getObjectStorageKey());
-    if (count($locations) == count($location_ids)) {
-      return $locations;
-    }
-    $location_ids = array_diff($location_ids, array_keys($locations));
     sort($location_ids);
 
-    if (!empty($location_ids)) {
-      if (count($location_ids) > self::MAX_FILTER_COUNT_ARRAY) {
-        // We need to do multiple queries.
-        return $this->doChunkedQuery($location_ids, fn ($ids): array => $this->getLocationsById($ids));
-      }
-      $items = $this->fabricClient->createQuery('locations', Location::getGraphQlItems())
-        ->setFilter('Id', $location_ids)
-        ->execute() ?: [];
-      $new_locations = $this->buildResultObjects($items, Location::class);
-      $new_locations = array_filter($new_locations, fn ($location) => is_int($location->getRawData()->AdminLevel));
-      $this->objectStore->addObjects($new_locations);
-      $locations += $new_locations;
+    if (count($location_ids) > self::MAX_FILTER_COUNT_ARRAY) {
+      // We need to do multiple queries.
+      return $this->doChunkedQuery($location_ids, fn ($ids): array => $this->getLocationsById($ids));
     }
+    $items = $this->fabricClient->createQuery('locations', Location::getGraphQlItems())
+      ->setFilter('Id', $location_ids)
+      ->execute() ?: [];
+    $locations = $this->buildResultObjects($items, Location::class);
     return $locations;
   }
 
@@ -88,7 +78,6 @@ class LocationQuery extends FabricQueryBase {
       ->setFilter('RecordStatus', 'Active')
       ->execute() ?: [];
     $locations = $this->buildResultObjects($items, Location::class);
-    $this->objectStore->addObjects($locations);
     return $locations;
   }
 
