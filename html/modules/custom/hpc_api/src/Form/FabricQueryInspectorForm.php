@@ -265,12 +265,16 @@ class FabricQueryInspectorForm extends FormBase {
   private function getMethodsForClass(string $class_name) {
     $class = new \ReflectionClass($class_name);
     $methods = $class->getMethods(\ReflectionMethod::IS_PUBLIC);
+    $exclude_names = ['create', 'setYear', 'getYear'];
     $options = [];
     foreach ($methods as $method) {
       if ($method->getDeclaringClass()->getNamespaceName() != $class->getNamespaceName()) {
         continue;
       }
       if (!$method->isPublic()) {
+        continue;
+      }
+      if (in_array($method->getName(), $exclude_names)) {
         continue;
       }
       $options[$method->getName()] = $method->getName();
@@ -367,7 +371,9 @@ class FabricQueryInspectorForm extends FormBase {
   private function callPluginMethod(FabricQueryPluginInterface $plugin, string $method_name, ?array $arguments = []) {
     $class = new \ReflectionClass(get_class($plugin));
     $method = $class->getMethod($method_name);
-    $this->processArgumentValues($plugin, $method_name, $arguments);
+    if ($arguments) {
+      $this->processArgumentValues($plugin, $method_name, $arguments);
+    }
     $plugin->disableCache();
     return $method->invokeArgs($plugin, $arguments ?? []);
   }

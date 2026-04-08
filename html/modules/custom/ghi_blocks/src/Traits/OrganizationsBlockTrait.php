@@ -2,6 +2,7 @@
 
 namespace Drupal\ghi_blocks\Traits;
 
+use Drupal\ghi_base_objects\Entity\BaseObjectChildInterface;
 use Drupal\ghi_plans\ApiObjects\Organization;
 use Drupal\ghi_plans\Entity\GoverningEntity;
 use Drupal\ghi_plans\Traits\PlanQueryTrait;
@@ -36,9 +37,10 @@ trait OrganizationsBlockTrait {
    */
   private function getOrganizations() {
     $plan_object = $this->getCurrentPlanObject();
+    $base_object = $this->getCurrentBaseObject();
     $organizations = &drupal_static(__FUNCTION__, []);
     if (empty($organizations)) {
-      $organizations = $this->getProjectQuery()->getProjectOrganizationsForPlan($plan_object);
+      $organizations = $this->getProjectQuery()->getProjectOrganizationsForPlan($plan_object, $base_object instanceof BaseObjectChildInterface ? $base_object : NULL);
     }
     return $organizations;
   }

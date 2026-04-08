@@ -109,9 +109,9 @@
         &:not(.sorttable-nosort)::after,
         &.sorttable-sorted::after,
         &.sorttable-sorted-reverse::after {
-          position: absolute;
-          right: 0;
-          bottom: 1.6rem;
+          position: relative;
+          top: 4px;
+          left: 5px;
           display: inline-block;
           width: 11px;
           height: 19px;
