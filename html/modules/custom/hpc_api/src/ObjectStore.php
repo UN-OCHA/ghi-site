@@ -19,7 +19,7 @@ class ObjectStore {
    *
    * @var bool
    */
-  protected bool $enabled = TRUE;
+  protected bool $enabled = FALSE;
 
   /**
    * Get the ids already requested, identified by key.
@@ -31,7 +31,10 @@ class ObjectStore {
    * @param string $key
    *   The key by which the request ids are stored.
    */
-  public function addRequestedIds(string $storage_key, array $ids, ?string $key = NULL) {
+  public function addRequestedIds(string $storage_key, array $ids, ?string $key = NULL): void {
+    if (!$this->enabled) {
+      return;
+    }
     $storage = $this->cache($storage_key) ?: [];
     $key = $key ?? 'id';
     $storage['requested_ids'] = $storage['requested_ids'] ?? [];
@@ -66,6 +69,9 @@ class ObjectStore {
    *   The object to store.
    */
   public function addObject(ApiObjectInterface $object): void {
+    if (!$this->enabled) {
+      return;
+    }
     $storage = $this->cache($object->getObjectStorageKey()) ?: [];
     $storage['objects'] = $storage['objects'] ?? [];
     $storage['objects'][$object->id()] = $object;
@@ -89,6 +95,9 @@ class ObjectStore {
    *   The objects to store.
    */
   public function addObjects(array $objects): void {
+    if (!$this->enabled) {
+      return;
+    }
     foreach ($objects as $object) {
       $this->addObject($object);
     }
@@ -181,6 +190,9 @@ class ObjectStore {
    *   The collection key identifier for the objects.
    */
   public function addObjectCollection(array $objects, string $storage_key, string $collection_key): void {
+    if (!$this->enabled) {
+      return;
+    }
     $storage = $this->cache($storage_key) ?? [];
     $storage['collections'] = $storage['collections'] ?? [];
     $collection_key_method = 'get' . ucfirst(strtolower($collection_key));
