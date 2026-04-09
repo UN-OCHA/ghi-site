@@ -110,6 +110,16 @@ class Project extends BaseObject {
   }
 
   /**
+   * Get the target.
+   *
+   * @return float
+   *   The project target.
+   */
+  public function getTarget(): float {
+    return (float) $this->map->target;
+  }
+
+  /**
    * Get the requirements.
    *
    * @return float
