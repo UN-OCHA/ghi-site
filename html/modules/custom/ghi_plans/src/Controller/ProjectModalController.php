@@ -267,22 +267,22 @@ class ProjectModalController extends ControllerBase {
       $row[] = [
         'data' => [
           '#theme' => 'hpc_amount',
-          '#amount' => $project->target,
+          '#amount' => $project->getTarget(),
           '#scale' => 'full',
           '#decimal_format' => $decimal_format,
         ],
-        'data-sort-value' => $project->target,
+        'data-sort-value' => $project->getTarget(),
         'data-sort-type' => 'numeric',
         'data-column-type' => 'amount',
       ];
       $row[] = [
         'data' => [
           '#theme' => 'hpc_currency',
-          '#value' => $project->requirements,
+          '#value' => $project->getRequirements(),
           '#scale' => 'full',
           '#decimal_format' => $decimal_format,
         ],
-        'data-sort-value' => $project->requirements,
+        'data-sort-value' => $project->getRequirements(),
         'data-sort-type' => 'numeric',
         'data-column-type' => 'amount',
       ];

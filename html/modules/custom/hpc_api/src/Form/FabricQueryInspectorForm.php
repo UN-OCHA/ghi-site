@@ -65,7 +65,7 @@ class FabricQueryInspectorForm extends FormBase {
     ];
 
     $arguments = $plugin && $method_name ? $this->getArguments($plugin, $method_name) : [];
-    $submitted_arguments = $form_state->getValue(['arguments', $method_name]);
+    $submitted_arguments = array_filter($form_state->getValue(['arguments', $method_name], []));
     $form['arguments'] = [
       '#type' => 'container',
       '#tree' => TRUE,

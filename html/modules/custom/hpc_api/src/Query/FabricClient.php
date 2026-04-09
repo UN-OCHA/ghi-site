@@ -236,16 +236,21 @@ class FabricClient {
    * @param string $key_property
    *   The property to use as a key.
    *
-   * @return false|array
+   * @return false|array|object
    *   The result from the fabric query or FALSE on failure.
    */
-  public function execute(FabricQuery $query, string $key_property = 'Id'): false|array {
-    $query->assureKeyProperty($key_property);
+  public function execute(FabricQuery $query, string $key_property = 'Id'): false|array|object {
+    if (!$query->isAggregated()) {
+      $query->assureKeyProperty($key_property);
+    }
     $data = $this->query($query);
     if (!is_object($data)) {
       return FALSE;
     }
     $query_name = $query->getQueryName();
+    if ($query->isAggregated()) {
+      return $data?->$query_name?->groupBy[0]?->aggregations ?? (object) [];
+    }
     $items = $this->getItems($data, $query_name, $key_property);
     if ($data->$query_name?->hasNextPage ?? FALSE && !empty($data->$query_name?->endCursor)) {
       $query->setAfter($data->$query_name?->endCursor);
