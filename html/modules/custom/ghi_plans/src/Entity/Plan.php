@@ -281,11 +281,7 @@ class Plan extends BaseObject implements BaseObjectMetaDataInterface, BaseObject
     }
     elseif ($this->useProjectRequirements()) {
       $project_query = $this->getProjectQuery();
-      $projects = $project_query->getProjectsForPlanId($this->getSourceId());
-      $requirements = 0;
-      foreach ($projects as $project) {
-        $requirements += $project->getRequirements();
-      }
+      $requirements = $project_query->getProjectRequirementsForPlan($this->getSourceId());
     }
     $this->get('field_requirements')->setValue($requirements);
     if ($this->hasField('field_requirements_updated')) {

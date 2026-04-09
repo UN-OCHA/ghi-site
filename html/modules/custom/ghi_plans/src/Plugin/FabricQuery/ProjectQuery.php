@@ -96,6 +96,28 @@ class ProjectQuery extends FabricQueryBase {
   }
 
   /**
+   * Get the total project requirements for the given plan id.
+   *
+   * @param int $plan_id
+   *   The plan id.
+   *
+   * @return float
+   *   The total requirement sum of the projects.
+   */
+  public function getProjectRequirementsForPlan(int $plan_id) {
+    $aggregations = $this->fabricClient->createQuery('projects')
+      ->setFilters([
+        'PlanId' => $plan_id,
+        'IsPublished' => TRUE,
+      ])
+      ->setAggregation('Id', [
+        'sum' => 'CurrentRequestedFunds',
+      ])
+      ->execute() ?: NULL;
+    return (float) $aggregations?->sum ?? 0;
+  }
+
+  /**
    * Get all projects for the given plan.
    *
    * @param int $plan_id

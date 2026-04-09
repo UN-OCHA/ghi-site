@@ -45,6 +45,13 @@ class FabricQuery implements \Stringable {
   private ?array $orderBy = NULL;
 
   /**
+   * The aggregation object.
+   *
+   * @var object|null
+   */
+  private ?object $aggregation = NULL;
+
+  /**
    * The limit.
    *
    * @var int
@@ -212,6 +219,58 @@ class FabricQuery implements \Stringable {
   }
 
   /**
+   * Set the aggregation.
+   *
+   * @param string $group_field
+   *   The field by which to group.
+   * @param array $aggregations
+   *   The aggregations.
+   *
+   * @return self
+   *   Returns the client instance for chaining.
+   */
+  public function setAggregation(string $group_field, array $aggregations): self {
+    $this->validateAggregations($aggregations);
+    $aggregation = (object) [
+      'group_field' => $group_field,
+      'aggregations' => $aggregations,
+    ];
+    $this->aggregation = $aggregation;
+    return $this;
+  }
+
+  /**
+   * Validate the given aggregation object.
+   *
+   * @param array $aggregations
+   *   The aggregations array.
+   *
+   * @return bool
+   *   TRUE if validation passes, otherwise an exception is thrown.
+   *
+   * @throws InvalidArgumentException
+   */
+  public function validateAggregations(array $aggregations) {
+    $allowed_functions = ['avg', 'count', 'max', 'min', 'sum'];
+    foreach (array_keys($aggregations) as $aggregate_function) {
+      if (!in_array($aggregate_function, $allowed_functions)) {
+        throw new \InvalidArgumentException('Invalid aggregate function ' . $aggregate_function . '. Called in ' . get_called_class());
+      }
+    }
+    return TRUE;
+  }
+
+  /**
+   * Check if the query uses aggregation.
+   *
+   * @return bool
+   *   TRUE if the query uses aggregation, FALSE otherwise.
+   */
+  public function isAggregated(): bool {
+    return !empty($this->aggregation);
+  }
+
+  /**
    * Create a string representation of the query.
    *
    * @return string
@@ -224,8 +283,11 @@ class FabricQuery implements \Stringable {
       throw new \Exception('No query name is set yet. Call ::create first.');
     }
     $item_string = $this->buildItemString();
-    if ($item_string === NULL) {
+    if (empty($item_string) && !$this->isAggregated()) {
       throw new \Exception('No items to query are set yet. Call ::setItems first.');
+    }
+    if (!empty($item_string) && $this->isAggregated()) {
+      throw new \Exception('Cannot request items and aggregate in the same query.');
     }
     $filter_string = $this->buildFilterString();
     $order_string = $this->buildOrderString();
@@ -236,6 +298,10 @@ class FabricQuery implements \Stringable {
       !empty($filter_string) ? 'filter: { ' . $filter_string . ' }' : NULL,
       !empty($order_string) ? 'orderBy: { ' . $order_string . ' }' : NULL,
     ]);
+    if ($this->isAggregated()) {
+      $aggregation_string = $this->buildAggregationString();
+      return $this->queryName . ' ( ' . implode(', ', $arguments) . ' ) { ' . $aggregation_string . ' }';
+    }
     return $this->queryName . ' ( ' . implode(', ', $arguments) . ' ) { items { ' . $item_string . ' } endCursor hasNextPage }';
   }
 
@@ -332,7 +398,7 @@ class FabricQuery implements \Stringable {
    * Build an order string for graphql.
    *
    * @param array|null $order_by
-   *   Optional array of orders for recursion.
+   *   Optional array of order by items.
    *
    * @return string|null
    *   The fully build order string for the given items.
@@ -347,15 +413,39 @@ class FabricQuery implements \Stringable {
   }
 
   /**
+   * Build aggregate string for graphql.
+   *
+   * @param object|null $aggregation
+   *   Optional aggregation object.
+   *
+   * @return string|null
+   *   The fully build aggregation.
+   */
+  private function buildAggregationString(?array $aggregation = NULL) {
+    $aggregation = $aggregation ?? $this->aggregation;
+    if (!$aggregation) {
+      return NULL;
+    }
+    $aggregation_strings = [];
+    foreach ($aggregation->aggregations ?? [] as $function => $field) {
+      $aggregation_strings[] = $function . '(field: ' . $field . ')';
+    }
+    if (empty($aggregation_strings)) {
+      return NULL;
+    }
+    return 'groupBy(fields: ' . $aggregation->group_field . ') { aggregations { ' . implode(' ', $aggregation_strings) . ' } }';
+  }
+
+  /**
    * Execute the current query.
    *
    * @param string $key_property
    *   The property to use as a key.
    *
-   * @return false|array
+   * @return false|array|object
    *   The result from the fabric query or FALSE on failure.
    */
-  public function execute(string $key_property = 'Id'): false|array {
+  public function execute(string $key_property = 'Id'): false|array|object {
     return $this->getFabricClient()->execute($this, $key_property);
   }
 
