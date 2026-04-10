@@ -464,7 +464,7 @@ abstract class GHIBlockBase extends HPCBlockBase implements TrustedCallbackInter
         ],
         '#create_placeholder' => TRUE,
         '#cache' => [
-          'context' => $this->getCacheContexts(),
+          'contexts' => $this->getCacheContexts(),
         ],
         '#lazy_builder_preview' => [
           '#type' => 'container',
@@ -529,12 +529,15 @@ abstract class GHIBlockBase extends HPCBlockBase implements TrustedCallbackInter
     $cache_key = $this->getCacheKey([
       $this->getPluginId(),
       $this->getUuid(),
+      md5(json_encode($this->getBlockConfig())),
+      json_encode($this->currentUser->getRoles()),
     ] + $this->getPageArguments());
 
     $build = $build ?? [
       '#attributes' => [],
     ];
 
+    // See if there is a cached version available.
     $build_content = $this->cache($cache_key);
     if (!$build_content) {
       // Build the full block. First get the actual block content.

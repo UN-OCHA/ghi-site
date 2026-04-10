@@ -14,6 +14,69 @@ class Location extends BaseObject implements GeoJsonLocationInterface {
   use GeoJsonLocationTrait;
 
   /**
+   * The name of the location.
+   *
+   * @var string|null
+   */
+  protected ?string $name;
+
+  /**
+   * The admin level of the location.
+   *
+   * @var int
+   */
+  protected int $adminLevel;
+
+  /**
+   * The pcode of the location.
+   *
+   * @var string|null
+   */
+  protected ?string $pcode;
+
+  /**
+   * The ISO3 code of the location.
+   *
+   * @var string|null
+   */
+  protected ?string $iso3;
+
+  /**
+   * The country id of the location.
+   *
+   * @var int
+   */
+  protected int $countryId;
+
+  /**
+   * The ISO3 code of the country.
+   *
+   * @var string
+   */
+  protected string $countryIso3;
+
+  /**
+   * The lat/lng coordinates.
+   *
+   * @var array
+   */
+  protected array $latLng;
+
+  /**
+   * The timestamp when the location becomes valid.
+   *
+   * @var string|null
+   */
+  protected ?string $validOn;
+
+  /**
+   * The status of the location.
+   *
+   * @var string
+   */
+  protected string $status;
+
+  /**
    * Define the dimension items used in queries.
    */
   const GRAPHQL_ITEMS = [
@@ -40,20 +103,17 @@ class Location extends BaseObject implements GeoJsonLocationInterface {
   /**
    * {@inheritdoc}
    */
-  protected function map() {
-    $data = $this->getRawData();
-    return (object) [
-      'id' => $data->Id,
-      'name' => $data->Name,
-      'admin_level' => $data->AdminLevel,
-      'pcode' => $data->Pcode ?? NULL,
-      'iso3' => $data->ISO3 ?? NULL,
-      'country_id' => $data->CountryId,
-      'country_iso3' => $data->CountryISO3 ?? NULL,
-      'latLng' => [(string) $data->Latitude, (string) $data->Longitude],
-      'valid_on' => ($data->ActiveUntil ?? NULL) ? substr($data->ActiveUntil, 0, strlen($data->ActiveUntil) - 3) : NULL,
-      'status' => strtolower($data->RecordStatus ?? ''),
-    ];
+  public function __construct(object $data) {
+    parent::__construct($data);
+    $this->name = $data->Name;
+    $this->adminLevel = $data->AdminLevel;
+    $this->pcode = $data->Pcode ?? NULL;
+    $this->iso3 = $data->ISO3 ?? NULL;
+    $this->countryId = $data->CountryId;
+    $this->countryIso3 = $data->CountryISO3 ?? NULL;
+    $this->latLng = [(string) $data->Latitude, (string) $data->Longitude];
+    $this->validOn = ($data->ActiveUntil ?? NULL) ? substr($data->ActiveUntil, 0, strlen($data->ActiveUntil) - 3) : NULL;
+    $this->status = strtolower($data->RecordStatus ?? '');
   }
 
   /**
@@ -63,7 +123,7 @@ class Location extends BaseObject implements GeoJsonLocationInterface {
     return md5(implode('_', [
       $this->id(),
       $this->status,
-      ($this->valid_on ?: 'current'),
+      ($this->validOn ?: 'current'),
     ]));
   }
 
@@ -78,14 +138,14 @@ class Location extends BaseObject implements GeoJsonLocationInterface {
    * {@inheritdoc}
    */
   public function getIso3(): ?string {
-    return $this->isCountry() ? $this->iso3 : ($this->country_iso3 ?? NULL);
+    return $this->isCountry() ? $this->iso3 : ($this->countryIso3 ?? NULL);
   }
 
   /**
    * {@inheritdoc}
    */
   public function getAdminLevel(): int {
-    return $this->admin_level;
+    return $this->adminLevel;
   }
 
   /**
@@ -143,8 +203,8 @@ class Location extends BaseObject implements GeoJsonLocationInterface {
    */
   public function getGeoJsonVersion(): string {
     $version = 'current';
-    if ($this->valid_on && $this->status == 'expired') {
-      $version = (string) date('Y', $this->valid_on);
+    if ($this->validOn && $this->status == 'expired') {
+      $version = (string) date('Y', $this->validOn);
     }
     return $version;
   }
@@ -153,9 +213,10 @@ class Location extends BaseObject implements GeoJsonLocationInterface {
    * {@inheritdoc}
    */
   public function getGeoJsonLocationData(): array {
-    return $this->toArray() + [
+    $array = $this->toArray() + [
       'filepath' => $this->getGeoJsonFileUrl($this),
     ];
+    return $array;
   }
 
   /**

@@ -15,6 +15,69 @@ abstract class EntityObjectBase extends ApiObjectBase implements EntityObjectInt
   use PlanQueryTrait;
 
   /**
+   * The name of the entity.
+   *
+   * @var string
+   */
+  protected string $name;
+
+  /**
+   * The group name.
+   *
+   * @var string
+   */
+  protected string $groupName;
+
+  /**
+   * The description.
+   *
+   * @var string|null
+   */
+  protected ?string $description;
+
+  /**
+   * The entity name.
+   *
+   * @var string
+   */
+  protected string $entityName;
+
+  /**
+   * The plan id.
+   *
+   * @var int|null
+   */
+  protected ?int $planId;
+
+  /**
+   * The prototype id.
+   *
+   * @var int|null
+   */
+  protected ?int $prototypeId;
+
+  /**
+   * The custom reference.
+   *
+   * @var string
+   */
+  protected string $customReference;
+
+  /**
+   * The composed reference.
+   *
+   * @var string|null
+   */
+  protected ?string $composedReference;
+
+  /**
+   * The custom id.
+   *
+   * @var string
+   */
+  protected string $customId;
+
+  /**
    * The entity prototype.
    *
    * @var \Drupal\ghi_plans\ApiObjects\Prototypes\EntityPrototype
@@ -34,20 +97,31 @@ abstract class EntityObjectBase extends ApiObjectBase implements EntityObjectInt
   public function __construct($data) {
     parent::__construct($data);
     $this->children = [];
+
+    $this->name = ($data->ComposedReference ?? '') . ': ' . $data->Name;
+    $this->groupName = ($data->ComposedReference ?? '') . ': ' . $data->Name;
+    $this->description = $data->Description ?: NULL;
+    $this->entityName = $data->Name;
+    $this->planId = $data->PlanId ?? NULL;
+    $this->prototypeId = $data->HpcEntityPrototypeId ?? NULL;
+    $this->customReference = $data->CustomReference;
+    $this->composedReference = $data->ComposedReference ?? NULL;
+    // Legacy support.
+    $this->customId = $data->CustomReference;
   }
 
   /**
    * {@inheritdoc}
    */
   public function getName() {
-    return $this->map->name;
+    return $this->name;
   }
 
   /**
    * {@inheritdoc}
    */
   public function getGroupName(): ?string {
-    return $this->map->group_name ?? NULL;
+    return $this->groupName ?? NULL;
   }
 
   /**
@@ -77,28 +151,28 @@ abstract class EntityObjectBase extends ApiObjectBase implements EntityObjectInt
    * {@inheritdoc}
    */
   public function getCustomReference():string {
-    return $this->custom_reference;
+    return $this->customReference;
   }
 
   /**
    * {@inheritdoc}
    */
-  public function getComposedReference() {
-    return $this->composed_reference;
+  public function getComposedReference(): ?string {
+    return $this->composedReference;
   }
 
   /**
    * {@inheritdoc}
    */
-  public function getTypeName() {
+  public function getTypeName(): string {
     return $this->getPluralName();
   }
 
   /**
    * {@inheritdoc}
    */
-  public function getChildren() {
-    return $this->children;
+  public function getChildren(): array {
+    return $this->children ?? [];
   }
 
   /**
@@ -136,7 +210,7 @@ abstract class EntityObjectBase extends ApiObjectBase implements EntityObjectInt
    * {@inheritdoc}
    */
   public function getPlanId() {
-    return $this->getRawData()->PlanId ?? NULL;
+    return $this->planId;
   }
 
   /**
@@ -146,11 +220,10 @@ abstract class EntityObjectBase extends ApiObjectBase implements EntityObjectInt
     if ($this->prototype instanceof EntityPrototype) {
       return $this->prototype;
     }
-    $prototype_id = $this->getRawData()->HpcEntityPrototypeId;
-    if (empty($prototype_id)) {
+    if (empty($this->prototypeId)) {
       return NULL;
     }
-    return $this->getEntityPrototypeQuery()?->getPrototype($prototype_id) ?? NULL;
+    return $this->getEntityPrototypeQuery()?->getPrototype($this->prototypeId) ?? NULL;
   }
 
   /**

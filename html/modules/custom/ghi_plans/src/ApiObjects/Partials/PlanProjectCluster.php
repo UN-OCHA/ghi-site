@@ -2,7 +2,7 @@
 
 namespace Drupal\ghi_plans\ApiObjects\Partials;
 
-use Drupal\ghi_base_objects\ApiObjects\BaseObject;
+use Drupal\hpc_api\ApiObjects\ApiObjectBase;
 
 /**
  * Abstraction class for a project cluster partial object.
@@ -11,7 +11,21 @@ use Drupal\ghi_base_objects\ApiObjects\BaseObject;
  * appears in some specific endpoints. We map this here to provide type hinting
  * and abstracted data access.
  */
-class PlanProjectCluster extends BaseObject {
+class PlanProjectCluster extends ApiObjectBase {
+
+  /**
+   * The name.
+   *
+   * @var string
+   */
+  protected string $name;
+
+  /**
+   * The icon.
+   *
+   * @var string|null
+   */
+  protected ?string $icon;
 
   /**
    * Define the dimension items used in queries.
@@ -22,18 +36,22 @@ class PlanProjectCluster extends BaseObject {
   ];
 
   /**
-   * Map the raw data.
-   *
-   * @return object
-   *   An object with the mapped data.
+   * {@inheritdoc}
    */
-  protected function map() {
-    $data = $this->getRawData();
-    return (object) [
-      'id' => $data->Id,
-      'name' => $data->Name,
-      'icon' => $data->Icon ?? NULL,
-    ];
+  public function __construct(object $data) {
+    parent::__construct($data);
+    $this->name = $data->Name;
+    $this->icon = $data->Icon ?? NULL;
+  }
+
+  /**
+   * Get the name of the cluster.
+   *
+   * @return string
+   *   The name.
+   */
+  public function getName(): string {
+    return $this->name;
   }
 
   /**
@@ -42,8 +60,18 @@ class PlanProjectCluster extends BaseObject {
    * @return string
    *   The icon string.
    */
-  public function getIcon() {
+  public function getIcon(): ?string {
     return $this->icon;
+  }
+
+  /**
+   * Check if the entity has an icon.
+   *
+   * @return bool
+   *   TRUE if the entity has an icon, FALSE otherwise..
+   */
+  public function hasIcon(): bool {
+    return $this->getIcon() !== NULL;
   }
 
 }

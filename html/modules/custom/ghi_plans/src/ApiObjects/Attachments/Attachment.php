@@ -10,6 +10,7 @@ use Drupal\ghi_base_objects\Helpers\BaseObjectHelper;
 use Drupal\ghi_plans\ApiObjects\Facts\AttachmentFact;
 use Drupal\ghi_plans\ApiObjects\Facts\MeasurementFact;
 use Drupal\ghi_plans\ApiObjects\Measurements\Measurement;
+use Drupal\ghi_plans\ApiObjects\PlanEntityInterface;
 use Drupal\ghi_plans\ApiObjects\PlanReportingPeriod;
 use Drupal\ghi_plans\ApiObjects\Prototypes\AttachmentPrototype;
 use Drupal\ghi_plans\Entity\Plan;
@@ -25,12 +26,12 @@ use Drupal\hpc_api\ApiObjects\Types\Unit;
 use Drupal\hpc_api\Traits\DateTimeTrait;
 use Drupal\hpc_api\Traits\SimpleCacheTrait;
 use Drupal\hpc_common\Helpers\ArrayHelper;
-use Drupal\hpc_common\Helpers\StringHelper;
+use Drupal\hpc_api\Helpers\StringHelper;
 
 /**
  * Abstraction for API data attachment objects.
  */
-class Attachment extends ApiObjectBase implements AttachmentInterface {
+class Attachment extends ApiObjectBase implements AttachmentInterface, DisaggregatedDataInterface {
 
   use DataPointConfigBackwardsCompatibilityTrait;
   use DateTimeTrait;
@@ -39,6 +40,118 @@ class Attachment extends ApiObjectBase implements AttachmentInterface {
   use PlanReportingPeriodTrait;
   use SimpleCacheTrait;
   use StringTranslationTrait;
+
+  /**
+   * The type of the attachment.
+   *
+   * @var string
+   */
+  protected string $type;
+
+  /**
+   * The plan id.
+   *
+   * @var int|null
+   */
+  protected ?int $planId;
+
+  /**
+   * The entity id.
+   *
+   * @var int|null
+   */
+  protected ?int $entityId;
+
+  /**
+   * The entity type id.
+   *
+   * @var int|null
+   */
+  protected ?int $entityTypeId;
+
+  /**
+   * The entity main type.
+   *
+   * @var string|null
+   */
+  protected ?string $entityMainType;
+
+  /**
+   * The source data.
+   *
+   * @var object
+   */
+  protected object $source;
+
+  /**
+   * The attachment prototype id.
+   *
+   * @var int
+   */
+  protected int $attachmentPrototypeId;
+
+  /**
+   * The custom id.
+   *
+   * @var string|null
+   */
+  protected ?string $customId;
+
+  /**
+   * The composed reference.
+   *
+   * @var string|null
+   */
+  protected ?string $composedReference;
+
+  /**
+   * The description.
+   *
+   * @var string|null
+   */
+  protected ?string $description;
+
+  /**
+   * The values.
+   *
+   * @var array
+   */
+  protected array $values;
+
+  /**
+   * The unit.
+   *
+   * @var \Drupal\hpc_api\ApiObjects\Types\Unit|null
+   */
+  protected ?Unit $unit;
+
+  /**
+   * The monitoring period.
+   *
+   * @var \Drupal\ghi_plans\ApiObjects\PlanReportingPeriod|null
+   */
+  protected ?PlanReportingPeriod $monitoringPeriod;
+
+  /**
+   * Whether the attachment has disaggregated data.
+   *
+   * @var bool
+   */
+  protected bool $hasDisaggregatedData;
+
+  /**
+   * The calculation method.
+   *
+   * @var string|null
+   */
+  protected ?string $calculationMethod;
+
+  /**
+   * The timestamp of the last update.
+   *
+   * @var string|null
+   */
+  protected ?string $updatedAt;
 
   /**
    * The facts representing the totals.
@@ -135,40 +248,39 @@ class Attachment extends ApiObjectBase implements AttachmentInterface {
   /**
    * {@inheritdoc}
    */
-  protected function map() {
+  public function __construct(object $data) {
+    parent::__construct($data);
     $query = $this->getEntityTypeQuery();
+    $this->processTotals((array) ($data->attachmentFact?->items ?? []));
+    $this->processMeasurements((array) ($data->measurement?->items ?? []));
+    $calculation_method = $data->CalculationMethod ?? NULL;
 
-    $attachment = $this->getRawData();
-    $period = $this->map?->monitoring_period ?? $this->fetchReportingPeriodForAttachment();
-    $this->processTotals((array) ($attachment->attachmentFact?->items ?? []));
-    $this->processMeasurements((array) ($attachment->measurement?->items ?? []));
-
-    $processed = (object) [
-      'id' => $attachment->Id,
-      'type' => strtolower($attachment->AttachmentType),
-      'source' => (object) [
-        'entity_type' => PlanEntityHelper::checkObjectType($attachment->EntityMainType ?? NULL),
-        'entity_id' => $attachment->EntityId ?? NULL,
-        'plan_id' => $attachment->PlanId ?? NULL,
-      ],
-      'attachment_prototype_id' => $attachment->AttachmentPrototypeId,
-      'custom_id' => $attachment->CustomReference ?? NULL,
-      'composed_reference' => $attachment->ComposedReference ?? NULL,
-      'description' => $attachment->Name ?? NULL,
-      'values' => $this->extractValues($this->totals ?? []),
-      'unit' => ($attachment->UnitId ?? NULL) ? $query->getUnit($attachment->UnitId) : NULL,
-      'monitoring_period' => $period ?? NULL,
-      'has_disaggregated_data' => !empty($attachment->HasDisaggregatedData),
-      'calculation_method' => ($attachment->CalculationMethod ?? NULL),
-    ];
-    $processed->calculation_method = is_string($processed->calculation_method) ? strtolower($processed->calculation_method) : NULL;
-
-    // Cleanup the values.
-    $processed->values = array_map(function ($value) {
+    // Extract and cleanup the values.
+    $values = $this->extractValues($this->totals ?? []);
+    $values = array_map(function ($value) {
       return $value === "" ? NULL : $value;
-    }, $processed->values);
+    }, $values);
 
-    return $processed;
+    $this->type = strtolower($data->AttachmentType);
+    $this->planId = $data->PlanId ?? NULL;
+    $this->entityId = $data->EntityId ?? NULL;
+    $this->entityTypeId = $data->EntityTypeId ?? NULL;
+    $this->entityMainType = $data->EntityMainType ?? NULL;
+    $this->source = (object) [
+      'entity_type' => PlanEntityHelper::checkObjectType($data->EntityMainType ?? NULL),
+      'entity_id' => $data->EntityId ?? NULL,
+      'plan_id' => $data->PlanId ?? NULL,
+    ];
+    $this->attachmentPrototypeId = $data->AttachmentPrototypeId;
+    $this->customId = $data->CustomReference ?? NULL;
+    $this->composedReference = $data->ComposedReference ?? NULL;
+    $this->description = $data->Name ?? NULL;
+    $this->values = $values;
+    $this->unit = ($data->UnitId ?? NULL) ? $query->getUnit($data->UnitId) : NULL;
+    $this->monitoringPeriod = NULL;
+    $this->hasDisaggregatedData = !empty($data->HasDisaggregatedData);
+    $this->calculationMethod = is_string($calculation_method) ? strtolower($calculation_method) : NULL;
+    $this->updatedAt = $data->UpdatedAt ?? NULL;
   }
 
   /**
@@ -189,7 +301,7 @@ class Attachment extends ApiObjectBase implements AttachmentInterface {
    * {@inheritdoc}
    */
   public function getCustomId() {
-    return $this->custom_id;
+    return $this->customId;
   }
 
   /**
@@ -212,8 +324,8 @@ class Attachment extends ApiObjectBase implements AttachmentInterface {
    * @return int
    *   A timestamp.
    */
-  public function getLastUpdated() {
-    return self::getTimestamp($this->getRawData()->UpdatedAt);
+  public function getLastUpdated(): ?int {
+    return $this->updatedAt ? self::getTimestamp($this->updatedAt) : NULL;
   }
 
   /**
@@ -222,8 +334,29 @@ class Attachment extends ApiObjectBase implements AttachmentInterface {
    * @return string
    *   The type as string.
    */
-  public function getType() {
+  public function getAttachmentType() {
     return $this->type;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getEntityId() {
+    return $this->entityId;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getEntityTypeId() {
+    return $this->entityTypeId;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getEntityMainType() {
+    return $this->entityMainType;
   }
 
   /**
@@ -255,12 +388,9 @@ class Attachment extends ApiObjectBase implements AttachmentInterface {
   }
 
   /**
-   * Get the source entity.
-   *
-   * @return \Drupal\ghi_plans\ApiObjects\PlanEntityInterface|null
-   *   The entity object.
+   * {@inheritdoc}
    */
-  public function getSourceEntity() {
+  public function getSourceEntity(): ?PlanEntityInterface {
     if (!empty($this->sourceEntity)) {
       return $this->sourceEntity;
     }
@@ -305,7 +435,11 @@ class Attachment extends ApiObjectBase implements AttachmentInterface {
    *   A reporting period object or NULL.
    */
   public function getCurrentMonitoringPeriod() {
-    return $this->monitoring_period;
+    if ($this->monitoringPeriod !== NULL) {
+      return $this->monitoringPeriod;
+    }
+    $this->monitoringPeriod = $this->fetchReportingPeriodForAttachment();
+    return $this->monitoringPeriod;
   }
 
   /**
@@ -432,16 +566,22 @@ class Attachment extends ApiObjectBase implements AttachmentInterface {
   }
 
   /**
-   * Get the prototype for an attachment.
+   * Get the id of the attachment prototype.
    *
-   * @return \Drupal\ghi_plans\ApiObjects\Prototypes\AttachmentPrototype|null
-   *   The attachment prototype object.
+   * @return int
+   *   The attachment prototype id.
+   */
+  public function getPrototypeId(): int {
+    return $this->attachmentPrototypeId;
+  }
+
+  /**
+   * {@inheritdoc}
    */
   public function getPrototype(): ?AttachmentPrototype {
     if ($this->prototype instanceof AttachmentPrototype) {
       return $this->prototype;
     }
-    $attachment = $this->getRawData();
 
     // First see if we can extract the prototype from the plan. This is better
     // for performance when we need to do this for multiple attachments
@@ -451,8 +591,8 @@ class Attachment extends ApiObjectBase implements AttachmentInterface {
     if (!$attachment_prototype_query) {
       return NULL;
     }
-    $plan_id = $attachment->PlanId ?? NULL;
-    $prototype_id = $attachment->AttachmentPrototypeId ?? ($attachment->attachmentPrototypeId ?? NULL);
+    $plan_id = $this->getPlanId();
+    $prototype_id = $this->getPrototypeId();
     if ($plan_id && $prototype_id && $prototype = $attachment_prototype_query->getPrototypeByPlanAndId($plan_id, $prototype_id)) {
       return $prototype;
     }
@@ -460,7 +600,7 @@ class Attachment extends ApiObjectBase implements AttachmentInterface {
     // If that didn't work, we query the prototype data directly.
     $prototype = $prototype_id ? $attachment_prototype_query->getPrototype($prototype_id) : NULL;
     if (!$prototype instanceof AttachmentPrototype) {
-      throw new \Exception(sprintf('Failed to extract prototype for attachment %s', $attachment->Id));
+      throw new \Exception(sprintf('Failed to extract prototype for attachment %s', $this->id()));
     }
     $this->prototype = $prototype;
     return $this->prototype;
@@ -565,7 +705,7 @@ class Attachment extends ApiObjectBase implements AttachmentInterface {
    * {@inheritdoc}
    */
   public function getPlanId() {
-    return $this->map?->source?->plan_id ?? $this->getRawData()->PlanId;
+    return $this->source?->plan_id ?? $this->planId;
   }
 
   /**
@@ -597,7 +737,7 @@ class Attachment extends ApiObjectBase implements AttachmentInterface {
    *   TRUE if there is data, FALSE otherwise.
    */
   public function hasValues() {
-    return !empty($this->map->values);
+    return !empty($this->values);
   }
 
   /**
@@ -607,7 +747,7 @@ class Attachment extends ApiObjectBase implements AttachmentInterface {
    *   TRUE if disaggregated data can be fetched, FALSE otherwise.
    */
   public function hasDisaggregatedData() {
-    return (bool) $this->has_disaggregated_data;
+    return (bool) $this->hasDisaggregatedData && $this->getAttachmentQuery()->hasDisaggregatedData($this->id());
   }
 
   /**
@@ -678,10 +818,6 @@ class Attachment extends ApiObjectBase implements AttachmentInterface {
    */
   public function getDisaggregatedDataMultiple(array $reporting_period_ids = [], ?MetricType $metric_type = NULL) {
     $map_data = [];
-    $attachment_data = $this->getRawData();
-    if (empty($attachment_data) || empty($reporting_period_ids)) {
-      return $map_data;
-    }
     $plan_id = $this->getPlanId();
     if (!$plan_id) {
       return $map_data;
@@ -719,14 +855,13 @@ class Attachment extends ApiObjectBase implements AttachmentInterface {
    */
   public function getDisaggregatedData($reporting_period = 'latest', ?MetricType $metric_type = NULL): ?object {
     // First check if we have already processed this data.
-    $cache_key = $this->getCacheKey([
+    $cache_key = $this->getCacheKey(array_filter([
       'attachment_id' => $this->id(),
       'reporting_period' => $reporting_period,
       'updated' => $this->getLastUpdated(),
-    ]);
+    ]));
 
-    // $data = $this->cache($cache_key);
-    $data = NULL;
+    $data = $this->cache($cache_key);
     if (!$data) {
       // Get the disaggregated base data.
       $disaggregated = $this->getDisaggregated();
@@ -1038,7 +1173,7 @@ class Attachment extends ApiObjectBase implements AttachmentInterface {
    *   An array of values keyed by the metric type.
    */
   public function getPlanningValues() {
-    return array_filter($this->map->values, fn ($metric_type) => !$this->isMeasurementField($metric_type), ARRAY_FILTER_USE_KEY);
+    return array_filter($this->values, fn ($metric_type) => !$this->isMeasurementField($metric_type), ARRAY_FILTER_USE_KEY);
   }
 
   /**
@@ -1048,7 +1183,7 @@ class Attachment extends ApiObjectBase implements AttachmentInterface {
    *   An array of values keyed by the metric type.
    */
   public function getCurrentValues() {
-    return $this->map->values;
+    return $this->values + ($this->getCurrentMeasurement()?->getValues() ?? []);
   }
 
   /**
@@ -1499,7 +1634,7 @@ class Attachment extends ApiObjectBase implements AttachmentInterface {
           $rendered_value = [
             '#theme' => 'hpc_autoformat_value',
             '#value' => $value,
-            '#unit_type' => $this->unit ? $this->unit->type : 'amount',
+            '#unit_type' => $this->unit?->getType() ?: 'amount',
             '#unit_defaults' => [
               'amount' => [
                 '#scale' => 'full',

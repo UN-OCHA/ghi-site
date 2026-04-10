@@ -67,7 +67,7 @@ class EntityPrototypeQuery extends FabricQueryBase {
       return NULL;
     }
     $this->objectStore->addObjectCollection($prototypes, EntityPrototype::getObjectStorageKey(), 'PlanId');
-    return new PlanPrototype(array_map(fn ($prototype) => $prototype->getRawData(), $prototypes));
+    return new PlanPrototype(array_map(fn ($prototype) => $prototype, $prototypes));
   }
 
 }

@@ -66,6 +66,7 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
       dataSources: [
         'attachment' => 'fabric_query:attachment',
         'country' => 'fabric_query:country',
+        'entities' => 'fabric_query:entity',
       ],
       configForms: [
         'attachments' => [
@@ -754,11 +755,11 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
     $attachments = $this->getSelectedAttachments() ?? [];
     $prototype_opions = [];
     foreach ($attachments as $attachment) {
-      $prototype = $attachment->prototype;
-      if (array_key_exists($prototype->id, $prototype_opions)) {
+      $prototype = $attachment->getPrototype();
+      if (array_key_exists($prototype->id(), $prototype_opions)) {
         continue;
       }
-      $prototype_opions[$prototype->id] = $prototype;
+      $prototype_opions[$prototype->id()] = $prototype;
     }
     return $prototype_opions;
   }
@@ -912,7 +913,7 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
       $plan_id => $query_handler->getPlan($plan_id),
     ];
 
-    /** @var \Drupal\ghi_plans\Plugin\FabricQuery\PlanEntityQuery $query */
+    /** @var \Drupal\ghi_plans\Plugin\FabricQuery\EntityQuery $query */
     $query = $this->getQueryHandler('entities');
     $plan_entities += $query->getEntitiesForPlan($plan_id, $this->getCurrentBaseObject()) ?? [];
     return $plan_entities;
@@ -1023,7 +1024,7 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
           $filtered_attachments = AttachmentMatcher::matchAttachments($attachment, $available_attachments);
           foreach ($filtered_attachments as $filtered_attachment) {
             $conf['attachments']['entity_attachments']['attachments']['attachment_id'][$filtered_attachment->id()] = $filtered_attachment->id();
-            $conf['attachments']['entity_attachments']['entities']['entity_ids'][$filtered_attachment->source->entity_id] = $filtered_attachment->source->entity_id;
+            $conf['attachments']['entity_attachments']['entities']['entity_ids'][$filtered_attachment->getSourceEntityId()] = $filtered_attachment->getSourceEntityId();
           }
         }
       }

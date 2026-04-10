@@ -9,6 +9,7 @@ use Drupal\ghi_plans\Helpers\PlanEntityHelper;
 use Drupal\ghi_plans\Traits\DisaggregatedDataTrait;
 use Drupal\ghi_plans\Traits\PlanQueryTrait;
 use Drupal\hpc_api\ApiObjects\ApiObjectBase;
+use Drupal\hpc_api\ApiObjects\Types\Unit;
 
 /**
  * Abstraction class for API measurement objects.
@@ -17,6 +18,104 @@ class Measurement extends ApiObjectBase implements MeasurementInterface {
 
   use PlanQueryTrait;
   use DisaggregatedDataTrait;
+
+  /**
+   * The type.
+   *
+   * @var string
+   */
+  protected string $type;
+
+  /**
+   * The source data.
+   *
+   * @var object
+   */
+  protected object $source;
+
+  /**
+   * The attachment id.
+   *
+   * @var int
+   */
+  protected int $attachmentId;
+
+  /**
+   * The attachment prototype id.
+   *
+   * @var int
+   */
+  protected int $attachmentPrototypeId;
+
+  /**
+   * The plan id.
+   *
+   * @var int
+   */
+  protected int $planId;
+
+  /**
+   * The custom id.
+   *
+   * @var string|null
+   */
+  protected ?string $customId;
+
+  /**
+   * The composed reference.
+   *
+   * @var string|null
+   */
+  protected ?string $composedReference;
+
+  /**
+   * The description.
+   *
+   * @var string|null
+   */
+  protected ?string $description;
+
+  /**
+   * The comment.
+   *
+   * @var string|null
+   */
+  protected ?string $comment;
+
+  /**
+   * The values.
+   *
+   * @var array
+   */
+  protected array $values;
+
+  /**
+   * The unit.
+   *
+   * @var \Drupal\hpc_api\ApiObjects\Types\Unit|null
+   */
+  protected ?Unit $unit;
+
+  /**
+   * The monitoring period.
+   *
+   * @var int
+   */
+  protected int $monitoringPeriod;
+
+  /**
+   * Whether the measurement has disaggregated data.
+   *
+   * @var bool
+   */
+  protected bool $hasDisaggregatedData;
+
+  /**
+   * The calculation method.
+   *
+   * @var string|null
+   */
+  protected ?string $calculationMethod;
 
   /**
    * The facts representing the totals.
@@ -77,40 +176,36 @@ class Measurement extends ApiObjectBase implements MeasurementInterface {
   /**
    * {@inheritdoc}
    */
-  protected function map() {
+  public function __construct(object $data) {
+    parent::__construct($data);
     $query = $this->getEntityTypeQuery();
-    $measurement = $this->getRawData();
-    $this->processTotals((array) ($measurement->measurementFact?->items ?? []));
+    $this->processTotals((array) ($data->measurementFact?->items ?? []));
 
-    $processed = (object) [
-      'id' => $measurement->Id,
-      'type' => strtolower($measurement->MeasurementType),
-      'source' => (object) [
-        'entity_type' => PlanEntityHelper::checkObjectType($measurement->EntityMainType ?? NULL),
-        'entity_id' => $measurement->EntityId ?? NULL,
-        'plan_id' => $measurement->PlanId ?? NULL,
-      ],
-      'attachment_id' => $measurement->AttachmentId,
-      'attachment_prototype_id' => $measurement->AttachmentPrototypeId,
-      'custom_id' => $measurement->CustomReference ?? NULL,
-      'composed_reference' => $measurement->ComposedReference ?? NULL,
-      'description' => $measurement->Name ?? NULL,
-      'comment' => !empty($measurement->IsCommentPublic) ? ($measurement->Comments ?? NULL) : NULL,
-      'values' => $this->extractValues($this->totals),
-      'unit' => ($measurement->UnitId ?? NULL) ? $query->getUnit($measurement->UnitId) : NULL,
-      'monitoring_period' => $measurement->MeasurementPeriodId ?? NULL,
-      'has_disaggregated_data' => TRUE,
-      'calculation_method' => ($measurement->CalculationMethod ?? NULL),
+    $this->type = strtolower($data->MeasurementType);
+    $this->source = (object) [
+      'entity_type' => PlanEntityHelper::checkObjectType($data->EntityMainType ?? NULL),
+      'entity_id' => $data->EntityId ?? NULL,
+      'plan_id' => $data->PlanId ?? NULL,
     ];
-
-    return $processed;
+    $this->attachmentId = $data->AttachmentId;
+    $this->attachmentPrototypeId = $data->AttachmentPrototypeId;
+    $this->planId = $data->PlanId;
+    $this->customId = $data->CustomReference ?? NULL;
+    $this->composedReference = $data->ComposedReference ?? NULL;
+    $this->description = $data->Name ?? NULL;
+    $this->comment = !empty($data->IsCommentPublic) ? ($data->Comments ?? NULL) : NULL;
+    $this->values = $this->extractValues($this->totals);
+    $this->unit = ($data->UnitId ?? NULL) ? $query->getUnit($data->UnitId) : NULL;
+    $this->monitoringPeriod = $data->MeasurementPeriodId ?? NULL;
+    $this->hasDisaggregatedData = TRUE;
+    $this->calculationMethod = ($data->CalculationMethod ?? NULL);
   }
 
   /**
    * {@inheritdoc}
    */
   public function getPlanId() {
-    return $this->map?->source?->plan_id ?? $this->getRawData()->PlanId;
+    return $this->source?->plan_id;
   }
 
   /**
@@ -131,14 +226,14 @@ class Measurement extends ApiObjectBase implements MeasurementInterface {
    * {@inheritdoc}
    */
   public function getAttachmentId() {
-    return $this->map?->attachment_id;
+    return $this->attachmentId;
   }
 
   /**
    * {@inheritdoc}
    */
   public function getReportingPeriodId() {
-    return $this->monitoring_period;
+    return $this->monitoringPeriod;
   }
 
   /**
@@ -146,7 +241,7 @@ class Measurement extends ApiObjectBase implements MeasurementInterface {
    */
   public function getDataPointValue($metric_type) {
     // @todo Add calculated fields.
-    return $this->map->values[$metric_type] ?? NULL;
+    return $this->values[$metric_type] ?? NULL;
   }
 
   /**
@@ -187,7 +282,7 @@ class Measurement extends ApiObjectBase implements MeasurementInterface {
    * {@inheritdoc}
    */
   public function getValues() {
-    return $this->map->values;
+    return $this->values;
   }
 
   /**
@@ -217,7 +312,6 @@ class Measurement extends ApiObjectBase implements MeasurementInterface {
     if ($this->prototype instanceof AttachmentPrototype) {
       return $this->prototype;
     }
-    $measurement = $this->getRawData();
 
     // First see if we can extract the prototype from the plan. This is better
     // for performance when we need to do this for multiple attachments
@@ -225,10 +319,10 @@ class Measurement extends ApiObjectBase implements MeasurementInterface {
     // requests are cached.
     $attachment_prototype_query = $this->getAttachmentPrototypeQuery();
     if (!$attachment_prototype_query) {
-      throw new \Exception(sprintf('Failed to extract prototype for attachment %s', $measurement->Id));
+      throw new \Exception(sprintf('Failed to extract prototype for attachment %s', $this->id()));
     }
-    $plan_id = $measurement->PlanId ?? NULL;
-    $prototype_id = $measurement->AttachmentPrototypeId ?? NULL;
+    $plan_id = $this->planId ?? NULL;
+    $prototype_id = $this->attachmentPrototypeId ?? NULL;
     if ($plan_id && $prototype_id && $prototype = $attachment_prototype_query->getPrototypeByPlanAndId($plan_id, $prototype_id)) {
       return $prototype;
     }
@@ -236,7 +330,7 @@ class Measurement extends ApiObjectBase implements MeasurementInterface {
     // If that didn't work, we query the prototype data directly.
     $prototype = $prototype_id ? $attachment_prototype_query->getPrototype($prototype_id) : NULL;
     if (!$prototype instanceof AttachmentPrototype) {
-      throw new \Exception(sprintf('Failed to extract prototype for attachment %s', $measurement->Id));
+      throw new \Exception(sprintf('Failed to extract prototype for attachment %s', $this->id()));
     }
     $this->prototype = $prototype;
     return $this->prototype;

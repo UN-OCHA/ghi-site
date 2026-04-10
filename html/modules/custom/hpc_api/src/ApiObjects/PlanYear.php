@@ -8,17 +8,18 @@ namespace Drupal\hpc_api\ApiObjects;
 class PlanYear extends ApiObjectBase {
 
   /**
-   * Map the raw data.
+   * The year.
    *
-   * @return object
-   *   An object with the mapped data.
+   * @var int
    */
-  protected function map() {
-    $data = $this->getRawData();
-    return (object) [
-      'id' => $data->Id,
-      'year' => $data->CalendarYear,
-    ];
+  protected int $year;
+
+  /**
+   * {@inheritdoc}
+   */
+  public function __construct(object $data) {
+    parent::__construct($data);
+    $this->year = (int) $data->CalendarYear;
   }
 
   /**
@@ -28,7 +29,7 @@ class PlanYear extends ApiObjectBase {
    *   The name.
    */
   public function getYear() {
-    return $this->map->year;
+    return $this->year;
   }
 
 }

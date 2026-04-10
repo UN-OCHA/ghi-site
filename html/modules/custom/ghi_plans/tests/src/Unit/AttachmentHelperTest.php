@@ -55,8 +55,8 @@ class AttachmentHelperTest extends ApiObjectTestBase {
   public function testInvalidAttachmentType() {
     $this->expectException(InvalidAttachmentTypeException::class);
     AttachmentHelper::processAttachment((object) [
-      'id' => 38529,
-      'type' => 'INVALID_ATTACHMENT_TYPE',
+      'Id' => 38529,
+      'AttachmentType' => 'INVALID_ATTACHMENT_TYPE',
     ]);
   }
 

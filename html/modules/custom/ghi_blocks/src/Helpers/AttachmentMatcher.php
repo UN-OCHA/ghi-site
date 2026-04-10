@@ -30,7 +30,7 @@ class AttachmentMatcher {
    */
   public static function matchAttachments(AttachmentInterface $original_attachment, array $available_attachments) {
     return array_filter($available_attachments, function (Attachment $attachment) use ($original_attachment) {
-      if ($original_attachment->getType() != $attachment->getType()) {
+      if ($original_attachment->getAttachmentType() != $attachment->getAttachmentType()) {
         // Check the attachment type, e.g. "caseload" vs "indicator".
         return FALSE;
       }

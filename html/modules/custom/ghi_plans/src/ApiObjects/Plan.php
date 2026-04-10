@@ -9,7 +9,6 @@ use Drupal\ghi_plans\Traits\PlanQueryTrait;
 use Drupal\hpc_api\ApiObjects\Types\PlanCostingType;
 use Drupal\hpc_api\ApiObjects\Types\PlanType;
 use Drupal\hpc_api\Traits\DateTimeTrait;
-use Drupal\hpc_common\Helpers\StringHelper;
 
 /**
  * Abstraction class for API plan objects.
@@ -18,6 +17,153 @@ class Plan extends BaseObject implements PlanEntityInterface {
 
   use DateTimeTrait;
   use PlanQueryTrait;
+
+  /**
+   * The year.
+   *
+   * @var int|null
+   */
+  protected ?int $year;
+
+  /**
+   * The short name.
+   *
+   * @var string|null
+   */
+  protected ?string $shortName;
+
+  /**
+   * The subtitle.
+   *
+   * @var string|null
+   */
+  protected ?string $subtitle;
+
+  /**
+   * The comments.
+   *
+   * @var string|null
+   */
+  protected ?string $comments;
+
+  /**
+   * The plan type.
+   *
+   * @var \Drupal\hpc_api\ApiObjects\Types\PlanType|null
+   */
+  protected ?PlanType $planType;
+
+  /**
+   * The plan cluster type.
+   *
+   * @var string|null
+   */
+  protected ?string $planClusterType;
+
+  /**
+   * The plan costing type.
+   *
+   * @var \Drupal\hpc_api\ApiObjects\Types\PlanCostingType|null
+   */
+  protected ?PlanCostingType $planCostingType;
+
+  /**
+   * The reporting periods.
+   *
+   * @var array
+   */
+  protected array $reportingPeriods;
+
+  /**
+   * The start date.
+   *
+   * @var string|null
+   */
+  protected ?string $startDate;
+
+  /**
+   * The end date.
+   *
+   * @var string|null
+   */
+  protected ?string $endDate;
+
+  /**
+   * The created date.
+   *
+   * @var string|null
+   */
+  protected ?string $createdDate;
+
+  /**
+   * The updated date.
+   *
+   * @var string|null
+   */
+  protected ?string $updatedDate;
+
+  /**
+   * The document published date.
+   *
+   * @var string|null
+   */
+  protected ?string $documentPublishedDate;
+
+  /**
+   * The last published period.
+   *
+   * @var int|null
+   */
+  protected ?int $lastPublishedPeriod;
+
+  /**
+   * Whether the plan is released.
+   *
+   * @var bool
+   */
+  protected bool $isReleased;
+
+  /**
+   * Whether the plan is restricted.
+   *
+   * @var bool
+   */
+  protected bool $isRestricted;
+
+  /**
+   * Whether the plan is part of GHO.
+   *
+   * @var bool
+   */
+  protected bool $isPartOfGho;
+
+  /**
+   * The langcode.
+   *
+   * @var string|null
+   */
+  protected ?string $langcode;
+
+  /**
+   * The countries.
+   *
+   * @var \Drupal\ghi_base_objects\ApiObjects\Country[]
+   */
+  protected array $countries;
+
+  /**
+   * The organizations.
+   *
+   * @var array
+   */
+  protected array $organizations;
+
+  /**
+   * The focus country.
+   *
+   * @var \Drupal\ghi_base_objects\ApiObjects\Country|null
+   */
+  protected ?Country $focusCountry;
 
   const ENTITY_REF_CODE = 'PL';
 
@@ -48,7 +194,10 @@ class Plan extends BaseObject implements PlanEntityInterface {
     'LastPublishedReportingPeriodId',
     // phpcs:disable Squiz.Arrays.ArrayDeclaration.KeySpecified
     'planPeriod' => ['items' => ['period' => ['CalendarYear']]],
-    'planLocation' => ['items' => ['location' => Country::GRAPHQL_ITEMS]],
+    'planLocation' => [
+      'filter' => ['location' => ['AdminLevel' => 0]],
+      'items' => ['location' => Country::GRAPHQL_ITEMS],
+    ],
     'planOrganization' => [
       'filter' => ['RecordStatus' => 'Active'],
       'items' => ['organization' => Organization::GRAPHQL_ITEMS],
@@ -57,44 +206,33 @@ class Plan extends BaseObject implements PlanEntityInterface {
   ];
 
   /**
-   * Map the raw data.
-   *
-   * This uses only what we needed up to now. More properties can be mapped if
-   * needed.
-   *
-   * @return object
-   *   An object with the mapped data.
+   * {@inheritdoc}
    */
-  protected function map() {
-    $data = $this->getRawData();
+  public function __construct($data) {
+    parent::__construct($data);
     $plan_query = $this->getPlanQuery();
 
-    // Make sure we have proper objects for the plan types.
-    return (object) [
-      'id' => $data->Id,
-      'name' => $data->Name,
-      'year' => $data->planPeriod?->items[0]?->period?->CalendarYear ?? NULL,
-      'short_name' => $data->ShortName ?? NULL,
-      'subtitle' => $data->PlanSubTitle ?? NULL,
-      'comments' => $data->Description ?? NULL,
-      'plan_type' => ($data->PlanType ?? NULL) ? $plan_query->getPlanTypeByName($data->PlanType) : NULL,
-      'plan_cluster_type' => $data->PlanClusterType ?? NULL,
-      'plan_costing_type' => ($data->PlanCosting ?? NULL) ? $plan_query->getPlanCostingTypeByName($data->PlanCosting) : NULL,
-      'reporting_periods' => $data->planReportingPeriods ?? [],
-      'start_date' => $data->StartDate ? self::reformatDate($data->StartDate) : NULL,
-      'end_date' => $data->EndDate ? self::reformatDate($data->EndDate) : NULL,
-      'created_date' => ($data->CreatedAt ?? NULL) ? self::getTimestamp($data->CreatedAt) : NULL,
-      'updated_date' => ($data->UpdatedAt ?? NULL) ? self::getTimestamp($data->UpdatedAt) : NULL,
-      'document_published_date' => $data->DocumentPublishDate ? self::reformatDate($data->DocumentPublishDate) : NULL,
-      'last_published_period' => $data->LastPublishedReportingPeriodId ?? NULL,
-      'is_released' => $data->IsReleased ?? FALSE,
-      'is_restricted' => $data->IsRestricted ?? FALSE,
-      'is_part_of_gho' => $data->IsPartOfGHO ?? FALSE,
-      'langcode' => $data->PlanLanguageCode ?? 'en',
-      'countries' => array_map(fn ($item) => new Country($item->location), $data->planLocation?->items ?? []),
-      'organizations' => array_map(fn ($item) => new Organization($item->organization), $data->planOrganization?->items ?? []),
-      'focus_country' => ($data->FocusedLocationName ?? NULL) ? $plan_query->lookupCountry($data->FocusedLocationName) : NULL,
-    ];
+    $this->year = $data->planPeriod?->items[0]?->period?->CalendarYear ?? NULL;
+    $this->shortName = $data->ShortName ?? NULL;
+    $this->subtitle = $data->PlanSubTitle ?? NULL;
+    $this->comments = $data->Description ?? NULL;
+    $this->planType = ($data->PlanType ?? NULL) ? $plan_query->getPlanTypeByName($data->PlanType) : NULL;
+    $this->planClusterType = $data->PlanClusterType ?? NULL;
+    $this->planCostingType = ($data->PlanCosting ?? NULL) ? $plan_query->getPlanCostingTypeByName($data->PlanCosting) : NULL;
+    $this->reportingPeriods = $data->planReportingPeriods ?? [];
+    $this->startDate = ($data->StartDate ?? NULL) ? self::reformatDate($data->StartDate) : NULL;
+    $this->endDate = ($data->EndDate ?? NULL) ? self::reformatDate($data->EndDate) : NULL;
+    $this->createdDate = ($data->CreatedAt ?? NULL) ? self::getTimestamp($data->CreatedAt) : NULL;
+    $this->updatedDate = ($data->UpdatedAt ?? NULL) ? self::getTimestamp($data->UpdatedAt) : NULL;
+    $this->documentPublishedDate = ($data->DocumentPublishDate ?? NULL) ? self::reformatDate($data->DocumentPublishDate) : NULL;
+    $this->lastPublishedPeriod = $data->LastPublishedReportingPeriodId ?? NULL;
+    $this->isReleased = $data->IsReleased ?? FALSE;
+    $this->isRestricted = $data->IsRestricted ?? FALSE;
+    $this->isPartOfGho = $data->IsPartOfGHO ?? FALSE;
+    $this->langcode = $data->PlanLanguageCode ?? 'en';
+    $this->countries = array_map(fn ($item) => new Country($item->location), $data->planLocation?->items ?? []);
+    $this->organizations = array_map(fn ($item) => new Organization($item->organization), $data->planOrganization?->items ?? []);
+    $this->focusCountry = ($data->FocusedLocationName ?? NULL) ? $plan_query->lookupCountry($data->FocusedLocationName) : NULL;
   }
 
   /**
@@ -147,22 +285,22 @@ class Plan extends BaseObject implements PlanEntityInterface {
   /**
    * {@inheritdoc}
    */
-  public function getYear() {
-    return $this->map->year;
+  public function getYear(): ?int {
+    return $this->year;
   }
 
   /**
    * {@inheritdoc}
    */
   public function getShortName(): string {
-    return $this->map->short_name ?? parent::getShortName();
+    return $this->shortName ?? parent::getShortName();
   }
 
   /**
    * {@inheritdoc}
    */
   public function getSubtitle(): ?string {
-    return $this->map->subtitle ?? NULL;
+    return $this->subtitle ?? NULL;
   }
 
   /**
@@ -176,7 +314,7 @@ class Plan extends BaseObject implements PlanEntityInterface {
    * {@inheritdoc}
    */
   public function getComments(): ?string {
-    return $this->map->comments;
+    return $this->comments;
   }
 
   /**
@@ -193,7 +331,7 @@ class Plan extends BaseObject implements PlanEntityInterface {
    *   The plan type or NULL.
    */
   public function getPlanType(): ?PlanType {
-    return $this->map->plan_type ?? NULL;
+    return $this->planType ?? NULL;
   }
 
   /**
@@ -201,9 +339,12 @@ class Plan extends BaseObject implements PlanEntityInterface {
    */
   public function getPlanTypeAbbreviation(): ?string {
     if ($plan_type = $this->getEntity()?->getPlanType()) {
+      // Prefer to get the abbreviation from the term entity as that can be
+      // overridden.
       return $plan_type->getAbbreviation();
     }
-    return $this->plan_type ? StringHelper::getAbbreviation($this->plan_type) : NULL;
+    // Otherwise get it from the API object.
+    return $this->planType?->getAbbreviation() ?? NULL;
   }
 
   /**
@@ -213,7 +354,7 @@ class Plan extends BaseObject implements PlanEntityInterface {
    *   The plan costing type or NULL.
    */
   public function getPlanCostingType(): ?PlanCostingType {
-    return $this->map->plan_costing_type ?? NULL;
+    return $this->planCostingType ?? NULL;
   }
 
   /**
@@ -223,7 +364,7 @@ class Plan extends BaseObject implements PlanEntityInterface {
    *   The plan cluster type or NULL.
    */
   public function getPlanClusterType(): ?string {
-    return $this->map->plan_cluster_type ?? NULL;
+    return $this->planClusterType ?? NULL;
   }
 
   /**
@@ -233,7 +374,7 @@ class Plan extends BaseObject implements PlanEntityInterface {
    *   The start date as a string.
    */
   public function getStartDate(): ?string {
-    return $this->map->start_date;
+    return $this->startDate;
   }
 
   /**
@@ -243,7 +384,7 @@ class Plan extends BaseObject implements PlanEntityInterface {
    *   The end date as a string.
    */
   public function getEndDate(): ?string {
-    return $this->map->end_date;
+    return $this->endDate;
   }
 
   /**
@@ -253,7 +394,7 @@ class Plan extends BaseObject implements PlanEntityInterface {
    *   The created date as a string.
    */
   public function getCreatedDate(): ?string {
-    return $this->map->created_date;
+    return $this->createdDate;
   }
 
   /**
@@ -263,7 +404,7 @@ class Plan extends BaseObject implements PlanEntityInterface {
    *   The updated date as a string.
    */
   public function getUpdatedDate(): ?string {
-    return $this->map->updated_date;
+    return $this->updatedDate;
   }
 
   /**
@@ -273,7 +414,7 @@ class Plan extends BaseObject implements PlanEntityInterface {
    *   The document published date as a string.
    */
   public function getDocumentPublishedDate(): ?string {
-    return $this->map->document_published_date;
+    return $this->documentPublishedDate;
   }
 
   /**
@@ -283,7 +424,7 @@ class Plan extends BaseObject implements PlanEntityInterface {
    *   The language code as a boolean.
    */
   public function getLanguageCode(): string {
-    return $this->map->langcode;
+    return $this->langcode;
   }
 
   /**
@@ -293,7 +434,7 @@ class Plan extends BaseObject implements PlanEntityInterface {
    *   The last published reporting period.
    */
   public function getLastPublishedReportingPeriodId(): ?int {
-    return $this->map->last_published_period ?? NULL;
+    return $this->lastPublishedPeriod ?? NULL;
   }
 
   /**
@@ -303,7 +444,7 @@ class Plan extends BaseObject implements PlanEntityInterface {
    *   An array of country objects.
    */
   public function getCountries(): array {
-    return $this->map->countries;
+    return $this->countries;
   }
 
   /**
@@ -313,7 +454,7 @@ class Plan extends BaseObject implements PlanEntityInterface {
    *   An array of organization objects.
    */
   public function getPlanOrganizations(): array {
-    return $this->map->organizations;
+    return $this->organizations;
   }
 
   /**
@@ -323,7 +464,7 @@ class Plan extends BaseObject implements PlanEntityInterface {
    *   An array of country objects.
    */
   public function getFocusCountry(): ?Country {
-    return $this->map->focus_country;
+    return $this->focusCountry;
   }
 
   /**
@@ -333,7 +474,7 @@ class Plan extends BaseObject implements PlanEntityInterface {
    *   The released state as a boolean.
    */
   public function isReleased(): bool {
-    return $this->map->is_released;
+    return $this->isReleased;
   }
 
   /**
@@ -343,7 +484,7 @@ class Plan extends BaseObject implements PlanEntityInterface {
    *   The restricted state as a boolean.
    */
   public function isRestricted(): bool {
-    return $this->map->is_restricted;
+    return $this->isRestricted;
   }
 
   /**
@@ -353,7 +494,7 @@ class Plan extends BaseObject implements PlanEntityInterface {
    *   The GHO state as a boolean.
    */
   public function isPartOfGho(): bool {
-    return $this->map->is_part_of_gho;
+    return $this->isPartOfGho;
   }
 
 }

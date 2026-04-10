@@ -2,8 +2,10 @@
 
 namespace Drupal\ghi_plans\ApiObjects\Partials;
 
-use Drupal\ghi_base_objects\ApiObjects\BaseObject;
 use Drupal\ghi_plans\ApiObjects\Attachments\CaseloadAttachmentInterface;
+use Drupal\ghi_plans\ApiObjects\PlanEntityInterface;
+use Drupal\ghi_plans\ApiObjects\Prototypes\AttachmentPrototype;
+use Drupal\hpc_api\ApiObjects\ApiObjectBase;
 
 /**
  * Abstraction class for a plan partial object.
@@ -12,28 +14,53 @@ use Drupal\ghi_plans\ApiObjects\Attachments\CaseloadAttachmentInterface;
  * appears in some specific endpoints. We map this here to provide type hinting
  * and abstracted data access.
  */
-class PlanOverviewCaseload extends BaseObject implements CaseloadAttachmentInterface {
+class PlanOverviewCaseload extends ApiObjectBase implements CaseloadAttachmentInterface {
+
+  /**
+   * The custom id.
+   *
+   * @var string
+   */
+  protected string $customId;
+
+  /**
+   * The plan id.
+   *
+   * @var int
+   */
+  protected int $planId;
+
+  /**
+   * The fields.
+   *
+   * @var array
+   */
+  protected array $fields;
+
+  /**
+   * The field types.
+   *
+   * @var array
+   */
+  protected array $fieldTypes;
 
   /**
    * {@inheritdoc}
    */
-  protected function map() {
-    $data = $this->getRawData();
+  public function __construct(object $data) {
+    parent::__construct($data);
+    $this->customId = $data->CustomReference;
+    $this->planId = (int) $data->PlanId;
 
     $calculated_fields = $data->calculatedFields ?? [];
     if ($calculated_fields && !is_array($calculated_fields) && is_object($calculated_fields)) {
       $calculated_fields = [$calculated_fields];
     }
     $fields = array_merge($data->totals, $calculated_fields);
-    return (object) [
-      'id' => $data->Id,
-      'custom_id' => $data->CustomReference,
-      'plan_id' => $data->PlanId,
-      'fields' => $fields,
-      'field_types' => array_map(function ($item) {
-        return $item->type;
-      }, $fields),
-    ];
+    $this->fields = $fields;
+    $this->fieldTypes = array_map(function ($item) {
+      return $item->type;
+    }, $fields);
   }
 
   /**
@@ -54,7 +81,7 @@ class PlanOverviewCaseload extends BaseObject implements CaseloadAttachmentInter
    * {@inheritdoc}
    */
   public function getCustomId() {
-    return $this->custom_id;
+    return $this->customId;
   }
 
   /**
@@ -82,14 +109,14 @@ class PlanOverviewCaseload extends BaseObject implements CaseloadAttachmentInter
    * {@inheritdoc}
    */
   public function getFieldTypes() {
-    return $this->field_types;
+    return $this->fieldTypes;
   }
 
   /**
    * {@inheritdoc}
    */
   public function getPlanId() {
-    return $this->plan_id;
+    return $this->planId;
   }
 
   /**
@@ -104,6 +131,20 @@ class PlanOverviewCaseload extends BaseObject implements CaseloadAttachmentInter
    */
   public function getSourceEntityId() {
     return $this->getPlanId();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getSourceEntity(): ?PlanEntityInterface {
+    return NULL;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getPrototype(): ?AttachmentPrototype {
+    return NULL;
   }
 
 }

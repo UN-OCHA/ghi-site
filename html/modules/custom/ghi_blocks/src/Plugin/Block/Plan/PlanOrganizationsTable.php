@@ -287,8 +287,8 @@ class PlanOrganizationsTable extends GHIBlockBase implements ConfigurableTableBl
     $organizations = $this->getOrganizations();
     return array_map(function ($organization) {
       return [
-        'id' => $organization->id,
-        'organization_name' => $organization->name,
+        'id' => $organization->id(),
+        'organization_name' => $organization->getName(),
       ];
     }, $organizations);
   }

@@ -72,13 +72,13 @@ class ResourceQuery extends FabricQueryBase {
     $request_items = ['resource' => Resource::getGraphQlItems()];
     switch ($object_type) {
       case 'plan':
-        $items = $this->fabricClient->createQuery('planResources', $request_items)
+        $items = $this->fabricClient->createQuery('planResources', array_merge(['PlanId'], $request_items))
           ->setFilter('PlanId', $object_id)
           ->execute() ?: [];
         break;
 
       case 'governing_entity':
-        $items = $this->fabricClient->createQuery('fieldClusterResources', $request_items)
+        $items = $this->fabricClient->createQuery('fieldClusterResources', array_merge(['FieldClusterId'], $request_items))
           ->setFilter('FieldClusterId', $object_id)
           ->execute() ?: [];
         break;

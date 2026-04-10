@@ -67,8 +67,7 @@ class AttachmentQuery extends FabricQueryBase {
       $items = $this->fabricClient->createQuery('attachments', Attachment::getGraphQlItems())
         ->setFilter('Id', $attachment_ids)
         ->execute() ?: [];
-      $new_attachments = $this->buildResultObjects($items, Attachment::class);
-      $new_attachments = $this->processAttachments($new_attachments);
+      $new_attachments = $this->processAttachments($items);
       $this->objectStore->addObjects($new_attachments);
       $attachments += $new_attachments;
     }
@@ -108,22 +107,16 @@ class AttachmentQuery extends FabricQueryBase {
 
     // Try to get the requested attachments from the object store.
     $attachments = $this->objectStore->getObjects($entity_ids, Attachment::getObjectStorageKey(), 'EntityId', $query_filters);
-    $requested_ids = $this->objectStore->getRequestedIds(Attachment::getObjectStorageKey(), __FUNCTION__);
+    $existing_entity_ids = array_map(fn (AttachmentInterface $attachment) => $attachment->getSourceEntityId(), $attachments);
+    $entity_ids = array_diff($entity_ids, $existing_entity_ids);
 
-    $entity_ids = array_diff($entity_ids, $requested_ids);
     if (!empty($entity_ids)) {
-
-      // Keep track of what we have already requested.
-      $this->objectStore->addRequestedIds(Attachment::getObjectStorageKey(), $entity_ids, __FUNCTION__);
-
       // Do the query.
       $query_filters['EntityId'] = $entity_ids;
       $items = $this->fabricClient->createQuery('attachments', Attachment::getGraphQlItems())
         ->setFilters($query_filters)
         ->execute() ?: [];
-      $new_attachments = $this->buildResultObjects($items, Attachment::class);
-      $new_attachments = $this->processAttachments($new_attachments);
-      // Store the results.
+      $new_attachments = $this->processAttachments($items);
       $this->objectStore->addObjects($new_attachments);
       $attachments += $new_attachments;
     }
@@ -158,8 +151,7 @@ class AttachmentQuery extends FabricQueryBase {
       $items = $this->fabricClient->createQuery('attachments', Attachment::getGraphQlItems())
         ->setFilter('PlanId', $plan_id,)
         ->execute() ?: [];
-      $attachments = $this->buildResultObjects($items, Attachment::class);
-      $attachments = $this->processAttachments($attachments);
+      $attachments = $this->processAttachments($items);
       $this->objectStore->addObjectCollection($attachments, Attachment::getObjectStorageKey(), 'PlanId');
     }
 
@@ -188,7 +180,7 @@ class AttachmentQuery extends FabricQueryBase {
    *   An array of data attachments.
    */
   public function getAttachmentsForEntities(array $entities): array {
-    $entities = array_filter($entities, fn(PlanEntityInterface $entity): bool => $entity instanceof PlanEntityInterface);
+    $entities = array_filter($entities, fn($entity): bool => $entity instanceof PlanEntityInterface);
     if (empty($entities)) {
       return [];
     }
@@ -289,6 +281,32 @@ class AttachmentQuery extends FabricQueryBase {
         'LocationId' => 'NOT NULL',
       ])
       ->execute() ?: [];
+  }
+
+  /**
+   * Check if there is disaggregated data for an attachment.
+   *
+   * @param int $attachment_id
+   *   The attachment id.
+   *
+   * @return bool
+   *   TRUE if there is disaggregated data for the attachment, FALSE otherwise.
+   */
+  public function hasDisaggregatedData(int $attachment_id) {
+    $filters = [
+      'AttachmentId' => $attachment_id,
+      'LocationId' => 'NOT NULL',
+    ];
+    $queries = [
+      $this->fabricClient->createQuery('attachmentFacts')
+        ->setFilters($filters)
+        ->setAggregation('Id', ['count' => 'Id']),
+      $this->fabricClient->createQuery('measurementFacts')
+        ->setFilters($filters)
+        ->setAggregation('Id', ['count' => 'Id']),
+    ];
+    $result = $this->fabricClient->executeMultiple($queries);
+    return ($result['attachmentFacts']['count'] ?? NULL) > 0 || ($result['measurementFacts']['count'] ?? NULL) > 0;
   }
 
   /**

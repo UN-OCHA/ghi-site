@@ -11,6 +11,21 @@ use Drupal\hpc_api\ApiObjects\ApiObjectBase;
 abstract class BaseObject extends ApiObjectBase implements BaseObjectInterface {
 
   /**
+   * The name of the base object.
+   *
+   * @var string|null
+   */
+  protected ?string $name;
+
+  /**
+   * {@inheritdoc}
+   */
+  public function __construct(object $data) {
+    parent::__construct($data);
+    $this->name = $data->Name ?? NULL;
+  }
+
+  /**
    * Get the corresponding bundle.
    *
    * By default, this just takes the lowercased class name. API object classes
@@ -40,7 +55,7 @@ abstract class BaseObject extends ApiObjectBase implements BaseObjectInterface {
    * {@inheritdoc}
    */
   public function getName(): ?string {
-    return $this->map->name ?? ($this->getRawData()->Name ?? NULL);
+    return $this->name ?: NULL;
   }
 
   /**

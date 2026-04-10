@@ -64,6 +64,16 @@ class FabricQueryTest extends UnitTestCase {
       [
         'planPeriod' => [
           'period' => [
+            'CalendarYear' => 2025,
+          ],
+        ],
+      ],
+      'planPeriod: { period: { CalendarYear: { eq: 2025 } } }',
+    ];
+    $cases[] = [
+      [
+        'planPeriod' => [
+          'period' => [
             'PeriodType' => 'Year',
             'CalendarYear' => 2025,
           ],

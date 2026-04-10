@@ -7,6 +7,8 @@ namespace Drupal\ghi_geojson;
  */
 interface GeoJsonLocationInterface {
 
+  const MAINTAIN_ARRAY_KEYS = ['latLng'];
+
   /**
    * Get the iso3 code.
    *

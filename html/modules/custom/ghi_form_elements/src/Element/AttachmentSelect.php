@@ -167,7 +167,7 @@ class AttachmentSelect extends FormElementBase {
       $source_type_label = $attachment->getSourceEntityTypeLabel();
       $source_id = $attachment->getSourceEntityId();
       $entity_type_options[$source_type] = $source_type_label;
-      $attachment_type_options[$attachment->getType()] = ucfirst($attachment->getType());
+      $attachment_type_options[$attachment->getAttachmentType()] = ucfirst($attachment->getAttachmentType());
       if ($prototype = $attachment->getPrototype()) {
         $attachment_prototype_options[$prototype->id()] = $prototype->getName() . ' (' . $prototype->getRefCode() . ')';
       }
@@ -244,12 +244,12 @@ class AttachmentSelect extends FormElementBase {
     // Build the filter to limit attachments to the ones available using the
     // current filter values.
     $attachment_filter = array_filter([
-      'source.entity_type' => $defaults['entity_type'] ?? NULL,
-      'type' => $defaults['attachment_type'] ?? NULL,
-      'attachment_prototype_id' => $defaults['attachment_prototype'] ? (int) $defaults['attachment_prototype'] : NULL,
+      'getSourceEntityType' => $defaults['entity_type'] ?? NULL,
+      'getAttachmentType' => $defaults['attachment_type'] ?? NULL,
+      'getPrototypeId' => $defaults['attachment_prototype'] ? (int) $defaults['attachment_prototype'] : NULL,
     ]);
     if (!empty($element['#entity_ids'])) {
-      $attachment_filter['source.entity_id'] = $element['#entity_ids'];
+      $attachment_filter['getSourceEntityId'] = $element['#entity_ids'];
     }
 
     // Apply the attachment filters and build the options array.
@@ -257,19 +257,19 @@ class AttachmentSelect extends FormElementBase {
     $entities_in_selection = [];
     foreach (ArrayHelper::filterArray($attachments, $attachment_filter) as $attachment) {
       /** @var \Drupal\ghi_plans\ApiObjects\Attachments\Attachment $attachment */
-      $entities_in_selection[$attachment->source->entity_id] = TRUE;
+      $entities_in_selection[$attachment->getSourceEntityId()] = TRUE;
       $source_entity = $attachment->getSourceEntity();
-      $attachment_options[$attachment->id] = [
+      $attachment_options[$attachment->id()] = [
         'id' => $attachment->id(),
         'composed_reference' => $attachment->getComposedReference(),
-        'type' => $attachment->getType(),
+        'type' => $attachment->getAttachmentType(),
         'prototype' => $attachment->getPrototype()->getName(),
         'description' => $attachment->getDescription(),
         'sort_key' => $source_entity instanceof EntityObjectInterface ? $source_entity->getSortKey() : NULL,
       ];
 
       if (!empty($element['#disagg_warning'])) {
-        $attachment_options[$attachment->id]['disagg_data'] = $attachment->hasDisaggregatedData() ? '✓' : '✗';
+        $attachment_options[$attachment->id()]['disagg_data'] = $attachment->hasDisaggregatedData() ? '✓' : '✗';
       }
     }
     ArrayHelper::sortArrayByStringKey($attachment_options, 'composed_reference');

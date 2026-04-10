@@ -12,12 +12,13 @@ use Drupal\ghi_plans\ApiObjects\Prototypes\AttachmentPrototype;
 use Drupal\ghi_plans\ApiObjects\Prototypes\EntityPrototype;
 use Drupal\ghi_plans\Helpers\PlanEntityHelper;
 use Drupal\ghi_plans\Plugin\FabricQuery\AttachmentPrototypeQuery;
+use Drupal\ghi_plans\Plugin\FabricQuery\AttachmentQuery;
 use Drupal\ghi_plans\Plugin\FabricQuery\PlanQuery;
 use Drupal\hpc_api\ApiObjects\Types\MetricType;
 use Drupal\hpc_api\ApiObjects\Types\Unit;
 use Drupal\hpc_api\Plugin\FabricQuery\EntityTypeQuery;
 use Drupal\hpc_api\Query\FabricQueryBase;
-use Drupal\hpc_common\Helpers\StringHelper;
+use Drupal\hpc_api\Helpers\StringHelper;
 use Drupal\Tests\ghi_base_objects\Unit\ApiBaseObjectTestBase;
 use Prophecy\Argument;
 
@@ -160,6 +161,7 @@ abstract class ApiObjectTestBase extends ApiBaseObjectTestBase {
           'Name' => 'Location name',
           'AdminLevel' => rand(1, 3),
           'CountryId' => 36,
+          'CountryISO3' => 'AFG',
           'Latitude' => 0,
           'Longitude' => 0,
         ]);
@@ -169,12 +171,17 @@ abstract class ApiObjectTestBase extends ApiBaseObjectTestBase {
 
     $plan_query = $this->prophesize(PlanQuery::class);
     $plan_query->getPlanReportingPeriods(Argument::any())->willReturn([]);
+    $plan_query->getPlan(Argument::any())->willReturn(NULL);
 
     $fabric_query_manager->hasDefinition(Argument::any())->willReturn(TRUE);
     $fabric_query_manager->createInstance('entity_type')->willReturn($entity_type_query->reveal());
     $fabric_query_manager->createInstance('plan')->willReturn($plan_query->reveal());
     $fabric_query_manager->createInstance('location')->willReturn($location_query->reveal());
     $fabric_query_manager->createInstance(Argument::any())->willReturn($this->prophesize(FabricQueryBase::class)->reveal());
+
+    $attachment_query = $this->prophesize(AttachmentQuery::class);
+    $attachment_query->hasDisaggregatedData(38529)->willReturn(TRUE);
+    $fabric_query_manager->createInstance('attachment')->willReturn($attachment_query->reveal());
 
     $attachment_prototype_query = $this->prophesize(AttachmentPrototypeQuery::class);
     foreach ([5443] as $id) {

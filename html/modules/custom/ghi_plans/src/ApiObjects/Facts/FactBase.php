@@ -20,11 +20,122 @@ abstract class FactBase extends ApiObjectBase {
   use PlanQueryTrait;
 
   /**
+   * The attachment id.
+   *
+   * @var int
+   */
+  protected int $attachmentId;
+
+  /**
+   * The metric id.
+   *
+   * @var int
+   */
+  protected int $metricId;
+
+  /**
+   * The location id.
+   *
+   * @var int|null
+   */
+  protected ?int $locationId;
+
+  /**
+   * The gender id.
+   *
+   * @var int|null
+   */
+  protected ?int $genderId;
+
+  /**
+   * The age group id.
+   *
+   * @var int|null
+   */
+  protected ?int $ageGroupId;
+
+  /**
+   * The population status id.
+   *
+   * @var int|null
+   */
+  protected ?int $populationStatusId;
+
+  /**
+   * The settlement type id.
+   *
+   * @var int|null
+   */
+  protected ?int $settlementTypeId;
+
+  /**
+   * The disability status id.
+   *
+   * @var int|null
+   */
+  protected ?int $disabilityStatusId;
+
+  /**
+   * The health intervention category id.
+   *
+   * @var int|null
+   */
+  protected ?int $healthInterventionCategoryId;
+
+  /**
+   * The delivery modality id.
+   *
+   * @var int|null
+   */
+  protected ?int $deliveryModalityId;
+
+  /**
+   * The custom metric name.
+   *
+   * @var string|null
+   */
+  protected ?string $customMetricName;
+
+  /**
+   * Whether this fact represents a total.
+   *
+   * @var bool
+   */
+  protected bool $isTotal;
+
+  /**
+   * The value.
+   *
+   * @var float
+   */
+  protected float $value;
+
+  /**
    * The metric type used by the fact.
    *
    * @var \Drupal\hpc_api\ApiObjects\Types\MetricType
    */
   private $metric = NULL;
+
+  /**
+   * {@inheritdoc}
+   */
+  public function __construct(object $data) {
+    parent::__construct($data);
+    $this->attachmentId = $data->AttachmentId;
+    $this->metricId = $data->MetricTypeId;
+    $this->locationId = $data->LocationId ?? NULL;
+    $this->genderId = $data->GenderId;
+    $this->ageGroupId = $data->AgeGroupId;
+    $this->populationStatusId = $data->PopulationStatusId;
+    $this->settlementTypeId = $data->SettlementTypeId;
+    $this->disabilityStatusId = $data->DisabilityStatusId;
+    $this->healthInterventionCategoryId = $data->HealthInterventionCategoryId;
+    $this->deliveryModalityId = $data->DeliveryModalityId;
+    $this->customMetricName = $data->CustomMetricName;
+    $this->isTotal = $data->IsTotal;
+    $this->value = $data->ValueNum;
+  }
 
   /**
    * Get the metric type for this fact.
@@ -36,7 +147,7 @@ abstract class FactBase extends ApiObjectBase {
     if ($this->metric) {
       return $this->metric;
     }
-    $this->metric = $this->getEntityTypeQuery()?->getMetricType($this->map->metric_id) ?? NULL;
+    $this->metric = $this->getEntityTypeQuery()?->getMetricType($this->metricId) ?? NULL;
     return $this->metric;
   }
 
@@ -47,7 +158,7 @@ abstract class FactBase extends ApiObjectBase {
    *   TRUE if the fact is a total, FALSE otherwise.
    */
   public function isTotal() {
-    return $this->map->is_total;
+    return $this->isTotal;
   }
 
   /**
@@ -57,7 +168,7 @@ abstract class FactBase extends ApiObjectBase {
    *   The value of the fact.
    */
   public function getValue(): mixed {
-    return $this->map->value;
+    return $this->value;
   }
 
   /**
@@ -67,7 +178,7 @@ abstract class FactBase extends ApiObjectBase {
    *   The location id of the fact.
    */
   public function getLocationId(): ?int {
-    return $this->map->location_id ?? NULL;
+    return $this->locationId ?? NULL;
   }
 
   /**
@@ -106,21 +217,21 @@ abstract class FactBase extends ApiObjectBase {
    */
   public function getCategories() {
     $category_properties = [
-      'age_group_id' => 'ageGroups',
-      'delivery_modality_id' => 'deliveryModalities',
-      'disability_status_id' => 'disabilityStatuses',
-      'gender_id' => 'genders',
-      'health_intervention_category_id' => 'healthInterventionCategories',
-      'population_status_id' => 'populationStatuses',
-      'settlement_type_id' => 'settlementTypes',
+      'ageGroupId' => 'ageGroups',
+      'deliveryModalityId' => 'deliveryModalities',
+      'disabilityStatusId' => 'disabilityStatuses',
+      'genderId' => 'genders',
+      'healthInterventionCategoryId' => 'healthInterventionCategories',
+      'populationStatusId' => 'populationStatuses',
+      'settlementTypeId' => 'settlementTypes',
     ];
     $category_query = $this->getCategoryQuery();
     $categories = [];
     foreach ($category_properties as $property_name => $namespace) {
-      if (empty($this->map->$property_name)) {
+      if (!property_exists($this, $property_name) || empty($this->$property_name)) {
         continue;
       }
-      $category = $category_query?->getCategory($namespace, $this->map->$property_name);
+      $category = $category_query?->getCategory($namespace, $this->$property_name);
       if (!$category) {
         continue;
       }

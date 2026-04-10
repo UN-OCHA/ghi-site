@@ -12,7 +12,7 @@ use Drupal\ghi_form_elements\ConfigurationContainerItemPluginBase;
 use Drupal\ghi_plans\ApiObjects\Attachments\Attachment;
 use Drupal\ghi_plans\Entity\Plan;
 use Drupal\ghi_plans\Traits\AttachmentFilterTrait;
-use Drupal\hpc_common\Helpers\StringHelper;
+use Drupal\hpc_api\Helpers\StringHelper;
 use Drupal\user\Entity\User;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -199,7 +199,7 @@ class AttachmentData extends ConfigurationContainerItemPluginBase {
   private function getDataPointConfig() {
     $conf = $this->get('data_point');
     $attachment = $this->getAttachmentObject();
-    $attachment->handleKnownConfigIssues($conf);
+    $attachment?->handleKnownConfigIssues($conf);
     return $conf;
   }
 
@@ -370,14 +370,16 @@ class AttachmentData extends ConfigurationContainerItemPluginBase {
     if ($original_attachment) {
       // Let's see if we can find an alternative attachment.
       $attachments = $this->attachmentQuery->getAttachmentsForPlan($plan->getSourceId(), $this->getContextValue('base_object'), [
-        'Caseload',
-        'Indicator',
+        'AttachmentType' => [
+          'Caseload',
+          'Indicator',
+        ],
       ]);
       $filtered_attachments = AttachmentMatcher::matchAttachments($original_attachment, $attachments);
 
       // Use the default plan caseload if available.
       $caseload_id = $plan->getPlanCaseloadId();
-      if ($caseload_id && $original_attachment->getType() == 'caseload' && array_key_exists($caseload_id, $filtered_attachments)) {
+      if ($caseload_id && $original_attachment->getAttachmentType() == 'caseload' && array_key_exists($caseload_id, $filtered_attachments)) {
         $attachment_id = $caseload_id;
       }
       elseif (count($filtered_attachments) == 1) {

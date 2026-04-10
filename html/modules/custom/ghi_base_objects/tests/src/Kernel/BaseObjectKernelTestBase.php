@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\ghi_base_objects\Kernel;
 
+use Drupal\ghi_base_objects\ApiObjects\BaseObject;
 use Drupal\KernelTests\KernelTestBase;
 use Drupal\Tests\ghi_base_objects\Traits\BaseObjectTestTrait;
 
@@ -64,20 +65,8 @@ abstract class BaseObjectKernelTestBase extends KernelTestBase {
    *   The API object to test.
    * @param string $expected_bundle
    *   The expected bundle name.
-   * @param array $expected_data_keys
-   *   Expected keys in the mapped data.
    */
-  protected function assertApiObjectBasics($api_object, string $expected_bundle, array $expected_data_keys = []): void {
-    // Test basic interface methods.
-    $this->assertIsString($api_object->getName());
-
-    $this->assertNull($api_object->getEntity());
-    $this->assertIsString($api_object->getShortName());
-    $this->assertEquals($api_object->getName(), $api_object->getShortName());
-
-    $this->assertIsString($api_object->getBundle());
-    $this->assertEquals($expected_bundle, $api_object->getBundle());
-
+  protected function assertApiObjectBasics($api_object, string $expected_bundle): void {
     // Test ID and raw data access.
     $this->assertIsInt($api_object->id());
     $this->assertIsObject($api_object->getRawData());
@@ -89,6 +78,16 @@ abstract class BaseObjectKernelTestBase extends KernelTestBase {
     $this->assertIsArray($api_object->getCacheTags());
     $this->assertIsArray($api_object->getCacheContexts());
     $this->assertIsInt($api_object->getCacheMaxAge());
+
+    if ($api_object instanceof BaseObject) {
+      $this->assertIsString($api_object->getName());
+      $this->assertNull($api_object->getEntity());
+      $this->assertIsString($api_object->getShortName());
+      $this->assertEquals($api_object->getName(), $api_object->getShortName());
+
+      $this->assertIsString($api_object->getBundle());
+      $this->assertEquals($expected_bundle, $api_object->getBundle());
+    }
   }
 
 }

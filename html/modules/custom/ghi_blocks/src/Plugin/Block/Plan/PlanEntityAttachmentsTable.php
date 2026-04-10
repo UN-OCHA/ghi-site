@@ -138,7 +138,7 @@ class PlanEntityAttachmentsTable extends GHIBlockBase implements ConfigurableTab
     if (!$entity_id) {
       return NULL;
     }
-    /** @var \Drupal\ghi_plans\Plugin\FabricQuery\PlanEntityQuery $query */
+    /** @var \Drupal\ghi_plans\Plugin\FabricQuery\EntityQuery $query */
     $query = $this->getQueryHandler('entities');
     return $query->getEntity('planEntity', $entity_id) ?? $query->getEntity('governingEntity', $entity_id);
   }

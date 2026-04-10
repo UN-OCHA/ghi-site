@@ -8,6 +8,7 @@ use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\ghi_form_elements\Attribute\ConfigurationContainerItem;
 use Drupal\ghi_form_elements\ConfigurationContainerItemPluginBase;
 use Drupal\ghi_plans\ApiObjects\Entities\EntityObjectInterface;
+use Drupal\ghi_plans\ApiObjects\Entities\GoverningEntity;
 use Drupal\node\NodeInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -66,7 +67,7 @@ class EntityName extends ConfigurationContainerItemPluginBase {
       /** @var \Drupal\ghi_plans\ApiObjects\Entities\EntityObjectInterface $entity */
       return $entity->getDisplayName();
     }
-    return $entity->name ?? NULL;
+    return $entity->getName() ?? NULL;
   }
 
   /**
@@ -79,7 +80,7 @@ class EntityName extends ConfigurationContainerItemPluginBase {
       return NULL;
     }
     $entity_name = $this->getValue();
-    $icon_embed = !empty($entity->icon) ? $this->iconQuery->getIconEmbedCode($entity->icon) : NULL;
+    $icon_embed = $entity instanceof GoverningEntity && $entity->hasIcon() ? $this->iconQuery->getIconEmbedCode($entity->getIcon()) : NULL;
 
     $markup = [
       '#markup' => Markup::create($icon_embed . '<span class="name">' . $entity_name . '</span>'),

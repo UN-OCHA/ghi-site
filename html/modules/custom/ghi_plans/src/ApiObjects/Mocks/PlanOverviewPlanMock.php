@@ -22,29 +22,73 @@ use Drupal\hpc_common\Helpers\TaxonomyHelper;
 class PlanOverviewPlanMock extends PlanOverviewPlan {
 
   /**
-   * {@inheritdoc}
+   * The funding.
+   *
+   * @var string
    */
-  protected function map() {
-    $data = $this->getRawData();
-    $link = (array) ($data->link ?? []);
-    return (object) [
-      'id' => md5($data->plan_name),
-      'name' => $data->plan_name,
-      'funding' => (int) ($data->total_funding ?? 0),
-      'requirements' => (int) ($data->total_requirements ?? 0),
-      'coverage' => (float) ($data->funding_progress ?? 0) * 100,
-      // We support to pass in a value structure from an entity reference (or
-      // entity_autocomplete for that matter). We assume it's a node reference.
-      'target_node_id' => NestedArray::getValue($link, [0, 'target_id']),
-      'in_gho' => $data->in_gho ?? FALSE,
-    ];
-  }
+  protected string $funding;
 
   /**
-   * {@inheritdoc}
+   * The coverage.
+   *
+   * @var float
    */
-  public function id() {
-    return $this->id;
+  protected float $coverage;
+
+  /**
+   * The required footnote.
+   *
+   * @var string|null
+   */
+  protected ?string $requiredFootnote;
+
+  /**
+   * The plan status.
+   *
+   * @var bool
+   */
+  protected bool $planStatus;
+
+  /**
+   * The target node id.
+   *
+   * @var string
+   */
+  protected string $targetNodeId;
+
+  /**
+   * The caseload values.
+   *
+   * @var array
+   */
+  protected array $caseloadValues;
+
+  /**
+   * Constructs a PlanOverviewPlanMock object.
+   *
+   * @param object $data
+   *   The raw data object.
+   */
+  public function __construct(object $data) {
+    $link = (array) ($data->link ?? []);
+    $this->rawData = $data;
+    $this->id = md5($data->plan_name);
+    $this->name = $data->plan_name;
+    $this->planStatus = $data->plan_status ?? FALSE;
+    $this->funding = (int) ($data->total_funding ?? 0);
+    $this->requirements = (int) ($data->total_requirements ?? 0);
+    $this->requiredFootnote = $data->required_footnote ?: NULL;
+    $this->coverage = (float) ($data->funding_progress ?? 0) * 100;
+    // We support to pass in a value structure from an entity reference (or
+    // entity_autocomplete for that matter). We assume it's a node reference.
+    $this->targetNodeId = NestedArray::getValue($link, [0, 'target_id']);
+    $this->isPartOfGHO = $data->in_gho ?? FALSE;
+    $this->caseloadValues = [
+      'people_in_need' => $data->people_in_need ?? NULL,
+      'people_target' => $data->people_target ?? NULL,
+      'people_reached_percent' => $data->people_reached_percent ?? NULL,
+      'estimated_reached' => $data->estimated_reached ?? NULL,
+    ];
   }
 
   /**
@@ -71,11 +115,11 @@ class PlanOverviewPlanMock extends PlanOverviewPlan {
    *   A link object or NULL.
    */
   public function toLink() {
-    if (!$this->target_node_id) {
+    if (!$this->targetNodeId) {
       return NULL;
     }
     return Link::fromTextAndUrl($this->name, Url::fromRoute('entity.node.canonical', [
-      'node' => $this->target_node_id,
+      'node' => $this->targetNodeId,
     ]));
   }
 
@@ -83,8 +127,7 @@ class PlanOverviewPlanMock extends PlanOverviewPlan {
    * {@inheritdoc}
    */
   public function getPlanStatus() {
-    $raw_data = $this->getRawData();
-    return $raw_data->plan_status ?? FALSE;
+    return $this->planStatus;
   }
 
   /**
@@ -99,7 +142,7 @@ class PlanOverviewPlanMock extends PlanOverviewPlan {
    * {@inheritdoc}
    */
   public function getPlanType() {
-    return TaxonomyHelper::getTermById($this->getRawData()->plan_type, 'plan_type');
+    return TaxonomyHelper::getTermById($this->planType, 'plan_type');
   }
 
   /**
@@ -123,15 +166,7 @@ class PlanOverviewPlanMock extends PlanOverviewPlan {
   /**
    * {@inheritdoc}
    */
-  public function isPartOfGho() {
-    return $this->in_gho ?? FALSE;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
   public function getCaseloadValue(string $metric_type, ?string $metric_name = NULL): ?float {
-    $raw_data = $this->getRawData();
     $map = [
       'in_need' => 'people_in_need',
       'target' => 'people_target',
@@ -141,15 +176,14 @@ class PlanOverviewPlanMock extends PlanOverviewPlan {
     if (!array_key_exists($metric_type, $map)) {
       return NULL;
     }
-    return (int) $raw_data->{$map[$metric_type]} ?? NULL;
+    return (int) $this->caseloadValues[$map[$metric_type]] ?? NULL;
   }
 
   /**
    * Get the requirements footnote.
    */
-  public function getRequirementsFootnote() {
-    $raw_data = $this->getRawData();
-    return !empty($raw_data->required_footnote) ? $raw_data->required_footnote : NULL;
+  public function getRequirementsFootnote(): ?string {
+    return $this->requiredFootnote;
   }
 
 }

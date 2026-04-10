@@ -10,4 +10,12 @@ use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
  */
 interface FabricQueryPluginInterface extends PluginInspectionInterface, ContainerFactoryPluginInterface {
 
+  /**
+   * Disable caching.
+   *
+   * @return static
+   *   Returns the query instance for chaining.
+   */
+  public function disableCache(): static;
+
 }

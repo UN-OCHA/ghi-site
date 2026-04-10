@@ -29,8 +29,7 @@ class AttachmentHelper {
     $processed = [];
     foreach ($attachments as $attachment) {
       try {
-        $attachment_data = $attachment instanceof AttachmentInterface ? $attachment->getRawData() : $attachment;
-        $attachment_object = self::processAttachment($attachment_data);
+        $attachment_object = self::processAttachment($attachment);
         if (!$attachment_object) {
           continue;
         }
@@ -56,7 +55,7 @@ class AttachmentHelper {
    *   For unsupported attachment types, an Exception is thrown.
    */
   public static function processAttachment(object $attachment) {
-    $attachment_type = $attachment->AttachmentType ?? ($attachment->type ?? NULL);
+    $attachment_type = $attachment->AttachmentType;
     switch (strtolower($attachment_type)) {
       case 'caseload':
         return new CaseloadAttachment($attachment);

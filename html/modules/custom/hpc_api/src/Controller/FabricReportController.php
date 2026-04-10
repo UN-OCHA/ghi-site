@@ -9,7 +9,7 @@ use Drupal\Core\Form\FormState;
 use Drupal\Core\Render\Markup;
 use Drupal\hpc_api\Form\EntityLookupForm;
 use Drupal\hpc_api\Traits\FabricQueryTrait;
-use Drupal\hpc_common\Helpers\StringHelper;
+use Drupal\hpc_api\Helpers\StringHelper;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**

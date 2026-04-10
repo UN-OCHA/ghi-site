@@ -19,21 +19,21 @@ abstract class BaseMapObject implements BaseMapObjectInterface {
    *
    * @var string
    */
-  protected $name;
+  protected string $name;
 
   /**
    * The location ids of the map object.
    *
    * @var int[]
    */
-  protected $locationIds;
+  protected array $locationIds;
 
   /**
    * Additional data to be stored for the object.
    *
    * @var array
    */
-  protected $data;
+  protected array $data;
 
   /**
    * {@inheritdoc}

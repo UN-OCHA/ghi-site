@@ -7,6 +7,7 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\Attribute\FormElement;
 use Drupal\Core\Render\Element;
 use Drupal\Core\Render\Element\FormElementBase;
+use Drupal\ghi_base_objects\Entity\BaseObjectInterface;
 use Drupal\ghi_form_elements\Traits\AjaxElementTrait;
 use Drupal\ghi_plans\ApiObjects\Entities\EntityObjectInterface;
 use Drupal\ghi_plans\ApiObjects\Entities\GoverningEntity;
@@ -15,7 +16,6 @@ use Drupal\ghi_plans\Entity\Plan;
 use Drupal\ghi_plans\Helpers\PlanStructureHelper;
 use Drupal\ghi_plans\Traits\PlanQueryTrait;
 use Drupal\hpc_api\Query\EndpointQueryManager;
-use Drupal\hpc_common\Helpers\NodeHelper;
 
 /**
  * Provides an entity select element.
@@ -321,7 +321,7 @@ class EntitySelect extends FormElementBase {
    *   A flat array of entity objects, keyed by the entity id.
    * @param \Drupal\ghi_plans\ApiObjects\Plan $plan
    *   The plan object.
-   * @param object $context_node
+   * @param \Drupal\ghi_base_objects\Entity\BaseObjectInterface|null $context_node
    *   An optional context node object. If given this will set the high level
    *   group of the resulting sorted options array to the level represented by
    *   this node.
@@ -340,11 +340,11 @@ class EntitySelect extends FormElementBase {
    *   Array with all entities of the plan, represented in a
    *   multi-dimensional, hierarchical structure.
    */
-  public static function sortEntitiesByPlanStructure(array $entity_options, ApiObjectsPlan $plan, $context_node = NULL, $hierarchical = FALSE, $label_only = TRUE, ?array $ple_structure = NULL) {
+  public static function sortEntitiesByPlanStructure(array $entity_options, ApiObjectsPlan $plan, ?BaseObjectInterface $context_node = NULL, $hierarchical = FALSE, $label_only = TRUE, ?array $ple_structure = NULL) {
     $options = [];
 
     $ple_structure = $ple_structure ?? PlanStructureHelper::getPlanEntityStructure($plan->id());
-    $context_entity_original_id = $context_node ? NodeHelper::getOriginalIdFromNode($context_node) : NULL;
+    $context_entity_original_id = $context_node?->getSourceId() ?? NULL;
 
     // Create a nested option list based on the plan structure.
     $options = [];
@@ -358,15 +358,15 @@ class EntitySelect extends FormElementBase {
         $options = self::sortEntitiesByPlanStructure($entity_options, $plan, $context_node, $hierarchical, $label_only, $first_level_item->getChildren());
       }
       else {
-        if (empty($options[$first_level_item->group_name])) {
-          $options[$first_level_item->group_name] = [];
+        if (empty($options[$first_level_item->getGroupName()])) {
+          $options[$first_level_item->getGroupName()] = [];
         }
         if (!empty($entity_options[$first_level_item->id()])) {
-          $options[$first_level_item->group_name][$first_level_item->id()] = $label_only ? $first_level_item->getDisplayName() : $entity_options[$first_level_item->id()];
+          $options[$first_level_item->getGroupName()][$first_level_item->id()] = $label_only ? $first_level_item->getDisplayName() : $entity_options[$first_level_item->id()];
         }
         $children = $first_level_item->getChildren();
         if (!empty($children) && $hierarchical) {
-          $options[$first_level_item->group_name] += self::addChildItemsToOptionsGroup($first_level_item, $entity_options, 1, !$label_only);
+          $options[$first_level_item->getGroupName()] += self::addChildItemsToOptionsGroup($first_level_item, $entity_options, 1, !$label_only);
         }
       }
     }

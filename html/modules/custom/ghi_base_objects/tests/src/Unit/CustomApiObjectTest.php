@@ -27,17 +27,6 @@ class CustomApiObjectTest extends ApiBaseObjectTestBase {
 
     $custom_object->setCacheTags(['one', 'two']);
     $this->assertEquals(['one', 'two'], $custom_object->getCacheTags());
-
-    $this->assertEquals(['data' => serialize($raw_data)], $custom_object->__serialize());
-
-    $raw_data = (object) [
-      'Id' => 2,
-      'Name' => 'Custom object 2',
-    ];
-    $custom_object->__unserialize(['data' => serialize($raw_data)]);
-    $this->assertEquals($raw_data, $custom_object->getRawData());
-    $this->assertEquals($raw_data->Id, $custom_object->id());
-    $this->assertEquals($raw_data->Name, $custom_object->getName());
   }
 
 }

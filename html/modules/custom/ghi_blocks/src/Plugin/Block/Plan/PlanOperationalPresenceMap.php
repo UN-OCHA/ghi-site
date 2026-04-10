@@ -21,12 +21,12 @@ use Drupal\ghi_blocks\Traits\OrganizationsBlockTrait;
 use Drupal\ghi_plans\ApiObjects\Organization;
 use Drupal\ghi_plans\ApiObjects\Partials\PlanProjectCluster;
 use Drupal\ghi_plans\ApiObjects\Project;
-use Drupal\ghi_plans\Helpers\PlanStructureHelper;
 use Drupal\ghi_plans\Traits\FtsLinkTrait;
 use Drupal\hpc_common\Helpers\ThemeHelper;
 use Drupal\hpc_downloads\Interfaces\HPCDownloadPNGInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\ghi_plans\Entity\Plan;
 use Drupal\hpc_common\Plugin\HPCBlockMetadata;
 
 /**
@@ -99,7 +99,8 @@ class PlanOperationalPresenceMap extends GHIBlockBase implements MultiStepFormBl
    * {@inheritdoc}
    */
   public function isEmpty(): bool {
-    return empty($this->getLocations());
+    $locations = $this->getLocations();
+    return empty($locations);
   }
 
   /**
@@ -160,7 +161,7 @@ class PlanOperationalPresenceMap extends GHIBlockBase implements MultiStepFormBl
    * @return string
    *   The selected view as a string.
    */
-  private function getSelectedView() {
+  private function getSelectedView(): string {
     $conf = $this->getBlockConfig();
     $available_views = $this->getViewOptions();
     $requested_view = $this->requestStack->getCurrentRequest()->get('view') ?? NULL;
@@ -196,15 +197,8 @@ class PlanOperationalPresenceMap extends GHIBlockBase implements MultiStepFormBl
       'locations' => [],
     ];
 
-    $locations = $this->getLocations();
-    if (empty($locations)) {
-      // No locations, so we can abort here.
-      return NULL;
-    }
-
     $selected_view = $this->getSelectedView();
-    $object_id = $this->getSelectedObjectId($selected_view);
-    $objects_by_location = $this->getMapObjectsByLocation($selected_view, $object_id);
+    $objects_by_location = $this->getMapObjectsByLocation($selected_view);
     if (empty($objects_by_location)) {
       return NULL;
     }
@@ -224,14 +218,14 @@ class PlanOperationalPresenceMap extends GHIBlockBase implements MultiStepFormBl
     }
 
     // Process the locations.
-    foreach ($locations as $location) {
-      $objects = $objects_by_location[$location->id()] ?? [];
-      $location_data = (object) $location->getGeoJsonLocationData();
-      $location_data->location_id = $location->id();
-      $location_data->location_name = $location->getName();
-      $location_data->object_id = $location->id();
+    foreach ($objects_by_location as $location_id => $location) {
+      $objects = $location->objects ?? [];
+      $location_data = (object) $location->location->getGeoJsonLocationData();
+      $location_data->location_id = $location->location->id();
+      $location_data->location_name = $location->location->getName();
+      $location_data->object_id = $location_id;
       $location_data->object_count = count($objects);
-      $location_data->modal_content = $this->buildModalContent($location, $objects, $selected_view, $fts_link);
+      $location_data->modal_content = $this->buildModalContent($location->location, $objects, $selected_view, $fts_link);
 
       if (empty($location_data->filepath)) {
         continue;
@@ -262,6 +256,8 @@ class PlanOperationalPresenceMap extends GHIBlockBase implements MultiStepFormBl
     $organizations = $this->getConfiguredOrganizations();
     $organization_projects = $this->getProjectsByOrganization();
 
+    $locations = $this->getLocations();
+
     switch ($selected_view) {
       case 'organization':
         /** @var \Drupal\ghi_blocks\MapObjects\BaseMapObjectInterface[] $objects */
@@ -273,7 +269,11 @@ class PlanOperationalPresenceMap extends GHIBlockBase implements MultiStepFormBl
           $location_ids = [];
           $clusters = [];
           foreach ($projects as $project) {
-            $location_ids = array_merge($location_ids, $project->getLocationIds());
+            $project_location_ids = array_intersect($project->getLocationIds(), array_keys($locations));
+            if (empty($project_location_ids)) {
+              continue;
+            }
+            $location_ids = array_merge($location_ids, $project_location_ids);
             $clusters = array_merge($clusters, $project->getClusters());
           }
           $location_ids = array_unique($location_ids);
@@ -301,6 +301,10 @@ class PlanOperationalPresenceMap extends GHIBlockBase implements MultiStepFormBl
               if (array_key_exists($cluster->id(), $objects)) {
                 $location_ids = array_unique(array_merge($objects[$cluster->id()]->getLocationIds(), $project->getLocationIds()));
               }
+              $location_ids = array_intersect($location_ids, array_keys($locations));
+              if (empty($location_ids)) {
+                continue;
+              }
               $objects[$cluster->id()] = new ClusterMapObject($cluster->id(), $cluster->getName(), $location_ids, [
                 'icon' => $cluster->getIcon(),
               ]);
@@ -320,7 +324,11 @@ class PlanOperationalPresenceMap extends GHIBlockBase implements MultiStepFormBl
             continue;
           }
           foreach ($projects as $project) {
-            $objects[$project->id()] = new ProjectMapObject($project->id(), $project->getName(), $project->getLocationIds(), [
+            $location_ids = array_intersect($project->getLocationIds(), array_keys($locations));
+            if (empty($location_ids)) {
+              continue;
+            }
+            $objects[$project->id()] = new ProjectMapObject($project->id(), $project->getName(), $location_ids, [
               'clusters' => $project->getClusters(),
             ]);
           }
@@ -329,26 +337,26 @@ class PlanOperationalPresenceMap extends GHIBlockBase implements MultiStepFormBl
     }
 
     // Filter objects for those with empty locations.
-    $filtered_objects = array_filter($objects, function ($item) {
+    $objects[$selected_view] = array_filter($objects, function ($item) {
       return count($item->getLocationIds()) > 0;
     });
-
-    $objects[$selected_view] = $filtered_objects;
-    return $filtered_objects;
+    return $objects[$selected_view];
   }
 
   /**
    * Get the map objects grouped by location.
    *
-   * @param string $selected_view
+   * @param string|null $selected_view
    *   The currently selected view.
-   * @param int $object_id
+   * @param int|null $object_id
    *   Optional: Restrict to the given object id.
    *
    * @return array
    *   An array of map objects.
    */
-  private function getMapObjectsByLocation($selected_view, $object_id = NULL) {
+  private function getMapObjectsByLocation(?string $selected_view = NULL, ?int $object_id = NULL) {
+    $selected_view = $selected_view ?? $this->getSelectedView();
+    $object_id = $object_id ?? $this->getSelectedObjectId($selected_view);
     $objects = $this->getMapObjects($selected_view);
     $objects_by_location = [];
     foreach ($objects as $object) {
@@ -361,13 +369,33 @@ class PlanOperationalPresenceMap extends GHIBlockBase implements MultiStepFormBl
         continue;
       }
       foreach ($object->getLocationIds() as $location_id) {
-        $objects_by_location[$location_id] = $objects_by_location[$location_id] ?? [];
-        if (!empty($objects_by_location[$location_id][$object->id()])) {
+        $objects_by_location[$location_id] = $objects_by_location[$location_id] ?? (object) [
+          'location' => NULL,
+          'objects' => [],
+        ];
+        if (!empty($objects_by_location[$location_id]->objects[$object->id()])) {
           continue;
         }
-        $objects_by_location[$location_id][$object->id()] = $object;
+        $objects_by_location[$location_id]->objects[$object->id()] = $object;
       }
     }
+
+    $plan_object = $this->getCurrentPlanObject();
+    $max_admin_level = max($plan_object->getMaxAdminLevel(), 3);
+
+    /** @var \Drupal\ghi_base_objects\Plugin\FabricQuery\LocationQuery $location_query */
+    $location_query = $this->getQueryHandler('locations');
+    $locations = $location_query->getLocationsById(array_keys($objects_by_location));
+    foreach ($locations as $location) {
+      if (empty($objects_by_location[$location->id()])) {
+        continue;
+      }
+      if ($location->isCountry() || $location->getAdminLevel() > $max_admin_level) {
+        unset($objects_by_location[$location->id()]);
+      }
+      $objects_by_location[$location->id()]->location = $location;
+    }
+
     return $objects_by_location;
   }
 
@@ -414,7 +442,7 @@ class PlanOperationalPresenceMap extends GHIBlockBase implements MultiStepFormBl
             if (empty($clusters[$cluster->id()])) {
               $clusters[$cluster->id()] = [
                 'icon' => $this->iconQuery->getIconEmbedCode($cluster->getIcon()),
-                'name' => $cluster->name,
+                'name' => $cluster->getName(),
                 'organizations' => [],
               ];
             }
@@ -534,7 +562,7 @@ class PlanOperationalPresenceMap extends GHIBlockBase implements MultiStepFormBl
       'admin_level' => $location->getAdminLevel(),
       'pcode' => $location->getPcode(),
       'title_heading' => $this->t('Admin area @admin_level', [
-        '@admin_level' => $location->admin_level,
+        '@admin_level' => $location->getAdminLevel(),
       ]),
       'title' => $location->getName(),
       'content' => (!empty($objects) ? $fts_link : NULL) . $content,
@@ -847,12 +875,19 @@ class PlanOperationalPresenceMap extends GHIBlockBase implements MultiStepFormBl
     $key = $group . '--' . $property;
     if (!array_key_exists($key, $group_labels)) {
       $plan_object = $this->getCurrentPlanObject();
-      $ple_structure = PlanStructureHelper::getRpmPlanStructure($plan_object);
-      if (empty($ple_structure[$group])) {
-        return NULL;
-      }
-      $gve_item = reset($ple_structure[$group]);
-      $group_labels[$key] = $gve_item->$property;
+
+      $t_options = ['langcode' => $plan_object->getPlanLanguage()];
+      $cluster_label_map = [
+        Plan::CLUSTER_TYPE_CLUSTER => [
+          'label_singular' => $this->t('Cluster', [], $t_options),
+          'label' => $this->t('Clusters', [], $t_options),
+        ],
+        Plan::CLUSTER_TYPE_SECTOR => [
+          'label_singular' => $this->t('Sector', [], $t_options),
+          'label' => $this->t('Sectors', [], $t_options),
+        ],
+      ];
+      $group_labels[$key] = $cluster_label_map[$plan_object->getPlanClusterType()][$property] ?? NULL;
     }
     return $group_labels[$key];
   }
@@ -865,7 +900,7 @@ class PlanOperationalPresenceMap extends GHIBlockBase implements MultiStepFormBl
    */
   private function getAvailableOrganizationOptions() {
     $organizations = $this->getOrganizations();
-    $plan_location_ids = array_keys($this->getLocations());
+    $plan_location_ids = array_keys($this->getMapObjectsByLocation());
 
     return array_map(function (Organization $organization) use ($plan_location_ids) {
       $projects = $this->getOrganizationProjects($organization);
@@ -876,11 +911,11 @@ class PlanOperationalPresenceMap extends GHIBlockBase implements MultiStepFormBl
       }
       $location_ids = array_unique($location_ids);
       return [
-        'id' => $organization->id,
-        'name' => $organization->name,
+        'id' => $organization->id(),
+        'name' => $organization->getName(),
         'projects' => count($projects),
         'clusters' => implode(', ', array_map(function (PlanProjectCluster $cluster) {
-          return $cluster->name;
+          return $cluster->getName();
         }, $clusters)),
         'locations' => count(array_intersect($location_ids, $plan_location_ids)),
       ];
@@ -917,26 +952,21 @@ class PlanOperationalPresenceMap extends GHIBlockBase implements MultiStepFormBl
    *   A flat array of location objects.
    */
   private function getLocations() {
+    /** @var \Drupal\ghi_base_objects\Plugin\FabricQuery\LocationQuery $location_query */
+    $location_query = $this->getQueryHandler('locations');
+
     $plan_object = $this->getCurrentPlanObject();
-    $plan_locations = &drupal_static(__FUNCTION__, []);
-    if (empty($plan_locations[$plan_object->id()])) {
-      // Prepare the locations.
-      $country_id = $plan_object->getMainCountry()?->getSourceId() ?? NULL;
-      $max_admin_level = max($plan_object->getMaxAdminLevel(), 3);
+    $max_admin_level = max($plan_object->getMaxAdminLevel(), 3);
 
-      /** @var \Drupal\ghi_base_objects\Plugin\FabricQuery\LocationQuery $location_query */
-      $location_query = $this->getQueryHandler('locations');
-      $locations = $country_id ? $location_query->getLocationsForCountry($country_id, $max_admin_level) : [];
-
-      // Filter out all locations without GEOJSON files.
-      $locations = array_filter($locations, function ($location) {
-        return $location->hasGeoJsonFile();
-      });
-
-      // Done.
-      $plan_locations[$plan_object->id()] = $locations;
+    $locations_ids = [];
+    foreach ($this->getProjects() as $project) {
+      $locations_ids = array_merge($locations_ids, $project->getLocationIds());
     }
-    return $plan_locations[$plan_object->id()];
+    sort($locations_ids);
+    $locations_ids = array_unique($locations_ids);
+    $locations = $location_query->getLocationsById($locations_ids);
+    $locations = array_filter($locations, fn ($location) => !$location->isCountry() && $location->getAdminLevel() <= $max_admin_level && $location->hasGeoJsonFile());
+    return $locations;
   }
 
   /**

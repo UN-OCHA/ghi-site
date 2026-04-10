@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\ghi_base_objects\Unit;
 
+use Drupal\ghi_base_objects\ApiObjects\BaseObject;
 use Drupal\Tests\UnitTestCase;
 use Drupal\Tests\ghi_base_objects\Traits\BaseObjectTestTrait;
 use Drupal\Tests\hpc_api\Traits\PrivateAccessorTrait;
@@ -36,13 +37,6 @@ abstract class ApiBaseObjectTestBase extends UnitTestCase {
     // Test basic interface methods.
     $this->assertIsString($api_object->getName());
 
-    $this->assertNull($api_object->getEntity());
-    $this->assertIsString($api_object->getShortName());
-    $this->assertEquals($api_object->getName(), $api_object->getShortName());
-
-    $this->assertIsString($api_object->getBundle());
-    $this->assertEquals($expected_bundle, $api_object->getBundle());
-
     // Test ID and raw data access.
     $this->assertIsInt($api_object->id());
     $this->assertIsObject($api_object->getRawData());
@@ -54,6 +48,15 @@ abstract class ApiBaseObjectTestBase extends UnitTestCase {
     $this->assertIsArray($api_object->getCacheTags());
     $this->assertIsArray($api_object->getCacheContexts());
     $this->assertIsInt($api_object->getCacheMaxAge());
+
+    if ($api_object instanceof BaseObject) {
+      $this->assertNull($api_object->getEntity());
+      $this->assertIsString($api_object->getShortName());
+      $this->assertEquals($api_object->getName(), $api_object->getShortName());
+
+      $this->assertIsString($api_object->getBundle());
+      $this->assertEquals($expected_bundle, $api_object->getBundle());
+    }
   }
 
 }

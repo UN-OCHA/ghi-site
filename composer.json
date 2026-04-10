@@ -166,6 +166,7 @@
         "phpspec/prophecy-phpunit": "^2",
         "phpunit/phpcov": "^8.2",
         "phpunit/phpunit": "^9.5",
+        "shipmonk/dead-code-detector": "^0.5.1",
         "weitzman/drupal-test-traits": "^2.3"
     },
     "conflict": {

@@ -2,6 +2,8 @@
 
 namespace Drupal\ghi_plans\ApiObjects\Attachments;
 
+use Drupal\ghi_plans\ApiObjects\PlanEntityInterface;
+use Drupal\ghi_plans\ApiObjects\Prototypes\AttachmentPrototype;
 use Drupal\hpc_api\ApiObjects\ApiObjectInterface;
 
 /**
@@ -88,5 +90,21 @@ interface AttachmentInterface extends ApiObjectInterface {
    *   The source entity id.
    */
   public function getSourceEntityId();
+
+  /**
+   * Get the source entity.
+   *
+   * @return \Drupal\ghi_plans\ApiObjects\PlanEntityInterface|null
+   *   The entity object.
+   */
+  public function getSourceEntity(): ?PlanEntityInterface;
+
+  /**
+   * Get the prototype for an attachment.
+   *
+   * @return \Drupal\ghi_plans\ApiObjects\Prototypes\AttachmentPrototype|null
+   *   The attachment prototype object.
+   */
+  public function getPrototype(): ?AttachmentPrototype;
 
 }

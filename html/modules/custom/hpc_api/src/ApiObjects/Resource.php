@@ -10,6 +10,48 @@ use Drupal\Core\Url;
 class Resource extends ApiObjectBase {
 
   /**
+   * The name.
+   *
+   * @var string
+   */
+  protected string $name;
+
+  /**
+   * The mimetype.
+   *
+   * @var string
+   */
+  protected string $mimetype;
+
+  /**
+   * The URL.
+   *
+   * @var string
+   */
+  protected string $url;
+
+  /**
+   * The credit.
+   *
+   * @var string|null
+   */
+  protected ?string $credit;
+
+  /**
+   * The plan id.
+   *
+   * @var int|null
+   */
+  protected ?int $planId;
+
+  /**
+   * The field cluster id.
+   *
+   * @var int|null
+   */
+  protected ?int $fieldClusterId;
+
+  /**
    * Define the dimension items used in queries.
    */
   const GRAPHQL_ITEMS = [
@@ -21,23 +63,16 @@ class Resource extends ApiObjectBase {
   ];
 
   /**
-   * Map the raw data.
-   *
-   * This uses only what we needed up to now. More properties can be mapped if
-   * needed.
-   *
-   * @return object
-   *   An object with the mapped data.
+   * {@inheritdoc}
    */
-  protected function map() {
-    $data = $this->getRawData();
-    return (object) [
-      'id' => $data->Id,
-      'name' => $data->Name,
-      'mimetype' => $data->MimeType,
-      'url' => $data->URL,
-      'credit' => $data->Credit,
-    ];
+  public function __construct(object $data) {
+    parent::__construct($data);
+    $this->name = $data->Name;
+    $this->mimetype = $data->MimeType;
+    $this->url = $data->URL;
+    $this->credit = $data->Credit ?? NULL;
+    $this->planId = $data->PlanId ?? NULL;
+    $this->fieldClusterId = $data->FieldClusterId ?? NULL;
   }
 
   /**
@@ -46,8 +81,8 @@ class Resource extends ApiObjectBase {
    * @return string
    *   The name of the resource.
    */
-  public function getName() {
-    return $this->map->name;
+  public function getName(): string {
+    return $this->name;
   }
 
   /**
@@ -57,7 +92,7 @@ class Resource extends ApiObjectBase {
    *   The mimetype of the resource.
    */
   public function getMimeType(): string {
-    return (string) $this->map->mimetype;
+    return $this->mimetype;
   }
 
   /**
@@ -67,17 +102,37 @@ class Resource extends ApiObjectBase {
    *   The URL of the resource.
    */
   public function getUrl(): Url {
-    return Url::fromUri($this->map->url);
+    return Url::fromUri($this->url);
   }
 
   /**
    * Get the credits.
    *
-   * @return string
+   * @return string|null
    *   The credits as a string. Can be empty.
    */
-  public function getCredit() {
-    return (string) $this->map->credit;
+  public function getCredit(): ?string {
+    return $this->credit;
+  }
+
+  /**
+   * Get the plan id.
+   *
+   * @return int|null
+   *   The plan id.
+   */
+  public function getPlanId() {
+    return $this->planId;
+  }
+
+  /**
+   * Get the field cluster id.
+   *
+   * @return int|null
+   *   The field cluster id.
+   */
+  public function getFieldClusterId() {
+    return $this->fieldClusterId;
   }
 
 }

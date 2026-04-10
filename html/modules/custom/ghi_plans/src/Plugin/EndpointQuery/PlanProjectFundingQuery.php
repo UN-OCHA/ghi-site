@@ -90,10 +90,10 @@ class PlanProjectFundingQuery extends EndpointQueryBase {
     if (empty($this->data)) {
       $this->data = $this->getData();
     }
-    if (empty($this->data[$project->id])) {
+    if (empty($this->data[$project->id()])) {
       return $default;
     }
-    return !empty($this->data[$project->id][$property]) ? $this->data[$project->id][$property] : $default;
+    return !empty($this->data[$project->id()][$property]) ? $this->data[$project->id()][$property] : $default;
   }
 
   /**
@@ -116,10 +116,10 @@ class PlanProjectFundingQuery extends EndpointQueryBase {
     $property_values = [];
     $organization_projects = $this->filterProjectsToOrganization($projects, $organization);
     foreach ($organization_projects as $project) {
-      if (empty($this->data[$project->id])) {
+      if (empty($this->data[$project->id()])) {
         continue;
       }
-      $property_values[] = !empty($this->data[$project->id][$property]) ? $this->data[$project->id][$property] : 0;
+      $property_values[] = !empty($this->data[$project->id()][$property]) ? $this->data[$project->id()][$property] : 0;
     }
 
     $property_sum = !empty($property_values) ? array_sum($property_values) : 0;

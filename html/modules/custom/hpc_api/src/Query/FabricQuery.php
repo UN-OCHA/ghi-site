@@ -381,13 +381,19 @@ class FabricQuery implements \Stringable {
       elseif (is_bool($value)) {
         $strings[] = $key . ': { eq: ' . ($value ? 'true' : 'false') . ' }';
       }
-      elseif (is_array($value) && ArrayHelper::all($value, 'is_numeric')) {
+      elseif (is_array($value) && ArrayHelper::all($value, 'is_numeric') && ArrayHelper::all(array_keys($value), 'is_integer')) {
+        // All values are numeric and the keys are integers, so this is
+        // probably a list of ids.
         $strings[] = $key . ': { in: [' . implode(',', $value) . '] }';
       }
-      elseif (is_array($value) && ArrayHelper::all($value, 'is_string')) {
+      elseif (is_array($value) && ArrayHelper::all($value, 'is_string') && ArrayHelper::all(array_keys($value), 'is_integer')) {
+        // All values are strings and the keys are integers, so this is
+        // probably a list of string values.
         $strings[] = $key . ': { in: ["' . implode('", "', $value) . '"] }';
       }
       elseif (is_array($value)) {
+        // Anything else is treated like a sub filter, e.g.:
+        // filter -> location relation -> location -> location property.
         $strings[] = $key . ': { ' . $this->buildFilterString($value) . ' }';
       }
     }
