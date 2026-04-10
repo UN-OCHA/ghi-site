@@ -9,18 +9,29 @@ use Drupal\hpc_api\ApiObjects\Type;
  */
 class EntityType extends Type {
 
+  /**
+   * The name.
+   *
+   * @var string
+   */
+  protected string $name;
+
+  /**
+   * The label.
+   *
+   * @var string|null
+   */
+  protected ?string $label;
+
   const GRAPHQL_ITEMS = ['Id', 'Name', 'Alias'];
 
   /**
    * {@inheritdoc}
    */
-  protected function map() {
-    $data = $this->getRawData();
-    return (object) [
-      'id' => $data->Id,
-      'name' => $data->Name,
-      'label' => $data->Alias ?? NULL,
-    ];
+  public function __construct(object $data) {
+    parent::__construct($data);
+    $this->name = $data->Name;
+    $this->label = $data->Alias ?? NULL;
   }
 
   /**

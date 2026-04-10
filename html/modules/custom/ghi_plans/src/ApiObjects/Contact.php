@@ -2,12 +2,33 @@
 
 namespace Drupal\ghi_plans\ApiObjects;
 
-use Drupal\ghi_base_objects\ApiObjects\BaseObject;
+use Drupal\hpc_api\ApiObjects\ApiObjectBase;
 
 /**
  * Abstraction class for API contact objects.
  */
-class Contact extends BaseObject {
+class Contact extends ApiObjectBase {
+
+  /**
+   * The name of the contact.
+   *
+   * @var string
+   */
+  protected string $name;
+
+  /**
+   * The mail address.
+   *
+   * @var string|null
+   */
+  protected ?string $mail;
+
+  /**
+   * The agency.
+   *
+   * @var string|null
+   */
+  protected ?string $agency;
 
   /**
    * Define the dimension items used in queries.
@@ -20,19 +41,23 @@ class Contact extends BaseObject {
   ];
 
   /**
-   * Map the raw data.
-   *
-   * @return object
-   *   An object with the mapped data.
+   * {@inheritdoc}
    */
-  protected function map() {
-    $data = $this->getRawData();
-    return (object) [
-      'id' => $data->Id,
-      'name' => $data->Name,
-      'mail' => $data->Email,
-      'agency' => $data->LeadAgency,
-    ];
+  public function __construct(object $data) {
+    parent::__construct($data);
+    $this->name = $data->Name;
+    $this->mail = $data->Email ?? NULL;
+    $this->agency = $data->LeadAgency ?? NULL;
+  }
+
+  /**
+   * Get the name.
+   *
+   * @return string
+   *   The name.
+   */
+  public function getName(): string {
+    return $this->name;
   }
 
   /**
@@ -41,8 +66,8 @@ class Contact extends BaseObject {
    * @return string
    *   The mail address.
    */
-  public function getMail() {
-    return $this->map->mail;
+  public function getMail(): ?string {
+    return $this->mail;
   }
 
   /**
@@ -51,8 +76,8 @@ class Contact extends BaseObject {
    * @return string
    *   The agency.
    */
-  public function getAgency() {
-    return $this->map->agency;
+  public function getAgency(): ?string {
+    return $this->agency;
   }
 
 }

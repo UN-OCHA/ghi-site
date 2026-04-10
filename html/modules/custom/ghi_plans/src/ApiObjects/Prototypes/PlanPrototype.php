@@ -2,32 +2,50 @@
 
 namespace Drupal\ghi_plans\ApiObjects\Prototypes;
 
-use Drupal\ghi_base_objects\ApiObjects\BaseObject;
+use Drupal\hpc_api\ApiObjects\ApiObjectBase;
 
 /**
  * Abstraction class for plan prototype objects.
  */
-class PlanPrototype extends BaseObject {
+class PlanPrototype extends ApiObjectBase {
 
   /**
-   * Map the raw data.
+   * The plan id.
    *
-   * @return object
-   *   An object with the mapped data.
+   * @var int
    */
-  protected function map() {
-    $data = $this->getRawData();
-    $plan_id = reset($data)->PlanId;
-    $items = [];
-    foreach ($data as $item) {
-      $items[$item->OrderNumber ?? $item->Id] = new EntityPrototype($item);
-    }
-    ksort($items);
-    return (object) [
-      'plan_id' => $plan_id,
-      'items' => $items,
-    ];
+  protected int $planId;
 
+  /**
+   * The items.
+   *
+   * @var array
+   */
+  protected array $items;
+
+  /**
+   * {@inheritdoc}
+   */
+  public function __construct(array $prototypes) {
+    $this->rawData = $prototypes;
+    $this->planId = reset($prototypes)->getPlanId();
+    $this->id = $this->planId;
+    $this->items = [];
+    /** @var \Drupal\ghi_plans\ApiObjects\Prototypes\EntityPrototype[] $prototypes */
+    foreach ($prototypes as $prototype) {
+      $this->items[$prototype->getOrderNumber() ?? $prototype->id()] = $prototype;
+    }
+    ksort($this->items);
+  }
+
+  /**
+   * Get the plan id.
+   *
+   * @return int
+   *   The plan id.
+   */
+  public function getPlanId(): int {
+    return $this->planId;
   }
 
   /**
@@ -36,7 +54,7 @@ class PlanPrototype extends BaseObject {
    * @return \Drupal\ghi_plans\ApiObjects\Prototypes\EntityPrototype[]
    *   An array of entity prototypes.
    */
-  public function getEntityPrototypes() {
+  public function getEntityPrototypes(): array {
     return $this->items;
   }
 

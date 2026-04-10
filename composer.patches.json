@@ -38,6 +38,9 @@
     "drupal/phpexcel": {
       "Issue #3567264: PHP 8.4: Implicitly nullable parameter declarations deprecated": "https://www.drupal.org/files/issues/2026-01-26/php84-3.patch"
     },
+    "drupal/phpexcel": {
+      "Issue #3567264: PHP 8.4: Implicitly nullable parameter declarations deprecated": "https://www.drupal.org/files/issues/2026-01-26/php84-3.patch"
+    },
     "drupal/publishcontent": {
       "Issue #2820867: Bulk operations actions skip 'publishcontent' defined permissions": "https://www.drupal.org/files/issues/2026-03-31/permissions-for-bulk-operations-2820867-12.patch"
     },

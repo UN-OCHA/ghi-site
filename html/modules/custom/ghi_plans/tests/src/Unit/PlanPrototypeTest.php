@@ -18,12 +18,11 @@ class PlanPrototypeTest extends ApiObjectTestBase {
     $prototype = $this->getEntityPrototypeFromFixture(4267);
     $this->assertApiObjectBasics($prototype, 'entityprototype');
 
-    $plan_prototype = new PlanPrototype([$prototype->getRawData()]);
+    $plan_prototype = new PlanPrototype([$prototype]);
 
     // Test basic API object functionality, but skip name test since
     // PlanPrototype doesn't have a direct name.
     $this->assertInstanceOf(PlanPrototype::class, $plan_prototype);
-    $this->assertEquals('planprototype', $plan_prototype->getBundle());
 
     $this->assertIsArray($plan_prototype->getCacheTags());
 

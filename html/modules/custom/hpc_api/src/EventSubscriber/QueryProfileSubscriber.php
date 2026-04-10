@@ -47,6 +47,7 @@ class QueryProfileSubscriber implements EventSubscriberInterface {
     if (!empty($call_times)) {
       // arsort($call_times);
       $this->debugLogger->toFile($call_times);
+      $this->debugLogger->toFile('Total API requests: ' . array_sum($call_times));
     }
   }
 

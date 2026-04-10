@@ -456,4 +456,124 @@ class ArrayHelperTest extends UnitTestCase {
     $this->assertSame($expected, $data);
   }
 
+  /**
+   * Test keyByProperty method.
+   *
+   * @group ArrayHelper
+   */
+  public function testKeyByProperty() {
+    $object1 = new \stdClass();
+    $object1->id = 1;
+    $object1->name = 'One';
+
+    $object2 = new \stdClass();
+    $object2->id = 2;
+    $object2->name = 'Two';
+
+    $array = [$object1, $object2];
+    $result = ArrayHelper::keyByProperty($array, 'id');
+
+    $this->assertArrayHasKey(1, $result);
+    $this->assertArrayHasKey(2, $result);
+    $this->assertSame('One', $result[1]->name);
+    $this->assertSame('Two', $result[2]->name);
+  }
+
+  /**
+   * Data provider for filterArray.
+   */
+  public function filterArrayDataProvider() {
+    $array = [
+      ['id' => 1, 'name' => 'One', 'category' => 'a'],
+      ['id' => 2, 'name' => 'Two', 'category' => 'b'],
+      ['id' => 3, 'name' => 'Three', 'category' => 'a'],
+    ];
+
+    return [
+      [$array, ['category' => 'a'], 2],
+      [$array, ['category' => 'b'], 1],
+      [$array, ['id' => 2], 1],
+    ];
+  }
+
+  /**
+   * Test filterArray method.
+   *
+   * @group ArrayHelper
+   * @dataProvider filterArrayDataProvider
+   */
+  public function testFilterArray($array, $filters, $expected_count) {
+    $result = ArrayHelper::filterArray($array, $filters);
+    $this->assertCount($expected_count, $result);
+  }
+
+  /**
+   * Data provider for sumArraysByKey.
+   */
+  public function sumArraysByKeyDataProvider() {
+    return [
+      [[['value' => 10], ['value' => 20], ['value' => 30]], 'value', 60],
+      [[], 'value', 0],
+      [[['value' => 5]], 'value', 5],
+    ];
+  }
+
+  /**
+   * Test sumArraysByKey method.
+   *
+   * @group ArrayHelper
+   * @dataProvider sumArraysByKeyDataProvider
+   */
+  public function testSumArraysByKey($array, $key, $expected) {
+    $result = ArrayHelper::sumArraysByKey($array, $key);
+    $this->assertSame($expected, $result);
+  }
+
+  /**
+   * Data provider for insertItem.
+   */
+  public function insertItemDataProvider() {
+    return [
+      [['a', 'b', 'c'], 1, 'x', ['a', 'x', 'b', 'c']],
+      [['a', 'b', 'c'], 0, 'x', ['x', 'a', 'b', 'c']],
+      [['a', 'b', 'c'], 3, 'x', ['a', 'b', 'c', 'x']],
+    ];
+  }
+
+  /**
+   * Test insertItem method.
+   *
+   * @group ArrayHelper
+   * @dataProvider insertItemDataProvider
+   */
+  public function testInsertItem($array, $pos, $value, $expected) {
+    $result = ArrayHelper::insertItem($array, $pos, $value);
+    $this->assertSame($expected, $result);
+  }
+
+  /**
+   * Test sortObjectsByCallback method with numeric comparison.
+   *
+   * @group ArrayHelper
+   */
+  public function testSortObjectsByCallbackNumeric() {
+    $object1 = new \stdClass();
+    $object1->value = 3;
+    $object1->id = 1;
+
+    $object2 = new \stdClass();
+    $object2->value = 1;
+    $object2->id = 2;
+
+    $object3 = new \stdClass();
+    $object3->value = 2;
+    $object3->id = 3;
+
+    $array = [$object1, $object2, $object3];
+    ArrayHelper::sortObjectsByCallback($array, fn ($obj) => $obj->value, SORT_ASC, SORT_NUMERIC);
+
+    $values = array_map(fn($obj) => $obj->value, $array);
+    $this->assertSame([1, 2, 3], array_values($values));
+  }
+
 }

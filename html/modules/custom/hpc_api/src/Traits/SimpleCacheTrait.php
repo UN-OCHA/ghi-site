@@ -2,6 +2,8 @@
 
 namespace Drupal\hpc_api\Traits;
 
+use Symfony\Component\HttpFoundation\Request;
+
 /**
  * Provide a simple in-memory cache.
  */
@@ -23,7 +25,16 @@ trait SimpleCacheTrait {
    *   A cache key string.
    */
   public static function getCacheKey(array $array, ?string $called_class = NULL, ?string $called_method = NULL) {
-    // First sort the incoming arguments.
+    // Support ajax switchers when caching.
+    $query_args = self::getCurrentRequest()?->request->all() ?? [];
+    $query_args = array_filter($query_args, fn ($key) => !in_array($key, [
+      'ajax_page_state',
+      '_drupal_ajax',
+      '_triggering_element_name',
+      'form_build_id',
+    ]), ARRAY_FILTER_USE_KEY);
+    $array += $query_args;
+    // Sort the arguments by key.
     ksort($array);
     // Then get information about the caller.
     $called_class = $called_class ?? array_key_last(array_flip(explode('\\', get_called_class())));
@@ -99,6 +110,16 @@ trait SimpleCacheTrait {
    */
   private static function cacheBackend() {
     return \Drupal::cache();
+  }
+
+  /**
+   * Get the current request.
+   *
+   * @return \Symfony\Component\HttpFoundation\Request|null
+   *   A request object.
+   */
+  private static function getCurrentRequest(): ?Request {
+    return \Drupal::getContainer()->has('request_stack') ? \Drupal::requestStack()->getCurrentRequest() : NULL;
   }
 
   /**

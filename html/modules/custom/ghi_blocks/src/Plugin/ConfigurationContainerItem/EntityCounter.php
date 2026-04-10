@@ -11,6 +11,7 @@ use Drupal\ghi_blocks\Traits\ConfigurationItemValuePreviewTrait;
 use Drupal\ghi_form_elements\Attribute\ConfigurationContainerItem;
 use Drupal\ghi_form_elements\ConfigurationContainerItemPluginBase;
 use Drupal\ghi_plans\ApiObjects\Entities\EntityObjectInterface;
+use Drupal\ghi_plans\ApiObjects\Entities\GoverningEntity;
 use Drupal\ghi_plans\Entity\Plan;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -186,8 +187,8 @@ class EntityCounter extends ConfigurationContainerItemPluginBase {
 
     // Get the icon if there is any.
     $icon = NULL;
-    if ($entity && !empty($entity->icon)) {
-      $icon = $this->iconQuery->getIconEmbedCode($entity->icon);
+    if ($entity instanceof GoverningEntity && $entity->hasIcon()) {
+      $icon = $this->iconQuery->getIconEmbedCode($entity->getIcon());
     }
 
     $popover_content = NULL;
@@ -295,7 +296,7 @@ class EntityCounter extends ConfigurationContainerItemPluginBase {
       $prototype_id = $entity->getPrototypeId();
       if (empty($entity_prototype_options[$prototype_id])) {
         $entity_prototype_options[$prototype_id] = $entity->getPrototype()->getNamePlural();
-        $weight[$prototype_id] = $entity->order_number;
+        $weight[$prototype_id] = $entity->getOrderNumber();
       }
     }
 

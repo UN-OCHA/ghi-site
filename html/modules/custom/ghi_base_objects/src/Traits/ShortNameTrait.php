@@ -3,7 +3,7 @@
 namespace Drupal\ghi_base_objects\Traits;
 
 use Drupal\ghi_base_objects\Entity\BaseObjectInterface;
-use Drupal\hpc_common\Helpers\StringHelper;
+use Drupal\hpc_api\Helpers\StringHelper;
 
 /**
  * Helper trait for handling shortnames.

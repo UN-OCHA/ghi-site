@@ -3,31 +3,63 @@
 namespace Drupal\hpc_api\ApiObjects\Types;
 
 use Drupal\hpc_api\ApiObjects\Type;
-use Drupal\hpc_common\Helpers\StringHelper;
+use Drupal\hpc_api\Helpers\StringHelper;
 
 /**
  * Class for metric type objects.
  */
 class MetricType extends Type {
 
+  /**
+   * The name.
+   *
+   * @var string
+   */
+  protected string $name;
+
+  /**
+   * The machine name.
+   *
+   * @var string|null
+   */
+  protected ?string $machineName;
+
+  /**
+   * The label.
+   *
+   * @var string|null
+   */
+  protected ?string $label;
+
+  /**
+   * The locale.
+   *
+   * @var object
+   */
+  protected object $locale;
+
+  /**
+   * The lookup.
+   *
+   * @var array
+   */
+  protected array $lookup;
+
   const GRAPHQL_ITEMS = ['Id', 'Name', 'OtherName', 'NameFr', 'NameEs', 'HPCType', 'LabelLookup'];
 
   /**
    * {@inheritdoc}
    */
-  protected function map() {
-    $data = $this->getRawData();
-    return (object) [
-      'id' => $data->Id,
-      'name' => $data->Name,
-      'machine_name' => $data->HPCType ?? NULL,
-      'label' => $data->OtherName ?? NULL,
-      'locale' => (object) [
-        'fr' => $data->NameFr ?? NULL,
-        'es' => $data->NameEs ?? NULL,
-      ],
-      'lookup' => !empty($data->LabelLookup) ? explode('|', trim($data->LabelLookup, '|')) : [],
+  public function __construct(object $data) {
+    parent::__construct($data);
+    $this->name = $data->Name;
+    $this->machineName = $data->HPCType ?? NULL;
+    $this->label = $data->OtherName ?? NULL;
+    $this->locale = (object) [
+      'fr' => $data->NameFr ?? NULL,
+      'es' => $data->NameEs ?? NULL,
     ];
+    $this->lookup = !empty($data->LabelLookup) ? explode('|', trim($data->LabelLookup, '|')) : [];
   }
 
   /**
@@ -37,10 +69,10 @@ class MetricType extends Type {
    *   The label.
    */
   public function getLabel(?string $langcode = 'en'): string {
-    if (in_array($langcode, ['fr', 'es']) && $label = $this->map->locale->$langcode ?? NULL) {
+    if (in_array($langcode, ['fr', 'es']) && $label = $this->locale->$langcode ?? NULL) {
       return $label;
     }
-    return $this->map->label ?: $this->getName();
+    return $this->label ?: $this->getName();
   }
 
   /**
@@ -50,8 +82,8 @@ class MetricType extends Type {
    *   The machine name for the metric.
    */
   public function getMachineName(): string {
-    if ($this->map->machine_name) {
-      return StringHelper::camelCaseToUnderscoreCase($this->map->machine_name);
+    if ($this->machineName) {
+      return StringHelper::camelCaseToUnderscoreCase($this->machineName);
     }
     return StringHelper::camelCaseToUnderscoreCase(lcfirst(str_replace(' ', '', $this->getName())));
   }
@@ -66,10 +98,10 @@ class MetricType extends Type {
    *   TRUE if string matches any of the labels, FALSE otherwise.
    */
   public function matches($string): bool {
-    return strtolower($string) == strtolower($this->map->locale->fr ?? '')
-        || strtolower($string) == strtolower($this->map->locale->es ?? '')
-        || strtolower($string) == strtolower($this->map->name ?? '')
-        || in_array(strtolower($string), $this->map->lookup);
+    return strtolower($string) == strtolower($this->locale->fr ?? '')
+        || strtolower($string) == strtolower($this->locale->es ?? '')
+        || strtolower($string) == strtolower($this->name ?? '')
+        || in_array(strtolower($string), $this->lookup);
   }
 
 }

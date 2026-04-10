@@ -4,7 +4,7 @@ namespace Drupal\ghi_plans\ApiObjects\Prototypes;
 
 use Drupal\ghi_plans\Traits\PlanQueryTrait;
 use Drupal\hpc_api\ApiObjects\ApiObjectBase;
-use Drupal\hpc_common\Helpers\StringHelper;
+use Drupal\hpc_api\Helpers\StringHelper;
 
 /**
  * Abstraction for API attachment prototype objects.
@@ -12,6 +12,83 @@ use Drupal\hpc_common\Helpers\StringHelper;
 class AttachmentPrototype extends ApiObjectBase {
 
   use PlanQueryTrait;
+
+  /**
+   * The plan id.
+   *
+   * @var string
+   */
+  protected string $planId;
+
+  /**
+   * The name.
+   *
+   * @var string|null
+   */
+  protected ?string $name;
+
+  /**
+   * The ref code.
+   *
+   * @var string
+   */
+  protected string $refCode;
+
+  /**
+   * The type.
+   *
+   * @var string
+   */
+  protected string $type;
+
+  /**
+   * The fields.
+   *
+   * @var array
+   */
+  protected array $fields;
+
+  /**
+   * The entity ref codes.
+   *
+   * @var array
+   */
+  protected array $entityRefCodes;
+
+  /**
+   * The metric fields.
+   *
+   * @var array
+   */
+  protected array $metricFields;
+
+  /**
+   * The measurement fields.
+   *
+   * @var array
+   */
+  protected array $measurementFields;
+
+  /**
+   * The calculated fields.
+   *
+   * @var array
+   */
+  protected array $calculatedFields;
+
+  /**
+   * The original fields.
+   *
+   * @var array
+   */
+  protected array $originalFields;
+
+  /**
+   * The calculation methods.
+   *
+   * @var array
+   */
+  protected array $calculationMethods;
 
   /**
    * Define the dimension items used in queries.
@@ -44,8 +121,8 @@ class AttachmentPrototype extends ApiObjectBase {
   /**
    * {@inheritdoc}
    */
-  protected function map(): object {
-    $data = $this->getRawData();
+  public function __construct(object $data) {
+    parent::__construct($data);
     $value = is_string($data->Value) ? json_decode($data->Value ?? '') : $data->Value;
     $metric_fields = $value->metrics ?? [];
     $measurement_fields = $value->measureFields ?? [];
@@ -61,22 +138,19 @@ class AttachmentPrototype extends ApiObjectBase {
       $calculated_fields,
     );
 
-    return (object) [
-      'id' => $data->Id,
-      'plan_id' => $data->PlanId,
-      'name' => $value->Name ?? NULL,
-      'ref_code' => $data->RefCode,
-      'type' => strtolower($data->Type),
-      'fields' => $this->mapPrototypeFields($fields),
-      'entity_ref_codes' => $value->entities ?? [],
-      'metric_fields' => $this->mapPrototypeFields($metric_fields),
-      'measurement_fields' => $this->mapPrototypeFields($measurement_fields),
-      'calculated_fields' => $this->mapPrototypeFields($calculated_fields),
-      'original_fields' => $fields,
-      'calculation_methods' => array_map(function ($item) {
-        return strtolower($item);
-      }, $value->calculationMethod ?? []),
-    ];
+    $this->planId = $data->PlanId;
+    $this->name = $value->Name ?? NULL;
+    $this->refCode = $data->RefCode;
+    $this->type = strtolower($data->Type);
+    $this->fields = $this->mapPrototypeFields($fields);
+    $this->entityRefCodes = $value->entities ?? [];
+    $this->metricFields = $this->mapPrototypeFields($metric_fields);
+    $this->measurementFields = $this->mapPrototypeFields($measurement_fields);
+    $this->calculatedFields = $this->mapPrototypeFields($calculated_fields);
+    $this->originalFields = $fields;
+    $this->calculationMethods = array_map(function ($item) {
+      return strtolower($item);
+    }, $value->calculationMethod ?? []);
   }
 
   /**
@@ -129,7 +203,7 @@ class AttachmentPrototype extends ApiObjectBase {
    *   The plan id of the attachment prototype.
    */
   public function getPlanId(): ?int {
-    return $this->plan_id ?? NULL;
+    return $this->planId ?? NULL;
   }
 
   /**
@@ -179,7 +253,7 @@ class AttachmentPrototype extends ApiObjectBase {
    *   An array of field items.
    */
   public function getOriginalFields() {
-    return $this->original_fields;
+    return $this->originalFields;
   }
 
   /**
@@ -189,7 +263,7 @@ class AttachmentPrototype extends ApiObjectBase {
    *   An array of metric names.
    */
   public function getPlanningFields() {
-    return $this->metric_fields;
+    return $this->metricFields;
   }
 
   /**
@@ -199,7 +273,7 @@ class AttachmentPrototype extends ApiObjectBase {
    *   An array of metric names.
    */
   public function getMeasurementFields() {
-    return $this->measurement_fields;
+    return $this->measurementFields;
   }
 
   /**
@@ -209,7 +283,7 @@ class AttachmentPrototype extends ApiObjectBase {
    *   An array of metric names.
    */
   public function getCalculatedFields() {
-    return $this->calculated_fields;
+    return $this->calculatedFields;
   }
 
   /**
@@ -255,7 +329,7 @@ class AttachmentPrototype extends ApiObjectBase {
    *   Array of calculation method labels.
    */
   public function getCalculationMethods() {
-    return $this->calculation_methods;
+    return $this->calculationMethods;
   }
 
   /**
@@ -265,7 +339,7 @@ class AttachmentPrototype extends ApiObjectBase {
    *   The ref code string.
    */
   public function getRefCode() {
-    return $this->ref_code;
+    return $this->refCode;
   }
 
   /**
@@ -275,7 +349,7 @@ class AttachmentPrototype extends ApiObjectBase {
    *   An array of strings, e.g. SO, CQ, HC, ...
    */
   public function getEntityRefCodes() {
-    return $this->entity_ref_codes ?? [];
+    return $this->entityRefCodes ?? [];
   }
 
   /**

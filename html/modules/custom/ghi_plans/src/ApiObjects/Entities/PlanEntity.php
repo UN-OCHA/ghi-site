@@ -10,6 +10,27 @@ use Drupal\ghi_plans\Helpers\PlanEntityHelper;
 class PlanEntity extends EntityObjectBase {
 
   /**
+   * The parent entity ids.
+   *
+   * @var int[]
+   */
+  protected array $parentIds;
+
+  /**
+   * The governing entity parent id.
+   *
+   * @var int|null
+   */
+  protected ?int $governingEntityParentId;
+
+  /**
+   * The sort order.
+   *
+   * @var string|null
+   */
+  protected ?string $sortOrder;
+
+  /**
    * Define the dimension items used in queries.
    */
   const GRAPHQL_ITEMS = [
@@ -29,22 +50,16 @@ class PlanEntity extends EntityObjectBase {
   /**
    * {@inheritdoc}
    */
-  protected function map() {
-    $data = $this->getRawData();
-    return (object) [
-      'id' => $data->Id,
-      'description' => $data->Name,
-      // phpcs:disable
-      // @todo Retrieve and store the support information.
-      // 'support' => !empty($_entity_version->value->support) ? (array) $_entity_version->value->support : NULL,
-      // phpcs:enable
-      'parent_id' => $this->getParentId(),
-      'governing_entity_parent_id' => $data->CoordinationEntityId ?? NULL,
-      'custom_reference' => $data->CustomReference,
-
-      // Legacy support.
-      'custom_id' => $data->CustomReference,
-    ];
+  public function __construct(object $data) {
+    parent::__construct($data);
+    // phpcs:disable
+    // @todo Retrieve and store the support information.
+    // 'support' => !empty($_entity_version->value->support) ? (array) $_entity_version->value->support : NULL,
+    // phpcs:enable
+    $this->name = $data->Name;
+    $this->parentIds = array_map(fn ($item) => $item->ParentLogframeEntityId, $data->logframeEntityLink->items ?? []);
+    $this->governingEntityParentId = $data->CoordinationEntityId ?? NULL;
+    $this->sortOrder = $data->SortOrder ?? NULL;
   }
 
   /**
@@ -54,7 +69,7 @@ class PlanEntity extends EntityObjectBase {
    *   The id of the governing entity parent.
    */
   public function getGoverningEntityParentId(): ?int {
-    return $this->governing_entity_parent_id;
+    return $this->governingEntityParentId;
   }
 
   /**
@@ -64,11 +79,7 @@ class PlanEntity extends EntityObjectBase {
    *   The id of the direct parent.
    */
   public function getParentId(): ?int {
-    $items = $this->getRawData()->logframeEntityLink?->items ?? [];
-    if (empty($items)) {
-      return NULL;
-    }
-    return reset($items)->ParentLogframeEntityId;
+    return !empty($this->parentIds) ? reset($this->parentIds) : NULL;
   }
 
   /**
@@ -78,11 +89,7 @@ class PlanEntity extends EntityObjectBase {
    *   The ids of the parents.
    */
   public function getParentIds(): array {
-    $items = $this->getRawData()->logframeEntityLink?->items ?? [];
-    if (empty($items)) {
-      return [];
-    }
-    return array_map(fn ($item) => $item->ParentLogframeEntityId, $items);
+    return $this->parentIds;
   }
 
   /**
@@ -91,7 +98,7 @@ class PlanEntity extends EntityObjectBase {
    * @return \Drupal\ghi_plans\ApiObjects\Entities\PlanEntity[]
    *   The plan entity parents keyed by their entity ids.
    */
-  public function getPlanEntityParents() {
+  public function getPlanEntityParents(): array {
     $parents = [];
     foreach ($this->getParentIds() as $entity_id) {
       $parents[$entity_id] = PlanEntityHelper::getPlanEntity($entity_id);
@@ -102,8 +109,15 @@ class PlanEntity extends EntityObjectBase {
   /**
    * {@inheritdoc}
    */
-  public function getName() {
+  public function getName(): ?string {
     return $this->getPrototype()?->getNameSingular() ?? $this->getDescription();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getDescription(): ?string {
+    return $this->name;
   }
 
   /**
@@ -144,23 +158,22 @@ class PlanEntity extends EntityObjectBase {
   /**
    * {@inheritdoc}
    */
-  public function getComposedReference() {
-    $data = $this->getRawData();
-    return $data->ComposedReference ?: ($this->getEntityTypeRefCode() . $this->getCustomReference());
+  public function getComposedReference(): ?string {
+    return $this->composedReference ?: ($this->getEntityTypeRefCode() . $this->getCustomReference());
   }
 
   /**
    * {@inheritdoc}
    */
   public function getOrderNumber(): ?int {
-    return $this->getRawData()->SortOrder ?? parent::getOrderNumber();
+    return $this->sortOrder ?? parent::getOrderNumber();
   }
 
   /**
    * {@inheritdoc}
    */
   public function getSortKey(): ?string {
-    return $this->getRawData()->SortOrder ?? parent::getSortKey();
+    return $this->sortOrder ?? parent::getSortKey();
   }
 
   /**
@@ -170,7 +183,7 @@ class PlanEntity extends EntityObjectBase {
    *   The parent governing entity if found or NULL otherwise.
    */
   public function getParentGoverningEntity($recursion = FALSE): ?GoverningEntity {
-    if ($entity_id = $this->governing_entity_parent_id ?? NULL) {
+    if ($entity_id = $this->governingEntityParentId ?? NULL) {
       $entity = PlanEntityHelper::getGoverningEntity($entity_id);
       return $entity instanceof GoverningEntity ? $entity : NULL;
     }

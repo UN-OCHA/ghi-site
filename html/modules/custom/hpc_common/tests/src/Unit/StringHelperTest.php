@@ -3,10 +3,10 @@
 namespace Drupal\Tests\hpc_common\Unit;
 
 use Drupal\Tests\UnitTestCase;
-use Drupal\hpc_common\Helpers\StringHelper;
+use Drupal\hpc_api\Helpers\StringHelper;
 
 /**
- * @covers Drupal\hpc_common\Helpers\StringHelper
+ * @covers Drupal\hpc_api\Helpers\StringHelper
  */
 class StringHelperTest extends UnitTestCase {
 

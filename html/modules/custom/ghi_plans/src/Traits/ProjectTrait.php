@@ -25,10 +25,10 @@ trait ProjectTrait {
         continue;
       }
       foreach ($project_organizations as $organization) {
-        if (empty($organization_projects[$organization->id])) {
-          $organization_projects[$organization->id] = [];
+        if (empty($organization_projects[$organization->id()])) {
+          $organization_projects[$organization->id()] = [];
         }
-        $organization_projects[$organization->id][$project->id] = $project;
+        $organization_projects[$organization->id()][$project->id()] = $project;
       }
     }
     return $organization_projects;

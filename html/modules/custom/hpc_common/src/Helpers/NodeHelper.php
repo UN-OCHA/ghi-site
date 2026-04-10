@@ -100,29 +100,6 @@ class NodeHelper extends EntityHelper {
   }
 
   /**
-   * Retrieve a list of plans by title.
-   *
-   * @param string $title
-   *   String to search for.
-   * @param string $bundle
-   *   The bundle to look at.
-   * @param string $operator
-   *   The comparison operator.
-   *
-   * @return array
-   *   An array of matching entity objects.
-   */
-  public static function getNodesFromTitle($title, $bundle, $operator = 'CONTAINS') {
-    $nids = \Drupal::entityQuery('node')
-      ->condition('title', $title, $operator)
-      ->condition('type', $bundle)
-      ->sort('nid', 'DESC')
-      ->accessCheck()
-      ->execute();
-    return Node::loadMultiple($nids);
-  }
-
-  /**
    * Load a node from it's original ID.
    *
    * @param int $original_id

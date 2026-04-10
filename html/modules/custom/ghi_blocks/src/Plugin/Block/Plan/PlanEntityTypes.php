@@ -299,7 +299,7 @@ class PlanEntityTypes extends GHIBlockBase implements AutomaticTitleBlockInterfa
           if ($this->validatePlanEntity($entity, $validation_options)) {
             continue;
           }
-          $form['entity_ids'][$entity->id]['#disabled'] = TRUE;
+          $form['entity_ids'][$entity->id()]['#disabled'] = TRUE;
         }
       }
     }
@@ -340,7 +340,7 @@ class PlanEntityTypes extends GHIBlockBase implements AutomaticTitleBlockInterfa
       $ref_code = $entity->getEntityTypeRefCode();
       if (empty($options[$ref_code])) {
         $options[$ref_code] = $entity->getPluralName();
-        $weight[$ref_code] = $entity->getOrderNumber;
+        $weight[$ref_code] = $entity->getOrderNumber();
       }
     }
     uksort($options, function ($ref_code_a, $ref_code_b) use ($weight) {
@@ -393,7 +393,7 @@ class PlanEntityTypes extends GHIBlockBase implements AutomaticTitleBlockInterfa
     $items = [];
     $id_type = !empty($conf['id_type']) ? $conf['id_type'] : 'custom_id';
     foreach ($entities as $entity) {
-      $description = $entity->description;
+      $description = $entity->getDescription();
       $items[$entity->id()] = [
         'id' => $entity->getCustomName($id_type),
         'description' => $truncate_description ? Unicode::truncate($description, 120, TRUE, TRUE) : $description,
@@ -456,7 +456,7 @@ class PlanEntityTypes extends GHIBlockBase implements AutomaticTitleBlockInterfa
     if (!empty($entity_ids) && !in_array($entity->id(), $entity_ids)) {
       return FALSE;
     }
-    if (empty($entity->description)) {
+    if (empty($entity->getDescription())) {
       return FALSE;
     }
 

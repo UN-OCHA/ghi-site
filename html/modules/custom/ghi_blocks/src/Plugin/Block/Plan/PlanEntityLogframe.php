@@ -243,13 +243,13 @@ class PlanEntityLogframe extends GHIBlockBase implements MultiStepFormBlockInter
           ],
           '#create_placeholder' => TRUE,
           '#cache' => [
-            'context' => $this->getCacheContexts(),
+            'contexts' => $this->getCacheContexts(),
           ],
         ];
       }
       $contributes_heading = $entity instanceof PlanEntity ? $this->buildContributesToHeading($entity) : NULL;
       $entity_id = $this->getPlanEntityId($entity, $conf['entities']);
-      $entity_description = $this->getPlanEntityDescription($entity, $conf['entities']);
+      $entity_description = $this->getPlanEntityDescription($entity);
       $rendered_items[] = [
         'label' => $entity_id,
         'description' => $entity_description,
@@ -610,15 +610,13 @@ class PlanEntityLogframe extends GHIBlockBase implements MultiStepFormBlockInter
    *
    * @param \Drupal\ghi_plans\ApiObjects\PlanEntityInterface $entity
    *   The plan entity.
-   * @param array $conf
-   *   The entity configuration.
    * @param bool $truncate_description
    *   Whether to truncate the description or not.
    *
    * @return string|null
    *   The formatted plan entity description.
    */
-  private function getPlanEntityDescription(PlanEntityInterface $entity, array $conf, $truncate_description = FALSE): ?string {
+  private function getPlanEntityDescription(PlanEntityInterface $entity, $truncate_description = FALSE): ?string {
     $description = $entity->getDescription();
     return ($truncate_description && $description !== NULL) ? Unicode::truncate($description, 120, TRUE, TRUE) : $description;
   }
@@ -873,7 +871,7 @@ class PlanEntityLogframe extends GHIBlockBase implements MultiStepFormBlockInter
   public function entitiesForm(array $form, FormStateInterface $form_state) {
     $entity_ref_code_options = $this->getEntityRefCodeOptions();
     $wrapper_id = Html::getId('form-wrapper-ghi-block-config');
-    $ajax_parents = array_merge($form['#array_parents']);
+    $ajax_parents = array_merge($form['#array_parents'] ?? []);
     array_pop($ajax_parents);
 
     $page_node = $this->getPageNode();
@@ -956,7 +954,7 @@ class PlanEntityLogframe extends GHIBlockBase implements MultiStepFormBlockInter
         foreach ($matching_entities as $entity) {
           $entity_options[$entity->id()] = [
             'id' => $this->getPlanEntityId($entity, $defaults),
-            'description' => $this->getPlanEntityDescription($entity, $defaults, TRUE),
+            'description' => $this->getPlanEntityDescription($entity, TRUE),
           ];
         }
       }
@@ -1118,7 +1116,7 @@ class PlanEntityLogframe extends GHIBlockBase implements MultiStepFormBlockInter
     if (!$this->getCurrentPlanObject()) {
       return [];
     }
-    return $this->logframeManager->getEntityTypesFromPlanObject($this->getCurrentPlanObject());
+    return $this->logframeManager?->getEntityTypesFromPlanObject($this->getCurrentPlanObject()) ?: [];
   }
 
   /**
@@ -1136,7 +1134,7 @@ class PlanEntityLogframe extends GHIBlockBase implements MultiStepFormBlockInter
     if ($entity_ref_code == ApiObjectsPlan::ENTITY_REF_CODE && $context_object instanceof Plan) {
       /** @var \Drupal\ghi_plans\Plugin\FabricQuery\PlanQuery $query */
       $query = $this->getQueryHandler('plan');
-      $plan = $query->getPlan($context_object->getSourceId());
+      $plan = $query?->getPlan($context_object->getSourceId()) ?? NULL;
       return $plan ? [
         $plan->id() => $plan,
       ] : [];
@@ -1152,11 +1150,11 @@ class PlanEntityLogframe extends GHIBlockBase implements MultiStepFormBlockInter
     // Preload the entity prototypes.
     $entity_prototype_query = $this->getQueryHandler('entity_prototype');
     /** @var \Drupal\ghi_plans\Plugin\FabricQuery\EntityPrototypeQuery $entity_prototype_query */
-    $entity_prototype_query->getPlanPrototype($plan_id);
+    $entity_prototype_query?->getPlanPrototype($plan_id);
 
     /** @var \Drupal\ghi_plans\Plugin\FabricQuery\EntityQuery $query */
     $query = $this->getQueryHandler('entities');
-    $entities = $query->getEntitiesForPlan($plan_id, $context_object, NULL, $filter);
+    $entities = $query?->getEntitiesForPlan($plan_id, $context_object, NULL, $filter) ?? [];
     // This should give us plan and governing entity objects only, but let's
     // make sure.
     $entities = is_array($entities) ? array_filter($entities, function ($entity) {
@@ -1342,6 +1340,9 @@ class PlanEntityLogframe extends GHIBlockBase implements MultiStepFormBlockInter
     }
     /** @var \Drupal\ghi_plans\Plugin\FabricQuery\AttachmentPrototypeQuery $query */
     $query = $this->getQueryHandler('attachment_prototype');
+    if (!$query) {
+      return [];
+    }
     $attachment_prototypes = $query->getDataPrototypesForPlan($plan_object->getSourceId());
 
     $entity_ref_code = $this->getBlockConfig()['entities']['entity_ref_code'] ?? NULL;

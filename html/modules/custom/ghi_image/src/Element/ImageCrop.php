@@ -8,7 +8,6 @@ use Drupal\Core\Render\Attribute\FormElement;
 use Drupal\crop\Entity\Crop;
 use Drupal\crop\Entity\CropType;
 use Drupal\file\Entity\File;
-use Drupal\file_entity\Entity\FileEntity;
 use Drupal\image_widget_crop\Element\ImageCrop as ImageWidgetCropImageCrop;
 
 /**
@@ -133,8 +132,8 @@ class ImageCrop extends ImageWidgetCropImageCrop {
             'data-drupal-iwc-show-default-crop' => $element['#show_default_crop'] ? 'true' : 'false',
             'data-drupal-iwc-soft-limit' => Json::encode($crop_type->getSoftLimit()),
             'data-drupal-iwc-hard-limit' => Json::encode($crop_type->getHardLimit()),
-            'data-drupal-iwc-original-width' => ($file instanceof FileEntity) ? $file->getMetadata('width') : ($local_file_exists ? getimagesize($file_uri)[0] : NULL),
-            'data-drupal-iwc-original-height' => ($file instanceof FileEntity) ? $file->getMetadata('height') : ($local_file_exists ? getimagesize($file_uri)[1] : NULL),
+            'data-drupal-iwc-original-width' => $local_file_exists ? getimagesize($file_uri)[0] : NULL,
+            'data-drupal-iwc-original-height' => $local_file_exists ? getimagesize($file_uri)[1] : NULL,
           ] : [],
         ];
 

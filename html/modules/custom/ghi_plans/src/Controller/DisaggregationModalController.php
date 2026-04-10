@@ -46,8 +46,7 @@ class DisaggregationModalController extends ControllerBase {
     $field = $attachment->getFieldByType($metric_type->getMachineName());
     $metric_type_name = $metric_type->getMachineName();
     $entity = $attachment->getSourceEntity();
-    $icon = $entity instanceof GoverningEntity ? $entity->icon : NULL;
-    $icon_embed = $icon ? $this->iconQuery->getIconEmbedCode($icon) : NULL;
+    $icon_embed = $entity instanceof GoverningEntity && $entity->hasIcon() ? $this->iconQuery->getIconEmbedCode($entity->getIcon()) : NULL;
 
     $formatted_period = NULL;
     if ($metric_type_name && $attachment->isMeasurementField($metric_type_name) && $reporting_period = $attachment->getReportingPeriod($reporting_period_id)) {
@@ -230,17 +229,17 @@ class DisaggregationModalController extends ControllerBase {
         $row[] = [
           'data' => [
             '#theme' => 'hpc_autoformat_value',
-            '#value' => $location['total'],
+            '#value' => $location->totals[$metric_type->id()],
             '#unit_type' => $unit_type,
             '#unit_defaults' => $unit_defaults,
             '#decimal_format' => $decimal_format,
           ],
-          'data-sort-value' => $location['total'],
+          'data-sort-value' => $location->totals[$metric_type->id()],
           'data-sort-type' => 'numeric',
           'data-column-type' => $unit_type,
           'data-formatting' => 'numeric-full',
         ];
-        $totals[0] = ($totals[0] ?? 0) + (int) $location['total'];
+        $totals[0] = ($totals[0] ?? 0) + (int) $location->totals[$metric_type->id()];
       }
 
       $rows[] = [

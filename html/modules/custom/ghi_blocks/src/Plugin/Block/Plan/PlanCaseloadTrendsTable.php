@@ -133,9 +133,9 @@ class PlanCaseloadTrendsTable extends GHIBlockBase implements OverrideDefaultTit
       '#create_placeholder' => TRUE,
       '#cache' => [
         // Cache this per url and query to also capture the block settings.
-        'context' => $this->getCacheContexts(),
+        'contexts' => $this->getCacheContexts(),
         'tags' => $this->getCacheTags(),
-        'max' => $this->getCacheMaxAge(),
+        'max-age' => $this->getCacheMaxAge(),
         // Adding these cache keys here will trigger autoplaceholdering.
         'keys' => [
           $this->getPageNode()?->toUrl()?->toString() ?? $this->getCurrentUri(),

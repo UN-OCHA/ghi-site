@@ -12,6 +12,20 @@ use Drupal\hpc_common\Helpers\CommonHelper;
 class Organization extends BaseObject {
 
   /**
+   * The abbreviation.
+   *
+   * @var string|null
+   */
+  protected ?string $abbreviation;
+
+  /**
+   * The url.
+   *
+   * @var string|null
+   */
+  protected ?string $url;
+
+  /**
    * Define the dimension items used in queries.
    */
   const GRAPHQL_ITEMS = [
@@ -23,26 +37,12 @@ class Organization extends BaseObject {
   ];
 
   /**
-   * A list of clusters.
-   *
-   * @var array
+   * {@inheritdoc}
    */
-  public $clusters;
-
-  /**
-   * Map the raw data.
-   *
-   * @return object
-   *   An object with the mapped data.
-   */
-  protected function map() {
-    $data = $this->getRawData();
-    return (object) [
-      'id' => $data->Id ?? ($data->id ?? NULL),
-      'name' => $data->Name ?? ($data->name ?? NULL),
-      'abbreviation' => $data->Abbreviation ?? ($data->abbreviation ?? NULL),
-      'url' => CommonHelper::assureWellFormedUri($data->Url ?? ''),
-    ];
+  public function __construct(object $data) {
+    parent::__construct($data);
+    $this->abbreviation = $data->Abbreviation ?? ($data->abbreviation ?? NULL);
+    $this->url = CommonHelper::assureWellFormedUri($data->Url ?? '');
   }
 
   /**
@@ -52,7 +52,7 @@ class Organization extends BaseObject {
    *   The abbreviation of the organization.
    */
   public function getAbbreviation(): ?string {
-    return $this->map->abbreviation;
+    return $this->abbreviation;
   }
 
   /**
@@ -63,18 +63,6 @@ class Organization extends BaseObject {
    */
   public function getUrl(?array $options = []): ?Url {
     return $this->url ? Url::fromUri($this->url, $options) : NULL;
-  }
-
-  /**
-   * Get the names of the associated clusters.
-   *
-   * @return string[]
-   *   An array of cluster names.
-   */
-  public function getClusterNames() {
-    return array_map(function ($cluster) {
-      return $cluster->name;
-    }, $this->map->clusters);
   }
 
 }

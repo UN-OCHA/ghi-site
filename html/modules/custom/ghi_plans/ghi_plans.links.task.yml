@@ -1,9 +1,3 @@
-entity.base_object.plan_structure:
-  route_name: ghi_plans.base_object.plan_structure
-  base_route: entity.base_object.canonical
-  title: Plan structure
-  weight: 100
-
 hpc_api.fabric_report.plan_entity_lookup:
   route_name: ghi_plans.plan_entity_lookup
   base_route: hpc_api.fabric_report

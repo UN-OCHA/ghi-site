@@ -50,7 +50,10 @@ class PlanWebcontentFile extends GHIBlockBase {
 
     /** @var \Drupal\hpc_api\Plugin\FabricQuery\ResourceQuery $query */
     $query = $this->getQueryHandler('resource');
-    $resource = $query->getResource($conf['resource_id']);
+    $resource = $query?->getResource($conf['resource_id']) ?? NULL;
+    if (!$resource) {
+      return NULL;
+    }
     return [
       '#theme' => 'ghi_image',
       '#url' => $resource->getUrl()->toString(),

@@ -3,6 +3,10 @@
 namespace Drupal\Tests\ghi_plans\Kernel\ApiObjects;
 
 use Drupal\ghi_plans\ApiObjects\Partials\PlanOverviewPlan;
+use Drupal\ghi_plans\ApiObjects\Plan;
+use Drupal\ghi_plans\Plugin\FabricQuery\PlanQuery;
+use Drupal\hpc_api\ApiObjects\Types\PlanType;
+use Drupal\hpc_api\Query\FabricQueryManager;
 
 /**
  * Tests the PlanOverviewPlan API object.
@@ -33,7 +37,7 @@ class PlanOverviewPlanTest extends PlanApiObjectKernelTestBase {
    */
   protected function createMockRawData(array $data_overrides = []): object {
     $plan_overview_plan_defaults = [
-      'requirements' => (object) ['totalFunding' => 100000, 'fundingProgress' => 50000, 'revisedRequirements' => 75000],
+      'requirements' => 75000,
     ];
 
     $merged_overrides = array_merge($plan_overview_plan_defaults, $data_overrides);
@@ -45,8 +49,11 @@ class PlanOverviewPlanTest extends PlanApiObjectKernelTestBase {
    */
   public function testPlanOverviewPlanConstructorAndMapping(): void {
     $raw_data = $this->createMockRawData([
-      'Id' => 123,
-      'Name' => 'Test Plan Overview',
+      'plan' => new Plan((object) [
+        'Id' => 123,
+        'Name' => 'Test Plan Overview',
+        'Year' => 2025,
+      ]),
       'requirements' => 1500000,
     ]);
 
@@ -80,8 +87,22 @@ class PlanOverviewPlanTest extends PlanApiObjectKernelTestBase {
    * Test PlanOverviewPlan plan types.
    */
   public function testPlanPlanTypes(): void {
+    $plan_type = $this->prophesize(PlanType::class);
+    $plan_type->getName()->willReturn('Humanitarian response plan');
+    $plan_query = $this->prophesize(PlanQuery::class);
+    $plan_query->getPlanTypeByName('Humanitarian response plan')->willReturn($plan_type->reveal());
+    $fabric_query_manager = $this->prophesize(FabricQueryManager::class);
+    $fabric_query_manager->hasDefinition('plan')->willReturn(TRUE);
+    $fabric_query_manager->createInstance('plan')->willReturn($plan_query->reveal());
+    $this->container->set('plugin.manager.fabric_query_manager', $fabric_query_manager->reveal());
+
     $raw_data = $this->createMockRawData([
-      'PlanType' => 'Humanitarian response plan',
+      'plan' => new Plan((object) [
+        'Id' => 123,
+        'Name' => 'Test Plan Overview',
+        'Year' => 2025,
+        'PlanType' => 'Humanitarian response plan',
+      ]),
     ]);
     $plan_overview = new PlanOverviewPlan($raw_data);
     $this->assertNull($plan_overview->getPlanType());

@@ -137,4 +137,25 @@ class RequestHelperTest extends UnitTestCase {
     $this->assertEquals($result, RequestHelper::getQueryArgument($name, $arguments));
   }
 
+  /**
+   * Test flattenQuery method.
+   *
+   * @group RequestHelper
+   */
+  public function testFlattenQuery() {
+    $query = ['name' => 'test', 'page' => 1];
+    $result = RequestHelper::flattenQuery($query);
+    $this->assertSame('name=test&page=1', $result);
+  }
+
+  /**
+   * Test flattenQuery with empty array.
+   *
+   * @group RequestHelper
+   */
+  public function testFlattenQueryEmptyArray() {
+    $result = RequestHelper::flattenQuery([]);
+    $this->assertSame('', $result);
+  }
+
 }

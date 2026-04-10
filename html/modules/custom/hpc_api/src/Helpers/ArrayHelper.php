@@ -42,6 +42,16 @@ class ArrayHelper {
       $found = TRUE;
 
       foreach ($filters as $filter => $value) {
+        if (is_object($item) && method_exists($item, $filter)) {
+          $values = $item->$filter();
+          if (is_scalar($values) && $values == $value) {
+            $filtered_array[] = $item;
+          }
+          elseif (is_array($values) && in_array($value, $values)) {
+            $filtered_array[] = $item;
+          }
+          continue;
+        }
         $properties = explode('.', $filter);
         $obj = (object) $item;
 
@@ -155,7 +165,7 @@ class ArrayHelper {
         break;
 
       default:
-        throw new InvalidArgumentException('Invalid argument ' . $sort_type . ' for sort type. sortArray function only accepts sort types SORT_NUMERIC and SORT_STRING.');
+        throw new \InvalidArgumentException('Invalid argument ' . $sort_type . ' for sort type. sortArray function only accepts sort types SORT_NUMERIC and SORT_STRING.');
     }
   }
 
@@ -334,6 +344,27 @@ class ArrayHelper {
   }
 
   /**
+   * Transform the keys of the given array to underscore case.
+   *
+   * @param array $array
+   *   The array.
+   * @param array $exclude
+   *   An array of keys to exclude.
+   */
+  public static function transformKeysToUnderscore(&$array, array $exclude = []): void {
+    foreach (array_keys($array) as $key) {
+      if (in_array($key, $exclude)) {
+        continue;
+      }
+      $underscore_case = StringHelper::camelCaseToUnderscoreCase($key);
+      if ($underscore_case != $key) {
+        $array[$underscore_case] = $array[$key];
+        unset($array[$key]);
+      }
+    }
+  }
+
+  /**
    * Find the first item in an array by properties.
    *
    * @param array $array
@@ -499,7 +530,7 @@ class ArrayHelper {
         break;
 
       default:
-        throw new InvalidArgumentException('Invalid argument ' . $sort_type . ' for sort type. sortObjectsByProperty function only accepts sort types SORT_NUMERIC and SORT_STRING.');
+        throw new \InvalidArgumentException('Invalid argument ' . $sort_type . ' for sort type. sortObjectsByProperty function only accepts sort types SORT_NUMERIC and SORT_STRING.');
     }
   }
 

@@ -61,7 +61,7 @@ class IndicatorAttachment extends Attachment {
    *   The calculation method as a string.
    */
   public function getCalculationMethod() {
-    $calculation_method = $this->calculation_method;
+    $calculation_method = $this->calculationMethod;
     $prototype = $this->getPrototype();
     $available_methods = $prototype->getCalculationMethods();
     return in_array($calculation_method, $available_methods) ? $calculation_method : self::CALCULATION_METHOD_LATEST;

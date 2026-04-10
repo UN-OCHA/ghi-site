@@ -177,7 +177,7 @@ class PlanGoverningEntitiesTableTest extends PlanBlockKernelTestBase {
       'Id' => $cluster->getSourceId(),
       'Name' => $cluster->label(),
       'Description' => NULL,
-      'CustomReference' => NULL,
+      'CustomReference' => $this->randomString(),
     ]);
     $base_objects = $this->callPrivateMethod($plugin, 'loadBaseObjectsForEntities', [[$entity_object]]);
     $this->assertIsArray($base_objects);
@@ -252,7 +252,7 @@ class PlanGoverningEntitiesTableTest extends PlanBlockKernelTestBase {
         'Id' => $cluster->getSourceId(),
         'Name' => $cluster->label(),
         'Description' => NULL,
-        'CustomReference' => NULL,
+        'CustomReference' => $this->randomString(),
       ]);
     }, $clusters));
     $plugin->setQueryHandler('entities', $plan_entity_query->reveal());

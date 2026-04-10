@@ -47,9 +47,6 @@ class PlanOverviewCaseloadTest extends ApiObjectTestBase {
     $this->assertEquals(1, $caseload->getPlanId());
     $this->assertEquals('plan', $caseload->getSourceEntityType());
     $this->assertEquals(1, $caseload->getSourceEntityId());
-
-    // Test bundle method (from former testGetBundleReturnsCorrectBundle).
-    $this->assertEquals('planoverviewcaseload', $caseload->getBundle());
   }
 
   /**

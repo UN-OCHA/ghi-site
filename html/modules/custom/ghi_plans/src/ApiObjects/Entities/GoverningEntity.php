@@ -10,6 +10,27 @@ use Drupal\hpc_api\ApiObjects\Resource;
  */
 class GoverningEntity extends EntityObjectBase {
 
+  /**
+   * The icon name.
+   *
+   * @var string|null
+   */
+  protected ?string $icon;
+
+  /**
+   * The contacts.
+   *
+   * @var \Drupal\ghi_plans\ApiObjects\Contact[]
+   */
+  protected array $contacts;
+
+  /**
+   * The tags.
+   *
+   * @var string[]
+   */
+  protected array $tags;
+
   const ENTITY_REF_CODE = 'CL';
 
   /**
@@ -34,32 +55,20 @@ class GoverningEntity extends EntityObjectBase {
   /**
    * {@inheritdoc}
    */
-  protected function map() {
-    $data = $this->getRawData();
+  public function __construct(object $data) {
+    parent::__construct($data);
     $contacts = array_filter($data->coordinationEntityContact?->items ?? [], fn ($item) => !empty($item->contact));
-    return (object) [
-      'id' => $data->Id,
-      'name' => ($data->ComposedReference ?? '') . ': ' . $data->Name,
-      'group_name' => ($data->ComposedReference ?? '') . ': ' . $data->Name,
-      'description' => $data->Description ?: NULL,
-      'entity_name' => $data->Name,
-      'plan_id' => $data->PlanId ?? NULL,
-      'custom_reference' => $data->CustomReference,
-      'composed_reference' => $data->ComposedReference ?? NULL,
-      'icon' => NULL,
-      'contacts' => array_map(fn ($item): Contact => new Contact($item->contact), $contacts),
-      'tags' => !empty($data->HPCTags) ? explode('|', $data->HPCTags) : [],
 
-      // Legacy support.
-      'custom_id' => $data->CustomReference,
-    ];
+    $this->icon = NULL;
+    $this->contacts = array_map(fn ($item): Contact => new Contact($item->contact), $contacts);
+    $this->tags = !empty($data->HPCTags) ? explode('|', $data->HPCTags) : [];
   }
 
   /**
    * {@inheritdoc}
    */
   public function getDisplayName(): ?string {
-    return $this->map->entity_name;
+    return $this->entityName;
   }
 
   /**
@@ -106,13 +115,33 @@ class GoverningEntity extends EntityObjectBase {
   }
 
   /**
+   * Get the icon for this entity.
+   *
+   * @return string|null
+   *   The name of the icon.
+   */
+  public function getIcon(): ?string {
+    return $this->icon;
+  }
+
+  /**
+   * Check if the entity has an icon.
+   *
+   * @return bool
+   *   TRUE if the entity has an icon, FALSE otherwise..
+   */
+  public function hasIcon(): bool {
+    return $this->getIcon() !== NULL;
+  }
+
+  /**
    * Get the contacts for this entity.
    *
    * @return \Drupal\ghi_plans\ApiObjects\Contact[]
    *   An array of contact objects.
    */
   public function getContacts(): array {
-    return $this->map->contacts;
+    return $this->contacts;
   }
 
   /**
@@ -122,7 +151,7 @@ class GoverningEntity extends EntityObjectBase {
    *   An array of tag names.
    */
   public function getTags(): array {
-    return $this->map->tags ?: [];
+    return $this->tags ?: [];
   }
 
 }

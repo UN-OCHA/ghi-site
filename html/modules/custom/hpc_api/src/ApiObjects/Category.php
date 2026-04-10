@@ -13,6 +13,20 @@ abstract class Category extends ApiObjectBase implements CategoryInterface {
   const GRAPHQL_ITEMS = ['Id', 'Name', 'Description'];
 
   /**
+   * The name.
+   *
+   * @var string
+   */
+  protected string $name;
+
+  /**
+   * The description.
+   *
+   * @var string|null
+   */
+  protected ?string $description;
+
+  /**
    * The namespace for a category, e.g. ageGroup, genders.
    *
    * @var string
@@ -22,13 +36,10 @@ abstract class Category extends ApiObjectBase implements CategoryInterface {
   /**
    * {@inheritdoc}
    */
-  protected function map() {
-    $data = $this->getRawData();
-    return (object) [
-      'id' => $data->Id,
-      'name' => $data->Name,
-      'description' => $data->Description ?? NULL,
-    ];
+  public function __construct(object $data) {
+    parent::__construct($data);
+    $this->name = $data->Name;
+    $this->description = $data->Description ?? NULL;
   }
 
   /**

@@ -22,8 +22,8 @@ class ArrayHelperTest extends UnitTestCase {
     ];
 
     return [
-      [$array, 1, 2, FALSE, [2, 1, 'one', 'two'], NULL],
-      [$array, 1, 'one', FALSE, ['one', 2, 1, 'two'], NULL],
+      [$array, 1, 2, FALSE, [2, 1, 'one', 'two'], TRUE],
+      [$array, 1, 'one', FALSE, ['one', 2, 1, 'two'], TRUE],
       [$array, 1, 3, FALSE, [1, 2, 'one', 'two'], FALSE],
       [$array, '1', 2, TRUE, [1, 2, 'one', 'two'], FALSE],
       [$array, 1, '2', TRUE, [1, 2, 'one', 'two'], FALSE],

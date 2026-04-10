@@ -35,12 +35,8 @@ class PlanReportingPeriodTest extends PlanApiObjectKernelTestBase {
     $raw_data = $this->createMockRawData([
       'Id' => 123,
     ]);
-
     $plan_reporting_period = new PlanReportingPeriod($raw_data);
-
     $this->assertApiObjectBasics($plan_reporting_period, 'planreportingperiod');
-
-    $this->assertEquals('planreportingperiod', $plan_reporting_period->getBundle());
   }
 
 }
