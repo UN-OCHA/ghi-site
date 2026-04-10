@@ -77,7 +77,11 @@ class ObjectStore {
     $storage['objects'][$object->id()] = $object;
     // Create a lookup.
     foreach ($object->getObjectLookupProperties() as $property_name) {
-      $property_value = $object->getRawData()->$property_name ?? NULL;
+      $property_value = $object->getRawData()?->$property_name ?? NULL;
+      $method = 'get' . ucfirst($property_name);
+      if (!$property_value && method_exists($object, $method)) {
+        $property_value = $object->$method() ?? NULL;
+      }
       if (empty($property_value) || !is_scalar($property_value)) {
         continue;
       }
@@ -198,7 +202,7 @@ class ObjectStore {
     $collection_key_method = 'get' . ucfirst(strtolower($collection_key));
     foreach ($objects as $object) {
       assert($object instanceof ApiObjectInterface);
-      $property_value = $object->getRawData()->$collection_key ?? ($object->$collection_key ?? NULL);
+      $property_value = $object->getRawData()?->$collection_key ?? NULL;
       if (!$property_value && method_exists($object, $collection_key_method)) {
         $property_value = $object->$collection_key_method();
       }

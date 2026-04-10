@@ -16,7 +16,7 @@ use Drupal\ghi_form_elements\ConfigurationContainerItemPluginInterface;
 use Drupal\ghi_form_elements\Traits\AjaxElementTrait;
 use Drupal\ghi_form_elements\Traits\ConfigurationContainerGroup;
 use Drupal\hpc_common\Helpers\ArrayHelper;
-use Drupal\hpc_common\Helpers\StringHelper;
+use Drupal\hpc_api\Helpers\StringHelper;
 
 /**
  * Provides a configuration container element.

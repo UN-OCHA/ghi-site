@@ -35,11 +35,13 @@ class MapObjectsTest extends UnitTestCase {
   public function testOrganizationMapObjects() {
     $project = new Project((object) [
       'Id' => 1,
+      'PlanId' => 1,
       'Name' => 'Test project',
       'ProjectCode' => '1.0',
       'currentPublishedVersionId' => '1.0',
       'CurrentRequestedFunds' => 100,
-      'locationIds' => (object) ['ids' => []],
+      'locationIds' => [],
+      'organizations' => [],
     ]);
     $organization_map_object = new OrganizationMapObject(1, 'Test organization', [1, 2, 3], [
       'projects' => [$project],

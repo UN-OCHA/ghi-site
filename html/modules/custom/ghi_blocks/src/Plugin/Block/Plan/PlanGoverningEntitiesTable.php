@@ -18,7 +18,6 @@ use Drupal\ghi_form_elements\Traits\ConfigurationContainerTrait;
 use Drupal\ghi_plans\ApiObjects\Entities\EntityObjectInterface;
 use Drupal\ghi_plans\ApiObjects\Entities\GoverningEntity;
 use Drupal\ghi_plans\Entity\Plan;
-use Drupal\ghi_plans\Helpers\PlanStructureHelper;
 use Drupal\hpc_common\Plugin\HPCBlockMetadata;
 use Drupal\hpc_downloads\Interfaces\HPCDownloadExcelInterface;
 use Drupal\hpc_downloads\Interfaces\HPCDownloadPNGInterface;
@@ -490,9 +489,12 @@ class PlanGoverningEntitiesTable extends GHIBlockBase implements ConfigurableTab
     $context = $this->getBlockContext();
     $plan = $context['plan_object'];
     assert($plan instanceof Plan);
-    $plan_structure = PlanStructureHelper::getRpmPlanStructure($plan);
-    $first_gve = !empty($plan_structure['governing_entities']) ? reset($plan_structure['governing_entities']) : NULL;
-    return $first_gve ? $first_gve->label_singular : $this->t('Cluster');
+    $t_options = ['langcode' => $plan->getPlanLanguage()];
+    $cluster_label_map = [
+      Plan::CLUSTER_TYPE_CLUSTER => $this->t('Cluster', [], $t_options),
+      Plan::CLUSTER_TYPE_SECTOR => $this->t('Sector', [], $t_options),
+    ];
+    return $cluster_label_map[$plan->getPlanClusterType()] ?? $cluster_label_map[Plan::CLUSTER_TYPE_CLUSTER];
   }
 
   /**

@@ -49,6 +49,7 @@ class LocationTest extends ApiBaseObjectTestBase {
       'Pcode' => 'TEST001',
       'ISO3' => 'TST',
       'CountryId' => 1,
+      'CountryISO3' => 'TST',
       'RecordStatus' => 'active',
       'ActiveUntil' => '1434326400000',
     ];
@@ -80,7 +81,7 @@ class LocationTest extends ApiBaseObjectTestBase {
     $this->assertEquals(['12.345', '67.890'], $location->getLatLng());
     $this->assertEquals(1, $location->getAdminLevel());
     $this->assertEquals('TEST001', $location->getPcode());
-    $this->assertNull($location->getIso3());
+    $this->assertEquals('TST', $location->getIso3());
     $this->assertFalse($location->isCountry());
 
     $this->assertEquals('location', $location->getBundle());

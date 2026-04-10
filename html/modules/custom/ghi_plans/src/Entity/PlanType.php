@@ -2,7 +2,7 @@
 
 namespace Drupal\ghi_plans\Entity;
 
-use Drupal\hpc_common\Helpers\StringHelper;
+use Drupal\hpc_api\Helpers\StringHelper;
 use Drupal\taxonomy\Entity\Term;
 
 /**

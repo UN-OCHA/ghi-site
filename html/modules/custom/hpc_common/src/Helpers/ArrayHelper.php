@@ -20,8 +20,11 @@ class ArrayHelper extends ApiArrayHelper {
    *   The second key.
    * @param bool $strict
    *   Whether to use strict for finding a key in the array.
+   *
+   * @return bool
+   *   TRUE if the swapping was successfull, FALSE otherwise.
    */
-  public static function swap(array &$array, $key1, $key2, $strict = FALSE) {
+  public static function swap(array &$array, $key1, $key2, $strict = FALSE): bool {
     $keys = array_keys($array);
     if (!array_key_exists($key1, $array) || !array_key_exists($key2, $array)) {
       return FALSE;
@@ -35,6 +38,7 @@ class ArrayHelper extends ApiArrayHelper {
     [$keys[$index1], $keys[$index2]] = [$key2, $key1];
     [$array[$key1], $array[$key2]] = [$array[$key2], $array[$key1]];
     $array = array_combine($keys, array_values($array));
+    return TRUE;
   }
 
   /**
@@ -48,7 +52,7 @@ class ArrayHelper extends ApiArrayHelper {
    * @return array
    *   The processed array.
    */
-  public static function arrayMapAssoc(callable $callable, array $array) {
+  public static function arrayMapAssoc(callable $callable, array $array): array {
     return array_combine(array_keys($array), array_map($callable, $array, array_keys($array)));
   }
 
@@ -63,7 +67,7 @@ class ArrayHelper extends ApiArrayHelper {
    * @return array
    *   The processed array.
    */
-  public static function mapObjectsToString(array $array) {
+  public static function mapObjectsToString(array $array): array {
     foreach ($array as $key => $value) {
       if (is_object($value)) {
         if ($value instanceof \Stringable) {
@@ -86,7 +90,7 @@ class ArrayHelper extends ApiArrayHelper {
    * @param array $array
    *   The input array.
    */
-  public static function sortMultiDimensionalArrayByKeys(array &$array) {
+  public static function sortMultiDimensionalArrayByKeys(array &$array): void {
     $is_assoc = array_keys($array) !== range(0, count($array) - 1);
     if ($is_assoc) {
       ksort($array);
@@ -107,7 +111,7 @@ class ArrayHelper extends ApiArrayHelper {
    * @param array $array
    *   The input array.
    */
-  public static function reduceArray(array &$array) {
+  public static function reduceArray(array &$array): void {
     foreach ($array as $key => &$a) {
       if (is_array($a)) {
         if (empty($a)) {
@@ -130,7 +134,7 @@ class ArrayHelper extends ApiArrayHelper {
    * @return array
    *   The deduplicated array.
    */
-  public static function deduplicateStrings(array $array) {
+  public static function deduplicateStrings(array $array): array {
     $names_used = [];
     foreach ($array as &$name) {
       $names_used[$name] = $names_used[$name] ?? 0;
@@ -145,14 +149,14 @@ class ArrayHelper extends ApiArrayHelper {
   /**
    * Tell whether all members of $array validate the $predicate.
    */
-  public static function all(array $array, callable $predicate) {
+  public static function all(array $array, callable $predicate): bool {
     return $array === array_filter($array, $predicate);
   }
 
   /**
    * Tell whether any member of $array validates the $predicate.
    */
-  public static function any(array $array, $predicate) {
+  public static function any(array $array, $predicate): bool {
     return !empty(array_filter($array, $predicate));
   }
 

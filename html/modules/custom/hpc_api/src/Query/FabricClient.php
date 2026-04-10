@@ -498,7 +498,17 @@ class FabricClient {
       $properties = array_keys(get_object_vars($data));
       $namespace = count($properties) == 1 ? reset($properties) : NULL;
     }
-    return $namespace ? ArrayHelper::keyByProperty($data?->{$namespace}?->items ?? [], $key_property) : [];
+    if (!$namespace || !property_exists($data, $namespace) || !is_object($data->{$namespace} ?? NULL)) {
+      return [];
+    }
+    if (property_exists($data->{$namespace}, 'items')) {
+      return ArrayHelper::keyByProperty($data?->{$namespace}?->items ?? [], $key_property);
+    }
+    if (property_exists($data->{$namespace}, 'groupBy')) {
+      $aggregations = array_map(fn ($item) => (object) $item->aggregations, $data?->{$namespace}?->groupBy ?? []);
+      return !empty($aggregations) ? (array) reset($aggregations) : [];
+    }
+    return [];
   }
 
   /**

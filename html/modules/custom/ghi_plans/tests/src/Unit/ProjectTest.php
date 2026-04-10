@@ -36,8 +36,9 @@ class ProjectTest extends ApiObjectTestBase {
     $this->assertIsArray($project->getLocationIds());
     $this->assertEquals([], $project->getLocationIds());
 
-    $organization = $this->prophesize(Organization::class)->reveal();
-    $this->assertFalse($project->hasOrganization($organization));
+    $organization = $this->prophesize(Organization::class);
+    $organization->id()->willReturn(1);
+    $this->assertFalse($project->hasOrganization($organization->reveal()));
   }
 
   /**

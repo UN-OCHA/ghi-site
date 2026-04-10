@@ -9,6 +9,13 @@ use Drupal\hpc_api\ApiObjects\Type;
  */
 class Unit extends Type {
 
+  /**
+   * The French name.
+   *
+   * @var string
+   */
+  protected string $nameFrench;
+
   const GRAPHQL_ITEMS = ['Id', 'Name', 'NameFrench'];
 
   const TYPE_PERCENTAGE = 'percentage';
@@ -18,14 +25,21 @@ class Unit extends Type {
   const GROUP_AMOUNT = 'amount';
 
   /**
+   * {@inheritdoc}
+   */
+  public function __construct(object $data) {
+    parent::__construct($data);
+    $this->nameFrench = $data->NameFrench ?? NULL;
+  }
+
+  /**
    * Get the french name.
    *
    * @return string|null
    *   Either a string or NULL.
    */
   public function getNameFrench(): ?string {
-    $data = $this->getRawData();
-    return $data->NameFrench ?? NULL;
+    return $this->nameFrench;
   }
 
   /**

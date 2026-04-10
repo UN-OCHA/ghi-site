@@ -112,7 +112,7 @@ class PlanOverviewQuery extends FabricQueryBase {
       if ($attachment instanceof CaseloadAttachmentInterface) {
         $plan_id = $attachment->getPlanId();
         $caseloads_by_plan[$plan_id] = $caseloads_by_plan[$plan_id] ?? [];
-        $caseloads_by_plan[$plan_id][$attachment->id()] = $attachment->getRawData();
+        $caseloads_by_plan[$plan_id][$attachment->id()] = $attachment;
       }
       if ($attachment instanceof FinancialAttachment) {
         $plan_id = $attachment->getPlanId();
@@ -123,9 +123,11 @@ class PlanOverviewQuery extends FabricQueryBase {
 
     foreach ($plans as $plan) {
       $plan_id = $plan->id();
-      $plan_object = $plan->getRawData();
-      $plan_object->caseloads = $caseloads_by_plan[$plan_id] ?? [];
-      $plan_object->requirements = !empty($requirements_by_plan[$plan_id]) ? reset($requirements_by_plan[$plan_id]) : 0;
+      $plan_object = (object) [
+        'plan' => $plan,
+        'caseloads' => $caseloads_by_plan[$plan_id] ?? [],
+        'requirements' => !empty($requirements_by_plan[$plan_id]) ? reset($requirements_by_plan[$plan_id]) : 0,
+      ];
       $plan = new PlanOverviewPlan($plan_object);
       $this->plans[$plan->id()] = $plan;
     }
@@ -350,7 +352,7 @@ class PlanOverviewQuery extends FabricQueryBase {
       return $plan_entity->getSourceId();
     }, $result);
     $plans = array_filter($plans, function ($plan) use ($plan_ids) {
-      return in_array($plan->id, $plan_ids);
+      return in_array($plan->id(), $plan_ids);
     });
   }
 

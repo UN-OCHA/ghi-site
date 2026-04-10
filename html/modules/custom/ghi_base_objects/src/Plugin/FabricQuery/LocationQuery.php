@@ -55,6 +55,7 @@ class LocationQuery extends FabricQueryBase {
     }
     $items = $this->fabricClient->createQuery('locations', Location::getGraphQlItems())
       ->setFilter('Id', $location_ids)
+      ->setFilter('AdminLevel', 'NOT NULL')
       ->execute() ?: [];
     $locations = $this->buildResultObjects($items, Location::class);
     return $locations;

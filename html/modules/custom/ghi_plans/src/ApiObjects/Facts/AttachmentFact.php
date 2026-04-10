@@ -8,6 +8,13 @@ namespace Drupal\ghi_plans\ApiObjects\Facts;
 class AttachmentFact extends FactBase {
 
   /**
+   * The description.
+   *
+   * @var string|null
+   */
+  protected ?string $description;
+
+  /**
    * Define the fact items used in queries.
    */
   const GRAPHQL_ITEMS = [
@@ -33,25 +40,9 @@ class AttachmentFact extends FactBase {
   /**
    * {@inheritdoc}
    */
-  protected function map() {
-    $fact = $this->getRawData();
-    return (object) [
-      'id' => $fact->Id,
-      'attachment_id' => $fact->AttachmentId,
-      'metric_id' => $fact->MetricTypeId,
-      'location_id' => $fact->LocationId,
-      'gender_id' => $fact->GenderId,
-      'age_group_id' => $fact->AgeGroupId,
-      'population_status_id' => $fact->PopulationStatusId,
-      'settlement_type_id' => $fact->SettlementTypeId,
-      'disability_status_id' => $fact->DisabilityStatusId,
-      'health_intervention_category_id' => $fact->HealthInterventionCategoryId,
-      'delivery_modality_id' => $fact->DeliveryModalityId,
-      'custom_metric_name' => $fact->CustomMetricName,
-      'description' => $fact->Description,
-      'is_total' => $fact->IsTotal,
-      'value' => $fact->ValueNum,
-    ];
+  public function __construct(object $data) {
+    parent::__construct($data);
+    $this->description = $data->Description;
   }
 
 }

@@ -7,6 +7,7 @@ use Drupal\Core\Cache\CacheableDependencyInterface;
 use Drupal\Core\Cache\CacheableDependencyTrait;
 use Drupal\Core\DependencyInjection\DependencySerializationTrait;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
+use Drupal\hpc_api\Helpers\ArrayHelper;
 
 /**
  * Base class for API objects.
@@ -18,32 +19,32 @@ abstract class ApiObjectBase implements ApiObjectInterface, CacheableDependencyI
   use CacheableDependencyTrait;
 
   /**
-   * The original data for an object from the HPC API.
+   * The id.
    *
-   * @var object
+   * @var int
    */
-  protected $data;
+  protected int $id;
 
   /**
-   * The mapped data for an object from the HPC API.
+   * The raw data.
    *
-   * @var object
+   * @var mixed
    */
-  protected $map;
+  protected mixed $rawData;
 
   /**
    * {@inheritdoc}
    */
   public function __construct($data) {
-    $this->setRawData($data);
-    $this->updateMap();
+    $this->id = (int) $data->Id;
+    $this->rawData = $data;
   }
 
   /**
    * {@inheritdoc}
    */
-  public function id() {
-    return (int) ($this->map?->id ?? ($this->data->id ?? $this->data->Id));
+  public function id(): int {
+    return $this->id;
   }
 
   /**
@@ -64,50 +65,7 @@ abstract class ApiObjectBase implements ApiObjectInterface, CacheableDependencyI
    * {@inheritdoc}
    */
   public function getRawData() {
-    return $this->data ?: NULL;
-  }
-
-  /**
-   * Set the raw data for the attachment, as returned by the API.
-   *
-   * @param object $data
-   *   The raw data object.
-   */
-  protected function setRawData($data) {
-    $this->data = $data;
-  }
-
-  /**
-   * Update the internal map.
-   */
-  protected function updateMap() {
-    $this->map = $this->map($this->data);
-  }
-
-  /**
-   * Access mapped properties.
-   *
-   * @param string $property
-   *   The property to retrieve.
-   *
-   * @return mixed|null
-   *   The property value if it's available.
-   */
-  public function __get($property) {
-    return $this->map->$property ?? NULL;
-  }
-
-  /**
-   * Allow for empty or isset checks using magical accessors.
-   *
-   * @param string $property
-   *   The property to check.
-   *
-   * @return bool
-   *   TRUE if the value is present and not empty, FALSE otherwise.
-   */
-  public function __isset($property) {
-    return property_exists($this->map, $property) && !empty($this->map->$property);
+    return $this->rawData ?: NULL;
   }
 
   /**
@@ -146,29 +104,44 @@ abstract class ApiObjectBase implements ApiObjectInterface, CacheableDependencyI
    * {@inheritdoc}
    */
   public function toArray() {
-    $array = (array) $this->map ?? [];
-    foreach ($array as $key => $item) {
+    $reflect = new \ReflectionClass($this);
+    $array = [];
+    $exclude_properties = [
+      'stringTranslation',
+      'cacheMaxAge',
+      'rawData',
+    ];
+    foreach ($reflect->getProperties() as $property) {
+      $key = $property->getName();
+      if ($property->isPrivate() || in_array($key, $exclude_properties)) {
+        continue;
+      }
+      $item = $this->$key;
       if (is_object($item) && method_exists($item, 'toArray')) {
         $array[$key] = $item->toArray();
       }
-      if (is_array($item)) {
+      elseif (is_array($item)) {
         foreach ($item as $_key => $_item) {
           if (is_object($_item) && method_exists($_item, 'toArray')) {
             $array[$key][$_key] = $_item->toArray();
           }
+          elseif (is_array($_item) || is_scalar($_item)) {
+            $array[$key][$_key] = $_item;
+          }
         }
       }
+      else {
+        $array[$key] = $item;
+      }
     }
+
+    // Classes can define a constant to exclude specific array keys from being
+    // transformed.
+    $exclude_keys = $reflect->getConstant('MAINTAIN_ARRAY_KEYS') ?: [];
+    ArrayHelper::transformKeysToUnderscore($array, $exclude_keys);
+
     return $array;
   }
-
-  /**
-   * Map the raw data.
-   *
-   * @return object
-   *   An object with the mapped data.
-   */
-  abstract protected function map();
 
   /**
    * Set the cache tags for this object.
@@ -178,32 +151,6 @@ abstract class ApiObjectBase implements ApiObjectInterface, CacheableDependencyI
    */
   public function setCacheTags($cache_tags) {
     $this->cacheTags = Cache::mergeTags($this->cacheTags, $cache_tags);
-  }
-
-  /**
-   * Serialize the data for this object.
-   *
-   * @return array
-   *   An array with serialized data for this object.
-   */
-  public function __serialize() {
-    return ['data' => serialize($this->data)];
-  }
-
-  /**
-   * Unserialize this object based on the given data.
-   *
-   * @param array $data
-   *   The serialized data.
-   */
-  public function __unserialize(array $data) {
-    if (empty($data['data'])) {
-      return;
-    }
-    $this->setRawData(unserialize($data['data']));
-    if ($this->data) {
-      $this->updateMap();
-    }
   }
 
 }

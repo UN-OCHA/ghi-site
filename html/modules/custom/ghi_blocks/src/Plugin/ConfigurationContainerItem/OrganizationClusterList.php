@@ -91,7 +91,7 @@ class OrganizationClusterList extends ConfigurationContainerItemPluginBase {
     if ($clusters_by_organizations === NULL) {
       $clusters_by_organizations = $this->projectQuery->getProjectClustersByOrganization($plan_object, $base_object instanceof BaseObjectChildInterface ? $base_object : NULL);
     }
-    return $clusters_by_organizations[$organization->id] ?? NULL;
+    return $clusters_by_organizations[$organization->id()] ?? NULL;
   }
 
   /**
@@ -146,9 +146,9 @@ class OrganizationClusterList extends ConfigurationContainerItemPluginBase {
         return [
           0 => [
             '#theme' => 'hpc_tooltip',
-            '#tooltip' => $cluster->name,
+            '#tooltip' => $cluster->getName(),
             '#tag_content' => [
-              '#markup' => Markup::create($this->iconQuery->getIconEmbedCode($cluster->icon)),
+              '#markup' => Markup::create($this->iconQuery->getIconEmbedCode($cluster->getIcon())),
             ],
           ],
         ];

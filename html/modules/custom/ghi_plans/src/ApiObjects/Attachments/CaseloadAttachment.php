@@ -19,21 +19,8 @@ class CaseloadAttachment extends Attachment implements CaseloadAttachmentInterfa
    *   The caseload value if found.
    */
   public function getCaseloadValue($metric_type, $metric_name = NULL): ?float {
-    if (!$this->hasValues()) {
-      return NULL;
-    }
-    foreach ($this->getTotals() as $total) {
-      if (!$total->getMetric()) {
-        continue;
-      }
-      if ($total->getMetric()->getMachineName() == $metric_type) {
-        return $total->getValue();
-      }
-      if ($metric_name && $total->getMetric()->getName() == $metric_name) {
-        return $total->getValue();
-      }
-    }
-    return NULL;
+    $values = $this->getCurrentValues();
+    return $values[$metric_type] ?? NULL;
   }
 
 }

@@ -170,10 +170,7 @@ abstract class FabricQueryBase extends PluginBase implements FabricQueryPluginIn
   }
 
   /**
-   * Disable caching.
-   *
-   * @return static
-   *   Returns the query instance for chaining.
+   * {@inheritdoc}
    */
   public function disableCache(): static {
     $this->fabricClient->disableCache();

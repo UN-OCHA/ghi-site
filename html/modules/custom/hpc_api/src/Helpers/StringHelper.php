@@ -1,6 +1,6 @@
 <?php
 
-namespace Drupal\hpc_common\Helpers;
+namespace Drupal\hpc_api\Helpers;
 
 use Drupal\Component\Utility\Html;
 

@@ -25,7 +25,7 @@ trait AttachmentTableTrait {
    *   An array of entity objects, aka clusters.
    */
   public function getEntityObjects() {
-    /** @var \Drupal\ghi_plans\Plugin\FabricQuery\PlanEntityQuery $query */
+    /** @var \Drupal\ghi_plans\Plugin\FabricQuery\EntityQuery $query */
     $query = $this->getQueryHandler('entities');
     $plan_id = $this->getCurrentPlanId();
     return $query->getEntitiesForPlan($plan_id, $this->getPageNode(), 'governing');
@@ -93,11 +93,11 @@ trait AttachmentTableTrait {
     $attachments = $attachments ?? ($this->getAttachments() ?? []);
     $prototype_opions = [];
     foreach ($attachments as $attachment) {
-      $prototype = $attachment->prototype;
-      if (array_key_exists($prototype->id, $prototype_opions)) {
+      $prototype = $attachment->getPrototype();
+      if (array_key_exists($prototype->id(), $prototype_opions)) {
         continue;
       }
-      $prototype_opions[$prototype->id] = $prototype;
+      $prototype_opions[$prototype->id()] = $prototype;
     }
     return $prototype_opions;
   }

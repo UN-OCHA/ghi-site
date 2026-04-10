@@ -133,9 +133,9 @@ class PlanTable extends GHIBlockBase implements HPCDownloadExcelInterface, HPCDo
       '#progress_groups' => TRUE,
       '#soft_limit' => $this->getBlockConfig()['table']['soft_limit'] ?? 0,
       '#cache' => [
-        'context' => $this->getCacheContexts(),
+        'contexts' => $this->getCacheContexts(),
         'tags' => $this->getCacheTags(),
-        'max' => $this->getCacheMaxAge(),
+        'max-age' => $this->getCacheMaxAge(),
       ],
       '#block_id' => $this->getBlockId(),
     ];

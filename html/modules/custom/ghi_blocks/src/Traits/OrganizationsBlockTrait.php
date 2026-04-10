@@ -88,9 +88,20 @@ trait OrganizationsBlockTrait {
    *   An array of arrays. First level key is the organization id, second level
    *   key the project id and the value is a project object.
    */
-  private function getProjectsByOrganization(?array $organizations = NULL) {
+  private function getProjectsByOrganization() {
     $plan_object = $this->getCurrentPlanObject();
     return $this->getProjectQuery()->getPlanProjectsByOrganization($plan_object);
+  }
+
+  /**
+   * Get the projects for the current plan.
+   *
+   * @return \Drupal\ghi_plans\ApiObjects\Project[]
+   *   An array of project objects.
+   */
+  private function getProjects() {
+    $plan_object = $this->getCurrentPlanObject();
+    return $this->getProjectQuery()->getProjectsForPlanId($plan_object->getSourceId());
   }
 
   /**

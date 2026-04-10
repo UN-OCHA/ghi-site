@@ -8,6 +8,20 @@ namespace Drupal\hpc_api\ApiObjects;
 abstract class Type extends ApiObjectBase implements TypeInterface {
 
   /**
+   * The name.
+   *
+   * @var string
+   */
+  protected string $name;
+
+  /**
+   * The description.
+   *
+   * @var string|null
+   */
+  protected ?string $description;
+
+  /**
    * Define the dimension items used in queries.
    */
   const GRAPHQL_ITEMS = ['Id', 'Name', 'Description'];
@@ -15,13 +29,10 @@ abstract class Type extends ApiObjectBase implements TypeInterface {
   /**
    * {@inheritdoc}
    */
-  protected function map() {
-    $data = $this->getRawData();
-    return (object) [
-      'id' => $data->Id,
-      'name' => $data->Name,
-      'description' => $data->Description ?? NULL,
-    ];
+  public function __construct(object $data) {
+    parent::__construct($data);
+    $this->name = $data->Name;
+    $this->description = $data->Description ?? NULL;
   }
 
   /**

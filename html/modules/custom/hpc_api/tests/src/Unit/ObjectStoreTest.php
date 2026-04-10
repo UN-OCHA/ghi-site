@@ -121,6 +121,20 @@ class ObjectStoreTest extends UnitTestCase {
 class CustomApiObject extends ApiObjectBase {
 
   /**
+   * The name.
+   *
+   * @var string
+   */
+  protected string $name;
+
+  /**
+   * The code.
+   *
+   * @var string
+   */
+  protected string $code;
+
+  /**
    * Define the properties used for storage lookups.
    */
   const LOOKUP_PROPERTIES = [
@@ -130,19 +144,12 @@ class CustomApiObject extends ApiObjectBase {
   ];
 
   /**
-   * Map the raw data.
-   *
-   * @return object
-   *   An object with the mapped data.
+   * Public constructor.
    */
-  protected function map() {
-    $data = $this->getRawData();
-
-    return (object) [
-      'id' => $data->Id,
-      'name' => $data->Name,
-      'code' => $data->Code,
-    ];
+  public function __construct(object $data) {
+    parent::__construct($data);
+    $this->name = $data->Name;
+    $this->code = $data->Code;
   }
 
 }

@@ -249,7 +249,7 @@ class SparkLineChart extends ConfigurationContainerItemPluginBase {
         $tooltips[$reporting_period->id()] = NULL;
         continue;
       }
-      $totals = $attachment->values;
+      $totals = $attachment->getCurrentValues();
 
       // Prepare the tooltip items.
       $tooltip_items = [];

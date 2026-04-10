@@ -267,9 +267,9 @@ function common_design_subtheme_preprocess_block(&$variables) {
     $variables['attributes']['class'][] = 'content-width';
   }
 
-  // Make sure that full width blocks with a title show that title inside the
+  // Make sure that full width blocks show the title inside the
   // content area.
-  if (!empty($variables['full_width']) && !empty($variables['content']['#title'])) {
+  if (!empty($variables['full_width'])) {
     $variables['title_attributes']['class'][] = 'content-width';
   }
 

@@ -4,7 +4,6 @@ namespace Drupal\ghi_plans\ApiObjects\Partials;
 
 use Drupal\ghi_base_objects\ApiObjects\BaseObject;
 use Drupal\ghi_base_objects\ApiObjects\Country;
-use Drupal\ghi_plans\ApiObjects\Attachments\CaseloadAttachment;
 use Drupal\ghi_plans\ApiObjects\Attachments\CaseloadAttachmentInterface;
 use Drupal\ghi_plans\ApiObjects\PlanReportingPeriod;
 use Drupal\ghi_plans\Entity\Plan;
@@ -12,7 +11,7 @@ use Drupal\ghi_plans\Traits\AttachmentFilterTrait;
 use Drupal\ghi_plans\Traits\PlanReportingPeriodTrait;
 use Drupal\ghi_plans\Traits\PlanTypeTrait;
 use Drupal\hpc_common\Helpers\CommonHelper;
-use Drupal\hpc_common\Helpers\StringHelper;
+use Drupal\hpc_api\Helpers\StringHelper;
 
 /**
  * Abstraction class for a plan partial object.
@@ -28,6 +27,41 @@ class PlanOverviewPlan extends BaseObject {
   use AttachmentFilterTrait;
 
   /**
+   * The plan type.
+   *
+   * @var string|null
+   */
+  protected ?string $planType;
+
+  /**
+   * The requirements.
+   *
+   * @var float
+   */
+  protected float $requirements;
+
+  /**
+   * Whether the plan is part of the GHO.
+   *
+   * @var bool
+   */
+  protected bool $isPartOfGHO;
+
+  /**
+   * The last published reporting period id.
+   *
+   * @var int|null
+   */
+  protected ?int $lastPublishedReportingPeriodId;
+
+  /**
+   * The countries.
+   *
+   * @var \Drupal\ghi_base_objects\ApiObjects\Country[]
+   */
+  protected array $countries;
+
+  /**
    * The caseloads.
    *
    * @var \Drupal\ghi_plans\ApiObjects\Attachments\CaseloadAttachment[]
@@ -37,18 +71,18 @@ class PlanOverviewPlan extends BaseObject {
   /**
    * {@inheritdoc}
    */
-  protected function map() {
-    $data = $this->getRawData();
-
-    $this->caseloads = array_map(function ($item) {
-      return new CaseloadAttachment($item);
-    }, $data->caseloads ?? []);
-
-    return (object) [
-      'id' => $data->Id,
-      'name' => $data->Name,
-      'requirements' => $data->requirements ?: 0,
-    ];
+  public function __construct(object $data) {
+    /** @var \Drupal\ghi_plans\ApiObjects\Plan $plan */
+    $plan = $data->plan;
+    $this->rawData = $data;
+    $this->id = $plan->id();
+    $this->name = $plan->getName();
+    $this->planType = $plan->getPlanType()?->getName() ?? NULL;
+    $this->requirements = $data->requirements ?: 0;
+    $this->isPartOfGHO = $plan->isPartOfGho();
+    $this->lastPublishedReportingPeriodId = $plan->getLastPublishedReportingPeriodId();
+    $this->countries = $plan->getCountries();
+    $this->caseloads = $data->caseloads ?? [];
   }
 
   /**
@@ -119,7 +153,7 @@ class PlanOverviewPlan extends BaseObject {
     if ($fetch_from_entity && $plan_type = $this->getPlanType()) {
       return $plan_type->label();
     }
-    return $this->getRawData()->PlanType ?? NULL;
+    return $this->planType ?? NULL;
   }
 
   /**
@@ -219,7 +253,7 @@ class PlanOverviewPlan extends BaseObject {
    *   TRUE if the plan is partof the GHO, FALSE otherwise.
    */
   public function isPartOfGho() {
-    return $this->getRawData()->IsPartOfGHO ?? FALSE;
+    return $this->isPartOfGHO;
   }
 
   /**
@@ -315,11 +349,10 @@ class PlanOverviewPlan extends BaseObject {
    *   The reporting period object or NULL.
    */
   public function getLastPublishedReportingPeriod(): ?PlanReportingPeriod {
-    $period_id = $this->getRawData()->lastPublishedReportingPeriodId;
-    if (!$period_id) {
+    if (!$this->lastPublishedReportingPeriodId) {
       return NULL;
     }
-    return $this->getPlanReportingPeriod($this->id(), $period_id);
+    return $this->getPlanReportingPeriod($this->id(), $this->lastPublishedReportingPeriodId);
   }
 
   /**
@@ -329,15 +362,7 @@ class PlanOverviewPlan extends BaseObject {
    *   An array of country objects, keyed by the country id.
    */
   public function getCountries(): array {
-    $countries = [];
-    if (empty($this->getRawData()->planLocation?->items)) {
-      return $countries;
-    }
-    foreach ($this->getRawData()->planLocation?->items as $item) {
-      $country = new Country($item->location);
-      $countries[$country->id()] = $country;
-    }
-    return $countries;
+    return $this->countries;
   }
 
   /**

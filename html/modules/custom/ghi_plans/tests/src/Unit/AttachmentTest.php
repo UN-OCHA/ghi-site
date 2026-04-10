@@ -130,7 +130,6 @@ class AttachmentTest extends ApiObjectTestBase {
     ];
     $this->setPrivateProperty($attachment, 'totals', $totals);
     $this->assertNotEmpty($attachment->getTotals());
-    $this->callPrivateMethod($attachment, 'updateMap');
 
     $conf = [
       'processing' => 'single',
@@ -494,7 +493,7 @@ class AttachmentTest extends ApiObjectTestBase {
     $this->assertEquals('BP1', $attachment->getCustomIdWithRefCode());
     $this->assertEquals('BP1', $attachment->getComposedReference());
     $this->assertEquals('HPC 2023', $attachment->getDescription());
-    $this->assertEquals('caseload', $attachment->getType());
+    $this->assertEquals('caseload', $attachment->getAttachmentType());
     $this->assertEquals(1112, $attachment->getSourceEntityId());
     $this->assertEquals('plan', $attachment->getSourceEntityType());
     $this->assertEquals('Plan', $attachment->getSourceEntityTypeLabel());
@@ -589,7 +588,7 @@ class AttachmentTest extends ApiObjectTestBase {
     $this->assertInstanceOf(IndicatorAttachment::class, $attachment);
     $this->assertEquals('IN1', $attachment->getTitle());
     $this->assertEquals('Nombre de personnes non déplacées en insécurité alimentaire sévère ont reçu une assistance alimentaire', $attachment->getDescription());
-    $this->assertEquals('indicator', $attachment->getType());
+    $this->assertEquals('indicator', $attachment->getAttachmentType());
     $this->assertEmpty($attachment->getSourceEntity());
     $this->assertCount(2, $attachment->getFields());
     $this->assertCount(1, $attachment->getPlanningFields());

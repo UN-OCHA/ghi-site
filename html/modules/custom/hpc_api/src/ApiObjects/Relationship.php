@@ -8,6 +8,27 @@ namespace Drupal\hpc_api\ApiObjects;
 class Relationship extends ApiObjectBase {
 
   /**
+   * The type.
+   *
+   * @var mixed
+   */
+  protected mixed $type;
+
+  /**
+   * The source.
+   *
+   * @var object
+   */
+  protected object $source;
+
+  /**
+   * The target.
+   *
+   * @var object
+   */
+  protected object $target;
+
+  /**
    * Define the dimension items used in queries.
    */
   const GRAPHQL_ITEMS = [
@@ -20,27 +41,18 @@ class Relationship extends ApiObjectBase {
   ];
 
   /**
-   * Map the raw data.
-   *
-   * This uses only what we needed up to now. More properties can be mapped if
-   * needed.
-   *
-   * @return object
-   *   An object with the mapped data.
+   * {@inheritdoc}
    */
-  protected function map() {
-    $data = $this->getRawData();
-    return (object) [
-      'id' => $data->Id,
-      'type' => $data->RelationshipType,
-      'source' => (object) [
-        'type' => $data->FromEntityTypeId,
-        'id' => $data->FromId,
-      ],
-      'target' => (object) [
-        'type' => $data->ToEntityTypeId,
-        'id' => $data->ToId,
-      ],
+  public function __construct(object $data) {
+    parent::__construct($data);
+    $this->type = $data->RelationshipType;
+    $this->source = (object) [
+      'type' => $data->FromEntityTypeId,
+      'id' => $data->FromId,
+    ];
+    $this->target = (object) [
+      'type' => $data->ToEntityTypeId,
+      'id' => $data->ToId,
     ];
   }
 

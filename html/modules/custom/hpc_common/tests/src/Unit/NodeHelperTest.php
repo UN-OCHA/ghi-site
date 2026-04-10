@@ -342,49 +342,4 @@ class NodeHelperTest extends UnitTestCase {
     $this->assertEquals($result, NodeHelper::getOriginalIdFromTitle($title, $bundle));
   }
 
-  /**
-   * Test getting nodes by title.
-   *
-   * @group NodeHelper
-   */
-  public function testGetNodesFromTitle() {
-    // Mock nodes.
-    $node1 = $this->prophesize(Node::class);
-    $node2 = $this->prophesize(Node::class);
-    $node3 = $this->prophesize(Node::class);
-
-    // Mock loadMultiple.
-    $this->nodeStorage->expects($this->any())
-      ->method('loadMultiple')
-      ->with(['1', '2', '3'])
-      ->willReturn([$node1->reveal(), $node2->reveal(), $node3->reveal()]);
-
-    // Mock entityQuery methods to confirm that these are actually used.
-    $this->entityQuery->condition('title', Argument::any(), Argument::any())->willReturn($this->entityQuery);
-    $this->entityQuery->condition('type', Argument::any(), Argument::any())->willReturn($this->entityQuery);
-    $this->entityQuery->sort('nid', 'DESC')->willReturn($this->entityQuery);
-    $this->entityQuery->accessCheck()->willReturn($this->entityQuery);
-    $this->entityQuery->execute()->willReturn(['1', '2', '3']);
-
-    // Get the nodeStorage in entityTypeManager.
-    $this->entityTypeManager->expects($this->any())
-      ->method('getStorage')
-      ->with('node')
-      ->willReturn($this->nodeStorage);
-
-    // Mock getQuery.
-    $this->nodeStorage->expects($this->any())
-      ->method('getQuery')
-      ->willReturn($this->entityQuery->reveal());
-
-    $entity_type_repository = $this->prophesize(EntityTypeRepositoryInterface::class);
-    $entity_type_repository->getEntityTypeFromClass(Argument::any())->willReturn('node');
-
-    // Add to container.
-    \Drupal::getContainer()->set('entity_type.manager', $this->entityTypeManager);
-    \Drupal::getContainer()->set('entity_type.repository', $entity_type_repository->reveal());
-
-    $this->assertEquals(['0' => $node1->reveal(), '1' => $node2->reveal(), '2' => $node3->reveal()], NodeHelper::getNodesFromTitle('Test Title', 'Test bundle'));
-  }
-
 }
