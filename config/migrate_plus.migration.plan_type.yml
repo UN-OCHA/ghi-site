@@ -51,4 +51,6 @@ destination:
     - description
     - field_original_id
     - field_abbreviation
+idMap: {  }
 migration_dependencies: {  }
+include: null
