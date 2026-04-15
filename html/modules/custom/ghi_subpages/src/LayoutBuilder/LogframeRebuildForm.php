@@ -146,7 +146,6 @@ class LogframeRebuildForm extends FormBase {
       '#type' => 'link',
       '#title' => $this->t('Cancel'),
       '#url' => $section_storage->getLayoutBuilderUrl(),
-      '#weight' => -1,
       '#attributes' => [
         'class' => [
           'dialog-cancel',

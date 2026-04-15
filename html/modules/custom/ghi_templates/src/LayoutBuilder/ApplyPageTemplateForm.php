@@ -142,18 +142,6 @@ class ApplyPageTemplateForm extends TemplateFormBase {
       '#default_value' => $this->getSubmittedPageTemplate($form_state)?->id() ?? array_key_first($page_template_options),
     ];
 
-    $form['actions']['cancel'] = [
-      '#type' => 'link',
-      '#title' => $this->t('Cancel'),
-      '#url' => $section_storage->getLayoutBuilderUrl(),
-      '#weight' => -1,
-      '#attributes' => [
-        'class' => [
-          'dialog-cancel',
-        ],
-      ],
-    ];
-
     $form['actions']['validate'] = [
       '#type' => 'submit',
       '#value' => $this->t('Validate'),
@@ -163,6 +151,17 @@ class ApplyPageTemplateForm extends TemplateFormBase {
       $form['actions']['validate']['#ajax']['rebuild'] = TRUE;
       $form['actions']['validate']['#ajax']['callback'] = '::ajaxSubmit';
     }
+
+    $form['actions']['cancel'] = [
+      '#type' => 'link',
+      '#title' => $this->t('Cancel'),
+      '#url' => $section_storage->getLayoutBuilderUrl(),
+      '#attributes' => [
+        'class' => [
+          'dialog-cancel',
+        ],
+      ],
+    ];
 
     return $form;
   }

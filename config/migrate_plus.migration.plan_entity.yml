@@ -65,6 +65,8 @@ destination:
     - name
     - field_plan
     - field_prototype_id
+idMap: {  }
 migration_dependencies:
   required:
     - plan
+include: null

@@ -52,4 +52,6 @@ destination:
   overwrite_properties:
     - name
     - parent
+idMap: {  }
 migration_dependencies: {  }
+include: null

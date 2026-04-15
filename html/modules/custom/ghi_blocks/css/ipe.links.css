@@ -1,6 +1,9 @@
+.layout-builder-ipe-actions {
+  gap: 1rem !important;
+}
 .layout-builder-ipe-actions .dropbutton-wrapper.layout-builder-ipe--link {
   display: flex !important;
-  margin: 0.5rem 0.75rem !important;
+  margin: 0.5rem 0 !important;
   padding: 0 !important;
   width: initial !important;
 }

@@ -67,4 +67,6 @@ destination:
     - field_longitude
     - field_country_code
     - field_place_code
+idMap: {  }
 migration_dependencies: {  }
+include: null

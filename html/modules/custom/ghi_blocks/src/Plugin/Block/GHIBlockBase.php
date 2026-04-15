@@ -1454,7 +1454,6 @@ abstract class GHIBlockBase extends HPCBlockBase {
       '#type' => 'link',
       '#title' => $this->t('Cancel'),
       '#url' => $this->routeMatch->getParameter('section_storage')->getLayoutBuilderUrl(),
-      '#weight' => -1,
       '#attributes' => [
         'class' => [
           'dialog-cancel',

@@ -200,7 +200,6 @@ class SectionMenuItemForm extends FormBase {
       '#url' => Url::fromRoute('ghi_sections.node.section_navigation', [
         'node' => $node->id(),
       ]),
-      '#weight' => -1,
       '#attributes' => [
         'class' => [
           'dialog-cancel',

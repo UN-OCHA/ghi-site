@@ -1,5 +1,5 @@
 {
-    "_hash": "114951bb39fcb9817e32a37adaf854edc000b965c78f5e628773304510bc97f1",
+    "_hash": "0fa3a1269c141cc43a3d80f72917e398325e979ad265c5b4371fc642dfdabd63",
     "patches": {
         "drupal/core": [
             {
@@ -113,6 +113,18 @@
                 }
             }
         ],
+        "drupal/autologout": [
+            {
+                "package": "drupal/autologout",
+                "description": "Issue #3580058: Undefined array key 'cookie_samesite' warning after upgrade to 2.02",
+                "url": "./patches/autologout-3580058-mr.patch",
+                "sha256": "73cb32c43d37958a11a6ccfeee35e9b39849dddf4c6b2139d601507c47a20edc",
+                "depth": 1,
+                "extra": {
+                    "provenance": "patches-file:composer.patches.json"
+                }
+            }
+        ],
         "drupal/file_mdm": [
             {
                 "package": "drupal/file_mdm",
@@ -195,12 +207,14 @@
                 "extra": {
                     "provenance": "patches-file:composer.patches.json"
                 }
-            },
+            }
+        ],
+        "drupal/phpexcel": [
             {
-                "package": "drupal/page_manager",
-                "description": "Issue #3536704: [PHP8.4] Misc NULL deprecation warning on a few files",
-                "url": "https://www.drupal.org/files/issues/2026-03-07/page_manager-php8-4-deprecation-3536704-15.patch",
-                "sha256": "e97c945f609348108156ce95f691f63962ae994dea77f1c5303aa0b541b10c22",
+                "package": "drupal/phpexcel",
+                "description": "Issue #3567264: PHP 8.4: Implicitly nullable parameter declarations deprecated",
+                "url": "https://www.drupal.org/files/issues/2026-01-26/php84-3.patch",
+                "sha256": "4f977fe87b37f67e63f9ec62f1285f3cd7692ecdfb843b9627230d9fe4620a0f",
                 "depth": 1,
                 "extra": {
                     "provenance": "patches-file:composer.patches.json"
