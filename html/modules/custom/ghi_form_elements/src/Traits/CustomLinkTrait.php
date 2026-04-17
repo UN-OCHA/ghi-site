@@ -28,30 +28,30 @@ trait CustomLinkTrait {
   /**
    * {@inheritdoc}
    */
-  public function getLinkFromConfiguration(array $conf, array $contexts) {
+  public function getLinkFromConfiguration(array $conf, array $contexts): ?Link {
+    $link = NULL;
     if (array_key_exists('add_link', $conf) && empty($conf['add_link'])) {
-      return NULL;
+      return $link;
     }
     if (empty($conf['link_type'])) {
-      return NULL;
+      return $link;
     }
     $page_node = ($contexts['page_node'] ?? NULL) instanceof NodeInterface ? $contexts['page_node'] : NULL;
     $section_node = ($contexts['section_node'] ?? NULL) instanceof SectionNodeInterface ? $contexts['section_node'] : NULL;
     if ($conf['link_type'] == 'custom') {
-      if (empty($conf['link_custom']['url'])) {
-        return NULL;
+      if (!empty($conf['link_custom']['url'])) {
+        $link = $this->getLinkFromUri($conf['link_custom']['url'], ($conf['label'] ?? NULL) ?: NULL);
       }
-      return $this->getLinkFromUri($conf['link_custom']['url'], ($conf['label'] ?? NULL) ?: NULL);
     }
     elseif ($section_node && $page_node) {
       $targets = self::getLinkTargetUrls($section_node, $page_node);
       $configured_target = $conf['link_related']['target'];
-      if (empty($targets[$configured_target])) {
-        return NULL;
+      if (!empty($targets[$configured_target])) {
+        $url = $targets[$configured_target];
+        $link = $this->getLinkFromUrl($url, ($conf['label'] ?? NULL) ?: NULL);
       }
-      $url = $targets[$configured_target];
-      return $this->getLinkFromUrl($url, ($conf['label'] ?? NULL) ?: NULL);
     }
+    return $link;
   }
 
   /**
@@ -90,14 +90,7 @@ trait CustomLinkTrait {
    * @return \Drupal\Core\Link
    *   The link object.
    */
-  protected function getLinkFromUrl(Url $url, $label = NULL) {
-    $anonymous_access = $url->access(new AnonymousUserSession());
-    if (!$anonymous_access) {
-      return NULL;
-    }
-    if (!$url->access()) {
-      return NULL;
-    }
+  protected function getLinkFromUrl(Url $url, $label = NULL): ?Link {
     $link = $url->access() ? Link::fromTextAndUrl($label, $url) : NULL;
     if (!$link) {
       return NULL;
@@ -122,7 +115,7 @@ trait CustomLinkTrait {
 
     $classes = ['cd-button'];
     $classes[] = $is_external ? 'external' : 'read-more';
-    if (!$anonymous_access) {
+    if (!$url->access(new AnonymousUserSession())) {
       $classes[] = 'no-public-access';
       $attributes['data-tippy-content'] = $this->t('This link will not be displayed publicly because an anonymous user has no access to the targeted page.');
       $attributes['data-toggle'] = 'tooltip';
@@ -141,7 +134,7 @@ trait CustomLinkTrait {
    * @return bool
    *   TRUE if the uri string should be considered internal, FALSE otherwise.
    */
-  private function isInternalUri($uri) {
+  private function isInternalUri($uri): bool {
     return str_starts_with($uri, 'internal:');
   }
 

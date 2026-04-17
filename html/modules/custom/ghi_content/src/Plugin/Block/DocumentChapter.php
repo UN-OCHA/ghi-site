@@ -9,7 +9,6 @@ use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\ghi_blocks\Interfaces\MultiStepFormBlockInterface;
 use Drupal\ghi_blocks\Interfaces\OverrideDefaultTitleBlockInterface;
 use Drupal\ghi_content\Entity\ContentBase;
-use Drupal\ghi_content\RemoteContent\RemoteArticleInterface;
 use Drupal\ghi_content\RemoteContent\RemoteChapterInterface;
 use Drupal\ghi_content\RemoteContent\RemoteDocumentInterface;
 
@@ -327,11 +326,12 @@ class DocumentChapter extends ContentBlockBase implements MultiStepFormBlockInte
    */
   private function getChapterArticles() {
     $chapter = $this->getChapter();
-    $articles = $chapter ? array_filter(array_map(function (RemoteArticleInterface $article) {
-      $article_node = $this->articleManager->loadNodeForRemoteContent($article);
-      return $article_node?->access('view') ? $article_node : NULL;
-    }, $chapter->getArticles())) : [];
-    return $articles;
+    if (!$chapter) {
+      return NULL;
+    }
+    $article_ids = $chapter->getArticleIds();
+    $articles = $this->articleManager->loadNodesForRemoteIds($chapter->getSource()->getPluginId(), $article_ids);
+    return array_filter($articles, fn ($article) => $article->access('view'));
   }
 
   /**

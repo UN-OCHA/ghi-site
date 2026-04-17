@@ -4,7 +4,6 @@ namespace Drupal\ghi_content\Entity;
 
 use Drupal\Core\Cache\Cache;
 use Drupal\ghi_content\RemoteContent\RemoteChapterInterface;
-use Drupal\ghi_content\RemoteContent\RemoteContentInterface;
 use Drupal\ghi_content\RemoteContent\RemoteDocumentInterface;
 use Drupal\node\NodeInterface;
 
@@ -27,7 +26,7 @@ class Document extends ContentBase {
    */
   public function hasArticle(Article $article) {
     foreach ($this->getChapters() as $chapter) {
-      $articles = $this->getChapterArticles($chapter, FALSE);
+      $articles = $this->getChapterArticles($chapter);
       $article_ids = array_map(function (NodeInterface $node) {
         return $node->id();
       }, $articles);
@@ -76,19 +75,20 @@ class Document extends ContentBase {
    *   The articles for the given chapter.
    */
   public function getChapterArticles(RemoteChapterInterface $chapter) {
-    $articles = array_filter(array_map(function (RemoteContentInterface $remote_article) {
-      $_node = $this->getArticleManager()->loadNodeForRemoteContent($remote_article);
-      if (!$_node || !$_node->isPublished()) {
+    $article_ids = $chapter->getArticleIds();
+    $articles = $this->getArticleManager()->loadNodesForRemoteIds($chapter->getSource()->getPluginId(), $article_ids);
+    $articles = array_filter(array_map(function ($article) {
+      if (!$article || !$article->isPublished()) {
         return NULL;
       }
       // Cloning is important here, to prevent wrong links when the same
       // article is part of multiple documents.
-      $node = clone $_node;
-      if ($node instanceof ContentBase) {
-        $node->setContextNode($this);
+      $clone = clone $article;
+      if ($clone instanceof ContentBase) {
+        $clone->setContextNode($this);
       }
-      return $node;
-    }, $chapter->getArticles()));
+      return $clone;
+    }, $articles));
     return $articles;
   }
 
@@ -127,8 +127,9 @@ class Document extends ContentBase {
     if ($cache_tags === NULL) {
       $cache_tags = parent::getCacheTags();
       foreach ($this->getChapters() as $chapter) {
-        foreach ($chapter->getArticles() as $remote_article) {
-          $article = $this->getArticleManager()->loadNodeForRemoteContent($remote_article);
+        $article_ids = $chapter->getArticleIds();
+        $articles = $this->getArticleManager()->loadNodesForRemoteIds($chapter->getSource()->getPluginId(), $article_ids);
+        foreach ($articles as $article) {
           if (!$article instanceof Article) {
             continue;
           }
