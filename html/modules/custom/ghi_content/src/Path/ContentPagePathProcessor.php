@@ -26,9 +26,36 @@ class ContentPagePathProcessor implements InboundPathProcessorInterface, Outboun
   use ContentPathTrait;
 
   /**
+   * Validate if we want to handle the given path.
+   *
+   * @param string $path
+   *   The path to validate.
+   *
+   * @return bool
+   *   TRUE if we want to handle the path, FALSE otherwise.
+   */
+  private function validatePath($path): bool {
+    $paths = [
+      '/plan/',
+      '/document/',
+      '/article/',
+      '/node/',
+    ];
+    foreach ($paths as $string) {
+      if (str_starts_with($path, $string)) {
+        return TRUE;
+      }
+    }
+    return FALSE;
+  }
+
+  /**
    * {@inheritdoc}
    */
   public function processInbound($path, Request $request) {
+    if (!$this->validatePath($path)) {
+      return $path;
+    }
     $original_path = $path;
     if (strpos($path, '/article/') > 0) {
       $path = $this->processArticleUrl($path);
@@ -46,6 +73,9 @@ class ContentPagePathProcessor implements InboundPathProcessorInterface, Outboun
    * {@inheritdoc}
    */
   public function processOutbound($path, &$options = [], ?Request $request = NULL, ?BubbleableMetadata $bubbleable_metadata = NULL) {
+    if (!$this->validatePath($path)) {
+      return $path;
+    }
     if (!empty($options['custom_path'])) {
       $path = $options['custom_path'];
     }

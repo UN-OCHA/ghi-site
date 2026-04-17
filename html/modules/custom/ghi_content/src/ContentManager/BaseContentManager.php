@@ -181,6 +181,26 @@ abstract class BaseContentManager implements ContainerInjectionInterface {
   abstract protected function getRemoteSourceLinkType();
 
   /**
+   * Load local nodes by the given remote source and ids.
+   *
+   * @param string $source
+   *   The remote source as a string.
+   * @param int[] $ids
+   *   An array of ids to load from the source.
+   *
+   * @return \Drupal\ghi_content\Entity\ContentBase[]
+   *   An array of node objects.
+   */
+  public function loadNodesForRemoteIds(string $source, array $ids) {
+    $results = $this->entityTypeManager->getStorage('node')->loadByProperties([
+      'type' => $this->getNodeBundle(),
+      $this->getRemoteFieldName() . '.remote_source' => $source,
+      $this->getRemoteFieldName() . '.' . $this->getNodeBundle() . '_id' => $ids,
+    ]);
+    return $results;
+  }
+
+  /**
    * Load a local node for the given remote content.
    *
    * @param \Drupal\ghi_content\RemoteContent\RemoteContentInterface $content

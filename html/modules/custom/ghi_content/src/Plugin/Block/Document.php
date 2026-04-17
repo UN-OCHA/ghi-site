@@ -7,7 +7,6 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\ghi_blocks\Interfaces\AutomaticTitleBlockInterface;
 use Drupal\ghi_content\Entity\ContentBase;
 use Drupal\ghi_content\RemoteContent\HpcContentModule\RemoteChapter;
-use Drupal\ghi_content\RemoteContent\RemoteArticleInterface;
 
 /**
  * Provides a 'Document' block.
@@ -165,11 +164,12 @@ class Document extends ContentBlockBase implements AutomaticTitleBlockInterface 
    *   An array of article node objects.
    */
   private function getChapterArticles(RemoteChapter $chapter) {
-    $articles = $chapter ? array_filter(array_map(function (RemoteArticleInterface $article) {
-      $article_node = $this->articleManager->loadNodeForRemoteContent($article);
-      return $article_node?->access('view') ? $article_node : NULL;
-    }, $chapter->getArticles())) : [];
-    return $articles;
+    if (!$chapter) {
+      return [];
+    }
+    $article_ids = $chapter->getArticleIds();
+    $articles = $this->articleManager->loadNodesForRemoteIds($chapter->getSource()->getPluginId(), $article_ids);
+    return array_filter($articles, fn ($article) => $article->access('view'));
   }
 
 }
