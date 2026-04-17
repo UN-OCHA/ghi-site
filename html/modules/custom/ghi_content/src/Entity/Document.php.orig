@@ -126,20 +126,14 @@ class Document extends ContentBase {
     $cache_tags = &drupal_static(__FUNCTION__ . '_' . $this->id(), NULL);
     if ($cache_tags === NULL) {
       $cache_tags = parent::getCacheTags();
-      $article_ids = [];
-      $remote_source = NULL;
       foreach ($this->getChapters() as $chapter) {
-        $article_ids = array_merge($article_ids, $chapter->getArticleIds());
-        $remote_source = $remote_source ?? $chapter->getSource()->getPluginId();
-      }
-      $article_ids = array_unique(array_filter($article_ids));
-      if ($remote_source && $article_ids) {
-        $articles = $this->getArticleManager()->loadNodesForRemoteIds($remote_source, $article_ids);
+        $article_ids = $chapter->getArticleIds();
+        $articles = $this->getArticleManager()->loadNodesForRemoteIds($chapter->getSource()->getPluginId(), $article_ids);
         foreach ($articles as $article) {
           if (!$article instanceof Article) {
             continue;
           }
-          $cache_tags = Cache::mergeTags($cache_tags, $article->getCacheTagsToInvalidate());
+          $cache_tags = Cache::mergeTags($cache_tags, $article->getCacheTags());
         }
       }
     }
