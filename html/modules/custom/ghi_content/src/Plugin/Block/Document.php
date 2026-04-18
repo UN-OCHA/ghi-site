@@ -58,7 +58,10 @@ class Document extends ContentBlockBase implements AutomaticTitleBlockInterface 
         if ($document_node && $document_node instanceof ContentBase) {
           $article->setContextNode($document_node);
         }
-        $cache_tags = Cache::mergeTags($cache_tags, $article->getCacheTags() ?? []);
+        // The document node cache tags are already included above. Article
+        // invalidation tags are enough for these cards and avoid relationship
+        // expansion through Article::getCacheTags().
+        $cache_tags = Cache::mergeTags($cache_tags, $article->getCacheTagsToInvalidate() ?? []);
         $articles[] = $article;
       }
       $tabs[] = [
@@ -168,8 +171,7 @@ class Document extends ContentBlockBase implements AutomaticTitleBlockInterface 
       return [];
     }
     $article_ids = $chapter->getArticleIds();
-    $articles = $this->articleManager->loadNodesForRemoteIds($chapter->getSource()->getPluginId(), $article_ids);
-    return array_filter($articles, fn ($article) => $article->access('view'));
+    return $this->articleManager->loadAccessibleNodesForRemoteIds($chapter->getSource()->getPluginId(), $article_ids);
   }
 
 }
