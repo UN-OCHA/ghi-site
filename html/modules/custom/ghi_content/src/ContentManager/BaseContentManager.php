@@ -192,11 +192,45 @@ abstract class BaseContentManager implements ContainerInjectionInterface {
    *   An array of node objects.
    */
   public function loadNodesForRemoteIds(string $source, array $ids) {
-    $results = $this->entityTypeManager->getStorage('node')->loadByProperties([
-      'type' => $this->getNodeBundle(),
-      $this->getRemoteFieldName() . '.remote_source' => $source,
-      $this->getRemoteFieldName() . '.' . $this->getNodeBundle() . '_id' => $ids,
+    if (empty($ids)) {
+      return [];
+    }
+    $ids = array_values(array_unique($ids));
+    $cache_key = implode(':', [
+      $this->getNodeBundle(),
+      $source,
     ]);
+    $cache = &drupal_static(__METHOD__, []);
+    $cache[$cache_key] ??= [];
+
+    // Cache each remote id individually so overlapping chapter/article lists
+    // only query the ids that have not already been resolved in this request.
+    $missing_ids = array_values(array_diff($ids, array_keys($cache[$cache_key])));
+    if (!empty($missing_ids)) {
+      $results = $this->entityTypeManager->getStorage('node')->loadByProperties([
+        'type' => $this->getNodeBundle(),
+        $this->getRemoteFieldName() . '.remote_source' => $source,
+        $this->getRemoteFieldName() . '.' . $this->getNodeBundle() . '_id' => $missing_ids,
+      ]);
+      // Cache misses as NULL to avoid repeating the same lookup for unpublished
+      // or not-yet-imported remote content.
+      foreach ($missing_ids as $id) {
+        $cache[$cache_key][$id] = NULL;
+      }
+      foreach ($results as $node) {
+        if ($node instanceof ContentBase) {
+          $cache[$cache_key][$node->getSourceId()] = $node;
+        }
+      }
+    }
+
+    $results = [];
+    foreach ($ids as $id) {
+      $node = $cache[$cache_key][$id] ?? NULL;
+      if ($node instanceof ContentBase) {
+        $results[$node->id()] = $node;
+      }
+    }
     return $results;
   }
 
@@ -216,20 +250,48 @@ abstract class BaseContentManager implements ContainerInjectionInterface {
       return [];
     }
     $ids = array_values(array_unique($ids));
-    $remote_id_field = $this->getRemoteFieldName() . '.' . $this->getNodeBundle() . '_id';
-    $storage = $this->entityTypeManager->getStorage('node');
-    // Let the entity query apply node grants in bulk instead of calling
-    // access() on each loaded node, which is expensive for document listings.
-    $nids = $storage->getQuery()
-      ->accessCheck(TRUE)
-      ->condition('type', $this->getNodeBundle())
-      ->condition($this->getRemoteFieldName() . '.remote_source', $source)
-      ->condition($remote_id_field, $ids, 'IN')
-      ->execute();
-    $nodes = $nids ? $storage->loadMultiple($nids) : [];
-    uasort($nodes, function (ContentBase $a, ContentBase $b) use ($ids) {
-      return array_search($a->getSourceId(), $ids) <=> array_search($b->getSourceId(), $ids);
-    });
+    $cache_key = implode(':', [
+      $this->getNodeBundle(),
+      $source,
+      $this->currentUser->id(),
+    ]);
+    $cache = &drupal_static(__METHOD__, []);
+    $cache[$cache_key] ??= [];
+
+    // Cache access-checked results by remote id for the current user so
+    // overlapping lists can reuse known allowed nodes and known misses.
+    $missing_ids = array_values(array_diff($ids, array_keys($cache[$cache_key])));
+    if (!empty($missing_ids)) {
+      $remote_id_field = $this->getRemoteFieldName() . '.' . $this->getNodeBundle() . '_id';
+      $storage = $this->entityTypeManager->getStorage('node');
+      // Let the entity query apply node grants in bulk instead of calling
+      // access() on each loaded node, which is expensive for document listings.
+      $nids = $storage->getQuery()
+        ->accessCheck(TRUE)
+        ->condition('type', $this->getNodeBundle())
+        ->condition($this->getRemoteFieldName() . '.remote_source', $source)
+        ->condition($remote_id_field, $missing_ids, 'IN')
+        ->execute();
+      $nodes = $nids ? $storage->loadMultiple($nids) : [];
+      // Store misses too, otherwise inaccessible or missing ids are queried
+      // again whenever another chapter/list overlaps with them.
+      foreach ($missing_ids as $id) {
+        $cache[$cache_key][$id] = NULL;
+      }
+      foreach ($nodes as $node) {
+        if ($node instanceof ContentBase) {
+          $cache[$cache_key][$node->getSourceId()] = $node;
+        }
+      }
+    }
+
+    $nodes = [];
+    foreach ($ids as $id) {
+      $node = $cache[$cache_key][$id] ?? NULL;
+      if ($node instanceof ContentBase) {
+        $nodes[$node->id()] = $node;
+      }
+    }
     return $nodes;
   }
 
