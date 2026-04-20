@@ -5,6 +5,9 @@ ghi_content.article_settings:
     subarticle_local_render:
       type: boolean
       label: 'Render sub articles locally'
+    subarticle_local_render_preview_components:
+      type: integer
+      label: 'Sub article local render preview components'
 
 action.configuration.needs_review_flag:
   type: action_configuration_default

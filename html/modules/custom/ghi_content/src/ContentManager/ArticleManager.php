@@ -56,12 +56,25 @@ class ArticleManager extends BaseContentManager {
    * {@inheritdoc}
    */
   public function loadNodeForRemoteContent(RemoteContentInterface $content) {
+    $cache_key = implode(':', [
+      $this->getNodeBundle(),
+      $content->getSource()->getPluginId(),
+      $content->getId(),
+    ]);
+    // Remote content objects are often resolved repeatedly while rendering
+    // document navigation, sub-articles, and paragraph links in one request.
+    $cache = &drupal_static(__METHOD__, []);
+    if (array_key_exists($cache_key, $cache)) {
+      return $cache[$cache_key];
+    }
+
     $results = $this->entityTypeManager->getStorage('node')->loadByProperties([
       'type' => $this->getNodeBundle(),
       $this->getRemoteFieldName() . '.remote_source' => $content->getSource()->getPluginId(),
       $this->getRemoteFieldName() . '.article_id' => $content->getId(),
     ]);
-    return $results && !empty($results) ? reset($results) : NULL;
+    $cache[$cache_key] = $results && !empty($results) ? reset($results) : NULL;
+    return $cache[$cache_key];
   }
 
   /**

@@ -5,6 +5,7 @@ namespace Drupal\Tests\ghi_content\Traits;
 use Drupal\Component\Plugin\PluginInspectionInterface;
 use Drupal\Tests\pathauto\Functional\PathautoTestHelperTrait;
 use Drupal\ghi_content\ContentManager\ArticleManager;
+use Drupal\ghi_content\ContentManager\BaseContentManager;
 use Drupal\ghi_content\ContentManager\DocumentManager;
 use Drupal\ghi_content\Entity\Article;
 use Drupal\ghi_content\Entity\ContentBase;
@@ -71,6 +72,7 @@ trait ContentTestTrait {
     $article = Article::create($values);
     $this->assertSame(SAVED_NEW, $article->save());
     $this->assertInstanceOf(ContentBase::class, $article);
+    $this->resetContentLookupStaticCaches();
     return $article;
   }
 
@@ -85,7 +87,23 @@ trait ContentTestTrait {
     $document = Document::create($values);
     $this->assertSame(SAVED_NEW, $document->save());
     $this->assertInstanceOf(ContentBase::class, $document);
+    $this->resetContentLookupStaticCaches();
     return $document;
+  }
+
+  /**
+   * Reset static lookup caches between test fixture mutations.
+   *
+   * Kernel tests create documents and articles in one PHP request. That can
+   * leave request-local cached misses behind when a document fixture is queried
+   * before the matching article fixture node has been created.
+   */
+  private function resetContentLookupStaticCaches() {
+    drupal_static_reset(BaseContentManager::class . '::loadNodesForRemoteIds');
+    drupal_static_reset(BaseContentManager::class . '::loadAccessibleNodesForRemoteIds');
+    drupal_static_reset(ArticleManager::class . '::loadNodeForRemoteContent');
+    drupal_static_reset(DocumentManager::class . '::loadNodeForRemoteContent');
+    drupal_static_reset(Article::class . '::getDocuments');
   }
 
   /**
