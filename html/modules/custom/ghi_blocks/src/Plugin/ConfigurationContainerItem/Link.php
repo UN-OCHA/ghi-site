@@ -9,6 +9,7 @@ use Drupal\Core\Render\Element\RenderElementBase;
 use Drupal\Core\Render\Element\VerticalTabs;
 use Drupal\Core\Render\Markup;
 use Drupal\file\Entity\File;
+use Drupal\file\FileInterface;
 use Drupal\ghi_blocks\Traits\VerticalTabsTrait;
 use Drupal\ghi_form_elements\ConfigurationContainerItemPluginBase;
 use Drupal\ghi_form_elements\Helpers\FormElementHelper;
@@ -311,8 +312,7 @@ class Link extends ConfigurationContainerItemPluginBase {
       '#description' => $this->getDescription(),
       '#link' => $link->toRenderable(),
     ];
-    $file = $this->loadFile();
-    if ($file && file_exists($file->getFileUri())) {
+    if ($file = $this->getImageFile()) {
       $image_style = 'card_hero';
       if ($this->config['image']['crop_type'] == 'paper_size') {
         $image_style = 'paper_size';
@@ -366,7 +366,7 @@ class Link extends ConfigurationContainerItemPluginBase {
    * @return \Drupal\file\FileInterface|null
    *   The file entity object or NULL.
    */
-  public function getImageFile() {
+  public function getImageFile(): ?FileInterface {
     return $this->loadFile();
   }
 
@@ -376,7 +376,7 @@ class Link extends ConfigurationContainerItemPluginBase {
    * @return array
    *   A render array.
    */
-  public function getImage() {
+  public function getImage(): ?array {
     $file = $this->loadFile();
     if (!$file) {
       return NULL;
@@ -446,9 +446,10 @@ class Link extends ConfigurationContainerItemPluginBase {
    * @return \Drupal\file\FileInterface|null
    *   The file entity object or NULL.
    */
-  private function loadFile($file_id = NULL) {
+  private function loadFile($file_id = NULL): ?FileInterface {
     $file_id = $file_id ?? $this->getImageFileId();
-    return $file_id ? $this->entityTypeManager->getStorage('file')->load($file_id) : NULL;
+    $file = $file_id ? $this->entityTypeManager->getStorage('file')->load($file_id) : NULL;
+    return $file instanceof FileInterface ? $file : NULL;
   }
 
   /**
