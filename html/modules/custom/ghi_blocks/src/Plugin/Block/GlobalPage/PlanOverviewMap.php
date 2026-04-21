@@ -49,7 +49,6 @@ class PlanOverviewMap extends GHIBlockBase {
     return new HPCBlockMetadata(
       dataSources: [
         'plans_overview' => 'fabric_query:plan_overview',
-        'funding_overview' => 'hpc_api:funding_overview_query',
         'plan' => 'fabric_query:plan',
         'country' => 'fabric_query:country',
       ],
@@ -167,11 +166,8 @@ class PlanOverviewMap extends GHIBlockBase {
 
     $this->sortPlansByPlanType($plans, $config['plan_short_names'] ?? FALSE);
 
-    /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\FundingOverviewQuery $funding_query */
-    $funding_query = $this->getQueryHandler('funding_overview');
-    $plan_funding = $funding_query->getFundingByPlans();
     foreach ($plans as $plan) {
-      $funding = $plan_funding[$plan->id()] ?? 0;
+      $funding = $plan->getFunding() ?: 0;
       $requirements = $plan->getRequirements();
 
       $in_need = $plan->getCaseloadValue('in_need');
@@ -209,7 +205,7 @@ class PlanOverviewMap extends GHIBlockBase {
       $funding = (object) [
         'total_funding' => $funding,
         'total_requirements' => $requirements,
-        'funding_progress' => $plan->getCoverage($funding),
+        'funding_progress' => $plan->getCoverage(),
       ];
 
       $plan_id = $plan->id();

@@ -7,10 +7,8 @@ use Drupal\ghi_blocks\Interfaces\OverrideDefaultTitleBlockInterface;
 use Drupal\ghi_blocks\Plugin\Block\Plan\PlanCaseloadTrendsTable;
 use Drupal\ghi_plans\ApiObjects\Attachments\CaseloadAttachment;
 use Drupal\ghi_plans\ApiObjects\Attachments\FinancialAttachment;
-use Drupal\ghi_plans\Plugin\EndpointQuery\PlanFundingSummaryQuery;
 use Drupal\ghi_plans\Plugin\FabricQuery\AttachmentQuery;
 use Drupal\ghi_plans\Plugin\FabricQuery\PlanQuery;
-use Drupal\hpc_api\Query\EndpointQuery;
 use Drupal\hpc_downloads\Interfaces\HPCDownloadExcelInterface;
 use Drupal\hpc_downloads\Interfaces\HPCDownloadPNGInterface;
 use Drupal\Tests\ghi_blocks\Kernel\PlanBlockKernelTestBase;
@@ -95,12 +93,14 @@ class PlanCaseloadTrendsTableTest extends PlanBlockKernelTestBase {
     $this->assertEquals('currency', $requirements_cell['data-column-type']);
     $this->assertEquals('financial', $requirements_cell['data-progress-group']);
 
+    // Funding is allowed to be 0, because they come from the plan object that
+    // is not entirely mocked.
     $funding_cell = $table_data['rows'][0]['funding'];
-    $this->assertEquals(1000, $funding_cell['data-raw-value']);
+    $this->assertEquals(0, $funding_cell['data-raw-value']);
     $this->assertEquals('currency', $funding_cell['data-column-type']);
     $this->assertEquals('financial', $funding_cell['data-progress-group']);
 
-    // Coverag is allowed to be 0, because they come from the plan object that
+    // Coverage is allowed to be 0, because they come from the plan object that
     // is not entirely mocked.
     $coverage_cell = $table_data['rows'][0]['coverage'];
     $this->assertEquals('hpc_percent', $coverage_cell['data']['#theme']);
@@ -141,8 +141,10 @@ class PlanCaseloadTrendsTableTest extends PlanBlockKernelTestBase {
     // Requirements are allowed to be 0, because they come from the plan object
     // that is not entirely mocked.
     $this->assertEquals(0, $source_data[0]['requirements']);
-    $this->assertEquals(1000, $source_data[0]['funding']);
-    // Coverag is allowed to be 0, because they come from the plan object that
+    // Funding is allowed to be 0, because they come from the plan object that
+    // is not entirely mocked.
+    $this->assertEquals(0, $source_data[0]['funding']);
+    // Coverage is allowed to be 0, because they come from the plan object that
     // is not entirely mocked.
     $this->assertEquals(0.0, $source_data[0]['coverage']);
     $this->assertNull($source_data[0]['footnotes']);
@@ -253,7 +255,6 @@ class PlanCaseloadTrendsTableTest extends PlanBlockKernelTestBase {
 
     $plugin = $this->createBlockPlugin('plan_caseload_trends_table', $configuration, $contexts);
 
-    $plan_funding_query = $this->prophesize(PlanFundingSummaryQuery::class);
     $attachment_query = $this->prophesize(AttachmentQuery::class);
 
     $plan_query = $this->prophesize(PlanQuery::class);
@@ -262,7 +263,6 @@ class PlanCaseloadTrendsTableTest extends PlanBlockKernelTestBase {
     $reflection = new \ReflectionClass($plugin);
     $property = $reflection->getProperty('queryHandlers');
     $property->setValue($plugin, [
-      'plan_funding' => $plan_funding_query->reveal(),
       'attachment' => $attachment_query->reveal(),
       'plan' => $plan_query->reveal(),
     ]);
@@ -277,17 +277,6 @@ class PlanCaseloadTrendsTableTest extends PlanBlockKernelTestBase {
    *   The plugin.
    */
   private function injectApiQueryStubs($plugin) {
-    $endpoint_query = $this->prophesize(EndpointQuery::class);
-    $plan_funding_query = $this->prophesize(PlanFundingSummaryQuery::class);
-    $plan_funding_query->getData(Argument::cetera())->willReturn([
-      'total_funding' => 1000,
-    ]);
-    $plan_funding_query->setPlaceholder('plan_id', Argument::type('integer'))->willReturn(NULL);
-    $plan_funding_query->getFullEndpointUrl()->willReturn('https://api.hpc.tools/v2/fts/flow/plan/summary/' . rand(1, 10));
-    $plan_funding_query_mock = $plan_funding_query->reveal();
-    $plan_funding_query_mock->endpointQuery = $endpoint_query->reveal();
-    $plugin->setQueryHandler('plan_funding', $plan_funding_query_mock);
-
     $caseload = $this->prophesize(CaseloadAttachment::class);
     $caseload->getCaseloadValue('in_need')->willReturn(300);
     $caseload->getCaseloadValue('target')->willReturn(100);

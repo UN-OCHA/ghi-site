@@ -3,6 +3,7 @@
 namespace Drupal\ghi_plans\Plugin\FabricQuery;
 
 use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\ghi_base_objects\Helpers\BaseObjectHelper;
 use Drupal\ghi_plans\ApiObjects\Attachments\CaseloadAttachmentInterface;
 use Drupal\ghi_plans\ApiObjects\Attachments\FinancialAttachment;
 use Drupal\ghi_plans\ApiObjects\Partials\PlanOverviewPlan;
@@ -103,6 +104,8 @@ class PlanOverviewQuery extends FabricQueryBase {
 
     $plans = $this->planQuery->getPlansByYear($year);
     $plan_ids = $this->extractIds($plans);
+    /** @var \Drupal\ghi_plans\Entity\Plan[] $plan_objects */
+    $plan_objects = BaseObjectHelper::getBaseObjectsFromOriginalIds($plan_ids, 'plan');
     $this->attachmentPrototypeQuery->getDataPrototypesForPlans($plan_ids);
 
     $attachments = $this->attachmentQuery->getAttachmentsByObject('plan', $plan_ids, ['caseload', 'financial']);
@@ -123,12 +126,12 @@ class PlanOverviewQuery extends FabricQueryBase {
 
     foreach ($plans as $plan) {
       $plan_id = $plan->id();
-      $plan_object = (object) [
+      $plan = new PlanOverviewPlan((object) [
         'plan' => $plan,
         'caseloads' => $caseloads_by_plan[$plan_id] ?? [],
         'requirements' => !empty($requirements_by_plan[$plan_id]) ? reset($requirements_by_plan[$plan_id]) : 0,
-      ];
-      $plan = new PlanOverviewPlan($plan_object);
+        'funding' => $plan_objects[$plan_id]->getTotalFunding(),
+      ]);
       $this->plans[$plan->id()] = $plan;
     }
   }
@@ -193,6 +196,24 @@ class PlanOverviewQuery extends FabricQueryBase {
       $requirements += $plan->getRequirements();
     }
     return $requirements;
+  }
+
+  /**
+   * Get the total funding for all plans.
+   *
+   * @return float
+   *   The sum of funding for all GHO plans.
+   */
+  public function getTotalFunding(): float {
+    $plans = $this->getGhoPlans();
+    if (empty($plans)) {
+      return 0;
+    }
+    $funding = 0;
+    foreach ($plans as $plan) {
+      $funding += $plan->getFunding();
+    }
+    return $funding;
   }
 
   /**
