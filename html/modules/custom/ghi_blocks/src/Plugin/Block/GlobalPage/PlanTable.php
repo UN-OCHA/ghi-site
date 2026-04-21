@@ -66,7 +66,6 @@ class PlanTable extends GHIBlockBase implements HPCDownloadExcelInterface, HPCDo
     return new HPCBlockMetadata(
       dataSources: [
         'plans_overview' => 'fabric_query:plan_overview',
-        'funding_overview' => 'hpc_api:funding_overview_query',
       ],
     );
   }
@@ -186,10 +185,6 @@ class PlanTable extends GHIBlockBase implements HPCDownloadExcelInterface, HPCDo
     $cache_tags = [];
     $rows = [];
 
-    /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\FundingOverviewQuery $funding_query */
-    $funding_query = $this->getQueryHandler('funding_overview');
-    $plan_funding = $funding_query->getFundingByPlans();
-
     foreach ($plans as $plan) {
       $plan_entity = $plan->getEntity();
       if ($plan_entity) {
@@ -209,9 +204,9 @@ class PlanTable extends GHIBlockBase implements HPCDownloadExcelInterface, HPCDo
       $expected_reached = CommonHelper::calculateRatio($expected_reach, $target) * 100;
 
       // Setup the financial values.
-      $requirements = $plan->getRequirements($plan);
-      $funding = $plan_funding[$plan->id()] ?? 0;
-      $coverage = $plan->getCoverage($funding);
+      $requirements = $plan->getRequirements();
+      $funding = $plan->getFunding();
+      $coverage = $plan->getCoverage();
 
       // Setup number formatting.
       $decimals = 1;

@@ -3,7 +3,6 @@
 namespace Drupal\ghi_plans\Plugin\EndpointQuery;
 
 use Drupal\hpc_api\Query\EndpointQueryBase;
-use Drupal\hpc_common\Helpers\CommonHelper;
 
 /**
  * Provides a query plugin for plan funding summary.
@@ -83,46 +82,6 @@ class PlanFundingSummaryQuery extends EndpointQueryBase {
    */
   public function getOverallFunding($default = 0): float {
     return (float) $this->get('overall_funding', $default);
-  }
-
-  /**
-   * Get the outside funding.
-   *
-   * @return float
-   *   The outside funding value.
-   */
-  public function getOutsideFunding(): float {
-    $total_funding = $this->getTotalFunding();
-    $overall_funding = $this->getOverallFunding();
-    return $overall_funding - $total_funding;
-  }
-
-  /**
-   * Get the funding gap.
-   *
-   * @param float $requirements
-   *   The requirements to compare against.
-   *
-   * @return float
-   *   The funding gap value.
-   */
-  public function getFundingGap(float $requirements): float {
-    $total_funding = $this->getTotalFunding();
-    return $requirements - $total_funding;
-  }
-
-  /**
-   * Get the funding coverage.
-   *
-   * @param float $requirements
-   *   The requirements to compare against.
-   *
-   * @return float
-   *   The funding coverage value.
-   */
-  public function getFundingCoverage(float $requirements): float {
-    $funding = $this->getTotalFunding();
-    return (float) CommonHelper::calculateRatio($funding, $requirements) * 100;
   }
 
 }

@@ -66,7 +66,6 @@ class PlanCaseloadTrendsTable extends GHIBlockBase implements OverrideDefaultTit
         'attachment' => 'fabric_query:attachment',
         'entity' => 'fabric_query:entity',
         'plan' => 'fabric_query:plan',
-        'plan_funding' => 'hpc_api:plan_funding_summary_query',
       ]
     );
   }
@@ -436,14 +435,8 @@ class PlanCaseloadTrendsTable extends GHIBlockBase implements OverrideDefaultTit
     /** @var \Drupal\ghi_plans\Plugin\FabricQuery\AttachmentQuery $attachments_query */
     $attachments_query = $this->getQueryHandler('attachment');
 
-    /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\PlanFundingSummaryQuery $funding_query */
-    $funding_query = $this->getQueryHandler('plan_funding');
-
     /** @var \Drupal\ghi_plans\Plugin\FabricQuery\PlanQuery $plan_query */
     $plan_query = $this->getQueryHandler('plan');
-
-    // Pool of funding queries.
-    $funding_queries = [];
 
     // Collect the plan types per year to see if we need to add information to
     // distinguish different plans in the same year.
@@ -453,14 +446,7 @@ class PlanCaseloadTrendsTable extends GHIBlockBase implements OverrideDefaultTit
       $plan_year = $plan->getYear();
       $plan_type = $plan->getPlanType()->getAbbreviation();
       $plan_types[$plan_year][$plan_type] = !empty($plan_types[$plan_year][$plan_type]) ? $plan_types[$plan_year][$plan_type] + 1 : 1;
-
-      // Add to the pool the funding queries.
-      $funding_query->setPlaceholder('plan_id', $plan->getSourceId());
-      $funding_queries[] = $funding_query->getFullEndpointUrl();
     }
-
-    // Execute the pooled queries to fill the caches.
-    $funding_query->endpointQuery->queryPool($funding_queries);
 
     // Extract plan ids and preload the caseload data.
     $plan_ids = array_filter(array_map(fn (Plan $plan): ?int => $plan->getSourceId(), $related_plans));
@@ -481,9 +467,6 @@ class PlanCaseloadTrendsTable extends GHIBlockBase implements OverrideDefaultTit
       $caseloads = $caseloads_by_plan[$plan_id] ?? [];
       /** @var \Drupal\ghi_plans\ApiObjects\Attachments\CaseloadAttachment $caseload */
       $caseload = count($caseloads) > 1 ? $plan->getPlanCaseload($caseloads) : (!empty($caseloads) ? reset($caseloads) : NULL);
-
-      // Get the funding data. This should hit the cache already.
-      $funding_data = $funding_query->getData(['plan_id' => $plan->getSourceId()]);
 
       // Setup the plan type label to distinguish years with multiple plans of
       // the same type.
@@ -507,8 +490,8 @@ class PlanCaseloadTrendsTable extends GHIBlockBase implements OverrideDefaultTit
         'reached' => $reached,
         'reached_percent' => $reached ? CommonHelper::calculateRatio($reached, $target) * 100 : NULL,
         'requirements' => $plan->getRequirements(),
-        'funding' => $funding_data['total_funding'] ?? NULL,
-        'coverage' => $plan->getCoverage($funding_data['total_funding'] ?? 0),
+        'funding' => $plan->getTotalFunding(),
+        'coverage' => $plan->getCoverage(),
         'footnotes' => $plan ? $this->getFootnotesForPlanBaseobject($plan) : NULL,
       ];
     }

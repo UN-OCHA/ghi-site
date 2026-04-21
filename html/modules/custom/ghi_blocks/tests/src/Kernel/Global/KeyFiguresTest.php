@@ -38,7 +38,6 @@ class KeyFiguresTest extends PlanBlockKernelTestBase {
 
     $data_sources = $metadata->dataSources;
     $this->assertArrayHasKey('plans_overview', $data_sources);
-    $this->assertArrayHasKey('funding_overview', $data_sources);
   }
 
   /**

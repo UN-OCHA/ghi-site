@@ -42,7 +42,6 @@ class PlanTableTest extends PlanBlockKernelTestBase {
 
     $data_sources = $metadata->dataSources;
     $this->assertArrayHasKey('plans_overview', $data_sources);
-    $this->assertArrayHasKey('funding_overview', $data_sources);
   }
 
   /**
@@ -228,12 +227,13 @@ class PlanTableTest extends PlanBlockKernelTestBase {
     $plan->id()->willReturn($id);
     $plan->getName()->willReturn($plan_name);
     $plan->getEntity()->willReturn($plan_entity->reveal());
-    $plan->getRequirements(Argument::any())->willReturn(2000000);
+    $plan->getRequirements()->willReturn(2000000);
+    $plan->getFunding()->willReturn(1000000);
+    $plan->getCoverage()->willReturn(0.5);
     $plan->getCaseloadValue('in_need')->willReturn(100000);
     $plan->getCaseloadValue('target')->willReturn(80000);
     $plan->getCaseloadValue('latest_reach')->willReturn(60000);
     $plan->getCaseloadValue('expected_reach', 'Expected Reach')->willReturn(70000);
-    $plan->getCoverage(Argument::any())->willReturn(0.5);
     $plan->getPlanType()->willReturn($plan_type->reveal());
     $plan->getTypeShortName()->willReturn('HRP');
     $plan->isPartOfGho()->willReturn(FALSE);
@@ -260,14 +260,10 @@ class PlanTableTest extends PlanBlockKernelTestBase {
     $plans_query = $this->prophesize('\Drupal\ghi_plans\Plugin\FabricQuery\PlanOverviewQuery');
     $plans_query->getPlans()->willReturn(array_combine($plan_ids, $plans));
 
-    $funding_query = $this->prophesize('\Drupal\ghi_plans\Plugin\EndpointQuery\FundingOverviewQuery');
-    $funding_query->getFundingByPlans()->willReturn([]);
-
     $reflection = new \ReflectionClass($plugin);
     $property = $reflection->getProperty('queryHandlers');
     $property->setValue($plugin, [
       'plans_overview' => $plans_query->reveal(),
-      'funding_overview' => $funding_query->reveal(),
     ]);
   }
 
@@ -281,14 +277,10 @@ class PlanTableTest extends PlanBlockKernelTestBase {
     $plans_query = $this->prophesize('\Drupal\ghi_plans\Plugin\FabricQuery\PlanOverviewQuery');
     $plans_query->getPlans()->willReturn([]);
 
-    $funding_query = $this->prophesize('\Drupal\ghi_plans\Plugin\EndpointQuery\FundingOverviewQuery');
-    $funding_query->getFundingByPlans()->willReturn([]);
-
     $reflection = new \ReflectionClass($plugin);
     $property = $reflection->getProperty('queryHandlers');
     $property->setValue($plugin, [
       'plans_overview' => $plans_query->reveal(),
-      'funding_overview' => $funding_query->reveal(),
     ]);
   }
 

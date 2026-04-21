@@ -4,6 +4,7 @@ namespace Drupal\ghi_blocks\Plugin\ConfigurationContainerItem;
 
 use Drupal\Component\Utility\Html;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Logger\LoggerChannelTrait;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\ghi_base_objects\Entity\BaseObjectInterface;
 use Drupal\ghi_blocks\Traits\ConfigurationItemClusterRestrictTrait;
@@ -42,13 +43,7 @@ class FundingData extends ConfigurationContainerItemPluginBase {
   use FtsLinkTrait;
   use PlanFootnoteTrait;
   use RenderArrayTrait;
-
-  /**
-   * The funding query.
-   *
-   * @var \Drupal\ghi_plans\Plugin\EndpointQuery\PlanFundingSummaryQuery
-   */
-  public $fundingSummaryQuery;
+  use LoggerChannelTrait;
 
   /**
    * The flow search query.
@@ -84,7 +79,6 @@ class FundingData extends ConfigurationContainerItemPluginBase {
   public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition): FundingData {
     /** @var self $instance */
     $instance = parent::create($container, $configuration, $plugin_id, $plugin_definition);
-    $instance->fundingSummaryQuery = $instance->endpointQueryManager->createInstance('plan_funding_summary_query');
     $instance->flowSearchQuery = $instance->endpointQueryManager->createInstance('flow_search_query');
     $instance->clusterQuery = $instance->fabricQueryManager->createInstance('governing_entity');
     $instance->attachmentQuery = $instance->fabricQueryManager->createInstance('attachment');
@@ -289,7 +283,6 @@ class FundingData extends ConfigurationContainerItemPluginBase {
     if (array_key_exists($property, $values[$plan_id])) {
       return $values[$plan_id][$property];
     }
-    $this->fundingSummaryQuery->setPlaceholder('plan_id', $plan_id);
     switch ($property) {
       case 'current_requirements':
       case 'original_requirements':
@@ -297,23 +290,24 @@ class FundingData extends ConfigurationContainerItemPluginBase {
         break;
 
       case 'total_funding':
-        $value = $this->fundingSummaryQuery->getTotalFunding();
+        $value = $plan->getTotalFunding();
         break;
 
       case 'outside_funding':
-        $value = $this->fundingSummaryQuery->getOutsideFunding();
+        $value = $plan->getOutsideFunding();
         break;
 
       case 'funding_gap':
-        $value = $plan->getFundingGap($this->fundingSummaryQuery->getTotalFunding());
+        $value = $plan->getFundingGap();
         break;
 
       case 'funding_coverage':
-        $value = $plan->getCoverage($this->fundingSummaryQuery->getTotalFunding());
+        $value = $plan->getCoverage();
         break;
 
       default:
-        $value = $this->fundingSummaryQuery->get($property, 0);
+        $this->getLogger('ghi')->warning('Requested unknown property ' . $property);
+        $value = 0;
         break;
     }
 

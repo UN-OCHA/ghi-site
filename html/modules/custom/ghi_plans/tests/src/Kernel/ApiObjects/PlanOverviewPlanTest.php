@@ -33,18 +33,6 @@ class PlanOverviewPlanTest extends PlanApiObjectKernelTestBase {
   }
 
   /**
-   * {@inheritdoc}
-   */
-  protected function createMockRawData(array $data_overrides = []): object {
-    $plan_overview_plan_defaults = [
-      'requirements' => 75000,
-    ];
-
-    $merged_overrides = array_merge($plan_overview_plan_defaults, $data_overrides);
-    return parent::createMockRawData($merged_overrides);
-  }
-
-  /**
    * Test PlanOverviewPlan constructor and mapping.
    */
   public function testPlanOverviewPlanConstructorAndMapping(): void {
@@ -55,6 +43,7 @@ class PlanOverviewPlanTest extends PlanApiObjectKernelTestBase {
         'Year' => 2025,
       ]),
       'requirements' => 1500000,
+      'funding' => 1000000,
     ]);
 
     $plan_overview = new PlanOverviewPlan($raw_data);
@@ -62,7 +51,8 @@ class PlanOverviewPlanTest extends PlanApiObjectKernelTestBase {
     $this->assertApiObjectBasics($plan_overview, 'plan');
 
     $this->assertEquals(1500000, $plan_overview->getRequirements());
-    $this->assertEquals(66.7, $plan_overview->getCoverage(1000000));
+    $this->assertEquals(1000000, $plan_overview->getFunding());
+    $this->assertEquals(66.7, $plan_overview->getCoverage());
 
     $this->assertEquals('plan', $plan_overview->getBundle());
     $this->assertEquals('Test Plan Overview', $plan_overview->getName());
