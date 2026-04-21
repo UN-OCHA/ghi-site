@@ -114,13 +114,15 @@
     </footer>
   {% endif %}
 
-  <div{{ content_attributes.addClass('content-wrapper') }}>
-
-    {% if document_summary %}
+  {% if document_summary %}
+    <div class="document-summary-wrapper content-width">
       <div class="document-summary content-width">
         {{ document_summary }}
       </div>
-    {% endif %}
+    </div>
+  {% endif %}
+
+  <div{{ content_attributes.addClass('content-wrapper') }}>
 
     {{ content }}
 
