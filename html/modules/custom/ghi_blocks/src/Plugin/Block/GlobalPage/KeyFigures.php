@@ -45,7 +45,6 @@ class KeyFigures extends GHIBlockBase implements MultiStepFormBlockInterface {
       usesTitle: FALSE,
       dataSources: [
         'plans_overview' => 'fabric_query:plan_overview',
-        'funding_overview' => 'hpc_api:funding_overview_query',
       ],
       configForms: [
         'key_figures' => [
@@ -61,11 +60,9 @@ class KeyFigures extends GHIBlockBase implements MultiStepFormBlockInterface {
    * {@inheritdoc}
    */
   public function getData(string $source_key = 'data') {
-    $data = parent::getData('funding_overview');
-    $funding = !empty($data->totals->totalFunding) ? $data->totals->totalFunding : NULL;
-
     $plan_overview_query = $this->getPlanOverviewQuery();
     $requirements = $plan_overview_query->getTotalRequirements();
+    $funding = $plan_overview_query->getTotalFunding();
     $funding_progress = CommonHelper::calculateRatio($funding, $requirements);
 
     // Get the values of people in need and target from the caseload totals.
@@ -230,7 +227,7 @@ class KeyFigures extends GHIBlockBase implements MultiStepFormBlockInterface {
    */
   public function getBlockContext() {
     return [
-      'data' => $this->getData('funding_overview'),
+      'data' => $this->getData(),
     ];
   }
 

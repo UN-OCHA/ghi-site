@@ -23,6 +23,7 @@ class DocumentWizard extends ContentWizardBase {
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container) {
+    /** @var self */
     $instance = parent::create($container);
     $instance->documentManager = $container->get('ghi_content.manager.document');
     return $instance;

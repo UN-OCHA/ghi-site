@@ -252,9 +252,40 @@ class Plan extends BaseObject implements BaseObjectMetaDataInterface, BaseObject
   }
 
   /**
+   * Update the financial data for a plan.
+   */
+  public function updateFinancialData(): void {
+    $this->updateRequirements();
+    $this->updateFunding();
+    if ($this->hasField('field_requirements_updated')) {
+      $this->get('field_requirements_updated')->setValue(self::getRequestTime());
+    }
+  }
+
+  /**
    * Update the requirements for the plan.
    */
-  public function updateRequirements() {
+  private function updateFunding(): void {
+    if (!$this->hasField('field_funding_total') || !$this->hasField('field_funding_overall')) {
+      return;
+    }
+    /** @var \Drupal\hpc_api\Query\EndpointQueryManager $endpoint_query_manager */
+    $endpoint_query_manager = \Drupal::service('plugin.manager.endpoint_query_manager');
+    /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\PlanFundingSummaryQuery $funding_query */
+    $funding_query = $endpoint_query_manager->createInstance('plan_funding_summary_query');
+    $funding_query->setPlaceholder('plan_id', $this->getSourceId());
+    if ($this->hasField('field_funding_total')) {
+      $this->get('field_funding_total')?->setValue($funding_query->getTotalFunding());
+    }
+    if ($this->hasField('field_funding_overall')) {
+      $this->get('field_funding_overall')?->setValue($funding_query->getOverallFunding());
+    }
+  }
+
+  /**
+   * Update the requirements for the plan.
+   */
+  private function updateRequirements(): void {
     if (!$this->hasField('field_requirements')) {
       return;
     }
@@ -284,9 +315,46 @@ class Plan extends BaseObject implements BaseObjectMetaDataInterface, BaseObject
       $requirements = $project_query->getProjectRequirementsForPlan($this->getSourceId());
     }
     $this->get('field_requirements')->setValue($requirements);
-    if ($this->hasField('field_requirements_updated')) {
-      $this->get('field_requirements_updated')->setValue(self::getRequestTime());
+  }
+
+  /**
+   * Get the total funding for a plan.
+   *
+   * @return float|null
+   *   The total funding for the plan.
+   */
+  public function getTotalFunding(): ?float {
+    if (!$this->hasField('field_funding_total')) {
+      return NULL;
     }
+    $funding_total = $this->get('field_funding_total')->value;
+    return $funding_total !== NULL ? (float) $funding_total : NULL;
+  }
+
+  /**
+   * Get the overall funding for a plan.
+   *
+   * @return float|null
+   *   The overall funding for the plan.
+   */
+  public function getOverallFunding(): ?float {
+    if (!$this->hasField('field_funding_overall')) {
+      return NULL;
+    }
+    $funding_overall = $this->get('field_funding_overall')->value;
+    return $funding_overall !== NULL ? (float) $funding_overall : NULL;
+  }
+
+  /**
+   * Get the outside funding.
+   *
+   * @return float
+   *   The outside funding value.
+   */
+  public function getOutsideFunding(): float {
+    $total_funding = $this->getTotalFunding();
+    $overall_funding = $this->getOverallFunding();
+    return $overall_funding - $total_funding;
   }
 
   /**
@@ -306,27 +374,21 @@ class Plan extends BaseObject implements BaseObjectMetaDataInterface, BaseObject
   /**
    * Get the coverage for a plan.
    *
-   * @param float $funding
-   *   The funding to compare against.
-   *
    * @return float
    *   The coverage.
    */
-  public function getCoverage($funding): float {
-    return (float) CommonHelper::calculateRatio($funding, $this->getRequirements()) * 100;
+  public function getCoverage(): float {
+    return (float) CommonHelper::calculateRatio($this->getTotalFunding() ?? 0, $this->getRequirements()) * 100;
   }
 
   /**
-   * Get the coverage for a plan.
-   *
-   * @param float $funding
-   *   The funding to compare against.
+   * Get the funding gap for a plan.
    *
    * @return float
    *   The funding gap.
    */
-  public function getFundingGap($funding): float {
-    return $this->getRequirements() - $funding;
+  public function getFundingGap(): float {
+    return $this->getRequirements() - $this->getTotalFunding();
   }
 
   /**

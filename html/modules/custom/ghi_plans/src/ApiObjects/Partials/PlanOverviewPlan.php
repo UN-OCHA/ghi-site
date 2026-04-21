@@ -41,6 +41,13 @@ class PlanOverviewPlan extends BaseObject {
   protected float $requirements;
 
   /**
+   * The funding.
+   *
+   * @var float
+   */
+  protected float $funding;
+
+  /**
    * Whether the plan is part of the GHO.
    *
    * @var bool
@@ -78,7 +85,8 @@ class PlanOverviewPlan extends BaseObject {
     $this->id = $plan->id();
     $this->name = $plan->getName();
     $this->planType = $plan->getPlanType()?->getName() ?? NULL;
-    $this->requirements = $data->requirements ?: 0;
+    $this->requirements = ($data->requirements ?? NULL) ?: 0;
+    $this->funding = ($data->funding ?? NULL) ?: 0;
     $this->isPartOfGHO = $plan->isPartOfGho();
     $this->lastPublishedReportingPeriodId = $plan->getLastPublishedReportingPeriodId();
     $this->countries = $plan->getCountries();
@@ -259,14 +267,11 @@ class PlanOverviewPlan extends BaseObject {
   /**
    * Get the coverage for a plan based on the given funding.
    *
-   * @param float $funding
-   *   The funding to calculate the coverage against.
-   *
    * @return float
    *   The coverage for a plan.
    */
-  public function getCoverage(float $funding): float {
-    return (float) CommonHelper::calculateRatio($funding, $this->getRequirements()) * 100;
+  public function getCoverage(): float {
+    return (float) CommonHelper::calculateRatio($this->getFunding() ?: 0, $this->getRequirements()) * 100;
   }
 
   /**
@@ -277,6 +282,16 @@ class PlanOverviewPlan extends BaseObject {
    */
   public function getRequirements(): float {
     return (float) $this->requirements;
+  }
+
+  /**
+   * Get the funding for a plan.
+   *
+   * @return float
+   *   The plan funding.
+   */
+  public function getFunding(): float {
+    return (float) $this->funding;
   }
 
   /**
