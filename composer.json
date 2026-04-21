@@ -105,7 +105,7 @@
         "drupal/layout_builder_lock": "^1.1",
         "drupal/layout_builder_modal": "^1.1",
         "drupal/layout_builder_operation_link": "^2.1",
-        "drupal/layout_builder_restrictions": "^2.8",
+        "drupal/layout_builder_restrictions": "^3.0",
         "drupal/mailsystem": "^4.5",
         "drupal/maintenance200": "^2.1",
         "drupal/maxlength": "^3",
