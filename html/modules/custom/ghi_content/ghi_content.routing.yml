@@ -144,3 +144,16 @@ ghi_content.article_config:
     _admin_route: TRUE
   requirements:
     _permission: 'administer ghi article config'
+
+ghi_content.subarticle_deferred:
+  path: '/content/subarticle/{node}/deferred'
+  defaults:
+    _controller: '\Drupal\ghi_content\Controller\SubArticleController::loadDeferredContent'
+  requirements:
+    _custom_access: '\Drupal\ghi_content\Controller\SubArticleController::access'
+  options:
+    parameters:
+      node:
+        type: entity:node
+        bundle:
+          - article

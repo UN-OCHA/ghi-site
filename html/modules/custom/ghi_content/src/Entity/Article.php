@@ -55,12 +55,19 @@ class Article extends ContentBase implements ContentReviewInterface {
     if (!$this->id()) {
       return parent::getCacheTags();
     }
-    $cache_tags = &drupal_static(__FUNCTION__ . '_' . $this->id(), NULL);
+    $context_node = $this->getContextNode();
+    $context_key = $context_node instanceof Document ? 'document_' . $context_node->id() : 'default';
+    $cache_tags = &drupal_static(__FUNCTION__ . '_' . $this->id() . '_' . $context_key, NULL);
     if ($cache_tags === NULL) {
       $cache_tags = parent::getCacheTags();
+      if ($context_node instanceof Document) {
+        // The context document is already part of the parent render cache
+        // metadata. Avoid remote lookups to rediscover article documents.
+        return $cache_tags;
+      }
       $documents = $this->getDocuments();
       foreach ($documents as $document) {
-        $cache_tags = Cache::mergeTags($cache_tags, $document->getCacheTags());
+        $cache_tags = Cache::mergeTags($cache_tags, $document->getCacheTagsToInvalidate());
       }
     }
     return $cache_tags;
@@ -99,32 +106,21 @@ class Article extends ContentBase implements ContentReviewInterface {
     if (!$this->id()) {
       return [];
     }
-    $documents = &drupal_static(__FUNCTION__ . $this->id(), NULL);
-    if ($documents === NULL) {
-      $article_manager = $this->getContentManager();
-      $remote_article = $article_manager->loadRemoteContentForNode($this);
-      if (!$remote_article instanceof RemoteArticleInterface) {
-        return [];
-      }
-      $document_ids = $remote_article->getDocumentIds();
-      $remote_source = $remote_article->getSource()->getPluginId();
+    $documents = &drupal_static(__CLASS__ . '::' . __FUNCTION__, []);
 
-      /** @var \Drupal\ghi_content\RemoteSource\RemoteSourceManager $remote_source_manager */
-      $remote_source_manager = \Drupal::service('plugin.manager.remote_source');
-
-      if (!$remote_source || !$remote_source_manager->hasDefinition($remote_source)) {
-        return [];
-      }
-
-      /** @var \Drupal\ghi_content\RemoteSource\RemoteSourceInterface $remote_source_instance */
-      $remote_source_instance = $remote_source_manager->createInstance($remote_source);
-      $document_manager = self::getDocumentManager();
-      $documents = array_filter(array_map(function ($document_id) use ($document_manager, $remote_source_instance) {
-        $remote_document = $remote_source_instance->getDocument($document_id);
-        return $remote_document ? $document_manager->loadNodeForRemoteContent($remote_document) : NULL;
-      }, $document_ids));
+    $article_manager = $this->getContentManager();
+    $remote_article = $article_manager->loadRemoteContentForNode($this);
+    if (!$remote_article instanceof RemoteArticleInterface) {
+      return [];
     }
-    return $documents;
+    $document_ids = $remote_article->getDocumentIds();
+    $load_document_ids = array_diff($document_ids, array_map(fn ($document) => $document->getSourceId(), $documents));
+    if (!empty($load_document_ids)) {
+      $remote_source = $remote_article->getSource()->getPluginId();
+      $document_manager = self::getDocumentManager();
+      $documents += $document_manager->loadNodesForRemoteIds($remote_source, $load_document_ids);
+    }
+    return array_filter($documents, fn ($document) => in_array($document->getSourceId(), $document_ids));
   }
 
   /**

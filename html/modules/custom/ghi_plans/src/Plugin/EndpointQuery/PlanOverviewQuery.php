@@ -60,6 +60,11 @@ class PlanOverviewQuery extends EndpointQueryBase {
    * Retrieve plan data.
    */
   private function retrievePlans() {
+    // Several homepage blocks ask for plan funding during the same request.
+    // Keep the processed response on the query instance after the first call.
+    if ($this->plans !== NULL) {
+      return;
+    }
     $this->plans = [];
     $query_args = [];
 

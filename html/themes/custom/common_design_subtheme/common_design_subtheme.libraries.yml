@@ -237,6 +237,10 @@ gho-sub-article:
       components/gho-sub-article/gho-sub-article.js: {}
   dependencies:
     - common_design_subtheme/gho-appeals-tags
+    - core/drupal
+    - core/drupal.ajax
+    - core/jquery
+    - core/once
 gho-text:
   css:
     theme:

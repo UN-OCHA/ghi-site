@@ -1,8 +1,8 @@
 {
   "patches": {
     "drupal/core": {
-      "Issue #2820359: Add #element_submit and #limit_element_submit just like #element_validate and #limit_validation_errors": "https://www.drupal.org/files/issues/2024-09-04/2820359-121.patch",
-      "Issue #2844620: Automatically split headers into multiple lines when they exceed 8k": "https://www.drupal.org/files/issues/2024-12-02/automatically-split-headers-into-multiple-lines-when-they-exceed-8k-2844620.patch",
+      "Issue #2820359: Add #element_submit and #limit_element_submit just like #element_validate and #limit_validation_errors": "patches/core-element-submit-2820359-121.patch",
+      "Issue #2844620: Automatically split headers into multiple lines when they exceed 8k": "patches/core-automatically-split-headers-into-multiple-lines-when-they-exceed-8k-2844620.patch",
       "Issue #3008924: Callers of LayoutEntityHelperTrait::getEntitySections() do not account for the view mode": "./patches/3008924-rerolled-24.patch",
       "Issue #2902481: Add GROUP_CONCAT aggregate function to views": "https://www.drupal.org/files/issues/2024-08-09/add_group_concat_aggregate-2902481-44.patch",
       "Issue #151311: Split 'administer permissions' into a new administer roles permissions": "https://www.drupal.org/files/issues/2023-01-19/split_administer_permissions_151311-72.patch",
@@ -10,8 +10,14 @@
       "Issue #3001188: Make it possible to add relationships to layout builder": "./patches/3001188-make-it-possible-to-add-relationships-to-layout-builder.patch",
       "Issue #2329253: Allow the ChangedItem to skip updating the entity's changed timestamp when synchronizing (f.e. when migrating)": "https://www.drupal.org/files/issues/2024-07-30/2329253-10.x.patch",
       "Issue #?? (maybe #2837833): 'Required contexts without a value": "./patches/missing-context-value-in-layout-builder-admin.patch",
-      "Issue #2190333: Make #group FAPI / render feature work on all form/render #types out of the box": "https://www.drupal.org/files/issues/2023-09-04/drupal-core_form-api_groups_0.patch",
+      "Issue #2190333: Make #group FAPI / render feature work on all form/render #types out of the box": "patches/core-form-api-groups-2190333.patch",
       "Issue #2585169: Unable to alter local actions prior to rendering": "https://www.drupal.org/files/issues/2024-12-19/2585169-63-10.4.x.patch"
+    },
+    "drupal/autologout": {
+      "Issue #3580058: Undefined array key 'cookie_samesite' warning after upgrade to 2.02": "./patches/autologout-3580058-mr.patch"
+    },
+    "drupal/file_mdm": {
+      "Issue #3570037: Deprecated Error": "https://www.drupal.org/files/issues/2026-03-20/file_mdm-nullable-3570037-8.patch"
     },
     "drupal/geofield_map": {
       "Issue #3479680: Hide marker button when the map position is reset": "https://git.drupalcode.org/project/geofield_map/-/merge_requests/22.patch"
@@ -31,8 +37,14 @@
     "drupal/page_manager": {
       "Issue #3176661: Allow to edit page title when using Layout Builder variant": "https://www.drupal.org/files/issues/2022-11-15/page_manager-lb-title-3176661-15.patch"
     },
+    "drupal/phpexcel": {
+      "Issue #3567264: PHP 8.4: Implicitly nullable parameter declarations deprecated": "https://www.drupal.org/files/issues/2026-01-26/php84-3.patch"
+    },
     "drupal/publishcontent": {
-      "Issue #2820867: Bulk operations actions skip 'publishcontent' defined permissions": "https://www.drupal.org/files/issues/2024-10-14/permissions-for-bulk-operations-2820867-9.patch"
+      "Issue #2820867: Bulk operations actions skip 'publishcontent' defined permissions": "https://www.drupal.org/files/issues/2026-03-31/permissions-for-bulk-operations-2820867-12.patch"
+    },
+    "drupal/rabbit_hole": {
+      "Fix Multiple Implicit Nullable Parameters for PHP 8.4 Compatibility": "./patches/3516167-8-x-1.x-52.patch"
     },
     "drupal/seckit": {
       "Issue #2844205: Provide hook_seckit_options_alter() D8": "./patches/2844205.mr.patch"
@@ -44,9 +56,6 @@
     "drupal/openid_connect_windows_aad": {
         "Failed to get authentication tokens for Windows Azure AD": "./patches/openid_connect_windows_aad-3346603-5.patch"
     },
-    "drupal/config_default_image": {
-      "Issue #2921908: Provide a 2nd formatter \"Responsive image or default image\"": "https://www.drupal.org/files/issues/2022-11-21/config_default_image-2921908-7.patch"
-    },
     "drupal/view_unpublished": {
       "Issue #2958568: Add a search api processor for view unpublished": "./patches/2958568-view-unpublished-search-api-access-18.patch"
     },
@@ -55,8 +64,9 @@
     },
     "drupal/webp": {
       "Issue #3325808: Webp Image not generated for styles using original image.": "https://git.drupalcode.org/project/webp/-/merge_requests/35.patch",
-      "Issue #3281606: Rendering duplicate images when the original images have the same name but different extension": "https://git.drupalcode.org/project/webp/-/merge_requests/30.patch",
-      "Issue #3153137: Using Image Widget Crop in responsive images does not refresh webp image": "./patches/3153137-custom-fix-3281606.patch"
+      "Issue #3281606: Rendering duplicate images when the original images have the same name but different extension": "patches/webp-duplicate-images-same-name-3281606-30.patch",
+      "Issue #3153137: Using Image Widget Crop in responsive images does not refresh webp image": "./patches/3153137-custom-fix-3281606.patch",
+      "Issue #3561953: PHP 8.4 implicit nullable & constructor parameter order issues in WebP FileDownloadController": "https://www.drupal.org/files/issues/2026-03-06/3561953-12.patch"
     }
   }
 }

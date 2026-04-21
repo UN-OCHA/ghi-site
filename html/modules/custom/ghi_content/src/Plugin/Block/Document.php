@@ -7,7 +7,6 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\ghi_blocks\Interfaces\AutomaticTitleBlockInterface;
 use Drupal\ghi_content\Entity\ContentBase;
 use Drupal\ghi_content\RemoteContent\HpcContentModule\RemoteChapter;
-use Drupal\ghi_content\RemoteContent\RemoteArticleInterface;
 
 /**
  * Provides a 'Document' block.
@@ -59,7 +58,10 @@ class Document extends ContentBlockBase implements AutomaticTitleBlockInterface 
         if ($document_node && $document_node instanceof ContentBase) {
           $article->setContextNode($document_node);
         }
-        $cache_tags = Cache::mergeTags($cache_tags, $article->getCacheTags() ?? []);
+        // The document node cache tags are already included above. Article
+        // invalidation tags are enough for these cards and avoid relationship
+        // expansion through Article::getCacheTags().
+        $cache_tags = Cache::mergeTags($cache_tags, $article->getCacheTagsToInvalidate() ?? []);
         $articles[] = $article;
       }
       $tabs[] = [
@@ -165,11 +167,11 @@ class Document extends ContentBlockBase implements AutomaticTitleBlockInterface 
    *   An array of article node objects.
    */
   private function getChapterArticles(RemoteChapter $chapter) {
-    $articles = $chapter ? array_filter(array_map(function (RemoteArticleInterface $article) {
-      $article_node = $this->articleManager->loadNodeForRemoteContent($article);
-      return $article_node?->access('view') ? $article_node : NULL;
-    }, $chapter->getArticles())) : [];
-    return $articles;
+    if (!$chapter) {
+      return [];
+    }
+    $article_ids = $chapter->getArticleIds();
+    return $this->articleManager->loadAccessibleNodesForRemoteIds($chapter->getSource()->getPluginId(), $article_ids);
   }
 
 }

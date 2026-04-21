@@ -1,5 +1,5 @@
 # Build the code.
-FROM public.ecr.aws/unocha/php-k8s:8.3-stable AS builder
+FROM public.ecr.aws/unocha/php-k8s:8.4-stable AS builder
 
 ARG  BRANCH_ENVIRONMENT
 ENV  NODE_ENV=$BRANCH_ENVIRONMENT
@@ -20,7 +20,7 @@ RUN mkdir -m 0775 -p html/sites/default && \
 ################################################################################
 
 # Generate the image.
-FROM public.ecr.aws/unocha/php-k8s:8.3-stable
+FROM public.ecr.aws/unocha/php-k8s:8.4-stable
 
 ARG VCS_REF
 ARG VCS_URL
@@ -56,6 +56,7 @@ COPY --from=builder /srv/www/composer.json /srv/www/composer.json
 COPY --from=builder /srv/www/composer.patches.json /srv/www/composer.patches.json
 COPY --from=builder /srv/www/composer.lock /srv/www/composer.lock
 COPY --from=builder /srv/www/patches /srv/www/patches
+COPY --from=builder /srv/www/patches.lock.json /srv/www/patches.lock.json
 COPY --from=builder /srv/www/scripts /srv/www/scripts
 COPY --from=builder /srv/www/docker/etc/nginx/ratelimit.conf.template /etc/nginx/ratelimit.conf.template
 COPY --from=builder /srv/www/docker/etc/nginx/custom /etc/nginx/custom/

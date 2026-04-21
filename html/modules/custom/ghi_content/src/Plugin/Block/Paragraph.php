@@ -3,9 +3,11 @@
 namespace Drupal\ghi_content\Plugin\Block;
 
 use Drupal\Component\Utility\Html;
+use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\Markup;
 use Drupal\Core\Security\TrustedCallbackInterface;
+use Drupal\Core\Url;
 use Drupal\ghi_blocks\Interfaces\MultiStepFormBlockInterface;
 use Drupal\ghi_blocks\Interfaces\OptionalTitleBlockInterface;
 use Drupal\ghi_content\Entity\Article;
@@ -14,6 +16,7 @@ use Drupal\ghi_content\RemoteContent\RemoteParagraphInterface;
 use Drupal\ghi_form_elements\Traits\CustomLinkTrait;
 use Drupal\gho_footnotes\GhoFootnotes;
 use Drupal\hpc_common\Helpers\ThemeHelper;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Provides a 'Paragraph' block.
@@ -38,6 +41,23 @@ use Drupal\hpc_common\Helpers\ThemeHelper;
 class Paragraph extends ContentBlockBase implements OptionalTitleBlockInterface, MultiStepFormBlockInterface, TrustedCallbackInterface {
 
   use CustomLinkTrait;
+
+  /**
+   * The sub-article renderer.
+   *
+   * @var \Drupal\ghi_content\SubArticleRenderer
+   */
+  protected $subArticleRenderer;
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
+    /** @var static $instance */
+    $instance = parent::create($container, $configuration, $plugin_id, $plugin_definition);
+    $instance->subArticleRenderer = $container->get('ghi_content.subarticle_renderer');
+    return $instance;
+  }
 
   /**
    * The CSS class used for promoted paragraphs. This comes from the NCMS.
@@ -683,24 +703,7 @@ class Paragraph extends ContentBlockBase implements OptionalTitleBlockInterface,
       $content_node = $new_dom->getElementsByTagName('article')->item(0);
     }
     elseif ($this->config('ghi_content.article_settings')->get('subarticle_local_render')) {
-      // Local rendering has been requested, so we completely replace the
-      // content from the remote with the rendered page content of the article
-      // in our system.
-      /** @var \Drupal\Core\Entity\EntityViewBuilder $view_builder */
-      $view_builder = \Drupal::entityTypeManager()->getViewBuilder($local_subarticle->getEntityTypeId());
-      $build = $view_builder->view($local_subarticle);
-      $build['#skip_footnotes_processing'] = TRUE;
-      $build = $view_builder->build($build);
-
-      $html = ThemeHelper::render($build, FALSE);
-      $html = preg_replace('/<!--(.*)-->/Uis', '', $html);
-
-      // Create a new dom object with the local rendering result.
-      $new_dom = Html::load($html);
-      $content_node = $this->getElementByClass($new_dom->getElementsByTagName('article')->item(0), [
-        'layout--onecol',
-        'layout__region--content',
-      ]);
+      $content_node = $this->buildLocalSubarticleContent($paragraph, $local_subarticle);
     }
 
     if (!$content_node) {
@@ -718,6 +721,130 @@ class Paragraph extends ContentBlockBase implements OptionalTitleBlockInterface,
       $article_content_node->removeChild($article_content_node->firstChild);
     }
     $article_content_node->appendChild($fragment);
+  }
+
+  /**
+   * Build the initially visible local sub-article content.
+   *
+   * Only the configured number of local layout builder components is rendered
+   * during the main page request. Remaining components are represented by an
+   * AJAX placeholder so collapsed sub-articles do not recursively build their
+   * entire local article tree on cold cache requests.
+   *
+   * @param \Drupal\ghi_content\RemoteContent\RemoteParagraphInterface $paragraph
+   *   The remote sub-article paragraph.
+   * @param \Drupal\ghi_content\Entity\Article $local_subarticle
+   *   The local sub-article node.
+   *
+   * @return \DOMNode|null
+   *   The DOM node containing local sub-article content, or NULL.
+   */
+  private function buildLocalSubarticleContent(RemoteParagraphInterface $paragraph, Article $local_subarticle) {
+    $preview_component_count = $this->getSubarticlePreviewComponentCount();
+    $context_node = $this->getSubarticleContextNode();
+    $component_count = $this->subArticleRenderer->countComponents($local_subarticle);
+
+    // The renderer counts visible components for the preview limit, but returns
+    // the raw Layout Builder offset that the deferred AJAX request must resume
+    // from. These differ when earlier components render no visible markup in
+    // the current page context.
+    $next_component_offset = $preview_component_count;
+    $build = [
+      '#type' => 'container',
+      '#attributes' => [
+        'class' => [
+          'ghi-subarticle-local-render',
+        ],
+      ],
+      'content' => $this->subArticleRenderer->build($local_subarticle, $context_node, $this->getContexts(), 0, $preview_component_count, $next_component_offset),
+    ];
+
+    if ($component_count > $next_component_offset) {
+      $placeholder_id = Html::getId('ghi-subarticle-deferred-' . $paragraph->getId() . '-' . $local_subarticle->id());
+      $query = [
+        'offset' => $next_component_offset,
+        'placeholder_id' => $placeholder_id,
+        'current_uri' => $this->getCurrentUri(),
+      ];
+      if ($context_node) {
+        $query['context_node'] = $context_node->id();
+      }
+      if ($contexts = $this->getSubarticleAjaxContexts()) {
+        $query['contexts'] = $contexts;
+      }
+      $build['deferred'] = [
+        '#type' => 'container',
+        '#attributes' => [
+          'id' => $placeholder_id,
+          'class' => [
+            'ghi-subarticle-deferred-placeholder',
+          ],
+          'data-subarticle-load-url' => Url::fromRoute('ghi_content.subarticle_deferred', [
+            'node' => $local_subarticle->id(),
+          ], [
+            'query' => $query,
+          ])->toString(),
+        ],
+      ];
+    }
+
+    $html = ThemeHelper::render($build, FALSE);
+    $html = preg_replace('/<!--(.*)-->/Uis', '', $html);
+    $new_dom = Html::load($html);
+    return $this->getElementByClass($new_dom->getElementsByTagName('body')->item(0), 'ghi-subarticle-local-render');
+  }
+
+  /**
+   * Get the configured number of local sub-article preview components.
+   *
+   * @return int
+   *   The number of components to render during the initial page request.
+   */
+  private function getSubarticlePreviewComponentCount() {
+    return max(0, (int) ($this->config('ghi_content.article_settings')->get('subarticle_local_render_preview_components') ?? 3));
+  }
+
+  /**
+   * Get the node that should provide context for local sub-article rendering.
+   *
+   * @return \Drupal\node\NodeInterface|null
+   *   The context node, or NULL.
+   */
+  private function getSubarticleContextNode() {
+    $article_page = $this->getArticlePage();
+    return $article_page?->getContextNode();
+  }
+
+  /**
+   * Get context values that need to survive the deferred AJAX request.
+   *
+   * @return string[]
+   *   Context values encoded as "entity:{entity_type_id}:{entity_id}".
+   */
+  private function getSubarticleAjaxContexts() {
+    $contexts = $this->getContexts();
+    $available_context_ids = array_keys($this->contextRepository->getAvailableContexts());
+    $contexts += $this->contextRepository->getRuntimeContexts($available_context_ids);
+
+    $encoded_contexts = [];
+    foreach ($contexts as $key => $context) {
+      if (!$context->hasContextValue()) {
+        continue;
+      }
+      $value = $context->getContextValue();
+      if (!$value instanceof EntityInterface) {
+        continue;
+      }
+      if ($value->getEntityTypeId() == 'user') {
+        continue;
+      }
+      $encoded_contexts[$key] = implode(':', [
+        'entity',
+        $value->getEntityTypeId(),
+        $value->id(),
+      ]);
+    }
+    return $encoded_contexts;
   }
 
   /**

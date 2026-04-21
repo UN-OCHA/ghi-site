@@ -155,7 +155,6 @@ class ImportBlockForm extends ConfigureBlockFormBase {
       '#type' => 'link',
       '#title' => $this->t('Cancel'),
       '#url' => Url::fromRoute('layout_builder.choose_block', \Drupal::routeMatch()->getRawParameters()->all()),
-      '#weight' => -1,
       '#attributes' => [
         'class' => [
           'dialog-cancel',

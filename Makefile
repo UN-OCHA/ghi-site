@@ -1,6 +1,9 @@
 # Variables. Yes.
 DOCKER=docker
 DOCKER_BUILDKIT=0
+REGISTRY=unocha
+IMAGE_NAME=ghi-site
+IMAGE_TAG=local
 
 # The main build recipe.
 build:  clean
@@ -12,10 +15,10 @@ build:  clean
 				--build-arg GITHUB_ACTOR=`whoami` \
 				--build-arg GITHUB_REPOSITORY=`git config --get remote.origin.url` \
 				--build-arg GITHUB_SHA=`git rev-parse --short HEAD` \
-		. --file docker/Dockerfile --rm --force-rm --tag unocha/ghi-site:local \
+		. --file docker/Dockerfile --rm --force-rm --tag $(REGISTRY)/$(IMAGE_NAME):$(IMAGE_TAG) \
 		2>&1 | tee buildlog.txt
 
-		@echo "Built a shiny new unocha/ghi-site:local for you."
+		@echo "Built a shiny new $(REGISTRY)/$(IMAGE_NAME):$(IMAGE_TAG) for you."
 
 clean:
 	# This is done in the builder step, preventing breaking some local setups.

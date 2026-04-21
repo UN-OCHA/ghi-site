@@ -1,0 +1,109 @@
+diff --git a/src/Controller/ImageStyleDownloadController.php b/src/Controller/ImageStyleDownloadController.php
+index d51af48..0882fbc 100644
+--- a/src/Controller/ImageStyleDownloadController.php
++++ b/src/Controller/ImageStyleDownloadController.php
+@@ -107,26 +107,8 @@ class ImageStyleDownloadController extends FileDownloadController {
+     $image_uri = $scheme . '://' . $target;
+ 
+     if ($webp_wanted = preg_match('/\.webp$/', $image_uri)) {
+-      $destination = $this->webp->getWebpDestination($image_uri, '@directory@filename');
+-      $possible_image_uris = [$destination];
+-
+-      // Try out the different possible sources for a webp image.
+-      $extensions = [
+-        '.jpg',
+-        '.jpeg',
+-        '.png',
+-      ];
+-      foreach ($extensions as $extension) {
+-        $possible_image_uris[] = str_replace('.webp', mb_strtoupper($extension), $image_uri);
+-        $possible_image_uris[] = str_replace('.webp', $extension, $image_uri);
+-      }
+-
+-      foreach ($possible_image_uris as $possible_image_uri) {
+-        if (file_exists($possible_image_uri)) {
+-          $image_uri = $possible_image_uri;
+-          break;
+-        }
+-      }
++      // Drop the webp extension.
++      $image_uri = $this->webp->getWebpDestination($image_uri, '@directory@filename');
+     }
+ 
+     // Don't try to generate file if source is missing.
+diff --git a/src/Webp.php b/src/Webp.php
+index 7d5382c..49657e4 100644
+--- a/src/Webp.php
++++ b/src/Webp.php
+@@ -124,7 +124,7 @@ class Webp {
+       // If we can generate a GD resource from the source image, generate the
+       // URI of the WebP copy and try to create it.
+       if ($sourceImage !== NULL) {
+-        $destination = $this->getWebpDestination($uri, '@directory@filename.webp');
++        $destination = $this->getWebpDestination($uri, '@directory@filename.@extension.webp');
+ 
+         imagesavealpha($sourceImage, TRUE);
+         imagealphablending($sourceImage, TRUE);
+@@ -184,7 +184,7 @@ class Webp {
+    *   Webp version of srcset
+    */
+   public function getWebpSrcset($srcset) {
+-    return preg_replace('/\.(png|jpg|jpeg)(\\?.*?)?(,| |$)/i', '.webp\\2\\3', $srcset);
++    return preg_replace('/\.(png|jpg|jpeg)(\\?.*?)?(,| |$)/i', '.\\1.webp\\2\\3', $srcset);
+   }
+ 
+   /**
+@@ -207,7 +207,7 @@ class Webp {
+     // We'll convert the image into webp.
+     $ImageMagickImg->apply('convert', ['extension' => 'webp', 'quality' => $quality]);
+ 
+-    $destination = $this->getWebpDestination($uri, '@directory@filename.webp');
++    $destination = $this->getWebpDestination($uri, '@directory@filename.@extension.webp');
+     if ($ImageMagickImg->save($destination)) {
+       $webp = $destination;
+ 
+diff --git a/tests/src/Unit/WebpTest.php b/tests/src/Unit/WebpTest.php
+index bf136b8..82b7013 100644
+--- a/tests/src/Unit/WebpTest.php
++++ b/tests/src/Unit/WebpTest.php
+@@ -26,27 +26,27 @@ class WebpTest extends UnitTestCase {
+    * @covers Drupal\webp\Webp::getWebpSrcset
+    */
+   public function testgetWebpSrcset() {
+-    $this->assertEquals("testimage.webp", $this->webp->getWebpSrcset("testimage.jpg"));
+-    $this->assertEquals("testimage2.webp", $this->webp->getWebpSrcset("testimage2.png"));
+-    $this->assertEquals("testimage2.webp", $this->webp->getWebpSrcset("testimage2.jpeg"));
+-    $this->assertEquals("testimage2.webp", $this->webp->getWebpSrcset("testimage2.jpg"));
+-    $this->assertEquals("testimage2.ext.webp", $this->webp->getWebpSrcset("testimage2.ext.jpg"));
+-    $this->assertEquals("testimage2.ext.ext.webp", $this->webp->getWebpSrcset("testimage2.ext.ext.jpg"));
++    $this->assertEquals("testimage.jpg.webp", $this->webp->getWebpSrcset("testimage.jpg"));
++    $this->assertEquals("testimage2.png.webp", $this->webp->getWebpSrcset("testimage2.png"));
++    $this->assertEquals("testimage2.jpeg.webp", $this->webp->getWebpSrcset("testimage2.jpeg"));
++    $this->assertEquals("testimage2.jpg.webp", $this->webp->getWebpSrcset("testimage2.jpg"));
++    $this->assertEquals("testimage2.ext.jpg.webp", $this->webp->getWebpSrcset("testimage2.ext.jpg"));
++    $this->assertEquals("testimage2.ext.ext.jpg.webp", $this->webp->getWebpSrcset("testimage2.ext.ext.jpg"));
+ 
+     // Test that double extensions are handled properly.
+-    $this->assertEquals("testimage2.png.webp", $this->webp->getWebpSrcset("testimage2.png.jpg"));
+-    $this->assertEquals("testimage2.jpeg.png.webp", $this->webp->getWebpSrcset("testimage2.jpeg.png.jpg"));
++    $this->assertEquals("testimage2.png.jpg.webp", $this->webp->getWebpSrcset("testimage2.png.jpg"));
++    $this->assertEquals("testimage2.jpeg.png.jpg.webp", $this->webp->getWebpSrcset("testimage2.jpeg.png.jpg"));
+ 
+     // Test source sets with width descriptor/pixel density and multiple images.
+-    $this->assertEquals("some/path/image.webp?itok=vOpRgtYZ 1x", $this->webp->getWebpSrcset("some/path/image.JPG?itok=vOpRgtYZ 1x"));
+-    $this->assertEquals("some/path/image.webp?itok=vOpRgtYZ 1x, some/path/image.webp?itok=vOpRgtYZ 2x", $this->webp->getWebpSrcset("some/path/image.JPG?itok=vOpRgtYZ 1x, some/path/image.JPG?itok=vOpRgtYZ 2x"));
++    $this->assertEquals("some/path/image.JPG.webp?itok=vOpRgtYZ 1x", $this->webp->getWebpSrcset("some/path/image.JPG?itok=vOpRgtYZ 1x"));
++    $this->assertEquals("some/path/image.JPG.webp?itok=vOpRgtYZ 1x, some/path/image.JPG.webp?itok=vOpRgtYZ 2x", $this->webp->getWebpSrcset("some/path/image.JPG?itok=vOpRgtYZ 1x, some/path/image.JPG?itok=vOpRgtYZ 2x"));
+ 
+     // Test source sets with multiple images but without width descriptor/pixel density.
+-    $this->assertEquals("some/path/image.webp?itok=vOpRgtYZ, some/path/image.webp?itok=vOpRgtYZ", $this->webp->getWebpSrcset("some/path/image.JPG?itok=vOpRgtYZ, some/path/image.JPG?itok=vOpRgtYZ"));
++    $this->assertEquals("some/path/image.JPG.webp?itok=vOpRgtYZ, some/path/image.JPG.webp?itok=vOpRgtYZ", $this->webp->getWebpSrcset("some/path/image.JPG?itok=vOpRgtYZ, some/path/image.JPG?itok=vOpRgtYZ"));
+ 
+     // And multiple source sets with multiple images.
+-    $this->assertEquals("some/path/image.png.webp?itok=vOpRgtYZ 1x, some/path/image.jpg.ext.webp?itok=vOpRgtYZ 2x", $this->webp->getWebpSrcset("some/path/image.png.JPG?itok=vOpRgtYZ 1x, some/path/image.jpg.ext.JPG?itok=vOpRgtYZ 2x"));
+-    $this->assertEquals("some/path/image.png.webp?itok=vOpRgtYZ, some/path/image.jpg.ext.webp?itok=vOpRgtYZ", $this->webp->getWebpSrcset("some/path/image.png.JPG?itok=vOpRgtYZ, some/path/image.jpg.ext.JPG?itok=vOpRgtYZ"));
++    $this->assertEquals("some/path/image.png.JPG.webp?itok=vOpRgtYZ 1x, some/path/image.jpg.ext.JPG.webp?itok=vOpRgtYZ 2x", $this->webp->getWebpSrcset("some/path/image.png.JPG?itok=vOpRgtYZ 1x, some/path/image.jpg.ext.JPG?itok=vOpRgtYZ 2x"));
++    $this->assertEquals("some/path/image.png.JPG.webp?itok=vOpRgtYZ, some/path/image.jpg.ext.JPG.webp?itok=vOpRgtYZ", $this->webp->getWebpSrcset("some/path/image.png.JPG?itok=vOpRgtYZ, some/path/image.jpg.ext.JPG?itok=vOpRgtYZ"));
+   }
+ 
+ }

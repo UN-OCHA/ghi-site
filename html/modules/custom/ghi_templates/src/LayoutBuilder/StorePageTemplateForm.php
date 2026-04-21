@@ -59,20 +59,20 @@ class StorePageTemplateForm extends TemplateFormBase {
       '#title' => $this->t('Label'),
     ];
 
+    $form['actions']['submit'] = [
+      '#type' => 'submit',
+      '#value' => $this->t('Create new template'),
+    ];
+
     $form['actions']['cancel'] = [
       '#type' => 'link',
       '#title' => $this->t('Cancel'),
       '#url' => $section_storage->getLayoutBuilderUrl(),
-      '#weight' => -1,
       '#attributes' => [
         'class' => [
           'dialog-cancel',
         ],
       ],
-    ];
-    $form['actions']['submit'] = [
-      '#type' => 'submit',
-      '#value' => $this->t('Create new template'),
     ];
 
     if ($this->isAjax()) {
