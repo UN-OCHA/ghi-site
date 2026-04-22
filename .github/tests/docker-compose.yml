@@ -20,7 +20,7 @@ services:
       - default
 
   mysql:
-    image: public.ecr.aws/unocha/mysql:11.4
+    image: public.ecr.aws/unocha/mysql:11
     hostname: ghi-test-mysql
     container_name: ghi-test-mysql
     environment:
@@ -51,6 +51,8 @@ services:
       # Mount local custom code.
       #- "../html/modules/custom:/srv/www/html/modules/custom:ro"
       #- "../html/themes/custom:/srv/www/html/themes/custom:ro"
+      # Build logs.
+      - "../../logs:/srv/www/html/build/logs:rw"
     environment:
       - TERM=xterm
       - ENVIRONMENT=dev
