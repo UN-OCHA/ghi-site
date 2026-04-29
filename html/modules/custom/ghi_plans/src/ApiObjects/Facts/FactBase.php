@@ -83,6 +83,20 @@ abstract class FactBase extends ApiObjectBase {
   protected ?int $healthInterventionCategoryId;
 
   /**
+   * The maternal status id.
+   *
+   * @var int|null
+   */
+  protected ?int $maternalStatusId;
+
+  /**
+   * The disaggregation category other id.
+   *
+   * @var int|null
+   */
+  protected ?int $disaggregationCategoryOtherId;
+
+  /**
    * The delivery modality id.
    *
    * @var int|null
@@ -131,6 +145,8 @@ abstract class FactBase extends ApiObjectBase {
     $this->settlementTypeId = $data->SettlementTypeId;
     $this->disabilityStatusId = $data->DisabilityStatusId;
     $this->healthInterventionCategoryId = $data->HealthInterventionCategoryId;
+    $this->maternalStatusId = $data->MaternalStatusId;
+    $this->disaggregationCategoryOtherId = $data->DisaggregationCategoryOtherId;
     $this->deliveryModalityId = $data->DeliveryModalityId;
     $this->customMetricName = $data->CustomMetricName;
     $this->isTotal = $data->IsTotal;
@@ -217,13 +233,15 @@ abstract class FactBase extends ApiObjectBase {
    */
   public function getCategories() {
     $category_properties = [
-      'ageGroupId' => 'ageGroups',
-      'deliveryModalityId' => 'deliveryModalities',
-      'disabilityStatusId' => 'disabilityStatuses',
       'genderId' => 'genders',
-      'healthInterventionCategoryId' => 'healthInterventionCategories',
+      'ageGroupId' => 'ageGroups',
       'populationStatusId' => 'populationStatuses',
       'settlementTypeId' => 'settlementTypes',
+      'disabilityStatusId' => 'disabilityStatuses',
+      'healthInterventionCategoryId' => 'healthInterventionCategories',
+      'maternalStatusId' => 'maternalStatuses',
+      'disaggregationCategoryOtherId' => 'disaggregationCategoryOthers',
+      'deliveryModalityId' => 'deliveryModalities',
     ];
     $category_query = $this->getCategoryQuery();
     $categories = [];
