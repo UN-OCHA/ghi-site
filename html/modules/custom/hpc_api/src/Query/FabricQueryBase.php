@@ -11,8 +11,10 @@ use Drupal\hpc_api\ApiObjects\ApiObjectNamespaceInterface;
 use Drupal\hpc_api\ApiObjects\Categories\AgeGroup;
 use Drupal\hpc_api\ApiObjects\Categories\DeliveryModality;
 use Drupal\hpc_api\ApiObjects\Categories\DisabilityStatus;
+use Drupal\hpc_api\ApiObjects\Categories\DisaggregationCategoryOther;
 use Drupal\hpc_api\ApiObjects\Categories\Gender;
 use Drupal\hpc_api\ApiObjects\Categories\HealthInterventionCategory;
+use Drupal\hpc_api\ApiObjects\Categories\MaternalStatus;
 use Drupal\hpc_api\ApiObjects\Categories\PopulationStatus;
 use Drupal\hpc_api\ApiObjects\Categories\SettlementType;
 use Drupal\hpc_api\ApiObjects\PlanYear;
@@ -71,10 +73,12 @@ abstract class FabricQueryBase extends PluginBase implements FabricQueryPluginIn
 
   protected const CATEGORIES = [
     'ageGroups' => AgeGroup::class,
-    'genders' => Gender::class,
     'deliveryModalities' => DeliveryModality::class,
     'disabilityStatuses' => DisabilityStatus::class,
+    'disaggregationCategoryOthers' => DisaggregationCategoryOther::class,
+    'genders' => Gender::class,
     'healthInterventionCategories' => HealthInterventionCategory::class,
+    'maternalStatuses' => MaternalStatus::class,
     'populationStatuses' => PopulationStatus::class,
     'settlementTypes' => SettlementType::class,
   ];
