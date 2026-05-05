@@ -443,7 +443,20 @@ class EmbargoedAccessManager {
     if (!$is_protected && !$node->hasField(self::PROTECTED_FIELD)) {
       return FALSE;
     }
-    return $is_protected || !empty($node->get(self::PROTECTED_FIELD)->is_protected);
+    return $is_protected || $this->hasEnabledProtectionField($node);
+  }
+
+  /**
+   * Check whether the node has protection enabled in its field value.
+   *
+   * @param \Drupal\node\NodeInterface $node
+   *   The node to check.
+   *
+   * @return bool
+   *   TRUE if the node has a protected field value, FALSE otherwise.
+   */
+  protected function hasEnabledProtectionField(NodeInterface $node) {
+    return $node->hasField(self::PROTECTED_FIELD) && !empty($node->get(self::PROTECTED_FIELD)->is_protected);
   }
 
   /**
@@ -541,7 +554,7 @@ class EmbargoedAccessManager {
    *   The node to unprotect.
    */
   public function unprotectNode(NodeInterface $node) {
-    if (!$this->isProtected($node)) {
+    if (!$this->hasEnabledProtectionField($node)) {
       // Already done.
       return;
     }

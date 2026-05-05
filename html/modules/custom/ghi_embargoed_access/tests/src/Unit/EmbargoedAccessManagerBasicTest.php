@@ -189,7 +189,7 @@ class EmbargoedAccessManagerBasicTest extends UnitTestCase {
     $fieldItem = (object) ['is_protected' => TRUE];
 
     $node = $this->createMock(NodeInterface::class);
-    $node->expects($this->once())
+    $node->expects($this->exactly(2))
       ->method('hasField')
       ->with('field_protected')
       ->willReturn(TRUE);
@@ -221,7 +221,7 @@ class EmbargoedAccessManagerBasicTest extends UnitTestCase {
     $fieldItem = (object) ['is_protected' => FALSE];
 
     $node = $this->createMock(NodeInterface::class);
-    $node->expects($this->once())
+    $node->expects($this->exactly(2))
       ->method('hasField')
       ->with('field_protected')
       ->willReturn(TRUE);
@@ -505,6 +505,83 @@ class EmbargoedAccessManagerBasicTest extends UnitTestCase {
       ->with($node);
 
     $this->embargoedAccessManager->unprotectNode($node);
+  }
+
+  /**
+   * Tests unprotectNode clears stored protection when embargo is disabled.
+   *
+   * @covers ::unprotectNode
+   */
+  public function testUnprotectNodeSuccessfulWhenEmbargoDisabled(): void {
+    $fieldItem = (object) ['is_protected' => TRUE];
+    $fieldItemList = $this->createMock(FieldItemListInterface::class);
+    $field_was_cleared = FALSE;
+    $node_was_saved = FALSE;
+    $node_was_reindexed = FALSE;
+
+    // The page still has its stored protection flag, even though the global
+    // embargo switch below makes isProtected() report it as effectively open.
+    $node = $this->createMock(NodeInterface::class);
+    $node->expects($this->any())
+      ->method('hasField')
+      ->with('field_protected')
+      ->willReturn(TRUE);
+
+    $node->expects($this->exactly(2))
+      ->method('get')
+      ->with('field_protected')
+      ->willReturnOnConsecutiveCalls($fieldItem, $fieldItemList);
+
+    // Global protection is switched off. Editors should still be able to clear
+    // the page-level flag so it stays unprotected when the switch is enabled
+    // again later.
+    $config = $this->createMock(Config::class);
+    $config->expects($this->any())
+      ->method('get')
+      ->with('enabled')
+      ->willReturn(FALSE);
+
+    $this->configFactory->expects($this->any())
+      ->method('get')
+      ->with('ghi_embargoed_access.settings')
+      ->willReturn($config);
+
+    // The action should perform the same stored-field update and follow-up
+    // work as a normal unprotect action.
+    $fieldItemList->expects($this->any())
+      ->method('setValue')
+      ->with(NULL)
+      ->willReturnCallback(function () use (&$field_was_cleared) {
+        $field_was_cleared = TRUE;
+      });
+
+    $node->expects($this->any())
+      ->method('setNewRevision')
+      ->with(FALSE);
+    $node->expects($this->any())
+      ->method('setSyncing')
+      ->with(TRUE);
+    $node->expects($this->any())
+      ->method('save')
+      ->willReturnCallback(function () use (&$node_was_saved) {
+        $node_was_saved = TRUE;
+      });
+    $node->expects($this->any())
+      ->method('getCacheTags')
+      ->willReturn(['node:1']);
+
+    $this->searchApiTrackingManager->expects($this->any())
+      ->method('entityUpdate')
+      ->with($node)
+      ->willReturnCallback(function () use (&$node_was_reindexed) {
+        $node_was_reindexed = TRUE;
+      });
+
+    $this->embargoedAccessManager->unprotectNode($node);
+
+    $this->assertTrue($field_was_cleared, 'Unprotecting a page must clear the stored protection field even when global embargo is disabled.');
+    $this->assertTrue($node_was_saved, 'Unprotecting a page must save the node after clearing the stored protection field.');
+    $this->assertTrue($node_was_reindexed, 'Unprotecting a page must reindex the node after clearing the stored protection field.');
   }
 
   /**
