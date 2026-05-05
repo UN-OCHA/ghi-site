@@ -89,22 +89,110 @@ class EmbargoedAccessManagerBasicTest extends UnitTestCase {
   }
 
   /**
+   * Creates a protected field mock with the given protection state.
+   *
+   * @param bool $is_protected
+   *   Whether the protected field should be enabled.
+   *
+   * @return \Drupal\Core\Field\FieldItemListInterface|\PHPUnit\Framework\MockObject\MockObject
+   *   The mocked protected field.
+   */
+  protected function createProtectionField(bool $is_protected) {
+    $field = $this->createMock(FieldItemListInterface::class);
+    // The production code uses empty(), which checks __isset() before __get().
+    $field->expects($this->once())
+      ->method('__isset')
+      ->with('is_protected')
+      ->willReturn($is_protected);
+    if ($is_protected) {
+      $field->expects($this->once())
+        ->method('__get')
+        ->with('is_protected')
+        ->willReturn(TRUE);
+    }
+    return $field;
+  }
+
+  /**
+   * Creates a node mock with a protected field state.
+   *
+   * @param bool $is_protected
+   *   Whether the protected field should be enabled.
+   * @param object|null $field_item
+   *   The field item to return, or NULL to create a simple field item object.
+   * @param int|null $expected_get_calls
+   *   The expected number of protected field reads, or NULL for any number.
+   *
+   * @return \Drupal\node\NodeInterface|\PHPUnit\Framework\MockObject\MockObject
+   *   The mocked node.
+   */
+  protected function createNodeWithProtectionState(bool $is_protected, ?object $field_item = NULL, ?int $expected_get_calls = NULL) {
+    $field_item = $field_item ?? (object) ['is_protected' => $is_protected];
+    $node = $this->createMock(NodeInterface::class);
+    $node->expects($this->any())
+      ->method('hasField')
+      ->with('field_protected')
+      ->willReturn(TRUE);
+    $get_expectation = $expected_get_calls === NULL ? $this->any() : $this->exactly($expected_get_calls);
+    $node->expects($get_expectation)
+      ->method('get')
+      ->with('field_protected')
+      ->willReturn($field_item);
+    return $node;
+  }
+
+  /**
+   * Mocks the global embargo access state.
+   *
+   * @param bool $enabled
+   *   Whether embargoed access should be enabled.
+   * @param string $expected_calls
+   *   The expected number of config reads: 'once' or 'any'.
+   */
+  protected function mockEmbargoedAccessState(bool $enabled, string $expected_calls = 'once'): void {
+    $config = $this->createMock(Config::class);
+    $config->expects($expected_calls == 'any' ? $this->any() : $this->once())
+      ->method('get')
+      ->with('enabled')
+      ->willReturn($enabled);
+
+    $this->configFactory->expects($expected_calls == 'any' ? $this->any() : $this->once())
+      ->method('get')
+      ->with('ghi_embargoed_access.settings')
+      ->willReturn($config);
+  }
+
+  /**
+   * Expects the given node to be saved and queued for reindexing.
+   *
+   * @param \Drupal\node\NodeInterface|\PHPUnit\Framework\MockObject\MockObject $node
+   *   The mocked node.
+   */
+  protected function expectNodeSaveAndReindex($node): void {
+    $node->expects($this->once())
+      ->method('setNewRevision')
+      ->with(FALSE);
+    $node->expects($this->once())
+      ->method('setSyncing')
+      ->with(TRUE);
+    $node->expects($this->once())
+      ->method('save');
+    $node->expects($this->once())
+      ->method('getCacheTags')
+      ->willReturn(['node:1']);
+
+    $this->searchApiTrackingManager->expects($this->once())
+      ->method('entityUpdate')
+      ->with($node);
+  }
+
+  /**
    * Tests embargoedAccessEnabled when disabled.
    *
    * @covers ::embargoedAccessEnabled
    */
   public function testEmbargoedAccessEnabledDisabled(): void {
-    $config = $this->createMock(Config::class);
-    $config->expects($this->once())
-      ->method('get')
-      ->with('enabled')
-      ->willReturn(FALSE);
-
-    $this->configFactory->expects($this->once())
-      ->method('get')
-      ->with('ghi_embargoed_access.settings')
-      ->willReturn($config);
-
+    $this->mockEmbargoedAccessState(FALSE);
     $this->assertFalse($this->embargoedAccessManager->embargoedAccessEnabled());
   }
 
@@ -114,17 +202,7 @@ class EmbargoedAccessManagerBasicTest extends UnitTestCase {
    * @covers ::embargoedAccessEnabled
    */
   public function testEmbargoedAccessEnabledEnabled(): void {
-    $config = $this->createMock(Config::class);
-    $config->expects($this->once())
-      ->method('get')
-      ->with('enabled')
-      ->willReturn(TRUE);
-
-    $this->configFactory->expects($this->once())
-      ->method('get')
-      ->with('ghi_embargoed_access.settings')
-      ->willReturn($config);
-
+    $this->mockEmbargoedAccessState(TRUE);
     $this->assertTrue($this->embargoedAccessManager->embargoedAccessEnabled());
   }
 
@@ -165,18 +243,7 @@ class EmbargoedAccessManagerBasicTest extends UnitTestCase {
    */
   public function testEntityAccessEmbargoDisabled(): void {
     $node = $this->createMock(NodeInterface::class);
-
-    $config = $this->createMock(Config::class);
-    $config->expects($this->once())
-      ->method('get')
-      ->with('enabled')
-      ->willReturn(FALSE);
-
-    $this->configFactory->expects($this->once())
-      ->method('get')
-      ->with('ghi_embargoed_access.settings')
-      ->willReturn($config);
-
+    $this->mockEmbargoedAccessState(FALSE);
     $this->assertTrue($this->embargoedAccessManager->entityAccess($node));
   }
 
@@ -186,29 +253,8 @@ class EmbargoedAccessManagerBasicTest extends UnitTestCase {
    * @covers ::isProtected
    */
   public function testIsProtectedTrue(): void {
-    $fieldItem = (object) ['is_protected' => TRUE];
-
-    $node = $this->createMock(NodeInterface::class);
-    $node->expects($this->exactly(2))
-      ->method('hasField')
-      ->with('field_protected')
-      ->willReturn(TRUE);
-    $node->expects($this->once())
-      ->method('get')
-      ->with('field_protected')
-      ->willReturn($fieldItem);
-
-    $config = $this->createMock(Config::class);
-    $config->expects($this->once())
-      ->method('get')
-      ->with('enabled')
-      ->willReturn(TRUE);
-
-    $this->configFactory->expects($this->once())
-      ->method('get')
-      ->with('ghi_embargoed_access.settings')
-      ->willReturn($config);
-
+    $node = $this->createNodeWithProtectionState(TRUE);
+    $this->mockEmbargoedAccessState(TRUE);
     $this->assertTrue($this->embargoedAccessManager->isProtected($node));
   }
 
@@ -218,29 +264,8 @@ class EmbargoedAccessManagerBasicTest extends UnitTestCase {
    * @covers ::isProtected
    */
   public function testIsProtectedFalse(): void {
-    $fieldItem = (object) ['is_protected' => FALSE];
-
-    $node = $this->createMock(NodeInterface::class);
-    $node->expects($this->exactly(2))
-      ->method('hasField')
-      ->with('field_protected')
-      ->willReturn(TRUE);
-    $node->expects($this->once())
-      ->method('get')
-      ->with('field_protected')
-      ->willReturn($fieldItem);
-
-    $config = $this->createMock(Config::class);
-    $config->expects($this->once())
-      ->method('get')
-      ->with('enabled')
-      ->willReturn(TRUE);
-
-    $this->configFactory->expects($this->once())
-      ->method('get')
-      ->with('ghi_embargoed_access.settings')
-      ->willReturn($config);
-
+    $node = $this->createNodeWithProtectionState(FALSE);
+    $this->mockEmbargoedAccessState(TRUE);
     $this->assertFalse($this->embargoedAccessManager->isProtected($node));
   }
 
@@ -251,18 +276,7 @@ class EmbargoedAccessManagerBasicTest extends UnitTestCase {
    */
   public function testIsProtectedEmbargoDisabled(): void {
     $node = $this->createMock(NodeInterface::class);
-
-    $config = $this->createMock(Config::class);
-    $config->expects($this->once())
-      ->method('get')
-      ->with('enabled')
-      ->willReturn(FALSE);
-
-    $this->configFactory->expects($this->once())
-      ->method('get')
-      ->with('ghi_embargoed_access.settings')
-      ->willReturn($config);
-
+    $this->mockEmbargoedAccessState(FALSE);
     $this->assertFalse($this->embargoedAccessManager->isProtected($node));
   }
 
@@ -273,7 +287,6 @@ class EmbargoedAccessManagerBasicTest extends UnitTestCase {
    */
   public function testGetProtectedParentNull(): void {
     $node = $this->createMock(NodeInterface::class);
-
     $result = $this->embargoedAccessManager->getProtectedParent($node);
     $this->assertNull($result);
   }
@@ -284,34 +297,12 @@ class EmbargoedAccessManagerBasicTest extends UnitTestCase {
    * @covers ::getProtectedParent
    */
   public function testGetProtectedParentSubpage(): void {
-    $fieldItem = (object) ['is_protected' => TRUE];
-
-    $parentNode = $this->createMock(NodeInterface::class);
-    $parentNode->expects($this->any())
-      ->method('hasField')
-      ->with('field_protected')
-      ->willReturn(TRUE);
-    $parentNode->expects($this->any())
-      ->method('get')
-      ->with('field_protected')
-      ->willReturn($fieldItem);
-
+    $parentNode = $this->createNodeWithProtectionState(TRUE);
     $subpageNode = $this->createMock(SubpageNodeInterface::class);
     $subpageNode->expects($this->once())
       ->method('getParentBaseNode')
       ->willReturn($parentNode);
-
-    // Mock embargoedAccessEnabled to return TRUE for the isProtected call.
-    $config = $this->createMock(Config::class);
-    $config->expects($this->any())
-      ->method('get')
-      ->with('enabled')
-      ->willReturn(TRUE);
-
-    $this->configFactory->expects($this->any())
-      ->method('get')
-      ->with('ghi_embargoed_access.settings')
-      ->willReturn($config);
+    $this->mockEmbargoedAccessState(TRUE, 'any');
 
     $result = $this->embargoedAccessManager->getProtectedParent($subpageNode);
     $this->assertSame($parentNode, $result);
@@ -323,32 +314,9 @@ class EmbargoedAccessManagerBasicTest extends UnitTestCase {
    * @covers ::protectNode
    */
   public function testProtectNodeAlreadyProtected(): void {
-    $fieldItem = (object) ['is_protected' => TRUE];
-
-    $node = $this->createMock(NodeInterface::class);
-    $node->expects($this->any())
-      ->method('hasField')
-      ->with('field_protected')
-      ->willReturn(TRUE);
-
-    // Only one call to get() since method returns early when already protected.
-    $node->expects($this->once())
-      ->method('get')
-      ->with('field_protected')
-      ->willReturn($fieldItem);
-
-    $config = $this->createMock(Config::class);
-    $config->expects($this->any())
-      ->method('get')
-      ->with('enabled')
-      ->willReturn(TRUE);
-
-    $this->configFactory->expects($this->any())
-      ->method('get')
-      ->with('ghi_embargoed_access.settings')
-      ->willReturn($config);
-
-    // Node should not be saved if already protected.
+    $node = $this->createNodeWithProtectionState(TRUE);
+    $this->mockEmbargoedAccessState(TRUE, 'any');
+    // Already protected nodes should be left untouched.
     $node->expects($this->never())
       ->method('save');
 
@@ -361,33 +329,11 @@ class EmbargoedAccessManagerBasicTest extends UnitTestCase {
    * @covers ::protectNode
    */
   public function testProtectNodeSuccessful(): void {
-    $fieldItem = (object) ['is_protected' => FALSE];
-    $fieldItemList = $this->createMock(FieldItemListInterface::class);
+    $fieldItemList = $this->createProtectionField(FALSE);
+    $node = $this->createNodeWithProtectionState(FALSE, $fieldItemList, 2);
+    $this->mockEmbargoedAccessState(TRUE, 'any');
 
-    $node = $this->createMock(NodeInterface::class);
-    $node->expects($this->any())
-      ->method('hasField')
-      ->with('field_protected')
-      ->willReturn(TRUE);
-
-    // First call for isProtected check, second call for setValue.
-    $node->expects($this->exactly(2))
-      ->method('get')
-      ->with('field_protected')
-      ->willReturnOnConsecutiveCalls($fieldItem, $fieldItemList);
-
-    $config = $this->createMock(Config::class);
-    $config->expects($this->any())
-      ->method('get')
-      ->with('enabled')
-      ->willReturn(TRUE);
-
-    $this->configFactory->expects($this->any())
-      ->method('get')
-      ->with('ghi_embargoed_access.settings')
-      ->willReturn($config);
-
-    // Expectations for protecting the node.
+    // An unprotected node should get a protected field value and be persisted.
     $fieldItemList->expects($this->once())
       ->method('setValue')
       ->with([
@@ -395,22 +341,7 @@ class EmbargoedAccessManagerBasicTest extends UnitTestCase {
         'show_title' => FALSE,
         'hint' => '',
       ]);
-
-    $node->expects($this->once())
-      ->method('setNewRevision')
-      ->with(FALSE);
-    $node->expects($this->once())
-      ->method('setSyncing')
-      ->with(TRUE);
-    $node->expects($this->once())
-      ->method('save');
-    $node->expects($this->once())
-      ->method('getCacheTags')
-      ->willReturn(['node:1']);
-
-    $this->searchApiTrackingManager->expects($this->once())
-      ->method('entityUpdate')
-      ->with($node);
+    $this->expectNodeSaveAndReindex($node);
 
     $this->embargoedAccessManager->protectNode($node);
   }
@@ -421,30 +352,9 @@ class EmbargoedAccessManagerBasicTest extends UnitTestCase {
    * @covers ::unprotectNode
    */
   public function testUnprotectNodeAlreadyUnprotected(): void {
-    $fieldItem = (object) ['is_protected' => FALSE];
-
-    $node = $this->createMock(NodeInterface::class);
-    $node->expects($this->any())
-      ->method('hasField')
-      ->with('field_protected')
-      ->willReturn(TRUE);
-    $node->expects($this->once())
-      ->method('get')
-      ->with('field_protected')
-      ->willReturn($fieldItem);
-
-    $config = $this->createMock(Config::class);
-    $config->expects($this->any())
-      ->method('get')
-      ->with('enabled')
-      ->willReturn(TRUE);
-
-    $this->configFactory->expects($this->any())
-      ->method('get')
-      ->with('ghi_embargoed_access.settings')
-      ->willReturn($config);
-
-    // Node should not be saved if already unprotected.
+    $node = $this->createNodeWithProtectionState(FALSE);
+    $this->mockEmbargoedAccessState(TRUE, 'any');
+    // Already unprotected nodes should be left untouched.
     $node->expects($this->never())
       ->method('save');
 
@@ -457,52 +367,15 @@ class EmbargoedAccessManagerBasicTest extends UnitTestCase {
    * @covers ::unprotectNode
    */
   public function testUnprotectNodeSuccessful(): void {
-    $fieldItem = (object) ['is_protected' => TRUE];
-    $fieldItemList = $this->createMock(FieldItemListInterface::class);
+    $fieldItemList = $this->createProtectionField(TRUE);
+    $node = $this->createNodeWithProtectionState(TRUE, $fieldItemList, 2);
+    $this->mockEmbargoedAccessState(TRUE, 'any');
 
-    $node = $this->createMock(NodeInterface::class);
-    $node->expects($this->any())
-      ->method('hasField')
-      ->with('field_protected')
-      ->willReturn(TRUE);
-
-    // First call for isProtected check, second call for setValue.
-    $node->expects($this->exactly(2))
-      ->method('get')
-      ->with('field_protected')
-      ->willReturnOnConsecutiveCalls($fieldItem, $fieldItemList);
-
-    $config = $this->createMock(Config::class);
-    $config->expects($this->any())
-      ->method('get')
-      ->with('enabled')
-      ->willReturn(TRUE);
-
-    $this->configFactory->expects($this->any())
-      ->method('get')
-      ->with('ghi_embargoed_access.settings')
-      ->willReturn($config);
-
-    // Expectations for unprotecting the node.
+    // A protected node should have its stored field cleared and be persisted.
     $fieldItemList->expects($this->once())
       ->method('setValue')
       ->with(NULL);
-
-    $node->expects($this->once())
-      ->method('setNewRevision')
-      ->with(FALSE);
-    $node->expects($this->once())
-      ->method('setSyncing')
-      ->with(TRUE);
-    $node->expects($this->once())
-      ->method('save');
-    $node->expects($this->once())
-      ->method('getCacheTags')
-      ->willReturn(['node:1']);
-
-    $this->searchApiTrackingManager->expects($this->once())
-      ->method('entityUpdate')
-      ->with($node);
+    $this->expectNodeSaveAndReindex($node);
 
     $this->embargoedAccessManager->unprotectNode($node);
   }
@@ -513,75 +386,17 @@ class EmbargoedAccessManagerBasicTest extends UnitTestCase {
    * @covers ::unprotectNode
    */
   public function testUnprotectNodeSuccessfulWhenEmbargoDisabled(): void {
-    $fieldItem = (object) ['is_protected' => TRUE];
-    $fieldItemList = $this->createMock(FieldItemListInterface::class);
-    $field_was_cleared = FALSE;
-    $node_was_saved = FALSE;
-    $node_was_reindexed = FALSE;
+    $fieldItemList = $this->createProtectionField(TRUE);
+    $node = $this->createNodeWithProtectionState(TRUE, $fieldItemList, 2);
+    $this->mockEmbargoedAccessState(FALSE, 'any');
 
-    // The page still has its stored protection flag, even though the global
-    // embargo switch below makes isProtected() report it as effectively open.
-    $node = $this->createMock(NodeInterface::class);
-    $node->expects($this->any())
-      ->method('hasField')
-      ->with('field_protected')
-      ->willReturn(TRUE);
-
-    $node->expects($this->exactly(2))
-      ->method('get')
-      ->with('field_protected')
-      ->willReturnOnConsecutiveCalls($fieldItem, $fieldItemList);
-
-    // Global protection is switched off. Editors should still be able to clear
-    // the page-level flag so it stays unprotected when the switch is enabled
-    // again later.
-    $config = $this->createMock(Config::class);
-    $config->expects($this->any())
-      ->method('get')
-      ->with('enabled')
-      ->willReturn(FALSE);
-
-    $this->configFactory->expects($this->any())
-      ->method('get')
-      ->with('ghi_embargoed_access.settings')
-      ->willReturn($config);
-
-    // The action should perform the same stored-field update and follow-up
-    // work as a normal unprotect action.
-    $fieldItemList->expects($this->any())
+    // Even with global protection off, the stored page flag must be cleared.
+    $fieldItemList->expects($this->once())
       ->method('setValue')
-      ->with(NULL)
-      ->willReturnCallback(function () use (&$field_was_cleared) {
-        $field_was_cleared = TRUE;
-      });
-
-    $node->expects($this->any())
-      ->method('setNewRevision')
-      ->with(FALSE);
-    $node->expects($this->any())
-      ->method('setSyncing')
-      ->with(TRUE);
-    $node->expects($this->any())
-      ->method('save')
-      ->willReturnCallback(function () use (&$node_was_saved) {
-        $node_was_saved = TRUE;
-      });
-    $node->expects($this->any())
-      ->method('getCacheTags')
-      ->willReturn(['node:1']);
-
-    $this->searchApiTrackingManager->expects($this->any())
-      ->method('entityUpdate')
-      ->with($node)
-      ->willReturnCallback(function () use (&$node_was_reindexed) {
-        $node_was_reindexed = TRUE;
-      });
+      ->with(NULL);
+    $this->expectNodeSaveAndReindex($node);
 
     $this->embargoedAccessManager->unprotectNode($node);
-
-    $this->assertTrue($field_was_cleared, 'Unprotecting a page must clear the stored protection field even when global embargo is disabled.');
-    $this->assertTrue($node_was_saved, 'Unprotecting a page must save the node after clearing the stored protection field.');
-    $this->assertTrue($node_was_reindexed, 'Unprotecting a page must reindex the node after clearing the stored protection field.');
   }
 
   /**
@@ -590,34 +405,12 @@ class EmbargoedAccessManagerBasicTest extends UnitTestCase {
    * @covers ::entityAccess
    */
   public function testEntityAccessWithPasswordProtection(): void {
-    $fieldItem = (object) ['is_protected' => TRUE];
-
-    $node = $this->createMock(NodeInterface::class);
-    $node->expects($this->any())
-      ->method('hasField')
-      ->with('field_protected')
-      ->willReturn(TRUE);
-    $node->expects($this->once())
-      ->method('get')
-      ->with('field_protected')
-      ->willReturn($fieldItem);
-
-    $config = $this->createMock(Config::class);
-    $config->expects($this->any())
-      ->method('get')
-      ->with('enabled')
-      ->willReturn(TRUE);
-
-    $this->configFactory->expects($this->any())
-      ->method('get')
-      ->with('ghi_embargoed_access.settings')
-      ->willReturn($config);
-
+    $node = $this->createNodeWithProtectionState(TRUE);
+    $this->mockEmbargoedAccessState(TRUE, 'any');
     $this->passwordAccessManager->expects($this->once())
       ->method('hasUserAccessToEntity')
       ->with($node)
       ->willReturn(FALSE);
-
     $this->assertFalse($this->embargoedAccessManager->entityAccess($node));
   }
 
@@ -627,34 +420,12 @@ class EmbargoedAccessManagerBasicTest extends UnitTestCase {
    * @covers ::entityAccess
    */
   public function testEntityAccessWithPasswordProtectionGranted(): void {
-    $fieldItem = (object) ['is_protected' => TRUE];
-
-    $node = $this->createMock(NodeInterface::class);
-    $node->expects($this->any())
-      ->method('hasField')
-      ->with('field_protected')
-      ->willReturn(TRUE);
-    $node->expects($this->once())
-      ->method('get')
-      ->with('field_protected')
-      ->willReturn($fieldItem);
-
-    $config = $this->createMock(Config::class);
-    $config->expects($this->any())
-      ->method('get')
-      ->with('enabled')
-      ->willReturn(TRUE);
-
-    $this->configFactory->expects($this->any())
-      ->method('get')
-      ->with('ghi_embargoed_access.settings')
-      ->willReturn($config);
-
+    $node = $this->createNodeWithProtectionState(TRUE);
+    $this->mockEmbargoedAccessState(TRUE, 'any');
     $this->passwordAccessManager->expects($this->once())
       ->method('hasUserAccessToEntity')
       ->with($node)
       ->willReturn(TRUE);
-
     $this->assertTrue($this->embargoedAccessManager->entityAccess($node));
   }
 

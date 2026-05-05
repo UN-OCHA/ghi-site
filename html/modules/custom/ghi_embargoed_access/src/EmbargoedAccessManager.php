@@ -436,14 +436,10 @@ class EmbargoedAccessManager {
     if (!$this->embargoedAccessEnabled()) {
       return FALSE;
     }
-    $is_protected = FALSE;
     if ($this->getProtectedParent($node)) {
-      $is_protected = TRUE;
+      return TRUE;
     }
-    if (!$is_protected && !$node->hasField(self::PROTECTED_FIELD)) {
-      return FALSE;
-    }
-    return $is_protected || $this->hasEnabledProtectionField($node);
+    return $this->hasEnabledProtectionField($node);
   }
 
   /**
