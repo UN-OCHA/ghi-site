@@ -45,14 +45,18 @@ class MigrationBatchController {
 
       $source_keys = $source->getIds();
       $source_id_values = [];
+      $source_rows = [];
       foreach ($source_iterator as $item) {
-        $source_id_values[] = array_intersect_key($item, $source_keys);
+        $source_id = array_intersect_key($item, $source_keys);
+        $source_id_values[] = $source_id;
+        $source_rows[self::getSourceIdHash($source_id)] = $item;
       }
       $context['finished'] = 0;
       $context['sandbox'] = [];
       $context['sandbox']['total'] = count($nodes);
       $context['sandbox']['nodes'] = $nodes;
       $context['sandbox']['source_ids'] = $source_id_values;
+      $context['sandbox']['source_rows'] = $source_rows;
       $context['sandbox']['updated'] = 0;
       $context['results'][$migration->id()] = [];
     }
@@ -62,19 +66,21 @@ class MigrationBatchController {
       // Let us only do the following when the full imports are run.
       if ($node instanceof ContentBase && empty($source_tags)) {
         $source_id = $migration->getIdMap()->lookupSourceId(['nid' => $node->id()]);
+        $source_exists = in_array($source_id, $context['sandbox']['source_ids'], TRUE);
+        $source_row = $context['sandbox']['source_rows'][self::getSourceIdHash($source_id)] ?? NULL;
         $needs_saving = FALSE;
-        if (!in_array($source_id, $context['sandbox']['source_ids']) && $node->isPublished()) {
+        if (!$source_exists && $node->isPublished()) {
           // Disappeared nodes should be unpublished.
           $node->setUnpublished();
           $needs_saving = TRUE;
         }
-        if (in_array($source_id, $context['sandbox']['source_ids']) && !$node->isPublished() && !$node->unpublishedManually()) {
-          // New nodes should be published, nodes that have been manually
-          // unpublished should not be published.
+        if ($source_exists && !$node->isPublished() && self::shouldRepublishNode($node, $source_row)) {
+          // Republishing should follow the current remote visibility while
+          // still respecting manual unpublishes on HA.
           $node->setPublished();
           $needs_saving = TRUE;
         }
-        $orphaned = !in_array($source_id, $context['sandbox']['source_ids']);
+        $orphaned = !$source_exists;
         if ($node->isOrphaned() != $orphaned) {
           $node->setOrphaned($orphaned);
           $needs_saving = TRUE;
@@ -106,6 +112,38 @@ class MigrationBatchController {
       $source->cleanup();
     }
 
+  }
+
+  /**
+   * Determine whether a hidden node should be republished during cleanup.
+   *
+   * @param \Drupal\ghi_content\Entity\ContentBase $node
+   *   The local content node.
+   * @param array|null $source_row
+   *   The source metadata row for the node, if available.
+   *
+   * @return bool
+   *   TRUE if the node should be republished, FALSE otherwise.
+   */
+  protected static function shouldRepublishNode(ContentBase $node, ?array $source_row = NULL) {
+    if ($node->unpublishedManually()) {
+      return FALSE;
+    }
+    return !empty($source_row['autoVisible']);
+  }
+
+  /**
+   * Build a stable cache key for source id arrays.
+   *
+   * @param array $source_id
+   *   The source identifier values.
+   *
+   * @return string
+   *   A stable string representation of the source identifier.
+   */
+  protected static function getSourceIdHash(array $source_id) {
+    ksort($source_id);
+    return json_encode($source_id);
   }
 
   /**
