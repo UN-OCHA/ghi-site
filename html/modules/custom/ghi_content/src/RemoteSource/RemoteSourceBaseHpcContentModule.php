@@ -22,7 +22,7 @@ use Symfony\Component\HttpFoundation\Response;
 /**
  * HPC Content Module specific remote source base class.
  */
-abstract class RemoteSourceBaseHpcContentModule extends RemoteSourceBase {
+abstract class RemoteSourceBaseHpcContentModule extends RemoteSourceBase implements RemoteRefreshSourceInterface {
 
   use SimpleCacheTrait;
 
@@ -415,6 +415,38 @@ abstract class RemoteSourceBaseHpcContentModule extends RemoteSourceBase {
   }
 
   /**
+   * Get the remote refresh settings for the remote source.
+   */
+  protected function getRemoteRefreshSettings(): array {
+    $config = $this->getConfiguration();
+    return $config['remote_refresh'] ?? [];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getRemoteRefreshWebhookSecret(): ?string {
+    $remote_refresh = $this->getRemoteRefreshSettings();
+    return $remote_refresh['webhook_secret'] ?? NULL;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getRemoteRefreshSignatureTtl(): int {
+    $remote_refresh = $this->getRemoteRefreshSettings();
+    return (int) ($remote_refresh['signature_ttl'] ?? 300);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getRemoteRefreshMaxBodySize(): int {
+    $remote_refresh = $this->getRemoteRefreshSettings();
+    return (int) ($remote_refresh['max_body_size'] ?? 4096);
+  }
+
+  /**
    * {@inheritdoc}
    */
   public function checkConnection() {
@@ -477,6 +509,48 @@ abstract class RemoteSourceBaseHpcContentModule extends RemoteSourceBase {
       '#default_value' => $basic_auth['pass'] ?? NULL,
     ];
 
+    $remote_refresh = $this->getRemoteRefreshSettings();
+    $form['remote_refresh'] = [
+      '#type' => 'details',
+      '#title' => $this->t('Remote refresh'),
+      '#description' => $this->t('Settings for signed refresh notifications sent by this remote source.'),
+      '#open' => !empty($remote_refresh['webhook_secret']),
+      '#tree' => TRUE,
+    ];
+    $form['remote_refresh']['endpoint'] = [
+      '#type' => 'item',
+      '#title' => $this->t('Refresh endpoint'),
+      '#markup' => Url::fromRoute('ghi_content.remote_refresh.webhook', [], [
+        'absolute' => TRUE,
+      ])->toString(),
+      '#input' => FALSE,
+    ];
+    $form['remote_refresh']['webhook_secret'] = [
+      '#type' => 'password',
+      '#title' => $this->t('Webhook secret'),
+      '#description' => $this->t('Enter the shared secret used to validate refresh notifications from this remote source. No webhook secret is currently set.'),
+      '#default_value' => $remote_refresh['webhook_secret'] ?? NULL,
+    ];
+    if (!empty($remote_refresh['webhook_secret'])) {
+      $form['remote_refresh']['webhook_secret']['#description'] = $this->t('Enter the shared secret used to validate refresh notifications from this remote source. A webhook secret is currently set. Enter a new value to replace it, or leave this field empty to keep the current one.');
+    }
+    $form['remote_refresh']['signature_ttl'] = [
+      '#type' => 'number',
+      '#title' => $this->t('Signature time to live'),
+      '#description' => $this->t('Maximum age in seconds for signed refresh notifications.'),
+      '#default_value' => $remote_refresh['signature_ttl'] ?? 300,
+      '#min' => 1,
+      '#required' => TRUE,
+    ];
+    $form['remote_refresh']['max_body_size'] = [
+      '#type' => 'number',
+      '#title' => $this->t('Maximum body size'),
+      '#description' => $this->t('Maximum request body size in bytes for refresh notifications.'),
+      '#default_value' => $remote_refresh['max_body_size'] ?? 4096,
+      '#min' => 1,
+      '#required' => TRUE,
+    ];
+
     return $form;
   }
 
@@ -486,6 +560,12 @@ abstract class RemoteSourceBaseHpcContentModule extends RemoteSourceBase {
   public function setConfiguration(array $configuration) {
     if (empty($configuration['access_key']) && !empty($this->getRemoteAccessKey())) {
       $configuration['access_key'] = $this->getRemoteAccessKey();
+    }
+    if (empty($configuration['remote_refresh']['webhook_secret'])) {
+      $remote_refresh = $this->getRemoteRefreshSettings();
+      if (!empty($remote_refresh['webhook_secret'])) {
+        $configuration['remote_refresh']['webhook_secret'] = $remote_refresh['webhook_secret'];
+      }
     }
     parent::setConfiguration($configuration);
   }

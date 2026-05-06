@@ -50,8 +50,9 @@ class RemoteSourceEditForm extends FormBase {
    */
   public function validateForm(array &$form, FormStateInterface $form_state) {
     $form_state->cleanValues();
-    $this->remoteSource->setConfiguration($form_state->getValue('settings'));
-    if (!$this->remoteSource->checkConnection()) {
+    $remote_source = clone $this->remoteSource;
+    $remote_source->setConfiguration($form_state->getValue('settings'));
+    if (!$remote_source->checkConnection()) {
       $form_state->setErrorByName('settings', $this->t('The connection to the @remote_label failed with the given settings', [
         '@remote_label' => $this->remoteSource->getPluginLabel(),
       ]));

@@ -2,11 +2,15 @@ ghi_content.remote_sources:
   type: sequence
   label: 'Remote sources'
   sequence:
-    type: ghi_content.remote_sources.*
+    type: ghi_content.remote_sources.[%key]
     constraints:
       ValidKeys: '<infer>'
 
 ghi_content.remote_sources.*:
+  type: ghi_content.remote_source
+  label: 'Remote source'
+
+ghi_content.remote_source:
   type: mapping
   label: 'Remote source'
   mapping:
@@ -40,3 +44,22 @@ ghi_content.remote_sources.*:
           label: 'Password'
           constraints:
             PrimitiveType: []
+
+# Plugin-specific schema for \Drupal\ghi_content\Plugin\RemoteSource\HpcContentModule.
+ghi_content.remote_sources.hpc_content_module:
+  type: ghi_content.remote_source
+  label: 'HPC Content Module remote source'
+  mapping:
+    remote_refresh:
+      type: mapping
+      label: 'Remote refresh'
+      mapping:
+        webhook_secret:
+          type: string
+          label: 'Webhook secret'
+        signature_ttl:
+          type: integer
+          label: 'Signature TTL'
+        max_body_size:
+          type: integer
+          label: 'Maximum body size'

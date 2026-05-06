@@ -1,4 +1,7 @@
 services:
+  logger.channel.ghi_content:
+    parent: logger.channel_base
+    arguments: ['ghi_content']
   plugin.manager.remote_source:
     class: Drupal\ghi_content\RemoteSource\RemoteSourceManager
     parent: default_plugin_manager

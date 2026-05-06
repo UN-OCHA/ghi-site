@@ -18,6 +18,8 @@ class HpcContentModule extends RemoteSourceBaseHpcContentModule implements Remot
 
   /**
    * {@inheritdoc}
+   *
+   * @see ghi_content.remote_sources.hpc_content_module
    */
   public function defaultConfiguration() {
     return [
@@ -25,6 +27,11 @@ class HpcContentModule extends RemoteSourceBaseHpcContentModule implements Remot
       'basic_auth' => NULL,
       'endpoint' => 'ncms',
       'access_key' => NULL,
+      'remote_refresh' => [
+        'webhook_secret' => NULL,
+        'signature_ttl' => 300,
+        'max_body_size' => 4096,
+      ],
     ];
   }
 
