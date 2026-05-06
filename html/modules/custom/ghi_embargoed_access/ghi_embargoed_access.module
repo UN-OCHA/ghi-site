@@ -8,6 +8,7 @@
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\node\NodeInterface;
+use Drupal\views\ViewExecutable;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -106,6 +107,25 @@ function ghi_embargoed_access_entity_operation(EntityInterface $entity) {
 function ghi_embargoed_access_preprocess_views_view_table(&$variables) {
   $embargoed_access_manager = ghi_embargoed_access_get_access_manager();
   $embargoed_access_manager->preprocessViewsTable($variables);
+}
+
+/**
+ * Implements hook_views_pre_render().
+ */
+function ghi_embargoed_access_views_pre_render(ViewExecutable $view) {
+  if ($view->id() != 'embargoed_pages') {
+    return;
+  }
+  $embargoed_access_manager = ghi_embargoed_access_get_access_manager();
+  if ($embargoed_access_manager->embargoedAccessEnabled()) {
+    return;
+  }
+  $message_shown = &drupal_static(__FUNCTION__, FALSE);
+  if ($message_shown) {
+    return;
+  }
+  \Drupal::messenger()->addWarning(t('Protection actions are available, but additional access checks only happen when global protection is enabled.'));
+  $message_shown = TRUE;
 }
 
 /**

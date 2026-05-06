@@ -55,6 +55,20 @@ class EmbargoedAccessManagerBasicTest extends UnitTestCase {
   protected $searchApiTrackingManager;
 
   /**
+   * The mocked CSRF token generator.
+   *
+   * @var \Drupal\Core\Access\CsrfTokenGenerator|\PHPUnit\Framework\MockObject\MockObject
+   */
+  protected $csrfToken;
+
+  /**
+   * The mocked redirect destination service.
+   *
+   * @var \Drupal\Core\Routing\RedirectDestinationInterface|\PHPUnit\Framework\MockObject\MockObject
+   */
+  protected $redirectDestination;
+
+  /**
    * {@inheritdoc}
    */
   protected function setUp(): void {
@@ -65,14 +79,15 @@ class EmbargoedAccessManagerBasicTest extends UnitTestCase {
     $container = new Container();
     $cache_tags_invalidator = $this->createMock('Drupal\Core\Cache\CacheTagsInvalidatorInterface');
     $container->set('cache_tags.invalidator', $cache_tags_invalidator);
+    $container->set('string_translation', $this->getStringTranslationStub());
     \Drupal::setContainer($container);
 
     $entityTypeManager = $this->createMock(EntityTypeManagerInterface::class);
     $entityFieldManager = $this->createMock(EntityFieldManagerInterface::class);
     $this->configFactory = $this->createMock(ConfigFactoryInterface::class);
     $this->searchApiTrackingManager = $this->createMock(ContentEntityTrackingManager::class);
-    $csrfToken = $this->createMock(CsrfTokenGenerator::class);
-    $redirectDestination = $this->createMock(RedirectDestinationInterface::class);
+    $this->csrfToken = $this->createMock(CsrfTokenGenerator::class);
+    $this->redirectDestination = $this->createMock(RedirectDestinationInterface::class);
     $routeParser = $this->createMock(RouteParserInterface::class);
     $this->passwordAccessManager = $this->createMock(PasswordAccessManagerInterface::class);
 
@@ -81,8 +96,8 @@ class EmbargoedAccessManagerBasicTest extends UnitTestCase {
       $entityFieldManager,
       $this->configFactory,
       $this->searchApiTrackingManager,
-      $csrfToken,
-      $redirectDestination,
+      $this->csrfToken,
+      $this->redirectDestination,
       $routeParser,
       $this->passwordAccessManager
     );
@@ -234,6 +249,65 @@ class EmbargoedAccessManagerBasicTest extends UnitTestCase {
       ->willReturn(FALSE);
 
     $this->assertFalse($this->embargoedAccessManager->supportsProtections($node));
+  }
+
+  /**
+   * Tests protected nodes can be unprotected when embargo is disabled.
+   *
+   * @covers ::getOperationLinks
+   */
+  public function testOperationLinksShowUnprotectWhenEmbargoDisabled(): void {
+    $fieldItemList = $this->createProtectionField(TRUE);
+    $node = $this->createNodeWithProtectionState(TRUE, $fieldItemList, 1);
+    $node->expects($this->any())
+      ->method('id')
+      ->willReturn(123);
+    $node->expects($this->once())
+      ->method('access')
+      ->with('update')
+      ->willReturn(TRUE);
+    $this->csrfToken->expects($this->once())
+      ->method('get')
+      ->with('node/123/embargoed-access/toggle')
+      ->willReturn('token');
+    $this->redirectDestination->expects($this->once())
+      ->method('getAsArray')
+      ->willReturn(['destination' => '/admin']);
+    $this->mockEmbargoedAccessState(FALSE);
+
+    $links = $this->embargoedAccessManager->getOperationLinks($node);
+
+    $this->assertEquals("Don't password-protect", (string) $links['toggle_protected']['title']);
+    $this->assertEquals('Additional access checks only happen when global protection is enabled.', (string) $links['toggle_protected']['url']->getOption('attributes')['title']);
+  }
+
+  /**
+   * Tests unprotected nodes can be protected when embargo is disabled.
+   *
+   * @covers ::getOperationLinks
+   */
+  public function testOperationLinksShowProtectWhenEmbargoDisabled(): void {
+    $node = $this->createNodeWithProtectionState(FALSE);
+    $node->expects($this->any())
+      ->method('id')
+      ->willReturn(123);
+    $node->expects($this->once())
+      ->method('access')
+      ->with('update')
+      ->willReturn(TRUE);
+    $this->csrfToken->expects($this->once())
+      ->method('get')
+      ->with('node/123/embargoed-access/toggle')
+      ->willReturn('token');
+    $this->redirectDestination->expects($this->once())
+      ->method('getAsArray')
+      ->willReturn([]);
+    $this->mockEmbargoedAccessState(FALSE);
+
+    $links = $this->embargoedAccessManager->getOperationLinks($node);
+
+    $this->assertEquals('Password-protect', (string) $links['toggle_protected']['title']);
+    $this->assertEquals('Additional access checks only happen when global protection is enabled.', (string) $links['toggle_protected']['url']->getOption('attributes')['title']);
   }
 
   /**

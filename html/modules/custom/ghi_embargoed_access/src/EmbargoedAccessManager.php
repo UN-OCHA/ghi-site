@@ -623,7 +623,7 @@ class EmbargoedAccessManager {
   public function getOperationLinks(NodeInterface $node) {
     $links = [];
 
-    if (!$this->embargoedAccessEnabled() || !$this->supportsProtections($node)) {
+    if (!$this->supportsProtections($node)) {
       return $links;
     }
 
@@ -639,8 +639,11 @@ class EmbargoedAccessManager {
           'token' => $token,
         ] + $destination,
       ];
+      if (!$this->embargoedAccessEnabled()) {
+        $options['attributes']['title'] = $this->t('Additional access checks only happen when global protection is enabled.');
+      }
       $links['toggle_protected'] = [
-        'title' => !$this->isProtected($node) ? $this->t('Password-protect') : $this->t("Don't password-protect"),
+        'title' => !$this->hasEnabledProtectionField($node) ? $this->t('Password-protect') : $this->t("Don't password-protect"),
         'url' => Url::fromRoute('ghi_embargoed_access.toggle', $route_args, $options),
         'weight' => 60,
       ];
