@@ -1,0 +1,16 @@
+diff --git a/src/Entity/ImageAPIOptimizePipeline.php b/src/Entity/ImageAPIOptimizePipeline.php
+index e0b1d8b..99d10e1 100644
+--- a/src/Entity/ImageAPIOptimizePipeline.php
++++ b/src/Entity/ImageAPIOptimizePipeline.php
+@@ -205,6 +205,11 @@ class ImageAPIOptimizePipeline extends ConfigEntityBase implements ImageAPIOptimi
+ 
+       // Apply the actual processor.
+       $image_changed = $processor->applyToImage($temp_image_uri);
++      $webp_temp_uri = $temp_image_uri . '.webp';
++      if (file_exists($webp_temp_uri)) {
++        $this->temporaryFiles[] = $webp_temp_uri;
++        \Drupal::service('file_system')->copy($webp_temp_uri, $image_uri . '.webp', FileExists::Replace);
++      }
+ 
+       // The file may have changed on disk after each processor has been
+       // applied, and PHP has a cache of file size information etc. so clear

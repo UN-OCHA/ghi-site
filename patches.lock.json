@@ -1,5 +1,5 @@
 {
-    "_hash": "0fa3a1269c141cc43a3d80f72917e398325e979ad265c5b4371fc642dfdabd63",
+    "_hash": "2662c5d2f7dcd12154e87b229e0b7c2786e05dc7e7a7b81f45acb2084ae60945",
     "patches": {
         "drupal/core": [
             {
@@ -191,6 +191,18 @@
                 "description": "Issue #3401986: The containers summary text should not be overwritten",
                 "url": "https://www.drupal.org/files/issues/2023-11-15/3401986-2.patch",
                 "sha256": "dac66defbddda3923b37ff5a55eea1d259655cd6807338471a51d1ba509361da",
+                "depth": 1,
+                "extra": {
+                    "provenance": "patches-file:composer.patches.json"
+                }
+            }
+        ],
+        "drupal/imageapi_optimize": [
+            {
+                "package": "drupal/imageapi_optimize",
+                "description": "Copy generated WebP sidecars from temporary optimized derivatives to the final image style derivative",
+                "url": "./patches/imageapi-optimize-copy-webp-sidecar-from-temporary-derivative.patch",
+                "sha256": "19e860169d5a165ae1e4a4f7aeb3f781e2db750cbd262d45328d48a9d7bacba0",
                 "depth": 1,
                 "extra": {
                     "provenance": "patches-file:composer.patches.json"

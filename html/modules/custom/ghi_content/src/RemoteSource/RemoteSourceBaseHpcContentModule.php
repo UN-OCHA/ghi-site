@@ -516,7 +516,7 @@ abstract class RemoteSourceBaseHpcContentModule extends RemoteSourceBase {
     catch (GuzzleException $e) {
       return NULL;
     }
-    return $response->getHeader('content-length') ?? NULL;
+    return $response->getHeaderLine('content-length') ?: NULL;
   }
 
   /**

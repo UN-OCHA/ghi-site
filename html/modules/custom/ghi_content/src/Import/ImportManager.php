@@ -231,10 +231,13 @@ class ImportManager implements ContainerInjectionInterface {
 
       // Get the remote and local file size.
       $file_size_remote = $content->getSource()->getFileSize($image_url);
+      if (is_array($file_size_remote)) {
+        $file_size_remote = reset($file_size_remote) ?: NULL;
+      }
       // Use PHPs built-in filesize instead of File::getFileSize because like
       // that we check if the file is actually there.
       $file_size_local = $local_file ? @filesize($local_file->getFileUri()) : NULL;
-      if ($file_size_remote == $file_size_local) {
+      if ($file_size_remote !== NULL && $file_size_remote == $file_size_local) {
         // Image already present and downloaded or both images unavailable. No
         // need for further action.
         return FALSE;
@@ -253,7 +256,9 @@ class ImportManager implements ContainerInjectionInterface {
       }
       else {
         $message = $this->t('Error retrieving image');
-        $file_field->setValue(NULL);
+        if (!$local_file) {
+          $file_field->setValue(NULL);
+        }
       }
     }
     else {

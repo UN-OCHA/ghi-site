@@ -3,6 +3,7 @@
 namespace Drupal\Tests\ghi_content\Kernel;
 
 use Drupal\Core\Block\BlockPluginInterface;
+use Drupal\Core\File\FileSystemInterface;
 use Drupal\Core\Messenger\MessengerInterface;
 use Drupal\ghi_content\Entity\Article;
 use Drupal\ghi_content\Entity\ContentReviewInterface;
@@ -52,6 +53,7 @@ class ImportManagerTest extends KernelTestBase {
     'migrate',
     'text',
     'file',
+    'image',
     'filter',
     'hpc_api',
     'ghi_blocks',
@@ -76,7 +78,7 @@ class ImportManagerTest extends KernelTestBase {
     $this->installEntitySchema('node');
     $this->installEntitySchema('taxonomy_term');
     $this->installEntitySchema('file');
-    $this->installConfig(['system', 'field', 'file']);
+    $this->installConfig(['system', 'field', 'file', 'image']);
 
     NodeType::create(['type' => self::BUNDLE])->save();
     NodeType::create(['type' => self::ARTICLE_BUNDLE])->save();
@@ -168,6 +170,68 @@ class ImportManagerTest extends KernelTestBase {
     ]);
     $import_manager->importTextfield($document, $remote_document, 'Short title', 'getShortTitle', 'field_short_title', 'plain_text', $messenger->reveal());
     $this->assertEquals(NULL, $document->getShortTitle());
+  }
+
+  /**
+   * Tests that image import falls back to GET when remote size is unavailable.
+   */
+  public function testImportImageWithUnavailableRemoteSize() {
+    /** @var \Drupal\ghi_content\Import\ImportManager $import_manager */
+    $import_manager = \Drupal::service('ghi_content.import');
+
+    $this->setUpArticleImageField();
+
+    $article = Article::create([
+      'type' => self::ARTICLE_BUNDLE,
+      'title' => 'An article',
+      'uid' => 0,
+    ]);
+
+    $image_url = 'https://content.example.test/files/hero.jpg';
+    $image_data = $this->getTinyPngData();
+    $remote_article = $this->mockRemoteArticleWithImage($image_url, NULL, $image_data);
+
+    $import_manager->importImage($article, $remote_article, 'field_image');
+
+    $this->assertFalse($article->get('field_image')->isEmpty());
+    /** @var \Drupal\file\FileInterface $file */
+    $file = $article->get('field_image')->entity;
+    $this->assertNotEmpty($file);
+    $this->assertFileExists($file->getFileUri());
+    $this->assertSame(strlen($image_data), filesize($file->getFileUri()));
+  }
+
+  /**
+   * Tests that a transient remote image miss does not remove a local image.
+   */
+  public function testImportImageKeepsLocalFileWhenRemoteFetchFails() {
+    /** @var \Drupal\ghi_content\Import\ImportManager $import_manager */
+    $import_manager = \Drupal::service('ghi_content.import');
+
+    $this->setUpArticleImageField();
+
+    $article = Article::create([
+      'type' => self::ARTICLE_BUNDLE,
+      'title' => 'An article',
+      'uid' => 0,
+    ]);
+
+    $existing_data = $this->getTinyPngData();
+    /** @var \Drupal\file\FileRepositoryInterface $file_repository */
+    $file_repository = \Drupal::service('file.repository');
+    $existing_file = $file_repository->writeData($existing_data, 'public://article-images/existing-hero.png');
+    $article->get('field_image')->setValue([
+      'target_id' => $existing_file->id(),
+      'alt' => 'Existing hero',
+    ]);
+
+    $image_url = 'https://content.example.test/files/hero.jpg';
+    $remote_article = $this->mockRemoteArticleWithImage($image_url, strlen($existing_data) + 1, NULL);
+
+    $import_manager->importImage($article, $remote_article, 'field_image');
+
+    $this->assertSame($existing_file->id(), $article->get('field_image')->target_id);
+    $this->assertFileExists($existing_file->getFileUri());
   }
 
   /**
@@ -489,6 +553,64 @@ class ImportManagerTest extends KernelTestBase {
       $term = Term::load($tid);
       $this->assertContains($term->label(), $expected_term_names);
     }
+  }
+
+  /**
+   * Mock a remote article with a controllable image response.
+   *
+   * @param string $image_url
+   *   The remote image URL.
+   * @param int|null $remote_file_size
+   *   The remote file size returned by the source.
+   * @param string|null $image_data
+   *   The remote image data returned by the source.
+   *
+   * @return \Drupal\ghi_content\RemoteContent\RemoteArticleInterface
+   *   A remote article object.
+   */
+  private function mockRemoteArticleWithImage(string $image_url, ?int $remote_file_size, ?string $image_data) {
+    $remote_source = $this->createMock('Drupal\ghi_content\Plugin\RemoteSource\HpcContentModule');
+    $remote_source->expects($this->once())
+      ->method('getFileSize')
+      ->with($image_url)
+      ->willReturn($remote_file_size);
+    $remote_source->expects($this->once())
+      ->method('getFileContent')
+      ->with($image_url)
+      ->willReturn($image_data);
+
+    return new RemoteArticle((object) [
+      'id' => 42,
+      'title' => 'Nigeria',
+      'title_short' => 'Nigeria',
+      'summary' => 'Summary',
+      'image' => (object) [
+        'imageUrl' => $image_url,
+      ],
+      'imageCaption' => (object) [
+        'location' => 'Maiduguri',
+        'text' => 'A hero image',
+      ],
+    ], $remote_source);
+  }
+
+  /**
+   * Set up the article image field and its import directory.
+   */
+  private function setUpArticleImageField(): void {
+    $this->createField('node', self::ARTICLE_BUNDLE, 'image', 'field_image', 'Image');
+    $directory = 'public://article-images';
+    \Drupal::service('file_system')->prepareDirectory($directory, FileSystemInterface::CREATE_DIRECTORY | FileSystemInterface::MODIFY_PERMISSIONS);
+  }
+
+  /**
+   * Get a tiny valid PNG for image import smoke tests.
+   *
+   * @return string
+   *   Binary PNG data.
+   */
+  private function getTinyPngData(): string {
+    return base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/p9sAAAAASUVORK5CYII=');
   }
 
 }
