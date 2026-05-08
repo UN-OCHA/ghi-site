@@ -2,6 +2,8 @@
 
 namespace Drupal\Tests\ghi_content\Unit\Controller;
 
+use Drupal\Core\KeyValueStore\KeyValueExpirableFactoryInterface;
+use Drupal\Core\KeyValueStore\KeyValueStoreExpirableInterface;
 use Drupal\Core\Queue\QueueFactory;
 use Drupal\Core\Queue\QueueInterface;
 use Drupal\ghi_content\Controller\RemoteRefreshController;
@@ -20,6 +22,11 @@ use Symfony\Component\HttpFoundation\Response;
 class RemoteRefreshControllerTest extends UnitTestCase {
 
   /**
+   * A valid delivery id.
+   */
+  const DELIVERY_ID = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa';
+
+  /**
    * Tests that a valid signed notification is queued.
    */
   public function testValidRequestQueuesRefresh() {
@@ -32,6 +39,7 @@ class RemoteRefreshControllerTest extends UnitTestCase {
       'changed' => 1710000000,
       'forceUpdate' => 1,
       'event' => 'saved',
+      'deliveryId' => self::DELIVERY_ID,
     ];
     $body = json_encode($payload);
     $request = $this->createSignedRequest($body, $secret);
@@ -46,7 +54,8 @@ class RemoteRefreshControllerTest extends UnitTestCase {
           && $item->status === 1
           && $item->changed === 1710000000
           && $item->force_update === 1
-          && $item->event === 'saved';
+          && $item->event === 'saved'
+          && $item->delivery_id === self::DELIVERY_ID;
       }));
 
     $controller = $this->createController($secret, $queue);
@@ -65,6 +74,7 @@ class RemoteRefreshControllerTest extends UnitTestCase {
       'source' => 'secondary_source',
       'type' => 'document',
       'id' => 456,
+      'deliveryId' => self::DELIVERY_ID,
     ];
     $body = json_encode($payload);
     $request = $this->createSignedRequest($body, $secret);
@@ -85,10 +95,82 @@ class RemoteRefreshControllerTest extends UnitTestCase {
   }
 
   /**
+   * Tests that trashed notifications are queued.
+   */
+  public function testTrashedRequestQueuesRefresh() {
+    $secret = 'local-refresh-secret';
+    $payload = [
+      'source' => 'hpc_content_module',
+      'type' => 'article',
+      'id' => 123,
+      'status' => 0,
+      'event' => 'trashed',
+      'deliveryId' => self::DELIVERY_ID,
+    ];
+    $body = json_encode($payload);
+    $request = $this->createSignedRequest($body, $secret);
+
+    $queue = $this->createMock(QueueInterface::class);
+    $queue->expects($this->once())
+      ->method('createItem')
+      ->with($this->callback(function ($item) {
+        return $item->status === 0 && $item->event === 'trashed';
+      }));
+
+    $controller = $this->createController($secret, $queue);
+    $response = $controller->receive($request);
+
+    $this->assertSame(Response::HTTP_ACCEPTED, $response->getStatusCode());
+  }
+
+  /**
+   * Tests that duplicate deliveries are not queued again.
+   */
+  public function testDuplicateDeliveryIsNotQueued() {
+    $secret = 'local-refresh-secret';
+    $payload = [
+      'source' => 'hpc_content_module',
+      'type' => 'article',
+      'id' => 123,
+      'status' => 0,
+      'event' => 'deleted',
+      'deliveryId' => self::DELIVERY_ID,
+    ];
+    $body = json_encode($payload);
+    $request = $this->createSignedRequest($body, $secret);
+
+    $queue = $this->createMock(QueueInterface::class);
+    $queue->expects($this->never())->method('createItem');
+
+    $controller = $this->createController($secret, $queue, 'hpc_content_module', FALSE);
+    $response = $controller->receive($request);
+
+    $this->assertSame(Response::HTTP_ACCEPTED, $response->getStatusCode());
+    $this->assertSame('{"queued":false}', $response->getContent());
+  }
+
+  /**
+   * Tests that delivery ids are required.
+   */
+  public function testMissingDeliveryIdIsRejected() {
+    $secret = 'local-refresh-secret';
+    $body = '{"source":"hpc_content_module","type":"article","id":123}';
+    $request = $this->createSignedRequest($body, $secret);
+
+    $queue = $this->createMock(QueueInterface::class);
+    $queue->expects($this->never())->method('createItem');
+
+    $controller = $this->createController($secret, $queue);
+    $response = $controller->receive($request);
+
+    $this->assertSame(Response::HTTP_BAD_REQUEST, $response->getStatusCode());
+  }
+
+  /**
    * Tests that an invalid signature is rejected before queueing.
    */
   public function testInvalidSignatureIsRejected() {
-    $body = '{"source":"hpc_content_module","type":"article","id":123}';
+    $body = '{"source":"hpc_content_module","type":"article","id":123,"deliveryId":"aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"}';
     $request = Request::create('/', 'POST', [], [], [], [], $body);
     $request->headers->set('X-NCMS-Timestamp', (string) time());
     $request->headers->set('X-NCMS-Signature', 'sha256=invalid');
@@ -122,7 +204,7 @@ class RemoteRefreshControllerTest extends UnitTestCase {
    */
   public function testExpiredSignatureIsRejected() {
     $secret = 'local-refresh-secret';
-    $body = '{"source":"hpc_content_module","type":"article","id":123}';
+    $body = '{"source":"hpc_content_module","type":"article","id":123,"deliveryId":"aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"}';
     $timestamp = (string) (time() - 301);
     $signature = 'sha256=' . hash_hmac('sha256', $timestamp . '.' . $body, $secret);
 
@@ -144,7 +226,7 @@ class RemoteRefreshControllerTest extends UnitTestCase {
    */
   public function testInvalidPayloadIsRejected() {
     $secret = 'local-refresh-secret';
-    $body = '{"source":"unknown","type":"article","id":123}';
+    $body = '{"source":"unknown","type":"article","id":123,"deliveryId":"aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"}';
     $request = $this->createSignedRequest($body, $secret);
 
     $queue = $this->createMock(QueueInterface::class);
@@ -165,11 +247,13 @@ class RemoteRefreshControllerTest extends UnitTestCase {
    *   The queue mock.
    * @param string $source
    *   The discovered remote source id.
+   * @param bool $claim_delivery
+   *   Whether the delivery id can be claimed.
    *
    * @return \Drupal\ghi_content\Controller\RemoteRefreshController
    *   The controller.
    */
-  private function createController(string $secret, QueueInterface $queue, string $source = 'hpc_content_module'): RemoteRefreshController {
+  private function createController(string $secret, QueueInterface $queue, string $source = 'hpc_content_module', bool $claim_delivery = TRUE): RemoteRefreshController {
     $queue_factory = $this->createMock(QueueFactory::class);
     $queue_factory->method('get')
       ->with(RemoteRefreshController::QUEUE_ID)
@@ -188,7 +272,15 @@ class RemoteRefreshControllerTest extends UnitTestCase {
       ->with($source)
       ->willReturn($remote_source);
 
-    return new RemoteRefreshController($queue_factory, $remote_source_manager, new NullLogger());
+    $delivery_store = $this->createMock(KeyValueStoreExpirableInterface::class);
+    $delivery_store->method('setWithExpireIfNotExists')->willReturn($claim_delivery);
+
+    $key_value_expirable_factory = $this->createMock(KeyValueExpirableFactoryInterface::class);
+    $key_value_expirable_factory->method('get')
+      ->with('ghi_content_remote_refresh_deliveries')
+      ->willReturn($delivery_store);
+
+    return new RemoteRefreshController($queue_factory, $remote_source_manager, $key_value_expirable_factory, new NullLogger());
   }
 
   /**

@@ -69,6 +69,7 @@ final class RemoteRefreshQueue extends QueueWorkerBase implements ContainerFacto
     $source = $data->source ?? NULL;
     $type = $data->type ?? NULL;
     $remote_id = isset($data->id) ? (int) $data->id : NULL;
+    $event = $data->event ?? 'unknown';
     if (!$source || !$type || !$remote_id) {
       return;
     }
@@ -108,9 +109,11 @@ final class RemoteRefreshQueue extends QueueWorkerBase implements ContainerFacto
       // fetch the full remote export for every single webhook item.
       $content_manager->saveContentNode($node, FALSE);
 
-      $this->logger->info('Refreshed local @type node @nid from remote id @remote_id.', [
+      $this->logger->info('Processed @event event for local @type node @nid from remote source @source with remote id @remote_id.', [
+        '@event' => $event,
         '@type' => $type,
         '@nid' => $node->id(),
+        '@source' => $source,
         '@remote_id' => $remote_id,
       ]);
     }

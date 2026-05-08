@@ -3,7 +3,9 @@
 namespace Drupal\ghi_content\Controller;
 
 use Drupal\Component\Serialization\Json;
+use Drupal\Component\Uuid\Uuid;
 use Drupal\Core\Controller\ControllerBase;
+use Drupal\Core\KeyValueStore\KeyValueExpirableFactoryInterface;
 use Drupal\Core\Queue\QueueFactory;
 use Drupal\ghi_content\RemoteSource\RemoteRefreshSourceInterface;
 use Drupal\ghi_content\RemoteSource\RemoteSourceManager;
@@ -43,6 +45,13 @@ class RemoteRefreshController extends ControllerBase {
   protected $remoteSourceManager;
 
   /**
+   * The expirable key/value store factory.
+   *
+   * @var \Drupal\Core\KeyValueStore\KeyValueExpirableFactoryInterface
+   */
+  protected $keyValueExpirableFactory;
+
+  /**
    * Remote refresh source instances keyed by source id.
    *
    * @var \Drupal\ghi_content\RemoteSource\RemoteRefreshSourceInterface[]
@@ -59,9 +68,10 @@ class RemoteRefreshController extends ControllerBase {
   /**
    * Constructs a remote refresh controller.
    */
-  public function __construct(QueueFactory $queue_factory, RemoteSourceManager $remote_source_manager, LoggerInterface $logger) {
+  public function __construct(QueueFactory $queue_factory, RemoteSourceManager $remote_source_manager, KeyValueExpirableFactoryInterface $key_value_expirable_factory, LoggerInterface $logger) {
     $this->queueFactory = $queue_factory;
     $this->remoteSourceManager = $remote_source_manager;
+    $this->keyValueExpirableFactory = $key_value_expirable_factory;
     $this->logger = $logger;
   }
 
@@ -72,6 +82,7 @@ class RemoteRefreshController extends ControllerBase {
     return new static(
       $container->get('queue'),
       $container->get('plugin.manager.remote_source'),
+      $container->get('keyvalue.expirable'),
       $container->get('logger.channel.ghi_content')
     );
   }
@@ -111,6 +122,14 @@ class RemoteRefreshController extends ControllerBase {
       return new JsonResponse(['message' => 'Invalid signature.'], Response::HTTP_FORBIDDEN);
     }
 
+    if (!$this->claimDeliveryId($payload)) {
+      $this->logger->notice('Rejected duplicate remote refresh delivery @delivery_id from @source.', [
+        '@delivery_id' => $payload['deliveryId'],
+        '@source' => $payload['source'],
+      ]);
+      return new JsonResponse(['queued' => FALSE], Response::HTTP_ACCEPTED);
+    }
+
     $item = (object) [
       'source' => $payload['source'],
       'type' => $payload['type'],
@@ -119,11 +138,13 @@ class RemoteRefreshController extends ControllerBase {
       'changed' => isset($payload['changed']) ? (int) $payload['changed'] : NULL,
       'force_update' => isset($payload['forceUpdate']) ? (int) $payload['forceUpdate'] : NULL,
       'event' => $payload['event'] ?? NULL,
+      'delivery_id' => $payload['deliveryId'],
       'received' => time(),
     ];
     $this->queueFactory->get(self::QUEUE_ID)->createItem($item);
 
-    $this->logger->info('Queued remote refresh for @type @id from @source.', [
+    $this->logger->info('Queued @event event for @type @id from @source.', [
+      '@event' => $item->event ?? 'unknown',
       '@type' => $item->type,
       '@id' => $item->id,
       '@source' => $item->source,
@@ -181,6 +202,22 @@ class RemoteRefreshController extends ControllerBase {
   }
 
   /**
+   * Claim a delivery id so the same signed request cannot be replayed.
+   *
+   * @param array $payload
+   *   The validated payload.
+   *
+   * @return bool
+   *   TRUE if this delivery id has not been seen before, FALSE otherwise.
+   */
+  private function claimDeliveryId(array $payload): bool {
+    $remote_source = $this->getRemoteSource($payload['source']);
+    $ttl = $remote_source?->getRemoteRefreshSignatureTtl() ?? 300;
+    $store = $this->keyValueExpirableFactory->get('ghi_content_remote_refresh_deliveries');
+    return $store->setWithExpireIfNotExists($payload['source'] . ':' . $payload['deliveryId'], TRUE, max(1, $ttl) + 60);
+  }
+
+  /**
    * Get the largest configured webhook request body size.
    *
    * @return int
@@ -235,11 +272,17 @@ class RemoteRefreshController extends ControllerBase {
     if (empty($payload['source']) || !is_string($payload['source']) || !$this->getRemoteSource($payload['source'])) {
       $errors[] = 'Unsupported source.';
     }
-    if (!in_array($payload['type'] ?? NULL, ['article', 'document'])) {
+    if (!in_array($payload['type'] ?? NULL, ['article', 'document'], TRUE)) {
       $errors[] = 'Unsupported content type.';
     }
     if (empty($payload['id']) || !is_numeric($payload['id'])) {
       $errors[] = 'Missing content id.';
+    }
+    if (isset($payload['event']) && !in_array($payload['event'], ['saved', 'trashed', 'deleted'], TRUE)) {
+      $errors[] = 'Unsupported event.';
+    }
+    if (empty($payload['deliveryId']) || !is_string($payload['deliveryId']) || !Uuid::isValid($payload['deliveryId'])) {
+      $errors[] = 'Missing delivery id.';
     }
     return $errors;
   }
