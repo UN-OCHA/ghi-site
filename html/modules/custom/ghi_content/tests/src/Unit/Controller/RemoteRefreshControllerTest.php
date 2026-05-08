@@ -150,6 +150,31 @@ class RemoteRefreshControllerTest extends UnitTestCase {
   }
 
   /**
+   * Tests that ping requests are validated without queueing.
+   */
+  public function testPingRequestIsNotQueued() {
+    $secret = 'local-refresh-secret';
+    $payload = [
+      'source' => 'hpc_content_module',
+      'type' => 'article',
+      'id' => 1,
+      'event' => 'ping',
+      'deliveryId' => self::DELIVERY_ID,
+    ];
+    $body = json_encode($payload);
+    $request = $this->createSignedRequest($body, $secret);
+
+    $queue = $this->createMock(QueueInterface::class);
+    $queue->expects($this->never())->method('createItem');
+
+    $controller = $this->createController($secret, $queue);
+    $response = $controller->receive($request);
+
+    $this->assertSame(Response::HTTP_ACCEPTED, $response->getStatusCode());
+    $this->assertSame('{"checked":true}', $response->getContent());
+  }
+
+  /**
    * Tests that delivery ids are required.
    */
   public function testMissingDeliveryIdIsRejected() {

@@ -24,6 +24,15 @@ use Symfony\Component\HttpFoundation\Response;
  */
 abstract class RemoteSourceBaseHpcContentModule extends RemoteSourceBase implements RemoteRefreshSourceInterface {
 
+  /**
+   * Remote refresh setting keys stored in plugin configuration.
+   */
+  const REMOTE_REFRESH_SETTING_KEYS = [
+    'webhook_secret',
+    'signature_ttl',
+    'max_body_size',
+  ];
+
   use SimpleCacheTrait;
 
   /**
@@ -415,35 +424,53 @@ abstract class RemoteSourceBaseHpcContentModule extends RemoteSourceBase impleme
   }
 
   /**
-   * Get the remote refresh settings for the remote source.
-   */
-  protected function getRemoteRefreshSettings(): array {
-    $config = $this->getConfiguration();
-    return $config['remote_refresh'] ?? [];
-  }
-
-  /**
    * {@inheritdoc}
    */
   public function getRemoteRefreshWebhookSecret(): ?string {
-    $remote_refresh = $this->getRemoteRefreshSettings();
-    return $remote_refresh['webhook_secret'] ?? NULL;
+    return $this->getRuntimeRemoteRefreshSetting('webhook_secret');
   }
 
   /**
    * {@inheritdoc}
    */
   public function getRemoteRefreshSignatureTtl(): int {
-    $remote_refresh = $this->getRemoteRefreshSettings();
-    return (int) ($remote_refresh['signature_ttl'] ?? 300);
+    return (int) $this->getRuntimeRemoteRefreshSetting('signature_ttl', 300);
   }
 
   /**
    * {@inheritdoc}
    */
   public function getRemoteRefreshMaxBodySize(): int {
-    $remote_refresh = $this->getRemoteRefreshSettings();
-    return (int) ($remote_refresh['max_body_size'] ?? 4096);
+    return (int) $this->getRuntimeRemoteRefreshSetting('max_body_size', 4096);
+  }
+
+  /**
+   * Get the stored remote refresh settings for the remote source.
+   */
+  protected function getStoredRemoteRefreshSettings(): array {
+    return $this->getConfiguration()['remote_refresh'] ?? [];
+  }
+
+  /**
+   * Get the remote refresh setting value that is active at runtime.
+   *
+   * Values returned by the config factory include file-based overrides from
+   * settings.php. Those overrides must win over the stored plugin
+   * configuration because webhook validation uses the runtime configuration,
+   * not necessarily the raw values visible in the remote source edit form.
+   *
+   * @param string $key
+   *   The remote refresh setting key.
+   * @param mixed $default
+   *   The default value to use when neither runtime config nor stored plugin
+   *   configuration provides this setting.
+   *
+   * @return mixed
+   *   The runtime remote refresh setting value.
+   */
+  private function getRuntimeRemoteRefreshSetting(string $key, $default = NULL) {
+    return $this->getRemoteRefreshConfigOverride($key)
+      ?? ($this->getConfiguration()['remote_refresh'][$key] ?? $default);
   }
 
   /**
@@ -509,7 +536,7 @@ abstract class RemoteSourceBaseHpcContentModule extends RemoteSourceBase impleme
       '#default_value' => $basic_auth['pass'] ?? NULL,
     ];
 
-    $remote_refresh = $this->getRemoteRefreshSettings();
+    $remote_refresh = $this->getStoredRemoteRefreshSettings();
     $form['remote_refresh'] = [
       '#type' => 'details',
       '#title' => $this->t('Remote refresh'),
@@ -558,16 +585,55 @@ abstract class RemoteSourceBaseHpcContentModule extends RemoteSourceBase impleme
    * {@inheritdoc}
    */
   public function setConfiguration(array $configuration) {
+    // $configuration is the plugin configuration built from the submitted
+    // form. It contains raw submitted values, not the runtime config values
+    // from settings.php overrides.
     if (empty($configuration['access_key']) && !empty($this->getRemoteAccessKey())) {
       $configuration['access_key'] = $this->getRemoteAccessKey();
     }
-    if (empty($configuration['remote_refresh']['webhook_secret'])) {
-      $remote_refresh = $this->getRemoteRefreshSettings();
-      if (!empty($remote_refresh['webhook_secret'])) {
-        $configuration['remote_refresh']['webhook_secret'] = $remote_refresh['webhook_secret'];
-      }
+    $stored_webhook_secret = $this->getStoredRemoteRefreshSettings()['webhook_secret'] ?? NULL;
+    if (empty($configuration['remote_refresh']['webhook_secret']) && !empty($stored_webhook_secret)) {
+      // The password element intentionally renders empty, so an unchanged
+      // webhook secret is submitted as an empty value. Restore the stored
+      // plugin configuration value before saving, otherwise the empty password
+      // submission would be treated as an intentional deletion.
+      $configuration['remote_refresh']['webhook_secret'] = $stored_webhook_secret;
     }
     parent::setConfiguration($configuration);
+  }
+
+  /**
+   * Get a file-based config override for a remote refresh setting.
+   *
+   * This intentionally returns only the value supplied by Drupal's runtime
+   * config system, for example from settings.php. Call
+   * getRuntimeRemoteRefreshSetting() when the final usable value is needed,
+   * because that method falls back to stored plugin configuration and defaults.
+   *
+   * @param string $key
+   *   The remote refresh setting key.
+   *
+   * @return mixed
+   *   The overridden remote refresh setting value, or NULL when no override is
+   *   active for this setting.
+   */
+  private function getRemoteRefreshConfigOverride(string $key) {
+    return $this->configFactory
+      ->get('ghi_content.remote_sources')
+      ->get($this->getRemoteRefreshConfigKey($key));
+  }
+
+  /**
+   * Get the config key for a remote refresh setting.
+   *
+   * @param string $key
+   *   The remote refresh setting key.
+   *
+   * @return string
+   *   The config key.
+   */
+  private function getRemoteRefreshConfigKey(string $key): string {
+    return $this->getPluginId() . '.remote_refresh.' . $key;
   }
 
   /**
@@ -584,6 +650,7 @@ abstract class RemoteSourceBaseHpcContentModule extends RemoteSourceBase impleme
    * {@inheritdoc}
    */
   public function getFileSize($uri) {
+    $options = [];
     if ($basic_auth = $this->getRemoteBasicAuth()) {
       $options[RequestOptions::AUTH] = [
         $basic_auth['user'],

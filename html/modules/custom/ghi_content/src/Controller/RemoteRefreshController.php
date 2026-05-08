@@ -130,6 +130,14 @@ class RemoteRefreshController extends ControllerBase {
       return new JsonResponse(['queued' => FALSE], Response::HTTP_ACCEPTED);
     }
 
+    if (($payload['event'] ?? NULL) === 'ping') {
+      $this->logger->info('Validated @event event from @source.', [
+        '@event' => $payload['event'],
+        '@source' => $payload['source'],
+      ]);
+      return new JsonResponse(['checked' => TRUE], Response::HTTP_ACCEPTED);
+    }
+
     $item = (object) [
       'source' => $payload['source'],
       'type' => $payload['type'],
@@ -278,7 +286,7 @@ class RemoteRefreshController extends ControllerBase {
     if (empty($payload['id']) || !is_numeric($payload['id'])) {
       $errors[] = 'Missing content id.';
     }
-    if (isset($payload['event']) && !in_array($payload['event'], ['saved', 'trashed', 'deleted'], TRUE)) {
+    if (isset($payload['event']) && !in_array($payload['event'], ['saved', 'trashed', 'deleted', 'ping'], TRUE)) {
       $errors[] = 'Unsupported event.';
     }
     if (empty($payload['deliveryId']) || !is_string($payload['deliveryId']) || !Uuid::isValid($payload['deliveryId'])) {
