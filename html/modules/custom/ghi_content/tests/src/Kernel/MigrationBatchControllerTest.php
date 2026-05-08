@@ -100,6 +100,27 @@ class MigrationBatchControllerTest extends KernelTestBase {
   }
 
   /**
+   * Tests that source id comparison is stable across string and int values.
+   */
+  public function testSourceIdNormalization() {
+    $map_source_id = [
+      'id' => '696',
+    ];
+    $remote_source_id = [
+      'id' => 696,
+    ];
+
+    $this->assertSame(
+      $this->invokeNormalizeSourceId($map_source_id),
+      $this->invokeNormalizeSourceId($remote_source_id)
+    );
+    $this->assertSame(
+      $this->invokeGetSourceIdHash($map_source_id),
+      $this->invokeGetSourceIdHash($remote_source_id)
+    );
+  }
+
+  /**
    * Invoke the protected helper under test.
    *
    * @param \Drupal\ghi_content\Entity\Article $article
@@ -114,6 +135,36 @@ class MigrationBatchControllerTest extends KernelTestBase {
     $method = new \ReflectionMethod(MigrationBatchController::class, 'shouldRepublishNode');
     $method->setAccessible(TRUE);
     return $method->invoke(NULL, $article, $source_row);
+  }
+
+  /**
+   * Invoke the protected source id normalization helper.
+   *
+   * @param array $source_id
+   *   The source identifier values.
+   *
+   * @return array
+   *   The normalized source identifier values.
+   */
+  protected function invokeNormalizeSourceId(array $source_id) {
+    $method = new \ReflectionMethod(MigrationBatchController::class, 'normalizeSourceId');
+    $method->setAccessible(TRUE);
+    return $method->invoke(NULL, $source_id);
+  }
+
+  /**
+   * Invoke the protected source id hash helper.
+   *
+   * @param array $source_id
+   *   The source identifier values.
+   *
+   * @return string
+   *   The source identifier hash.
+   */
+  protected function invokeGetSourceIdHash(array $source_id) {
+    $method = new \ReflectionMethod(MigrationBatchController::class, 'getSourceIdHash');
+    $method->setAccessible(TRUE);
+    return $method->invoke(NULL, $source_id);
   }
 
 }
