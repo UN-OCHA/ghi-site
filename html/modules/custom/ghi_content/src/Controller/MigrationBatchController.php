@@ -47,7 +47,9 @@ class MigrationBatchController {
       $source_id_values = [];
       $source_rows = [];
       foreach ($source_iterator as $item) {
-        $source_id = array_intersect_key($item, $source_keys);
+        // The migrate id map stores source ids as strings, while GraphQL can
+        // return the same ids as integers. Normalize before strict comparison.
+        $source_id = self::normalizeSourceId(array_intersect_key($item, $source_keys));
         $source_id_values[] = $source_id;
         $source_rows[self::getSourceIdHash($source_id)] = $item;
       }
@@ -65,7 +67,8 @@ class MigrationBatchController {
       $node = array_shift($context['sandbox']['nodes']);
       // Let us only do the following when the full imports are run.
       if ($node instanceof ContentBase && empty($source_tags)) {
-        $source_id = $migration->getIdMap()->lookupSourceId(['nid' => $node->id()]);
+        // Match the normalized source id shape used when reading remote rows.
+        $source_id = self::normalizeSourceId($migration->getIdMap()->lookupSourceId(['nid' => $node->id()]));
         $source_exists = in_array($source_id, $context['sandbox']['source_ids'], TRUE);
         $source_row = $context['sandbox']['source_rows'][self::getSourceIdHash($source_id)] ?? NULL;
         $needs_saving = FALSE;
@@ -133,6 +136,20 @@ class MigrationBatchController {
   }
 
   /**
+   * Normalize source ids so strict comparisons survive storage type changes.
+   *
+   * @param array $source_id
+   *   The source identifier values.
+   *
+   * @return array
+   *   The normalized source identifier values.
+   */
+  protected static function normalizeSourceId(array $source_id) {
+    ksort($source_id);
+    return array_map('strval', $source_id);
+  }
+
+  /**
    * Build a stable cache key for source id arrays.
    *
    * @param array $source_id
@@ -142,8 +159,7 @@ class MigrationBatchController {
    *   A stable string representation of the source identifier.
    */
   protected static function getSourceIdHash(array $source_id) {
-    ksort($source_id);
-    return json_encode($source_id);
+    return json_encode(self::normalizeSourceId($source_id));
   }
 
   /**
