@@ -264,6 +264,10 @@
     }
   }
 
+  td[data-column="0"] {
+    white-space: nowrap;
+  }
+
   tr.totals-row,
   tfoot tr {
     border-bottom: 0;
