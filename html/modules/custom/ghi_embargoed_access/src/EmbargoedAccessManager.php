@@ -443,6 +443,22 @@ class EmbargoedAccessManager {
   }
 
   /**
+   * Check the status of the protection.
+   *
+   * This doesn not check the global embargo status, but only looks at the
+   * node itself.
+   *
+   * @param \Drupal\node\NodeInterface $node
+   *   The node to check.
+   *
+   * @return bool
+   *   TRUE if the node is currently set to protected, FALSE otherwise.
+   */
+  public function getProtectionStatus(NodeInterface $node): bool {
+    return $this->hasEnabledProtectionField($node) === TRUE;
+  }
+
+  /**
    * Check whether the node has protection enabled in its field value.
    *
    * @param \Drupal\node\NodeInterface $node
