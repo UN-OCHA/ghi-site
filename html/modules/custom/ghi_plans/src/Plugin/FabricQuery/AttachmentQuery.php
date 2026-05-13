@@ -4,8 +4,8 @@ namespace Drupal\ghi_plans\Plugin\FabricQuery;
 
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
-use Drupal\ghi_plans\ApiObjects\Attachments\AttachmentInterface;
 use Drupal\ghi_plans\ApiObjects\Attachments\Attachment;
+use Drupal\ghi_plans\ApiObjects\Attachments\AttachmentInterface;
 use Drupal\ghi_plans\ApiObjects\Facts\AttachmentFact;
 use Drupal\ghi_plans\ApiObjects\PlanEntityInterface;
 use Drupal\ghi_plans\Helpers\AttachmentHelper;
@@ -107,8 +107,9 @@ class AttachmentQuery extends FabricQueryBase {
 
     // Try to get the requested attachments from the object store.
     $attachments = $this->objectStore->getObjects($entity_ids, Attachment::getObjectStorageKey(), 'EntityId', $query_filters);
-    $existing_entity_ids = array_map(fn (AttachmentInterface $attachment) => $attachment->getSourceEntityId(), $attachments);
-    $entity_ids = array_diff($entity_ids, $existing_entity_ids);
+    $requested_ids_key = $this->getObjectStoreRequestedIdsKey('EntityId', $query_filters);
+    $requested_entity_ids = $this->objectStore->getRequestedIds(Attachment::getObjectStorageKey(), $requested_ids_key);
+    $entity_ids = array_diff($entity_ids, $requested_entity_ids);
 
     if (!empty($entity_ids)) {
       // Do the query.
@@ -118,10 +119,48 @@ class AttachmentQuery extends FabricQueryBase {
         ->execute() ?: [];
       $new_attachments = $this->processAttachments($items);
       $this->objectStore->addObjects($new_attachments);
+      $this->objectStore->addRequestedIds(Attachment::getObjectStorageKey(), $entity_ids, $requested_ids_key);
       $attachments += $new_attachments;
     }
 
     return $attachments;
+  }
+
+  /**
+   * Build an object-store key for requested entity ids and lookup filters.
+   *
+   * @param string $property
+   *   The lookup property that identifies the requested ids.
+   * @param array $filters
+   *   The filters applied to the lookup.
+   *
+   * @return string
+   *   A stable requested ids key.
+   */
+  private function getObjectStoreRequestedIdsKey(string $property, array $filters): string {
+    unset($filters[$property]);
+    $this->sortObjectStoreRequestedIdsKeyFilters($filters);
+    return $property . ':' . hash('sha256', serialize($filters));
+  }
+
+  /**
+   * Sort requested ids key filters recursively.
+   *
+   * @param array $filters
+   *   The filters to sort.
+   */
+  private function sortObjectStoreRequestedIdsKeyFilters(array &$filters): void {
+    foreach ($filters as &$value) {
+      if (!is_array($value)) {
+        continue;
+      }
+      $this->sortObjectStoreRequestedIdsKeyFilters($value);
+    }
+    if ($filters && array_keys($filters) === range(0, count($filters) - 1)) {
+      sort($filters);
+      return;
+    }
+    ksort($filters);
   }
 
   /**

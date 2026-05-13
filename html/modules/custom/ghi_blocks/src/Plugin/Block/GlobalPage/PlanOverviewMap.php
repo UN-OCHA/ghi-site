@@ -169,6 +169,7 @@ class PlanOverviewMap extends GHIBlockBase {
     foreach ($plans as $plan) {
       $funding = $plan->getFunding() ?: 0;
       $requirements = $plan->getRequirements();
+      $coverage = $plan->getCoverage();
 
       $in_need = $plan->getCaseloadValue('in_need');
       $target = $plan->getCaseloadValue('target');
@@ -205,7 +206,7 @@ class PlanOverviewMap extends GHIBlockBase {
       $funding = (object) [
         'total_funding' => $funding,
         'total_requirements' => $requirements,
-        'funding_progress' => $plan->getCoverage(),
+        'funding_progress' => $coverage,
       ];
 
       $plan_id = $plan->id();

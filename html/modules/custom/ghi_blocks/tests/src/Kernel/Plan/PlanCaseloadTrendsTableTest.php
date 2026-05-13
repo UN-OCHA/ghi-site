@@ -6,7 +6,7 @@ use Drupal\Core\Form\FormState;
 use Drupal\ghi_blocks\Interfaces\OverrideDefaultTitleBlockInterface;
 use Drupal\ghi_blocks\Plugin\Block\Plan\PlanCaseloadTrendsTable;
 use Drupal\ghi_plans\ApiObjects\Attachments\CaseloadAttachment;
-use Drupal\ghi_plans\ApiObjects\Attachments\FinancialAttachment;
+use Drupal\ghi_plans\ApiObjects\Attachments\CostAttachment;
 use Drupal\ghi_plans\Plugin\FabricQuery\AttachmentQuery;
 use Drupal\ghi_plans\Plugin\FabricQuery\PlanQuery;
 use Drupal\hpc_downloads\Interfaces\HPCDownloadExcelInterface;
@@ -282,7 +282,7 @@ class PlanCaseloadTrendsTableTest extends PlanBlockKernelTestBase {
     $caseload->getCaseloadValue('target')->willReturn(100);
     $caseload->getCaseloadValue('latest_reach')->willReturn(80);
 
-    $financial = $this->prophesize(FinancialAttachment::class);
+    $financial = $this->prophesize(CostAttachment::class);
     $financial->getRequirements()->willReturn(3000);
     $financial->getCoverage(1000)->willReturn(0.333);
 

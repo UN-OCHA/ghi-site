@@ -4,7 +4,7 @@ namespace Drupal\ghi_plans\Helpers;
 
 use Drupal\ghi_plans\ApiObjects\Attachments\AttachmentInterface;
 use Drupal\ghi_plans\ApiObjects\Attachments\CaseloadAttachment;
-use Drupal\ghi_plans\ApiObjects\Attachments\FinancialAttachment;
+use Drupal\ghi_plans\ApiObjects\Attachments\CostAttachment;
 use Drupal\ghi_plans\ApiObjects\Attachments\IndicatorAttachment;
 use Drupal\ghi_plans\Exceptions\InvalidAttachmentTypeException;
 use Drupal\ghi_plans\Traits\PlanQueryTrait;
@@ -63,8 +63,9 @@ class AttachmentHelper {
       case 'indicator':
         return new IndicatorAttachment($attachment);
 
+      case 'cost':
       case 'financial':
-        return new FinancialAttachment($attachment);
+        return new CostAttachment($attachment);
 
       default:
         throw new InvalidAttachmentTypeException(sprintf('Unknown attachment type: %s', $attachment_type));

@@ -5,9 +5,9 @@ namespace Drupal\ghi_plans\ApiObjects\Attachments;
 use Drupal\hpc_common\Helpers\CommonHelper;
 
 /**
- * Abstraction for API financial attachment objects.
+ * Abstraction for API cost attachment objects.
  */
-class FinancialAttachment extends Attachment {
+class CostAttachment extends Attachment {
 
   /**
    * Get the requirements.
@@ -18,8 +18,8 @@ class FinancialAttachment extends Attachment {
   public function getRequirements() {
     $totals = $this->getTotals();
     // @todo What to do if there are multiple requirement records?
-    $requirements = reset($totals);
-    return $requirements ? $requirements->getValue() : 0;
+    $requirements = count($totals) ? reset($totals) : NULL;
+    return $requirements?->getValue() ?? 0;
   }
 
   /**

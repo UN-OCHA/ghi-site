@@ -223,7 +223,7 @@ class PlanGoverningEntitiesTableTest extends PlanBlockKernelTestBase {
     $plugin = $this->createBlockPlugin('plan_governing_entities_table', $configuration ?: [], $contexts);
 
     $attachment_query = $this->prophesize(AttachmentQuery::class);
-    $attachment_query->getAttachmentsByObject('governingEntity', Argument::any(), ['financial'])->willReturn([]);
+    $attachment_query->getAttachmentsByObject('governingEntity', Argument::any(), ['cost'])->willReturn([]);
 
     $reflection = new \ReflectionClass($plugin);
     $property = $reflection->getProperty('queryHandlers');

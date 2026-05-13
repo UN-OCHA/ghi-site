@@ -11,7 +11,7 @@ use Drupal\ghi_base_objects\Entity\BaseObjectFocusCountryInterface;
 use Drupal\ghi_base_objects\Entity\BaseObjectMetaDataInterface;
 use Drupal\ghi_base_objects\Entity\Country as EntityCountry;
 use Drupal\ghi_plans\ApiObjects\Attachments\CaseloadAttachmentInterface;
-use Drupal\ghi_plans\ApiObjects\Attachments\FinancialAttachment;
+use Drupal\ghi_plans\ApiObjects\Attachments\CostAttachment;
 use Drupal\ghi_plans\Traits\AttachmentFilterTrait;
 use Drupal\ghi_plans\Traits\FtsLinkTrait;
 use Drupal\ghi_plans\Traits\PlanQueryTrait;
@@ -293,18 +293,18 @@ class Plan extends BaseObject implements BaseObjectMetaDataInterface, BaseObject
     $attachments_query = $this->getAttachmentQuery();
     $requirements = NULL;
     if ($this->usePlanRequirements()) {
-      $attachments = $attachments_query->getAttachmentsByObject('plan', [$this->getSourceId()], 'financial');
+      $attachments = $attachments_query->getAttachmentsByObject('plan', [$this->getSourceId()], 'cost');
       $attachment = count($attachments) ? reset($attachments) : NULL;
-      assert($attachment instanceof FinancialAttachment || $attachment === NULL);
+      assert($attachment instanceof CostAttachment || $attachment === NULL);
       $requirements = $attachment?->getRequirements() ?? NULL;
     }
     elseif ($this->useClusterRequirements()) {
       $plan_entity_query = $this->getEntityQuery();
       $clusters = $plan_entity_query->getEntitiesForPlan($this->getSourceId(), NULL, 'governing');
       $requirements = 0;
-      $attachments = $attachments_query->getAttachmentsByObject('governingEntity', array_keys($clusters), 'financial');
+      $attachments = $attachments_query->getAttachmentsByObject('governingEntity', array_keys($clusters), 'cost');
       foreach ($attachments as $attachment) {
-        if (!$attachment instanceof FinancialAttachment) {
+        if (!$attachment instanceof CostAttachment) {
           continue;
         }
         $requirements += $attachment->getRequirements();
