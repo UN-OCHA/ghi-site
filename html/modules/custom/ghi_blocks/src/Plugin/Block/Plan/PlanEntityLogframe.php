@@ -1199,15 +1199,20 @@ class PlanEntityLogframe extends GHIBlockBase implements MultiStepFormBlockInter
   private function sortPlanEntities(array &$entities, $conf) {
     if (!empty($conf['sort'])) {
       [$key, $sort] = explode('_', $conf['sort_column']);
-      uasort($entities, function ($a, $b) use ($key, $sort, $conf) {
-        $a_value = $key == 'id' ? $this->getPlanEntityId($a, $conf) : (!empty(($a)->{$key}) ? ($a)->{$key} : 0);
-        $b_value = $key == 'id' ? $this->getPlanEntityId($b, $conf) : (!empty(($b)->{$key}) ? ($b)->{$key} : 0);
-        if ($sort == SORT_ASC) {
-          return strnatcmp($a_value, $b_value);
-        }
-        if ($sort == SORT_DESC) {
-          return strnatcmp($b_value, $a_value);
-        }
+      // BC code to handle outdated configuration where the sort direction is
+      // still given as a string.
+      $sort = match ($sort) {
+        'ASC' => SORT_ASC,
+        'DESC' => SORT_DESC,
+        default => $sort,
+      };
+      // Properties are protected and can't be accessed directly, so we need to
+      // use a getter if it exists.
+      $callback = 'get' . ucfirst(strtolower($key));
+      uasort($entities, function ($a, $b) use ($key, $callback, $sort, $conf) {
+        $a_value = $key == 'id' ? $this->getPlanEntityId($a, $conf) : (method_exists($a, $callback) ? ($a->$callback() ?? 0) : 0);
+        $b_value = $key == 'id' ? $this->getPlanEntityId($b, $conf) : (method_exists($b, $callback) ? ($b->$callback() ?? 0) : 0);
+        return $sort == SORT_DESC ? strnatcmp($b_value, $a_value) : strnatcmp($a_value, $b_value);
       });
     }
   }
