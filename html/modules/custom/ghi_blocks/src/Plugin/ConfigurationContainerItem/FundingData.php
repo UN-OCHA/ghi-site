@@ -12,7 +12,7 @@ use Drupal\ghi_blocks\Traits\ConfigurationItemValuePreviewTrait;
 use Drupal\ghi_blocks\Traits\PlanFootnoteTrait;
 use Drupal\ghi_form_elements\Attribute\ConfigurationContainerItem;
 use Drupal\ghi_form_elements\ConfigurationContainerItemPluginBase;
-use Drupal\ghi_plans\ApiObjects\Attachments\FinancialAttachment;
+use Drupal\ghi_plans\ApiObjects\Attachments\CostAttachment;
 use Drupal\ghi_plans\Entity\GoverningEntity;
 use Drupal\ghi_plans\Entity\Plan;
 use Drupal\ghi_plans\Traits\FtsLinkTrait;
@@ -184,9 +184,9 @@ class FundingData extends ConfigurationContainerItemPluginBase {
    *   The requirements.
    */
   private function getRequirements($entity_type, $entity_id): ?float {
-    $attachments = $this->attachmentQuery->getAttachmentsByObject($entity_type, [$entity_id], 'financial');
+    $attachments = $this->attachmentQuery->getAttachmentsByObject($entity_type, [$entity_id], 'cost');
     $attachment = count($attachments) > 0 ? reset($attachments) : NULL;
-    assert($attachment === NULL || $attachment instanceof FinancialAttachment);
+    assert($attachment === NULL || $attachment instanceof CostAttachment);
     return $attachment?->getRequirements();
   }
 
@@ -195,7 +195,7 @@ class FundingData extends ConfigurationContainerItemPluginBase {
    *
    * @param string $data_type_key
    *   The data type key.
-   * @param string $cluster_restrict
+   * @param array $cluster_restrict
    *   An array describing how to restrict by cluster..
    *
    * @return string|\Drupal\Component\Render\MarkupInterface
@@ -214,6 +214,7 @@ class FundingData extends ConfigurationContainerItemPluginBase {
     $base_object = $this->getContextValue('base_object');
     $cluster_context = $base_object && $base_object instanceof GoverningEntity ? $base_object : NULL;
 
+    $cache_key = NULL;
     if ($entity && $entity instanceof ApiObjectInterface) {
       $cache_key = 'cluster::' . $entity->id() . '::' . $data_type_key;
     }
@@ -224,10 +225,9 @@ class FundingData extends ConfigurationContainerItemPluginBase {
       $cache_key = 'cluster::' . $cluster_context->getSourceId() . '::' . $data_type_key;
     }
 
-    if (array_key_exists($cache_key, $values)) {
+    if ($cache_key && array_key_exists($cache_key, $values)) {
       return $values[$cache_key];
     }
-    $values[$cache_key] = NULL;
 
     $data_type = $this->getDataType($data_type_key);
     if (!$data_type) {
@@ -259,8 +259,9 @@ class FundingData extends ConfigurationContainerItemPluginBase {
     elseif ($cluster_context) {
       $value = $this->getValueForCluster($cluster_context->getSourceId(), $property);
     }
-
-    $values[$cache_key] = $value;
+    if ($cache_key) {
+      $values[$cache_key] = $value;
+    }
     return $value;
   }
 
@@ -390,10 +391,10 @@ class FundingData extends ConfigurationContainerItemPluginBase {
       return NULL;
     }
     if ($property == 'current_requirements') {
-      $attachments = $this->attachmentQuery->getAttachmentsByObject('governingEntity', $cluster_ids, 'financial');
-      /** @var \Drupal\ghi_plans\ApiObjects\Attachments\FinancialAttachment[] $attachments */
-      $attachments = array_filter($attachments, fn (FinancialAttachment $attachment): bool => $attachment instanceof FinancialAttachment);
-      return array_sum(array_map(fn (FinancialAttachment $attachment): float => $attachment->getRequirements(), $attachments));
+      $attachments = $this->attachmentQuery->getAttachmentsByObject('governingEntity', $cluster_ids, 'cost');
+      /** @var \Drupal\ghi_plans\ApiObjects\Attachments\CostAttachment[] $attachments */
+      $attachments = array_filter($attachments, fn (CostAttachment $attachment): bool => $attachment instanceof CostAttachment);
+      return array_sum(array_map(fn (CostAttachment $attachment): float => $attachment->getRequirements(), $attachments));
     }
 
     $values = array_map(function ($cluster_id) use ($property) {

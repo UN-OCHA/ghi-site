@@ -86,9 +86,9 @@ class Attachment extends ApiObjectBase implements AttachmentInterface, Disaggreg
   /**
    * The attachment prototype id.
    *
-   * @var int
+   * @var int|null
    */
-  protected int $attachmentPrototypeId;
+  protected ?int $attachmentPrototypeId;
 
   /**
    * The custom id.
@@ -568,10 +568,10 @@ class Attachment extends ApiObjectBase implements AttachmentInterface, Disaggreg
   /**
    * Get the id of the attachment prototype.
    *
-   * @return int
+   * @return int|null
    *   The attachment prototype id.
    */
-  public function getPrototypeId(): int {
+  public function getPrototypeId(): ?int {
     return $this->attachmentPrototypeId;
   }
 
