@@ -17,12 +17,23 @@ trait ObjectFilterTrait {
    * @param array $filter
    *   The filter array to apply.
    *
-   * @throws InvalidArgumentException
+   * @throws \InvalidArgumentException
    */
   protected function filterObjects(array &$objects, array $filter) {
     foreach ($filter as $key => $value) {
       if (is_array($value)) {
-        $objects = array_filter($objects, fn (ApiObjectInterface $object): bool => in_array($object->getRawData()->$key, $value));
+        $objects = array_filter($objects, function (ApiObjectInterface $object) use ($key, $value): bool {
+          $object_value = $object->getRawData()->$key;
+          foreach ($value as $filter_value) {
+            if (is_string($object_value) && is_string($filter_value) && strcasecmp($object_value, $filter_value) === 0) {
+              return TRUE;
+            }
+            if ($object_value == $filter_value) {
+              return TRUE;
+            }
+          }
+          return FALSE;
+        });
       }
       elseif (is_string($value)) {
         $objects = array_filter($objects, fn (ApiObjectInterface $object): bool => strcasecmp($object->getRawData()->$key, $value) === 0);

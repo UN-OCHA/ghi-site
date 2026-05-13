@@ -7,7 +7,7 @@ use Drupal\ghi_base_objects\Entity\BaseObjectInterface;
 use Drupal\ghi_plans\ApiObjects\Prototypes\AttachmentPrototype;
 use Drupal\ghi_plans\ApiObjects\Attachments\CaseloadAttachment;
 use Drupal\ghi_plans\ApiObjects\Attachments\Attachment;
-use Drupal\ghi_plans\ApiObjects\Attachments\FinancialAttachment;
+use Drupal\ghi_plans\ApiObjects\Attachments\CostAttachment;
 use Drupal\ghi_plans\ApiObjects\Attachments\IndicatorAttachment;
 use Drupal\ghi_plans\ApiObjects\Facts\AttachmentFact;
 use Drupal\ghi_plans\ApiObjects\PlanReportingPeriod;
@@ -639,10 +639,10 @@ class AttachmentTest extends ApiObjectTestBase {
   /**
    * Test parsing of caseload attachments.
    */
-  public function testAttachmentFinancial() {
-    /** @var \Drupal\ghi_plans\ApiObjects\Attachments\FinancialAttachment $attachment */
+  public function testAttachmentCost() {
+    /** @var \Drupal\ghi_plans\ApiObjects\Attachments\CostAttachment $attachment */
     $attachment = $this->getAttachmentFromFixture('financial');
-    $this->assertInstanceOf(FinancialAttachment::class, $attachment);
+    $this->assertInstanceOf(CostAttachment::class, $attachment);
     $this->assertEmpty($attachment->getDescription());
     $this->assertEquals(344007921, $attachment->getRequirements());
     $this->assertEquals(25, $attachment->getCoverage(86001980.25));

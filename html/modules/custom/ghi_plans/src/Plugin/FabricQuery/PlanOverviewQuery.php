@@ -5,7 +5,7 @@ namespace Drupal\ghi_plans\Plugin\FabricQuery;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\ghi_base_objects\Helpers\BaseObjectHelper;
 use Drupal\ghi_plans\ApiObjects\Attachments\CaseloadAttachmentInterface;
-use Drupal\ghi_plans\ApiObjects\Attachments\FinancialAttachment;
+use Drupal\ghi_plans\ApiObjects\Attachments\CostAttachment;
 use Drupal\ghi_plans\ApiObjects\Partials\PlanOverviewPlan;
 use Drupal\hpc_api\Attribute\FabricQuery;
 use Drupal\hpc_api\Query\FabricQueryBase;
@@ -108,7 +108,7 @@ class PlanOverviewQuery extends FabricQueryBase {
     $plan_objects = BaseObjectHelper::getBaseObjectsFromOriginalIds($plan_ids, 'plan');
     $this->attachmentPrototypeQuery->getDataPrototypesForPlans($plan_ids);
 
-    $attachments = $this->attachmentQuery->getAttachmentsByObject('plan', $plan_ids, ['caseload', 'financial']);
+    $attachments = $this->attachmentQuery->getAttachmentsByObject('plan', $plan_ids, ['caseload', 'cost']);
     $caseloads_by_plan = [];
     $requirements_by_plan = [];
     foreach ($attachments as $attachment) {
@@ -117,7 +117,7 @@ class PlanOverviewQuery extends FabricQueryBase {
         $caseloads_by_plan[$plan_id] = $caseloads_by_plan[$plan_id] ?? [];
         $caseloads_by_plan[$plan_id][$attachment->id()] = $attachment;
       }
-      if ($attachment instanceof FinancialAttachment) {
+      if ($attachment instanceof CostAttachment) {
         $plan_id = $attachment->getPlanId();
         $requirements_by_plan[$plan_id] = $requirements_by_plan[$plan_id] ?? [];
         $requirements_by_plan[$plan_id][$attachment->id()] = $attachment->getRequirements();

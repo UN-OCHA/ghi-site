@@ -154,7 +154,7 @@ class PlanGoverningEntitiesTable extends GHIBlockBase implements ConfigurableTab
     $entity_ids = array_map(fn ($item) => $item->id(), $entities);
     /** @var \Drupal\ghi_plans\Plugin\FabricQuery\AttachmentQuery $attachments_query */
     $attachments_query = $this->getQueryHandler('attachment');
-    $attachments_query->getAttachmentsByObject('governingEntity', $entity_ids, ['financial']);
+    $attachments_query->getAttachmentsByObject('governingEntity', $entity_ids, ['cost']);
 
     $rows = [];
     $subpage_nodes = $this->subpageManager->loadSubpagesForBaseObjects($objects);
