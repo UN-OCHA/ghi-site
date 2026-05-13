@@ -575,7 +575,8 @@ abstract class FabricQueryBase extends PluginBase implements FabricQueryPluginIn
    *   The sector object or NULL if not found.
    */
   public function getSector(int $id): ?Sector {
-    $sector = $this->baseTypes['sectors'][$id] ?? NULL;
+    $sectors = $this->getSectors();
+    $sector = $sectors[$id] ?? NULL;
     assert($sector === NULL || $sector instanceof Sector);
     return $sector;
   }
@@ -601,7 +602,8 @@ abstract class FabricQueryBase extends PluginBase implements FabricQueryPluginIn
    *   The unit object or NULL if not found.
    */
   public function getUnit(int $id): ?Unit {
-    $unit = $this->baseTypes['units'][$id] ?? NULL;
+    $units = $this->getUnits();
+    $unit = $units[$id] ?? NULL;
     assert($unit === NULL || $unit instanceof Unit);
     return $unit;
   }
@@ -627,7 +629,8 @@ abstract class FabricQueryBase extends PluginBase implements FabricQueryPluginIn
    *   The calculation method object or NULL if not found.
    */
   public function getCalculationMethod(int $id): ?CalculationMethod {
-    $calculation_method = $this->baseTypes['calcMethods'][$id] ?? NULL;
+    $calculation_methods = $this->getCalculationMethods();
+    $calculation_method = $calculation_methods[$id] ?? NULL;
     assert($calculation_method === NULL || $calculation_method instanceof CalculationMethod);
     return $calculation_method;
   }
