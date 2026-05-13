@@ -698,7 +698,7 @@ class Attachment extends ApiObjectBase implements AttachmentInterface, Disaggreg
    *   TRUE if the value should be considered NULL, FALSE otherwise.
    */
   public function isNullValue($value): bool {
-    return empty($value) && $value !== 0 && $value !== "0";
+    return empty($value) && $value !== 0 && $value !== 0.0 && $value !== "0";
   }
 
   /**
