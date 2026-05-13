@@ -63,6 +63,13 @@ class Location extends BaseObject implements GeoJsonLocationInterface {
   protected array $latLng;
 
   /**
+   * The id of the parent location.
+   *
+   * @var int|null
+   */
+  protected ?int $parentId;
+
+  /**
    * The timestamp when the location becomes valid.
    *
    * @var string|null
@@ -89,6 +96,7 @@ class Location extends BaseObject implements GeoJsonLocationInterface {
     'AdminLevel',
     'Latitude',
     'Longitude',
+    'ParentId',
     'RecordStatus',
     'ActiveUntil',
   ];
@@ -112,6 +120,7 @@ class Location extends BaseObject implements GeoJsonLocationInterface {
     $this->countryId = $data->CountryId;
     $this->countryIso3 = $data->CountryISO3 ?? NULL;
     $this->latLng = [(string) $data->Latitude, (string) $data->Longitude];
+    $this->parentId = $data->ParentId ?? NULL;
     $this->validOn = ($data->ActiveUntil ?? NULL) ? substr($data->ActiveUntil, 0, strlen($data->ActiveUntil) - 3) : NULL;
     $this->status = strtolower($data->RecordStatus ?? '');
   }
@@ -189,12 +198,22 @@ class Location extends BaseObject implements GeoJsonLocationInterface {
   }
 
   /**
+   * Get the parent id.
+   *
+   * @return int|null
+   *   The parent id or NULL.
+   */
+  public function getParentId(): ?int {
+    return $this->parentId;
+  }
+
+  /**
    * Check if the location represents a country.
    *
    * @return bool
    *   TRUE if it is a country, FALSE otherwise.
    */
-  public function isCountry() {
+  public function isCountry(): bool {
     return $this->getAdminLevel() == 0;
   }
 
