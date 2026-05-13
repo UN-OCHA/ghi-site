@@ -325,33 +325,52 @@ class EmbargoedAccessManagerBasicTest extends UnitTestCase {
    * Tests isProtected when node is protected.
    *
    * @covers ::isProtected
+   * @covers ::getProtectionStatus
    */
   public function testIsProtectedTrue(): void {
     $node = $this->createNodeWithProtectionState(TRUE);
     $this->mockEmbargoedAccessState(TRUE);
     $this->assertTrue($this->embargoedAccessManager->isProtected($node));
+    $this->assertTrue($this->embargoedAccessManager->getProtectionStatus($node));
   }
 
   /**
    * Tests isProtected when node is not protected.
    *
    * @covers ::isProtected
+   * @covers ::getProtectionStatus
    */
   public function testIsProtectedFalse(): void {
     $node = $this->createNodeWithProtectionState(FALSE);
     $this->mockEmbargoedAccessState(TRUE);
     $this->assertFalse($this->embargoedAccessManager->isProtected($node));
+    $this->assertFalse($this->embargoedAccessManager->getProtectionStatus($node));
   }
 
   /**
-   * Tests isProtected when embargo is disabled.
+   * Tests isProtected when embargo is disabled and node not protected.
    *
    * @covers ::isProtected
+   * @covers ::getProtectionStatus
    */
-  public function testIsProtectedEmbargoDisabled(): void {
+  public function testIsProtectedNullEmbargoDisabled(): void {
     $node = $this->createMock(NodeInterface::class);
     $this->mockEmbargoedAccessState(FALSE);
     $this->assertFalse($this->embargoedAccessManager->isProtected($node));
+    $this->assertFalse($this->embargoedAccessManager->getProtectionStatus($node));
+  }
+
+  /**
+   * Tests isProtected when embargo is disabled and node is protected.
+   *
+   * @covers ::isProtected
+   * @covers ::getProtectionStatus
+   */
+  public function testIsProtectedTrueEmbargoDisabled(): void {
+    $node = $this->createNodeWithProtectionState(TRUE);
+    $this->mockEmbargoedAccessState(FALSE);
+    $this->assertFalse($this->embargoedAccessManager->isProtected($node));
+    $this->assertTrue($this->embargoedAccessManager->getProtectionStatus($node));
   }
 
   /**
