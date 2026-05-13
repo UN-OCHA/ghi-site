@@ -192,6 +192,9 @@ class DisaggregationModalController extends ControllerBase {
 
     // Get a shortcut to the actual location data.
     $locations = array_map(fn ($location) => $location->location, $disaggregated_data->locations);
+    $location_ids = array_map(fn ($location) => $location['id'], $locations);
+    $locations = array_combine($location_ids, $locations);
+
     foreach ($disaggregated_data->locations as $location) {
       $row = [];
       $parents = array_key_exists('id', $location->location) ? $this->getLocationParents($locations, $location->location['id']) : NULL;
@@ -248,6 +251,9 @@ class DisaggregationModalController extends ControllerBase {
       ];
     }
 
+    // Initial sorting by the first column, which contains the (composed) name.
+    usort($rows, fn ($a, $b) => strnatcasecmp($a['data'][0], $b['data'][0]));
+
     $total_row = [
       'data' => [
         $this->t('Total', [], $t_options),
@@ -303,16 +309,16 @@ class DisaggregationModalController extends ControllerBase {
   /**
    * Get the names of all parents for the given location.
    */
-  private function getLocationParents($locations, $location_id) {
+  private function getLocationParents(array $locations, int $location_id) {
     if (empty($locations[$location_id])) {
       return NULL;
     }
     $parents = [];
-    $parent_id = !empty($locations[$location_id]['map_data']['parent_id']) ? $locations[$location_id]['map_data']['parent_id'] : NULL;
+    $parent_id = !empty($locations[$location_id]['parent_id']) ? $locations[$location_id]['parent_id'] : NULL;
     while ($parent_id && !empty($locations[$parent_id])) {
       $parent = $locations[$parent_id];
       $parents[] = $parent['name'];
-      $parent_id = !empty($parent['map_data']['parent_id']) ? $parent['map_data']['parent_id'] : NULL;
+      $parent_id = !empty($parent['parent_id']) ? $parent['parent_id'] : NULL;
     }
     return count($parents) ? array_reverse($parents) : NULL;
   }
