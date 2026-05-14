@@ -35,7 +35,6 @@ third_party_settings:
       - Forms
       - 'Generic elements'
       - Global
-      - HID
       - 'Inline blocks'
       - 'Lists (Views)'
       - Menus
@@ -59,7 +58,6 @@ third_party_settings:
         - 'Content fields'
         - Forms
         - Global
-        - HID
         - 'Lists (Views)'
         - Menus
         - 'Plan cluster elements'

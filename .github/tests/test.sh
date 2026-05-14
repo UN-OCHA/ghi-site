@@ -28,7 +28,6 @@ docker-compose -f .github/tests/docker-compose.yml exec -T drupal drush -y si --
 # Run tests.
 echo "Run all tests and generate coverage report."
 docker-compose -f .github/tests/docker-compose.yml exec -T drupal drush -y en dblog
-docker-compose -f .github/tests/docker-compose.yml exec -T drupal drush -y cset social_auth_hid.settings auto_redirect false --input-format=yaml
 docker-compose -f .github/tests/docker-compose.yml exec -T drupal chmod -R 777 /srv/www/html/sites/default/files /srv/www/html/sites/default/private
 docker-compose -f .github/tests/docker-compose.yml exec -T drupal mkdir -p /srv/www/html/build/logs
 docker-compose -f .github/tests/docker-compose.yml exec -T drupal chmod -R 777 /srv/www/html/build/logs

@@ -36,7 +36,6 @@ third_party_settings:
         - 'Content fields'
         - Forms
         - Global
-        - HID
         - 'Lists (Views)'
         - Menus
         - Page

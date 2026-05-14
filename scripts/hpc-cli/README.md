@@ -18,11 +18,7 @@ with the HPA API.
         [ -e PROD|DEMO|STAGE|DEV_BLUE|DEV_RED ]
         [ -v 1|2 ]
         [ -b Issue a backend request with API key]
-        [ -h Issue an HID authenticated request]
         [ -s Show the resulting URL, but don't actually send the request]
-
-    Login via HID:
-      api login
 
 
 Prerequisites
