@@ -27,6 +27,7 @@ use Drupal\hpc_api\ApiObjects\Types\PlanCostingType;
 use Drupal\hpc_api\ApiObjects\Types\PlanType;
 use Drupal\hpc_api\ApiObjects\Types\RelationshipType;
 use Drupal\hpc_api\ApiObjects\Types\ResourceType;
+use Drupal\hpc_api\ApiObjects\Types\RevisionState;
 use Drupal\hpc_api\ApiObjects\Types\Sector;
 use Drupal\hpc_api\ApiObjects\Types\Unit;
 use Drupal\hpc_api\Traits\ObjectFilterTrait;
@@ -67,6 +68,7 @@ abstract class FabricQueryBase extends PluginBase implements FabricQueryPluginIn
     'entityTypes' => EntityType::class,
     'metricTypes' => MetricType::class,
     'resourceTypes' => ResourceType::class,
+    'revisionStates' => RevisionState::class,
     'sectors' => Sector::class,
     'units' => Unit::class,
   ];
