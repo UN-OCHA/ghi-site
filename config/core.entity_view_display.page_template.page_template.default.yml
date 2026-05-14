@@ -62,7 +62,6 @@ third_party_settings:
         - 'Custom block types'
         - Forms
         - Global
-        - HID
         - 'Lists (Views)'
         - 'Mailing list'
         - Menus

@@ -48,7 +48,6 @@ third_party_settings:
       - 'Generic elements'
       - 'Geofield Map'
       - Global
-      - HID
       - 'Inline blocks'
       - 'Lists (Views)'
       - 'Mailing list'
@@ -78,7 +77,6 @@ third_party_settings:
         - Forms
         - 'Geofield Map'
         - Global
-        - HID
         - 'Lists (Views)'
         - 'Mailing list'
         - Menus

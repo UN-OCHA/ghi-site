@@ -51,7 +51,6 @@ third_party_settings:
         - 'Country elements'
         - 'Custom block types'
         - Forms
-        - HID
         - 'Lists (Views)'
         - 'Mailing list'
         - Menus

@@ -38,7 +38,6 @@ third_party_settings:
       - 'Custom block types'
       - Forms
       - 'Generic elements'
-      - HID
       - Homepage
       - 'Inline blocks'
       - 'Lists (Views)'
@@ -58,7 +57,6 @@ third_party_settings:
         - 'Country elements'
         - 'Custom block types'
         - Forms
-        - HID
         - Homepage
         - 'Inline blocks'
         - 'Lists (Views)'
