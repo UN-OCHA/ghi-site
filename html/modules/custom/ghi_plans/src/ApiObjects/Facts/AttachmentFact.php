@@ -15,12 +15,20 @@ class AttachmentFact extends FactBase {
   protected ?string $description;
 
   /**
+   * The revision state id.
+   *
+   * @var int|null
+   */
+  protected ?int $revisionStateId;
+
+  /**
    * Define the fact items used in queries.
    */
   const GRAPHQL_ITEMS = [
     'Id',
     'AttachmentId',
     'MetricTypeId',
+    'RevisionStateId',
     'LocationId',
     'GenderId',
     'AgeGroupId',
@@ -43,6 +51,7 @@ class AttachmentFact extends FactBase {
   public function __construct(object $data) {
     parent::__construct($data);
     $this->description = $data->Description;
+    $this->revisionStateId = $data->RevisionStateId;
   }
 
 }
