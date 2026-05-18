@@ -35,9 +35,7 @@ class RemoteRefreshControllerTest extends UnitTestCase {
       'source' => 'hpc_content_module',
       'type' => 'article',
       'id' => 123,
-      'status' => 1,
       'changed' => 1710000000,
-      'forceUpdate' => 1,
       'event' => 'saved',
       'deliveryId' => self::DELIVERY_ID,
     ];
@@ -51,9 +49,7 @@ class RemoteRefreshControllerTest extends UnitTestCase {
         return $item->source === 'hpc_content_module'
           && $item->type === 'article'
           && $item->id === 123
-          && $item->status === 1
           && $item->changed === 1710000000
-          && $item->force_update === 1
           && $item->event === 'saved'
           && $item->delivery_id === self::DELIVERY_ID;
       }));
@@ -74,6 +70,7 @@ class RemoteRefreshControllerTest extends UnitTestCase {
       'source' => 'secondary_source',
       'type' => 'document',
       'id' => 456,
+      'event' => 'saved',
       'deliveryId' => self::DELIVERY_ID,
     ];
     $body = json_encode($payload);
@@ -103,7 +100,6 @@ class RemoteRefreshControllerTest extends UnitTestCase {
       'source' => 'hpc_content_module',
       'type' => 'article',
       'id' => 123,
-      'status' => 0,
       'event' => 'trashed',
       'deliveryId' => self::DELIVERY_ID,
     ];
@@ -114,7 +110,7 @@ class RemoteRefreshControllerTest extends UnitTestCase {
     $queue->expects($this->once())
       ->method('createItem')
       ->with($this->callback(function ($item) {
-        return $item->status === 0 && $item->event === 'trashed';
+        return $item->event === 'trashed';
       }));
 
     $controller = $this->createController($secret, $queue);
@@ -132,7 +128,6 @@ class RemoteRefreshControllerTest extends UnitTestCase {
       'source' => 'hpc_content_module',
       'type' => 'article',
       'id' => 123,
-      'status' => 0,
       'event' => 'deleted',
       'deliveryId' => self::DELIVERY_ID,
     ];
@@ -179,7 +174,24 @@ class RemoteRefreshControllerTest extends UnitTestCase {
    */
   public function testMissingDeliveryIdIsRejected() {
     $secret = 'local-refresh-secret';
-    $body = '{"source":"hpc_content_module","type":"article","id":123}';
+    $body = '{"source":"hpc_content_module","type":"article","id":123,"event":"saved"}';
+    $request = $this->createSignedRequest($body, $secret);
+
+    $queue = $this->createMock(QueueInterface::class);
+    $queue->expects($this->never())->method('createItem');
+
+    $controller = $this->createController($secret, $queue);
+    $response = $controller->receive($request);
+
+    $this->assertSame(Response::HTTP_BAD_REQUEST, $response->getStatusCode());
+  }
+
+  /**
+   * Tests that event is required.
+   */
+  public function testMissingEventIsRejected() {
+    $secret = 'local-refresh-secret';
+    $body = '{"source":"hpc_content_module","type":"article","id":123,"deliveryId":"aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"}';
     $request = $this->createSignedRequest($body, $secret);
 
     $queue = $this->createMock(QueueInterface::class);
@@ -195,7 +207,7 @@ class RemoteRefreshControllerTest extends UnitTestCase {
    * Tests that an invalid signature is rejected before queueing.
    */
   public function testInvalidSignatureIsRejected() {
-    $body = '{"source":"hpc_content_module","type":"article","id":123,"deliveryId":"aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"}';
+    $body = '{"source":"hpc_content_module","type":"article","id":123,"event":"saved","deliveryId":"aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"}';
     $request = Request::create('/', 'POST', [], [], [], [], $body);
     $request->headers->set('X-NCMS-Timestamp', (string) time());
     $request->headers->set('X-NCMS-Signature', 'sha256=invalid');
@@ -229,7 +241,7 @@ class RemoteRefreshControllerTest extends UnitTestCase {
    */
   public function testExpiredSignatureIsRejected() {
     $secret = 'local-refresh-secret';
-    $body = '{"source":"hpc_content_module","type":"article","id":123,"deliveryId":"aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"}';
+    $body = '{"source":"hpc_content_module","type":"article","id":123,"event":"saved","deliveryId":"aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"}';
     $timestamp = (string) (time() - 301);
     $signature = 'sha256=' . hash_hmac('sha256', $timestamp . '.' . $body, $secret);
 

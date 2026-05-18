@@ -142,9 +142,7 @@ class RemoteRefreshController extends ControllerBase {
       'source' => $payload['source'],
       'type' => $payload['type'],
       'id' => (int) $payload['id'],
-      'status' => isset($payload['status']) ? (int) $payload['status'] : NULL,
       'changed' => isset($payload['changed']) ? (int) $payload['changed'] : NULL,
-      'force_update' => isset($payload['forceUpdate']) ? (int) $payload['forceUpdate'] : NULL,
       'event' => $payload['event'] ?? NULL,
       'delivery_id' => $payload['deliveryId'],
       'received' => time(),
@@ -286,7 +284,12 @@ class RemoteRefreshController extends ControllerBase {
     if (empty($payload['id']) || !is_numeric($payload['id'])) {
       $errors[] = 'Missing content id.';
     }
-    if (isset($payload['event']) && !in_array($payload['event'], ['saved', 'trashed', 'deleted', 'ping'], TRUE)) {
+    if (empty($payload['event']) || !is_string($payload['event']) || !in_array($payload['event'], [
+      'saved',
+      'trashed',
+      'deleted',
+      'ping',
+    ], TRUE)) {
       $errors[] = 'Unsupported event.';
     }
     if (empty($payload['deliveryId']) || !is_string($payload['deliveryId']) || !Uuid::isValid($payload['deliveryId'])) {

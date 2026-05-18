@@ -2,6 +2,7 @@
 
 namespace Drupal\ghi_content\RemoteSource;
 
+use Drupal\Component\Utility\Html;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
 use Drupal\ghi_content\RemoteContent\HpcContentModule\RemoteArticle;
@@ -551,6 +552,83 @@ abstract class RemoteSourceBaseHpcContentModule extends RemoteSourceBase impleme
         'absolute' => TRUE,
       ])->toString(),
       '#input' => FALSE,
+    ];
+    $form['remote_refresh']['documentation'] = [
+      '#type' => 'details',
+      '#title' => $this->t('Webhook contract'),
+      '#description' => $this->t('Use this contract when configuring the remote system that sends refresh notifications.'),
+      '#open' => FALSE,
+    ];
+    $form['remote_refresh']['documentation']['summary'] = [
+      '#theme' => 'item_list',
+      '#items' => [
+        $this->t('Send requests with the POST method to the refresh endpoint shown above.'),
+        $this->t('Include X-NCMS-Timestamp as a Unix timestamp in seconds. The timestamp must be within the configured signature time to live.'),
+        $this->t('Include X-NCMS-Signature as sha256=&lt;hex digest&gt;. The digest is an HMAC-SHA256 signature of &lt;timestamp&gt;.&lt;raw request body&gt; using the configured webhook secret.'),
+        $this->t('Use a new deliveryId UUID for each delivery. Duplicate delivery ids are accepted but are not queued again.'),
+      ],
+    ];
+    $form['remote_refresh']['documentation']['payload'] = [
+      '#type' => 'table',
+      '#header' => [
+        $this->t('Payload field'),
+        $this->t('Required'),
+        $this->t('Description'),
+      ],
+      '#rows' => [
+        [
+          ['data' => 'source'],
+          ['data' => $this->t('Yes')],
+          ['data' => $this->t('Remote source id, for example hpc_content_module.')],
+        ],
+        [
+          ['data' => 'type'],
+          ['data' => $this->t('Yes')],
+          ['data' => $this->t('Remote content type. Supported values are article and document.')],
+        ],
+        [
+          ['data' => 'id'],
+          ['data' => $this->t('Yes')],
+          ['data' => $this->t('Remote content id.')],
+        ],
+        [
+          ['data' => 'deliveryId'],
+          ['data' => $this->t('Yes')],
+          ['data' => $this->t('Unique UUID used for replay protection.')],
+        ],
+        [
+          ['data' => 'event'],
+          ['data' => $this->t('Yes')],
+          ['data' => $this->t('Supported values are saved, trashed, deleted, and ping.')],
+        ],
+        [
+          ['data' => 'changed'],
+          ['data' => $this->t('No')],
+          ['data' => $this->t('Unix timestamp for the remote content change.')],
+        ],
+      ],
+    ];
+    $form['remote_refresh']['documentation']['responses'] = [
+      '#theme' => 'item_list',
+      '#title' => $this->t('Responses'),
+      '#items' => [
+        $this->t('202 with queued=true: the notification was accepted and queued.'),
+        $this->t('202 with checked=true: a ping was accepted.'),
+        $this->t('202 with queued=false: the delivery id was already seen.'),
+        $this->t('400, 403, or 413: the payload, signature, or request size was rejected.'),
+      ],
+    ];
+    $example_payload = json_encode([
+      'source' => 'hpc_content_module',
+      'type' => 'article',
+      'id' => 123,
+      'event' => 'saved',
+      'deliveryId' => 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
+    ], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+    $form['remote_refresh']['documentation']['example'] = [
+      '#type' => 'item',
+      '#title' => $this->t('Example payload'),
+      '#markup' => '<pre><code>' . Html::escape($example_payload) . '</code></pre>',
     ];
     $form['remote_refresh']['webhook_secret'] = [
       '#type' => 'password',

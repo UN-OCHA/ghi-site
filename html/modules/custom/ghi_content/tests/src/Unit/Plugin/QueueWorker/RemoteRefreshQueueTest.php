@@ -69,7 +69,6 @@ class RemoteRefreshQueueTest extends UnitTestCase {
       'source' => 'hpc_content_module',
       'type' => 'article',
       'id' => 123,
-      'status' => 0,
       'event' => 'deleted',
     ]);
   }
@@ -115,8 +114,7 @@ class RemoteRefreshQueueTest extends UnitTestCase {
       'source' => 'hpc_content_module',
       'type' => 'article',
       'id' => 123,
-      'status' => 0,
-      'event' => 'saved',
+      'event' => 'trashed',
     ]);
   }
 
@@ -189,7 +187,6 @@ class RemoteRefreshQueueTest extends UnitTestCase {
       'source' => 'hpc_content_module',
       'type' => 'article',
       'id' => 123,
-      'status' => 1,
       'event' => 'saved',
     ]);
 
@@ -260,7 +257,6 @@ class RemoteRefreshQueueTest extends UnitTestCase {
       'source' => 'hpc_content_module',
       'type' => 'article',
       'id' => 123,
-      'status' => 1,
       'event' => 'saved',
     ]);
   }
@@ -328,7 +324,6 @@ class RemoteRefreshQueueTest extends UnitTestCase {
       'source' => 'hpc_content_module',
       'type' => 'article',
       'id' => 123,
-      'status' => 1,
       'event' => 'saved',
       'received' => 1,
     ]);

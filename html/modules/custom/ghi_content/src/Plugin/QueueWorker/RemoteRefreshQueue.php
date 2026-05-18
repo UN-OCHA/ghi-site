@@ -10,7 +10,6 @@ use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\ghi_content\ContentManager\BaseContentManager;
 use Drupal\ghi_content\Entity\ContentBase;
 use Drupal\migrate\Plugin\MigrationInterface;
-use Drupal\node\NodeInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -115,7 +114,7 @@ final class RemoteRefreshQueue extends QueueWorkerBase implements ContainerFacto
     }
 
     try {
-      $remote_item_is_published = !isset($data->status) || (int) $data->status !== NodeInterface::NOT_PUBLISHED;
+      $remote_item_is_published = !in_array($event, ['deleted', 'trashed'], TRUE);
       $node = $this->getOrImportLocalNode($source, $type, $remote_id, $event, $remote_item_is_published, $received);
       if (!$node instanceof ContentBase) {
         return;
@@ -227,8 +226,8 @@ final class RemoteRefreshQueue extends QueueWorkerBase implements ContainerFacto
     }
     else {
       // For saved events we refresh the already-linked local node from the
-      // remote source. For deleted or trashed events CM sends status 0, so
-      // those events intentionally take the unpublished path above.
+      // remote source. Deleted or trashed events intentionally take the
+      // unpublished path above.
       if (!$content_manager->updateNodeFromRemote($node)) {
         $this->logger->warning('Remote refresh skipped local node @nid because remote data could not be loaded.', [
           '@nid' => $node->id(),
