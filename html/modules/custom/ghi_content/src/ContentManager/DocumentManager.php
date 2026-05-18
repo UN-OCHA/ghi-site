@@ -162,10 +162,10 @@ class DocumentManager extends BaseContentManager {
   /**
    * {@inheritdoc}
    */
-  public function updateNodeFromRemote(ContentBase $node, $dry_run = FALSE, $reset = FALSE) {
+  public function updateNodeFromRemote(ContentBase $node, $dry_run = FALSE, $reset = FALSE): bool {
     $document = $this->loadRemoteContentForNode($node, TRUE);
     if (!$document) {
-      return;
+      return FALSE;
     }
 
     // See if the document needs a cleanup.
@@ -202,6 +202,7 @@ class DocumentManager extends BaseContentManager {
     if (!$dry_run) {
       $this->importManager->layoutManagerDiscardChanges($node, NULL);
     }
+    return TRUE;
   }
 
   /**

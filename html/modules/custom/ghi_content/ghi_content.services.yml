@@ -14,6 +14,9 @@ services:
   ghi_content.import:
     class: Drupal\ghi_content\Import\ImportManager
     arguments: ['@config.factory', '@entity_type.manager', '@plugin.manager.block', '@current_user', '@uuid', '@layout_builder.tempstore_repository', '@plugin.manager.entity_reference_selection', '@file.repository', '@event_dispatcher']
+  ghi_content.targeted_migration_importer:
+    class: Drupal\ghi_content\Import\TargetedMigrationImporter
+    arguments: ['@keyvalue', '@datetime.time', '@string_translation']
   ghi_content.subarticle_renderer:
     class: Drupal\ghi_content\SubArticleRenderer
     arguments: ['@context.repository']
