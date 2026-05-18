@@ -212,6 +212,9 @@ class SparkLineChart extends ConfigurationContainerItemPluginBase {
 
     // Get the configuration.
     $data_point = $this->getConfiguredDataPoint();
+    if ($data_point === NULL) {
+      return [];
+    }
     $show_baseline = $this->get('show_baseline');
     $use_calculation_method = $this->get('use_calculation_method');
     $baseline = $show_baseline ? $this->get('baseline') : NULL;
@@ -284,17 +287,12 @@ class SparkLineChart extends ConfigurationContainerItemPluginBase {
       ], FALSE);
     }
 
-    // Add a baseline if needed.
-    if ($show_baseline) {
-      $baseline_value = $attachment->getMeasurementMetricValue($baseline, $last_reporting_period?->id() ?? 'latest');
-    }
-
     // Render the chart.
     return [
       '#theme' => 'hpc_sparkline',
       '#data' => $data,
       '#reporting_period_ids' => array_keys($data),
-      '#baseline_value' => $show_baseline ? $baseline_value : NULL,
+      '#baseline_value' => $show_baseline ? $attachment->getMeasurementMetricValue($baseline, $last_reporting_period?->id() ?? 'latest') : NULL,
       '#tooltips' => $tooltips,
     ];
   }
