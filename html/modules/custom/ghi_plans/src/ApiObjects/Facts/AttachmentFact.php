@@ -50,8 +50,8 @@ class AttachmentFact extends FactBase {
    */
   public function __construct(object $data) {
     parent::__construct($data);
-    $this->description = $data->Description;
-    $this->revisionStateId = $data->RevisionStateId;
+    $this->description = $data->Description ?? NULL;
+    $this->revisionStateId = $data->RevisionStateId ?? NULL;
   }
 
 }

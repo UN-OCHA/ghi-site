@@ -24,7 +24,7 @@ class FabricQueryForm extends FormBase {
     $form['query'] = [
       '#type' => 'textarea',
       '#title' => $this->t('Query'),
-      '#rows' => 3,
+      '#rows' => 10,
       '#attributes' => [
         'style' => 'margin-bottom: -2rem;',
       ],
