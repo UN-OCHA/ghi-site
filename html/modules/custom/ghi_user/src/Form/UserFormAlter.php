@@ -172,19 +172,27 @@ class UserFormAlter {
    *   The form state object.
    */
   public function alterEditForm(&$form, FormStateInterface $form_state) {
+    /** @var \Drupal\user\UserInterface $user */
+    $user = $form_state->getFormObject()->getEntity();
+
     // Disable password fields.
-    $form['account']['pass']['#access'] = FALSE;
-    $form['account']['current_pass']['#access'] = FALSE;
+    if (isset($form['account']['pass'])) {
+      $form['account']['pass']['#access'] = FALSE;
+      if ($user->isNew()) {
+        $form['account']['pass']['#required'] = FALSE;
+        array_unshift($form['#validate'], [self::class, 'setGeneratedPassword']);
+      }
+    }
+    if (isset($form['account']['current_pass'])) {
+      $form['account']['current_pass']['#access'] = FALSE;
+    }
     // Don't require password for changing the mail address.
     $form_state->set('user_pass_reset', 1);
 
     if ($this->currentUser->hasPermission('administer users')) {
-      // Administrator should see all fields.
+      // Administrator should see all other fields.
       return;
     }
-
-    /** @var \Drupal\user\UserInterface $user */
-    $user = $form_state->getFormObject()->getEntity();
 
     // For non-administrators we provide a customized display of the form where
     // most of the fields are disabled but still shown for information purposes.
@@ -237,6 +245,15 @@ class UserFormAlter {
       if (!in_array($key, $keep_children)) {
         $form[$key]['#access'] = FALSE;
       }
+    }
+  }
+
+  /**
+   * Adds a generated password for new accounts created through the UI.
+   */
+  public static function setGeneratedPassword(array &$form, FormStateInterface $form_state) {
+    if ($form_state->isValueEmpty('pass')) {
+      $form_state->setValue('pass', \Drupal::service('password_generator')->generate());
     }
   }
 
