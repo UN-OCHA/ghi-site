@@ -62,7 +62,7 @@ class EmbargoedAccessController extends ControllerBase {
     $t_args = [
       '@title' => $node->label(),
     ];
-    if ($this->embargoedAccessManager->isProtected($node)) {
+    if ($this->embargoedAccessManager->getProtectionStatus($node) === TRUE) {
       $this->embargoedAccessManager->unprotectNode($node);
       $this->messenger()->addStatus($this->t('Password protection has been removed from <em>@title</em>', $t_args));
     }

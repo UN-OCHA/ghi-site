@@ -32,7 +32,6 @@ third_party_settings:
       - Forms
       - 'Generic elements'
       - Global
-      - HID
       - 'Inline blocks'
       - 'Lists (Views)'
       - Menus
@@ -58,7 +57,6 @@ third_party_settings:
         - 'Custom block types'
         - Forms
         - Global
-        - HID
         - 'Lists (Views)'
         - Menus
         - Page

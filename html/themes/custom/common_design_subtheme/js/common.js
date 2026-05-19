@@ -79,6 +79,14 @@
 
   };
 
+  // Determine whether a table should be treated as expanded from stored block
+  // settings.
+  Drupal.CommonDesignSubtheme.SoftLimit.isExpandedFromSettings = function ($table) {
+    // AJAX refreshes can leave client-side block settings ahead of the new
+    // markup. Only trust the stored state when the table rendered expanded too.
+    return Drupal.GhiBlockSettings.getBlockSettingForElement($table.get(0), 'soft_limit') == 'expanded' && $table.hasClass('expanded');
+  };
+
   // Add overflow logic to entity navigation menus.
   Drupal.CommonDesignSubtheme.EntityNavigation = {};
   Drupal.CommonDesignSubtheme.EntityNavigation.apply = function ($container) {
@@ -218,16 +226,14 @@
       once('soft-limit-table-big-pipe', $('table.soft-limit')).forEach(element => {
         let $table = $(element);
         // Check if we have settings for this block element in the URL.
-        let blockSoftLimit = Drupal.GhiBlockSettings.getBlockSettingForElement(element, 'soft_limit');
-        if (blockSoftLimit != 'expanded') {
+        if (!Drupal.CommonDesignSubtheme.SoftLimit.isExpandedFromSettings($table)) {
           Drupal.CommonDesignSubtheme.SoftLimit.addExpandButton($table);
         }
       });
       once('soft-limit-table', $('.block-content:not(:has(> span[data-big-pipe-placeholder-id])) table.soft-limit', context)).forEach(element => {
         let $table = $(element);
         // Check if we have settings for this block element in the URL.
-        let blockSoftLimit = Drupal.GhiBlockSettings.getBlockSettingForElement(element, 'soft_limit');
-        if (blockSoftLimit != 'expanded') {
+        if (!Drupal.CommonDesignSubtheme.SoftLimit.isExpandedFromSettings($table)) {
           Drupal.CommonDesignSubtheme.SoftLimit.addExpandButton($table);
           Drupal.CommonDesignSubtheme.SoftLimit.applyLimit($table);
 

@@ -436,14 +436,39 @@ class EmbargoedAccessManager {
     if (!$this->embargoedAccessEnabled()) {
       return FALSE;
     }
-    $is_protected = FALSE;
     if ($this->getProtectedParent($node)) {
-      $is_protected = TRUE;
+      return TRUE;
     }
-    if (!$is_protected && !$node->hasField(self::PROTECTED_FIELD)) {
-      return FALSE;
-    }
-    return $is_protected || !empty($node->get(self::PROTECTED_FIELD)->is_protected);
+    return $this->hasEnabledProtectionField($node);
+  }
+
+  /**
+   * Check the status of the protection.
+   *
+   * This doesn not check the global embargo status, but only looks at the
+   * node itself.
+   *
+   * @param \Drupal\node\NodeInterface $node
+   *   The node to check.
+   *
+   * @return bool
+   *   TRUE if the node is currently set to protected, FALSE otherwise.
+   */
+  public function getProtectionStatus(NodeInterface $node): bool {
+    return $this->hasEnabledProtectionField($node) === TRUE;
+  }
+
+  /**
+   * Check whether the node has protection enabled in its field value.
+   *
+   * @param \Drupal\node\NodeInterface $node
+   *   The node to check.
+   *
+   * @return bool
+   *   TRUE if the node has a protected field value, FALSE otherwise.
+   */
+  protected function hasEnabledProtectionField(NodeInterface $node) {
+    return $node->hasField(self::PROTECTED_FIELD) && !empty($node->get(self::PROTECTED_FIELD)->is_protected);
   }
 
   /**
@@ -541,7 +566,7 @@ class EmbargoedAccessManager {
    *   The node to unprotect.
    */
   public function unprotectNode(NodeInterface $node) {
-    if (!$this->isProtected($node)) {
+    if (!$this->hasEnabledProtectionField($node)) {
       // Already done.
       return;
     }
@@ -614,7 +639,7 @@ class EmbargoedAccessManager {
   public function getOperationLinks(NodeInterface $node) {
     $links = [];
 
-    if (!$this->embargoedAccessEnabled() || !$this->supportsProtections($node)) {
+    if (!$this->supportsProtections($node)) {
       return $links;
     }
 
@@ -630,8 +655,11 @@ class EmbargoedAccessManager {
           'token' => $token,
         ] + $destination,
       ];
+      if (!$this->embargoedAccessEnabled()) {
+        $options['attributes']['title'] = $this->t('Additional access checks only happen when global protection is enabled.');
+      }
       $links['toggle_protected'] = [
-        'title' => !$this->isProtected($node) ? $this->t('Password-protect') : $this->t("Don't password-protect"),
+        'title' => !$this->hasEnabledProtectionField($node) ? $this->t('Password-protect') : $this->t("Don't password-protect"),
         'url' => Url::fromRoute('ghi_embargoed_access.toggle', $route_args, $options),
         'weight' => 60,
       ];

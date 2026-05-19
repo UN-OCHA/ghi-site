@@ -37,11 +37,6 @@ $config['ghi_content.remote_sources'] = [
   ],
 ];
 
-// Setup HID.
-$config['social_auth_hid.settings']['client_id'] = getenv('HID_CLIENT_ID');
-$config['social_auth_hid.settings']['client_secret'] = getenv('HID_CLIENT_SECRET');
-$config['social_auth_hid.settings']['base_url'] = 'https://auth.humanitarian.id';
-
 // Solr config.
 $config['search_api.server.solr_server']['backend_config']['connector'] = 'standard';
 $config['search_api.server.solr_server']['backend_config']['connector_config']['host'] = 'solr';
