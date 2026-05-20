@@ -1,5 +1,5 @@
 {
-    "_hash": "0fa3a1269c141cc43a3d80f72917e398325e979ad265c5b4371fc642dfdabd63",
+    "_hash": "82867915d19604535c436d47069c43db1b4047d15f3f309920eb620401e0a451",
     "patches": {
         "drupal/core": [
             {
@@ -108,18 +108,6 @@
                 "url": "https://www.drupal.org/files/issues/2024-12-19/2585169-63-10.4.x.patch",
                 "sha256": "9995f49107320a8dd1d8c84ae7add1a543be50175a17bb447c3b9c335e010fde",
                 "depth": 2,
-                "extra": {
-                    "provenance": "patches-file:composer.patches.json"
-                }
-            }
-        ],
-        "drupal/autologout": [
-            {
-                "package": "drupal/autologout",
-                "description": "Issue #3580058: Undefined array key 'cookie_samesite' warning after upgrade to 2.02",
-                "url": "./patches/autologout-3580058-mr.patch",
-                "sha256": "73cb32c43d37958a11a6ccfeee35e9b39849dddf4c6b2139d601507c47a20edc",
-                "depth": 1,
                 "extra": {
                     "provenance": "patches-file:composer.patches.json"
                 }
