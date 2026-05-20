@@ -2,6 +2,7 @@
 
 namespace Drupal\ghi_content\RemoteSource;
 
+use Drupal\Component\Utility\Html;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
 use Drupal\ghi_content\RemoteContent\HpcContentModule\RemoteArticle;
@@ -22,7 +23,16 @@ use Symfony\Component\HttpFoundation\Response;
 /**
  * HPC Content Module specific remote source base class.
  */
-abstract class RemoteSourceBaseHpcContentModule extends RemoteSourceBase {
+abstract class RemoteSourceBaseHpcContentModule extends RemoteSourceBase implements RemoteRefreshSourceInterface {
+
+  /**
+   * Remote refresh setting keys stored in plugin configuration.
+   */
+  const REMOTE_REFRESH_SETTING_KEYS = [
+    'webhook_secret',
+    'signature_ttl',
+    'max_body_size',
+  ];
 
   use SimpleCacheTrait;
 
@@ -417,6 +427,56 @@ abstract class RemoteSourceBaseHpcContentModule extends RemoteSourceBase {
   /**
    * {@inheritdoc}
    */
+  public function getRemoteRefreshWebhookSecret(): ?string {
+    return $this->getRuntimeRemoteRefreshSetting('webhook_secret');
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getRemoteRefreshSignatureTtl(): int {
+    return (int) $this->getRuntimeRemoteRefreshSetting('signature_ttl', 300);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getRemoteRefreshMaxBodySize(): int {
+    return (int) $this->getRuntimeRemoteRefreshSetting('max_body_size', 4096);
+  }
+
+  /**
+   * Get the stored remote refresh settings for the remote source.
+   */
+  protected function getStoredRemoteRefreshSettings(): array {
+    return $this->getConfiguration()['remote_refresh'] ?? [];
+  }
+
+  /**
+   * Get the remote refresh setting value that is active at runtime.
+   *
+   * Values returned by the config factory include file-based overrides from
+   * settings.php. Those overrides must win over the stored plugin
+   * configuration because webhook validation uses the runtime configuration,
+   * not necessarily the raw values visible in the remote source edit form.
+   *
+   * @param string $key
+   *   The remote refresh setting key.
+   * @param mixed $default
+   *   The default value to use when neither runtime config nor stored plugin
+   *   configuration provides this setting.
+   *
+   * @return mixed
+   *   The runtime remote refresh setting value.
+   */
+  private function getRuntimeRemoteRefreshSetting(string $key, $default = NULL) {
+    return $this->getRemoteRefreshConfigOverride($key)
+      ?? ($this->getConfiguration()['remote_refresh'][$key] ?? $default);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function checkConnection() {
     try {
       $response = $this->query('{connection}');
@@ -477,6 +537,125 @@ abstract class RemoteSourceBaseHpcContentModule extends RemoteSourceBase {
       '#default_value' => $basic_auth['pass'] ?? NULL,
     ];
 
+    $remote_refresh = $this->getStoredRemoteRefreshSettings();
+    $form['remote_refresh'] = [
+      '#type' => 'details',
+      '#title' => $this->t('Remote refresh'),
+      '#description' => $this->t('Settings for signed refresh notifications sent by this remote source.'),
+      '#open' => !empty($remote_refresh['webhook_secret']),
+      '#tree' => TRUE,
+    ];
+    $form['remote_refresh']['endpoint'] = [
+      '#type' => 'item',
+      '#title' => $this->t('Refresh endpoint'),
+      '#markup' => Url::fromRoute('ghi_content.remote_refresh.webhook', [], [
+        'absolute' => TRUE,
+      ])->toString(),
+      '#input' => FALSE,
+    ];
+    $form['remote_refresh']['documentation'] = [
+      '#type' => 'details',
+      '#title' => $this->t('Webhook contract'),
+      '#description' => $this->t('Use this contract when configuring the remote system that sends refresh notifications.'),
+      '#open' => FALSE,
+    ];
+    $form['remote_refresh']['documentation']['summary'] = [
+      '#theme' => 'item_list',
+      '#items' => [
+        $this->t('Send requests with the POST method to the refresh endpoint shown above.'),
+        $this->t('Include X-NCMS-Timestamp as a Unix timestamp in seconds. The timestamp must be within the configured signature time to live.'),
+        $this->t('Include X-NCMS-Signature as sha256=&lt;hex digest&gt;. The digest is an HMAC-SHA256 signature of &lt;timestamp&gt;.&lt;raw request body&gt; using the configured webhook secret.'),
+        $this->t('Use a new deliveryId UUID for each delivery. Duplicate delivery ids are accepted but are not queued again.'),
+      ],
+    ];
+    $form['remote_refresh']['documentation']['payload'] = [
+      '#type' => 'table',
+      '#header' => [
+        $this->t('Payload field'),
+        $this->t('Required'),
+        $this->t('Description'),
+      ],
+      '#rows' => [
+        [
+          ['data' => 'source'],
+          ['data' => $this->t('Yes')],
+          ['data' => $this->t('Remote source id, for example hpc_content_module.')],
+        ],
+        [
+          ['data' => 'type'],
+          ['data' => $this->t('Yes')],
+          ['data' => $this->t('Remote content type. Supported values are article and document.')],
+        ],
+        [
+          ['data' => 'id'],
+          ['data' => $this->t('Yes')],
+          ['data' => $this->t('Remote content id.')],
+        ],
+        [
+          ['data' => 'deliveryId'],
+          ['data' => $this->t('Yes')],
+          ['data' => $this->t('Unique UUID used for replay protection.')],
+        ],
+        [
+          ['data' => 'event'],
+          ['data' => $this->t('Yes')],
+          ['data' => $this->t('Supported values are saved, trashed, deleted, and ping.')],
+        ],
+        [
+          ['data' => 'changed'],
+          ['data' => $this->t('No')],
+          ['data' => $this->t('Unix timestamp for the remote content change.')],
+        ],
+      ],
+    ];
+    $form['remote_refresh']['documentation']['responses'] = [
+      '#theme' => 'item_list',
+      '#title' => $this->t('Responses'),
+      '#items' => [
+        $this->t('202 with queued=true: the notification was accepted and queued.'),
+        $this->t('202 with checked=true: a ping was accepted.'),
+        $this->t('202 with queued=false: the delivery id was already seen.'),
+        $this->t('400, 403, or 413: the payload, signature, or request size was rejected.'),
+      ],
+    ];
+    $example_payload = json_encode([
+      'source' => 'hpc_content_module',
+      'type' => 'article',
+      'id' => 123,
+      'event' => 'saved',
+      'deliveryId' => 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
+    ], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+    $form['remote_refresh']['documentation']['example'] = [
+      '#type' => 'item',
+      '#title' => $this->t('Example payload'),
+      '#markup' => '<pre><code>' . Html::escape($example_payload) . '</code></pre>',
+    ];
+    $form['remote_refresh']['webhook_secret'] = [
+      '#type' => 'password',
+      '#title' => $this->t('Webhook secret'),
+      '#description' => $this->t('Enter the shared secret used to validate refresh notifications from this remote source. No webhook secret is currently set.'),
+      '#default_value' => $remote_refresh['webhook_secret'] ?? NULL,
+    ];
+    if (!empty($remote_refresh['webhook_secret'])) {
+      $form['remote_refresh']['webhook_secret']['#description'] = $this->t('Enter the shared secret used to validate refresh notifications from this remote source. A webhook secret is currently set. Enter a new value to replace it, or leave this field empty to keep the current one.');
+    }
+    $form['remote_refresh']['signature_ttl'] = [
+      '#type' => 'number',
+      '#title' => $this->t('Signature time to live'),
+      '#description' => $this->t('Maximum age in seconds for signed refresh notifications.'),
+      '#default_value' => $remote_refresh['signature_ttl'] ?? 300,
+      '#min' => 1,
+      '#required' => TRUE,
+    ];
+    $form['remote_refresh']['max_body_size'] = [
+      '#type' => 'number',
+      '#title' => $this->t('Maximum body size'),
+      '#description' => $this->t('Maximum request body size in bytes for refresh notifications.'),
+      '#default_value' => $remote_refresh['max_body_size'] ?? 4096,
+      '#min' => 1,
+      '#required' => TRUE,
+    ];
+
     return $form;
   }
 
@@ -484,10 +663,55 @@ abstract class RemoteSourceBaseHpcContentModule extends RemoteSourceBase {
    * {@inheritdoc}
    */
   public function setConfiguration(array $configuration) {
+    // $configuration is the plugin configuration built from the submitted
+    // form. It contains raw submitted values, not the runtime config values
+    // from settings.php overrides.
     if (empty($configuration['access_key']) && !empty($this->getRemoteAccessKey())) {
       $configuration['access_key'] = $this->getRemoteAccessKey();
     }
+    $stored_webhook_secret = $this->getStoredRemoteRefreshSettings()['webhook_secret'] ?? NULL;
+    if (empty($configuration['remote_refresh']['webhook_secret']) && !empty($stored_webhook_secret)) {
+      // The password element intentionally renders empty, so an unchanged
+      // webhook secret is submitted as an empty value. Restore the stored
+      // plugin configuration value before saving, otherwise the empty password
+      // submission would be treated as an intentional deletion.
+      $configuration['remote_refresh']['webhook_secret'] = $stored_webhook_secret;
+    }
     parent::setConfiguration($configuration);
+  }
+
+  /**
+   * Get a file-based config override for a remote refresh setting.
+   *
+   * This intentionally returns only the value supplied by Drupal's runtime
+   * config system, for example from settings.php. Call
+   * getRuntimeRemoteRefreshSetting() when the final usable value is needed,
+   * because that method falls back to stored plugin configuration and defaults.
+   *
+   * @param string $key
+   *   The remote refresh setting key.
+   *
+   * @return mixed
+   *   The overridden remote refresh setting value, or NULL when no override is
+   *   active for this setting.
+   */
+  private function getRemoteRefreshConfigOverride(string $key) {
+    return $this->configFactory
+      ->get('ghi_content.remote_sources')
+      ->get($this->getRemoteRefreshConfigKey($key));
+  }
+
+  /**
+   * Get the config key for a remote refresh setting.
+   *
+   * @param string $key
+   *   The remote refresh setting key.
+   *
+   * @return string
+   *   The config key.
+   */
+  private function getRemoteRefreshConfigKey(string $key): string {
+    return $this->getPluginId() . '.remote_refresh.' . $key;
   }
 
   /**
@@ -504,6 +728,7 @@ abstract class RemoteSourceBaseHpcContentModule extends RemoteSourceBase {
    * {@inheritdoc}
    */
   public function getFileSize($uri) {
+    $options = [];
     if ($basic_auth = $this->getRemoteBasicAuth()) {
       $options[RequestOptions::AUTH] = [
         $basic_auth['user'],

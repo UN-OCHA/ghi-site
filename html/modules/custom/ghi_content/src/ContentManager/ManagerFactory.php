@@ -51,4 +51,21 @@ class ManagerFactory {
     return NULL;
   }
 
+  /**
+   * Get the content manager for an incoming remote content type.
+   *
+   * @param string $type
+   *   The remote content type.
+   *
+   * @return \Drupal\ghi_content\ContentManager\BaseContentManager|null
+   *   The content manager.
+   */
+  public function getContentManagerForRemoteType(string $type): ?BaseContentManager {
+    return match ($type) {
+      'article' => $this->articleManager,
+      'document' => $this->documentManager,
+      default => NULL,
+    };
+  }
+
 }

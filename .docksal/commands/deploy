@@ -60,7 +60,7 @@ if $IMPORT_BACKUP; then
     drush sql:drop -y >/dev/null
 
     echo "Importing ${FILENAME}"
-    drush sql:query -y --file=${FILEPATH} --extra=-f >/dev/null
+    drush sql:query -y --file=${FILEPATH} --extra="--ssl=0 -f" >/dev/null
     echo "Import finished"
   else
     echo "No backup found in ${BACKUP_DIRECTORY}"

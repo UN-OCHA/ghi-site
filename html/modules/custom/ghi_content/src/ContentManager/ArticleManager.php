@@ -186,10 +186,10 @@ class ArticleManager extends BaseContentManager {
   /**
    * {@inheritdoc}
    */
-  public function updateNodeFromRemote(ContentBase $node, $dry_run = FALSE, $reset = FALSE) {
+  public function updateNodeFromRemote(ContentBase $node, $dry_run = FALSE, $reset = FALSE): bool {
     $article = $this->loadRemoteContentForNode($node, TRUE, FALSE);
     if (!$article) {
-      return;
+      return FALSE;
     }
 
     // See if the article needs a cleanup.
@@ -231,6 +231,7 @@ class ArticleManager extends BaseContentManager {
       $this->importManager->layoutManagerDiscardChanges($node, NULL);
       $node->setSyncing(TRUE);
     }
+    return TRUE;
   }
 
   /**

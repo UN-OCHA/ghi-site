@@ -187,11 +187,13 @@ abstract class BaseContentManager implements ContainerInjectionInterface {
    *   The remote source as a string.
    * @param int[] $ids
    *   An array of ids to load from the source.
+   * @param bool $reload
+   *   Whether to bypass any cached lookup result for the given ids.
    *
    * @return \Drupal\ghi_content\Entity\ContentBase[]
    *   An array of node objects.
    */
-  public function loadNodesForRemoteIds(string $source, array $ids) {
+  public function loadNodesForRemoteIds(string $source, array $ids, bool $reload = FALSE) {
     if (empty($ids)) {
       return [];
     }
@@ -202,6 +204,14 @@ abstract class BaseContentManager implements ContainerInjectionInterface {
     ]);
     $cache = &drupal_static(__METHOD__, []);
     $cache[$cache_key] ??= [];
+    if ($reload) {
+      // A caller may have just imported content that was cached as missing
+      // earlier in the same request. Drop only the requested ids so unrelated
+      // lookups keep benefiting from the request-static cache.
+      foreach ($ids as $id) {
+        unset($cache[$cache_key][$id]);
+      }
+    }
 
     // Cache each remote id individually so overlapping chapter/article lists
     // only query the ids that have not already been resolved in this request.
@@ -653,9 +663,12 @@ abstract class BaseContentManager implements ContainerInjectionInterface {
    *   Whether node should be reset to it's original state (as if it would be
    *   created right now based on the configuration on the remote).
    *
+   * @return bool
+   *   TRUE if remote data was applied to the node, FALSE otherwise.
+   *
    * @see ghi_content_node_presave()
    */
-  abstract public function updateNodeFromRemote(ContentBase $node, $dry_run = FALSE, $reset = FALSE);
+  abstract public function updateNodeFromRemote(ContentBase $node, $dry_run = FALSE, $reset = FALSE): bool;
 
   /**
    * Check if the given node is in-sync with its remote source.
