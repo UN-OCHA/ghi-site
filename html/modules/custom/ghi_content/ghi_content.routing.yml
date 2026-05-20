@@ -42,6 +42,16 @@ ghi_content.remote.settings:
       remote_source:
         type: 'remote_source'
 
+ghi_content.remote_refresh.webhook:
+  path: '/webhooks/content/remote-refresh'
+  defaults:
+    _controller: '\Drupal\ghi_content\Controller\RemoteRefreshController::receive'
+    _title: 'Remote content refresh webhook'
+  requirements:
+    # Access is enforced by an HMAC signature in the controller.
+    _access: 'TRUE'
+  methods: [POST]
+
 ghi_content.node.articles:
   path: '/node/{node}/articles'
   defaults:

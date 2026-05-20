@@ -34,6 +34,11 @@ $config['ghi_content.remote_sources'] = [
     'base_url' => 'https://content.hpc.tools',
     'endpoint' => 'ncms',
     'access_key' => getenv('CM_KEY'),
+    'remote_refresh' => [
+      'webhook_secret' => getenv('CM_WEBHOOK_SECRET') ?: '',
+      'signature_ttl' => 300,
+      'max_body_size' => 4096,
+    ],
   ],
 ];
 

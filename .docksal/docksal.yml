@@ -7,6 +7,7 @@ services:
       - HPC_API_PASS
       - HPC_API_KEY
       - CM_KEY
+      - CM_WEBHOOK_SECRET
       - MAPBOX_TOKEN
       - COMPOSER_MEMORY_LIMIT=-1
       - SOLR_CORE
@@ -18,6 +19,7 @@ services:
 
   web:
     environment:
+      - CM_WEBHOOK_SECRET
       - MAPBOX_TOKEN
 
   browser:
