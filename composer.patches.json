@@ -13,9 +13,6 @@
       "Issue #2190333: Make #group FAPI / render feature work on all form/render #types out of the box": "patches/core-form-api-groups-2190333.patch",
       "Issue #2585169: Unable to alter local actions prior to rendering": "https://www.drupal.org/files/issues/2024-12-19/2585169-63-10.4.x.patch"
     },
-    "drupal/autologout": {
-      "Issue #3580058: Undefined array key 'cookie_samesite' warning after upgrade to 2.02": "./patches/autologout-3580058-mr.patch"
-    },
     "drupal/file_mdm": {
       "Issue #3570037: Deprecated Error": "https://www.drupal.org/files/issues/2026-03-20/file_mdm-nullable-3570037-8.patch"
     },
