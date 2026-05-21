@@ -3,6 +3,7 @@
 namespace Drupal\hpc_api\Query;
 
 use Drupal\Component\Render\FormattableMarkup;
+use Drupal\Component\Serialization\Json;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\DependencyInjection\DependencySerializationTrait;
 use Drupal\Core\Logger\LoggerChannelFactoryInterface;
@@ -293,10 +294,8 @@ class FabricClient {
 
     $promises = [];
     foreach ($queries as $query) {
-      $query = $query instanceof FabricQuery ? $query->toString() : $query;
-      $query = trim(str_replace("\n", " ", addslashes(trim($query))));
-      $query = !str_starts_with($query, 'query {') ? 'query { ' . $query . ' }' : $query;
-      $body = '{"query": "' . $query . '"}';
+      $query = $this->prepareQuery($query);
+      $body = $this->buildRequestBody($query);
 
       $post_args = [
         'body' => $body,
@@ -341,10 +340,8 @@ class FabricClient {
    *   The result from the fabric query or FALSE on failure.
    */
   public function query(string|FabricQuery $query, ?string &$error = NULL) {
-    $query = $query instanceof FabricQuery ? $query->toString() : $query;
-    $query = trim(str_replace("\n", " ", addslashes(trim($query))));
-    $query = !str_starts_with($query, 'query {') ? 'query { ' . $query . ' }' : $query;
-    $body = '{"query": "' . $query . '"}';
+    $query = $this->prepareQuery($query);
+    $body = $this->buildRequestBody($query);
 
     $access_token = $this->getAccessToken();
     if (!$access_token) {
@@ -387,6 +384,34 @@ class FabricClient {
     }
 
     return $this->processResponse($response, $query, $cache_key);
+  }
+
+  /**
+   * Prepare a GraphQL query for Fabric.
+   *
+   * @param string|\Drupal\hpc_api\Query\FabricQuery $query
+   *   The query to prepare.
+   *
+   * @return string
+   *   The normalized query string.
+   */
+  private function prepareQuery(string|FabricQuery $query): string {
+    $query = $query instanceof FabricQuery ? $query->toString() : $query;
+    $query = trim(str_replace(["\r\n", "\r", "\n"], ' ', trim($query)));
+    return str_starts_with($query, 'query {') ? $query : 'query { ' . $query . ' }';
+  }
+
+  /**
+   * Build the JSON request body for a GraphQL query.
+   *
+   * @param string $query
+   *   The GraphQL query.
+   *
+   * @return string
+   *   The encoded request body.
+   */
+  private function buildRequestBody(string $query): string {
+    return Json::encode(['query' => $query]);
   }
 
   /**
