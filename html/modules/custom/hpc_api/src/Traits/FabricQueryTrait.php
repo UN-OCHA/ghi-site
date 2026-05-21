@@ -6,6 +6,7 @@ use Drupal\hpc_api\Plugin\FabricQuery\BaseTypeQuery;
 use Drupal\hpc_api\Plugin\FabricQuery\CategoryQuery;
 use Drupal\hpc_api\Plugin\FabricQuery\EntityLookupQuery;
 use Drupal\hpc_api\Plugin\FabricQuery\EntityTypeQuery;
+use Drupal\hpc_api\Plugin\FabricQuery\IconQuery;
 use Drupal\hpc_api\Plugin\FabricQuery\ResourceQuery;
 use Drupal\hpc_api\Query\FabricQueryBase;
 
@@ -86,6 +87,17 @@ trait FabricQueryTrait {
   protected static function getResourceQuery(): ?ResourceQuery {
     $query = self::getQueryInstance('resource');
     return $query instanceof ResourceQuery ? $query : NULL;
+  }
+
+  /**
+   * Get the icon query.
+   *
+   * @return \Drupal\hpc_api\Plugin\FabricQuery\IconQuery|null
+   *   The icon query or NULL.
+   */
+  protected static function getIconQuery(): ?IconQuery {
+    $query = self::getQueryInstance('icon');
+    return $query instanceof IconQuery ? $query : NULL;
   }
 
   /**

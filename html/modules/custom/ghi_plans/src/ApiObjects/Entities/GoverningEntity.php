@@ -49,6 +49,7 @@ class GoverningEntity extends EntityObjectBase {
     // phpcs:disable Squiz.Arrays.ArrayDeclaration.KeySpecified
     "coordinationEntityContact" => ['items' => ['contact' => Contact::GRAPHQL_ITEMS]],
     'fieldClusterResource' => ['items' => ['resource' => Resource::GRAPHQL_ITEMS]],
+    'icon' => ['Name'],
     // phpcs:enable Squiz.Arrays.ArrayDeclaration.KeySpecified
   ];
 
@@ -58,8 +59,7 @@ class GoverningEntity extends EntityObjectBase {
   public function __construct(object $data) {
     parent::__construct($data);
     $contacts = array_filter($data->coordinationEntityContact?->items ?? [], fn ($item) => !empty($item->contact));
-
-    $this->icon = NULL;
+    $this->icon = $data->icon?->Name ?? NULL;
     $this->contacts = array_map(fn ($item): Contact => new Contact($item->contact), $contacts);
     $this->tags = !empty($data->HPCTags) ? explode('|', $data->HPCTags) : [];
   }

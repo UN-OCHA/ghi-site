@@ -7,7 +7,7 @@ dependencies:
 id: plan_clusters
 label: 'Plan clusters'
 type: 'canonical_entities:node'
-pattern: '[node:field_entity_reference:entity:url:path]/ge/[node:field_base_object:entity:field_original_id]'
+pattern: '/[node:field_entity_reference:entity:url:path]/ge/[node:field_base_object:entity:field_original_id]'
 selection_criteria:
   3e41c3b4-071d-4778-b8c8-f3ab9653668e:
     id: 'entity_bundle:node'

@@ -57,7 +57,7 @@ class PlanOperationalPresenceMap extends GHIBlockBase implements MultiStepFormBl
   /**
    * The icon query.
    *
-   * @var \Drupal\hpc_api\Plugin\EndpointQuery\IconQuery
+   * @var \Drupal\hpc_api\Plugin\FabricQuery\IconQuery
    */
   public $iconQuery;
 
@@ -91,7 +91,7 @@ class PlanOperationalPresenceMap extends GHIBlockBase implements MultiStepFormBl
     $instance = parent::create($container, $configuration, $plugin_id, $plugin_definition);
 
     // Set our own properties.
-    $instance->iconQuery = $instance->endpointQueryManager->createInstance('icon_query');
+    $instance->iconQuery = $instance->fabricQueryManager->createInstance('icon');
     return $instance;
   }
 

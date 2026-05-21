@@ -151,7 +151,7 @@ abstract class FabricQueryBase extends PluginBase implements FabricQueryPluginIn
   /**
    * {@inheritdoc}
    */
-  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition): FabricQueryBase {
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition): self {
     /** @var self $instance */
     $instance = new static($configuration, $plugin_id, $plugin_definition);
     $instance->fabricClient = $container->get('hpc_api.fabric_client');

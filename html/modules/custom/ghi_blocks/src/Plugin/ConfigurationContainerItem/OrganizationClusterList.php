@@ -38,7 +38,7 @@ class OrganizationClusterList extends ConfigurationContainerItemPluginBase {
   /**
    * The icon query.
    *
-   * @var \Drupal\hpc_api\Plugin\EndpointQuery\IconQuery
+   * @var \Drupal\hpc_api\Plugin\FabricQuery\IconQuery
    */
   public $iconQuery;
 
@@ -49,7 +49,7 @@ class OrganizationClusterList extends ConfigurationContainerItemPluginBase {
     /** @var self $instance */
     $instance = parent::create($container, $configuration, $plugin_id, $plugin_definition);
     $instance->projectQuery = $instance->fabricQueryManager->createInstance('project');
-    $instance->iconQuery = $instance->endpointQueryManager->createInstance('icon_query');
+    $instance->iconQuery = $instance->fabricQueryManager->createInstance('icon');
     return $instance;
   }
 

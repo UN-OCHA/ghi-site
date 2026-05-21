@@ -7,7 +7,7 @@ dependencies:
 id: progress
 label: Progress
 type: 'canonical_entities:node'
-pattern: '[node:field_entity_reference:entity:url:path]/progress'
+pattern: '/[node:field_entity_reference:entity:url:path]/progress'
 selection_criteria:
   5ceda969-42d8-439e-98ae-39740f517b21:
     id: 'entity_bundle:node'

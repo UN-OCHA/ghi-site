@@ -33,6 +33,9 @@ class PlanProjectCluster extends ApiObjectBase {
   const GRAPHQL_ITEMS = [
     'Id',
     'Name',
+    // phpcs:disable Squiz.Arrays.ArrayDeclaration.KeySpecified
+    'icon' => ['Name'],
+    // phpcs:enable Squiz.Arrays.ArrayDeclaration.KeySpecified
   ];
 
   /**
@@ -41,7 +44,7 @@ class PlanProjectCluster extends ApiObjectBase {
   public function __construct(object $data) {
     parent::__construct($data);
     $this->name = $data->Name;
-    $this->icon = $data->Icon ?? NULL;
+    $this->icon = $data->icon?->Name ?? NULL;
   }
 
   /**
