@@ -65,7 +65,7 @@ class FabricQueryInspectorForm extends FormBase {
     ];
 
     $arguments = $plugin && $method_name ? $this->getArguments($plugin, $method_name) : [];
-    $submitted_arguments = array_filter($form_state->getValue(['arguments', $method_name], []));
+    $submitted_arguments = array_filter($form_state->getValue(['arguments', $method_name], []), static fn ($value) => $value !== NULL && $value !== '');
     $form['arguments'] = [
       '#type' => 'container',
       '#tree' => TRUE,
@@ -96,10 +96,7 @@ class FabricQueryInspectorForm extends FormBase {
       '#disabled' => !($plugin && $method_name),
     ];
 
-    if ($form_state->isSubmitted() && $plugin && $method_name) {
-      $start = microtime(TRUE);
-      $result = $this->callPluginMethod($plugin, $method_name, $submitted_arguments);
-      $duration = microtime(TRUE) - $start;
+    if ($result = $form_state->get('fabric_query_inspector_result')) {
       $form['meta'] = [
         '#type' => 'details',
         '#title' => $this->t('Meta'),
@@ -109,7 +106,7 @@ class FabricQueryInspectorForm extends FormBase {
             '#type' => 'html_tag',
             '#tag' => 'pre',
             '#value' => $this->t('The method call took @duration seconds', [
-              '@duration' => $duration,
+              '@duration' => $result['duration'],
             ]),
           ],
         ],
@@ -124,7 +121,7 @@ class FabricQueryInspectorForm extends FormBase {
             '#header' => ['Query', 'Duration'],
             '#rows' => array_map(function ($query, $duration) {
               return [Markup::create('<pre>' . $query . '</pre>'), $duration];
-            }, array_keys(QueryHelper::endpointCallTimeStorage()), QueryHelper::endpointCallTimeStorage()),
+            }, array_keys($result['queries']), $result['queries']),
           ],
         ],
       ];
@@ -136,7 +133,7 @@ class FabricQueryInspectorForm extends FormBase {
         'children' => [
           '#type' => 'html_tag',
           '#tag' => 'pre',
-          '#value' => empty($error) ? print_r($this->castValue($result), TRUE) : print_r($error, TRUE),
+          '#value' => empty($result['error']) ? print_r($this->castValue($result['value']), TRUE) : print_r($result['error'], TRUE),
         ],
       ];
       $form['result_json'] = [
@@ -146,7 +143,7 @@ class FabricQueryInspectorForm extends FormBase {
         'children' => [
           '#type' => 'html_tag',
           '#tag' => 'pre',
-          '#value' => empty($error) ? json_encode($this->castValue($result), JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE) : print_r($error, TRUE),
+          '#value' => empty($result['error']) ? json_encode($this->castValue($result['value']), JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE) : print_r($result['error'], TRUE),
         ],
       ];
       $form['result_original'] = [
@@ -156,7 +153,7 @@ class FabricQueryInspectorForm extends FormBase {
         'children' => [
           '#type' => 'html_tag',
           '#tag' => 'pre',
-          '#value' => empty($error) ? print_r($result, TRUE) : print_r($error, TRUE),
+          '#value' => empty($result['error']) ? print_r($result['value'], TRUE) : print_r($result['error'], TRUE),
         ],
       ];
     }
@@ -225,6 +222,31 @@ class FabricQueryInspectorForm extends FormBase {
    * {@inheritdoc}
    */
   public function submitForm(array &$form, FormStateInterface $form_state): void {
+    $plugin_options = $this->getPluginOptions();
+    $plugin_id = $form_state->getValue('plugin_id') ?: array_key_first($plugin_options);
+    $plugin = $this->getFabricQuery($plugin_id);
+
+    $method_options = $this->getMethodOptions($plugin);
+    $method_name = $form_state->getValue('method_name') ?? NULL;
+    $method_name = ($method_name && !empty($method_options[$method_name])) ? $method_name : array_key_first($method_options);
+
+    $submitted_arguments = array_filter($form_state->getValue(['arguments', $method_name], []), static fn ($value) => $value !== NULL && $value !== '');
+    $start = microtime(TRUE);
+    $error = NULL;
+    $value = NULL;
+    try {
+      $value = $this->callPluginMethod($plugin, $method_name, $submitted_arguments);
+    }
+    catch (\Throwable $e) {
+      $error = $e->getMessage();
+      $this->messenger()->addError($error);
+    }
+    $form_state->set('fabric_query_inspector_result', [
+      'duration' => microtime(TRUE) - $start,
+      'queries' => QueryHelper::endpointCallTimeStorage(),
+      'value' => $value,
+      'error' => $error,
+    ]);
     $form_state->setRebuild();
   }
 
@@ -303,7 +325,7 @@ class FabricQueryInspectorForm extends FormBase {
         continue;
       }
       $type = $arg->getType();
-      if ($type instanceof \ReflectionUnionType && !empty(array_diff($type->getTypes(), $allowed_types))) {
+      if ($type instanceof \ReflectionUnionType && !empty(array_diff($this->getTypeNames($type), $allowed_types))) {
         continue;
       }
       elseif ($type instanceof \ReflectionNamedType && !in_array($type->getName(), $allowed_types)) {
@@ -319,6 +341,19 @@ class FabricQueryInspectorForm extends FormBase {
       ];
     }
     return $options;
+  }
+
+  /**
+   * Get the named types from a reflection type declaration.
+   *
+   * @param \ReflectionUnionType $type
+   *   The union type declaration.
+   *
+   * @return string[]
+   *   The type names.
+   */
+  private function getTypeNames(\ReflectionUnionType $type): array {
+    return array_map(static fn (\ReflectionNamedType $type): string => $type->getName(), $type->getTypes());
   }
 
   /**
@@ -338,7 +373,7 @@ class FabricQueryInspectorForm extends FormBase {
       if (!$type) {
         continue;
       }
-      if ($type instanceof \ReflectionUnionType && in_array('array', $type->getTypes()) || $type instanceof \ReflectionNamedType && $type->getName() == 'array') {
+      if ($this->argumentAllowsType($type, 'array')) {
         if (str_contains($value, ',')) {
           $value = explode(',', $value);
         }
@@ -346,13 +381,38 @@ class FabricQueryInspectorForm extends FormBase {
           $value = [$value];
         }
       }
-      elseif ($type instanceof \ReflectionNamedType && $type->getName() == 'int') {
+      elseif ($this->argumentAllowsType($type, 'int')) {
         $value = (int) $value;
       }
-      else {
-        $value = NULL;
+      elseif ($this->argumentAllowsType($type, 'string')) {
+        $value = (string) $value;
       }
     }
+  }
+
+  /**
+   * Check whether an argument type declaration allows the given type.
+   *
+   * @param \ReflectionType $type
+   *   The argument type declaration.
+   * @param string $type_name
+   *   The type name to check.
+   *
+   * @return bool
+   *   TRUE if the type is allowed, FALSE otherwise.
+   */
+  private function argumentAllowsType(\ReflectionType $type, string $type_name): bool {
+    if ($type instanceof \ReflectionNamedType) {
+      return $type->getName() == $type_name;
+    }
+    if ($type instanceof \ReflectionUnionType) {
+      foreach ($type->getTypes() as $union_type) {
+        if ($union_type->getName() == $type_name) {
+          return TRUE;
+        }
+      }
+    }
+    return FALSE;
   }
 
   /**
