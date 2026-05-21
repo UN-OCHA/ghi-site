@@ -49,7 +49,7 @@ class ProjectCounter extends ConfigurationContainerItemPluginBase {
   /**
    * The icon query.
    *
-   * @var \Drupal\hpc_api\Plugin\EndpointQuery\IconQuery
+   * @var \Drupal\hpc_api\Plugin\FabricQuery\IconQuery
    */
   public $iconQuery;
 
@@ -61,7 +61,7 @@ class ProjectCounter extends ConfigurationContainerItemPluginBase {
     $instance = parent::create($container, $configuration, $plugin_id, $plugin_definition);
     $instance->projectQuery = $instance->fabricQueryManager->createInstance('project');
     $instance->flowSearchQuery = $instance->endpointQueryManager->createInstance('flow_search_query');
-    $instance->iconQuery = $instance->endpointQueryManager->createInstance('icon_query');
+    $instance->iconQuery = $instance->fabricQueryManager->createInstance('icon');
     return $instance;
   }
 

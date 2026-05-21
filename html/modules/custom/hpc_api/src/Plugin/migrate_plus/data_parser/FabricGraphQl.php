@@ -31,12 +31,7 @@ class FabricGraphQl extends Json {
    */
   protected FabricQueryPluginInterface $sourceQuery;
 
-  public function __construct(
-    array $configuration,
-    $plugin_id,
-    $plugin_definition,
-    protected DataFetcherPluginManager $fetcherPluginManager,
-  ) {
+  public function __construct(array $configuration, string $plugin_id, array $plugin_definition, protected DataFetcherPluginManager $fetcherPluginManager) {
     parent::__construct($configuration, $plugin_id, $plugin_definition, $fetcherPluginManager);
     $this->urls = $configuration['urls'];
     $this->itemSelector = $configuration['item_selector'] ?? '';

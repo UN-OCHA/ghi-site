@@ -4,6 +4,7 @@ namespace Drupal\Tests\ghi_blocks\Kernel;
 
 use Drupal\Core\Plugin\Context\EntityContext;
 use Drupal\Core\Plugin\Context\EntityContextDefinition;
+use Drupal\hpc_api\Plugin\FabricQuery\IconQuery;
 use Drupal\hpc_api\Query\EndpointQuery;
 use Drupal\hpc_api\Query\FabricClient;
 use Drupal\hpc_api\Query\FabricQueryManager;
@@ -13,6 +14,7 @@ use Drupal\Tests\ghi_base_objects\Traits\BaseObjectTestTrait;
 use Drupal\Tests\ghi_sections\Traits\SectionTestTrait;
 use Drupal\Tests\taxonomy\Traits\TaxonomyTestTrait;
 use Drupal\Tests\user\Traits\UserCreationTrait;
+use Prophecy\Argument;
 
 /**
  * Base class for plan block kernel tests.
@@ -67,6 +69,10 @@ abstract class PlanBlockKernelTestBase extends BlockKernelTestBase {
     $fabric_query_manager = $this->prophesize(FabricQueryManager::class);
     $endpoint_query = $this->prophesize(EndpointQuery::class);
     $fabric_client = $this->prophesize(FabricClient::class);
+
+    $icon_query = $this->prophesize(IconQuery::class);
+    $fabric_query_manager->createInstance('icon')->willReturn($icon_query->reveal());
+    $fabric_query_manager->hasDefinition(Argument::any())->willReturn(FALSE);
 
     $container = \Drupal::getContainer();
     $container->set('plugin.manager.fabric_query_manager', $fabric_query_manager->reveal());

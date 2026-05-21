@@ -42,13 +42,13 @@ process:
   field_original_id: original_id
   field_plan: plan_entity_id
   field_prototype_id: prototype_id
-  field_sector_ids: sector_ids
+  field_icon: icon_name
 destination:
   plugin: 'entity:base_object'
   overwrite_properties:
     - name
     - field_prototype_id
-    - field_sector_ids
+    - field_icon
 idMap: {  }
 migration_dependencies:
   required:

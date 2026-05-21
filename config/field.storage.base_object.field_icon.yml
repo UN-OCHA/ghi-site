@@ -1,0 +1,21 @@
+uuid: 9305baa0-b885-41ce-9190-5a5c19ce8598
+langcode: en
+status: true
+dependencies:
+  module:
+    - ghi_base_objects
+id: base_object.field_icon
+field_name: field_icon
+entity_type: base_object
+type: string
+settings:
+  max_length: 92
+  case_sensitive: false
+  is_ascii: false
+module: core
+locked: false
+cardinality: 1
+translatable: true
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false
