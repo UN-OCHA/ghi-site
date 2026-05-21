@@ -19,7 +19,7 @@ class DisaggregationModalController extends ControllerBase {
   /**
    * The icon query.
    *
-   * @var \Drupal\hpc_api\Plugin\EndpointQuery\IconQuery
+   * @var \Drupal\hpc_api\Plugin\FabricQuery\IconQuery
    */
   public $iconQuery;
 

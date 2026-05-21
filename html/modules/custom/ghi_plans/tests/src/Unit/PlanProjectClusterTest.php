@@ -18,7 +18,7 @@ class PlanProjectClusterTest extends ApiObjectTestBase {
     $project_cluster = new PlanProjectCluster((object) [
       'Id' => 123,
       'Name' => 'Test Project Cluster',
-      'Icon' => 'health-icon',
+      'icon' => (object) ['Name' => 'health-icon'],
     ]);
     $this->assertApiObjectBasics($project_cluster, 'planprojectcluster');
     $this->assertEquals('health-icon', $project_cluster->getIcon());

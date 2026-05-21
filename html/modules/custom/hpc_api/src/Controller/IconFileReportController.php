@@ -2,7 +2,7 @@
 
 namespace Drupal\hpc_api\Controller;
 
-use Drupal\hpc_api\Plugin\EndpointQuery\IconQuery;
+use Drupal\hpc_api\Plugin\FabricQuery\IconQuery;
 
 /**
  * Controller class for a icon files.

@@ -25,6 +25,9 @@ class GoverningEntityImportQuery extends FabricQueryBase implements ImportQueryI
       'Name',
       'PlanId',
       'HpcEntityPrototypeId',
+      // phpcs:disable Squiz.Arrays.ArrayDeclaration.KeySpecified
+      'icon' => ['Name'],
+      // phpcs:enable Squiz.Arrays.ArrayDeclaration.KeySpecified
     ];
     return $this->fabricClient->createQuery('coordinationEntities', $items)
       ->setOrderBy(['Id' => 'DESC'])

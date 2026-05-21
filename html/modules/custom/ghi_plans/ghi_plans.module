@@ -162,6 +162,9 @@ function ghi_plans_migrate_governing_entity_prepare_row(Row $row, MigrateSourceI
   // original id.
   $row->setSourceProperty('plan_entity_id', $plan_object->id());
 
+  // Set the icon name.
+  $row->setSourceProperty('icon_name', $raw_data->icon?->Name ?? NULL);
+
   // Use the truncated description as the name if the name is empty.
   if (empty($raw_data->Name) && !empty($raw_data->Description)) {
     $row->setSourceProperty('name', Unicode::truncate($raw_data->Description, 255, TRUE, TRUE));

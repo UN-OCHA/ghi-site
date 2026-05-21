@@ -7,7 +7,7 @@ dependencies:
 id: logframe
 label: Logframe
 type: 'canonical_entities:node'
-pattern: '[node:field_entity_reference:entity:url:path]/logframe'
+pattern: '/[node:field_entity_reference:entity:url:path]/logframe'
 selection_criteria:
   6b26fbd1-1717-4274-bdf4-4834ff9d0b07:
     id: 'entity_bundle:node'

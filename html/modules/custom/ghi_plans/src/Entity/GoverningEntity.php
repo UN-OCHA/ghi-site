@@ -45,17 +45,16 @@ class GoverningEntity extends BaseObject implements BaseObjectChildInterface {
   }
 
   /**
-   * Get the sector id that this governing entity belongs to.
+   * Get the icon name for this governing entity.
    *
-   * @return int|null
-   *   The sector id or NULL.
+   * @return string|null
+   *   The icon name or NULL.
    */
-  public function getSectorId(): ?int {
-    if (!$this->hasField('field_sector_id')) {
+  public function getIcon(): ?string {
+    if (!$this->hasField('field_icon')) {
       return NULL;
     }
-    $sector_id = $this->get('field_sector_id')->value;
-    return $sector_id;
+    return $this->get('field_icon')->value ?? NULL;
   }
 
   /**
@@ -63,13 +62,10 @@ class GoverningEntity extends BaseObject implements BaseObjectChildInterface {
    *
    * @return string|null
    *   The icon embed code or NULL.
-   *
-   * @todo We might want to import the icon as part of the Drupal data model
-   * too at some point to prevent unnecessary turn-arounds.
    */
   public function getIconEmbedCode(): ?string {
-    // @todo Update once the icons are in the data store.
-    return NULL;
+    $icon = $this->getIcon();
+    return $icon ? $this->getIconQuery()->getIconEmbedCode($icon) : NULL;
   }
 
   /**

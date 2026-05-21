@@ -7,7 +7,7 @@ dependencies:
 id: financials
 label: Financials
 type: 'canonical_entities:node'
-pattern: '[node:field_entity_reference:entity:url:path]/financials'
+pattern: '/[node:field_entity_reference:entity:url:path]/financials'
 selection_criteria:
   a1f0142e-03ea-4bfe-b804-2d1a059525b3:
     id: 'entity_bundle:node'

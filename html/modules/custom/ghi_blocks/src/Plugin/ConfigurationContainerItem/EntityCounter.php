@@ -43,7 +43,7 @@ class EntityCounter extends ConfigurationContainerItemPluginBase {
   /**
    * The icon query.
    *
-   * @var \Drupal\hpc_api\Plugin\EndpointQuery\IconQuery
+   * @var \Drupal\hpc_api\Plugin\FabricQuery\IconQuery
    */
   public $iconQuery;
 
@@ -53,7 +53,7 @@ class EntityCounter extends ConfigurationContainerItemPluginBase {
   public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition): EntityCounter {
     /** @var self $instance */
     $instance = parent::create($container, $configuration, $plugin_id, $plugin_definition);
-    $instance->iconQuery = $instance->endpointQueryManager->createInstance('icon_query');
+    $instance->iconQuery = $instance->fabricQueryManager->createInstance('icon');
     $instance->entityQuery = $instance->fabricQueryManager->createInstance('entity');
     return $instance;
   }

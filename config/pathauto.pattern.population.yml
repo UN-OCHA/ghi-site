@@ -7,7 +7,7 @@ dependencies:
 id: population
 label: Population
 type: 'canonical_entities:node'
-pattern: '[node:field_entity_reference:entity:url:path]/population'
+pattern: '/[node:field_entity_reference:entity:url:path]/population'
 selection_criteria:
   c66516bd-9977-4184-91b9-cb0b7bfc8236:
     id: 'entity_bundle:node'
