@@ -199,7 +199,7 @@ class DataPoint extends FormElementBase {
       '#type' => 'select',
       '#title' => $defaults['processing'] == 'single' ? t('Data point') : t('Data point #1'),
       '#options' => $data_point_options,
-      '#default_value' => $defaults['data_points'][0]['index'] ?? NULL,
+      '#default_value' => $defaults['data_points'][0]['metric_type'] ?? NULL,
       '#ajax' => [
         'event' => 'change',
         'callback' => [static::class, 'updateAjax'],
