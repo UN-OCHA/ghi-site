@@ -240,7 +240,7 @@ class Measurement extends ApiObjectBase implements MeasurementInterface {
    * {@inheritdoc}
    */
   public function getDataPointValue($metric_type) {
-    // @todo Add calculated fields.
+    // This includes calculated fields.
     return $this->values[$metric_type] ?? NULL;
   }
 

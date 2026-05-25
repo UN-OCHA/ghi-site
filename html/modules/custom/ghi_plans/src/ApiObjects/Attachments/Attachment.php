@@ -308,7 +308,7 @@ class Attachment extends ApiObjectBase implements AttachmentInterface, Disaggreg
    * {@inheritdoc}
    */
   public function getCustomIdWithRefCode(): string {
-    return $this->getPrototype()->getRefCode() . $this->getCustomId();
+    return $this->getPrototype()?->getRefCode() . $this->getCustomId();
   }
 
   /**
@@ -634,19 +634,32 @@ class Attachment extends ApiObjectBase implements AttachmentInterface, Disaggreg
   }
 
   /**
-   * Check if the given field label represens a calculated metric.
+   * Check if the given field label represens a calculated field.
    *
    * @param string $metric_type
    *   The metric type.
    *
    * @return bool
-   *   TRUE if the field is a calculated metric, FALSE otherwise.
+   *   TRUE if the field is a calculated field, FALSE otherwise.
    */
   public function isCalculatedField($metric_type) {
+    return array_key_exists($metric_type, $this->getCalculatedFields());
+  }
+
+  /**
+   * Check if the given field label represens a calculated measurement metric.
+   *
+   * @param string $metric_type
+   *   The metric type.
+   *
+   * @return bool
+   *   TRUE if the field is a calculated measurement metric, FALSE otherwise.
+   */
+  public function isCalculatedMeasurmentField($metric_type) {
     if (!array_key_exists($metric_type, $this->getCalculatedFields())) {
       return FALSE;
     }
-    $fields = $this->getPrototype()->getOriginalFields();
+    $fields = $this->getPrototype()?->getOriginalFields();
     $field = $fields[$metric_type] ?? NULL;
     if (!$field) {
       return FALSE;
@@ -1263,7 +1276,8 @@ class Attachment extends ApiObjectBase implements AttachmentInterface, Disaggreg
       $measurement = $this->getMeasurement($monitoring_period);
       return $measurement?->getDataPointValue($metric_type) ?? NULL;
     }
-    $value = $this->values[$metric_type] ?? NULL;
+    $values = $this->getCurrentValues();
+    $value = $values[$metric_type] ?? NULL;
 
     if ($this->isCumulativeReachFieldType($metric_type) && $cumulative_logic) {
       // We have some specific logic for data points of type cumulativeReach.
@@ -1579,10 +1593,10 @@ class Attachment extends ApiObjectBase implements AttachmentInterface, Disaggreg
     $data_point_2 = $data_points[1]['metric_type'];
     switch ($conf['processing']) {
       case 'single':
-        return $this->isCalculatedField($data_point_1);
+        return $this->isCalculatedMeasurmentField($data_point_1);
 
       case 'calculated':
-        return $this->isCalculatedField($data_point_1) || $this->isCalculatedField($data_point_2);
+        return $this->isCalculatedMeasurmentField($data_point_1) || $this->isCalculatedMeasurmentField($data_point_2);
 
     }
     return FALSE;
