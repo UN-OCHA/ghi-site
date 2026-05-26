@@ -268,6 +268,17 @@ class DataPoint extends ConfigurationContainerItemPluginBase {
   }
 
   /**
+   * {@inheritdoc}
+   */
+  public function getDataAttributes() {
+    $attributes = parent::getDataAttributes();
+    if ($attachment = $this->getAttachmentObject()) {
+      $attributes['data-attachment-id'] = $attachment->id();
+    }
+    return $attributes;
+  }
+
+  /**
    * Get the attachment object for this item.
    *
    * @return \Drupal\ghi_plans\ApiObjects\Attachments\Attachment|null
