@@ -144,6 +144,12 @@ function ghi_plans_migrate_plan_prepare_row(Row $row, MigrateSourceInterface $so
   $row->setSourceProperty('focus_country_id', $plan->getFocusCountry()?->id());
   $row->setSourceProperty('latest_published_period_id', $plan->getLastPublishedReportingPeriodId());
 
+  $financial_data = $plan_query->fetchFinancialData($plan_id);
+  $row->setSourceProperty('total_funding', $financial_data['total_funding']);
+  $row->setSourceProperty('overall_funding', $financial_data['overall_funding']);
+  $row->setSourceProperty('current_requirements', $financial_data['current_requirements']);
+  $row->setSourceProperty('original_requirements', $financial_data['original_requirements']);
+
   unset($plan);
 }
 

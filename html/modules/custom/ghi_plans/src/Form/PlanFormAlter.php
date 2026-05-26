@@ -172,11 +172,13 @@ class PlanFormAlter {
     $response = new AjaxResponse();
     $update_values = [
       $form['field_requirements']['widget'][0]['value']['#attributes']['data-drupal-selector'] => $plan->getRequirements(),
+      $form['field_requirements_original']['widget'][0]['value']['#attributes']['data-drupal-selector'] => $plan->getOriginalRequirements(),
       $form['field_funding_total']['widget'][0]['value']['#attributes']['data-drupal-selector'] => $plan->getTotalFunding(),
       $form['field_funding_overall']['widget'][0]['value']['#attributes']['data-drupal-selector'] => $plan->getOverallFunding(),
     ];
     foreach ($update_values as $selector => $value) {
-      $response->addCommand(new InvokeCommand('[data-drupal-selector="' . $selector . '"]', 'val', [number_format($value, 2, '.', '')]));
+      $formatted_value = $value !== NULL ? number_format($value, 2, '.', '') : NULL;
+      $response->addCommand(new InvokeCommand('[data-drupal-selector="' . $selector . '"]', 'val', [$formatted_value]));
     }
     // Give feedback.
     $response->addCommand(new MessageCommand(t('The financial data has been updated'), '#update-financial-data-wrapper', ['type' => 'status']));
