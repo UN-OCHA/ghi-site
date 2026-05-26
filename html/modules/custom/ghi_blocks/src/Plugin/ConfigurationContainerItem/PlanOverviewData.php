@@ -210,6 +210,15 @@ class PlanOverviewData extends ConfigurationContainerItemPluginBase {
   /**
    * {@inheritdoc}
    */
+  public function getDataAttributes() {
+    $attributes = parent::getDataAttributes();
+    $attributes['data-value-type'] = $this->getType()['id'] ?? NULL;
+    return $attributes;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function getApiValue($type = NULL) {
     $type = $type ?? $this->getType();
     $data = $this->getContextValue('data');
