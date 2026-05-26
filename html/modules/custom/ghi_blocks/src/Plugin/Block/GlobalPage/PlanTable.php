@@ -429,7 +429,7 @@ class PlanTable extends GHIBlockBase implements HPCDownloadExcelInterface, HPCDo
     });
     if (!empty($custom_rows)) {
       foreach ($custom_rows as $key => $custom_row) {
-        $custom_rows[$key] = new PlanOverviewPlanMock((object) $custom_row);
+        $custom_rows[$key] = new PlanOverviewPlanMock((object) $custom_row, -($key + 1));
       }
     }
     return $custom_rows;

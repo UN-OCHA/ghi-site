@@ -24,9 +24,9 @@ class PlanOverviewPlanMock extends PlanOverviewPlan {
   /**
    * The funding.
    *
-   * @var string
+   * @var float
    */
-  protected string $funding;
+  protected float $funding;
 
   /**
    * The coverage.
@@ -52,9 +52,9 @@ class PlanOverviewPlanMock extends PlanOverviewPlan {
   /**
    * The target node id.
    *
-   * @var string
+   * @var string|null
    */
-  protected string $targetNodeId;
+  protected ?string $targetNodeId;
 
   /**
    * The caseload values.
@@ -68,12 +68,15 @@ class PlanOverviewPlanMock extends PlanOverviewPlan {
    *
    * @param object $data
    *   The raw data object.
+   * @param int $id
+   *   The deterministic mock plan id.
    */
-  public function __construct(object $data) {
+  public function __construct(object $data, int $id) {
     $link = (array) ($data->link ?? []);
     $this->rawData = $data;
-    $this->id = md5($data->plan_name);
+    $this->id = $id;
     $this->name = $data->plan_name;
+    $this->planType = $data->plan_type ?? NULL;
     $this->planStatus = $data->plan_status ?? FALSE;
     $this->funding = (int) ($data->total_funding ?? 0);
     $this->requirements = (int) ($data->total_requirements ?? 0);
@@ -83,6 +86,8 @@ class PlanOverviewPlanMock extends PlanOverviewPlan {
     // entity_autocomplete for that matter). We assume it's a node reference.
     $this->targetNodeId = NestedArray::getValue($link, [0, 'target_id']);
     $this->isPartOfGHO = $data->in_gho ?? FALSE;
+    $this->lastPublishedReportingPeriodId = NULL;
+    $this->countries = [];
     $this->caseloadValues = [
       'people_in_need' => $data->people_in_need ?? NULL,
       'people_target' => $data->people_target ?? NULL,
