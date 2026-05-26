@@ -4,6 +4,7 @@ namespace Drupal\ghi_plans\Plugin\FabricQuery;
 
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\ghi_base_objects\ApiObjects\Country;
+use Drupal\ghi_plans\ApiObjects\Attachments\CostAttachment;
 use Drupal\ghi_plans\ApiObjects\Plan;
 use Drupal\ghi_plans\ApiObjects\PlanReportingPeriod;
 use Drupal\ghi_plans\Traits\PlanQueryTrait;
@@ -11,6 +12,7 @@ use Drupal\hpc_api\ApiObjects\Types\PlanCostingType;
 use Drupal\hpc_api\ApiObjects\Types\PlanType;
 use Drupal\hpc_api\Attribute\FabricQuery;
 use Drupal\hpc_api\Query\FabricQueryBase;
+use Drupal\hpc_api\Traits\EndpointQueryTrait;
 
 /**
  * Plugin implementation of the 'plan' fabric query.
@@ -22,6 +24,7 @@ use Drupal\hpc_api\Query\FabricQueryBase;
 class PlanQuery extends FabricQueryBase {
 
   use PlanQueryTrait;
+  use EndpointQueryTrait;
 
   /**
    * The plan types.
@@ -226,6 +229,29 @@ class PlanQuery extends FabricQueryBase {
     }
     $this->objectStore->addObject($country);
     return $country;
+  }
+
+  /**
+   * Fetch the financial data for the plan.
+   *
+   * @return array
+   *   An array with financial data for the plan.
+   */
+  public function fetchFinancialData(int $plan_id): array {
+    $funding_query = $this->getPlanFundingSummaryQuery();
+    $funding_query->setPlaceholder('plan_id', $plan_id);
+
+    $attachments_query = $this->getAttachmentQuery();
+    $attachments = $attachments_query->getAttachmentsByObject('plan', [$plan_id], 'cost');
+    $attachment = count($attachments) == 1 ? reset($attachments) : NULL;
+    assert($attachment instanceof CostAttachment || $attachment === NULL);
+
+    return [
+      'total_funding' => $funding_query->getTotalFunding(),
+      'overall_funding' => $funding_query->getOverallFunding(),
+      'current_requirements' => $attachment?->getRequirements() ?? NULL,
+      'original_requirements' => $attachment?->getOriginalRequirements() ?? NULL,
+    ];
   }
 
 }
