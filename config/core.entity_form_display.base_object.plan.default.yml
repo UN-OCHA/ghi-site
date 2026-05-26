@@ -28,6 +28,7 @@ dependencies:
     - field.field.base_object.plan.field_plan_type
     - field.field.base_object.plan.field_released
     - field.field.base_object.plan.field_requirements
+    - field.field.base_object.plan.field_requirements_original
     - field.field.base_object.plan.field_requirements_updated
     - field.field.base_object.plan.field_restricted
     - field.field.base_object.plan.field_short_name
@@ -160,6 +161,7 @@ third_party_settings:
     group_financial_data:
       children:
         - field_requirements
+        - field_requirements_original
         - field_funding_total
         - field_funding_overall
       label: 'Financial data'
@@ -271,14 +273,14 @@ content:
     third_party_settings: {  }
   field_funding_overall:
     type: number
-    weight: 12
+    weight: 13
     region: content
     settings:
       placeholder: ''
     third_party_settings: {  }
   field_funding_total:
     type: number
-    weight: 11
+    weight: 12
     region: content
     settings:
       placeholder: ''
@@ -394,6 +396,13 @@ content:
   field_requirements:
     type: number
     weight: 10
+    region: content
+    settings:
+      placeholder: ''
+    third_party_settings: {  }
+  field_requirements_original:
+    type: number
+    weight: 11
     region: content
     settings:
       placeholder: ''

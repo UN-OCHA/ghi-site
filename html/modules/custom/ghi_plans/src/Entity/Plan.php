@@ -286,35 +286,21 @@ class Plan extends BaseObject implements BaseObjectMetaDataInterface, BaseObject
    * Update the requirements for the plan.
    */
   private function updateRequirements(): void {
-    if (!$this->hasField('field_requirements')) {
+    if (!$this->hasField('field_requirements') && !$this->hasField('field_requirements_original')) {
       return;
     }
-
     $attachments_query = $this->getAttachmentQuery();
-    $requirements = NULL;
-    if ($this->usePlanRequirements()) {
-      $attachments = $attachments_query->getAttachmentsByObject('plan', [$this->getSourceId()], 'cost');
-      $attachment = count($attachments) ? reset($attachments) : NULL;
-      assert($attachment instanceof CostAttachment || $attachment === NULL);
-      $requirements = $attachment?->getRequirements() ?? NULL;
+    $attachments = $attachments_query->getAttachmentsByObject('plan', [$this->getSourceId()], 'cost');
+    $attachment = count($attachments) ? reset($attachments) : NULL;
+    if (!$attachment instanceof CostAttachment) {
+      return;
     }
-    elseif ($this->useClusterRequirements()) {
-      $plan_entity_query = $this->getEntityQuery();
-      $clusters = $plan_entity_query->getEntitiesForPlan($this->getSourceId(), NULL, 'governing');
-      $requirements = 0;
-      $attachments = $attachments_query->getAttachmentsByObject('governingEntity', array_keys($clusters), 'cost');
-      foreach ($attachments as $attachment) {
-        if (!$attachment instanceof CostAttachment) {
-          continue;
-        }
-        $requirements += $attachment->getRequirements();
-      }
+    if ($this->hasField('field_requirements')) {
+      $this->get('field_requirements')->setValue($attachment?->getRequirements() ?? NULL);
     }
-    elseif ($this->useProjectRequirements()) {
-      $project_query = $this->getProjectQuery();
-      $requirements = $project_query->getProjectRequirementsForPlan($this->getSourceId());
+    if ($this->hasField('field_requirements_original')) {
+      $this->get('field_requirements_original')->setValue($attachment?->getOriginalRequirements() ?? NULL);
     }
-    $this->get('field_requirements')->setValue($requirements);
   }
 
   /**
@@ -368,6 +354,20 @@ class Plan extends BaseObject implements BaseObjectMetaDataInterface, BaseObject
       return NULL;
     }
     $requirements = $this->get('field_requirements')->value;
+    return $requirements !== NULL ? (float) $requirements : NULL;
+  }
+
+  /**
+   * Get the requirements for a plan.
+   *
+   * @return float|null
+   *   The requirements for the plan.
+   */
+  public function getOriginalRequirements(): ?float {
+    if (!$this->hasField('field_requirements_original')) {
+      return NULL;
+    }
+    $requirements = $this->get('field_requirements_original')->value;
     return $requirements !== NULL ? (float) $requirements : NULL;
   }
 

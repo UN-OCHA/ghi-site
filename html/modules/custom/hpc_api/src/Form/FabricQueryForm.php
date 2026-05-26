@@ -60,10 +60,20 @@ class FabricQueryForm extends FormBase {
         ],
       ];
 
+      $form['result_json'] = [
+        '#type' => 'details',
+        '#title' => $this->t('Result (json)'),
+        '#open' => TRUE,
+        'children' => [
+          '#type' => 'html_tag',
+          '#tag' => 'pre',
+          '#value' => empty($error) ? json_encode($result, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE) : print_r($error, TRUE),
+        ],
+      ];
       $form['result'] = [
         '#type' => 'details',
-        '#title' => $this->t('Result'),
-        '#open' => TRUE,
+        '#title' => $this->t('Result (original)'),
+        '#open' => FALSE,
         'children' => [
           '#type' => 'html_tag',
           '#tag' => 'pre',
