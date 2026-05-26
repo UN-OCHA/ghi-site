@@ -557,6 +557,33 @@ abstract class FabricQueryBase extends PluginBase implements FabricQueryPluginIn
   }
 
   /**
+   * Get the available revision states.
+   *
+   * @return \Drupal\hpc_api\ApiObjects\Types\RevisionState[]
+   *   The revision states.
+   */
+  public function getRevisionStates(): array {
+    $this->fetchBaseTypes();
+    return $this->baseTypes['revisionStates'];
+  }
+
+  /**
+   * Get a revision state by id.
+   *
+   * @param int $id
+   *   The id of the revision state.
+   *
+   * @return \Drupal\hpc_api\ApiObjects\Types\RevisionState|null
+   *   The revision state object or NULL if not found.
+   */
+  public function getRevisionState(int $id): ?RevisionState {
+    $revision_states = $this->getRevisionStates();
+    $revision_state = $revision_states[$id] ?? NULL;
+    assert($revision_state === NULL || $revision_state instanceof RevisionState);
+    return $revision_state;
+  }
+
+  /**
    * Get the available sectors.
    *
    * @return \Drupal\hpc_api\ApiObjects\Types\Sector[]
