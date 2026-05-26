@@ -1,0 +1,20 @@
+uuid: 330c8db2-5392-424d-a174-e2d49449c2cf
+langcode: en
+status: true
+dependencies:
+  module:
+    - ghi_base_objects
+id: base_object.field_requirements_original
+field_name: field_requirements_original
+entity_type: base_object
+type: decimal
+settings:
+  precision: 14
+  scale: 2
+module: core
+locked: false
+cardinality: 1
+translatable: true
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

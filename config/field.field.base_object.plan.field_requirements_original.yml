@@ -1,0 +1,23 @@
+uuid: 5a4a76a6-45ba-4adf-a1fa-8be7b9f35910
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.base_object.field_requirements_original
+    - ghi_base_objects.base_object_type.plan
+id: base_object.plan.field_requirements_original
+field_name: field_requirements_original
+entity_type: base_object
+bundle: plan
+label: 'Requirements (original)'
+description: 'The original requirements are set and updated automatically by a cron job.'
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  min: null
+  max: null
+  prefix: ''
+  suffix: ''
+field_type: decimal

@@ -173,7 +173,7 @@ class FundingData extends ConfigurationContainerItemPluginBase {
   }
 
   /**
-   * Get the requirements for the given object type and object id.
+   * Get the cost attachment for the given entity type and entity id.
    *
    * @param string $entity_type
    *   The entity type.
@@ -183,11 +183,41 @@ class FundingData extends ConfigurationContainerItemPluginBase {
    * @return float|null
    *   The requirements.
    */
-  private function getRequirements($entity_type, $entity_id): ?float {
+  private function getCostAttachment(string $entity_type, int $entity_id): ?CostAttachment {
     $attachments = $this->attachmentQuery->getAttachmentsByObject($entity_type, [$entity_id], 'cost');
     $attachment = count($attachments) > 0 ? reset($attachments) : NULL;
     assert($attachment === NULL || $attachment instanceof CostAttachment);
-    return $attachment?->getRequirements();
+    return $attachment;
+  }
+
+  /**
+   * Get the requirements for the given entity type and entity id.
+   *
+   * @param string $entity_type
+   *   The entity type.
+   * @param int $entity_id
+   *   The entity id.
+   *
+   * @return float|null
+   *   The requirements.
+   */
+  private function getRequirements(string $entity_type, int $entity_id): ?float {
+    return $this->getCostAttachment($entity_type, $entity_id)?->getRequirements();
+  }
+
+  /**
+   * Get the requirements for the given entity type and entity id.
+   *
+   * @param string $entity_type
+   *   The entity type.
+   * @param int $entity_id
+   *   The entity id.
+   *
+   * @return float|null
+   *   The original requirements.
+   */
+  private function getOriginalRequirements(string $entity_type, int $entity_id): ?float {
+    return $this->getCostAttachment($entity_type, $entity_id)?->getOriginalRequirements();
   }
 
   /**
@@ -286,8 +316,11 @@ class FundingData extends ConfigurationContainerItemPluginBase {
     }
     switch ($property) {
       case 'current_requirements':
-      case 'original_requirements':
         $value = $plan->getRequirements();
+        break;
+
+      case 'original_requirements':
+        $value = $plan->getOriginalRequirements();
         break;
 
       case 'total_funding':
@@ -335,8 +368,11 @@ class FundingData extends ConfigurationContainerItemPluginBase {
     }
     switch ($property) {
       case 'current_requirements':
-      case 'original_requirements':
         $value = $this->getRequirements('governingEntity', $cluster_id);
+        break;
+
+      case 'original_requirements':
+        $value = $this->getOriginalRequirements('governingEntity', $cluster_id);
         break;
 
       case 'total_funding':
