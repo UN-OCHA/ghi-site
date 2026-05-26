@@ -11,7 +11,6 @@ use Drupal\ghi_base_objects\Entity\BaseObjectFocusCountryInterface;
 use Drupal\ghi_base_objects\Entity\BaseObjectMetaDataInterface;
 use Drupal\ghi_base_objects\Entity\Country as EntityCountry;
 use Drupal\ghi_plans\ApiObjects\Attachments\CaseloadAttachmentInterface;
-use Drupal\ghi_plans\ApiObjects\Attachments\CostAttachment;
 use Drupal\ghi_plans\Traits\AttachmentFilterTrait;
 use Drupal\ghi_plans\Traits\FtsLinkTrait;
 use Drupal\ghi_plans\Traits\PlanQueryTrait;
@@ -255,51 +254,23 @@ class Plan extends BaseObject implements BaseObjectMetaDataInterface, BaseObject
    * Update the financial data for a plan.
    */
   public function updateFinancialData(): void {
-    $this->updateRequirements();
-    $this->updateFunding();
-    if ($this->hasField('field_requirements_updated')) {
-      $this->get('field_requirements_updated')->setValue(self::getRequestTime());
-    }
-  }
-
-  /**
-   * Update the requirements for the plan.
-   */
-  private function updateFunding(): void {
-    if (!$this->hasField('field_funding_total') || !$this->hasField('field_funding_overall')) {
-      return;
-    }
-    /** @var \Drupal\hpc_api\Query\EndpointQueryManager $endpoint_query_manager */
-    $endpoint_query_manager = \Drupal::service('plugin.manager.endpoint_query_manager');
-    /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\PlanFundingSummaryQuery $funding_query */
-    $funding_query = $endpoint_query_manager->createInstance('plan_funding_summary_query');
-    $funding_query->setPlaceholder('plan_id', $this->getSourceId());
+    $financial_data = $this->getPlanQuery()->fetchFinancialData($this->getSourceId());
     if ($this->hasField('field_funding_total')) {
-      $this->get('field_funding_total')?->setValue($funding_query->getTotalFunding());
+      $this->get('field_funding_total')?->setValue($financial_data['total_funding']);
     }
     if ($this->hasField('field_funding_overall')) {
-      $this->get('field_funding_overall')?->setValue($funding_query->getOverallFunding());
+      $this->get('field_funding_overall')?->setValue($financial_data['overall_funding']);
     }
-  }
 
-  /**
-   * Update the requirements for the plan.
-   */
-  private function updateRequirements(): void {
-    if (!$this->hasField('field_requirements') && !$this->hasField('field_requirements_original')) {
-      return;
-    }
-    $attachments_query = $this->getAttachmentQuery();
-    $attachments = $attachments_query->getAttachmentsByObject('plan', [$this->getSourceId()], 'cost');
-    $attachment = count($attachments) ? reset($attachments) : NULL;
-    if (!$attachment instanceof CostAttachment) {
-      return;
-    }
     if ($this->hasField('field_requirements')) {
-      $this->get('field_requirements')->setValue($attachment?->getRequirements() ?? NULL);
+      $this->get('field_requirements')->setValue($financial_data['current_requirements']);
     }
     if ($this->hasField('field_requirements_original')) {
-      $this->get('field_requirements_original')->setValue($attachment?->getOriginalRequirements() ?? NULL);
+      $this->get('field_requirements_original')->setValue($financial_data['original_requirements']);
+    }
+
+    if ($this->hasField('field_requirements_updated')) {
+      $this->get('field_requirements_updated')->setValue(self::getRequestTime());
     }
   }
 

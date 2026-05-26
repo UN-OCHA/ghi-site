@@ -33,6 +33,8 @@ source:
   ids:
     original_id:
       type: integer
+  constants:
+    now: now
 process:
   type:
     plugin: default_value
@@ -85,6 +87,15 @@ process:
     message: 'Plan end date is missing'
   field_document_published_on: document_published_on
   field_plan_coordinator: plan_coordinator
+  field_latest_published_period_id: latest_published_period_id
+  field_funding_total: total_funding
+  field_funding_overall: overall_funding
+  field_requirements: current_requirements
+  field_requirements_original: original_requirements
+  field_requirements_updated:
+    plugin: callback
+    callable: strtotime
+    source: constants/now
 destination:
   plugin: 'entity:base_object'
   overwrite_properties:
@@ -108,6 +119,12 @@ destination:
     - field_plan_date_range
     - field_document_published_on
     - field_plan_coordinator
+    - field_latest_published_period_id
+    - field_funding_total
+    - field_funding_overall
+    - field_requirements
+    - field_requirements_original
+    - field_requirements_updated
 idMap: {  }
 migration_dependencies:
   required:

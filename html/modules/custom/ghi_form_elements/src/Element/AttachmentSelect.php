@@ -438,14 +438,4 @@ class AttachmentSelect extends FormElementBase {
     return $element;
   }
 
-  /**
-   * Get the endpoint query manager service.
-   *
-   * @return \Drupal\hpc_api\Query\EndpointQueryManager
-   *   The endpoint query manager service.
-   */
-  private static function getEndpointQueryManager() {
-    return \Drupal::service('plugin.manager.endpoint_query_manager');
-  }
-
 }
