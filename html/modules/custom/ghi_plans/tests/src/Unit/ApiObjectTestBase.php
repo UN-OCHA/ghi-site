@@ -15,6 +15,7 @@ use Drupal\ghi_plans\Plugin\FabricQuery\AttachmentPrototypeQuery;
 use Drupal\ghi_plans\Plugin\FabricQuery\AttachmentQuery;
 use Drupal\ghi_plans\Plugin\FabricQuery\PlanQuery;
 use Drupal\hpc_api\ApiObjects\Types\MetricType;
+use Drupal\hpc_api\ApiObjects\Types\RevisionState;
 use Drupal\hpc_api\ApiObjects\Types\Unit;
 use Drupal\hpc_api\Plugin\FabricQuery\EntityTypeQuery;
 use Drupal\hpc_api\Query\FabricQueryBase;
@@ -138,7 +139,7 @@ abstract class ApiObjectTestBase extends ApiBaseObjectTestBase {
       $this->mockMetricType(2, 'affected'),
       $this->mockMetricType(3, 'inNeed'),
       $this->mockMetricType(5, 'target'),
-      $this->mockMetricType(10, 'requirements'),
+      $this->mockMetricType(41, 'requirements'),
       $this->mockMetricType(14, 'cumulativeReach'),
       $this->mockMetricType(15, 'optionOverallCumulReach'),
       $this->mockMetricType(16, 'periodicalReach'),
@@ -150,6 +151,15 @@ abstract class ApiObjectTestBase extends ApiBaseObjectTestBase {
       $entity_type_query->getMetricType($metric_type->id())->willReturn($metric_type);
     }
     $entity_type_query->getMetricTypes()->willReturn($metric_types);
+    $revision_states = [
+      new RevisionState((object) ['Id' => 1, 'Name' => 'Original']),
+      new RevisionState((object) ['Id' => 2, 'Name' => 'Current']),
+      new RevisionState((object) ['Id' => 3, 'Name' => 'GHO']),
+    ];
+    foreach ($revision_states as $revision_state) {
+      $entity_type_query->getRevisionState($revision_state->id())->willReturn($revision_state);
+    }
+    $entity_type_query->getRevisionStates()->willReturn($revision_states);
     $entity_type_query->getUnit(Argument::any())->willReturn($this->prophesize(Unit::class)->reveal());
 
     $location_query = $this->prophesize(LocationQuery::class);

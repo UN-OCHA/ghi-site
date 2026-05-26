@@ -5,8 +5,8 @@
   "EntityId": 1140,
   "EntityTypeId": 19,
   "EntityMainType": "Plan",
-  "AttachmentType": "Financial",
-  "CustomReference": "1",
+  "AttachmentType": "Cost",
+  "CustomReference": null,
   "HasDisaggregatedData": false,
   "UnitId": null,
   "CalculationMethodId": null,
@@ -20,9 +20,8 @@
       {
         "Id": 17094,
         "AttachmentId": 35754,
-        "MetricTypeId": 10,
-        "PeriodId": 44,
-        "SectorId": null,
+        "MetricTypeId": 41,
+        "RevisionStateId": 1,
         "LocationId": null,
         "GenderId": null,
         "AgeGroupId": null,
@@ -34,7 +33,6 @@
         "DisaggregationCategoryOtherId": null,
         "DeliveryModalityId": null,
         "CustomMetricName": null,
-        "Description": null,
         "IsTotal": true,
         "ValueNum": 344007921
       }
