@@ -204,6 +204,16 @@ abstract class ConfigurationContainerItemPluginBase extends PluginBase implement
       'data-content' => $this->getLabel(),
       'class' => $this->getClasses(),
       'export_value' => $this->getSortableValue(),
+    ] + $this->getDataAttributes();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getDataAttributes() {
+    return [
+      'data-item-type' => $this->getPluginId(),
+      'data-raw-value' => $this->getSortableValue(),
     ];
   }
 

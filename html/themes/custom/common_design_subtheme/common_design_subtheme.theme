@@ -728,10 +728,11 @@ function common_design_subtheme_preprocess_item_list__key_figures(&$variables) {
   $items = &$variables['items'];
   $figures = [];
   foreach ($items as &$item) {
+    $attributes = $item['value']['#wrapper_attributes'] ?? [];
     $figures[] = array_filter([
       'label' => $item['value']['#title'],
       'value' => $item['value'][0],
-      'class' => implode(' ', $item['value']['#wrapper_attributes']['class'] ?? []),
+      'attributes' => new Attribute($attributes),
     ]);
   }
   $variables['figures'] = $figures;

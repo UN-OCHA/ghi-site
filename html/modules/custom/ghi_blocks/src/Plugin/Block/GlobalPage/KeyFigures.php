@@ -126,6 +126,7 @@ class KeyFigures extends GHIBlockBase implements MultiStepFormBlockInterface {
           '#type' => 'item',
           '#title' => $item_type->getLabel(),
           0 => $item_type->getRenderArray(),
+          '#wrapper_attributes' => $item_type->getDataAttributes(),
         ];
       }
       if (empty($rendered)) {

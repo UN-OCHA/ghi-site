@@ -60,6 +60,9 @@ class PlanHeadlineFiguresTest extends PlanBlockKernelTestBase {
     $this->assertEquals('tab_container', $build[0]['#theme']);
     $this->assertEquals('Population', $build[0]['#tabs'][0]['title']['#markup']);
     $this->assertCount(1, $build[0]['#tabs'][0]['items']['#items']);
+    $item = $build[0]['#tabs'][0]['items']['#items'][0];
+    $this->assertEquals('label_value', $item['#wrapper_attributes']['data-item-type']);
+    $this->assertEquals(100, $item['#wrapper_attributes']['data-raw-value']);
   }
 
   /**

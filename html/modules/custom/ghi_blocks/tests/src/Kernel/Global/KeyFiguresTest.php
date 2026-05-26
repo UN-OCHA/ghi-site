@@ -108,6 +108,28 @@ class KeyFiguresTest extends PlanBlockKernelTestBase {
   }
 
   /**
+   * Tests plan overview data attributes.
+   */
+  public function testPlanOverviewDataAttributes() {
+    $plugin = $this->getBlockPlugin();
+    $item_type = $plugin->getItemTypePluginForColumn([
+      'item_type' => 'plan_overview_data',
+      'config' => [
+        'type' => 'people_in_need',
+      ],
+    ], [
+      'data' => [
+        'people_in_need' => 100,
+      ],
+    ]);
+
+    $attributes = $item_type->getDataAttributes();
+    $this->assertEquals('plan_overview_data', $attributes['data-item-type']);
+    $this->assertEquals(100, $attributes['data-raw-value']);
+    $this->assertEquals('people_in_need', $attributes['data-value-type']);
+  }
+
+  /**
    * Tests block contexts requirements.
    */
   public function testBlockContexts() {
