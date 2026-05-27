@@ -299,7 +299,7 @@ class PlanOverviewQuery extends FabricQueryBase {
       if ($plan->isRrp()) {
         continue;
       }
-      if (empty($caseload['target']) || empty($caseload['reached'])) {
+      if (empty($caseload['target']) || empty($caseload['latest_reach'])) {
         // Only add target and reached to the totals for percentage if both are
         // non-NULL.
         continue;
@@ -307,7 +307,7 @@ class PlanOverviewQuery extends FabricQueryBase {
       $caseload_totals['target_custom'] += $caseload['target'];
       // If reached is higher than target, use target instead, so that the
       // final percentage per plan can't get over 100%.
-      $caseload_totals['reached_custom'] += min($caseload['reached'], $caseload['target']);
+      $caseload_totals['reached_custom'] += min($caseload['latest_reach'], $caseload['target']);
     }
 
     return $caseload_totals;
