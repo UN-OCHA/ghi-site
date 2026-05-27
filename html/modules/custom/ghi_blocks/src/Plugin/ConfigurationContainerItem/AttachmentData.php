@@ -249,7 +249,7 @@ class AttachmentData extends ConfigurationContainerItemPluginBase {
     $data_point = $this->getDataPointConfig();
     $build = $attachment->formatValue($data_point);
 
-    // See if what property to use for footnotes if any.
+    // See what property to use for footnotes if any.
     $metric_type = $data_point['data_points'][0]['metric_type'];
     $property = $metric_type;
     if ($attachment->isCalculatedField($metric_type) && $source = $attachment->getSourceTypeForCalculatedField($metric_type)) {
@@ -267,21 +267,13 @@ class AttachmentData extends ConfigurationContainerItemPluginBase {
   /**
    * {@inheritdoc}
    */
-  public function getClasses() {
-    $classes = parent::getClasses();
-    if ($attachment = $this->getAttachmentObject()) {
-      $classes[] = 'attachment-' . $attachment->id();
-    }
-    return $classes;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
   public function getDataAttributes() {
     $attributes = parent::getDataAttributes();
     if ($attachment = $this->getAttachmentObject()) {
       $attributes['data-attachment-id'] = $attachment->id();
+    }
+    if ($data_point = $this->getDataPointConfig()) {
+      $attributes['data-metric-type'] = $data_point['data_points'][0]['metric_type'];
     }
     return $attributes;
   }
