@@ -69,7 +69,7 @@ class KeyFigures extends GHIBlockBase implements MultiStepFormBlockInterface {
     $types = [
       'in_need' => 'In Need',
       'target' => 'Target',
-      'reached' => 'Latest reached',
+      'latest_reach' => 'Latest reached',
       'expected_reach' => 'Expected reach',
     ];
 
@@ -82,7 +82,7 @@ class KeyFigures extends GHIBlockBase implements MultiStepFormBlockInterface {
       'funding_progress' => $funding_progress,
       'people_in_need' => $caseload_values['in_need'],
       'people_target' => $caseload_values['target'],
-      'people_reached' => $caseload_values['reached'],
+      'people_reached' => $caseload_values['latest_reach'],
       'people_reached_percent' => CommonHelper::calculateRatio($caseload_values['reached_custom'], $caseload_values['target_custom']),
       'people_expected_reach' => $caseload_values['expected_reach'],
       'countries_affected' => $affected_countries,
