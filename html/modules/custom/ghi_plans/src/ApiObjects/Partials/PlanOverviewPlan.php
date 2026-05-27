@@ -267,11 +267,14 @@ class PlanOverviewPlan extends BaseObject {
   /**
    * Get the coverage for a plan based on the given funding.
    *
+   * @param int $precision
+   *   The precision to use (number of digits after the decimal point).
+   *
    * @return float
    *   The coverage for a plan.
    */
-  public function getCoverage(): float {
-    return (float) CommonHelper::calculateRatio($this->getFunding() ?: 0, $this->getRequirements()) * 100;
+  public function getCoverage(int $precision = 1): float {
+    return (float) CommonHelper::calculateRatio($this->getFunding() ?: 0, $this->getRequirements(), $precision + 2) * 100;
   }
 
   /**

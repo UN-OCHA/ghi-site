@@ -206,7 +206,7 @@ class PlanTable extends GHIBlockBase implements HPCDownloadExcelInterface, HPCDo
       // Setup the financial values.
       $requirements = $plan->getRequirements();
       $funding = $plan->getFunding();
-      $coverage = $plan->getCoverage();
+      $coverage = $plan->getCoverage(2);
 
       // Setup number formatting.
       $decimals = 1;
