@@ -238,8 +238,8 @@ class PlanQuery extends FabricQueryBase {
    *   An array with financial data for the plan.
    */
   public function fetchFinancialData(int $plan_id): array {
-    $funding_query = $this->getPlanFundingSummaryQuery();
-    $funding_query->setPlaceholder('plan_id', $plan_id);
+    $funding_query = clone $this->getPlanFundingSummaryQuery();
+    $funding_query->getData(['plan_id' => $plan_id]);
 
     $attachments_query = $this->getAttachmentQuery();
     $attachments = $attachments_query->getAttachmentsByObject('plan', [$plan_id], 'cost');
