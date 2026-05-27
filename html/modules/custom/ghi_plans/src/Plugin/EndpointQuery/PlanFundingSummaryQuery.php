@@ -29,8 +29,7 @@ class PlanFundingSummaryQuery extends EndpointQueryBase {
    * {@inheritdoc}
    */
   public function getData(array $placeholders = [], array $query_args = []) {
-    $data = (array) parent::getData($placeholders, $query_args);
-    $data += [
+    $data = (array) parent::getData($placeholders, $query_args) + [
       'total_funding' => 0,
       'overall_funding' => 0,
     ];
