@@ -282,21 +282,21 @@ class PlanOverviewPlan extends BaseObject {
   /**
    * Get the requirements for a plan.
    *
-   * @return float
+   * @return int
    *   The plan requirements.
    */
-  public function getRequirements(): float {
-    return (float) $this->requirements;
+  public function getRequirements(): int {
+    return (int) $this->requirements;
   }
 
   /**
    * Get the funding for a plan.
    *
-   * @return float
+   * @return int
    *   The plan funding.
    */
-  public function getFunding(): float {
-    return (float) $this->funding;
+  public function getFunding(): int {
+    return (int) $this->funding;
   }
 
   /**
