@@ -5,6 +5,7 @@ namespace Drupal\ghi_plans\ApiObjects\Partials;
 use Drupal\ghi_base_objects\ApiObjects\BaseObject;
 use Drupal\ghi_base_objects\ApiObjects\Country;
 use Drupal\ghi_plans\ApiObjects\Attachments\CaseloadAttachmentInterface;
+use Drupal\ghi_plans\ApiObjects\Mocks\PlanOverviewPlanMock;
 use Drupal\ghi_plans\ApiObjects\PlanReportingPeriod;
 use Drupal\ghi_plans\Entity\Plan;
 use Drupal\ghi_plans\Traits\AttachmentFilterTrait;
@@ -91,6 +92,7 @@ class PlanOverviewPlan extends BaseObject {
     $this->lastPublishedReportingPeriodId = $plan->getLastPublishedReportingPeriodId();
     $this->countries = $plan->getCountries();
     $this->caseloads = $data->caseloads ?? [];
+    usort($this->caseloads, fn($a, $b) => strcmp($a->getCustomId(), $b->getCustomId()));
   }
 
   /**
@@ -315,10 +317,10 @@ class PlanOverviewPlan extends BaseObject {
    * @param string $metric_name
    *   The english metric name.
    *
-   * @return int
+   * @return int|float|null
    *   The caseload value if found.
    */
-  public function getCaseloadValue(string $metric_type, ?string $metric_name = NULL): ?float {
+  public function getCaseloadValue(string $metric_type, ?string $metric_name = NULL): int|float|null {
     if (!$this->hasCaseloads()) {
       return NULL;
     }
@@ -326,7 +328,11 @@ class PlanOverviewPlan extends BaseObject {
     foreach ($this->caseloads as $caseload) {
       $value = $caseload->getCaseloadValue($metric_type, $metric_name);
       if ($value !== NULL) {
-        return $value;
+        // In general, we want to return int values for the caseload values.
+        // Only if this is invoked from a PlanOverviewPlanMock object, we want
+        // to support returning float-like values, as these are entered
+        // manually for the custom rows.
+        return (self::class instanceof PlanOverviewPlanMock) ? $value : (int) $value;
       }
     }
     return NULL;
@@ -356,8 +362,8 @@ class PlanOverviewPlan extends BaseObject {
    *   A caseload object or NULL.
    */
   public function getPlanCaseload(?int $attachment_id = NULL): ?CaseloadAttachmentInterface {
-    $attachment_id = ($attachment_id ?? $this->getEntity()?->getPlanCaseloadId()) ?? array_key_first($this->caseloads);
-    return $attachment_id ? $this->findPlanCaseload($this->caseloads, $attachment_id) : NULL;
+    $attachment_id = ($attachment_id ?? $this->getEntity()?->getPlanCaseloadId()) ?? NULL;
+    return $this->findPlanCaseload($this->caseloads, $attachment_id);
   }
 
   /**
