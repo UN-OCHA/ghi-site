@@ -1,0 +1,47 @@
+.project-detail-modal.ui-dialog {
+  width: min(90vw, 1240px) !important;
+  max-width: calc(100vw - 2rem);
+}
+
+.project-detail-modal.ui-dialog .ui-dialog-content {
+  overflow-x: hidden;
+}
+
+.legacy-project-iframe-wrapper {
+  max-width: 100%;
+  overflow: clip;
+}
+
+.legacy-project-iframe-wrapper--modal {
+  height: min(78vh, 980px);
+  min-height: 620px;
+}
+
+.legacy-project-iframe {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  min-height: 620px;
+  overflow: hidden;
+  border: 0;
+}
+
+.legacy-project-iframe-wrapper--modal .legacy-project-iframe {
+  height: 100%;
+}
+
+@media (max-width: 767px) {
+  .project-detail-modal.ui-dialog {
+    width: calc(100vw - 1rem) !important;
+    max-width: calc(100vw - 1rem);
+  }
+
+  .legacy-project-iframe-wrapper--modal {
+    height: 78vh;
+    min-height: 520px;
+  }
+
+  .legacy-project-iframe {
+    min-height: 520px;
+  }
+}
