@@ -14,7 +14,6 @@ use Drupal\ghi_plans\ApiObjects\Organization;
 use Drupal\ghi_plans\Entity\GoverningEntity;
 use Drupal\ghi_plans\Entity\Plan;
 use Drupal\ghi_plans\Entity\PlanCostingType;
-use Drupal\ghi_plans\Entity\PlanEntity;
 use Drupal\ghi_plans\Entity\PlanType;
 use Drupal\ghi_plans\Form\PlanFormAlter;
 use Drupal\migrate\MigrateSkipRowException;
@@ -30,8 +29,6 @@ function ghi_plans_entity_bundle_info_alter(array &$bundles) {
   $bundles['base_object']['plan']['label'] = t('Plan');
   $bundles['base_object']['governing_entity']['class'] = GoverningEntity::class;
   $bundles['base_object']['governing_entity']['label'] = t('Governing Entity');
-  $bundles['base_object']['plan_entity']['class'] = PlanEntity::class;
-  $bundles['base_object']['plan_entity']['label'] = t('Plan Entity');
   $bundles['taxonomy_term']['plan_type']['class'] = PlanType::class;
   $bundles['taxonomy_term']['plan_type']['label'] = t('Plan type');
   $bundles['taxonomy_term']['plan_costing']['class'] = PlanCostingType::class;
