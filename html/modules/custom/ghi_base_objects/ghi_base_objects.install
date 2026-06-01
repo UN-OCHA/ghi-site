@@ -1,0 +1,57 @@
+<?php
+
+/**
+ * @file
+ * Install and update hooks for the GHI Base Objects module.
+ */
+
+/**
+ * Remove legacy imported entities before their config is removed.
+ */
+function ghi_base_objects_update_10001() {
+  $entity_type_manager = \Drupal::entityTypeManager();
+
+  $base_object_storage = $entity_type_manager->getStorage('base_object');
+  foreach (['organization', 'plan_entity'] as $bundle) {
+    do {
+      $base_object_ids = \Drupal::entityQuery('base_object')
+        ->condition('type', $bundle)
+        ->accessCheck(FALSE)
+        ->range(0, 250)
+        ->execute();
+      if ($base_object_ids) {
+        $base_object_storage->delete($base_object_storage->loadMultiple($base_object_ids));
+      }
+    } while ($base_object_ids);
+  }
+
+  $term_storage = $entity_type_manager->getStorage('taxonomy_term');
+  $term_ids = \Drupal::entityQuery('taxonomy_term')
+    ->condition('vid', 'organization_type')
+    ->accessCheck(FALSE)
+    ->execute();
+  if ($term_ids) {
+    $term_storage->delete($term_storage->loadMultiple($term_ids));
+  }
+
+  $menu_link_storage = $entity_type_manager->getStorage('menu_link_content');
+  foreach ([
+    'internal:/admin/content/base-objects/organizations',
+    'base:admin/content/base-objects/organizations',
+  ] as $uri) {
+    $menu_links = $menu_link_storage->loadByProperties(['link.uri' => $uri]);
+    if ($menu_links) {
+      $menu_link_storage->delete($menu_links);
+    }
+  }
+
+  $schema = \Drupal::database()->schema();
+  foreach (['organization', 'organization_type', 'plan_entity'] as $migration_id) {
+    foreach (['migrate_map_', 'migrate_message_'] as $table_prefix) {
+      $table = $table_prefix . $migration_id;
+      if ($schema->tableExists($table)) {
+        $schema->dropTable($table);
+      }
+    }
+  }
+}
