@@ -8,6 +8,7 @@ ignored_config_entities:
   - ghi_content.remote_sources
   - ghi_embargoed_access.settings
   - ghi_hero_image.config
+  - ghi_plans.legacy_projects
   - 'page_manager.page.homepage:access_conditions'
   - 'page_manager.page.homepage:access_logic'
   - 'page_manager.page_variant.homepage*:variant_settings.sections.0.components'
