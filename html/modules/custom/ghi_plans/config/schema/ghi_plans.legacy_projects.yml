@@ -1,0 +1,10 @@
+ghi_plans.legacy_projects:
+  type: config_object
+  label: 'GHI legacy project settings'
+  mapping:
+    base_url:
+      type: string
+      label: 'Legacy project base URL'
+    tree_url:
+      type: string
+      label: 'Legacy project tree URL'

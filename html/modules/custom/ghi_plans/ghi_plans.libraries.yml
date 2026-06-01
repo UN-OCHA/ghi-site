@@ -8,3 +8,13 @@ ghi_plans.admin.plan_edit_form:
   css:
     component:
       css/ghi_plans.admin.plan_edit_form.css: {}
+legacy_project:
+  version: VERSION
+  js:
+    js/legacy-project.js: {}
+  css:
+    component:
+      css/legacy-project.css: {}
+  dependencies:
+    - core/drupal
+    - core/once
