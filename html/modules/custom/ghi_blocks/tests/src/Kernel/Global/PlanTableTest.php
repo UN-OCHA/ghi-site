@@ -229,7 +229,7 @@ class PlanTableTest extends PlanBlockKernelTestBase {
     $plan->getEntity()->willReturn($plan_entity->reveal());
     $plan->getRequirements()->willReturn(2000000);
     $plan->getFunding()->willReturn(1000000);
-    $plan->getCoverage()->willReturn(0.5);
+    $plan->getCoverage(2)->willReturn(50.0);
     $plan->getCaseloadValue('in_need')->willReturn(100000);
     $plan->getCaseloadValue('target')->willReturn(80000);
     $plan->getCaseloadValue('latest_reach')->willReturn(60000);

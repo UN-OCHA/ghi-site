@@ -12,6 +12,8 @@ function ghi_plans_uninstall() {
   \Drupal::configFactory()->getEditable('migrate_plus.migration.plan')->delete();
   \Drupal::configFactory()->getEditable('migrate_plus.migration.plan_entity')->delete();
   \Drupal::configFactory()->getEditable('migrate_plus.migration.governing_entity')->delete();
+  \Drupal::configFactory()->getEditable('migrate_plus.migration.organization')->delete();
+  \Drupal::configFactory()->getEditable('migrate_plus.migration.organization_type')->delete();
   \Drupal::configFactory()->getEditable('migrate_plus.migration.country')->delete();
   \Drupal::configFactory()->getEditable('migrate_plus.migration.plan_costing')->delete();
   \Drupal::configFactory()->getEditable('migrate_plus.migration.plan_type')->delete();
