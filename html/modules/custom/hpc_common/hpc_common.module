@@ -241,3 +241,17 @@ function hpc_common_static_store($key, $result = NULL) {
     return array_key_exists($key, $static_storage) ? $static_storage[$key] : NULL;
   }
 }
+
+/**
+ * Implements hook_page_attachments().
+ */
+function hpc_common_page_attachments(array &$page) {
+  \Drupal::service('hpc_common.global_gtm_tag')->attachPageHead($page);
+}
+
+/**
+ * Implements hook_page_top().
+ */
+function hpc_common_page_top(array &$page_top) {
+  \Drupal::service('hpc_common.global_gtm_tag')->attachPageTop($page_top);
+}

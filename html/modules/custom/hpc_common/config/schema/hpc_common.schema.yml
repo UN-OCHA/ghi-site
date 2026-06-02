@@ -1,0 +1,8 @@
+hpc_common.settings:
+  type: config_object
+  label: 'HPC Common settings'
+  mapping:
+    additional_google_tag:
+      type: string
+      label: 'Additional GTM container ID'
+      nullable: true
