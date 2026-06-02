@@ -26,6 +26,11 @@
   border: 0;
 }
 
+/* Let the global menu receive click-away events while a header dropdown is open. */
+body:has(button.cd-main-menu__btn[aria-expanded="true"]) .legacy-project-iframe {
+  pointer-events: none;
+}
+
 .legacy-project-iframe-wrapper--modal .legacy-project-iframe {
   height: 100%;
 }
