@@ -127,6 +127,24 @@
     }
   };
 
+  Drupal.CommonDesignSubtheme.applyResponsiveTableLabels = function (table) {
+    const labels = Array.from(table.querySelectorAll('thead th')).map((header) => {
+      const headerClone = header.cloneNode(true);
+      headerClone.querySelectorAll('#sorttable-sortfwdind, #sorttable-sortrevind').forEach((indicator) => {
+        indicator.remove();
+      });
+      return headerClone.textContent.trim();
+    });
+
+    table.querySelectorAll('tbody tr, tfoot tr').forEach((row) => {
+      Array.from(row.querySelectorAll('td')).forEach((cell, index) => {
+        if (typeof labels[index] != 'undefined') {
+          cell.setAttribute('data-content', labels[index]);
+        }
+      });
+    });
+  };
+
   Drupal.behaviors.CommonDesignSubtheme = {
     attach: function (context, settings) {
       if ($(context).hasClass('glb-canvas-form')) {
@@ -215,6 +233,12 @@
         });
 
       }
+
+      // Common Design only labels responsive table cells on initial page load.
+      // Repeat that work for Drupal AJAX content, including modal tables.
+      once('responsive-table-labels', 'table.cd-table--responsive', context).forEach((table) => {
+        Drupal.CommonDesignSubtheme.applyResponsiveTableLabels(table);
+      });
 
       once('overflow-navigation', $('.block-section-navigation, .block-document-navigation', context)).forEach(element => {
         Drupal.CommonDesignSubtheme.EntityNavigation.apply($(element));

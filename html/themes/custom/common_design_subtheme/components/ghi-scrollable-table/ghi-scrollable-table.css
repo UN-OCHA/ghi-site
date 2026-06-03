@@ -1,24 +1,75 @@
 .scrollable-table--wrapper {
+  --scrollable-table-shadow-size: 2.25rem;
+  --scrollable-table-shadow-radius: 5rem;
+  --scrollable-table-shadow-color: rgba(0, 0, 0, 0.28);
+  --scrollable-table-shadow-transparent: rgba(0, 0, 0, 0);
+
   position: relative;
 }
+
 .scrollable-table--wrapper .shadow-left {
   position: absolute;
-  display: none;
-  width: 20px;
-  background-image: radial-gradient(
-    farthest-side at 0 50%,
-    rgba(0, 0, 0, 0.4) 0%,
-    rgba(0, 0, 0, 0) 100%
+  z-index: 2;
+  display: block;
+  width: var(--scrollable-table-shadow-size);
+  transition: opacity 125ms ease-in-out;
+  pointer-events: none;
+  opacity: 0;
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    transparent,
+    #000 var(--scrollable-table-shadow-radius),
+    #000 calc(100% - var(--scrollable-table-shadow-radius)),
+    transparent
+  );
+  mask-image: linear-gradient(
+    to bottom,
+    transparent,
+    #000 var(--scrollable-table-shadow-radius),
+    #000 calc(100% - var(--scrollable-table-shadow-radius)),
+    transparent
+  );
+  background-image: linear-gradient(
+    to right,
+    var(--scrollable-table-shadow-color),
+    var(--scrollable-table-shadow-transparent)
   );
 }
 
 .scrollable-table--wrapper .shadow-right {
   position: absolute;
-  display: none;
-  width: 20px;
-  background-image: radial-gradient(
-    farthest-side at 100% 50%,
-    rgba(0, 0, 0, 0.4) 0%,
-    rgba(0, 0, 0, 0) 100%
+  z-index: 2;
+  display: block;
+  width: var(--scrollable-table-shadow-size);
+  transition: opacity 125ms ease-in-out;
+  pointer-events: none;
+  opacity: 0;
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    transparent,
+    #000 var(--scrollable-table-shadow-radius),
+    #000 calc(100% - var(--scrollable-table-shadow-radius)),
+    transparent
   );
+  mask-image: linear-gradient(
+    to bottom,
+    transparent,
+    #000 var(--scrollable-table-shadow-radius),
+    #000 calc(100% - var(--scrollable-table-shadow-radius)),
+    transparent
+  );
+  background-image: linear-gradient(
+    to left,
+    var(--scrollable-table-shadow-color),
+    var(--scrollable-table-shadow-transparent)
+  );
+}
+
+.scrollable-table--wrapper .shadow-left.is-visible,
+.scrollable-table--wrapper .shadow-right.is-visible {
+  opacity: 1;
+}
+
+.ghi-modal-dialog .scrollable-table--wrapper {
+  --scrollable-table-shadow-color: rgba(0, 0, 0, 0.34);
 }

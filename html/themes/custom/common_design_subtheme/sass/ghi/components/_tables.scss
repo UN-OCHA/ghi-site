@@ -266,4 +266,15 @@
       font-weight: 700;
     }
   }
+
+  @media (max-width: 575px) {
+    &.cd-table--responsive td {
+      text-align: left;
+
+      .cell-wrapper-inner,
+      .value-wrapper {
+        justify-content: flex-start;
+      }
+    }
+  }
 }
