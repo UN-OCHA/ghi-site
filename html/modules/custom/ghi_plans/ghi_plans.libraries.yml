@@ -17,4 +17,5 @@ legacy_project:
       css/legacy-project.css: {}
   dependencies:
     - core/drupal
+    - core/drupal.debounce
     - core/once
