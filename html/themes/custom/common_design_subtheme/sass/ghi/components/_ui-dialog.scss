@@ -118,6 +118,7 @@
     }
 
     .ui-dialog-content {
+      padding: 1rem !important;
       border-right: 1px solid var(--cd-default-border-color);
       border-bottom: 1px solid var(--cd-default-border-color);
       border-left: 1px solid var(--cd-default-border-color);

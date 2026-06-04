@@ -1,95 +1,125 @@
-(function ($, Drupal) {
+(function ($, Drupal, once) {
+  'use strict';
 
   Drupal.ScrollableTable = function (table) {
     $(table).uniqueId();
     this.table = table;
+    this.tableElement = $(table).find('table').get(0);
     this.timeout = null;
     this.shadowLeft = null;
     this.shadowRight = null;
+    this.resizeObserver = null;
 
-    this.init = function() {
+    this.init = function () {
       this.initShadows();
-      this.calcPosition();
       this.addScrollListener();
       this.addResizeListener();
-      $(this.table).trigger('resize.shadow');
-    }
+      this.addTableResizeObserver();
+      this.refresh();
+      setTimeout(() => this.refresh(), 0);
+    };
 
-    this.initShadows = function() {
-      $(this.table).wrap($('<div>').addClass('scrollable-table--wrapper'));
-      this.shadowLeft = $('<div>')
-        .addClass('shadow-left');
-      $(this.table).parent().append(this.shadowLeft);
-      this.shadowRight = $('<div>')
-        .addClass('shadow-right');
-      $(this.table).parent().append(this.shadowRight);
-      $(this.table).find('table').css('position', 'relative');
-    }
+    this.initShadows = function () {
+      const $table = $(this.table);
+      if (!$table.parent().hasClass('scrollable-table--wrapper')) {
+        $table.wrap($('<div>').addClass('scrollable-table--wrapper'));
+      }
 
-    this.getScrollOffset = function() {
-      offset = $(this.table).find('table').outerWidth() - $(this.table).outerWidth();
-      return Math.floor(offset);
-    }
+      const $wrapper = $table.parent();
+      this.shadowLeft = $wrapper.find('> .shadow-left');
+      if (!this.shadowLeft.length) {
+        this.shadowLeft = $('<div>').addClass('shadow-left');
+        $wrapper.append(this.shadowLeft);
+      }
+      this.shadowRight = $wrapper.find('> .shadow-right');
+      if (!this.shadowRight.length) {
+        this.shadowRight = $('<div>').addClass('shadow-right');
+        $wrapper.append(this.shadowRight);
+      }
+      $(this.tableElement).css('position', 'relative');
+    };
 
-    this.calcPosition = function() {
-      width = $(this.table).outerWidth();
-      height = $(this.table).find('table').outerHeight();
-      position = $(this.table).find('table').position();
-      let top_offset = $(this.table).find('table').offset().top - $(this.table).offset().top;
+    this.getScrollOffset = function () {
+      return Math.max(0, Math.floor(this.table.scrollWidth - this.table.clientWidth));
+    };
 
-      // update
+    this.refresh = function () {
+      this.calcPosition();
+      this.updateShadows();
+    };
+
+    this.calcPosition = function () {
+      const scrollRect = this.table.getBoundingClientRect();
+      const wrapperRect = $(this.table).parent().get(0).getBoundingClientRect();
+      const height = $(this.tableElement).outerHeight();
+      const topOffset = $(this.tableElement).offset().top - $(this.table).offset().top;
+      const leftOffset = scrollRect.left - wrapperRect.left;
+      const rightOffset = scrollRect.right - wrapperRect.left - this.shadowRight.outerWidth();
+
       this.shadowLeft.css({
         height: height + 'px',
-        top: top_offset + 'px',
-        left: (-1 * position.left) + 'px'
+        top: topOffset + 'px',
+        left: leftOffset + 'px'
       });
       this.shadowRight.css({
         height: height + 'px',
-        top: top_offset + 'px',
-        left: (width + (-1 * position.left) - 20) + 'px',
+        top: topOffset + 'px',
+        left: rightOffset + 'px'
       });
-    }
+    };
 
-    this.addScrollListener = function() {
+    this.updateShadows = function () {
+      const scrollOffset = this.getScrollOffset();
+      const scrollLeft = Math.ceil($(this.table).scrollLeft());
+      const isScrollable = scrollOffset > 1;
+
+      $(this.table).parent().toggleClass('is-scrollable', isScrollable);
+      this.shadowLeft.toggleClass('is-visible', isScrollable && scrollLeft > 0);
+      this.shadowRight.toggleClass('is-visible', isScrollable && scrollLeft < scrollOffset - 1);
+    };
+
+    this.addScrollListener = function () {
       var self = this;
       $(self.table).off('scroll.shadow');
-      $(self.table).on('scroll.shadow', function() {
-        let scroll_offset = self.getScrollOffset();
-        if ($(self.table).scrollLeft() > 0 && scroll_offset > 0) {
-          self.shadowLeft.fadeIn(125);
-        } else {
-          self.shadowLeft.fadeOut(125);
-        }
-        if ($(self.table).scrollLeft() >= scroll_offset || scroll_offset == 0) {
-          self.shadowRight.fadeOut(125);
-        } else {
-          self.shadowRight.fadeIn(125);
-        }
+      $(self.table).on('scroll.shadow', function () {
+        self.updateShadows();
       });
-    }
+    };
 
-    this.addResizeListener = function() {
+    this.addResizeListener = function () {
       var self = this;
-      $(window).on('resize.shadow', function() {
+      $(window).on('resize.shadow', function () {
         clearTimeout(self.timeout);
-        self.timeout = setTimeout(function() {
-          self.calcPosition();
-          $(self.table).trigger('scroll.shadow');
+        self.timeout = setTimeout(function () {
+          self.refresh();
         }, 10);
       });
-    }
+    };
 
-  }
+    this.addTableResizeObserver = function () {
+      if (typeof window.ResizeObserver == 'undefined') {
+        return;
+      }
+
+      var self = this;
+      this.resizeObserver = new window.ResizeObserver(function () {
+        clearTimeout(self.timeout);
+        self.timeout = setTimeout(function () {
+          self.refresh();
+        }, 10);
+      });
+      this.resizeObserver.observe(this.table);
+      this.resizeObserver.observe(this.tableElement);
+    };
+
+  };
 
   Drupal.behaviors.ScrollableTable = {
     attach: function (context, settings) {
-      once('sortable-table', '.scrollable-table', context).forEach(element => {
-        if ($(element).css('overflow-x') != 'auto') {
-          return;
-        }
-        table = new Drupal.ScrollableTable(element);
+      once('ghi-scrollable-table', '.scrollable-table', context).forEach(element => {
+        const table = new Drupal.ScrollableTable(element);
         table.init();
       });
     }
   };
-}(jQuery, Drupal));
+})(jQuery, Drupal, window.once);
