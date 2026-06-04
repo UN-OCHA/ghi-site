@@ -4,6 +4,8 @@
   }
 }
 
-.ghi-modal-dialog table.ghi-table thead th {
+.ghi-modal-dialog table.ghi-table thead th,
+.project-count-modal.ui-dialog .ui-dialog-title,
+.project-detail-modal.ui-dialog .ui-dialog-title {
   white-space: normal !important;
 }

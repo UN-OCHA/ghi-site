@@ -1,6 +1,24 @@
+.project-detail-modal.ui-dialog {
+  width: min(90vw, 1240px) !important;
+  max-width: calc(100vw - 2rem);
+}
+
+.project-detail-modal.ui-dialog .ui-dialog-content {
+  overflow: hidden;
+}
+
+body:has(.legacy-project-iframe-wrapper--standalone) .cd-page-title {
+  display: none;
+}
+
 .legacy-project-iframe-wrapper {
   max-width: 100%;
   overflow: clip;
+}
+
+.legacy-project-iframe-wrapper--modal {
+  height: min(78vh, 980px);
+  min-height: min(620px, 78vh);
 }
 
 .legacy-project-iframe {
@@ -17,8 +35,169 @@ body:has(button.cd-main-menu__btn[aria-expanded="true"]) .legacy-project-iframe 
   pointer-events: none;
 }
 
+.legacy-project-iframe-wrapper--modal .legacy-project-iframe {
+  height: 100%;
+  min-height: 0;
+}
+
+.legacy-project-print-source {
+  position: fixed;
+  top: 0;
+  left: 0;
+  display: block;
+  width: min(90vw, 1240px);
+  max-width: 100%;
+  height: auto;
+  overflow: visible;
+  visibility: hidden;
+  pointer-events: none;
+}
+
 @media (max-width: 767px) {
+  .project-detail-modal.ui-dialog {
+    width: calc(100vw - 1rem) !important;
+    max-width: calc(100vw - 1rem);
+  }
+
+  .legacy-project-iframe-wrapper--modal {
+    height: 78vh;
+    min-height: 520px;
+  }
+
   .legacy-project-iframe {
     min-height: 520px;
+  }
+}
+
+@media print {
+  @page {
+    /* Keep enough breathing room for page headers/footers without changing the
+       tuned legacy content width. */
+    margin: 24mm 12mm;
+  }
+
+  html:has(body.legacy-project-printing-modal),
+  html:has(body.legacy-project-printing-source),
+  body.legacy-project-printing-modal,
+  body.legacy-project-printing-source {
+    width: auto !important;
+    height: auto !important;
+    min-height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: visible !important;
+    background: #fff !important;
+  }
+
+  /* The print source can outlive transient beforeprint/afterprint signals while
+     Chrome's print preview is open. If it exists, print it alone. */
+  body.legacy-project-printing-source > * {
+    display: none !important;
+  }
+
+  body.legacy-project-printing-modal > * {
+    display: none !important;
+  }
+
+  body.legacy-project-printing-modal > .project-detail-modal.ui-dialog {
+    display: block !important;
+  }
+
+  body.legacy-project-printing-source > .project-detail-modal.ui-dialog {
+    display: none !important;
+  }
+
+  body.legacy-project-printing-source > .legacy-project-print-source {
+    display: block !important;
+  }
+
+  body.legacy-project-printing-source .legacy-project-print-source {
+    position: static !important;
+    width: 100% !important;
+    max-width: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: #fff !important;
+    overflow: visible !important;
+    visibility: visible !important;
+    pointer-events: auto !important;
+  }
+
+  body.legacy-project-printing-source .legacy-project-print-source h2,
+  body.legacy-project-printing-source .legacy-project-print-source h3,
+  body.legacy-project-printing-source .legacy-project-print-source h4,
+  body.legacy-project-printing-source .legacy-project-print-source h5 {
+    break-after: avoid;
+    page-break-after: avoid;
+  }
+
+  body.legacy-project-printing-source .legacy-project-print-source thead {
+    display: table-header-group;
+  }
+
+  body.legacy-project-printing-source .legacy-project-print-source tfoot {
+    display: table-footer-group;
+  }
+
+  body.legacy-project-printing-source .legacy-project-print-source tr,
+  body.legacy-project-printing-source .legacy-project-print-source th,
+  body.legacy-project-printing-source .legacy-project-print-source td {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  body.legacy-project-printing-source .legacy-project-print-source img,
+  body.legacy-project-printing-source .legacy-project-print-source svg {
+    max-width: 100%;
+    height: auto;
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  body.legacy-project-printing-source .legacy-project-print-source .clusterImg {
+    width: 2rem;
+    max-width: 2rem;
+    height: 2rem;
+    object-fit: contain;
+    vertical-align: middle;
+  }
+
+  body.legacy-project-printing-modal .project-detail-modal.ui-dialog .ui-dialog-titlebar,
+  body.legacy-project-printing-modal .project-detail-modal.ui-dialog .ui-resizable-handle {
+    display: none !important;
+  }
+
+  body.legacy-project-printing-modal .project-detail-modal.ui-dialog {
+    position: static !important;
+    width: 100% !important;
+    max-width: none !important;
+    height: auto !important;
+    max-height: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    transform: none !important;
+    overflow: visible !important;
+  }
+
+  body.legacy-project-printing-modal .project-detail-modal.ui-dialog .ui-dialog-content,
+  body.legacy-project-printing-modal .project-detail-modal.ui-dialog .legacy-project-iframe-wrapper--modal {
+    display: block !important;
+    width: 100% !important;
+    height: auto !important;
+    max-height: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+    background: transparent !important;
+    overflow: visible !important;
+  }
+
+  body.legacy-project-printing-modal .project-detail-modal.ui-dialog .legacy-project-iframe {
+    width: 100% !important;
+    min-height: 0 !important;
+    overflow: hidden !important;
   }
 }
