@@ -127,6 +127,9 @@ class FabricQuery implements \Stringable {
    *
    * @return self
    *   Returns the client instance for chaining.
+   *
+   * @throws \InvalidArgumentException
+   *   Thrown when the filters are invalid.
    */
   public function setFilters(array $filters): self {
     $this->validateFilters($filters);
@@ -144,6 +147,9 @@ class FabricQuery implements \Stringable {
    *
    * @return self
    *   Returns the client instance for chaining.
+   *
+   * @throws \InvalidArgumentException
+   *   Thrown when the filter value is invalid.
    */
   public function setFilter(string $key, $value): self {
     $this->validateFilters([$key => $value]);
@@ -160,7 +166,8 @@ class FabricQuery implements \Stringable {
    * @return bool
    *   TRUE if validation passes, otherwise an exception is thrown.
    *
-   * @throws InvalidArgumentException
+   * @throws \InvalidArgumentException
+   *   Thrown when the filters are invalid.
    */
   public function validateFilters(array $filters) {
     foreach ($filters as $value) {

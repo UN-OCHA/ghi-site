@@ -7,7 +7,6 @@ use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\ghi_plans\ApiObjects\Facts\MeasurementFact;
 use Drupal\ghi_plans\ApiObjects\Measurements\Measurement;
 use Drupal\ghi_plans\ApiObjects\Measurements\MeasurementInterface;
-use Drupal\ghi_plans\ApiObjects\PlanEntityInterface;
 use Drupal\ghi_plans\Traits\AttachmentFilterTrait;
 use Drupal\hpc_api\Attribute\FabricQuery;
 use Drupal\hpc_api\Query\FabricQueryBase;
@@ -260,58 +259,6 @@ class MeasurementQuery extends FabricQueryBase {
       $measurements_by_cluster[$cluster_id][$measurement->id()] = $measurement;
     }
     return $measurements_by_cluster;
-  }
-
-  /**
-   * Get measurements for the given set of entities.
-   *
-   * @param \Drupal\ghi_plans\ApiObjects\PlanEntityInterface[] $entities
-   *   The plan entity objects.
-   *
-   * @return \Drupal\ghi_plans\ApiObjects\Measurements\MeasurementInterface[]
-   *   An array of data measurements.
-   */
-  public function getMeasurementsForEntities(array $entities): array {
-    if (empty($entities)) {
-      return [];
-    }
-
-    $entity_ids = [];
-    foreach ($entities as $entity) {
-      if (!$entity instanceof PlanEntityInterface) {
-        continue;
-      }
-      $entity_ids[$entity->getEntityType()] = $entity_ids[$entity->getEntityType()] ?? [];
-      $entity_ids[$entity->getEntityType()][] = $entity->id();
-    }
-
-    $measurements = [];
-
-    $filters = [];
-    foreach (array_keys($entity_ids) as $entity_type) {
-      $type_filter_value = $this->getEntityTypeFilterValue($entity_type);
-      if (!$type_filter_value) {
-        continue;
-      }
-      $filters[] = '{ EntityMainType: { eq: "' . $type_filter_value . '" } EntityId:  { in: [' . implode(',', $entity_ids[$entity_type]) . '] } }';
-    }
-
-    if (empty($filters)) {
-      return [];
-    }
-
-    $payload = "
-      measurements (first: 10000, filter: {
-        or: [" . implode('', $filters) . "]
-        MeasurementType:  { in: [\"Caseload\", \"Indicator\"] }
-      }) {
-        items {" . implode(' ', Measurement::getGraphQlItems()) . "}
-      }
-      ";
-    $data = $this->fabricClient->query($payload);
-    $items = $data ? $this->getItems($data, 'measurements') : [];
-    $measurements = $this->buildResultObjects($items, Measurement::class);
-    return $measurements;
   }
 
   /**
