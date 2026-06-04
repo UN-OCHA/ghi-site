@@ -34,7 +34,7 @@
   },
   "devDependencies": {
     "@xmldom/xmldom": "^0.9.10",
-    "axios": ">=1.15.2",
+    "axios": ">=1.16.0",
     "core-js": "^3.20.0",
     "css-what": ">=5.0.1",
     "eslint": "^7.23.0",
