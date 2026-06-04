@@ -1,20 +1,6 @@
-.project-detail-modal.ui-dialog {
-  width: min(90vw, 1240px) !important;
-  max-width: calc(100vw - 2rem);
-}
-
-.project-detail-modal.ui-dialog .ui-dialog-content {
-  overflow-x: hidden;
-}
-
 .legacy-project-iframe-wrapper {
   max-width: 100%;
   overflow: clip;
-}
-
-.legacy-project-iframe-wrapper--modal {
-  height: min(78vh, 980px);
-  min-height: 620px;
 }
 
 .legacy-project-iframe {
@@ -31,21 +17,7 @@ body:has(button.cd-main-menu__btn[aria-expanded="true"]) .legacy-project-iframe 
   pointer-events: none;
 }
 
-.legacy-project-iframe-wrapper--modal .legacy-project-iframe {
-  height: 100%;
-}
-
 @media (max-width: 767px) {
-  .project-detail-modal.ui-dialog {
-    width: calc(100vw - 1rem) !important;
-    max-width: calc(100vw - 1rem);
-  }
-
-  .legacy-project-iframe-wrapper--modal {
-    height: 78vh;
-    min-height: 520px;
-  }
-
   .legacy-project-iframe {
     min-height: 520px;
   }

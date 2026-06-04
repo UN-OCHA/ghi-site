@@ -247,8 +247,6 @@ class ProjectModalController extends ControllerBase {
   /**
    * Build the standalone legacy project page.
    *
-   * This is also used as the modal content for project links in project tables.
-   *
    * @param int $project_id
    *   The project id.
    *
@@ -256,17 +254,13 @@ class ProjectModalController extends ControllerBase {
    *   A render array.
    */
   public function buildLegacyProject($project_id): array {
-    $modal_display = $this->isDialogRequest();
-    $query = $modal_display ? [
-      'display' => 'modal',
-    ] : [];
     return [
       '#type' => 'container',
       '#attributes' => [
         'class' => [
           'legacy-project-iframe-wrapper',
-          $modal_display ? 'legacy-project-iframe-wrapper--modal' : 'legacy-project-iframe-wrapper--standalone',
-          $modal_display ? '' : 'content-width',
+          'legacy-project-iframe-wrapper--standalone',
+          'content-width',
         ],
       ],
       'iframe' => [
@@ -276,16 +270,14 @@ class ProjectModalController extends ControllerBase {
           'class' => ['legacy-project-iframe'],
           'src' => Url::fromRoute('ghi_plans.project.legacy_iframe', [
             'project_id' => $project_id,
-          ], [
-            'query' => $query,
           ])->toString(),
           'title' => $this->t('Project @project_id details', [
             '@project_id' => $project_id,
           ]),
           'loading' => 'lazy',
           'sandbox' => 'allow-same-origin allow-popups allow-popups-to-escape-sandbox',
-          'scrolling' => $modal_display ? 'auto' : 'no',
-          'data-legacy-project-autosize' => $modal_display ? 'false' : 'true',
+          'scrolling' => 'no',
+          'data-legacy-project-autosize' => 'true',
         ],
       ],
       '#attached' => [
@@ -346,8 +338,7 @@ class ProjectModalController extends ControllerBase {
       return new Response($this->t('The requested project details are not available.'), Response::HTTP_NOT_FOUND);
     }
 
-    $display = $this->requestStack->getCurrentRequest()->query->get('display');
-    $html = $this->prepareLegacyProjectHtml($html, $display === 'modal');
+    $html = $this->prepareLegacyProjectHtml($html);
     $response = new Response($html);
     $response->headers->set('Content-Type', 'text/html; charset=UTF-8');
     $response->headers->set('Cache-Control', 'public, max-age=600');
@@ -674,7 +665,7 @@ class ProjectModalController extends ControllerBase {
   }
 
   /**
-   * Build a modal-enabled link to the legacy project details page.
+   * Build a link to the legacy project details page.
    *
    * @param \Drupal\ghi_plans\ApiObjects\Project $project
    *   The project object.
@@ -694,21 +685,8 @@ class ProjectModalController extends ControllerBase {
     ]);
     $url->setOptions([
       'attributes' => [
-        'class' => ['use-ajax', 'project-detail-modal'],
-        'data-dialog-type' => 'dialog',
-        'data-dialog-options' => Json::encode([
-          'target' => 'ghi-project-detail-modal',
-          'modal' => TRUE,
-          'width' => '90%',
-          'title' => $this->t('@project_code: @project_name', [
-            '@project_code' => $project->getProjectCode(),
-            '@project_name' => $project->getName(),
-          ]),
-          'classes' => [
-            'ui-dialog' => 'project-detail-modal ghi-modal-dialog',
-          ],
-        ]),
-        'rel' => 'nofollow',
+        'target' => '_blank',
+        'rel' => 'nofollow noopener',
       ],
     ]);
 
@@ -886,13 +864,11 @@ class ProjectModalController extends ControllerBase {
    *
    * @param string $html
    *   The original HTML.
-   * @param bool $modal_display
-   *   Whether the HTML is being rendered inside the modal iframe.
    *
    * @return string
    *   The prepared HTML.
    */
-  private function prepareLegacyProjectHtml(string $html, bool $modal_display = FALSE): string {
+  private function prepareLegacyProjectHtml(string $html): string {
     $html = preg_replace('/<script\b[^>]*>.*?<\/script>/is', '', $html);
     $html = preg_replace('/\s+on[a-z]+\s*=\s*(["\']).*?\1/is', '', $html);
     $html = preg_replace_callback('/((?:href|src)=["\'])\.\.\/_assets\/([^"\']+)/i', function ($matches) {
@@ -912,14 +888,8 @@ class ProjectModalController extends ControllerBase {
       '.create-project .col-9{width:100%!important;max-width:100%;padding: 0 !important;}',
       '.create-project table{max-width:100%;}',
       '.create-project .col-9>h1,.create-project .col-9>h2{display:none!important;}',
+      'html,body,.content,.create-project{overflow-y:hidden;}',
     ];
-    if ($modal_display) {
-      $style_rules[] = '.create-project{padding:0 0.5rem;}';
-      $style_rules[] = '.create-project .review>section.border-top:first-child{border-top: 0 !important;padding-top: 2rem !important;}';
-    }
-    else {
-      $style_rules[] = 'html,body,.content,.create-project{overflow-y:hidden;}';
-    }
     $style = '<style>' . implode('', $style_rules) . '</style>';
     if (stripos($html, '</head>') !== FALSE) {
       return preg_replace('/<\/head>/i', $style . '</head>', $html, 1);
@@ -1001,17 +971,6 @@ class ProjectModalController extends ControllerBase {
       $parts[] = $part;
     }
     return implode('/', $parts);
-  }
-
-  /**
-   * Check if the current request is rendering dialog content.
-   *
-   * @return bool
-   *   TRUE if rendering for a dialog.
-   */
-  private function isDialogRequest(): bool {
-    $wrapper_format = (string) $this->requestStack->getCurrentRequest()->query->get('_wrapper_format');
-    return str_contains($wrapper_format, 'drupal_dialog') || str_contains($wrapper_format, 'drupal_modal');
   }
 
   /**
