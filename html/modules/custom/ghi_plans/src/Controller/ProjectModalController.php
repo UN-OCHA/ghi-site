@@ -528,11 +528,17 @@ class ProjectModalController extends ControllerBase {
 
     return [
       '#theme' => 'table',
+      '#attributes' => [
+        'class' => ['legacy-project-list-table'],
+      ],
       '#cell_wrapping' => FALSE,
       '#header' => $header,
       '#sticky_rows' => $total_rows,
       '#rows' => $rows,
       '#sortable' => TRUE,
+      '#attached' => [
+        'library' => ['ghi_plans/legacy_project'],
+      ],
     ];
   }
 
@@ -614,6 +620,9 @@ class ProjectModalController extends ControllerBase {
       '#sticky_rows' => $total_rows,
       '#rows' => $rows,
       '#sortable' => TRUE,
+      '#attached' => [
+        'library' => ['ghi_plans/legacy_project'],
+      ],
     ];
   }
 
@@ -704,6 +713,17 @@ class ProjectModalController extends ControllerBase {
       ],
       $t_options,
     ) : $this->legacyProjectTitle($project->id());
+    $modal_title = (string) $modal_title;
+    $iframe_src = Url::fromRoute('ghi_plans.project.legacy_iframe', [
+      'project_id' => $project->id(),
+    ], [
+      'query' => [
+        'display' => 'modal',
+      ],
+    ])->toString();
+    $iframe_title = $this->t('Project @project_id details', [
+      '@project_id' => $project->id(),
+    ], $t_options);
 
     $url = Url::fromRoute('ghi_plans.project.legacy', [
       'project_id' => $project->id(),
@@ -712,6 +732,11 @@ class ProjectModalController extends ControllerBase {
       'attributes' => [
         'class' => ['use-ajax', 'project-detail-modal'],
         'data-dialog-type' => 'dialog',
+        'data-legacy-project-code' => $project->getProjectCode(),
+        'data-legacy-project-id' => $project->id(),
+        'data-legacy-project-iframe-src' => $iframe_src,
+        'data-legacy-project-iframe-title' => $iframe_title,
+        'data-legacy-project-title' => $modal_title,
         'data-dialog-options' => Json::encode([
           'target' => 'ghi-project-detail-modal',
           'modal' => TRUE,

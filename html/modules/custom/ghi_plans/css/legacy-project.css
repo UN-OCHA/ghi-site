@@ -1,3 +1,43 @@
+:is(#main-content, .ghi-modal-dialog) .table-wrapper table.ghi-table.legacy-project-list-table {
+  width: 100%;
+  table-layout: fixed;
+}
+
+/* Project count modals have five dense columns. Fixed proportions keep long
+   project names from pushing organizations and amounts outside the viewport. */
+:is(#main-content, .ghi-modal-dialog) .table-wrapper table.ghi-table.legacy-project-list-table :is(th, td) {
+  padding-inline: 0.5rem;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+:is(#main-content, .ghi-modal-dialog) .table-wrapper table.ghi-table.legacy-project-list-table :is(th, td):nth-child(1) {
+  width: 22%;
+}
+
+:is(#main-content, .ghi-modal-dialog) .table-wrapper table.ghi-table.legacy-project-list-table :is(th, td):nth-child(2) {
+  width: 29%;
+}
+
+:is(#main-content, .ghi-modal-dialog) .table-wrapper table.ghi-table.legacy-project-list-table :is(th, td):nth-child(3) {
+  width: 23%;
+}
+
+:is(#main-content, .ghi-modal-dialog) .table-wrapper table.ghi-table.legacy-project-list-table :is(th, td):is(:nth-child(4), :nth-child(5)) {
+  width: 13%;
+  text-align: right;
+}
+
+:is(#main-content, .ghi-modal-dialog) .table-wrapper table.ghi-table.legacy-project-list-table td:is(:nth-child(4), :nth-child(5)) {
+  white-space: nowrap;
+  overflow-wrap: normal;
+}
+
+:is(#main-content, .ghi-modal-dialog) .table-wrapper table.ghi-table.legacy-project-list-table td:first-child a {
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
 .project-detail-modal.ui-dialog {
   width: min(90vw, 1240px) !important;
   max-width: calc(100vw - 2rem);
@@ -7,11 +47,51 @@
   overflow: hidden;
 }
 
+.project-detail-modal.ui-dialog .legacy-project-pager {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  margin: 0 0 0.5rem;
+  gap: 0.25rem;
+}
+
+.project-detail-modal.ui-dialog .legacy-project-pager__button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  padding: 0;
+  cursor: pointer;
+  color: var(--cd-primary-color);
+  border: 0;
+  background: transparent;
+}
+
+.project-detail-modal.ui-dialog .legacy-project-pager__button:disabled {
+  cursor: default;
+  opacity: 0.35;
+}
+
+.project-detail-modal.ui-dialog .legacy-project-pager__button .material-icons {
+  font-size: 1.5rem;
+  line-height: 1;
+}
+
+.project-detail-modal.ui-dialog .legacy-project-pager__status {
+  margin-left: 0.35rem;
+  color: var(--ghi-default-text-color);
+  font-size: var(--cd-font-size--small);
+  font-weight: 500;
+  line-height: 1;
+}
+
 body:has(.legacy-project-iframe-wrapper--standalone) .cd-page-title {
   display: none;
 }
 
 .legacy-project-iframe-wrapper {
+  position: relative;
   max-width: 100%;
   overflow: clip;
 }
@@ -38,6 +118,19 @@ body:has(button.cd-main-menu__btn[aria-expanded="true"]) .legacy-project-iframe 
 .legacy-project-iframe-wrapper--modal .legacy-project-iframe {
   height: 100%;
   min-height: 0;
+}
+
+.legacy-project-iframe--staging,
+.legacy-project-iframe--preload {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  visibility: hidden;
+  pointer-events: none;
+  border: 0;
 }
 
 .legacy-project-print-source {
@@ -163,6 +256,7 @@ body:has(button.cd-main-menu__btn[aria-expanded="true"]) .legacy-project-iframe 
   }
 
   body.legacy-project-printing-modal .project-detail-modal.ui-dialog .ui-dialog-titlebar,
+  body.legacy-project-printing-modal .project-detail-modal.ui-dialog .legacy-project-pager,
   body.legacy-project-printing-modal .project-detail-modal.ui-dialog .ui-resizable-handle {
     display: none !important;
   }
