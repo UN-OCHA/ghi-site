@@ -131,5 +131,14 @@ msgstr "Projet @project_id"
 msgid "Project @project_id details"
 msgstr "Détails du projet @project_id"
 
+msgid "Project navigation"
+msgstr "Navigation du projet"
+
+msgid "Previous project"
+msgstr "Projet précédent"
+
+msgid "Next project"
+msgstr "Projet suivant"
+
 msgid "@project_code: @project_name"
 msgstr "@project_code : @project_name"

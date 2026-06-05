@@ -11,11 +11,16 @@ ghi_plans.admin.plan_edit_form:
 legacy_project:
   version: VERSION
   js:
-    js/legacy-project.js: {}
+    js/legacy-project/index.js: {}
+    js/legacy-project/modal-resize.js: {}
+    js/legacy-project/iframe.js: {}
+    js/legacy-project/print.js: {}
+    js/legacy-project/pager.js: {}
   css:
     component:
       css/legacy-project.css: {}
   dependencies:
     - core/drupal
     - core/drupal.debounce
+    - core/jquery
     - core/once
