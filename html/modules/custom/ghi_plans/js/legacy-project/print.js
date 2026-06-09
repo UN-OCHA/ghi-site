@@ -60,10 +60,9 @@
       return;
     }
 
-    // Keep the warmed source while the modal remains open, but remove it after
-    // Drupal destroys the dialog so its print-only styles and cloned content do
-    // not linger for the next unrelated print action.
-    if (!document.querySelector('.project-detail-modal iframe.legacy-project-iframe')) {
+    // Keep the warmed source while a printable legacy iframe remains on the
+    // page, whether it is in a modal or on the standalone fallback page.
+    if (!getLegacyProjectPrintIframes().length) {
       LegacyProject.removeProjectModalPrintSource();
     }
   };

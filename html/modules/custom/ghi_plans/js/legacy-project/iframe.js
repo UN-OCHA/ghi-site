@@ -60,11 +60,9 @@
       const cacheHeight = () => {
         try {
           LegacyProject.cacheIframeContentHeight(iframe);
-          if (iframe.closest('.project-detail-modal')) {
-            // Warm and refresh the source as the iframe content settles, so
-            // invoking print does not race iframe inspection or font loading.
-            LegacyProject.buildProjectModalPrintSource?.(iframe, true);
-          }
+          // Warm and refresh the source as the iframe content settles, so
+          // invoking print does not race iframe inspection or font loading.
+          LegacyProject.buildProjectModalPrintSource?.(iframe, true);
         }
         catch (e) {
           // Printing still falls back to the visible iframe if inspection fails.
