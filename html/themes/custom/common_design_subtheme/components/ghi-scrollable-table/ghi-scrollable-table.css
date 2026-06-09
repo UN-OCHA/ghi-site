@@ -73,3 +73,24 @@
 .ghi-modal-dialog .scrollable-table--wrapper {
   --scrollable-table-shadow-color: rgba(0, 0, 0, 0.34);
 }
+
+/* Project count modals can contain many rows and columns. Give the projects
+   variant one native scroll area and suppress the component shadows, which
+   otherwise add noise next to the always-visible scrollbars. */
+.project-count-modal--projects.ghi-modal-dialog {
+  overflow: hidden !important;
+}
+
+.project-count-modal--projects.ghi-modal-dialog .ui-dialog-content {
+  overflow: hidden !important;
+}
+
+.project-count-modal--projects.ghi-modal-dialog .table-wrapper {
+  max-height: min(70vh, 42rem);
+  overflow: auto;
+}
+
+.project-count-modal--projects.ghi-modal-dialog .scrollable-table--wrapper > .shadow-left,
+.project-count-modal--projects.ghi-modal-dialog .scrollable-table--wrapper > .shadow-right {
+  display: none !important;
+}
