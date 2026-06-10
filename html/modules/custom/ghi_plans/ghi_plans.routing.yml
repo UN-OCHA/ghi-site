@@ -57,19 +57,19 @@ ghi_plans.project.legacy:
     _controller: '\Drupal\ghi_plans\Controller\ProjectModalController::buildLegacyProject'
     _title_callback: '\Drupal\ghi_plans\Controller\ProjectModalController::legacyProjectTitle'
   requirements:
-    # The iframe target is public legacy project content.
+    # Legacy project pages render public content from the GitHub Pages export.
     _access: 'TRUE'
     project_id: '\d+'
   options:
     parameters:
       project_id:
         type: integer
-ghi_plans.project.legacy_iframe:
-  path: '/project/{project_id}/legacy-iframe'
+ghi_plans.project.legacy_fragment:
+  path: '/project/{project_id}/legacy-fragment'
   defaults:
-    _controller: '\Drupal\ghi_plans\Controller\ProjectModalController::buildLegacyProjectIframe'
+    _controller: '\Drupal\ghi_plans\Controller\ProjectModalController::buildLegacyProjectFragment'
   requirements:
-    # The iframe target is public legacy project content.
+    # Fragments are the same public legacy content used by the fallback page.
     _access: 'TRUE'
     project_id: '\d+'
   options:

@@ -3,6 +3,8 @@
 namespace Drupal\ghi_plans\Controller;
 
 use Drupal\Component\Serialization\Json;
+use Drupal\Component\Utility\Html;
+use Drupal\Component\Utility\UrlHelper;
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Link;
 use Drupal\Core\Render\Markup;
@@ -46,6 +48,133 @@ class ProjectModalController extends ControllerBase {
    * Short cache lifetime for unavailable legacy project indexes.
    */
   private const LEGACY_PROJECT_AVAILABILITY_FAILURE_TTL = 300;
+
+  /**
+   * Cache lifetime for fetched legacy project fragments and proxied assets.
+   */
+  private const LEGACY_PROJECT_RENDER_CACHE_MAX_AGE = 600;
+
+  /**
+   * Legacy project tags that can be rendered safely inside the Drupal page.
+   */
+  private const LEGACY_PROJECT_ALLOWED_TAGS = [
+    'a',
+    'b',
+    'br',
+    'div',
+    'em',
+    'fieldset',
+    'h1',
+    'h2',
+    'h3',
+    'h4',
+    'h5',
+    'hr',
+    'img',
+    'label',
+    'li',
+    'ol',
+    'p',
+    'section',
+    'span',
+    'strong',
+    'table',
+    'tbody',
+    'td',
+    'tfoot',
+    'th',
+    'thead',
+    'tr',
+    'ul',
+  ];
+
+  /**
+   * Legacy project tags that should be removed with their full contents.
+   */
+  private const LEGACY_PROJECT_DROP_TAGS = [
+    'audio',
+    'button',
+    'canvas',
+    'embed',
+    'form',
+    'iframe',
+    'input',
+    'link',
+    'object',
+    'script',
+    'select',
+    'style',
+    'textarea',
+    'video',
+  ];
+
+  /**
+   * Attributes preserved while normalizing the extracted legacy project HTML.
+   */
+  private const LEGACY_PROJECT_ALLOWED_ATTRIBUTES = [
+    'alt',
+    'class',
+    'colspan',
+    'href',
+    'rel',
+    'rowspan',
+    'scope',
+    'src',
+    'target',
+    'title',
+  ];
+
+  /**
+   * Legacy classes that carry project semantics or stable visual meaning.
+   */
+  private const LEGACY_PROJECT_ALLOWED_CLASSES = [
+    'align-items-center',
+    'bg-light',
+    'border-top',
+    'clusterImg',
+    'col',
+    'col-3',
+    'col-4',
+    'col-5',
+    'col-9',
+    'col-12',
+    'create-project',
+    'dependent',
+    'disableCluster',
+    'd-flex',
+    'heading-text',
+    'ind-1',
+    'ind-2',
+    'ind-3',
+    'ind-4',
+    'justify-content-between',
+    'mb-1',
+    'me-1',
+    'mt-4',
+    'mx-3',
+    'p-2',
+    'p-5',
+    'pb-3',
+    'pe-1',
+    'pe-2',
+    'padding-text',
+    'ps-1',
+    'pt-1',
+    'pt-2',
+    'pt-5',
+    'px-3',
+    'px-4',
+    'py-2',
+    'py-5',
+    'review',
+    'row',
+    'section-child',
+    'section-header',
+    'segmentation',
+    'table',
+    'table-dark',
+    'text-secondary',
+  ];
 
   /**
    * The endpoint query manager.
@@ -256,40 +385,14 @@ class ProjectModalController extends ControllerBase {
    *   A render array.
    */
   public function buildLegacyProject($project_id): array {
-    $modal_display = $this->isDialogRequest();
-    $query = $modal_display ? [
-      'display' => 'modal',
-    ] : [];
+    $markup = $this->buildLegacyProjectMarkup((int) $project_id, $this->isDialogRequest());
     return [
-      '#type' => 'container',
-      '#attributes' => [
-        'class' => [
-          'legacy-project-iframe-wrapper',
-          $modal_display ? 'legacy-project-iframe-wrapper--modal' : 'legacy-project-iframe-wrapper--standalone',
-          $modal_display ? '' : 'content-width',
-        ],
-      ],
-      'iframe' => [
-        '#type' => 'html_tag',
-        '#tag' => 'iframe',
-        '#attributes' => [
-          'class' => ['legacy-project-iframe'],
-          'src' => Url::fromRoute('ghi_plans.project.legacy_iframe', [
-            'project_id' => $project_id,
-          ], [
-            'query' => $query,
-          ])->toString(),
-          'title' => $this->t('Project @project_id details', [
-            '@project_id' => $project_id,
-          ]),
-          'loading' => 'lazy',
-          'sandbox' => 'allow-same-origin allow-popups allow-popups-to-escape-sandbox',
-          'scrolling' => $modal_display ? 'auto' : 'no',
-          'data-legacy-project-autosize' => $modal_display ? 'false' : 'true',
-        ],
-      ],
+      '#markup' => Markup::create($markup['html']),
       '#attached' => [
         'library' => ['ghi_plans/legacy_project'],
+      ],
+      '#cache' => [
+        'max-age' => self::LEGACY_PROJECT_RENDER_CACHE_MAX_AGE,
       ],
     ];
   }
@@ -317,18 +420,66 @@ class ProjectModalController extends ControllerBase {
   }
 
   /**
-   * Build the iframe document for a legacy project.
+   * Build the HTML fragment used for client-side project detail paging.
    *
    * @param int $project_id
    *   The project id.
    *
    * @return \Symfony\Component\HttpFoundation\Response
-   *   The HTML response.
+   *   The fragment response.
    */
-  public function buildLegacyProjectIframe($project_id): Response {
+  public function buildLegacyProjectFragment($project_id): Response {
+    $markup = $this->buildLegacyProjectMarkup((int) $project_id, TRUE);
+    $response = new Response($markup['html'], $markup['status']);
+    $response->headers->set('Content-Type', 'text/html; charset=UTF-8');
+    $response->headers->set('Cache-Control', 'public, max-age=' . self::LEGACY_PROJECT_RENDER_CACHE_MAX_AGE);
+    return $response;
+  }
+
+  /**
+   * Build the sanitized legacy project wrapper markup.
+   *
+   * @param int $project_id
+   *   The project id.
+   * @param bool $modal_display
+   *   Whether the wrapper is being rendered inside a dialog.
+   *
+   * @return array{html: string, status: int}
+   *   The wrapped HTML and HTTP-like status for raw fragment responses.
+   */
+  private function buildLegacyProjectMarkup(int $project_id, bool $modal_display): array {
+    $fragment = $this->loadLegacyProjectFragment($project_id);
+    $classes = [
+      'legacy-project-wrapper',
+      $modal_display ? 'legacy-project-wrapper--modal' : 'legacy-project-wrapper--standalone',
+    ];
+    if (!$modal_display) {
+      $classes[] = 'content-width';
+    }
+
+    $html = '<div class="' . implode(' ', $classes) . '" data-legacy-project-id="' . $project_id . '">';
+    $html .= '<div class="legacy-project-content">' . $fragment['html'] . '</div>';
+    $html .= '</div>';
+
+    return [
+      'html' => $html,
+      'status' => $fragment['status'],
+    ];
+  }
+
+  /**
+   * Load and extract the legacy project content from the GitHub Pages export.
+   *
+   * @param int $project_id
+   *   The project id.
+   *
+   * @return array{html: string, status: int}
+   *   The sanitized fragment HTML and HTTP-like status.
+   */
+  private function loadLegacyProjectFragment(int $project_id): array {
     $legacy_project_url = $this->getLegacyProjectExternalUrl($project_id);
     if (!$legacy_project_url) {
-      return new Response($this->t('The requested project details are not available.'), Response::HTTP_NOT_FOUND);
+      return $this->buildUnavailableLegacyProjectFragment(Response::HTTP_NOT_FOUND);
     }
 
     try {
@@ -339,19 +490,236 @@ class ProjectModalController extends ControllerBase {
       $html = (string) $response->getBody();
     }
     catch (GuzzleException $e) {
-      return new Response($this->t('The requested project details are not available.'), Response::HTTP_BAD_GATEWAY);
+      return $this->buildUnavailableLegacyProjectFragment(Response::HTTP_BAD_GATEWAY);
     }
 
     if ($response->getStatusCode() !== Response::HTTP_OK) {
-      return new Response($this->t('The requested project details are not available.'), Response::HTTP_NOT_FOUND);
+      return $this->buildUnavailableLegacyProjectFragment(Response::HTTP_NOT_FOUND);
     }
 
-    $display = $this->requestStack->getCurrentRequest()->query->get('display');
-    $html = $this->prepareLegacyProjectHtml($html, $display === 'modal');
-    $response = new Response($html);
-    $response->headers->set('Content-Type', 'text/html; charset=UTF-8');
-    $response->headers->set('Cache-Control', 'public, max-age=600');
-    return $response;
+    $fragment = $this->prepareLegacyProjectFragment($html);
+    if ($fragment === NULL) {
+      return $this->buildUnavailableLegacyProjectFragment(Response::HTTP_NOT_FOUND);
+    }
+
+    return [
+      'html' => $fragment,
+      'status' => Response::HTTP_OK,
+    ];
+  }
+
+  /**
+   * Build a small fallback fragment for missing legacy project data.
+   *
+   * @param int $status
+   *   The HTTP-like status for the missing data.
+   *
+   * @return array{html: string, status: int}
+   *   The fallback fragment and status.
+   */
+  private function buildUnavailableLegacyProjectFragment(int $status): array {
+    return [
+      'html' => '<p class="legacy-project-message">' . Html::escape((string) $this->t('The requested project details are not available.')) . '</p>',
+      'status' => $status,
+    ];
+  }
+
+  /**
+   * Extract the project body from the legacy full HTML document.
+   *
+   * @param string $html
+   *   The legacy project HTML document.
+   *
+   * @return string|null
+   *   The sanitized project fragment, or NULL if the expected body is absent.
+   */
+  private function prepareLegacyProjectFragment(string $html): ?string {
+    $document = new \DOMDocument('1.0', 'UTF-8');
+    $document->preserveWhiteSpace = FALSE;
+    $document->formatOutput = FALSE;
+    $previous_errors = libxml_use_internal_errors(TRUE);
+    $loaded = $document->loadHTML('<?xml encoding="UTF-8">' . $html, LIBXML_NONET | LIBXML_NOERROR | LIBXML_NOWARNING);
+    libxml_clear_errors();
+    libxml_use_internal_errors($previous_errors);
+    if (!$loaded) {
+      return NULL;
+    }
+
+    $xpath = new \DOMXPath($document);
+    $project = $xpath
+      ->query('//*[contains(concat(" ", normalize-space(@class), " "), " create-project ")]')
+      ?->item(0);
+    if (!$project instanceof \DOMElement) {
+      return NULL;
+    }
+
+    $fragment_document = new \DOMDocument('1.0', 'UTF-8');
+    $fragment_document->preserveWhiteSpace = FALSE;
+    $fragment_document->formatOutput = FALSE;
+    $fragment = $fragment_document->importNode($project, TRUE);
+    if (!$fragment instanceof \DOMElement) {
+      return NULL;
+    }
+    $fragment_document->appendChild($fragment);
+    $this->sanitizeLegacyProjectElement($fragment);
+
+    return $fragment_document->saveHTML($fragment) ?: NULL;
+  }
+
+  /**
+   * Sanitize an imported legacy project element in place.
+   *
+   * @param \DOMElement $element
+   *   The imported element.
+   */
+  private function sanitizeLegacyProjectElement(\DOMElement $element): void {
+    $this->sanitizeLegacyProjectAttributes($element);
+
+    foreach (iterator_to_array($element->childNodes) as $child) {
+      if (!$child instanceof \DOMElement) {
+        continue;
+      }
+
+      $tag = strtolower($child->tagName);
+      if (in_array($tag, self::LEGACY_PROJECT_DROP_TAGS, TRUE)) {
+        $element->removeChild($child);
+        continue;
+      }
+
+      if (!in_array($tag, self::LEGACY_PROJECT_ALLOWED_TAGS, TRUE)) {
+        $this->sanitizeLegacyProjectElement($child);
+        while ($child->firstChild) {
+          $element->insertBefore($child->firstChild, $child);
+        }
+        $element->removeChild($child);
+        continue;
+      }
+
+      $this->sanitizeLegacyProjectElement($child);
+    }
+  }
+
+  /**
+   * Normalize attributes on a safe legacy project element.
+   *
+   * @param \DOMElement $element
+   *   The element to normalize.
+   */
+  private function sanitizeLegacyProjectAttributes(\DOMElement $element): void {
+    foreach (iterator_to_array($element->attributes) as $attribute) {
+      $name = strtolower($attribute->name);
+      $value = $attribute->value;
+
+      if (!in_array($name, self::LEGACY_PROJECT_ALLOWED_ATTRIBUTES, TRUE)) {
+        $element->removeAttribute($attribute->name);
+        continue;
+      }
+
+      switch ($name) {
+        case 'class':
+          $classes = $this->filterLegacyProjectClasses($value);
+          $classes ? $element->setAttribute('class', $classes) : $element->removeAttribute('class');
+          break;
+
+        case 'href':
+          $href = $this->normalizeLegacyProjectHref($value);
+          $href ? $element->setAttribute('href', $href) : $element->removeAttribute('href');
+          break;
+
+        case 'src':
+          $src = $this->normalizeLegacyProjectSource($value);
+          $src ? $element->setAttribute('src', $src) : $element->removeAttribute('src');
+          break;
+
+        case 'colspan':
+        case 'rowspan':
+          ctype_digit($value) ? $element->setAttribute($name, $value) : $element->removeAttribute($name);
+          break;
+
+        case 'target':
+        case 'rel':
+          // Link targets are normalized from the final href below.
+          $element->removeAttribute($name);
+          break;
+      }
+    }
+
+    if (strtolower($element->tagName) === 'a' && $element->hasAttribute('href')) {
+      $element->setAttribute('target', '_blank');
+      $element->setAttribute('rel', 'noopener noreferrer');
+    }
+  }
+
+  /**
+   * Keep only legacy classes that still carry meaning outside Bootstrap.
+   *
+   * @param string $class_attribute
+   *   The original class attribute.
+   *
+   * @return string|null
+   *   The normalized class attribute, or NULL if no classes remain.
+   */
+  private function filterLegacyProjectClasses(string $class_attribute): ?string {
+    $classes = preg_split('/\s+/', trim($class_attribute)) ?: [];
+    $classes = array_values(array_intersect($classes, self::LEGACY_PROJECT_ALLOWED_CLASSES));
+    return $classes ? implode(' ', $classes) : NULL;
+  }
+
+  /**
+   * Normalize safe link URLs inside extracted legacy project content.
+   *
+   * @param string $href
+   *   The original href attribute.
+   *
+   * @return string|null
+   *   The normalized href, or NULL if it is unsafe or unsupported.
+   */
+  private function normalizeLegacyProjectHref(string $href): ?string {
+    $href = trim(UrlHelper::stripDangerousProtocols($href));
+    if ($href === '') {
+      return NULL;
+    }
+
+    $scheme = strtolower((string) parse_url($href, PHP_URL_SCHEME));
+    if (in_array($scheme, ['http', 'https', 'mailto'], TRUE)) {
+      return $href;
+    }
+
+    if ($scheme === '') {
+      $asset_url = $this->normalizeLegacyProjectSource($href);
+      return $asset_url;
+    }
+
+    return NULL;
+  }
+
+  /**
+   * Normalize safe asset URLs inside extracted legacy project content.
+   *
+   * @param string $src
+   *   The original src or relative asset href.
+   *
+   * @return string|null
+   *   The local asset proxy URL, an allowed external URL, or NULL.
+   */
+  private function normalizeLegacyProjectSource(string $src): ?string {
+    $src = trim(UrlHelper::stripDangerousProtocols($src));
+    if ($src === '' || str_starts_with($src, '#')) {
+      return NULL;
+    }
+
+    if (UrlHelper::isExternal($src)) {
+      return preg_match('/^https?:\/\//i', $src) ? $src : NULL;
+    }
+
+    $asset_path = $this->normalizeLegacyProjectAssetPath('projects', $src);
+    if ($asset_path === NULL) {
+      return NULL;
+    }
+    if ($asset_path !== 'favicon.ico' && !str_starts_with($asset_path, '_assets/')) {
+      return NULL;
+    }
+    return $this->getLegacyProjectAssetProxyUrl($asset_path);
   }
 
   /**
@@ -386,13 +754,12 @@ class ProjectModalController extends ControllerBase {
       return new Response('', Response::HTTP_NOT_FOUND);
     }
 
-    $content_type = $asset_response->getHeaderLine('Content-Type');
-    $content = $this->prepareLegacyProjectAssetContent((string) $asset_response->getBody(), $asset_path, $content_type);
+    $content = (string) $asset_response->getBody();
     $response = new Response($content);
     if ($content_type = $asset_response->getHeaderLine('Content-Type')) {
       $response->headers->set('Content-Type', $content_type);
     }
-    $response->headers->set('Cache-Control', 'public, max-age=600');
+    $response->headers->set('Cache-Control', 'public, max-age=' . self::LEGACY_PROJECT_RENDER_CACHE_MAX_AGE);
     return $response;
   }
 
@@ -714,16 +1081,9 @@ class ProjectModalController extends ControllerBase {
       $t_options,
     ) : $this->legacyProjectTitle($project->id());
     $modal_title = (string) $modal_title;
-    $iframe_src = Url::fromRoute('ghi_plans.project.legacy_iframe', [
+    $fragment_url = Url::fromRoute('ghi_plans.project.legacy_fragment', [
       'project_id' => $project->id(),
-    ], [
-      'query' => [
-        'display' => 'modal',
-      ],
     ])->toString();
-    $iframe_title = $this->t('Project @project_id details', [
-      '@project_id' => $project->id(),
-    ], $t_options);
 
     $url = Url::fromRoute('ghi_plans.project.legacy', [
       'project_id' => $project->id(),
@@ -734,8 +1094,7 @@ class ProjectModalController extends ControllerBase {
         'data-dialog-type' => 'dialog',
         'data-legacy-project-code' => $project->getProjectCode(),
         'data-legacy-project-id' => $project->id(),
-        'data-legacy-project-iframe-src' => $iframe_src,
-        'data-legacy-project-iframe-title' => $iframe_title,
+        'data-legacy-project-url' => $fragment_url,
         'data-legacy-project-title' => $modal_title,
         'data-dialog-options' => Json::encode([
           'target' => 'ghi-project-detail-modal',
@@ -917,81 +1276,6 @@ class ProjectModalController extends ControllerBase {
       return NULL;
     }
     return rtrim($value, '/');
-  }
-
-  /**
-   * Prepare legacy project HTML for display inside a sandboxed iframe.
-   *
-   * @param string $html
-   *   The original HTML.
-   * @param bool $modal_display
-   *   Whether the HTML is being rendered inside the modal iframe.
-   *
-   * @return string
-   *   The prepared HTML.
-   */
-  private function prepareLegacyProjectHtml(string $html, bool $modal_display = FALSE): string {
-    $html = preg_replace('/<script\b[^>]*>.*?<\/script>/is', '', $html);
-    $html = preg_replace('/\s+on[a-z]+\s*=\s*(["\']).*?\1/is', '', $html);
-    $html = preg_replace_callback('/((?:href|src)=["\'])\.\.\/_assets\/([^"\']+)/i', function ($matches) {
-      return $matches[1] . $this->getLegacyProjectAssetProxyUrl('_assets/' . $matches[2]);
-    }, $html);
-    $html = preg_replace('/(href=["\'])favicon\.ico(["\'])/i', '$1' . $this->getLegacyProjectAssetProxyUrl('favicon.ico') . '$2', $html);
-
-    $style_rules = [
-      'html,body{overflow-x:hidden;}',
-      'body{margin:0;}',
-      'body>.content{height:auto;}',
-      '.content,.create-project{max-width:100%;overflow-x:hidden;margin: 0;}',
-      '.create-project{padding:0}',
-      '.create-project .row{margin-left:0;margin-right:0;}',
-      '.create-project .border{border:0 !important;}',
-      '.create-project .review>section{padding-left:0 !important;padding-right:0 !important;}',
-      '.create-project .col-9{width:100%!important;max-width:100%;padding: 0 !important;}',
-      '.create-project table{max-width:100%;}',
-      '@media print{html,body,.content,.create-project{height:auto!important;overflow:visible!important;}body{margin:0!important;}.create-project{padding:0!important;}}',
-      '@media print{h2,h3,h4,h5{break-after:avoid;page-break-after:avoid;}table{break-inside:auto;page-break-inside:auto;}thead{display:table-header-group;}tfoot{display:table-footer-group;}tr,th,td{break-inside:avoid;page-break-inside:avoid;}img,svg{max-width:100%;height:auto;break-inside:avoid;page-break-inside:avoid;}.clusterImg{width:2rem;max-width:2rem;height:2rem;object-fit:contain;vertical-align:middle;}}',
-    ];
-    if ($modal_display) {
-      $style_rules[] = '.create-project{padding:0 0.5rem;}';
-      $style_rules[] = '.create-project .review>section.border-top:first-child{border-top: 0 !important;padding-top: 2rem !important;}';
-    }
-    else {
-      $style_rules[] = 'html,body,.content,.create-project{overflow-y:hidden;}';
-    }
-    $style = '<style>' . implode('', $style_rules) . '</style>';
-    if (stripos($html, '</head>') !== FALSE) {
-      return preg_replace('/<\/head>/i', $style . '</head>', $html, 1);
-    }
-    return $style . $html;
-  }
-
-  /**
-   * Prepare a proxied legacy project asset.
-   *
-   * @param string $content
-   *   The asset content.
-   * @param string $asset_path
-   *   The asset path relative to the legacy project base URL.
-   * @param string $content_type
-   *   The asset content type.
-   *
-   * @return string
-   *   The prepared asset content.
-   */
-  private function prepareLegacyProjectAssetContent(string $content, string $asset_path, string $content_type): string {
-    if (!str_contains($content_type, 'text/css')) {
-      return $content;
-    }
-
-    $base_path = dirname($asset_path);
-    return preg_replace_callback('/url\((["\']?)(?!data:|https?:|\/)([^"\')]+)\1\)/i', function ($matches) use ($base_path) {
-      $asset_path = $this->normalizeLegacyProjectAssetPath($base_path, $matches[2]);
-      if ($asset_path === NULL) {
-        return $matches[0];
-      }
-      return 'url("' . $this->getLegacyProjectAssetProxyUrl($asset_path) . '")';
-    }, $content);
   }
 
   /**

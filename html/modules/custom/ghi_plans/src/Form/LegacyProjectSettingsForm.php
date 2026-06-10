@@ -45,7 +45,7 @@ class LegacyProjectSettingsForm extends ConfigFormBase {
     $form['base_url'] = [
       '#type' => 'url',
       '#title' => $this->t('Legacy project base URL'),
-      '#description' => $this->t('Base URL for the published legacy project files. The project iframe appends /projects/{project_id}.html to this value.'),
+      '#description' => $this->t('Base URL for the published legacy project files. The renderer appends /projects/{project_id}.html to this value.'),
       '#default_value' => $config->get('base_url'),
       '#maxlength' => 2048,
     ];
