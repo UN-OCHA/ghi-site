@@ -79,12 +79,6 @@ class PlanCaseloadTrendsTable extends GHIBlockBase implements OverrideDefaultTit
     $instance->planManager = $container->get('ghi_plans.manager');
     $instance->sectionManager = $container->get('ghi_sections.manager');
 
-    // Write something to the session to make big pipe work also for anonymous
-    // users on the first request for this block which will not have any cached
-    // data.
-    $request = $container->get('request_stack')->getCurrentRequest();
-    $request->cookies->set($request->getSession()->getName(), 'big_pipe work around');
-
     return $instance;
   }
 
