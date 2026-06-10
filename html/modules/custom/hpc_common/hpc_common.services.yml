@@ -18,3 +18,6 @@ services:
     arguments: ['@context.repository']
     tags:
       - { name: 'event_subscriber' }
+  hpc_common.global_gtm_tag:
+    class: Drupal\hpc_common\GlobalGtmTag
+    arguments: ['@config.factory', '@current_user', '@router.admin_context']

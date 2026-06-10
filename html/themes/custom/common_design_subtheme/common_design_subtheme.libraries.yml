@@ -105,6 +105,8 @@ ghi-scrollable-table:
   js:
     components/ghi-scrollable-table/ghi-scrollable-table.js: {}
   dependencies:
+    - core/jquery
+    - core/once
     - core/internal.jquery_ui
 
 # Copy libraries from GHO

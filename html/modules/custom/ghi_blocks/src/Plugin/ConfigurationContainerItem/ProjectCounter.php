@@ -227,10 +227,13 @@ class ProjectCounter extends ConfigurationContainerItemPluginBase {
     $base_object = $this->getContextValue('base_object');
     $context_node = $this->getContextValue('context_node');
 
+    $route_name = NULL;
+    $dialog_classes = ['project-count-modal', 'ghi-modal-dialog'];
     switch ($data_type) {
       case 'projects_count':
         $route_name = 'ghi_plans.modal_content.projects';
         $width = '80%';
+        $dialog_classes[] = 'project-count-modal--projects';
         break;
 
       case 'organizations_count':
@@ -239,6 +242,9 @@ class ProjectCounter extends ConfigurationContainerItemPluginBase {
         break;
     }
 
+    if (!$route_name) {
+      return NULL;
+    }
     $link_url = Url::fromRoute($route_name, [
       'base_object' => $base_object->id(),
     ]);
@@ -253,7 +259,7 @@ class ProjectCounter extends ConfigurationContainerItemPluginBase {
             '@column_label' => $this->getLabel(),
           ]),
           'classes' => [
-            'ui-dialog' => 'project-count-modal ghi-modal-dialog',
+            'ui-dialog' => implode(' ', $dialog_classes),
           ],
         ]),
         'rel' => 'nofollow',
