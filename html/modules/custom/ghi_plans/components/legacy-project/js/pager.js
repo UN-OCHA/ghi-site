@@ -16,27 +16,32 @@
   };
 
   /**
-   * Extracts the data needed to page to a project without a new Ajax request.
+   * Extracts the data needed to page to a project detail fragment.
    */
   const getProjectDetailLinkData = (link) => {
     const {
       legacyProjectCode,
       legacyProjectId,
-      legacyProjectIframeSrc,
-      legacyProjectIframeTitle,
       legacyProjectTitle,
+      legacyProjectUrl,
     } = link.dataset;
-    if (!legacyProjectId || !legacyProjectIframeSrc || !legacyProjectTitle) {
+    if (!legacyProjectId || !legacyProjectTitle || !legacyProjectUrl) {
       return null;
     }
 
     return {
       projectCode: legacyProjectCode || link.textContent.trim(),
       projectId: legacyProjectId,
-      iframeSrc: legacyProjectIframeSrc,
-      iframeTitle: legacyProjectIframeTitle || legacyProjectTitle,
       title: legacyProjectTitle,
+      url: legacyProjectUrl,
     };
+  };
+
+  /**
+   * Clears prefetched fragment requests that no longer belong to this context.
+   */
+  const clearProjectDetailPreloads = () => {
+    state.projectDetailPagerPreloads = new Map();
   };
 
   /**
@@ -44,6 +49,7 @@
    */
   LegacyProject.captureProjectDetailPagerContext = (link) => {
     const countDialog = link.closest('.project-count-modal.ui-dialog');
+    clearProjectDetailPreloads();
     if (!countDialog) {
       state.projectDetailPagerContext = null;
       return;
@@ -73,6 +79,7 @@
    */
   LegacyProject.clearProjectDetailPagerContext = () => {
     state.projectDetailPagerContext = null;
+    clearProjectDetailPreloads();
   };
 
   /**
@@ -96,7 +103,7 @@
   };
 
   /**
-   * Adds the pager navigation above the project iframe when needed.
+   * Adds the pager navigation above the current project fragment when needed.
    */
   const ensureProjectDetailPager = (dialog) => {
     const content = dialog.querySelector('.ui-dialog-content');
@@ -132,9 +139,9 @@
     status.setAttribute('aria-live', 'polite');
     pager.appendChild(status);
 
-    const iframeWrapper = content.querySelector('.legacy-project-iframe-wrapper');
-    if (iframeWrapper) {
-      content.insertBefore(pager, iframeWrapper);
+    const wrapper = content.querySelector('.legacy-project-wrapper');
+    if (wrapper) {
+      content.insertBefore(pager, wrapper);
     }
     else {
       content.prepend(pager);
@@ -144,45 +151,14 @@
   };
 
   /**
-   * Removes hidden staging iframes that never became the active project.
-   */
-  const removeProjectDetailStagingIframes = (dialog, keep = null) => {
-    dialog
-      .querySelectorAll('iframe.legacy-project-iframe--staging')
-      .forEach((iframe) => {
-        if (iframe !== keep) {
-          iframe.remove();
-        }
-      });
-  };
-
-  /**
-   * Removes stale sibling preloads while preserving requested project ids.
-   */
-  const removeProjectDetailPreloadIframes = (
-    dialog,
-    keepProjectIds = new Set(),
-  ) => {
-    dialog
-      .querySelectorAll('iframe.legacy-project-iframe--preload')
-      .forEach((iframe) => {
-        if (!keepProjectIds.has(iframe.dataset.legacyProjectId)) {
-          iframe.remove();
-        }
-      });
-  };
-
-  /**
    * Removes pager markup from a detail dialog without affecting the title.
    */
   const removeProjectDetailPager = (dialog) => {
     dialog.querySelector('.legacy-project-pager')?.remove();
-    removeProjectDetailStagingIframes(dialog);
-    removeProjectDetailPreloadIframes(dialog);
     delete dialog.dataset.legacyProjectPagerCurrentIndex;
     delete dialog.dataset.legacyProjectPagerLoading;
     delete dialog.dataset.legacyProjectPagerLoadToken;
-    dialog.querySelector('.legacy-project-iframe-wrapper')?.removeAttribute('aria-busy');
+    dialog.querySelector('.legacy-project-wrapper')?.removeAttribute('aria-busy');
   };
 
   /**
@@ -229,105 +205,68 @@
   };
 
   /**
-   * Finds a preloaded or currently-preloading iframe for an item.
-   */
-  const getProjectDetailPreloadIframe = (dialog, item, loadedOnly = false) => (
-    Array.from(
-      dialog.querySelectorAll('iframe.legacy-project-iframe--preload'),
-    ).find((iframe) => (
-      iframe.dataset.legacyProjectId === item.projectId &&
-      (!loadedOnly || iframe.dataset.legacyProjectPreloadReady === 'true')
-    )) || null
-  );
-
-  /**
-   * Marks the project content area as busy while the next iframe is preloading.
+   * Marks the project content area as busy while the next fragment loads.
    */
   const setProjectDetailPagerLoading = (dialog, loading, token = null) => {
-    const iframeWrapper = dialog.querySelector('.legacy-project-iframe-wrapper');
+    const wrapper = dialog.querySelector('.legacy-project-wrapper');
     if (loading) {
       dialog.dataset.legacyProjectPagerLoading = 'true';
       if (token) {
         dialog.dataset.legacyProjectPagerLoadToken = token;
       }
-      iframeWrapper?.setAttribute('aria-busy', 'true');
+      wrapper?.setAttribute('aria-busy', 'true');
       refreshProjectDetailPager(dialog);
       return;
     }
 
     delete dialog.dataset.legacyProjectPagerLoading;
     delete dialog.dataset.legacyProjectPagerLoadToken;
-    iframeWrapper?.removeAttribute('aria-busy');
+    wrapper?.removeAttribute('aria-busy');
     refreshProjectDetailPager(dialog);
   };
 
   /**
-   * Resets iframe-specific state before moving it to another project document.
+   * Fetches and caches the raw fragment markup for a project.
    */
-  const resetProjectDetailIframeState = (iframe) => {
-    delete iframe.dataset.legacyProjectContentHeight;
-    delete iframe.dataset.legacyProjectPrintHeight;
-    delete iframe.dataset.legacyProjectPrintScrolling;
-    LegacyProject.removeProjectModalPrintSource?.();
+  const fetchProjectDetailMarkup = (item) => {
+    const cached = state.projectDetailPagerPreloads.get(item.projectId);
+    if (cached) {
+      return cached;
+    }
+
+    const promise = fetch(item.url, {
+      credentials: 'same-origin',
+      headers: {
+        'X-Requested-With': 'XMLHttpRequest',
+      },
+    }).then((response) => {
+      if (!response.ok) {
+        throw new Error(`Legacy project fragment failed: ${response.status}`);
+      }
+      return response.text();
+    }).catch((error) => {
+      state.projectDetailPagerPreloads.delete(item.projectId);
+      throw error;
+    });
+    state.projectDetailPagerPreloads.set(item.projectId, promise);
+    return promise;
   };
 
   /**
-   * Builds a hidden iframe without the active iframe class.
+   * Parses one fetched fragment response into a fresh wrapper element.
    */
-  const createProjectDetailHiddenIframe = (iframe, item, className) => {
-    const hiddenIframe = iframe.cloneNode(false);
-    hiddenIframe.removeAttribute('src');
-    hiddenIframe.removeAttribute('data-once');
-    hiddenIframe.className = className;
-    hiddenIframe.dataset.legacyProjectId = item.projectId;
-    hiddenIframe.setAttribute('aria-hidden', 'true');
-    hiddenIframe.setAttribute('tabindex', '-1');
-    hiddenIframe.setAttribute('title', item.iframeTitle);
-    hiddenIframe.setAttribute('loading', 'eager');
-    delete hiddenIframe.dataset.legacyProjectContentHeight;
-    delete hiddenIframe.dataset.legacyProjectPrintHeight;
-    delete hiddenIframe.dataset.legacyProjectPrintScrolling;
-
-    return hiddenIframe;
-  };
-
-  /**
-   * Builds a hidden staging iframe that can become the visible project.
-   */
-  const createProjectDetailStagingIframe = (iframe, item, token) => {
-    const stagingIframe = createProjectDetailHiddenIframe(
-      iframe,
-      item,
-      'legacy-project-iframe--staging',
+  const parseProjectDetailWrapper = (html) => {
+    const documentFragment = new DOMParser().parseFromString(
+      html,
+      'text/html',
     );
-    stagingIframe.dataset.legacyProjectPagerLoadToken = token;
-
-    return stagingIframe;
+    return documentFragment.querySelector('.legacy-project-wrapper');
   };
 
   /**
-   * Builds a hidden sibling preload iframe and marks it ready after load.
+   * Starts warming the immediate previous and next project fragments.
    */
-  const createProjectDetailPreloadIframe = (iframe, item) => {
-    const preloadIframe = createProjectDetailHiddenIframe(
-      iframe,
-      item,
-      'legacy-project-iframe--preload',
-    );
-    preloadIframe.addEventListener('load', () => {
-      preloadIframe.dataset.legacyProjectPreloadReady = 'true';
-    }, { once: true });
-    preloadIframe.addEventListener('error', () => {
-      preloadIframe.remove();
-    }, { once: true });
-
-    return preloadIframe;
-  };
-
-  /**
-   * Starts warming the immediate previous and next project iframes.
-   */
-  const preloadProjectDetailSiblingIframes = (dialog) => {
+  const preloadProjectDetailSiblingFragments = (dialog) => {
     if (
       !state.projectDetailPagerContext ||
       dialog.dataset.legacyProjectPagerLoading === 'true'
@@ -335,17 +274,15 @@
       return;
     }
 
-    const iframe = dialog.querySelector('iframe.legacy-project-iframe');
-    const iframeWrapper = iframe?.closest('.legacy-project-iframe-wrapper');
-    if (!iframe || !iframeWrapper) {
-      return;
-    }
-
     const scheduledContext = state.projectDetailPagerContext;
     const scheduledIndex = scheduledContext.currentIndex;
     const items = scheduledContext.items;
     const preloadItems = [];
-    for (let offset = 1; offset <= constants.projectDetailPagerPreloadRadius; offset++) {
+    for (
+      let offset = 1;
+      offset <= constants.projectDetailPagerPreloadRadius;
+      offset++
+    ) {
       [scheduledIndex - offset, scheduledIndex + offset].forEach((index) => {
         if (hasProjectDetailPagerIndex(index)) {
           preloadItems.push(items[index]);
@@ -353,10 +290,15 @@
       });
     }
 
-    const keepProjectIds = new Set(
-      preloadItems.map((item) => item.projectId),
-    );
-    removeProjectDetailPreloadIframes(dialog, keepProjectIds);
+    const keepProjectIds = new Set([
+      items[scheduledIndex].projectId,
+      ...preloadItems.map((item) => item.projectId),
+    ]);
+    state.projectDetailPagerPreloads.forEach((value, projectId) => {
+      if (!keepProjectIds.has(projectId)) {
+        state.projectDetailPagerPreloads.delete(projectId);
+      }
+    });
 
     const warm = () => {
       if (
@@ -367,12 +309,11 @@
       ) {
         return;
       }
+
       preloadItems.forEach((item) => {
-        if (!getProjectDetailPreloadIframe(dialog, item)) {
-          const preloadIframe = createProjectDetailPreloadIframe(iframe, item);
-          iframeWrapper.appendChild(preloadIframe);
-          preloadIframe.src = item.iframeSrc;
-        }
+        fetchProjectDetailMarkup(item).catch(() => {
+          // The active pager controls remain usable even if a warmup fails.
+        });
       });
     };
 
@@ -382,59 +323,6 @@
     else {
       setTimeout(warm, 0);
     }
-  };
-
-  /**
-   * Makes the fully loaded staging iframe the visible project document.
-   */
-  const completeProjectDetailIframeSwap = (dialog, stagingIframe, item, index) => {
-    if (
-      !dialog.isConnected ||
-      !state.projectDetailPagerContext ||
-      dialog.dataset.legacyProjectPagerLoadToken !==
-        stagingIframe.dataset.legacyProjectPagerLoadToken
-    ) {
-      stagingIframe.remove();
-      return;
-    }
-
-    const iframe = dialog.querySelector('iframe.legacy-project-iframe');
-    const title = dialog.querySelector('.ui-dialog-title');
-    if (!iframe || !title) {
-      stagingIframe.remove();
-      setProjectDetailPagerLoading(dialog, false);
-      return;
-    }
-
-    state.projectDetailPagerContext.currentIndex = index;
-    title.textContent = item.title;
-    stagingIframe.className = iframe.className;
-    stagingIframe.removeAttribute('aria-hidden');
-    stagingIframe.removeAttribute('tabindex');
-    delete stagingIframe.dataset.legacyProjectId;
-    delete stagingIframe.dataset.legacyProjectPagerLoadToken;
-    delete stagingIframe.dataset.legacyProjectPreloadReady;
-    resetProjectDetailIframeState(stagingIframe);
-    iframe.remove();
-    removeProjectDetailStagingIframes(dialog, stagingIframe);
-    dialog.querySelector('.ui-dialog-content')?.scrollTo(0, 0);
-    setProjectDetailPagerLoading(dialog, false);
-    attachProjectDetailPagerIframeInput(dialog);
-    Drupal.attachBehaviors(dialog);
-    preloadProjectDetailSiblingIframes(dialog);
-  };
-
-  /**
-   * Restores pager controls if the hidden iframe fails to load.
-   */
-  const failProjectDetailIframeSwap = (dialog, stagingIframe) => {
-    if (
-      dialog.dataset.legacyProjectPagerLoadToken ===
-      stagingIframe.dataset.legacyProjectPagerLoadToken
-    ) {
-      setProjectDetailPagerLoading(dialog, false);
-    }
-    stagingIframe.remove();
   };
 
   /**
@@ -450,50 +338,41 @@
     }
 
     const item = state.projectDetailPagerContext.items[index];
-    const iframe = dialog.querySelector('iframe.legacy-project-iframe');
     const title = dialog.querySelector('.ui-dialog-title');
-    const iframeWrapper = iframe?.closest('.legacy-project-iframe-wrapper');
-    if (!iframe || !title || !iframeWrapper) {
+    const currentWrapper = dialog.querySelector('.legacy-project-wrapper');
+    if (!title || !currentWrapper) {
       return false;
-    }
-
-    const preloadedIframe = getProjectDetailPreloadIframe(dialog, item, true);
-    if (preloadedIframe) {
-      const loadToken = `${Date.now()}-${Math.random()}`;
-      dialog.dataset.legacyProjectPagerLoadToken = loadToken;
-      preloadedIframe.dataset.legacyProjectPagerLoadToken = loadToken;
-      preloadedIframe.className = 'legacy-project-iframe--staging';
-      completeProjectDetailIframeSwap(dialog, preloadedIframe, item, index);
-      return true;
     }
 
     const loadToken = `${Date.now()}-${Math.random()}`;
     setProjectDetailPagerLoading(dialog, true, loadToken);
 
-    let stagingIframe = getProjectDetailPreloadIframe(dialog, item);
-    if (stagingIframe) {
-      stagingIframe.className = 'legacy-project-iframe--staging';
-      delete stagingIframe.dataset.legacyProjectPreloadReady;
-      stagingIframe.dataset.legacyProjectPagerLoadToken = loadToken;
-    }
-    else {
-      removeProjectDetailStagingIframes(dialog);
-      stagingIframe = createProjectDetailStagingIframe(
-        iframe,
-        item,
-        loadToken,
-      );
-    }
-    stagingIframe.addEventListener('load', () => {
-      completeProjectDetailIframeSwap(dialog, stagingIframe, item, index);
-    }, { once: true });
-    stagingIframe.addEventListener('error', () => {
-      failProjectDetailIframeSwap(dialog, stagingIframe);
-    }, { once: true });
-    if (!stagingIframe.parentElement) {
-      stagingIframe.src = item.iframeSrc;
-      iframeWrapper.appendChild(stagingIframe);
-    }
+    fetchProjectDetailMarkup(item)
+      .then(parseProjectDetailWrapper)
+      .then((wrapper) => {
+        if (!wrapper) {
+          throw new Error('Legacy project fragment did not contain a wrapper.');
+        }
+        if (
+          !dialog.isConnected ||
+          dialog.dataset.legacyProjectPagerLoadToken !== loadToken
+        ) {
+          return;
+        }
+
+        state.projectDetailPagerContext.currentIndex = index;
+        title.textContent = item.title;
+        currentWrapper.replaceWith(wrapper);
+        dialog.querySelector('.ui-dialog-content')?.scrollTo(0, 0);
+        Drupal.attachBehaviors(wrapper);
+        setProjectDetailPagerLoading(dialog, false);
+        preloadProjectDetailSiblingFragments(dialog);
+      })
+      .catch(() => {
+        if (dialog.dataset.legacyProjectPagerLoadToken === loadToken) {
+          setProjectDetailPagerLoading(dialog, false);
+        }
+      });
 
     return true;
   };
@@ -519,7 +398,7 @@
   );
 
   /**
-   * Handles keyboard paging for the modal shell and the iframe document.
+   * Handles keyboard paging for the modal shell and project content.
    */
   const handleProjectDetailPagerKeydown = (dialog, event) => {
     if (
@@ -616,31 +495,6 @@
   };
 
   /**
-   * Adds pager input handlers inside the same-origin project iframe.
-   */
-  const attachProjectDetailPagerIframeInput = (dialog) => {
-    const iframe = dialog.querySelector('iframe.legacy-project-iframe');
-    if (!iframe) {
-      return;
-    }
-
-    try {
-      const doc = LegacyProject.getIframeDocument(iframe);
-      if (
-        !doc?.documentElement ||
-        doc.documentElement.dataset.legacyProjectPagerInputAttached
-      ) {
-        return;
-      }
-      doc.documentElement.dataset.legacyProjectPagerInputAttached = 'true';
-      attachProjectDetailPagerInput(doc, dialog);
-    }
-    catch (e) {
-      // Paging controls in the parent modal remain usable if frame access fails.
-    }
-  };
-
-  /**
    * Initializes the detail modal pager for the captured project-count context.
    */
   LegacyProject.attachProjectDetailPager = (element) => {
@@ -674,13 +528,8 @@
       });
     }
 
-    const iframe = dialog.querySelector('iframe.legacy-project-iframe');
-    iframe?.addEventListener('load', () => {
-      attachProjectDetailPagerIframeInput(dialog);
-    });
-    attachProjectDetailPagerIframeInput(dialog);
     refreshProjectDetailPager(dialog);
-    preloadProjectDetailSiblingIframes(dialog);
+    preloadProjectDetailSiblingFragments(dialog);
   };
 
   /**
