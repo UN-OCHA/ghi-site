@@ -289,3 +289,56 @@
     }
   }
 }
+
+#main-content,
+.ghi-modal-dialog {
+  .table-wrapper table.ghi-table.legacy-project-list-table {
+    width: 100%;
+    table-layout: fixed;
+
+    // Project count modals have five dense columns. Keep this override after
+    // the generic modal table styles so project names cannot push
+    // organizations and amounts outside the viewport.
+    th,
+    td {
+      padding-inline: 0.5rem;
+      white-space: normal;
+      overflow-wrap: anywhere;
+
+      &:nth-child(1) {
+        width: 22%;
+      }
+
+      &:nth-child(2) {
+        width: 29%;
+      }
+
+      &:nth-child(3) {
+        width: 23%;
+      }
+
+      &:is(:nth-child(4), :nth-child(5)) {
+        width: 13%;
+        text-align: right;
+      }
+
+      &:last-child {
+        padding-right: 0.5rem;
+      }
+    }
+
+    td {
+      &:is(:nth-child(4), :nth-child(5)) {
+        white-space: nowrap;
+        overflow-wrap: normal;
+      }
+
+      &:first-child a {
+        white-space: normal;
+        overflow-wrap: anywhere;
+        color: inherit;
+        font-size: inherit;
+      }
+    }
+  }
+}
