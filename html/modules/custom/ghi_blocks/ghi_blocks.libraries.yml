@@ -118,23 +118,34 @@ map.gl:
     - ghi_blocks/map.gl.control.disclaimer
     - ghi_blocks/map.gl.control.search
 
+map.gl.lazy:
+  js:
+    js/map.gl/map.lazy.js: {}
+  dependencies:
+    - core/jquery
+    - core/drupal
+    - core/drupalSettings
+    - core/once
+    - core/drupal.ajax
+
 map.gl.plan_overview:
   js:
     js/map.gl/map.plan_overview.js: {}
   dependencies:
-    - ghi_blocks/map.gl
+    - ghi_blocks/map.gl.lazy
+    - core/drupalSettings
 
 map.gl.plan:
   js:
     js/map.gl/map.plan_attachment.js: {}
   dependencies:
-    - ghi_blocks/map.gl
+    - ghi_blocks/map.gl.lazy
 
 map.gl.operational_presence:
   js:
     js/map.gl/map.plan_operational_presence.js: {}
   dependencies:
-    - ghi_blocks/map.gl
+    - ghi_blocks/map.gl.lazy
 
 modal:
   js:

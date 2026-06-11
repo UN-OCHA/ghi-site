@@ -10,10 +10,13 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Plugin\Context\EntityContextDefinition;
 use Drupal\Core\Render\Markup;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\Core\Url;
 use Drupal\ghi_blocks\Helpers\AttachmentMatcher;
 use Drupal\ghi_blocks\Interfaces\ConfigValidationInterface;
+use Drupal\ghi_blocks\Interfaces\LazyMapBlockInterface;
 use Drupal\ghi_blocks\Interfaces\MultiStepFormBlockInterface;
 use Drupal\ghi_blocks\Interfaces\OverrideDefaultTitleBlockInterface;
+use Drupal\ghi_blocks\Map\MapPayload;
 use Drupal\ghi_blocks\Plugin\Block\BlockCommentInterface;
 use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
 use Drupal\ghi_blocks\Traits\BlockCommentTrait;
@@ -45,7 +48,7 @@ use Drupal\hpc_downloads\Interfaces\HPCDownloadPNGInterface;
     'plan_cluster' => new EntityContextDefinition('entity:base_object', new TranslatableMarkup('Cluster'), required: FALSE, constraints: ['Bundle' => 'governing_entity']),
   ],
 )]
-class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterface, OverrideDefaultTitleBlockInterface, HPCDownloadPNGInterface, ConfigValidationInterface, BlockCommentInterface {
+class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterface, OverrideDefaultTitleBlockInterface, HPCDownloadPNGInterface, ConfigValidationInterface, BlockCommentInterface, LazyMapBlockInterface {
 
   use AttachmentFilterTrait;
   use BlockCommentTrait;
@@ -101,6 +104,14 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
   /**
    * {@inheritdoc}
    */
+  public function getDownloadPngSelector(): ?string {
+    $selector = parent::getDownloadPngSelector();
+    return $selector ? $selector . '.map-image-loaded' : NULL;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function buildContent() {
     $attachment = $this->getDefaultAttachment();
     if (!$attachment || !$this->attachmentCanBeMapped($attachment)) {
@@ -108,10 +119,85 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
       return NULL;
     }
 
-    $conf = $this->getBlockConfig();
     $style = self::STYLE_CIRCLE;
     $chart_id = Html::getUniqueId('plan-attachment-map--' . $style);
+
+    $attachment_switcher = $this->getAttachmentSwitcher();
+    $block_uuid = $this->getUuid();
+    $data_url_query = array_filter([
+      'current_uri' => $this->getCurrentUri(),
+      'map_id' => $chart_id,
+      'attachment_id' => $attachment->id(),
+    ], fn ($value) => $value !== NULL && $value !== '');
+
+    $build = [
+      '#full_width' => FALSE,
+    ];
+    $build[] = [
+      '#theme' => 'plan_attachment_map',
+      '#chart_id' => $chart_id,
+      '#map_tabs' => NULL,
+      '#map_type' => $style,
+      '#attachment' => $attachment,
+      '#attachment_switcher' => $attachment_switcher,
+      '#legend' => $style == self::STYLE_CIRCLE ? FALSE : TRUE,
+      '#attached' => [
+        'library' => ['ghi_blocks/map.gl.plan'],
+        'drupalSettings' => [
+          'plan_attachment_map' => [
+            $chart_id => [
+              'id' => $chart_id,
+              'data_url' => $block_uuid ? Url::fromRoute('ghi_blocks.map_data', [
+                'plugin_id' => $this->getPluginId(),
+                'block_uuid' => $block_uuid,
+              ], [
+                'query' => $data_url_query,
+              ])->toString() : NULL,
+            ],
+          ],
+        ],
+      ],
+    ];
+    $cache_metadata = CacheableMetadata::createFromObject($attachment);
+    $cache_metadata
+      ->addCacheableDependency($this->getCurrentBaseObject())
+      ->addCacheTags($this->getMapConfigCacheTags())
+      ->applyTo($build);
+    return $build;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function buildLazyMapPayload(string $map_id): MapPayload {
+    $attachment = $this->getDefaultAttachment();
+    if (!$attachment || !$this->attachmentCanBeMapped($attachment)) {
+      return MapPayload::forEmptyMap(
+        [
+          'id' => $map_id,
+          'settings_key' => 'plan_attachment_map',
+        ],
+        MapPayload::cacheabilityFromTags(Cache::mergeTags($this->getCurrentBaseObject()->getCacheTags(), $this->getMapConfigCacheTags())),
+      );
+    }
+
+    $conf = $this->getBlockConfig();
+    $style = self::STYLE_CIRCLE;
     $map = $this->buildCircleMap();
+    if (empty($map['data'])) {
+      $cache_metadata = CacheableMetadata::createFromRenderArray($map);
+      $cache_metadata
+        ->addCacheableDependency($attachment)
+        ->addCacheableDependency($this->getCurrentBaseObject())
+        ->addCacheTags($this->getMapConfigCacheTags());
+      return MapPayload::forEmptyMap(
+        [
+          'id' => $map_id,
+          'settings_key' => 'plan_attachment_map',
+        ],
+        $cache_metadata,
+      );
+    }
 
     $outline_country = NULL;
     $focus_country = $this->getCurrentPlanObject()->getFocusCountry();
@@ -122,17 +208,10 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
       $outline_country['location_name'] = $outline_country['name'];
     }
 
-    if (empty($map['data'])) {
-      // Nothing to show.
-      return NULL;
-    }
-
     $map_settings = [
-      // If the map data is empty, it is important to set it to NULL, otherwise
-      // the empty array is simply ignored due to the way that Drupal merges the
-      // given settings into the existing ones.
-      'json' => !empty($map['data']) ? $map['data'] : NULL,
-      'id' => $chart_id,
+      'json' => $map['data'],
+      'id' => $map_id,
+      'settings_key' => 'plan_attachment_map',
       'disclaimer' => $conf['map']['common']['disclaimer'] ?: $this->getDefaultMapDisclaimer($this->getCurrentPlanObject()->getPlanLanguage()),
       'pcodes_enabled' => $conf['map']['common']['pcodes_enabled'] ?? TRUE,
       'label_min_zoom' => (int) ($conf['map']['common']['label_min_zoom'] ?? 6),
@@ -140,33 +219,20 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
       'outline_country' => $outline_country,
     ] + $map['settings'];
 
-    $attachment_switcher = $this->getAttachmentSwitcher();
+    $cache_metadata = CacheableMetadata::createFromRenderArray($map);
+    $cache_metadata
+      ->addCacheableDependency($this->getCurrentBaseObject())
+      ->addCacheTags($this->getMapConfigCacheTags());
 
-    $build = [
-      '#full_width' => FALSE,
-    ];
-    $build[] = [
-      '#theme' => 'plan_attachment_map',
-      '#chart_id' => $chart_id,
-      '#map_tabs' => $map['tabs'] ?? NULL,
-      '#map_type' => $style,
-      '#attachment' => $attachment,
-      '#attachment_switcher' => $attachment_switcher,
-      '#legend' => $style == self::STYLE_CIRCLE ? FALSE : TRUE,
-      '#attached' => [
-        'library' => ['ghi_blocks/map.gl.plan'],
-        'drupalSettings' => [
-          'plan_attachment_map' => [
-            $chart_id => $map_settings,
-          ],
-        ],
+    return MapPayload::forMap(
+      $map_settings,
+      self::getGlobalMapSettings(),
+      self::getMapboxConfig(),
+      $cache_metadata,
+      [
+        '.pane-' . $map_id . ' .map-tabs--inner' => $map['tabs'],
       ],
-      '#cache' => [
-        'tags' => Cache::mergeTags($this->getCurrentBaseObject()->getCacheTags(), $this->getMapConfigCacheTags()),
-      ],
-    ];
-    CacheableMetadata::createFromRenderArray($map)->applyTo($build);
-    return $build;
+    );
   }
 
   /**
@@ -774,7 +840,8 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
     $default_attachment = &drupal_static($this->getUuid() . '::' . __METHOD__, NULL);
     if ($default_attachment === NULL) {
       $conf = $this->getBlockConfig();
-      $requested_attachment_id = $this->requestStack->getCurrentRequest()->request->get('attachment_id') ?? NULL;
+      $request = $this->requestStack->getCurrentRequest();
+      $requested_attachment_id = $request->request->get('attachment_id') ?? $request->query->get('attachment_id') ?? NULL;
       $default_attachment_id = $conf['map']['common']['default_attachment'] ?? NULL;
       $attachments = $this->getSelectedAttachments();
       $attachment = NULL;
