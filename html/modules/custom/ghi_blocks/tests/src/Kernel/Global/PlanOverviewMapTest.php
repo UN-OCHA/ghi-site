@@ -6,6 +6,8 @@ use Drupal\Core\Form\FormState;
 use Drupal\Core\Plugin\Context\Context;
 use Drupal\Core\Plugin\Context\ContextDefinition;
 use Drupal\Core\Render\Markup;
+use Drupal\ghi_blocks\Interfaces\LazyMapBlockInterface;
+use Drupal\ghi_blocks\Map\MapPayload;
 use Drupal\ghi_blocks\Plugin\Block\GlobalPage\PlanOverviewMap;
 use Drupal\ghi_plans\ApiObjects\Partials\PlanOverviewPlan;
 use Drupal\ghi_plans\Entity\PlanType;
@@ -27,6 +29,7 @@ class PlanOverviewMapTest extends PlanBlockKernelTestBase {
   public function testBlockPluginInstantiation() {
     $plugin = $this->getBlockPlugin();
     $this->assertInstanceOf(PlanOverviewMap::class, $plugin);
+    $this->assertInstanceOf(LazyMapBlockInterface::class, $plugin);
   }
 
   /**
@@ -85,8 +88,13 @@ class PlanOverviewMapTest extends PlanBlockKernelTestBase {
     $this->assertArrayHasKey('#map_type', $build);
     $this->assertArrayHasKey('#map_tabs', $build);
     $this->assertArrayHasKey('#cache', $build);
-    $this->assertNotEmpty($build['#attached']['drupalSettings']['plan_overview_map'][$build['#chart_id']]['json']);
-    $data = $build['#attached']['drupalSettings']['plan_overview_map'][$build['#chart_id']]['json'];
+    $settings = $build['#attached']['drupalSettings']['plan_overview_map'][$build['#chart_id']];
+    $this->assertArrayNotHasKey('json', $settings);
+    $this->assertNotEmpty($settings['data_url']);
+
+    $data_settings = $plugin->buildMapDataSettings($build['#chart_id']);
+    $this->assertNotEmpty($data_settings['map']['json']);
+    $data = $data_settings['map']['json'];
     $tabs = array_keys($data);
     $this->assertCount(count($tabs), $build['#map_tabs']['#items']);
     foreach ($data as $tab_data) {
@@ -124,8 +132,13 @@ class PlanOverviewMapTest extends PlanBlockKernelTestBase {
     $this->assertArrayHasKey('#map_type', $build);
     $this->assertArrayHasKey('#map_tabs', $build);
     $this->assertArrayHasKey('#cache', $build);
-    $this->assertNotEmpty($build['#attached']['drupalSettings']['plan_overview_map'][$build['#chart_id']]['json']);
-    $data = $build['#attached']['drupalSettings']['plan_overview_map'][$build['#chart_id']]['json'];
+    $settings = $build['#attached']['drupalSettings']['plan_overview_map'][$build['#chart_id']];
+    $this->assertArrayNotHasKey('json', $settings);
+    $this->assertNotEmpty($settings['data_url']);
+
+    $data_settings = $plugin->buildMapDataSettings($build['#chart_id']);
+    $this->assertNotEmpty($data_settings['map']['json']);
+    $data = $data_settings['map']['json'];
     $tabs = array_keys($data);
     $this->assertCount(count($tabs), $build['#map_tabs']['#items']);
     foreach ($data as $tab_data) {
@@ -157,6 +170,15 @@ class PlanOverviewMapTest extends PlanBlockKernelTestBase {
     $this->assertArrayHasKey('library', $build['#attached']);
     $this->assertArrayHasKey('drupalSettings', $build['#attached']);
     $this->assertContains('ghi_blocks/map.gl.plan_overview', $build['#attached']['library']);
+    $settings = $build['#attached']['drupalSettings']['plan_overview_map'][$build['#chart_id']];
+    $this->assertArrayHasKey('data_url', $settings);
+    $this->assertStringContainsString('/map-data/global_plan_overview_map/block_uuid', $settings['data_url']);
+    $this->assertArrayNotHasKey('mapbox', $build['#attached']['drupalSettings']);
+    $this->assertArrayNotHasKey('map_config', $build['#attached']['drupalSettings']);
+
+    $payload = $plugin->buildLazyMapPayload($build['#chart_id']);
+    $this->assertInstanceOf(MapPayload::class, $payload);
+    $this->assertEquals('plan_overview_map', $payload->getMap()['settings_key']);
   }
 
   /**
@@ -181,12 +203,14 @@ class PlanOverviewMapTest extends PlanBlockKernelTestBase {
     // The cache tags should include the block plugin's cache tags.
     $expected_tags = [
       'global_plan_overview_map:block_uuid',
-      'plan:1',
-      'plan:2',
     ];
     foreach ($expected_tags as $tag) {
       $this->assertContains($tag, $cache_tags);
     }
+
+    $data_settings = $plugin->buildMapDataSettings('plan-overview-map-test');
+    $this->assertContains('plan:1', $data_settings['cache_tags']);
+    $this->assertContains('plan:2', $data_settings['cache_tags']);
   }
 
   /**
@@ -289,7 +313,11 @@ class PlanOverviewMapTest extends PlanBlockKernelTestBase {
       'year' => new Context(new ContextDefinition('string'), '2024'),
     ];
 
-    return $this->createBlockPlugin('global_plan_overview_map', $configuration, $contexts);
+    $plugin = $this->createBlockPlugin('global_plan_overview_map', $configuration, $contexts);
+    $plugin_configuration = $plugin->getConfiguration();
+    $plugin_configuration['uuid'] = 'block_uuid';
+    $plugin->setConfiguration($plugin_configuration);
+    return $plugin;
   }
 
   /**

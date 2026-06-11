@@ -25,6 +25,7 @@ use Drupal\hpc_downloads\Interfaces\HPCDownloadExcelInterface;
 use Drupal\hpc_downloads\Interfaces\HPCDownloadExcelMultipleInterface;
 use Drupal\hpc_downloads\Interfaces\HPCDownloadPDFInterface;
 use Drupal\hpc_downloads\Interfaces\HPCDownloadPluginInterface;
+use Drupal\hpc_downloads\Interfaces\HPCDownloadPNGInterface;
 use Drupal\hpc_downloads\Interfaces\HPCDownloadSourceInterface;
 use Drupal\hpc_downloads\NodeDownloadPlugin;
 use Drupal\views\Views;
@@ -467,6 +468,9 @@ class DownloadController extends ControllerBase {
     }
     else {
       // PDF or PNG download.
+      if ($this->isPngDownload($plugin, $download_type)) {
+        $options['block_selector'] = $plugin->getDownloadPngSelector();
+      }
       $status = $download_method::createDownloadFile($record, $options);
     }
     return $status;
@@ -477,6 +481,13 @@ class DownloadController extends ControllerBase {
    */
   private function isPdfDownload($plugin, $download_type) {
     return $plugin instanceof HPCDownloadPDFInterface && $download_type == HPCDownloadPluginInterface::DOWNLOAD_TYPE_PDF;
+  }
+
+  /**
+   * Check if download method is PNG.
+   */
+  private function isPngDownload($plugin, $download_type) {
+    return $plugin instanceof HPCDownloadPNGInterface && $download_type == HPCDownloadPluginInterface::DOWNLOAD_TYPE_PNG;
   }
 
   /**

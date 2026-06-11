@@ -2211,6 +2211,14 @@ abstract class GHIBlockBase extends HPCBlockBase implements TrustedCallbackInter
   /**
    * {@inheritdoc}
    */
+  public function getDownloadPngSelector(): ?string {
+    $block_uuid = $this->getUuid();
+    return $block_uuid ? '.block-' . $block_uuid : NULL;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function getDownloadCaption() {
     $page_title = $this->getPageTitle();
     if ($page_title) {

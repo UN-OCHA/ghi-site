@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\ghi_blocks\Kernel\Plan;
 
+use Drupal\ghi_blocks\Interfaces\LazyMapBlockInterface;
 use Drupal\ghi_blocks\Interfaces\MultiStepFormBlockInterface;
 use Drupal\ghi_blocks\Interfaces\OverrideDefaultTitleBlockInterface;
 use Drupal\ghi_blocks\Plugin\Block\Plan\PlanOperationalPresenceMap;
@@ -46,6 +47,7 @@ class PlanOperationalPresenceMapTest extends PlanBlockKernelTestBase {
 
     $this->assertInstanceOf(MultiStepFormBlockInterface::class, $plugin);
     $this->assertInstanceOf(OverrideDefaultTitleBlockInterface::class, $plugin);
+    $this->assertInstanceOf(LazyMapBlockInterface::class, $plugin);
   }
 
   /**

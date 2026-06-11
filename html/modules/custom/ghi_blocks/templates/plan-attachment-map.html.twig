@@ -3,11 +3,9 @@
 <div {{ attributes }}>
  {{ attachment_select }}
   <div {{ map_attributes }}>
-    {% if map_tabs %}
-      <div class="map-tabs">
-        <div class="map-tabs--inner">{{ map_tabs }}</div>
-      </div>
-    {% endif %}
+    <div class="map-tabs">
+      <div class="map-tabs--inner">{{ map_tabs }}</div>
+    </div>
     <div class="map-container">
       {% if legend %}
         <div id="{{ chart_id }}-legend" class="map-legend"></div>

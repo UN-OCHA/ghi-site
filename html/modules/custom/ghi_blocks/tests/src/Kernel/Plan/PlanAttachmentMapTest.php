@@ -3,8 +3,10 @@
 namespace Drupal\Tests\ghi_blocks\Kernel\Plan;
 
 use Drupal\ghi_blocks\Interfaces\ConfigValidationInterface;
+use Drupal\ghi_blocks\Interfaces\LazyMapBlockInterface;
 use Drupal\ghi_blocks\Interfaces\MultiStepFormBlockInterface;
 use Drupal\ghi_blocks\Interfaces\OverrideDefaultTitleBlockInterface;
+use Drupal\ghi_blocks\Map\MapPayload;
 use Drupal\ghi_blocks\Plugin\Block\Plan\PlanAttachmentMap;
 use Drupal\Tests\ghi_blocks\Kernel\PlanBlockKernelTestBase;
 
@@ -50,6 +52,7 @@ class PlanAttachmentMapTest extends PlanBlockKernelTestBase {
     $this->assertInstanceOf(MultiStepFormBlockInterface::class, $plugin);
     $this->assertInstanceOf(OverrideDefaultTitleBlockInterface::class, $plugin);
     $this->assertInstanceOf(ConfigValidationInterface::class, $plugin);
+    $this->assertInstanceOf(LazyMapBlockInterface::class, $plugin);
   }
 
   /**
@@ -90,6 +93,20 @@ class PlanAttachmentMapTest extends PlanBlockKernelTestBase {
    */
   public function testStyleConstant() {
     $this->assertEquals('circle', PlanAttachmentMap::STYLE_CIRCLE);
+  }
+
+  /**
+   * Tests the empty lazy map payload.
+   */
+  public function testEmptyLazyMapPayload() {
+    $plugin = $this->getBlockPlugin();
+    $payload = $plugin->buildLazyMapPayload('test-map');
+
+    $this->assertInstanceOf(MapPayload::class, $payload);
+    $this->assertTrue($payload->isEmpty());
+    $this->assertSame([], $payload->getAttachments());
+    $this->assertSame('test-map', $payload->getMap()['id']);
+    $this->assertSame('plan_attachment_map', $payload->getMap()['settings_key']);
   }
 
   /**
