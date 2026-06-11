@@ -14,6 +14,11 @@ use Drupal\hpc_downloads\Helpers\FileHelper;
 class PNG {
 
   /**
+   * Query parameter used to identify Snap PNG page renders.
+   */
+  private const SNAP_PNG_QUERY_PARAMETER = 'hpc_download';
+
+  /**
    * Create the PDF/PNG download.
    */
   public static function createDownloadFile($record, $options) {
@@ -42,8 +47,9 @@ class PNG {
     // Prepare params to be passed to Snap Service.
     $query_params = [
       'output' => 'png',
-      'selector' => '.block-' . $options['block_uuid'],
+      'selector' => $options['block_selector'] ?? '.block-' . $options['block_uuid'],
       'width' => 1280,
+      'delay' => 3000,
     ];
 
     return $query_params;
@@ -66,7 +72,7 @@ class PNG {
     $temp_name = 'temporary://' . $record['options']['file_name'] . '.' . $options['type'];
 
     // Get response from the snap service.
-    $url = Url::fromUserInput($options['uri'])->setAbsolute()->toString();
+    $url = self::getSnapRenderUrl($options['uri']);
     $response = self::generateDocument($url, $snap_params);
     if (!$response) {
       \Drupal::logger('hpc_downloads')->error('Error response from snap service.');
@@ -91,6 +97,23 @@ class PNG {
     // All done. now close the record with success status.
     DownloadRecord::closeRecord($record);
     return TRUE;
+  }
+
+  /**
+   * Build the target URL that Snap should render.
+   *
+   * @param string $uri
+   *   The current page URI.
+   *
+   * @return string
+   *   The absolute URL for the Snap render browser.
+   */
+  private static function getSnapRenderUrl(string $uri): string {
+    $url = Url::fromUserInput($uri);
+    $query = $url->getOption('query') ?: [];
+    $query[self::SNAP_PNG_QUERY_PARAMETER] = 'png';
+    $url->setOption('query', $query);
+    return $url->setAbsolute()->toString();
   }
 
 }

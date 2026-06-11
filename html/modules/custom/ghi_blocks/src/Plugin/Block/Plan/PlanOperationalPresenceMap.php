@@ -8,9 +8,12 @@ use Drupal\Core\Block\Attribute\Block;
 use Drupal\Core\Cache\Cache;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Plugin\Context\EntityContextDefinition;
+use Drupal\Core\Url;
 use Drupal\ghi_base_objects\ApiObjects\Location;
+use Drupal\ghi_blocks\Interfaces\LazyMapBlockInterface;
 use Drupal\ghi_blocks\Interfaces\MultiStepFormBlockInterface;
 use Drupal\ghi_blocks\Interfaces\OverrideDefaultTitleBlockInterface;
+use Drupal\ghi_blocks\Map\MapPayload;
 use Drupal\ghi_blocks\MapObjects\BaseMapObjectInterface;
 use Drupal\ghi_blocks\MapObjects\ClusterMapObject;
 use Drupal\ghi_blocks\MapObjects\OrganizationMapObject;
@@ -42,7 +45,7 @@ use Drupal\hpc_common\Plugin\HPCBlockMetadata;
     'plan_cluster' => new EntityContextDefinition('entity:base_object', new TranslatableMarkup('Cluster'), required: FALSE, constraints: ['Bundle' => 'governing_entity']),
   ],
 )]
-class PlanOperationalPresenceMap extends GHIBlockBase implements MultiStepFormBlockInterface, OverrideDefaultTitleBlockInterface, HPCDownloadPNGInterface {
+class PlanOperationalPresenceMap extends GHIBlockBase implements MultiStepFormBlockInterface, OverrideDefaultTitleBlockInterface, HPCDownloadPNGInterface, LazyMapBlockInterface {
 
   use OrganizationsBlockTrait;
   use FtsLinkTrait;
@@ -106,34 +109,31 @@ class PlanOperationalPresenceMap extends GHIBlockBase implements MultiStepFormBl
   /**
    * {@inheritdoc}
    */
+  public function getDownloadPngSelector(): ?string {
+    $selector = parent::getDownloadPngSelector();
+    return $selector ? $selector . '.map-image-loaded' : NULL;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function buildContent() {
     $available_views = $this->getAvailableViews();
-    $map_data = $this->getMapData();
-    if (empty($map_data) || empty($available_views)) {
+    if (empty($available_views) || empty($this->getLocations())) {
       return;
     }
 
-    $conf = $this->getBlockConfig();
     $chart_id = Html::getUniqueId('plan-operational-presence-map');
     $chart_class = Html::getClass('plan-operational-presence-map');
     $selected_view = $this->getSelectedView();
-
-    $outline_country = NULL;
-    $focus_country = $this->getCurrentPlanObject()->getFocusCountry();
-    if ($focus_country) {
-      /** @var \Drupal\ghi_base_objects\Plugin\FabricQuery\LocationQuery $location_query */
-      $location_query = $this->getQueryHandler('locations');
-      $country = $location_query->getLocation($focus_country->getSourceId());
-      $outline_country = $country?->toArray();
-    }
-
-    $map_settings = [
-      'json' => $map_data,
-      'id' => $chart_id,
-      'disclaimer' => $conf['display']['disclaimer'] ?: $this->getDefaultMapDisclaimer($this->getCurrentPlanObject()->getPlanLanguage()),
-      'pcodes_enabled' => $conf['display']['pcodes_enabled'] ?? TRUE,
-      'outline_country' => $outline_country,
-    ];
+    $selected_object_id = $this->getSelectedObjectId($selected_view);
+    $block_uuid = $this->getUuid();
+    $data_url_query = array_filter([
+      'current_uri' => $this->getCurrentUri(),
+      'map_id' => $chart_id,
+      'view' => $selected_view,
+      'object_id' => $selected_object_id,
+    ], fn ($value) => $value !== NULL && $value !== '');
 
     return [
       '#theme' => 'plan_operational_presence_map',
@@ -145,7 +145,15 @@ class PlanOperationalPresenceMap extends GHIBlockBase implements MultiStepFormBl
         'library' => ['ghi_blocks/map.gl.operational_presence'],
         'drupalSettings' => [
           'plan_operational_presence_map' => [
-            $chart_id => $map_settings,
+            $chart_id => [
+              'id' => $chart_id,
+              'data_url' => $block_uuid ? Url::fromRoute('ghi_blocks.map_data', [
+                'plugin_id' => $this->getPluginId(),
+                'block_uuid' => $block_uuid,
+              ], [
+                'query' => $data_url_query,
+              ])->toString() : NULL,
+            ],
           ],
         ],
       ],
@@ -153,6 +161,46 @@ class PlanOperationalPresenceMap extends GHIBlockBase implements MultiStepFormBl
         'tags' => Cache::mergeTags($this->getCurrentBaseObject()->getCacheTags(), $this->getMapConfigCacheTags()),
       ],
     ];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function buildLazyMapPayload(string $map_id): MapPayload {
+    $conf = $this->getBlockConfig();
+    $map_data = $this->getMapData();
+    if (empty($map_data)) {
+      return MapPayload::forEmptyMap(
+        [
+          'id' => $map_id,
+          'settings_key' => 'plan_operational_presence_map',
+        ],
+        MapPayload::cacheabilityFromTags(Cache::mergeTags($this->getCurrentBaseObject()->getCacheTags(), $this->getMapConfigCacheTags())),
+      );
+    }
+
+    $outline_country = NULL;
+    $focus_country = $this->getCurrentPlanObject()->getFocusCountry();
+    if ($focus_country) {
+      /** @var \Drupal\ghi_base_objects\Plugin\FabricQuery\LocationQuery $location_query */
+      $location_query = $this->getQueryHandler('locations');
+      $country = $location_query->getLocation($focus_country->getSourceId());
+      $outline_country = $country?->toArray();
+    }
+
+    return MapPayload::forMap(
+      [
+        'json' => $map_data,
+        'id' => $map_id,
+        'settings_key' => 'plan_operational_presence_map',
+        'disclaimer' => $conf['display']['disclaimer'] ?: $this->getDefaultMapDisclaimer($this->getCurrentPlanObject()->getPlanLanguage()),
+        'pcodes_enabled' => $conf['display']['pcodes_enabled'] ?? TRUE,
+        'outline_country' => $outline_country,
+      ],
+      self::getGlobalMapSettings(),
+      self::getMapboxConfig(),
+      MapPayload::cacheabilityFromTags(Cache::mergeTags($this->getCurrentBaseObject()->getCacheTags(), $this->getMapConfigCacheTags())),
+    );
   }
 
   /**

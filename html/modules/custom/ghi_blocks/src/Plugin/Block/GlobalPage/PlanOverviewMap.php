@@ -11,6 +11,8 @@ use Drupal\Core\Plugin\Context\EntityContextDefinition;
 use Drupal\Core\Render\Markup;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\Url;
+use Drupal\ghi_blocks\Interfaces\LazyMapBlockInterface;
+use Drupal\ghi_blocks\Map\MapPayload;
 use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
 use Drupal\ghi_blocks\Traits\GlobalMapTrait;
 use Drupal\ghi_blocks\Traits\GlobalPlanOverviewBlockTrait;
@@ -35,7 +37,7 @@ use Drupal\hpc_downloads\Helpers\DownloadHelper;
     'year' => new ContextDefinition(data_type: 'integer', label: new TranslatableMarkup("Year")),
   ]
 )]
-class PlanOverviewMap extends GHIBlockBase {
+class PlanOverviewMap extends GHIBlockBase implements LazyMapBlockInterface {
 
   use GlobalMapTrait;
   use GlobalPlanOverviewBlockTrait;
@@ -59,46 +61,67 @@ class PlanOverviewMap extends GHIBlockBase {
    * {@inheritdoc}
    */
   public function buildContent() {
-    $map = $this->buildCircleMap();
+    $chart_id = Html::getUniqueId('plan-overview-map');
+    $block_uuid = $this->getUuid();
 
-    $chart_id = $map['chart_id'];
     return [
       '#theme' => 'plan_overview_map',
       '#chart_id' => $chart_id,
-      '#map_type' => $map['settings']['style'],
-      '#map_tabs' => $map['tabs'] ? [
+      '#map_type' => 'circle',
+      '#map_tabs' => [
         '#theme' => 'item_list',
-        '#items' => $map['tabs'],
+        '#items' => $this->buildTabLinks(),
         '#gin_lb_theme_suggestions' => FALSE,
-      ] : NULL,
+      ],
       '#attached' => [
         'library' => ['ghi_blocks/map.gl.plan_overview'],
         'drupalSettings' => [
           'plan_overview_map' => [
-            $chart_id => $map['settings'],
+            $chart_id => [
+              'id' => $chart_id,
+              'data_url' => $block_uuid ? Url::fromRoute('ghi_blocks.map_data', [
+                'plugin_id' => $this->getPluginId(),
+                'block_uuid' => $block_uuid,
+              ], [
+                'query' => [
+                  'current_uri' => $this->getCurrentUri(),
+                  'map_id' => $chart_id,
+                ],
+              ])->toString() : NULL,
+            ],
           ],
         ],
       ],
       '#cache' => [
-        'tags' => Cache::mergeTags($map['cache_tags'], $this->getMapConfigCacheTags()),
+        'tags' => $this->getMapConfigCacheTags(),
       ],
     ];
   }
 
   /**
+   * Build the JavaScript settings for the lazy-loaded map payload.
+   *
+   * @param string|null $chart_id
+   *   The map container ID from the initial page render.
+   *
+   * @return array
+   *   The settings and data needed to initialize the map client side.
+   */
+  public function buildMapDataSettings(?string $chart_id = NULL): array {
+    return $this->buildLazyMapPayload($chart_id ?? Html::getUniqueId('plan-overview-map'))->toArray();
+  }
+
+  /**
    * {@inheritdoc}
    */
-  public function getCacheTags() {
-    $cache_tags = parent::getCacheTags();
-    $plans = $this->getPlans();
-    foreach ($plans as $plan) {
-      $plan_entity = $plan->getEntity();
-      if (!$plan_entity) {
-        continue;
-      }
-      $cache_tags = Cache::mergeTags($cache_tags, $plan_entity->getCacheTags());
-    }
-    return $cache_tags;
+  public function buildLazyMapPayload(string $map_id): MapPayload {
+    $map = $this->buildCircleMap($map_id);
+    return MapPayload::forMap(
+      $map['settings'],
+      self::getGlobalMapSettings(),
+      self::getMapboxConfig(),
+      MapPayload::cacheabilityFromTags(Cache::mergeTags($map['cache_tags'], $this->getMapConfigCacheTags())),
+    );
   }
 
   /**
@@ -108,39 +131,13 @@ class PlanOverviewMap extends GHIBlockBase {
    *   An array containing the map data, map javascript settings, the chart id
    *   and the available tabs.
    */
-  private function buildCircleMap() {
+  private function buildCircleMap(?string $chart_id = NULL) {
     $conf = $this->getBlockConfig();
-    $chart_id = Html::getUniqueId('plan-overview-map');
+    $chart_id = $chart_id ?? Html::getUniqueId('plan-overview-map');
     $plans = $this->getPlans();
 
     // All tabs we have, including the legend we want to show.
-    $tabs = [
-      'in_need' => [
-        'group' => 'caseload',
-        'label' => $this->t('In Need'),
-        'icon' => 'users',
-      ],
-      'target' => [
-        'group' => 'caseload',
-        'label' => $this->t('Targeted'),
-        'icon' => 'users',
-      ],
-      'requirements' => [
-        'group' => 'funding',
-        'label' => $this->t('Requirements'),
-        'icon' => 'attach-money',
-      ],
-      'funding' => [
-        'group' => 'funding',
-        'label' => $this->t('Funding'),
-        'icon' => 'attach-money',
-      ],
-      'coverage' => [
-        'group' => 'coverage',
-        'label' => $this->t('% Funded'),
-        'icon' => 'attach-money',
-      ],
-    ];
+    $tabs = $this->getMapTabs();
 
     $map = [
       'chart_id' => $chart_id,
@@ -187,6 +184,7 @@ class PlanOverviewMap extends GHIBlockBase {
 
       $plan_entity = $plan->getEntity();
       if ($plan_entity) {
+        $map['cache_tags'] = Cache::mergeTags($map['cache_tags'], $plan_entity->getCacheTags());
         $footnotes[$plan->id()] = $this->getFootnotesForPlanBaseobject($plan_entity);
       }
       $section = $plan_entity ? $this->sectionManager->loadSectionForBaseObject($plan_entity) : NULL;
@@ -349,6 +347,7 @@ class PlanOverviewMap extends GHIBlockBase {
     $map['settings'] = [
       'json' => !empty($map['data']) ? $map['data'] : NULL,
       'id' => $chart_id,
+      'settings_key' => 'plan_overview_map',
       'style' => 'circle',
       'legend' => $this->buildLegendItems(),
       'search_enabled' => $conf['search_enabled'],
@@ -356,6 +355,56 @@ class PlanOverviewMap extends GHIBlockBase {
     ];
 
     return $map;
+  }
+
+  /**
+   * Build tab links for the initial lightweight map render.
+   *
+   * @return \Drupal\Core\Render\Markup[]
+   *   The tab links.
+   */
+  private function buildTabLinks(): array {
+    $links = [];
+    foreach ($this->getMapTabs() as $key => $tab) {
+      $links[] = Markup::create('<a href="#" class="map-tab" data-map-index="' . $key . '">' . $tab['label'] . '</a>');
+    }
+    return $links;
+  }
+
+  /**
+   * Get the supported map tabs.
+   *
+   * @return array
+   *   The tab definitions.
+   */
+  private function getMapTabs(): array {
+    return [
+      'in_need' => [
+        'group' => 'caseload',
+        'label' => $this->t('In Need'),
+        'icon' => 'users',
+      ],
+      'target' => [
+        'group' => 'caseload',
+        'label' => $this->t('Targeted'),
+        'icon' => 'users',
+      ],
+      'requirements' => [
+        'group' => 'funding',
+        'label' => $this->t('Requirements'),
+        'icon' => 'attach-money',
+      ],
+      'funding' => [
+        'group' => 'funding',
+        'label' => $this->t('Funding'),
+        'icon' => 'attach-money',
+      ],
+      'coverage' => [
+        'group' => 'coverage',
+        'label' => $this->t('% Funded'),
+        'icon' => 'attach-money',
+      ],
+    ];
   }
 
   /**

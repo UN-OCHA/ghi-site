@@ -181,6 +181,121 @@
     },
 
     /**
+     * Prepare a bitmap snapshot for Snap PNG captures.
+     *
+     * Snap's element screenshot can miss WebGL canvas contents even after the
+     * map is ready. In PNG capture mode we copy the rendered canvas into an
+     * overlaid image so the export captures the same visual map.
+     *
+     * @param {ghi.mapState} state
+     *   The map state.
+     */
+    preparePngCaptureSnapshot: function (state) {
+      let map = state.getMap();
+      let element = document.getElementById(state.getMapId());
+      if (!map || !element) {
+        return;
+      }
+      let blockElement = element.closest('.block');
+
+      element.scrollIntoView({
+        block: 'center',
+        inline: 'nearest',
+      });
+      map.resize();
+
+      let attempts = 0;
+      let failSnapshot = () => {
+        element.setAttribute('data-map-snapshot-error', '');
+        map.off('idle', syncSnapshot);
+      };
+      let syncSnapshot = () => {
+        attempts++;
+        let isReady = false;
+        try {
+          isReady = map.isStyleLoaded() && map.areTilesLoaded();
+        }
+        catch (e) {
+          isReady = false;
+        }
+        let style = state.style ?? null;
+        let layerId = style && typeof style.getFeatureLayerId === 'function' ? style.getFeatureLayerId() : null;
+        let locations = typeof state.getLocations === 'function' ? state.getLocations() : [];
+        if (isReady && style && style.loaded !== true) {
+          isReady = false;
+        }
+        if (isReady && layerId) {
+          let renderedFeatures = [];
+          if (!map.getLayer(layerId)) {
+            isReady = false;
+          }
+          else if (locations.length) {
+            try {
+              renderedFeatures = map.queryRenderedFeatures({ layers: [layerId] });
+            }
+            catch (e) {
+              try {
+                renderedFeatures = map.queryRenderedFeatures(undefined, { layers: [layerId] });
+              }
+              catch (e) {
+                renderedFeatures = [];
+              }
+            }
+            isReady = renderedFeatures.length > 0;
+          }
+        }
+        if (!isReady) {
+          if (attempts < 40) {
+            setTimeout(syncSnapshot, 500);
+          }
+          else {
+            failSnapshot();
+          }
+          return;
+        }
+
+        let canvas = element.querySelector('.mapboxgl-canvas');
+        let mapContainer = element.querySelector('.mapboxgl-map');
+        if (!canvas || !mapContainer) {
+          failSnapshot();
+          return;
+        }
+
+        let snapshot = element.querySelector(':scope > .mapboxgl-canvas-snapshot');
+        if (!snapshot) {
+          snapshot = document.createElement('img');
+          snapshot.className = 'mapboxgl-canvas-snapshot';
+          snapshot.alt = '';
+          snapshot.setAttribute('aria-hidden', 'true');
+          snapshot.style.display = 'block';
+          snapshot.style.width = '100%';
+          snapshot.style.height = mapContainer.offsetHeight + 'px';
+          snapshot.style.objectFit = 'cover';
+          element.appendChild(snapshot);
+        }
+
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            try {
+              let snapshotUrl = canvas.toDataURL('image/png');
+              snapshot.src = snapshotUrl;
+              mapContainer.style.display = 'none';
+              element.setAttribute('data-map-snapshot-ready', '');
+              blockElement?.classList.add('map-image-loaded');
+              map.off('idle', syncSnapshot);
+            }
+            catch (e) {
+              failSnapshot();
+            }
+          });
+        });
+      };
+
+      map.on('idle', syncSnapshot);
+      setTimeout(syncSnapshot, 500);
+    },
+
+    /**
      * Initialize the map
      *
      * @param {String} map_id
@@ -198,6 +313,9 @@
       let mapbox = new ghi.mapbox();
       let map = mapbox.addMap(element, options);
       if (!map) {
+        if (element && options.png_capture_mode === true) {
+          element.setAttribute('data-map-snapshot-error', '');
+        }
         return;
       }
 
@@ -234,6 +352,9 @@
 
       // Setup the state.
       state.setup(options);
+      if (options.png_capture_mode === true) {
+        this.preparePngCaptureSnapshot(state);
+      }
     },
 
   }

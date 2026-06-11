@@ -62,6 +62,7 @@
         cooperativeGestures: true,
         attributionControl: false,
         logoPosition: 'bottom-right',
+        preserveDrawingBuffer: options.preserve_drawing_buffer === true,
       };
 
       // Create a map.
