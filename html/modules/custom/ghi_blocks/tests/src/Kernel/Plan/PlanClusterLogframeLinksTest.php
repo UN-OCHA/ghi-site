@@ -57,10 +57,6 @@ class PlanClusterLogframeLinksTest extends PlanBlockKernelTestBase {
     $this->assertInstanceOf(PlanClusterLogframeLinks::class, $plugin);
     $this->assertInstanceOf(OverrideDefaultTitleBlockInterface::class, $plugin);
     $this->assertEquals('Cluster Frameworks', $plugin->label());
-
-    $admin_icons = $plugin->getAdminIcons();
-    $this->assertCount(1, $admin_icons);
-    $this->assertArrayHasKey('configuration', $admin_icons);
   }
 
   /**

@@ -5,7 +5,6 @@ namespace Drupal\ghi_blocks\Plugin\Block;
 use Drupal\Component\Plugin\Exception\ContextException;
 use Drupal\Component\Plugin\Exception\PluginException;
 use Drupal\Component\Render\FormattableMarkup;
-use Drupal\Component\Serialization\Yaml;
 use Drupal\Component\Utility\Html;
 use Drupal\Component\Utility\NestedArray;
 use Drupal\Core\Ajax\AjaxResponse;
@@ -18,7 +17,6 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Form\SubformState;
 use Drupal\Core\Form\SubformStateInterface;
 use Drupal\Core\Render\Element;
-use Drupal\Core\Render\Markup;
 use Drupal\Core\Security\TrustedCallbackInterface;
 use Drupal\Core\Url;
 use Drupal\ghi_base_objects\Entity\BaseObjectAwareEntityInterface;
@@ -32,16 +30,13 @@ use Drupal\ghi_blocks\Interfaces\OptionalTitleBlockInterface;
 use Drupal\ghi_blocks\Interfaces\OverrideDefaultTitleBlockInterface;
 use Drupal\ghi_blocks\Traits\BlockCommentTrait;
 use Drupal\ghi_blocks\Traits\VerticalTabsTrait;
-use Drupal\ghi_homepage\Entity\Homepage;
 use Drupal\ghi_plan_clusters\Entity\PlanCluster;
 use Drupal\ghi_plans\Entity\Plan;
 use Drupal\ghi_sections\Entity\SectionNodeInterface;
 use Drupal\ghi_subpages\Entity\SubpageNodeInterface;
 use Drupal\hpc_api\Helpers\ProfileHelper;
 use Drupal\hpc_api\Traits\SimpleCacheTrait;
-use Drupal\hpc_common\Helpers\ArrayHelper;
 use Drupal\hpc_common\Helpers\BlockHelper;
-use Drupal\hpc_common\Helpers\UserHelper;
 use Drupal\hpc_common\Plugin\HPCBlockBase;
 use Drupal\hpc_downloads\DownloadSource\BlockSource;
 use Drupal\hpc_downloads\Interfaces\HPCDownloadExcelInterface;
@@ -632,14 +627,6 @@ abstract class GHIBlockBase extends HPCBlockBase implements TrustedCallbackInter
     if (!empty($variables['content']['#download_links'])) {
       $variables['download_links'] = $variables['content']['#download_links'];
       unset($variables['content']['#download_links']);
-    }
-
-    if (UserHelper::isAdministrator()) {
-      $icons = $this->getAdminIcons();
-      $variables['icons'] = array_values($icons);
-      if (array_key_exists('api_url', $icons)) {
-        $variables['attributes']['class'][] = 'has-api-url-tooltip';
-      }
     }
 
     // Add the block settings library, so that block actions get stored in the
@@ -2283,75 +2270,6 @@ abstract class GHIBlockBase extends HPCBlockBase implements TrustedCallbackInter
       ]),
     ];
     return $meta_data;
-  }
-
-  /**
-   * Get the available admin icons for the block.
-   *
-   * @return array
-   *   An array of render arrays for the icons.
-   */
-  public function getAdminIcons() {
-    $icons = [];
-    if ($this->isPreview()) {
-      return $icons;
-    }
-    if (!$this->getPageNode() || $this->getPageNode() instanceof Homepage) {
-      // Don't show the icons on the homepage.
-      return $icons;
-    }
-    $endpoint_urls = $this->getFullEndpointUrls();
-    if (!empty($endpoint_urls)) {
-      $icons['api_url'] = [
-        '#theme' => 'hpc_tooltip',
-        '#tooltip' => implode('<br />', $endpoint_urls),
-        '#class' => 'api-url',
-        '#tag_content' => [
-          '#theme' => 'hpc_icon',
-          '#icon' => 'help',
-          '#tag' => 'span',
-        ],
-      ];
-    }
-    $icons['configuration'] = [
-      '#theme' => 'hpc_popover',
-      '#title' => $this->t('Block configuration'),
-      '#content' => Markup::create('<pre>' . Yaml::encode(ArrayHelper::mapObjectsToString($this->getConfiguration())) . '</pre>'),
-      '#material_icon' => 'content_copy',
-      '#class' => 'block-configuration',
-    ];
-    $block_uuid = $this->getUuid();
-    // See if we can get a block instance based on the available information.
-    // If not then we don't want to add the reload link as it wouldn't function
-    // properly anyway. This situation happens when embedding a full node view,
-    // e.g. a homepage node, into a different page.
-    $block_instance = BlockHelper::getBlockInstance($this->getCurrentUri(), $this->getPluginId(), $block_uuid);
-    if (!empty($block_uuid) && $block_instance) {
-      $url = Url::fromRoute('ghi_blocks.load_block', [
-        'plugin_id' => $this->getPluginId(),
-        'block_uuid' => $block_uuid,
-      ]);
-      $icons['reload'] = [
-        '#type' => 'link',
-        '#title' => [
-          '#theme' => 'hpc_icon',
-          '#icon' => 'refresh',
-          '#tag' => 'span',
-        ],
-        '#url' => $url,
-        '#options' => [
-          'query' => [
-            'current_uri' => $this->getCurrentUri(),
-          ] + $this->requestStack->getCurrentRequest()->query->all(),
-        ],
-        '#attributes' => [
-          'class' => [
-            'use-ajax',
-          ],
-        ],
-      ];
-    }
-    return $icons;
   }
 
 }
