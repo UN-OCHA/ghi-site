@@ -9,7 +9,6 @@ global-styling:
     - core/jquery
     - core/once
     - common_design_subtheme/sorttable
-    - common_design_subtheme/select2
     - common_design_subtheme/icons
     - common_design/cd-dropdown
     # This is not technically a dependency, but on pages that have no visible
@@ -56,9 +55,14 @@ select2:
   version: 2
   js:
     /libraries/select2/dist/js/select2.min.js: {}
+    js/select2.js: {}
   css:
     component:
       /libraries/select2/dist/css/select2.min.css: {}
+  dependencies:
+    - core/drupal
+    - core/jquery
+    - core/once
 
 icons:
   js:

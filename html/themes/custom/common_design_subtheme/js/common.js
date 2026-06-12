@@ -157,19 +157,6 @@
         $(this).parents('.ghi-image-wrapper').hide();
       });
 
-      $('select').filter(function () {
-        if ($(this).parents('[data-block-preview]').length) {
-          return true;
-        }
-        return !$(this).parents('.glb-canvas-form').length;
-      }).each(function () {
-        $(this).select2({
-          width: 'resolve',
-          minimumResultsForSearch: 5,
-          dropdownAutoWidth: true
-        });
-      });
-
       if (typeof sorttable != 'undefined') {
         once('sortable-table-init', 'table.sortable', context).forEach(element => {
           if (context != document || !$(element).data('once').includes('sortable-table-init')) {
