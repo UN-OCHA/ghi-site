@@ -61,7 +61,9 @@ class ProjectQuery extends FabricQueryBase {
       return [];
     }
     if (count($project_ids) > self::MAX_FILTER_COUNT_ARRAY) {
-      return $this->doChunkedQuery($project_ids, fn ($ids): array => $this->getProjectsById($ids, $plan_context));
+      $projects = $this->doChunkedQuery($project_ids, fn ($ids): array => $this->getProjectsById($ids, $plan_context));
+      $this->sortProjectsByProjectCode($projects);
+      return $projects;
     }
     $items = $this->fabricClient->createQuery('projects', Project::getGraphQlItems())
       ->setFilter('Id', $project_ids)
@@ -77,7 +79,9 @@ class ProjectQuery extends FabricQueryBase {
     $this->addOrganizationsToProjectItems($items);
     $this->addFieldClustersToProjectItems($items);
     $this->addLocationIdsToProjectItems($items);
-    return $this->buildResultObjects($items, Project::class);
+    $projects = $this->buildResultObjects($items, Project::class);
+    $this->sortProjectsByProjectCode($projects);
+    return $projects;
   }
 
   /**
@@ -152,7 +156,18 @@ class ProjectQuery extends FabricQueryBase {
       $projects = array_filter($projects, fn ($project) => array_key_exists($organization_id, $project->getOrganizations()));
     }
 
+    $this->sortProjectsByProjectCode($projects);
     return $projects;
+  }
+
+  /**
+   * Sort projects by their project code.
+   *
+   * @param \Drupal\ghi_plans\ApiObjects\Project[] $projects
+   *   An array of project objects.
+   */
+  private function sortProjectsByProjectCode(array &$projects): void {
+    ArrayHelper::sortObjectsByMethod($projects, 'getProjectCode', SORT_ASC, SORT_STRING);
   }
 
   /**
