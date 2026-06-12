@@ -91,6 +91,11 @@ function ghi_hero_image_preprocess_page(&$variables) {
  * to configure flushing max once a day, which is not enough for us.
  */
 function ghi_hero_image_cache_flush() {
+  if (PHP_SAPI === 'cli') {
+    // Avoid recursively deleting the shared external-image cache during Drush
+    // cache rebuilds, which are part of the deployment path.
+    return;
+  }
   if (\Drupal::moduleHandler()->moduleExists('imagecache_external') && function_exists('imagecache_external_get_directory_path')) {
     // A bit extreme to delete the full external storage, but
     // imagecache_external_flush_cache() doesn't work when not called from
