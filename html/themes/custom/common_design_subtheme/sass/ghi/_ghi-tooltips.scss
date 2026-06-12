@@ -44,6 +44,10 @@
   svg {
     fill: var(--cd-primary-color);
   }
+
+  .modal-link svg {
+    fill: currentColor;
+  }
 }
 
 .tippy-box .tippy-content {
