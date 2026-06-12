@@ -1,6 +1,14 @@
 .material-icon {
-  font-family: 'Material Icons' !important;
-  font-style: normal !important;
-  font-weight: normal !important;
-  text-transform: none !important;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  vertical-align: middle;
+  line-height: 1;
+}
+
+.material-icon__svg {
+  display: block;
+  width: 1em;
+  height: 1em;
+  fill: currentColor;
 }

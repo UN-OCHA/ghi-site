@@ -109,7 +109,8 @@
         opacity: .4;
         outline-style: none;
 
-        span {
+        .material-icon {
+          color: var(--ghi-default-text-color);
           font-size: 16px;
           font-weight: 700;
           line-height: 20px;

@@ -97,7 +97,9 @@
             line-height: 24px;
 
             .link {
-              height: 24px; // Same height as the material icon inside.
+              display: inline-flex;
+              align-items: center;
+              height: 24px;
               cursor: pointer;
               color: var(--cd-primary-color);
               font-weight: bold;
@@ -143,6 +145,10 @@
 
             span {
               display: inline-block;
+            }
+
+            .material-icon {
+              font-size: 20px;
             }
           }
 

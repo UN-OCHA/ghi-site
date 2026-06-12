@@ -17,8 +17,8 @@
             <p class="label">{{ item.label }}</p>
             <p class="description">{{ item.description }}</p>
           </div>
-          <span class="table-toggle material-icons" tabindex="0" data-toggle="tooltip" data-tippy-content="{{ tooltip_show_data }}" data-tippy-content-open="{{ tooltip_hide_data }}">keyboard_arrow_down</span>
-          <span class="table-no-data material-icons" data-toggle="tooltip" data-tippy-content="{{ tooltip_no_data }}">horizontal_rule</span>
+          <span class="table-toggle material-icon" tabindex="0" data-toggle="tooltip" data-tippy-content="{{ tooltip_show_data }}" data-tippy-content-open="{{ tooltip_hide_data }}"><svg aria-hidden="true" focusable="false"><use href="#material-symbol-keyboard-arrow-down" xlink:href="#material-symbol-keyboard-arrow-down"></use></svg></span>
+          <span class="table-no-data material-icon" data-toggle="tooltip" data-tippy-content="{{ tooltip_no_data }}"><svg aria-hidden="true" focusable="false"><use href="#material-symbol-horizontal-rule" xlink:href="#material-symbol-horizontal-rule"></use></svg></span>
         </div>
         {%- if not item.attachment_tables is empty or not item.contributes_heading is empty -%}
           <div class="attachment-tables-wrapper">

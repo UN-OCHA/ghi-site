@@ -1,0 +1,7 @@
+{% if symbol_id %}
+  <svg class="material-icon__svg" aria-hidden="true" focusable="false">
+    <use href="#{{ symbol_id }}" xlink:href="#{{ symbol_id }}"></use>
+  </svg>
+{% else %}
+  {{ icon }}
+{% endif %}

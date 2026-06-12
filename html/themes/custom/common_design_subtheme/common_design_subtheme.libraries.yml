@@ -10,6 +10,7 @@ global-styling:
     - core/once
     - common_design_subtheme/sorttable
     - common_design_subtheme/select2
+    - common_design_subtheme/icons
     - common_design/cd-dropdown
     # This is not technically a dependency, but on pages that have no visible
     # element using cd-tables, but at least one hidden, not having this already
@@ -58,6 +59,12 @@ select2:
   css:
     component:
       /libraries/select2/dist/css/select2.min.css: {}
+
+icons:
+  js:
+    js/icons.js: {}
+  dependencies:
+    - core/drupal
 
 # External libraries
 swiper:
