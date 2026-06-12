@@ -33,7 +33,7 @@
   opacity: 0.35;
 }
 
-.project-detail-modal.ui-dialog .legacy-project-pager__button .material-icons {
+.project-detail-modal.ui-dialog .legacy-project-pager__button .material-icon {
   font-size: 1.5rem;
   line-height: 1;
 }

@@ -114,9 +114,14 @@
       wrapper.appendChild(input);
 
       let cancel = document.createElement('a');
-      cancel.innerHTML = '<span class="material-icon">cancel</span>';
       cancel.className = 'search-cancel';
       cancel.setAttribute('title', Drupal.t('Cancel'));
+      let cancelIcon = document.createElement('span');
+      cancelIcon.className = 'material-icon';
+      cancelIcon.dataset.hpcIcon = 'cancel';
+      cancelIcon.setAttribute('aria-hidden', 'true');
+      cancel.appendChild(cancelIcon);
+      Drupal.attachBehaviors(cancel);
       cancel.addEventListener('click', (e) => this.cancelSearch());
       wrapper.appendChild(cancel);
 

@@ -92,6 +92,7 @@ map.gl.control.search:
   js:
     js/map.gl/controls/map.control.search.js: {}
   dependencies:
+    - core/drupal
     - core/jquery
 
 map.gl.state:

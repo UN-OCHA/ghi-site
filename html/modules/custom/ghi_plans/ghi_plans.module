@@ -6,7 +6,6 @@
  */
 
 use Drupal\Component\Utility\Unicode;
-use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\ghi_base_objects\ApiObjects\Country;
 use Drupal\ghi_base_objects\Helpers\BaseObjectHelper;
@@ -57,21 +56,6 @@ function ghi_plans_cron() {
     $plan->setSyncing(TRUE);
     $plan->save();
   }
-}
-
-/**
- * Implements hook_page_attachments().
- */
-function ghi_plans_page_attachments(array &$page) {
-  $cache = CacheableMetadata::createFromRenderArray($page);
-  $page['#attached']['html_head_link'][] = [
-    [
-      'href' => 'https://fonts.googleapis.com/icon?family=Material+Icons',
-      'rel' => 'stylesheet',
-    ],
-  ];
-  // Apply updated caching information.
-  $cache->applyTo($page);
 }
 
 /**

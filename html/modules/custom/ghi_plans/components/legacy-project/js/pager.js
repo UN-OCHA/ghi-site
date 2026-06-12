@@ -83,7 +83,7 @@
   };
 
   /**
-   * Creates one Material Icons pager button with an accessible label.
+   * Creates one pager button with an accessible label.
    */
   const createProjectDetailPagerButton = (direction, icon, label) => {
     const button = document.createElement('button');
@@ -94,10 +94,11 @@
     button.setAttribute('title', label);
 
     const iconElement = document.createElement('span');
-    iconElement.className = 'material-icons';
+    iconElement.className = 'material-icon';
+    iconElement.dataset.hpcIcon = icon;
     iconElement.setAttribute('aria-hidden', 'true');
-    iconElement.textContent = icon;
     button.appendChild(iconElement);
+    Drupal.attachBehaviors(button);
 
     return button;
   };
@@ -122,14 +123,14 @@
     pager.appendChild(
       createProjectDetailPagerButton(
         'previous',
-        'keyboard_arrow_left',
+        'keyboard-arrow-left',
         Drupal.t('Previous project'),
       ),
     );
     pager.appendChild(
       createProjectDetailPagerButton(
         'next',
-        'keyboard_arrow_right',
+        'keyboard-arrow-right',
         Drupal.t('Next project'),
       ),
     );

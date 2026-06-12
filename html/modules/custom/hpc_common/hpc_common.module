@@ -163,6 +163,13 @@ function hpc_common_theme($existing, $type, $theme, $path) {
       ],
       'template' => 'hpc-icon',
     ] + $common,
+    'hpc_icon_symbol' => [
+      'variables' => [
+        'icon' => NULL,
+        'symbol_id' => NULL,
+      ],
+      'template' => 'hpc-icon-symbol',
+    ] + $common,
     'hpc_toggle' => [
       'variables' => [
         'parent_selector' => NULL,
