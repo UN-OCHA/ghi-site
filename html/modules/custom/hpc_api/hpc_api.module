@@ -5,6 +5,7 @@
  * Global functions for the HPC API module.
  */
 
+use Drupal\Core\File\FileSystemInterface;
 use Drupal\hpc_api\Helpers\QueryHelper;
 
 /**
@@ -13,7 +14,24 @@ use Drupal\hpc_api\Helpers\QueryHelper;
  * Clean up import files.
  */
 function hpc_api_cache_flush() {
-  hpc_api_clear_directory(QueryHelper::IMPORT_DIR, '/.*\.json/');
+  hpc_api_clear_directory_contents(QueryHelper::IMPORT_DIR);
+}
+
+/**
+ * Delete and recreate the given directory.
+ *
+ * Use this only for directories whose whole contents are disposable.
+ *
+ * @param string $dir
+ *   The directory to clear.
+ */
+function hpc_api_clear_directory_contents($dir) {
+  /** @var \Drupal\Core\File\FileSystem $file_system */
+  $file_system = \Drupal::service('file_system');
+  if (file_exists($dir)) {
+    $file_system->deleteRecursive($dir);
+  }
+  $file_system->prepareDirectory($dir, FileSystemInterface::CREATE_DIRECTORY | FileSystemInterface::MODIFY_PERMISSIONS);
 }
 
 /**

@@ -614,5 +614,16 @@ function hpc_downloads_phpexcel_export($op, &$data, $phpexcel, $options, $column
  * Implements hook_cache_flush().
  */
 function hpc_downloads_cache_flush() {
+  if (PHP_SAPI === 'cli') {
+    // Keep deployment cache rebuilds from scanning the shared downloads tree.
+    return;
+  }
+  DownloadHelper::clearDownloadFiles();
+}
+
+/**
+ * Implements hook_cron().
+ */
+function hpc_downloads_cron() {
   DownloadHelper::clearDownloadFiles();
 }
