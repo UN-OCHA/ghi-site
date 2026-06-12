@@ -20,20 +20,20 @@
   }
 }
 
-.material-icons {
-  display: inline-block;
-  white-space: nowrap;
-  letter-spacing: normal;
-  text-transform: none;
-  word-wrap: normal;
-  direction: ltr;
-  font-family: "Material Icons", sans-serif;
+.material-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  vertical-align: middle;
   font-size: 24px;
-  font-weight: normal;
-  font-style: normal;
   line-height: 1;
-  -webkit-font-feature-settings: "liga";
-  -webkit-font-smoothing: antialiased;
+
+  svg {
+    display: block;
+    width: 1em;
+    height: 1em;
+    fill: currentColor;
+  }
 }
 
 #main-content {

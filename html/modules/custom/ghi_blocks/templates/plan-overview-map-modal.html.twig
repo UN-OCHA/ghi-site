@@ -1,7 +1,7 @@
 <div class="plan-overview-map-modal-content-wrapper">
   <div class="section-wrapper">
     <div class="section-header">
-      <i class="material-icons group">group</i>
+      {{ {'#theme': 'hpc_icon', '#icon': 'group', '#tag': 'i'} }}
       <span>{{ 'People'|t }}</span>
     </div>
     <div class="section-row">
@@ -44,7 +44,7 @@
   {% if items.funding_required or items.funding_received or items.funding_progress %}
     <div class="section-wrapper">
       <div class="section-header">
-        <i class="material-icons attach-money">attach_money</i>
+        {{ {'#theme': 'hpc_icon', '#icon': 'attach_money', '#tag': 'i'} }}
         <span>{{ 'Funding'|t }}</span>
       </div>
       <div class="section-row">

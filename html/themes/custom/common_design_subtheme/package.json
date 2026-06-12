@@ -14,7 +14,7 @@
     "sass:postcss": "postcss --no-map css/styles.css --use autoprefixer -b 'last 3 versions' -r",
     "sass:build": "npm run sass:lint && npm run sass:compile && npm run sass:postcss",
     "js:lint": "eslint js/*.js",
-    "svg:sprite": "svg-sprite --svg-xmldecl=false --svg-doctype=false --svg-rootattrs=_config/svg-sprite.config.json --log=info --symbol --symbol-prefix='%s' --symbol-example=true --shape-id-generator='' --symbol-dest=img/icons --symbol-sprite=ghi-icons-sprite.svg img/icons/*.svg"
+    "svg:sprite": "find img/icons -maxdepth 1 -type f -name '*.svg' ! -name 'ghi-icons-sprite.svg' -print | sort | xargs svg-sprite --svg-xmldecl=false --svg-doctype=false --svg-rootattrs=_config/svg-sprite.config.json --log=info --symbol --symbol-prefix='%s' --symbol-example=true --shape-id-generator='' --symbol-dest=img/icons --symbol-sprite=ghi-icons-sprite.svg"
   },
   "engines": {
     "node": "^18.16.1",
