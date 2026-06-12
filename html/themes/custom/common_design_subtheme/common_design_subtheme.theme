@@ -248,9 +248,6 @@ function common_design_subtheme_preprocess_block(&$variables) {
       }
       $variables['content']['#full_width'] = TRUE;
       $variables['attributes']['class'][] = 'block-highlighted';
-      // Don't show the admin links for the first block as this gives issues
-      // with the styling after using the reload admin link.
-      unset($variables['icons']);
     }
     $processed_regions[$region] = TRUE;
   }
