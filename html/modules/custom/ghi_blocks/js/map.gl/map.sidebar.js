@@ -134,7 +134,8 @@
       let state = this.state;
       event.stopPropagation();
 
-      let object_id = $(element).data('object-id') ?? $(element).parent('[data-object-id]').data('object-id');
+      element = element.closest('.navigation .link');
+      let object_id = $(element).data('object-id');
       var new_active_location = state.getLocationById(object_id);
       if (new_active_location) {
         state.style.showSidebarForObject(new_active_location);
@@ -156,8 +157,8 @@
       let self = this;
       // Add navigation behavior.
       $(this.container).find(once('map-navigation-links', '.navigation .link'))
-        .on('click', (e) => self.handleNavigationLink(e.target, e))
-        .on('keyup', (e) => self.handleEnter(e, () => self.handleNavigationLink(e.target, e)))
+        .on('click', (e) => self.handleNavigationLink(e.currentTarget, e))
+        .on('keyup', (e) => self.handleEnter(e, () => self.handleNavigationLink(e.currentTarget, e)))
         .on('keyup', (e) => self.handleEsc(e, () => self.hide()));
     }
 
