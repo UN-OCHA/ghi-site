@@ -448,6 +448,10 @@ abstract class GHIBlockBase extends HPCBlockBase implements TrustedCallbackInter
     $lazy_load = $this->config('ghi_blocks.block_settings')->get('lazy_load') && $this->supportsLazyLoading();
     $is_front_page_block = str_starts_with($this->getPluginId(), 'global_');
     if ($lazy_load && !$this->isPreview() && !$is_front_page_block && !$this->isEmpty()) {
+      $preview_classes = ['ghi-block-bigpipe-preview'];
+      if ($this->currentUser->isAuthenticated()) {
+        $preview_classes[] = 'ghi-block-bigpipe-preview--delayed';
+      }
       $build['content'] = [
         '#lazy_builder' => [
           static::class . '::lazyBuildContent',
@@ -464,7 +468,7 @@ abstract class GHIBlockBase extends HPCBlockBase implements TrustedCallbackInter
         '#lazy_builder_preview' => [
           '#type' => 'container',
           '#attributes' => [
-            'class' => ['ghi-block-bigpipe-preview'],
+            'class' => $preview_classes,
           ],
           'content' => [
             [
