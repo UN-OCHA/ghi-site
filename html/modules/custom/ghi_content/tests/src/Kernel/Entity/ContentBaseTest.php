@@ -18,6 +18,7 @@ use Drupal\ghi_sections\Entity\Section;
 use Drupal\node\Entity\NodeType;
 use Drupal\node\NodeInterface;
 use Drupal\taxonomy\Entity\Term;
+use Symfony\Component\HttpFoundation\Request;
 
 /**
  * Tests some features of the abstract ContentBase class.
@@ -281,13 +282,14 @@ class ContentBaseTest extends KernelTestBase {
    */
   public function testContextNodeDocument() {
     // Create a published article with some tags.
+    $article_tags = [
+      $this->createTerm($this->vocabulary),
+      $this->createTerm($this->vocabulary),
+    ];
     $article = Article::create([
       'title' => 'Article title',
       'status' => NodeInterface::PUBLISHED,
-      'field_tags' => [
-        $this->createTerm($this->vocabulary),
-        $this->createTerm($this->vocabulary),
-      ],
+      'field_tags' => $article_tags,
     ]);
     $article->save();
     $this->assertEquals('Article title', $article->getPageTitle());
@@ -309,7 +311,7 @@ class ContentBaseTest extends KernelTestBase {
     // Confirm this document is a valid context node and that it's label is
     // used as the page title for the article.
     $this->assertTrue($article->isValidContextNode($document->reveal()));
-    $article->setContextNode($document->reveal());
+    $this->assertTrue($article->setContextNodeIfValid($document->reveal()));
     $this->assertEquals($document->reveal(), $article->getContextNode());
     $this->assertEquals('Document title', $article->getPageTitle());
 
@@ -328,12 +330,28 @@ class ContentBaseTest extends KernelTestBase {
     $document->hasArticle($article)->willReturn(FALSE);
     $document->label()->willReturn('Document title');
 
+    $ambient_section = Section::create([
+      'title' => 'Ambient section title',
+      'status' => NodeInterface::PUBLISHED,
+      'field_tags' => $article_tags,
+    ]);
+    $ambient_section->save();
+    $request = Request::create('/ambient-section');
+    $request->attributes->set('node', $ambient_section);
+    \Drupal::service('request_stack')->push($request);
+
     // Confirm this document is a not a valid context node and that it's label
-    // is not used as the page title for the article.
-    $this->assertFalse($article->isValidContextNode($document->reveal()));
-    $article->setContextNode($document->reveal());
-    $this->assertNull($article->getContextNode());
-    $this->assertEquals('Article title', $article->getPageTitle());
+    // is not used as the page title for the article. Also confirm that the
+    // rejected explicit context prevents a fallback to ambient route context.
+    try {
+      $this->assertFalse($article->isValidContextNode($document->reveal()));
+      $this->assertFalse($article->setContextNodeIfValid($document->reveal()));
+      $this->assertNull($article->getContextNode());
+      $this->assertEquals('Article title', $article->getPageTitle());
+    }
+    finally {
+      \Drupal::service('request_stack')->pop();
+    }
   }
 
   /**
