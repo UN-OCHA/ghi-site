@@ -311,7 +311,7 @@ class ContentBaseTest extends KernelTestBase {
     // Confirm this document is a valid context node and that it's label is
     // used as the page title for the article.
     $this->assertTrue($article->isValidContextNode($document->reveal()));
-    $this->assertTrue($article->setContextNodeIfValid($document->reveal()));
+    $this->assertTrue($article->setContextNode($document->reveal()));
     $this->assertEquals($document->reveal(), $article->getContextNode());
     $this->assertEquals('Document title', $article->getPageTitle());
 
@@ -345,7 +345,7 @@ class ContentBaseTest extends KernelTestBase {
     // rejected explicit context prevents a fallback to ambient route context.
     try {
       $this->assertFalse($article->isValidContextNode($document->reveal()));
-      $this->assertFalse($article->setContextNodeIfValid($document->reveal()));
+      $this->assertFalse($article->setContextNode($document->reveal()));
       $this->assertNull($article->getContextNode());
       $this->assertEquals('Article title', $article->getPageTitle());
     }
