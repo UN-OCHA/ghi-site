@@ -17,6 +17,9 @@ class Article extends ContentBase implements ContentReviewInterface {
    *   The context node if set.
    */
   public function getContextNode() {
+    // If an explicit context candidate exists, let ContentBase validate it.
+    // That prevents a rejected document context from being replaced by the
+    // current route document.
     if (!$this->contextNode) {
       $document = $this->getCurrentDocumentNode();
       if ($document && $this->isValidContextNode($document)) {

@@ -30,7 +30,7 @@ abstract class ContentBase extends Node implements NodeInterface, ImageNodeInter
    *
    * @var \Drupal\node\NodeInterface
    */
-  private $contextNode = NULL;
+  protected $contextNode = NULL;
 
   /**
    * {@inheritdoc}
@@ -134,12 +134,32 @@ abstract class ContentBase extends Node implements NodeInterface, ImageNodeInter
   }
 
   /**
+   * Set the given node as explicit context and report whether it is valid.
+   *
+   * Invalid explicit contexts are still stored as candidates so later
+   * getContextNode() calls do not fall back to ambient route context.
+   *
+   * @param \Drupal\node\NodeInterface $node
+   *   The node to set as the current context.
+   *
+   * @return bool
+   *   TRUE if the node was accepted as context, FALSE otherwise.
+   */
+  public function setContextNodeIfValid(NodeInterface $node): bool {
+    $this->setContextNode($node);
+    return $this->isValidContextNode($node);
+  }
+
+  /**
    * Get the current context node.
    *
    * @return \Drupal\node\NodeInterface|null
    *   The context node if set.
    */
   public function getContextNode() {
+    // Only derive section context when no explicit context candidate has been
+    // set. An invalid explicit candidate should return NULL instead of being
+    // replaced by ambient route context.
     if (!$this->contextNode) {
       $section = $this->getCurrentSectionNode();
       if ($section && $this->isValidContextNode($section)) {
