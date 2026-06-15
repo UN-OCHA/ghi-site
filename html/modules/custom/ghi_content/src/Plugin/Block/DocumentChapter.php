@@ -62,15 +62,20 @@ class DocumentChapter extends ContentBlockBase implements MultiStepFormBlockInte
       return NULL;
     }
     $document_node = $this->documentManager->loadNodeForRemoteContent($this->getDocument());
-    if (!$document_node) {
+    if (!$document_node instanceof ContentBase) {
       return NULL;
     }
     $cache_tags = [];
+    $cache_max_age = Cache::PERMANENT;
+    $cache_tags = Cache::mergeTags($cache_tags, $document_node->getCacheTags());
     $articles = [];
     foreach ($this->getChapterArticles() as $_article) {
       $article = clone $_article;
-      if ($document_node && $document_node instanceof ContentBase) {
-        $article->setContextNode($document_node);
+      if (!$article->setContextNodeIfValid($document_node)) {
+        // A rejected document context would render bare article links, so keep
+        // both the block and cloned article out of reusable caches.
+        $cache_max_age = 0;
+        $article->mergeCacheMaxAge(0);
       }
       // The document node cache tags are already included above. Article
       // invalidation tags are enough for these cards and avoid relationship
@@ -88,6 +93,7 @@ class DocumentChapter extends ContentBlockBase implements MultiStepFormBlockInte
       '#cache' => [
         'tags' => $cache_tags,
         'contexts' => ['url.path'],
+        'max-age' => $cache_max_age,
       ],
       '#attributes' => [
         'class' => [],
