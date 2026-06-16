@@ -6,7 +6,7 @@ use Drupal\Core\Field\FieldStorageDefinitionInterface;
 use Drupal\ghi_content\ContentManager\ArticleManager;
 use Drupal\ghi_content\ContentManager\DocumentManager;
 use Drupal\ghi_content\Entity\Article;
-use Drupal\ghi_content\Entity\ContentBase;
+use Drupal\ghi_content\Entity\Document as DocumentNode;
 use Drupal\ghi_content\Plugin\Block\Document;
 use Drupal\ghi_content\Plugin\Block\DocumentChapter;
 use Drupal\ghi_content\RemoteContent\HpcContentModule\RemoteChapter;
@@ -92,7 +92,7 @@ class DocumentContextCacheTest extends KernelTestBase {
    * Tests that document blocks do not cache rejected article contexts.
    */
   public function testDocumentBlockRejectsContextWithoutCaching(): void {
-    $article = $this->createBlockArticle();
+    $this->createBlockArticle();
     $document_node = $this->createRejectedContextDocumentNode();
     $chapter = $this->createChapter();
     $remote_document = $this->createRemoteDocument($chapter);
@@ -105,13 +105,13 @@ class DocumentContextCacheTest extends KernelTestBase {
     $this->setProtectedProperty($plugin, 'configuration', [
       'hpc' => [],
     ]);
-    $this->setProtectedProperty($plugin, 'articleManager', $this->createArticleManager($article));
     $this->setProtectedProperty($plugin, 'documentManager', $this->createDocumentManager($document_node));
+    $this->setProtectedProperty($plugin, 'documentArticleContext', \Drupal::service('ghi_content.document_article_context'));
 
     $build = $plugin->buildContent();
 
     $this->assertSame(0, $build['#cache']['max-age']);
-    $this->assertContains('node:999', $build['#cache']['tags']);
+    $this->assertContains('node:' . $document_node->id(), $build['#cache']['tags']);
     $rendered_article = $build[0]['#tabs'][0]['items']['#articles'][0];
     $this->assertSame(0, $rendered_article->getCacheMaxAge());
   }
@@ -120,7 +120,7 @@ class DocumentContextCacheTest extends KernelTestBase {
    * Tests that document chapter blocks do not cache rejected article contexts.
    */
   public function testDocumentChapterBlockRejectsContextWithoutCaching(): void {
-    $article = $this->createBlockArticle();
+    $this->createBlockArticle();
     $document_node = $this->createRejectedContextDocumentNode();
     $chapter = $this->createChapter();
     $remote_document = $this->createRemoteDocument($chapter);
@@ -137,13 +137,13 @@ class DocumentContextCacheTest extends KernelTestBase {
     $this->setProtectedProperty($plugin, 'configuration', [
       'hpc' => [],
     ]);
-    $this->setProtectedProperty($plugin, 'articleManager', $this->createArticleManager($article));
     $this->setProtectedProperty($plugin, 'documentManager', $this->createDocumentManager($document_node));
+    $this->setProtectedProperty($plugin, 'documentArticleContext', \Drupal::service('ghi_content.document_article_context'));
 
     $build = $plugin->buildContent();
 
     $this->assertSame(0, $build['#cache']['max-age']);
-    $this->assertContains('node:999', $build['#cache']['tags']);
+    $this->assertContains('node:' . $document_node->id(), $build['#cache']['tags']);
     $rendered_article = $build[0]['#tabs'][0]['items']['article_collection']['#articles'][0];
     $this->assertSame(0, $rendered_article->getCacheMaxAge());
   }
@@ -157,26 +157,23 @@ class DocumentContextCacheTest extends KernelTestBase {
   private function createBlockArticle(): Article {
     return $this->createArticle([
       'status' => NodeInterface::PUBLISHED,
+      ArticleManager::REMOTE_ARTICLE_FIELD => [
+        'remote_source' => 'test_source',
+        'article_id' => 123,
+      ],
     ]);
   }
 
   /**
-   * Creates a non-document content node mock that rejects article context.
+   * Creates a document node without a matching article relationship.
    *
-   * @return \Drupal\ghi_content\Entity\ContentBase|\PHPUnit\Framework\MockObject\MockObject
-   *   The content node.
+   * @return \Drupal\ghi_content\Entity\Document
+   *   The document node.
    */
-  private function createRejectedContextDocumentNode(): ContentBase {
-    $document_node = $this->getMockBuilder(ContentBase::class)
-      ->disableOriginalConstructor()
-      ->onlyMethods([
-        'getCacheTags',
-        'isProtected',
-      ])
-      ->getMockForAbstractClass();
-    $document_node->method('getCacheTags')->willReturn(['node:999']);
-    $document_node->method('isProtected')->willReturn(FALSE);
-    return $document_node;
+  private function createRejectedContextDocumentNode(): DocumentNode {
+    return $this->createDocument([
+      'status' => NodeInterface::PUBLISHED,
+    ]);
   }
 
   /**
@@ -220,35 +217,15 @@ class DocumentContextCacheTest extends KernelTestBase {
   }
 
   /**
-   * Creates an article manager that returns the given article.
-   *
-   * @param \Drupal\ghi_content\Entity\Article $article
-   *   The article to return.
-   *
-   * @return \Drupal\ghi_content\ContentManager\ArticleManager|\PHPUnit\Framework\MockObject\MockObject
-   *   The article manager.
-   */
-  private function createArticleManager(Article $article): ArticleManager {
-    $article_manager = $this->getMockBuilder(ArticleManager::class)
-      ->disableOriginalConstructor()
-      ->onlyMethods(['loadAccessibleNodesForRemoteIds'])
-      ->getMock();
-    $article_manager->method('loadAccessibleNodesForRemoteIds')
-      ->with('test_source', [123])
-      ->willReturn([$article]);
-    return $article_manager;
-  }
-
-  /**
    * Creates a document manager that returns the given document node.
    *
-   * @param \Drupal\ghi_content\Entity\ContentBase $document_node
+   * @param \Drupal\ghi_content\Entity\Document $document_node
    *   The document node to return.
    *
    * @return \Drupal\ghi_content\ContentManager\DocumentManager|\PHPUnit\Framework\MockObject\MockObject
    *   The document manager.
    */
-  private function createDocumentManager(ContentBase $document_node): DocumentManager {
+  private function createDocumentManager(DocumentNode $document_node): DocumentManager {
     $document_manager = $this->getMockBuilder(DocumentManager::class)
       ->disableOriginalConstructor()
       ->onlyMethods(['loadNodeForRemoteContent'])

@@ -2,11 +2,9 @@
 
 namespace Drupal\ghi_content\Plugin\Block;
 
-use Drupal\Core\Cache\Cache;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\ghi_blocks\Interfaces\AutomaticTitleBlockInterface;
-use Drupal\ghi_content\Entity\ContentBase;
-use Drupal\ghi_content\RemoteContent\HpcContentModule\RemoteChapter;
+use Drupal\ghi_content\Entity\Document as DocumentNode;
 
 /**
  * Provides a 'Document' block.
@@ -39,35 +37,24 @@ class Document extends ContentBlockBase implements AutomaticTitleBlockInterface 
       return NULL;
     }
     $document_node = $this->documentManager->loadNodeForRemoteContent($document);
-    if (!$document_node instanceof ContentBase) {
+    if (!$document_node instanceof DocumentNode) {
       return NULL;
     }
-    $cache_tags = [];
-    $cache_max_age = Cache::PERMANENT;
-
-    $cache_tags = Cache::mergeTags($cache_tags, $document_node->getCacheTags());
+    $cacheability = $this->documentArticleContext->createCacheability($document_node);
 
     $conf = $this->getBlockConfig();
     $show_titles = $conf['show_titles'] ?? TRUE;
 
     $tabs = [];
+    $has_articles = FALSE;
     $chapters = $document->getChapters(FALSE);
     foreach ($chapters as $chapter) {
-      $articles = [];
-      foreach ($this->getChapterArticles($chapter) as $_article) {
-        $article = clone $_article;
-        if (!$article->setContextNodeIfValid($document_node)) {
-          // A rejected document context would render bare article links, so
-          // keep both the block and cloned article out of reusable caches.
-          $cache_max_age = 0;
-          $article->mergeCacheMaxAge(0);
-        }
-        // The document node cache tags are already included above. Article
-        // invalidation tags are enough for these cards and avoid relationship
-        // expansion through Article::getCacheTags().
-        $cache_tags = Cache::mergeTags($cache_tags, $article->getCacheTagsToInvalidate() ?? []);
-        $articles[] = $article;
-      }
+      $articles = $this->documentArticleContext->prepareArticles(
+        $this->documentArticleContext->loadArticlesForChapter($chapter, TRUE),
+        $document_node,
+        $cacheability
+      );
+      $has_articles = $has_articles || !empty($articles);
       $tabs[] = [
         'title' => [
           '#markup' => $show_titles ? $chapter->getShortTitle() : NULL,
@@ -83,14 +70,14 @@ class Document extends ContentBlockBase implements AutomaticTitleBlockInterface 
       ];
     }
 
-    if (empty($articles)) {
+    if (!$has_articles) {
       return NULL;
     }
 
     $build = [
       '#cache' => [
-        'tags' => $cache_tags,
-        'max-age' => $cache_max_age,
+        'tags' => $cacheability->getCacheTags(),
+        'max-age' => $cacheability->getCacheMaxAge(),
       ],
     ];
 
@@ -163,20 +150,6 @@ class Document extends ContentBlockBase implements AutomaticTitleBlockInterface 
       return NULL;
     }
     return $remote_source->getDocument($document_id);
-  }
-
-  /**
-   * Get the articles for the configured chapter.
-   *
-   * @return \Drupal\ghi_content\Entity\Article[]
-   *   An array of article node objects.
-   */
-  private function getChapterArticles(RemoteChapter $chapter) {
-    if (!$chapter) {
-      return [];
-    }
-    $article_ids = $chapter->getArticleIds();
-    return $this->articleManager->loadAccessibleNodesForRemoteIds($chapter->getSource()->getPluginId(), $article_ids);
   }
 
 }
