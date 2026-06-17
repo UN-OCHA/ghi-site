@@ -28,9 +28,9 @@ class HeroImageManager {
   /**
    * The attachment query.
    *
-   * @var \Drupal\hpc_api\Plugin\FabricQuery\ResourceQuery
+   * @var \Drupal\hpc_api\Plugin\FabricQuery\FileAssetQuery
    */
-  public $resourceQuery;
+  public $fileAssetQuery;
 
   /**
    * The SmugMug image service.
@@ -51,7 +51,7 @@ class HeroImageManager {
    */
   public function __construct(EntityTypeManagerInterface $entity_type_manager, FabricQueryManager $fabric_query_manager, Image $smugmug_image, FileSystemInterface $file_system) {
     $this->entityTypeManager = $entity_type_manager;
-    $this->resourceQuery = $fabric_query_manager->createInstance('resource');
+    $this->fileAssetQuery = $fabric_query_manager->createInstance('file_asset');
     $this->smugmugImage = $smugmug_image;
     $this->fileSystem = $file_system;
   }
@@ -66,7 +66,7 @@ class HeroImageManager {
    *   The item source as a string.
    */
   public function getDefaultItemSource(FieldItemListInterface $items) {
-    if ($this->getHeroImageResources($items)) {
+    if ($this->getHeroImageFileAsset($items)) {
       return 'hpc_webcontent_file_attachment';
     }
     return 'none';
@@ -103,19 +103,19 @@ class HeroImageManager {
     switch ($item_source) {
       case 'hpc_webcontent_file_attachment':
 
-        // Find the right resource based on the configuration, or fallback to
-        // the first available resource.
-        $resources = $this->getHeroImageResources($items);
-        $resource_id = $item_settings['resource_id'] ?? ($item_settings['attachment_id'] ?? NULL);
-        if (!$resource_id || empty($resources[$resource_id])) {
-          $resource_id = array_key_first($resources);
+        // Find the right file asset based on the configuration, or fallback to
+        // the first available file asset.
+        $file_assets = $this->getHeroImageFileAsset($items);
+        $file_asset_id = $item_settings['file_asset_id'] ?? ($item_settings['attachment_id'] ?? NULL);
+        if (!$file_asset_id || empty($file_assets[$file_asset_id])) {
+          $file_asset_id = array_key_first($file_assets);
         }
 
-        if ($resource_id && !empty($resources[$resource_id])) {
-          $resource = $resources[$resource_id];
-          $image_url = $resource->getUrl()->toString();
+        if ($file_asset_id && !empty($file_assets[$file_asset_id])) {
+          $file_asset = $file_assets[$file_asset_id];
+          $image_url = $file_asset->getUrl()->toString();
           $file_uri = imagecache_external_generate_path($image_url);
-          $credit = $resource->getCredit();
+          $credit = $file_asset->getCredit();
         }
         break;
 
@@ -179,21 +179,21 @@ class HeroImageManager {
   }
 
   /**
-   * Get the resources for the given items.
+   * Get the file assets for the given items.
    *
    * @param \Drupal\Core\Field\FieldItemListInterface $items
    *   The field values to be rendered.
    *
-   * @return \Drupal\hpc_api\ApiObjects\Resource[]
+   * @return \Drupal\hpc_api\ApiObjects\FileAsset[]
    *   An array of attachment objects.
    */
-  private function getHeroImageResources(FieldItemListInterface $items): array {
+  private function getHeroImageFileAsset(FieldItemListInterface $items): array {
     $entity = $items->getEntity();
     $base_object = BaseObjectHelper::getBaseObjectFromNode($entity, 'plan');
     if (!$base_object instanceof BaseObjectInterface) {
       return [];
     }
-    return $this->resourceQuery->getResourcesByObject($base_object->bundle(), $base_object->getSourceId());
+    return $this->fileAssetQuery->getFileAssetsByObject($base_object->bundle(), $base_object->getSourceId());
   }
 
   /**

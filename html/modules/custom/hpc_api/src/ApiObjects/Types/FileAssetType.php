@@ -5,8 +5,8 @@ namespace Drupal\hpc_api\ApiObjects\Types;
 use Drupal\hpc_api\ApiObjects\Type;
 
 /**
- * Class for resource type objects.
+ * Class for file asset type objects.
  */
-class ResourceType extends Type {
+class FileAssetType extends Type {
 
 }

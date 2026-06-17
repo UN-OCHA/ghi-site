@@ -278,7 +278,7 @@ class ProjectQuery extends FabricQueryBase {
       return;
     }
     foreach ($items as &$item) {
-      $organizations = array_map(fn ($reference): Organization => new Organization($reference->organization), $item->projectOrganization->items);
+      $organizations = array_map(fn ($reference): Organization => new Organization($reference), $item->organization->items);
       $organization_ids = $this->extractIds($organizations);
       $item->organizations = array_combine($organization_ids, $organizations);
     }
@@ -295,7 +295,7 @@ class ProjectQuery extends FabricQueryBase {
       return;
     }
     foreach ($items as &$item) {
-      $clusters = array_map(fn ($reference): PlanProjectCluster => new PlanProjectCluster($reference->coordinationEntity), $item->projectFieldCluster->items);
+      $clusters = array_map(fn ($reference): PlanProjectCluster => new PlanProjectCluster($reference), $item->coordinationEntity->items);
       $cluster_ids = $this->extractIds($clusters);
       $item->clusters = array_combine($cluster_ids, $clusters);
     }
@@ -312,7 +312,7 @@ class ProjectQuery extends FabricQueryBase {
       return;
     }
     foreach ($items as &$item) {
-      $location_ids = array_map(fn ($reference) => $reference->LocationId, $item->projectLocation->items);
+      $location_ids = array_map(fn ($reference) => $reference->Id, $item->location->items);
       $item->locationIds = $location_ids;
     }
   }

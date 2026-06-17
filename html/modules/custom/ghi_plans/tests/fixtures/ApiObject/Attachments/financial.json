@@ -11,9 +11,7 @@
   "UnitId": null,
   "CalculationMethodId": null,
   "Description": null,
-  "VisibilityGroupId": 1,
   "AttachmentPrototypeId": 5621,
-  "RecordStatus": "Active",
   "UpdatedAt": "2022-10-05T09:03:31.000Z",
   "attachmentFact": {
     "items": [

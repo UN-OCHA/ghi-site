@@ -44,7 +44,7 @@ class PlanEntity extends EntityObjectBase {
     'CustomReference',
     'ComposedReference',
     'SortOrder',
-    'logframeEntityLink { items { ParentLogframeEntityId } }',
+    'logframeEntitySupportRel { items { SupportsLogframeEntityId } }',
   ];
 
   /**
@@ -57,7 +57,7 @@ class PlanEntity extends EntityObjectBase {
     // 'support' => !empty($_entity_version->value->support) ? (array) $_entity_version->value->support : NULL,
     // phpcs:enable
     $this->name = $data->Name;
-    $this->parentIds = array_map(fn ($item) => $item->ParentLogframeEntityId, $data->logframeEntityLink->items ?? []);
+    $this->parentIds = array_map(fn ($item) => $item->SupportsLogframeEntityId, $data->logframeEntitySupportRel->items ?? []);
     $this->governingEntityParentId = $data->CoordinationEntityId ?? NULL;
     $this->sortOrder = $data->SortOrder ?? NULL;
   }

@@ -111,6 +111,13 @@ abstract class FactBase extends ApiObjectBase {
   protected ?string $customMetricName;
 
   /**
+   * The source of a calculated field.
+   *
+   * @var string|null
+   */
+  protected ?string $calculatedFieldSource = NULL;
+
+  /**
    * Whether this fact represents a total.
    *
    * @var bool
@@ -149,6 +156,7 @@ abstract class FactBase extends ApiObjectBase {
     $this->disaggregationCategoryOtherId = $data->DisaggregationCategoryOtherId;
     $this->deliveryModalityId = $data->DeliveryModalityId;
     $this->customMetricName = $data->CustomMetricName;
+    $this->calculatedFieldSource = $data->DerivedMetricSource;
     $this->isTotal = $data->IsTotal;
     $this->value = $data->ValueNum;
   }

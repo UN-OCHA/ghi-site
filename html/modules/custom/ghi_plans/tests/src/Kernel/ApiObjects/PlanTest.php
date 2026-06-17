@@ -42,7 +42,7 @@ class PlanTest extends PlanApiObjectKernelTestBase {
       'EndDate' => '2025-12-31T00:00:00.000Z',
       'CreatedAt' => '2024-10-07T11:40:06.000Z',
       'UpdatedAt' => '2025-12-08T13:34:53.000Z',
-      'planPeriod' => (object) ['items' => [(object) ['period' => (object) ['CalendarYear' => 2025]]]],
+      'period' => (object) ['items' => [(object) ['CalendarYear' => 2025]]],
       'DocumentPublishDate' => NULL,
       'CurrentReportingPeriodId' => 1235,
       'LastPublishedReportingPeriodId' => 1234,

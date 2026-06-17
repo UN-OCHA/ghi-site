@@ -32,7 +32,7 @@ class PlanWebcontentFile extends GHIBlockBase {
     return new HPCBlockMetadata(
       usesTitle: FALSE,
       dataSources: [
-        'resource' => 'fabric_query:resource',
+        'file_asset' => 'fabric_query:file_asset',
       ]
     );
   }
@@ -41,23 +41,23 @@ class PlanWebcontentFile extends GHIBlockBase {
    * {@inheritdoc}
    */
   public function buildContent() {
-    // Retrieve the resource.
+    // Retrieve the file asset.
     $conf = $this->getBlockConfig();
-    $conf['resource_id'] = $conf['resource_id'] ?? ($conf['attachment_id'] ?? NULL);
-    if (empty($conf['resource_id'])) {
+    $conf['file_asset_id'] = $conf['file_asset_id'] ?? ($conf['attachment_id'] ?? NULL);
+    if (empty($conf['file_asset_id'])) {
       return;
     }
 
-    /** @var \Drupal\hpc_api\Plugin\FabricQuery\ResourceQuery $query */
-    $query = $this->getQueryHandler('resource');
-    $resource = $query?->getResource($conf['resource_id']) ?? NULL;
-    if (!$resource) {
+    /** @var \Drupal\hpc_api\Plugin\FabricQuery\FileAssetQuery $query */
+    $query = $this->getQueryHandler('file_asset');
+    $file_asset = $query?->getFileAsset($conf['file_asset_id']) ?? NULL;
+    if (!$file_asset) {
       return NULL;
     }
     return [
       '#theme' => 'ghi_image',
-      '#url' => $resource->getUrl()->toString(),
-      '#credit' => $resource->getCredit(),
+      '#url' => $file_asset->getUrl()->toString(),
+      '#credit' => $file_asset->getCredit(),
       '#style' => 'wide',
     ];
   }
@@ -70,7 +70,7 @@ class PlanWebcontentFile extends GHIBlockBase {
    */
   protected function getConfigurationDefaults() {
     return [
-      'resource_id' => NULL,
+      'file_asset_id' => NULL,
     ];
   }
 
@@ -80,25 +80,25 @@ class PlanWebcontentFile extends GHIBlockBase {
   public function getConfigForm(array $form, FormStateInterface $form_state) {
     $options = [];
 
-    // Retrieve the resources.
+    // Retrieve the file assets.
     $plan = $this->getCurrentPlanObject();
-    /** @var \Drupal\hpc_api\Plugin\FabricQuery\ResourceQuery $query */
-    $query = $this->getQueryHandler('resource');
-    $resources = $plan ? $query->getResourcesByObject($plan->bundle(), $plan->getSourceId()) : [];
+    /** @var \Drupal\hpc_api\Plugin\FabricQuery\FileAssetQuery $query */
+    $query = $this->getQueryHandler('file_asset');
+    $file_assets = $plan ? $query->getFileAssetsByObject($plan->bundle(), $plan->getSourceId()) : [];
 
-    if (!empty($resources)) {
-      foreach ($resources as $resource) {
-        $url = $resource->getUrl();
+    if (!empty($file_assets)) {
+      foreach ($file_assets as $file_asset) {
+        $url = $file_asset->getUrl();
         $url->setOptions([
           'external' => TRUE,
           'attributes' => [
             'target' => '_blank',
           ],
         ]);
-        $options[$resource->id()] = [
-          'id' => $resource->id(),
-          'title' => $resource->getName(),
-          'file_name' => $resource->getName(),
+        $options[$file_asset->id()] = [
+          'id' => $file_asset->id(),
+          'title' => $file_asset->getName(),
+          'file_name' => $file_asset->getName(),
           'file_url' => Link::fromTextAndUrl($url->toString(), $url),
           'preview' => [
             'data' => [
@@ -112,22 +112,22 @@ class PlanWebcontentFile extends GHIBlockBase {
     }
 
     $table_header = [
-      'id' => $this->t('Resource ID'),
+      'id' => $this->t('File asset ID'),
       'title' => $this->t('Title'),
       'file_name' => $this->t('File name'),
       'file_url' => $this->t('File URL'),
       'preview' => $this->t('Preview'),
     ];
 
-    $form['resource_id'] = [
+    $form['file_asset_id'] = [
       '#type' => 'tableselect',
       '#tree' => TRUE,
       '#header' => $table_header,
       '#validated' => TRUE,
       '#options' => $options,
-      '#default_value' => $this->getDefaultFormValueFromFormState($form_state, 'resource_id') ?? array_key_first($options),
+      '#default_value' => $this->getDefaultFormValueFromFormState($form_state, 'file_asset_id') ?? array_key_first($options),
       '#multiple' => FALSE,
-      '#empty' => $this->t('There are no file resources available in the current plan context.'),
+      '#empty' => $this->t('There are no file assets available in the current plan context.'),
       '#required' => TRUE,
     ];
     return $form;

@@ -94,24 +94,25 @@ class PlanQuery extends FabricQueryBase {
    *
    * @param int $year
    *   The year for which to fetch plans.
+   * @param bool $current_version
+   *   Whether to restrict to plans with a current version.
    *
    * @return \Drupal\ghi_plans\ApiObjects\Plan[]
    *   An array of plan objects.
    */
-  public function getPlansByYear(int $year): array {
+  public function getPlansByYear(int $year, bool $current_version = TRUE): array {
     $plans = $this->objectStore->getObjectCollection(Plan::getObjectStorageKey(), 'year', $year);
     if (!empty($plans)) {
       return $plans;
     }
     $items = $this->fabricClient->createQuery('plans', ['Id'])
-      ->setFilters([
-        'planPeriod' => [
-          'period' => [
-            'PeriodType' => 'Year',
-            'CalendarYear' => $year,
-          ],
+      ->setFilters(array_filter([
+        'period' => [
+          'PeriodType' => 'Year',
+          'CalendarYear' => $year,
         ],
-      ])
+        'IsLegacyCurrentVersion' => $current_version ? TRUE : NULL,
+      ]))
       ->execute();
     $plan_ids = $this->extractIdsFromRawData($items);
     $plans = $this->getPlansById($plan_ids);

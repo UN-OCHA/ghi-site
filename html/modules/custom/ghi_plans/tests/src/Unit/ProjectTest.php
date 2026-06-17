@@ -24,7 +24,7 @@ class ProjectTest extends ApiObjectTestBase {
     $this->assertEquals('Reducing Protection Risks and Meeting Basic Needs of Conflict-Affected Communities Far North, North West and South West Regions, Cameroon', $project->getName());
 
     $this->assertTrue($project->isPublished());
-    $this->assertNull($project->getPlanId());
+    $this->assertEquals(1115, $project->getPlanId());
     $this->assertEquals('HCMR23-FSC;PRO;WSH-197792-1', $project->getProjectCode());
     $this->assertEquals(2437563, $project->getRequirements());
     $this->assertIsArray($project->getOrganizations());

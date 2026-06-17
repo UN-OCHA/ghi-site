@@ -39,6 +39,7 @@ class MapObjectsTest extends UnitTestCase {
       'Name' => 'Test project',
       'ProjectCode' => '1.0',
       'currentPublishedVersionId' => '1.0',
+      'TotalProjectTarget' => 200,
       'CurrentRequestedFunds' => 100,
       'locationIds' => [],
       'organizations' => [],

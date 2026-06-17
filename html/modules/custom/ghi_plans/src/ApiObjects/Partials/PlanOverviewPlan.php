@@ -300,16 +300,6 @@ class PlanOverviewPlan extends BaseObject {
   }
 
   /**
-   * Check if the current plan partial has caseloads.
-   *
-   * @return bool
-   *   TRUE of the plan has caseloads, FALSE otherwise.
-   */
-  private function hasCaseloads(): bool {
-    return !empty($this->caseloads);
-  }
-
-  /**
    * Get a caseload value.
    *
    * @param string $metric_type
@@ -321,21 +311,17 @@ class PlanOverviewPlan extends BaseObject {
    *   The caseload value if found.
    */
   public function getCaseloadValue(string $metric_type, ?string $metric_name = NULL): int|float|null {
-    if (!$this->hasCaseloads()) {
+    $plan_caseload = $this->getPlanCaseload();
+    if (!$plan_caseload) {
       return NULL;
     }
 
-    foreach ($this->caseloads as $caseload) {
-      $value = $caseload->getCaseloadValue($metric_type, $metric_name);
-      if ($value !== NULL) {
-        // In general, we want to return int values for the caseload values.
-        // Only if this is invoked from a PlanOverviewPlanMock object, we want
-        // to support returning float-like values, as these are entered
-        // manually for the custom rows.
-        return (self::class instanceof PlanOverviewPlanMock) ? $value : (int) $value;
-      }
-    }
-    return NULL;
+    $value = $plan_caseload->getCaseloadValue($metric_type, $metric_name);
+    // In general, we want to return int values for the caseload values.
+    // Only if this is invoked from a PlanOverviewPlanMock object, we want
+    // to support returning float-like values, as these are entered
+    // manually for the custom rows.
+    return $value !== NULL ? ((self::class instanceof PlanOverviewPlanMock) ? $value : (int) $value) : NULL;
   }
 
   /**

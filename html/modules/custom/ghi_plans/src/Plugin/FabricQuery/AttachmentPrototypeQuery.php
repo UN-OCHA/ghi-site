@@ -27,9 +27,7 @@ class AttachmentPrototypeQuery extends FabricQueryBase {
    */
   private function queryWithFilters($filters): array {
     return $this->fabricClient->createQuery('attachmentPrototypes', AttachmentPrototype::getGraphQlItems())
-      ->setFilters($filters + [
-        'RecordStatus' => 'Active',
-      ])
+      ->setFilters($filters)
       ->execute() ?: [];
 
   }

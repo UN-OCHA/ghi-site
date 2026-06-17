@@ -101,9 +101,6 @@ class AttachmentPrototype extends ApiObjectBase {
     'PlanId',
     'CreatedAt',
     'UpdatedAt',
-    'RecordStatus',
-    'Source',
-    'SourceId',
   ];
 
   const DATA_TYPES = [

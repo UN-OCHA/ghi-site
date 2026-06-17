@@ -5,9 +5,9 @@ namespace Drupal\hpc_api\ApiObjects;
 use Drupal\Core\Url;
 
 /**
- * Class for resource objects.
+ * Class for file asset objects.
  */
-class Resource extends ApiObjectBase {
+class FileAsset extends ApiObjectBase {
 
   /**
    * The name.
@@ -58,7 +58,7 @@ class Resource extends ApiObjectBase {
     'Id',
     'Name',
     'MimeType',
-    'URL',
+    'url',
     'Credit',
   ];
 
@@ -69,27 +69,27 @@ class Resource extends ApiObjectBase {
     parent::__construct($data);
     $this->name = $data->Name;
     $this->mimetype = $data->MimeType;
-    $this->url = $data->URL;
+    $this->url = $data->url;
     $this->credit = $data->Credit ?? NULL;
     $this->planId = $data->PlanId ?? NULL;
     $this->fieldClusterId = $data->FieldClusterId ?? NULL;
   }
 
   /**
-   * Get the name of the resource.
+   * Get the name of the file asset.
    *
    * @return string
-   *   The name of the resource.
+   *   The name of the file asset.
    */
   public function getName(): string {
     return $this->name;
   }
 
   /**
-   * Get the mimetype of the resource.
+   * Get the mimetype of the file asset.
    *
    * @return string
-   *   The mimetype of the resource.
+   *   The mimetype of the file asset.
    */
   public function getMimeType(): string {
     return $this->mimetype;
@@ -99,7 +99,7 @@ class Resource extends ApiObjectBase {
    * Get the URL.
    *
    * @return \Drupal\Core\Url
-   *   The URL of the resource.
+   *   The URL of the file asset.
    */
   public function getUrl(): Url {
     return Url::fromUri($this->url);

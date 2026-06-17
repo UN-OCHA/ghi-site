@@ -47,8 +47,8 @@ class WebcontentFileSelect extends FormElementBase {
    * any arbitrary data inside the form_state object.
    */
   public static function processWebcontentFileSelect(array &$element, FormStateInterface $form_state) {
-    if (empty($element['#default_value']['resource_id']) && !empty($element['#default_value']['attachment_id'])) {
-      $element['#default_value']['resource_id'] = $element['#default_value']['attachment_id'];
+    if (empty($element['#default_value']['file_asset_id']) && !empty($element['#default_value']['attachment_id'])) {
+      $element['#default_value']['file_asset_id'] = $element['#default_value']['attachment_id'];
       unset($element['#default_value']['attachment_id']);
     }
     /** @var \Drupal\ghi_base_objects\Entity\BaseObjectInterface $plan_object */
@@ -59,25 +59,25 @@ class WebcontentFileSelect extends FormElementBase {
     }
     /** @var \Drupal\ghi_base_objects\Entity\BaseObjectInterface $base_object */
     $base_object = $element['#base_object'] ?: $plan_object;
-    $resource_query = self::getResourceQuery();
-    $resources = $resource_query->getResourcesByObject($base_object->bundle(), $base_object->getSourceId());
+    $file_asset_query = self::getFileAssetQuery();
+    $file_assets = $file_asset_query->getFileAssetsByObject($base_object->bundle(), $base_object->getSourceId());
     $states = $element['#states'] ?? [];
 
     $file_options = [];
-    if (!empty($resources)) {
-      foreach ($resources as $resource) {
+    if (!empty($file_assets)) {
+      foreach ($file_assets as $file_asset) {
         // @todo Add check for image files before trying to show a preview.
-        $file_options[$resource->id()] = [
-          'id' => $resource->id(),
-          'title' => $resource->getName(),
-          'file_name' => $resource->getName(),
+        $file_options[$file_asset->id()] = [
+          'id' => $file_asset->id(),
+          'title' => $file_asset->getName(),
+          'file_name' => $file_asset->getName(),
           'preview' => [
             'data' => [
               '#theme' => 'imagecache_external',
               '#style_name' => 'thumbnail',
-              '#uri' => $resource->getUrl()->toString(),
+              '#uri' => $file_asset->getUrl()->toString(),
               '#attributes' => [
-                'title' => $resource->getUrl()->toString(),
+                'title' => $file_asset->getUrl()->toString(),
               ],
             ],
           ],
@@ -86,7 +86,7 @@ class WebcontentFileSelect extends FormElementBase {
     }
 
     $table_header = [
-      'id' => t('Resource ID'),
+      'id' => t('File asset ID'),
       'title' => t('Title'),
       'file_name' => t('File name'),
       'preview' => t('Preview'),
@@ -95,8 +95,8 @@ class WebcontentFileSelect extends FormElementBase {
     // Set the defaults.
     $submitted_values = array_filter((array) $form_state->getValue($element['#parents']));
     $values = $submitted_values + (array) $element['#default_value'];
-    $default_value = !empty($values['resource_id']) ? $values['resource_id'] : ($element['#default_value']['resource_id'] ?? (count($resources) ? array_key_first($resources) : NULL));
-    $element['resource_id'] = [
+    $default_value = !empty($values['file_asset_id']) ? $values['file_asset_id'] : ($element['#default_value']['file_asset_id'] ?? (count($file_assets) ? array_key_first($file_assets) : NULL));
+    $element['file_asset_id'] = [
       '#type' => 'tableselect',
       '#tree' => TRUE,
       '#header' => $table_header,

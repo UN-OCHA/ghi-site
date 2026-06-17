@@ -156,15 +156,8 @@ class Measurement extends ApiObjectBase implements MeasurementInterface {
     'Description',
     'IsCommentPublic',
     'Comments',
-    'VisibilityGroupId',
     'AttachmentPrototypeId',
-    'RecordStatus',
-    // 'ActiveUntil',
-    // 'Source',
-    // 'SourceId',
-    // 'CreatedAt',
     'UpdatedAt',
-    // 'IsLocked',
     // phpcs:disable Squiz.Arrays.ArrayDeclaration.KeySpecified
     'measurementFact' => [
       'filter' => ['IsTotal' => TRUE, 'LocationId' => NULL],

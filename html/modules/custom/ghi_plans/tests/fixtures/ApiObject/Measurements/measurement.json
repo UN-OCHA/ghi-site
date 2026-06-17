@@ -13,9 +13,7 @@
   "Description": null,
   "IsCommentPublic": true,
   "Comments": "The data is measured following common data collection approaches",
-  "VisibilityGroupId": 1,
   "AttachmentPrototypeId": 5443,
-  "RecordStatus": "Active",
   "UpdatedAt": "2024-09-13T17:08:48.000Z",
   "measurementFact": {
     "items": [
