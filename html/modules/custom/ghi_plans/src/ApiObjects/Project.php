@@ -56,6 +56,13 @@ class Project extends ApiObjectBase {
   protected float $requirements;
 
   /**
+   * The target.
+   *
+   * @var float
+   */
+  protected float $target;
+
+  /**
    * The location ids.
    *
    * @var array
@@ -70,13 +77,6 @@ class Project extends ApiObjectBase {
   protected array $organizations;
 
   /**
-   * The target.
-   *
-   * @var float
-   */
-  protected float $target;
-
-  /**
    * Define the dimension items used in queries.
    */
   const GRAPHQL_ITEMS = [
@@ -88,25 +88,17 @@ class Project extends ApiObjectBase {
     'EndDate',
     'IsPublished',
     'Objective',
-    'VisibilityGroupId',
     'ImplementingPartners',
     'ImplementationStatus',
+    'TotalProjectTarget',
     'CurrentRequestedFunds',
-    'RecordStatus',
-    'ActiveUntil',
-    'Source',
-    'SourceId',
     'PlanId',
     'CreatedAt',
     'UpdatedAt',
-    'IsLocked',
-    'PgSqlPdf',
-    'HpcId',
-    'HpcVersionId',
     // phpcs:disable Squiz.Arrays.ArrayDeclaration.KeySpecified
-    'projectFieldCluster' => ['items' => ['coordinationEntity' => PlanProjectCluster::GRAPHQL_ITEMS]],
-    'projectOrganization' => ['items' => ['organization' => Organization::GRAPHQL_ITEMS]],
-    'projectLocation' => ['items' => ['LocationId']],
+    'coordinationEntity' => ['items' => PlanProjectCluster::GRAPHQL_ITEMS],
+    'organization' => ['items' => Organization::GRAPHQL_ITEMS],
+    'location' => ['items' => ['Id']],
     // phpcs:enable Squiz.Arrays.ArrayDeclaration.KeySpecified
   ];
 
@@ -120,12 +112,10 @@ class Project extends ApiObjectBase {
     $this->planId = $data->PlanId !== NULL ? (int) $data->PlanId : NULL;
     $this->clusters = $data->clusters ?? [];
     $this->published = !empty($data->IsPublished);
-    $this->requirements = (float) $data->CurrentRequestedFunds;
+    $this->target = (float) $data->TotalProjectTarget ?? 0;
+    $this->requirements = (float) $data->CurrentRequestedFunds ?? 0;
     $this->locationIds = $data->locationIds ?? [];
     $this->organizations = $data->organizations ?? [];
-    $this->target = !empty($data->targets) ? (float) array_sum(array_map(function ($item) {
-      return $item->total;
-    }, $data->targets)) : 0;
   }
 
   /**

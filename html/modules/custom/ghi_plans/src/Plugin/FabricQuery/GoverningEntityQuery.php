@@ -59,7 +59,6 @@ class GoverningEntityQuery extends FabricQueryBase {
     $items = $this->fabricClient->createQuery('coordinationEntities', GoverningEntity::getGraphQlItems())
       ->setFilters([
         'Id' => $entity_ids,
-        'RecordStatus' => 'Active',
       ])
       ->execute() ?: [];
 
@@ -86,7 +85,6 @@ class GoverningEntityQuery extends FabricQueryBase {
     $items = $this->fabricClient->createQuery('coordinationEntities', GoverningEntity::getGraphQlItems())
       ->setFilters([
         'PlanId' => $plan_id,
-        'RecordStatus' => 'Active',
       ])
       ->execute() ?: [];
 
@@ -110,7 +108,6 @@ class GoverningEntityQuery extends FabricQueryBase {
     $items = $this->fabricClient->createQuery('coordinationEntities', GoverningEntity::getGraphQlItems())
       ->setFilters([
         'PlanId' => $plan_id,
-        'RecordStatus' => 'Active',
       ])
       ->execute() ?: [];
     $governing_entities = $this->buildResultObjects($items, GoverningEntity::class);

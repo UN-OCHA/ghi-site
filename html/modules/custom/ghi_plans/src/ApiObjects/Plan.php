@@ -117,6 +117,13 @@ class Plan extends BaseObject implements PlanEntityInterface {
   protected ?int $lastPublishedPeriod;
 
   /**
+   * The last published period.
+   *
+   * @var bool
+   */
+  protected bool $isCurrentVersion;
+
+  /**
    * Whether the plan is released.
    *
    * @var bool
@@ -192,15 +199,15 @@ class Plan extends BaseObject implements PlanEntityInterface {
     'FocusedLocationId',
     'CurrentReportingPeriodId',
     'LastPublishedReportingPeriodId',
+    'IsLegacyCurrentVersion',
     // phpcs:disable Squiz.Arrays.ArrayDeclaration.KeySpecified
-    'planPeriod' => ['items' => ['period' => ['CalendarYear']]],
-    'planLocation' => [
-      'filter' => ['location' => ['AdminLevel' => 0]],
-      'items' => ['location' => Country::GRAPHQL_ITEMS],
+    'period' => ['items' => ['CalendarYear']],
+    'location' => [
+      'filter' => ['AdminLevel' => 0],
+      'items' => Country::GRAPHQL_ITEMS,
     ],
-    'planOrganization' => [
-      'filter' => ['RecordStatus' => 'Active'],
-      'items' => ['organization' => Organization::GRAPHQL_ITEMS],
+    'organization' => [
+      'items' => Organization::GRAPHQL_ITEMS,
     ],
     // phpcs:enable Squiz.Arrays.ArrayDeclaration.KeySpecified
   ];
@@ -212,7 +219,7 @@ class Plan extends BaseObject implements PlanEntityInterface {
     parent::__construct($data);
     $plan_query = $this->getPlanQuery();
 
-    $this->year = $data->planPeriod?->items[0]?->period?->CalendarYear ?? NULL;
+    $this->year = $data->period?->items[0]?->CalendarYear ?? NULL;
     $this->shortName = $data->ShortName ?? NULL;
     $this->subtitle = $data->PlanSubTitle ?? NULL;
     $this->comments = $data->Description ?? NULL;
@@ -226,12 +233,13 @@ class Plan extends BaseObject implements PlanEntityInterface {
     $this->updatedDate = ($data->UpdatedAt ?? NULL) ? self::getTimestamp($data->UpdatedAt) : NULL;
     $this->documentPublishedDate = ($data->DocumentPublishDate ?? NULL) ? self::reformatDate($data->DocumentPublishDate) : NULL;
     $this->lastPublishedPeriod = $data->LastPublishedReportingPeriodId ?? NULL;
+    $this->isCurrentVersion = !empty($data->IsLegacyCurrentVersion);
     $this->isReleased = $data->IsReleased ?? FALSE;
     $this->isRestricted = $data->IsRestricted ?? FALSE;
     $this->isPartOfGho = $data->IsPartOfGHO ?? FALSE;
     $this->langcode = $data->PlanLanguageCode ?? 'en';
-    $this->countries = array_map(fn ($item) => new Country($item->location), $data->planLocation?->items ?? []);
-    $this->organizations = array_map(fn ($item) => new Organization($item->organization), $data->planOrganization?->items ?? []);
+    $this->countries = array_map(fn ($item) => new Country($item), $data->location?->items ?? []);
+    $this->organizations = array_map(fn ($item) => new Organization($item), $data->organization?->items ?? []);
     $this->focusCountry = ($data->FocusedLocationName ?? NULL) ? $plan_query->lookupCountry($data->FocusedLocationName) : NULL;
   }
 

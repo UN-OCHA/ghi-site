@@ -3,7 +3,7 @@
 namespace Drupal\ghi_plans\ApiObjects\Entities;
 
 use Drupal\ghi_plans\ApiObjects\Contact;
-use Drupal\hpc_api\ApiObjects\Resource;
+use Drupal\hpc_api\ApiObjects\FileAsset;
 
 /**
  * Abstraction class for API governing entity objects.
@@ -47,8 +47,8 @@ class GoverningEntity extends EntityObjectBase {
     'ComposedReference',
     'HPCTags',
     // phpcs:disable Squiz.Arrays.ArrayDeclaration.KeySpecified
-    "coordinationEntityContact" => ['items' => ['contact' => Contact::GRAPHQL_ITEMS]],
-    'fieldClusterResource' => ['items' => ['resource' => Resource::GRAPHQL_ITEMS]],
+    'contact' => ['items' => Contact::GRAPHQL_ITEMS],
+    'fileAsset' => ['items' => FileAsset::GRAPHQL_ITEMS],
     'icon' => ['Name'],
     // phpcs:enable Squiz.Arrays.ArrayDeclaration.KeySpecified
   ];

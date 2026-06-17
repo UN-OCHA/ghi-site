@@ -11,9 +11,7 @@
   "UnitId": null,
   "CalculationMethodId": null,
   "Description": null,
-  "VisibilityGroupId": 1,
   "AttachmentPrototypeId": 5403,
-  "RecordStatus": "Active",
   "UpdatedAt": "2024-06-18T12:25:30.000Z",
   "attachmentFact": {
     "items": [
@@ -141,9 +139,7 @@
         "UnitId": null,
         "CalculationMethodId": null,
         "Description": null,
-        "VisibilityGroupId": 1,
         "AttachmentPrototypeId": 5403,
-        "RecordStatus": "Active",
         "UpdatedAt": "2024-06-18T12:31:03.000Z",
         "measurementFact": {
           "items": [
@@ -207,9 +203,7 @@
         "UnitId": null,
         "CalculationMethodId": null,
         "Description": null,
-        "VisibilityGroupId": 1,
         "AttachmentPrototypeId": 5403,
-        "RecordStatus": "Active",
         "UpdatedAt": "2024-06-18T12:31:11.000Z",
         "measurementFact": {
           "items": [
@@ -253,9 +247,7 @@
         "Description": null,
         "IsCommentPublic": true,
         "Comments": "Test comment",
-        "VisibilityGroupId": 1,
         "AttachmentPrototypeId": 5403,
-        "RecordStatus": "Active",
         "UpdatedAt": "2024-06-18T12:35:06.000Z",
         "measurementFact": {
           "items": [
@@ -341,9 +333,7 @@
         "UnitId": null,
         "CalculationMethodId": null,
         "Description": null,
-        "VisibilityGroupId": 1,
         "AttachmentPrototypeId": 5403,
-        "RecordStatus": "Active",
         "UpdatedAt": "2024-06-18T12:31:34.000Z",
         "measurementFact": {
           "items": [

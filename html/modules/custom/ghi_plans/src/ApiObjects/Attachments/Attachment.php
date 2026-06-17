@@ -213,15 +213,8 @@ class Attachment extends ApiObjectBase implements AttachmentInterface, Disaggreg
     'UnitId',
     'CalculationMethod',
     'Description',
-    'VisibilityGroupId',
     'AttachmentPrototypeId',
-    'RecordStatus',
-    // 'ActiveUntil',
-    // 'Source',
-    // 'SourceId',
-    // 'CreatedAt',
     'UpdatedAt',
-    // 'IsLocked',
     // phpcs:disable Squiz.Arrays.ArrayDeclaration.KeySpecified
     'attachmentFact' => [
       'filter' => ['IsTotal' => TRUE, 'LocationId' => NULL],
@@ -1196,7 +1189,16 @@ class Attachment extends ApiObjectBase implements AttachmentInterface, Disaggreg
    *   An array of values keyed by the metric type.
    */
   public function getCurrentValues() {
-    return $this->values + ($this->getCurrentMeasurement()?->getValues() ?? []);
+    $measurement = $this->getCurrentMeasurement();
+    if ($measurement === NULL && $this->getPlanObject()->getYear() < date('Y') && count($this->getMeasurements())) {
+      // If there is no current measurement, the plan is from last year or
+      // earlier and there are at least some measurements, take the values
+      // from the most recent measurement.
+      $measurements = $this->getMeasurements();
+      $measurement = reset($measurements);
+    }
+    $values = $this->values + ($measurement?->getValues() ?? []);
+    return $values;
   }
 
   /**
@@ -1312,7 +1314,6 @@ class Attachment extends ApiObjectBase implements AttachmentInterface, Disaggreg
   public function getValueByIndex($index, $monitoring_period = 'latest', $cumulative_logic = TRUE) {
     $metric_type = array_values($this->getFieldTypes())[$index] ?? NULL;
     return $metric_type ? $this->getValueByMetricType($metric_type, $monitoring_period, $cumulative_logic) : NULL;
-
   }
 
   /**

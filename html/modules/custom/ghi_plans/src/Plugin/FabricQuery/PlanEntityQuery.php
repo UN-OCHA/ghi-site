@@ -59,7 +59,6 @@ class PlanEntityQuery extends FabricQueryBase {
     $items = $this->fabricClient->createQuery('logframeEntities', PlanEntity::getGraphQlItems())
       ->setFilters([
         'Id' => $entity_ids,
-        'RecordStatus' => 'Active',
       ])
       ->execute() ?: [];
 
@@ -86,7 +85,6 @@ class PlanEntityQuery extends FabricQueryBase {
     $items = $this->fabricClient->createQuery('logframeEntities', PlanEntity::getGraphQlItems())
       ->setFilters([
         'PlanId' => $plan_id,
-        'RecordStatus' => 'Active',
       ])
       ->execute() ?: [];
     $entities = $this->buildResultObjects($items, PlanEntity::class);

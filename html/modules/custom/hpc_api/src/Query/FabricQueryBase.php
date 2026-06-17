@@ -19,14 +19,13 @@ use Drupal\hpc_api\ApiObjects\Categories\PopulationStatus;
 use Drupal\hpc_api\ApiObjects\Categories\SettlementType;
 use Drupal\hpc_api\ApiObjects\PlanYear;
 use Drupal\hpc_api\ApiObjects\Relationship;
-use Drupal\hpc_api\ApiObjects\Types\CalculationMethod;
 use Drupal\hpc_api\ApiObjects\Types\CategoryType;
 use Drupal\hpc_api\ApiObjects\Types\EntityType;
+use Drupal\hpc_api\ApiObjects\Types\FileAssetType;
 use Drupal\hpc_api\ApiObjects\Types\MetricType;
 use Drupal\hpc_api\ApiObjects\Types\PlanCostingType;
 use Drupal\hpc_api\ApiObjects\Types\PlanType;
 use Drupal\hpc_api\ApiObjects\Types\RelationshipType;
-use Drupal\hpc_api\ApiObjects\Types\ResourceType;
 use Drupal\hpc_api\ApiObjects\Types\RevisionState;
 use Drupal\hpc_api\ApiObjects\Types\Sector;
 use Drupal\hpc_api\ApiObjects\Types\Unit;
@@ -63,11 +62,11 @@ abstract class FabricQueryBase extends PluginBase implements FabricQueryPluginIn
    * Base types.
    */
   protected const BASE_TYPES = [
-    'calcMethods' => CalculationMethod::class,
+    // 'calcMethods' => CalculationMethod::class,
     'categoryTypes' => CategoryType::class,
     'entityTypes' => EntityType::class,
     'metricTypes' => MetricType::class,
-    'resourceTypes' => ResourceType::class,
+    'fileAssetTypes' => FileAssetType::class,
     'revisionStates' => RevisionState::class,
     'sectors' => Sector::class,
     'units' => Unit::class,
@@ -635,33 +634,6 @@ abstract class FabricQueryBase extends PluginBase implements FabricQueryPluginIn
     $unit = $units[$id] ?? NULL;
     assert($unit === NULL || $unit instanceof Unit);
     return $unit;
-  }
-
-  /**
-   * Get the available calculation methods.
-   *
-   * @return \Drupal\hpc_api\ApiObjects\Types\CalculationMethod[]
-   *   The calculation methods.
-   */
-  public function getCalculationMethods(): array {
-    $this->fetchBaseTypes();
-    return $this->baseTypes['calcMethods'];
-  }
-
-  /**
-   * Get a calculation method by id.
-   *
-   * @param int $id
-   *   The id of the calculation method.
-   *
-   * @return \Drupal\hpc_api\ApiObjects\Types\CalculationMethod|null
-   *   The calculation method object or NULL if not found.
-   */
-  public function getCalculationMethod(int $id): ?CalculationMethod {
-    $calculation_methods = $this->getCalculationMethods();
-    $calculation_method = $calculation_methods[$id] ?? NULL;
-    assert($calculation_method === NULL || $calculation_method instanceof CalculationMethod);
-    return $calculation_method;
   }
 
   /**

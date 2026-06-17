@@ -60,17 +60,9 @@ class PlanReportingPeriod extends ApiObjectBase {
     'Id',
     'StartDate',
     'EndDate',
-    // 'ExpiryDate',
     'PeriodNumber',
     'PlanId',
     'MeasurementsGenerated',
-    'RecordStatus',
-    // 'ActiveUntil',
-    // 'Source',
-    // 'SourceId',
-    // 'CreatedAt',
-    // 'UpdatedAt',
-    // 'IsLocked',
   ];
 
   /**

@@ -23,7 +23,7 @@ class EntityType extends Type {
    */
   protected ?string $label;
 
-  const GRAPHQL_ITEMS = ['Id', 'Name', 'Alias'];
+  const GRAPHQL_ITEMS = ['Id', 'Name', 'DisplayName'];
 
   /**
    * {@inheritdoc}

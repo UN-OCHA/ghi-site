@@ -10,13 +10,6 @@ use Drupal\hpc_api\ApiObjects\Types\RevisionState;
 class AttachmentFact extends FactBase {
 
   /**
-   * The description.
-   *
-   * @var string|null
-   */
-  protected ?string $description;
-
-  /**
    * The revision state id.
    *
    * @var int|null
@@ -49,7 +42,7 @@ class AttachmentFact extends FactBase {
     'DisaggregationCategoryOtherId',
     'DeliveryModalityId',
     'CustomMetricName',
-    'Description',
+    'DerivedMetricSource',
     'IsTotal',
     'ValueNum',
   ];
@@ -59,7 +52,6 @@ class AttachmentFact extends FactBase {
    */
   public function __construct(object $data) {
     parent::__construct($data);
-    $this->description = $data->Description ?? NULL;
     $this->revisionStateId = $data->RevisionStateId ?? NULL;
   }
 

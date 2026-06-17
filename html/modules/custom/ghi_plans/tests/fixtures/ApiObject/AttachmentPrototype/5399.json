@@ -39,8 +39,5 @@
   },
   "PlanId": 1112,
   "CreatedAt": "2022-09-27T09:22:19.000Z",
-  "UpdatedAt": "2023-05-11T09:17:27.000Z",
-  "RecordStatus": "Active",
-  "Source": "HPC",
-  "SourceId": "5399"
+  "UpdatedAt": "2023-05-11T09:17:27.000Z"
 }

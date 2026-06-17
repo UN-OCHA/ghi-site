@@ -7,7 +7,7 @@ use Drupal\hpc_api\Plugin\FabricQuery\CategoryQuery;
 use Drupal\hpc_api\Plugin\FabricQuery\EntityLookupQuery;
 use Drupal\hpc_api\Plugin\FabricQuery\EntityTypeQuery;
 use Drupal\hpc_api\Plugin\FabricQuery\IconQuery;
-use Drupal\hpc_api\Plugin\FabricQuery\ResourceQuery;
+use Drupal\hpc_api\Plugin\FabricQuery\FileAssetQuery;
 use Drupal\hpc_api\Query\FabricQueryBase;
 
 /**
@@ -79,14 +79,14 @@ trait FabricQueryTrait {
   }
 
   /**
-   * Get the resource query.
+   * Get the file asset query.
    *
-   * @return \Drupal\hpc_api\Plugin\FabricQuery\ResourceQuery|null
-   *   The resource query or NULL.
+   * @return \Drupal\hpc_api\Plugin\FabricQuery\FileAssetQuery|null
+   *   The file asset query or NULL.
    */
-  protected static function getResourceQuery(): ?ResourceQuery {
-    $query = self::getQueryInstance('resource');
-    return $query instanceof ResourceQuery ? $query : NULL;
+  protected static function getFileAssetQuery(): ?FileAssetQuery {
+    $query = self::getQueryInstance('file_asset');
+    return $query instanceof FileAssetQuery ? $query : NULL;
   }
 
   /**

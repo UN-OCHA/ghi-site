@@ -40,9 +40,9 @@ class EntityPrototype extends ApiObjectBase {
   /**
    * The order number.
    *
-   * @var string
+   * @var string|null
    */
-  protected string $orderNumber;
+  protected ?string $orderNumber;
 
   /**
    * The singular name.
@@ -84,9 +84,6 @@ class EntityPrototype extends ApiObjectBase {
     'OrderNumber',
     'CreatedAt',
     'UpdatedAt',
-    'RecordStatus',
-    'Source',
-    'SourceId',
   ];
 
   /**
@@ -99,7 +96,7 @@ class EntityPrototype extends ApiObjectBase {
     $this->refCode = $data->RefCode;
     $this->type = strtoupper($data->Type);
     $this->planId = $data->PlanId;
-    $this->orderNumber = $data->OrderNumber;
+    $this->orderNumber = $data->OrderNumber ?? NULL;
     $this->nameSingular = $value->name->en->singular;
     $this->namePlural = $value->name->en->plural;
     $this->canSupport = $value->canSupport ?? [];
@@ -195,7 +192,7 @@ class EntityPrototype extends ApiObjectBase {
    *   The order number.
    */
   public function getOrderNumber(): ?int {
-    return $this->orderNumber ?? NULL;
+    return ($this->orderNumber ?? NULL) ? intval($this->orderNumber) : NULL;
   }
 
   /**

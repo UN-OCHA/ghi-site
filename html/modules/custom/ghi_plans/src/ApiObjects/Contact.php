@@ -37,7 +37,7 @@ class Contact extends ApiObjectBase {
     'Id',
     'Name',
     'Email',
-    'LeadAgency',
+    // 'LeadAgency',
   ];
 
   /**
