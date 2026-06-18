@@ -37,7 +37,7 @@
     "axios": ">=1.16.0",
     "core-js": "^3.20.0",
     "css-what": ">=5.0.1",
-    "eslint": "^7.23.0",
+    "eslint": "^10.5.0",
     "json-schema": ">=0.4.0",
     "minimist": "^1.2.6",
     "nth-check": ">=2.0.1",
