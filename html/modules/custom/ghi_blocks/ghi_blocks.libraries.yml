@@ -110,12 +110,14 @@ map.gl:
   js:
     js/map.gl/map.mapbox.js: {}
     js/map.gl/styles/map.circle.js: {}
+    js/map.gl/styles/map.composite.js: {}
     js/map.gl/styles/map.choropleth.js: {}
     js/map.gl/map.js: {}
   dependencies:
     - core/jquery
     - ghi_blocks/mapbox_gl
     - ghi_blocks/turf
+    - hpc_common/d3
     - ghi_blocks/map.gl.state
     - ghi_blocks/map.gl.sidebar
     - ghi_blocks/map.gl.interactive_legend
@@ -144,6 +146,12 @@ map.gl.plan_overview:
 map.gl.plan:
   js:
     js/map.gl/map.plan_attachment.js: {}
+  dependencies:
+    - ghi_blocks/map.gl.lazy
+
+map.gl.plan_composite:
+  js:
+    js/map.gl/map.plan_composite.js: {}
   dependencies:
     - ghi_blocks/map.gl.lazy
 

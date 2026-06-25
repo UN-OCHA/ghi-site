@@ -17,6 +17,7 @@
     // Built-in styles are loaded before this controller by the map.gl library.
     styleClasses: {
       circle: window.ghi.circleMap,
+      composite: window.ghi.compositeMap,
       choropleth: window.ghi.choroplethMap,
     },
     config: {
@@ -139,12 +140,14 @@
 
       // Treat cache entries as shared geometry. Properties such as object_count
       // are view-specific and must be applied freshly for each map render.
+      let location_id = location.id ?? location.location_id;
+      let location_name = location.name ?? location.location_name;
       feature = Object.assign({}, feature, {
-        id: Number(location.id),
+        id: Number(location_id),
         properties: {
-          object_id: location.object_id ?? location.id,
-          location_id: location.id,
-          location_name: location.name,
+          object_id: location.object_id ?? location_id,
+          location_id: location_id,
+          location_name: location_name,
         },
       });
       if (featureCallback) {
@@ -462,6 +465,112 @@
       if (options.png_capture_mode === true) {
         this.preparePngCaptureSnapshot(state);
       }
+    },
+
+    /**
+     * Create a map from the given array of objects.
+     *
+     * @param {Array} array
+     *   The array to process. Must be an array of objects.
+     * @param {String} property
+     *   The object property to use as key.
+     *
+     * @returns {Object}
+     *   A map object with items keyed by the given item property.
+     */
+    keyArray: function (array, property) {
+      let objects = {};
+      if (typeof array != 'object' || !array.length) {
+        return objects;
+      }
+      for (let item of array) {
+        if (typeof item != 'object' || !item.hasOwnProperty(property)) {
+          continue;
+        }
+        objects[item[property]] = item;
+      }
+      return objects;
+    },
+
+    /**
+     * Get the fill color stops for the given ranges.
+     *
+     * @param {Array} ranges
+     *   The range stops.
+     * @param {Object} colors
+     *   The colors keyed by range index.
+     *
+     * @returns {Array}
+     *   An array relating a stop point in the data with a color to use.
+     */
+    getFillColors: function (ranges, colors) {
+      let fillColors = [];
+      for (let i in ranges) {
+        fillColors.push([ranges[i], colors[i]]);
+      }
+      return fillColors;
+    },
+
+    /**
+     * Get the fill color for a specific value.
+     *
+     * @param {Array} ranges
+     *   The range stops.
+     * @param {Object} colors
+     *   The colors keyed by range index.
+     * @param {Number} value
+     *   The value to map to a color.
+     *
+     * @returns {String}
+     *   A color code as a string.
+     */
+    getFillColor: function (ranges, colors, value) {
+      for (let i in ranges) {
+        if (value <= ranges[i]) {
+          return i > 0 ? colors[i - 1] : colors[i];
+        }
+      }
+      return colors[Object.keys(colors).length - 1];
+    },
+
+    /**
+     * Get the data ranges for the given values.
+     *
+     * @param {Array} values
+     *   The values to get data ranges for.
+     * @param {Number} max
+     *   The maximum number of range buckets.
+     *
+     * @returns {Array}
+     *   An array of stop values representing the range in data.
+     */
+    getDataRanges: function (values, max = 6) {
+      var ranges = [0];
+      if (values.length == 0) {
+        return ranges;
+      }
+      let max_count = Math.max.apply(Math, values);
+      let range_count = Math.min(max, max_count);
+      let range_step = max_count > (max - 1) ? Math.floor((max_count - 1) / range_count + 1) : 1;
+
+      for (var i = 0; i < range_count - 1; i++) {
+        ranges.push(i * range_step + 1);
+      }
+
+      var max_count_display = max_count;
+      let max_steps = [1000, 500, 200, 100, 50, 20, 15, 10, 5, 1];
+      for (var j = 0; j < max_steps.length; j++) {
+        if (max_count > max_steps[j]) {
+          max_count_display = Math.floor(max_count / max_steps[j]) * max_steps[j];
+          let last_bucket_max = ranges[ranges.length - 1] + range_step;
+          if (max_count_display < last_bucket_max) {
+            max_count_display = (max_count > 100 && max_count - last_bucket_max < 10) ? max_count - 10 : last_bucket_max;
+          }
+          break;
+        }
+      }
+      ranges.push(max_count_display);
+      return ranges;
     },
 
   }
