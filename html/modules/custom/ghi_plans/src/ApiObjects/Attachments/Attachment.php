@@ -1190,7 +1190,8 @@ class Attachment extends ApiObjectBase implements AttachmentInterface, Disaggreg
    */
   public function getCurrentValues() {
     $measurement = $this->getCurrentMeasurement();
-    if ($measurement === NULL && $this->getPlanObject()->getYear() < date('Y') && count($this->getMeasurements())) {
+    $plan_object = $this->getPlanObject();
+    if ($measurement === NULL && $plan_object !== NULL && $plan_object->getYear() < date('Y') && count($this->getMeasurements())) {
       // If there is no current measurement, the plan is from last year or
       // earlier and there are at least some measurements, take the values
       // from the most recent measurement.

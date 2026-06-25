@@ -156,7 +156,7 @@ abstract class FactBase extends ApiObjectBase {
     $this->disaggregationCategoryOtherId = $data->DisaggregationCategoryOtherId;
     $this->deliveryModalityId = $data->DeliveryModalityId;
     $this->customMetricName = $data->CustomMetricName;
-    $this->calculatedFieldSource = $data->DerivedMetricSource;
+    $this->calculatedFieldSource = $data->DerivedMetricSource ?? NULL;
     $this->isTotal = $data->IsTotal;
     $this->value = $data->ValueNum;
   }
