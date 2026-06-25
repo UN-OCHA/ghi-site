@@ -6,6 +6,11 @@ configuration_container:
       css/attachment_select.css: {}
       css/data_point.css: {}
 
+map_dataset:
+  css:
+    component:
+      css/map_dataset.css: {}
+
 states_regex:
   js:
     js/states.regex.js: {}

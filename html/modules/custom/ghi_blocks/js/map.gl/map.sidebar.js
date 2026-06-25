@@ -119,7 +119,7 @@
       build.total_count = current_locations.length;
       build.next = next_index !== null ? current_locations[next_index] : null;
       build.previous = previous_index !== null ? current_locations[previous_index] : null;
-      build.location_data = location_data;
+      build.location_data = Object.assign({}, object, location_data);
       return build;
     }
 

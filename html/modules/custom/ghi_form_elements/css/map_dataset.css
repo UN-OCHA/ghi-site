@@ -1,0 +1,37 @@
+table.map-dataset-config-table td {
+  vertical-align: top !important;
+}
+
+table.map-dataset-config-table td:first-child,
+table.map-dataset-config-table td:last-child,
+table.map-dataset-config-table td.dataset-settings-summary {
+  padding-top: 1.2rem !important;
+}
+
+table.map-dataset-config-table td > * {
+  margin-top: .75rem !important;
+  margin-bottom: .75rem !important;
+}
+
+table.map-dataset-config-table td:not(.glb-form-item) > .glb-form-item,
+table.map-dataset-config-table td:not(.glb-form-item) > div > .glb-form-item,
+table.map-dataset-config-table td:not(.glb-form-item) > .glb-form-wrapper,
+table.map-dataset-config-table td:not(.glb-form-item) > div > .glb-form-wrapper {
+  margin: 0 !important;
+}
+
+table.map-dataset-config-table td .form-type--select .description {
+  max-width: 10rem;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+table.map-dataset-config-table td.dataset-settings-summary {
+  width: 100%;
+  font-size: var(--gin-font-size-xs);
+  color: var(--gin-color-text-light);
+}
+
+table.map-dataset-config-table td.dataset-settings-edit {
+  text-align: right;
+}

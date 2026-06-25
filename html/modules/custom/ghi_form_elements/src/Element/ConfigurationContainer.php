@@ -1380,6 +1380,7 @@ class ConfigurationContainer extends FormElementBase {
       ];
       $element['custom_config'][$custom_action] = [
         '#type' => 'container',
+        '#item_id' => $id,
         '#parents' => array_merge($element['#parents'], [
           'custom_config',
           $custom_action,
