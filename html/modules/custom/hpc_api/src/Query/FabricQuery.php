@@ -10,6 +10,11 @@ use Drupal\hpc_common\Helpers\ArrayHelper;
 class FabricQuery implements \Stringable {
 
   /**
+   * The maximum number of values Fabric accepts in a single IN filter.
+   */
+  const MAX_FILTER_COUNT_ARRAY = 100;
+
+  /**
    * The default limit for queries.
    *
    * Fabric has an internal default limit of 100 records which is too small.
@@ -372,6 +377,7 @@ class FabricQuery implements \Stringable {
   private function buildFilterString(?array $filter = NULL) {
     $filter = $filter ?? $this->filters;
     $strings = [];
+    $chunked_filter_strings = [];
     foreach (($filter ?? []) as $key => $value) {
       if (is_null($value)) {
         $strings[] = $key . ': { isNull: true }';
@@ -391,12 +397,24 @@ class FabricQuery implements \Stringable {
       elseif (is_array($value) && ArrayHelper::all($value, 'is_numeric') && ArrayHelper::all(array_keys($value), 'is_integer')) {
         // All values are numeric and the keys are integers, so this is
         // probably a list of ids.
-        $strings[] = $key . ': { in: [' . implode(',', $value) . '] }';
+        if (count($value) > self::MAX_FILTER_COUNT_ARRAY) {
+          // Fabric rejects a single IN operator with more than 100 values.
+          $chunked_filter_strings[] = $this->buildChunkedFilterString($key, $value, TRUE);
+        }
+        else {
+          $strings[] = $this->buildListFilterString($key, $value, TRUE);
+        }
       }
       elseif (is_array($value) && ArrayHelper::all($value, 'is_string') && ArrayHelper::all(array_keys($value), 'is_integer')) {
         // All values are strings and the keys are integers, so this is
         // probably a list of string values.
-        $strings[] = $key . ': { in: ["' . implode('", "', $value) . '"] }';
+        if (count($value) > self::MAX_FILTER_COUNT_ARRAY) {
+          // Keep string lists on the same chunking path as numeric ID lists.
+          $chunked_filter_strings[] = $this->buildChunkedFilterString($key, $value, FALSE);
+        }
+        else {
+          $strings[] = $this->buildListFilterString($key, $value, FALSE);
+        }
       }
       elseif (is_array($value)) {
         // Anything else is treated like a sub filter, e.g.:
@@ -404,7 +422,57 @@ class FabricQuery implements \Stringable {
         $strings[] = $key . ': { ' . $this->buildFilterString($value) . ' }';
       }
     }
+    if (count($chunked_filter_strings) == 1) {
+      $strings[] = reset($chunked_filter_strings);
+    }
+    elseif (count($chunked_filter_strings) > 1) {
+      // Multiple oversized filters must all apply, so combine their OR groups
+      // with AND rather than appending several sibling OR keys.
+      $strings[] = 'and: [{' . implode('}, {', $chunked_filter_strings) . '}]';
+    }
     return !empty($strings) ? implode(' ', $strings) : NULL;
+  }
+
+  /**
+   * Build a single IN filter string.
+   *
+   * @param string $key
+   *   The filter key.
+   * @param array $values
+   *   The filter values.
+   * @param bool $numeric
+   *   Whether the filter values should be rendered as numbers.
+   *
+   * @return string
+   *   The filter string.
+   */
+  private function buildListFilterString(string $key, array $values, bool $numeric): string {
+    $value_string = $numeric ? implode(',', $values) : '"' . implode('", "', $values) . '"';
+    return $key . ': { in: [' . $value_string . '] }';
+  }
+
+  /**
+   * Build an OR filter string from IN filter chunks.
+   *
+   * Fabric rejects IN filters with more than 100 values. Wrapping multiple
+   * smaller IN filters in OR preserves the same semantics in one query.
+   *
+   * @param string $key
+   *   The filter key.
+   * @param array $values
+   *   The filter values.
+   * @param bool $numeric
+   *   Whether the filter values should be rendered as numbers.
+   *
+   * @return string
+   *   The filter string.
+   */
+  private function buildChunkedFilterString(string $key, array $values, bool $numeric): string {
+    $filters = [];
+    foreach (array_chunk($values, self::MAX_FILTER_COUNT_ARRAY) as $chunk) {
+      $filters[] = '{ ' . $this->buildListFilterString($key, $chunk, $numeric) . ' }';
+    }
+    return 'or: [' . implode(', ', $filters) . ']';
   }
 
   /**

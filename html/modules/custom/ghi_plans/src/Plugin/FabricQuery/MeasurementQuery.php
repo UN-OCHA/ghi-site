@@ -50,9 +50,6 @@ class MeasurementQuery extends FabricQueryBase {
    *   An array of measurement objects, keyed by the measurement id.
    */
   public function getMeasurementsById(array $measurement_ids): array {
-    if (count($measurement_ids) > self::MAX_FILTER_COUNT_ARRAY) {
-      return $this->doChunkedQuery($measurement_ids, fn ($ids): array => $this->getMeasurementsById($ids));
-    }
     $measurements = $this->objectStore->getObjects($measurement_ids, Measurement::getObjectStorageKey());
     if (count($measurements) == count($measurement_ids)) {
       return $measurements;
@@ -81,9 +78,6 @@ class MeasurementQuery extends FabricQueryBase {
    *   An array of measurement objects, keyed by the measurement id.
    */
   public function getMeasurementsByAttachmentId(array $attachment_ids): array {
-    if (count($attachment_ids) > self::MAX_FILTER_COUNT_ARRAY) {
-      return $this->doChunkedQuery($attachment_ids, fn ($ids): array => $this->getMeasurementsByAttachmentId($ids));
-    }
     $measurements = $this->objectStore->getObjects($attachment_ids, Measurement::getObjectStorageKey(), 'AttachmentId');
     if (count($measurements) == count($attachment_ids)) {
       return $measurements;

@@ -53,9 +53,6 @@ class AttachmentQuery extends FabricQueryBase {
    */
   public function getAttachmentsById(array $attachment_ids): array {
     $attachment_ids = array_unique($attachment_ids);
-    if (count($attachment_ids) > self::MAX_FILTER_COUNT_ARRAY) {
-      return $this->doChunkedQuery($attachment_ids, fn ($ids): array => $this->getAttachmentsById($ids));
-    }
     $attachments = $this->objectStore->getObjects($attachment_ids, Attachment::getObjectStorageKey());
     if (count($attachments) == count($attachment_ids)) {
       return $attachments;

@@ -50,11 +50,6 @@ class PlanEntityQuery extends FabricQueryBase {
     }
     $entity_ids = array_diff($entity_ids, array_keys($entities));
 
-    if (count($entity_ids) > self::MAX_FILTER_COUNT_ARRAY) {
-      // We need to do multiple queries.
-      return $this->doChunkedQuery($entity_ids, fn ($ids): array => $this->getPlanEntitiesById($ids));
-    }
-
     // Get the plan entity.
     $items = $this->fabricClient->createQuery('logframeEntities', PlanEntity::getGraphQlItems())
       ->setFilters([

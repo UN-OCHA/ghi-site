@@ -60,11 +60,6 @@ class ProjectQuery extends FabricQueryBase {
     if (empty($project_ids)) {
       return [];
     }
-    if (count($project_ids) > self::MAX_FILTER_COUNT_ARRAY) {
-      $projects = $this->doChunkedQuery($project_ids, fn ($ids): array => $this->getProjectsById($ids, $plan_context));
-      $this->sortProjectsByProjectCode($projects);
-      return $projects;
-    }
     $items = $this->fabricClient->createQuery('projects', Project::getGraphQlItems())
       ->setFilter('Id', $project_ids)
       ->setFilter('IsPublished', TRUE)

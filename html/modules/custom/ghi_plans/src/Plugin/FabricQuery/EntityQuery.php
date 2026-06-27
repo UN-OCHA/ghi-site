@@ -56,10 +56,6 @@ class EntityQuery extends FabricQueryBase {
    *   An array of entity objects.
    */
   public function getEntities(string $entity_type, array $entity_ids): array {
-    if (count($entity_ids) > self::MAX_FILTER_COUNT_ARRAY) {
-      // We need to do multiple queries.
-      return $this->doChunkedQuery($entity_ids, fn ($ids): array => $this->getEntities($entity_type, $ids));
-    }
     switch ($entity_type) {
       case 'governingEntity':
         return $this->getGoverningEntityQuery()->getGoverningEntitiesById($entity_ids);
