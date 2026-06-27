@@ -89,14 +89,7 @@
      */
     buildSidebar = function(object, build) {
       let state = this.state;
-      let data = state.getData();
-      let object_id = parseInt(object.object_id);
-
-      var location_data = object.modal_content ?? data.modal_contents[object_id];
-      let variant_id = state.getVariantId();
-      if (variant_id && state.hasVariant(state.getCurrentIndex(), variant_id)) {
-        location_data = data.variants[variant_id].modal_contents[object_id];
-      }
+      var location_data = state.getModalContent(object);
       if (!location_data) {
         // The new tab has no data for the currently active location.
         return;
@@ -138,7 +131,7 @@
       let object_id = $(element).data('object-id');
       var new_active_location = state.getLocationById(object_id);
       if (new_active_location) {
-        state.style.showSidebarForObject(new_active_location);
+        state.showSidebarForObject(new_active_location);
         if ($(element).hasClass('previous')) {
           $(this.container).find('.link.previous').focus();
         }

@@ -45,6 +45,7 @@
       this.tooltip = null;
       this.adminLevel = null;
       this.adminLevelControl = null;
+      this.modalContentRequests = {};
       this.ready = false;
 
       // Chose the right admin level to start with.
@@ -255,6 +256,132 @@
      */
     getOptions = function () {
       return this.options;
+    }
+
+    /**
+     * Check if modal contents can be lazy-loaded for this map.
+     *
+     * @returns {Boolean}
+     *   TRUE if a modal content URL is available, FALSE otherwise.
+     */
+    hasLazyModalData = function () {
+      return typeof this.getOptions().modal_data_url != 'undefined' && this.getOptions().modal_data_url !== null;
+    }
+
+    /**
+     * Get the modal content endpoint for this map.
+     *
+     * @returns {String|null}
+     *   The modal content URL, if available.
+     */
+    getLazyModalDataUrl = function () {
+      return this.getOptions().modal_data_url ?? null;
+    }
+
+    /**
+     * Get modal content for the given object from the current map data.
+     *
+     * @param {Object} object
+     *   The location object.
+     * @param {String|null} index
+     *   The current map tab index.
+     * @param {String|null} variant_id
+     *   The current variant id.
+     *
+     * @returns {Object|null}
+     *   The modal content if already available, or NULL otherwise.
+     */
+    getModalContent = function (object, index = null, variant_id = null) {
+      index = index ?? object.index ?? this.getCurrentIndex();
+      variant_id = variant_id ?? object.variant_id ?? this.getVariantId();
+
+      let data = this.hasMapTabs() && index !== null ? this.getDataForIndex(index) : this.getData();
+      if (!data) {
+        return object.modal_content ?? null;
+      }
+
+      let object_id = parseInt(object.object_id ?? object.location_id ?? object.id);
+      if (variant_id && data.variants?.[variant_id]?.modal_contents?.[object_id]) {
+        return data.variants[variant_id].modal_contents[object_id];
+      }
+      if (data.modal_contents?.[object_id]) {
+        return data.modal_contents[object_id];
+      }
+      return object.modal_content ?? null;
+    }
+
+    /**
+     * Persist modal content into the current map data.
+     *
+     * @param {String|Number} object_id
+     *   The location object id.
+     * @param {Object|null} modal_content
+     *   The modal content to store.
+     * @param {String|null} index
+     *   The current map tab index.
+     * @param {String|null} variant_id
+     *   The current variant id.
+     */
+    setModalContent = function (object_id, modal_content, index = null, variant_id = null) {
+      index = index ?? this.getCurrentIndex();
+      let data = this.hasMapTabs() && index !== null ? this.getDataForIndex(index) : this.getData();
+      if (!data || modal_content === null) {
+        return;
+      }
+
+      object_id = String(object_id);
+      if (variant_id && this.hasVariant(index, variant_id)) {
+        data.variants[variant_id].modal_contents = data.variants[variant_id].modal_contents ?? {};
+        data.variants[variant_id].modal_contents[object_id] = modal_content;
+        return;
+      }
+
+      data.modal_contents = data.modal_contents ?? {};
+      data.modal_contents[object_id] = modal_content;
+    }
+
+    /**
+     * Load modal content lazily for the given object when needed.
+     *
+     * @param {Object} object
+     *   The location object.
+     *
+     * @returns {Object}
+     *   A jQuery promise.
+     */
+    loadModalContent = function (object) {
+      let existing_modal_content = this.getModalContent(object);
+      if (existing_modal_content || !this.hasLazyModalData()) {
+        return $.Deferred().resolve(existing_modal_content).promise();
+      }
+
+      let index = object.index ?? this.getCurrentIndex();
+      let variant_id = object.variant_id ?? this.getVariantId();
+      let object_id = String(object.object_id ?? object.location_id ?? object.id);
+      let request_key = [index ?? 'default', variant_id ?? 'base', object_id].join(':');
+
+      if (typeof this.modalContentRequests[request_key] == 'undefined') {
+        let deferred = $.Deferred();
+        this.modalContentRequests[request_key] = deferred.promise();
+        this.getMapController().showThrobber(this);
+        $.ajax({
+          dataType: 'json',
+          url: this.getLazyModalDataUrl(),
+          data: {
+            data_index: index,
+            object_id: object_id,
+            variant_id: variant_id,
+          },
+          success: (response) => {
+            this.setModalContent(object_id, response, index, variant_id);
+            deferred.resolve(response);
+          },
+          error: () => deferred.reject(),
+          complete: () => this.getMapController().hideThrobber(this)
+        });
+      }
+
+      return this.modalContentRequests[request_key];
     }
 
     /**
@@ -606,7 +733,7 @@
         let focused_feature = focused_location ? this.getFeatureByObjectId(focused_location.object_id) : null;
         let location_is_visible = this.isOverviewMap() || (focused_location && focused_location.total > 0);
         if (focused_location && focused_feature && location_is_visible) {
-          this.style.showSidebarForObject(this.focusedLocation);
+          this.showSidebarForObject(this.focusedLocation);
         }
         else {
           this.hideSidebar();
@@ -656,6 +783,15 @@
      *   The location object to show in the sidebar.
      */
     showSidebarForObject = function (object) {
+      if (!this.getModalContent(object) && this.hasLazyModalData()) {
+        this.loadModalContent(object).done(() => {
+          if (this.getModalContent(object)) {
+            this.showSidebarForObject(object);
+          }
+        });
+        return;
+      }
+
       let map = this.getMap();
       let style = this.style;
 

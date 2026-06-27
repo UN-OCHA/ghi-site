@@ -7,6 +7,7 @@ use Drupal\Component\Plugin\Exception\PluginException;
 use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Component\Utility\Html;
 use Drupal\Component\Utility\NestedArray;
+use Drupal\Component\Uuid\UuidInterface;
 use Drupal\Core\Ajax\AjaxResponse;
 use Drupal\Core\Ajax\ReplaceCommand;
 use Drupal\Core\Cache\Cache;
@@ -16,6 +17,7 @@ use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Form\SubformState;
 use Drupal\Core\Form\SubformStateInterface;
+use Drupal\Core\KeyValueStore\KeyValueExpirableFactoryInterface;
 use Drupal\Core\Render\Element;
 use Drupal\Core\Security\TrustedCallbackInterface;
 use Drupal\Core\Url;
@@ -71,6 +73,16 @@ abstract class GHIBlockBase extends HPCBlockBase implements TrustedCallbackInter
    * The form key for the base object form.
    */
   const CONTEXTS_FORM_KEY = 'contexts';
+
+  /**
+   * The expirable key/value collection for block configuration previews.
+   */
+  public const CONFIGURATION_PREVIEW_COLLECTION = 'ghi_blocks.block_configuration_preview';
+
+  /**
+   * The lifetime of stored block configuration preview state.
+   */
+  private const CONFIGURATION_PREVIEW_TTL = 3600;
 
   /**
    * Current form state object if in a configuration context.
@@ -164,6 +176,20 @@ abstract class GHIBlockBase extends HPCBlockBase implements TrustedCallbackInter
   protected $currentUser;
 
   /**
+   * The expirable key/value store factory.
+   *
+   * @var \Drupal\Core\KeyValueStore\KeyValueExpirableFactoryInterface
+   */
+  protected KeyValueExpirableFactoryInterface $keyValueExpirableFactory;
+
+  /**
+   * The UUID generator.
+   *
+   * @var \Drupal\Component\Uuid\UuidInterface
+   */
+  protected UuidInterface $uuid;
+
+  /**
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
@@ -183,6 +209,8 @@ abstract class GHIBlockBase extends HPCBlockBase implements TrustedCallbackInter
     $instance->pathMatcher = $container->get('path.matcher');
     $instance->formSubmitter = $container->get('form_submitter');
     $instance->currentUser = $container->get('current_user');
+    $instance->keyValueExpirableFactory = $container->get('keyvalue.expirable');
+    $instance->uuid = $container->get('uuid');
 
     $instance->getContexts();
 
@@ -1152,36 +1180,102 @@ abstract class GHIBlockBase extends HPCBlockBase implements TrustedCallbackInter
     else {
       // Show a preview area.
       $temporary_settings = $this->getTemporarySettings($form_state);
-      $label_subkey = $this instanceof MultiStepFormBlockInterface ? $this->getTitleSubform() : NULL;
-      $this->configuration['hpc'] = $temporary_settings;
-      $this->configuration['label'] = NestedArray::getValue($temporary_settings, array_filter([
-        $label_subkey,
-        'label',
-      ])) ?? $this->label();
-      $this->configuration['label_display'] = NestedArray::getValue($temporary_settings, array_filter([
-        $label_subkey,
-        'label_display',
-      ]));
+      $this->applyConfigurationPreviewSettings($temporary_settings);
       $this->configuration['is_preview'] = TRUE;
-      $build = $this->build();
-      $form['container']['preview'] = $build ? [
-        '#theme' => 'block',
+      $preview_token = $this->storeConfigurationPreviewState();
+      $form['container']['preview'] = [
+        '#type' => 'container',
         '#attributes' => [
           'data-block-preview' => $this->getPluginId(),
-        ] + ($build['#attributes'] ?? []),
-        '#configuration' => $this->configuration,
-        '#base_plugin_id' => $this->getBaseId(),
-        '#plugin_id' => $this->getPluginId(),
-        '#derivative_plugin_id' => $this->getDerivativeId(),
-        '#id' => $this->getPluginId(),
+          'data-block-preview-token' => $preview_token,
+          'data-block-preview-url' => Url::fromRoute('ghi_blocks.block_preview', [
+            'token' => $preview_token,
+          ])->toString(),
+        ],
         '#attached' => [
           'library' => ['ghi_blocks/block.preview'],
         ],
-        'content' => $build,
-      ] : NULL;
+      ];
     }
 
     return $form;
+  }
+
+  /**
+   * Apply the submitted preview settings to this block instance.
+   *
+   * @param array $temporary_settings
+   *   The settings built from the submitted form values.
+   */
+  private function applyConfigurationPreviewSettings(array $temporary_settings): void {
+    $label_subkey = $this instanceof MultiStepFormBlockInterface ? $this->getTitleSubform() : NULL;
+    $this->configuration['hpc'] = $temporary_settings;
+    $this->configuration['label'] = NestedArray::getValue($temporary_settings, array_filter([
+      $label_subkey,
+      'label',
+    ])) ?? $this->label();
+    $this->configuration['label_display'] = NestedArray::getValue($temporary_settings, array_filter([
+      $label_subkey,
+      'label_display',
+    ]));
+  }
+
+  /**
+   * Store the preview input state outside the rendered form.
+   *
+   * The rendered preview can be large, so the form only carries a token. The
+   * preview endpoint uses the stored plugin state to render the output later,
+   * keeping that output out of the serialized form state.
+   *
+   * @return string
+   *   The token referencing the stored preview input state.
+   */
+  private function storeConfigurationPreviewState(): string {
+    $token = $this->uuid->generate();
+    $store = $this->keyValueExpirableFactory->get(self::CONFIGURATION_PREVIEW_COLLECTION);
+    $store->setWithExpire($token, [
+      'uid' => (int) $this->currentUser->id(),
+      'plugin_id' => $this->getPluginId(),
+      'configuration' => $this->getConfiguration(),
+      'contexts' => $this->getConfigurationPreviewContextData(),
+      'current_uri' => $this->getCurrentUri(),
+    ], self::CONFIGURATION_PREVIEW_TTL);
+    return $token;
+  }
+
+  /**
+   * Get context values in a compact serializable form.
+   *
+   * @return array
+   *   The context data keyed by context name.
+   */
+  private function getConfigurationPreviewContextData(): array {
+    $contexts = [];
+    foreach ($this->getContexts() as $context_name => $context) {
+      if (!$context->hasContextValue()) {
+        continue;
+      }
+      $value = $context->getContextValue();
+      if ($value instanceof EntityInterface) {
+        // Only persisted entities can be restored from compact preview state.
+        if ($value->id() === NULL) {
+          continue;
+        }
+        $contexts[$context_name] = [
+          'type' => 'entity',
+          'entity_type_id' => $value->getEntityTypeId(),
+          'id' => $value->id(),
+        ];
+        continue;
+      }
+      if (is_scalar($value) || $value === NULL) {
+        $contexts[$context_name] = [
+          'type' => 'scalar',
+          'value' => $value,
+        ];
+      }
+    }
+    return $contexts;
   }
 
   /**

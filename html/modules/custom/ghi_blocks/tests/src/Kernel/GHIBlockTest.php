@@ -3,13 +3,16 @@
 namespace Drupal\Tests\ghi_blocks\Kernel;
 
 use Drupal\Component\Render\FormattableMarkup;
+use Drupal\Core\Ajax\AjaxResponse;
 use Drupal\Core\Form\FormState;
 use Drupal\Core\Routing\RouteMatchInterface;
+use Drupal\ghi_blocks\Controller\BlockPreviewController;
 use Drupal\ghi_blocks\Interfaces\OptionalTitleBlockInterface;
 use Drupal\ghi_blocks\Interfaces\OverrideDefaultTitleBlockInterface;
 use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
 use Drupal\layout_builder\SectionStorageInterface;
 use PHPUnit\Framework\ExpectationFailedException;
+use Symfony\Component\HttpFoundation\Request;
 
 /**
  * Tests generic properties of block plugin.
@@ -167,6 +170,79 @@ class GHIBlockTest extends BlockKernelTestBase {
     $block_form['#submit'] = [];
     $plugin->blockFormAlter($block_form, $form_state);
     $this->assertContains('generic-datawrapper', $block_form['#attributes']['class']);
+  }
+
+  /**
+   * Tests configuration previews rendered through the preview endpoint.
+   */
+  public function testBlockConfigurationPreviewUsesEndpoint() {
+    $plugin = $this->getDatawrapperBlockPlugin(self::EMBED_CODE_VALID);
+    $form_state = new FormState();
+    $form_state->set('preview', TRUE);
+    $configuration_form = $plugin->buildConfigurationForm([], $form_state);
+
+    $this->assertArrayHasKey('preview', $configuration_form['container']);
+    $preview = $configuration_form['container']['preview'];
+    $attributes = $preview['#attributes'];
+    $this->assertSame('generic_datawrapper', $attributes['data-block-preview']);
+    $this->assertArrayHasKey('data-block-preview-token', $attributes);
+    $this->assertArrayHasKey('data-block-preview-url', $attributes);
+    $this->assertStringStartsWith('/block-preview/',
+      $attributes['data-block-preview-url']);
+    $this->assertArrayNotHasKey('content', $preview);
+
+    $store = $this->container->get('keyvalue.expirable')
+      ->get(GHIBlockBase::CONFIGURATION_PREVIEW_COLLECTION);
+    $stored_preview = $store->get($attributes['data-block-preview-token']);
+    $this->assertSame('generic_datawrapper', $stored_preview['plugin_id']);
+    $this->assertSame(self::EMBED_CODE_VALID, $stored_preview['configuration']['hpc']['embed']);
+  }
+
+  /**
+   * Tests that endpoint previews ignore undeclared stored contexts.
+   */
+  public function testBlockConfigurationPreviewEndpointSkipsUnknownContexts() {
+    $plugin = $this->getDatawrapperBlockPlugin(self::EMBED_CODE_VALID);
+    $configuration = $plugin->getConfiguration();
+    $configuration['is_preview'] = TRUE;
+    $token = $this->container->get('uuid')->generate();
+
+    $store = $this->container->get('keyvalue.expirable')
+      ->get(GHIBlockBase::CONFIGURATION_PREVIEW_COLLECTION);
+    $store->setWithExpire($token, [
+      'uid' => (int) $this->container->get('current_user')->id(),
+      'plugin_id' => $plugin->getPluginId(),
+      'configuration' => $configuration,
+      'contexts' => [
+        'year' => [
+          'type' => 'scalar',
+          'value' => 2025,
+        ],
+      ],
+      'current_uri' => '/plan/1263/population',
+    ], 3600);
+
+    $controller = BlockPreviewController::create($this->container);
+    $this->assertInstanceOf(AjaxResponse::class, $controller->preview($token));
+  }
+
+  /**
+   * Tests current URI resolution for Layout Builder editor requests.
+   */
+  public function testCurrentUriUsesEditorPaths() {
+    $request_stack = $this->container->get('request_stack');
+
+    $request_stack->push(Request::create('/layout-builder-ipe/entity/edit/overrides/node.17132', 'GET', [
+      'current_path' => '/plan/1263/population',
+    ]));
+    $this->assertSame('/plan/1263/population', $this->getDatawrapperBlockPlugin()->getCurrentUri());
+    $request_stack->pop();
+
+    $request_stack->push(Request::create('/layout_builder/update/block/overrides/node.17132/0/content/example', 'GET', [
+      'destination' => '/node/17132',
+    ]));
+    $this->assertSame('/node/17132', $this->getDatawrapperBlockPlugin()->getCurrentUri());
+    $request_stack->pop();
   }
 
   /**
