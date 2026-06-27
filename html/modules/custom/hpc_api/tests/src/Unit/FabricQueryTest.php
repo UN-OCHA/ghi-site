@@ -46,6 +46,7 @@ class FabricQueryTest extends UnitTestCase {
    */
   public function dataProviderBuildFilterString() {
     $cases = [];
+    $one_to_hundred = range(1, 100);
     $cases[] = [
       [
         'Id' => 10,
@@ -80,6 +81,26 @@ class FabricQueryTest extends UnitTestCase {
         ],
       ],
       'planPeriod: { period: { PeriodType: { eq: "Year" } CalendarYear: { eq: 2025 } } }',
+    ];
+    $cases[] = [
+      [
+        'Id' => range(1, 101),
+      ],
+      'or: [{ Id: { in: [' . implode(',', $one_to_hundred) . '] } }, { Id: { in: [101] } }]',
+    ];
+    $cases[] = [
+      [
+        'Id' => range(1, 101),
+        'AdminLevel' => 'NOT NULL',
+      ],
+      'AdminLevel: { isNull: false } or: [{ Id: { in: [' . implode(',', $one_to_hundred) . '] } }, { Id: { in: [101] } }]',
+    ];
+    $cases[] = [
+      [
+        'Id' => range(1, 101),
+        'ParentId' => range(101, 201),
+      ],
+      'and: [{or: [{ Id: { in: [' . implode(',', $one_to_hundred) . '] } }, { Id: { in: [101] } }]}, {or: [{ ParentId: { in: [' . implode(',', range(101, 200)) . '] } }, { ParentId: { in: [201] } }]}]',
     ];
     return $cases;
   }

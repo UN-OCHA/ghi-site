@@ -49,10 +49,6 @@ class LocationQuery extends FabricQueryBase {
     $location_ids = array_unique($location_ids);
     sort($location_ids);
 
-    if (count($location_ids) > self::MAX_FILTER_COUNT_ARRAY) {
-      // We need to do multiple queries.
-      return $this->doChunkedQuery($location_ids, fn ($ids): array => $this->getLocationsById($ids));
-    }
     $items = $this->fabricClient->createQuery('locations', Location::getGraphQlItems())
       ->setFilter('Id', $location_ids)
       ->setFilter('AdminLevel', 'NOT NULL')

@@ -50,11 +50,6 @@ class GoverningEntityQuery extends FabricQueryBase {
     }
     $entity_ids = array_diff($entity_ids, array_keys($governing_entities));
 
-    if (count($entity_ids) > self::MAX_FILTER_COUNT_ARRAY) {
-      // We need to do multiple queries.
-      return $this->doChunkedQuery($entity_ids, fn ($ids): array => $this->getGoverningEntitiesById($ids));
-    }
-
     // Get the governing entity.
     $items = $this->fabricClient->createQuery('coordinationEntities', GoverningEntity::getGraphQlItems())
       ->setFilters([

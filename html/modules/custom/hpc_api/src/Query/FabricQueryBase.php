@@ -56,8 +56,6 @@ abstract class FabricQueryBase extends PluginBase implements FabricQueryPluginIn
   const CATEGORY_NAME_PLAN_TYPE = 'PlanType';
   const CATEGORY_NAME_PLAN_COSTING = 'PlanCosting';
 
-  const MAX_FILTER_COUNT_ARRAY = 100;
-
   /**
    * Base types.
    */
@@ -234,28 +232,6 @@ abstract class FabricQueryBase extends PluginBase implements FabricQueryPluginIn
    */
   public function setCache($cache_key, $data): mixed {
     return $this->cache($cache_key, $data, FALSE, NULL, $this->getCacheTags());
-  }
-
-  /**
-   * Do a chunked query to work around fabrics limitation of 100 filter values.
-   *
-   * @param scalar[] $values
-   *   An array of values. Typically a list of ids.
-   * @param callable $callback
-   *   A callback function that will be called with the value subset as the
-   *   only argument.
-   *
-   * @return array
-   *   An array of result objects.
-   */
-  protected function doChunkedQuery(array $values, callable $callback): array {
-    $items = [];
-    for ($i = 0; $i < ceil(count($values) / self::MAX_FILTER_COUNT_ARRAY); $i++) {
-      $subset = array_slice($values, $i * self::MAX_FILTER_COUNT_ARRAY, self::MAX_FILTER_COUNT_ARRAY);
-      $result = $callback($subset);
-      $items = $items + (is_array($result) ? $result : []);
-    }
-    return $items;
   }
 
   /**
@@ -827,10 +803,6 @@ abstract class FabricQueryBase extends PluginBase implements FabricQueryPluginIn
   private function getEntityItems(string $namespace, array $entity_ids, $fields = NULL): array {
     if (empty($entity_ids)) {
       return [];
-    }
-    if (count($entity_ids) > self::MAX_FILTER_COUNT_ARRAY) {
-      // We need to do multiple queries.
-      return $this->doChunkedQuery($entity_ids, fn ($ids): array => $this->getEntityItems($namespace, $ids, $fields));
     }
     $items = $this->fabricClient->createQuery($namespace)
       ->setItems($fields ?? ['Id', 'Name'])

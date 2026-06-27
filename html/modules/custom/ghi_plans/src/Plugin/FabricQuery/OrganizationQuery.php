@@ -52,9 +52,6 @@ class OrganizationQuery extends FabricQueryBase {
     }
     $organization_ids = array_unique($organization_ids);
     sort($organization_ids);
-    if (count($organization_ids) > self::MAX_FILTER_COUNT_ARRAY) {
-      return $this->doChunkedQuery($organization_ids, fn ($ids): array => $this->getOrganizationsById($ids));
-    }
     $items = $this->fabricClient->createQuery('organizations', Organization::getGraphQlItems())
       ->setFilter('Id', $organization_ids)
       ->execute() ?: [];
