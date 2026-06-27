@@ -8,6 +8,7 @@ use Drupal\Core\Cache\Cache;
 use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Plugin\Context\EntityContextDefinition;
+use Drupal\Core\Render\BubbleableMetadata;
 use Drupal\Core\Render\Markup;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\Url;
@@ -59,6 +60,8 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
   use PlanReportingPeriodTrait;
 
   const STYLE_CIRCLE = 'circle';
+  public const CONFIGURATION_PREVIEW_MODAL_COLLECTION = 'ghi_blocks.plan_attachment_map_preview_modal';
+  private const CONFIGURATION_PREVIEW_MODAL_TTL = 3600;
 
   /**
    * {@inheritdoc}
@@ -129,6 +132,38 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
       'map_id' => $chart_id,
       'attachment_id' => $attachment->id(),
     ], fn ($value) => $value !== NULL && $value !== '');
+    $map_settings = [
+      'id' => $chart_id,
+      'data_url' => $block_uuid ? Url::fromRoute('ghi_blocks.map_data', [
+        'plugin_id' => $this->getPluginId(),
+        'block_uuid' => $block_uuid,
+      ], [
+        'query' => $data_url_query,
+      ])->toString() : NULL,
+    ];
+    $map_tabs = NULL;
+    $attachments = [
+      'library' => ['ghi_blocks/map.gl.plan'],
+      'drupalSettings' => [
+        'plan_attachment_map' => [
+          $chart_id => $map_settings,
+        ],
+      ],
+    ];
+
+    if ($this->isConfigurationPreview()) {
+      // Block configuration preview needs the map data from the in-memory
+      // block state. Reusing the lazy callback here would rebuild the saved
+      // block from the page instead of the previewed configuration.
+      $payload = $this->buildLazyMapPayload($chart_id);
+      if (!$payload->isEmpty()) {
+        // The lazy response normally replaces the tab markup over Ajax, so in
+        // preview we copy those replacements into the initial render instead.
+        $map_tabs = $payload->getHtml()['.pane-' . $chart_id . ' .map-tabs--inner'] ?? NULL;
+        $attachments = BubbleableMetadata::mergeAttachments($attachments, $payload->getAttachments());
+        $attachments['drupalSettings']['plan_attachment_map'][$chart_id] = $this->getConfigurationPreviewMap($payload->getMap());
+      }
+    }
 
     $build = [
       '#full_width' => FALSE,
@@ -136,27 +171,12 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
     $build[] = [
       '#theme' => 'plan_attachment_map',
       '#chart_id' => $chart_id,
-      '#map_tabs' => NULL,
+      '#map_tabs' => $map_tabs,
       '#map_type' => $style,
       '#attachment' => $attachment,
       '#attachment_switcher' => $attachment_switcher,
       '#legend' => $style == self::STYLE_CIRCLE ? FALSE : TRUE,
-      '#attached' => [
-        'library' => ['ghi_blocks/map.gl.plan'],
-        'drupalSettings' => [
-          'plan_attachment_map' => [
-            $chart_id => [
-              'id' => $chart_id,
-              'data_url' => $block_uuid ? Url::fromRoute('ghi_blocks.map_data', [
-                'plugin_id' => $this->getPluginId(),
-                'block_uuid' => $block_uuid,
-              ], [
-                'query' => $data_url_query,
-              ])->toString() : NULL,
-            ],
-          ],
-        ],
-      ],
+      '#attached' => $attachments,
     ];
     $cache_metadata = CacheableMetadata::createFromObject($attachment);
     $cache_metadata
@@ -233,6 +253,96 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
         '.pane-' . $map_id . ' .map-tabs--inner' => $map['tabs'],
       ],
     );
+  }
+
+  /**
+   * Reduce the map settings payload used for block configuration preview.
+   *
+   * The full lazy payload contains modal markup for every location and metric.
+   * The preview only needs enough data to render the map initially, so modal
+   * contents are replaced with an on-demand lookup URL.
+   *
+   * @param array $map
+   *   The map settings array from the lazy payload.
+   *
+   * @return array
+   *   The preview-safe map settings.
+   */
+  private function getConfigurationPreviewMap(array $map): array {
+    if (empty($map['json']) || !is_array($map['json'])) {
+      return $map;
+    }
+
+    $modal_data_token = $this->storeConfigurationPreviewModalData($map);
+    foreach ($map['json'] as &$item) {
+      unset($item['modal_contents']);
+      if (empty($item['variants']) || !is_array($item['variants'])) {
+        continue;
+      }
+      foreach ($item['variants'] as &$variant) {
+        unset($variant['modal_contents']);
+      }
+      unset($variant);
+    }
+    unset($item);
+
+    if ($modal_data_token) {
+      $map['modal_data_url'] = Url::fromRoute('ghi_blocks.map_preview_modal_data', [
+        'token' => $modal_data_token,
+      ])->toString();
+    }
+
+    return $map;
+  }
+
+  /**
+   * Store preview modal contents separately so preview payloads stay small.
+   *
+   * The preview still needs access to per-location modal content after a map
+   * item is selected. Store that markup behind a short-lived token so the
+   * initial preview response and drupalSettings payload stay small.
+   *
+   * @param array $map
+   *   The full map settings array before preview trimming is applied.
+   *
+   * @return string|null
+   *   A token for lazy-loading preview modal contents, or NULL if there are no
+   *   modal contents to store.
+   */
+  private function storeConfigurationPreviewModalData(array $map): ?string {
+    if (empty($map['json']) || !is_array($map['json'])) {
+      return NULL;
+    }
+
+    $store = $this->keyValueExpirableFactory->get(self::CONFIGURATION_PREVIEW_MODAL_COLLECTION);
+    $token = $this->uuid->generate();
+    $uid = (int) $this->currentUser->id();
+    $has_modal_data = FALSE;
+
+    foreach ($map['json'] as $data_index => $item) {
+      if (!empty($item['modal_contents']) && is_array($item['modal_contents'])) {
+        $store->setWithExpire(implode(':', [$token, $data_index, 'base']), [
+          'uid' => $uid,
+          'modal_contents' => $item['modal_contents'],
+        ], self::CONFIGURATION_PREVIEW_MODAL_TTL);
+        $has_modal_data = TRUE;
+      }
+      if (empty($item['variants']) || !is_array($item['variants'])) {
+        continue;
+      }
+      foreach ($item['variants'] as $variant_id => $variant) {
+        if (empty($variant['modal_contents']) || !is_array($variant['modal_contents'])) {
+          continue;
+        }
+        $store->setWithExpire(implode(':', [$token, $data_index, $variant_id]), [
+          'uid' => $uid,
+          'modal_contents' => $variant['modal_contents'],
+        ], self::CONFIGURATION_PREVIEW_MODAL_TTL);
+        $has_modal_data = TRUE;
+      }
+    }
+
+    return $has_modal_data ? $token : NULL;
   }
 
   /**

@@ -110,6 +110,42 @@ class PlanAttachmentMapTest extends PlanBlockKernelTestBase {
   }
 
   /**
+   * Tests that configuration preview removes modal contents from map data.
+   */
+  public function testConfigurationPreviewMapStripsModalContents(): void {
+    $plugin = $this->getBlockPlugin();
+    $map = [
+      'json' => [
+        'people-targeted-0' => [
+          'label' => 'People targeted',
+          'modal_contents' => [
+            '1' => ['html' => '<p>Modal</p>'],
+          ],
+          'variants' => [
+            'f' => [
+              'modal_contents' => [
+                '1' => ['html' => '<p>Variant modal</p>'],
+              ],
+            ],
+          ],
+        ],
+      ],
+      'id' => 'test-map',
+      'settings_key' => 'plan_attachment_map',
+    ];
+
+    $preview_map = $this->callPrivateMethod($plugin, 'getConfigurationPreviewMap', [$map]);
+
+    $this->assertArrayHasKey('json', $preview_map);
+    $this->assertArrayHasKey('modal_data_url', $preview_map);
+    $this->assertArrayNotHasKey('modal_contents', $preview_map['json']['people-targeted-0']);
+    $this->assertArrayNotHasKey('modal_contents', $preview_map['json']['people-targeted-0']['variants']['f']);
+    $this->assertSame('People targeted', $preview_map['json']['people-targeted-0']['label']);
+    $this->assertSame('test-map', $preview_map['id']);
+    $this->assertSame('plan_attachment_map', $preview_map['settings_key']);
+  }
+
+  /**
    * Get a block plugin with default configuration.
    *
    * @return \Drupal\ghi_blocks\Plugin\Block\Plan\PlanAttachmentMap

@@ -32,6 +32,28 @@ ghi_blocks.map_data:
         block_uuid:
           type: string
 
+ghi_blocks.map_preview_modal_data:
+  path: '/map-preview-modal-data/{token}'
+  defaults:
+    _controller: '\Drupal\ghi_blocks\Controller\PreviewMapModalDataController::data'
+  requirements:
+    _permission: 'access content'
+  options:
+    parameters:
+      token:
+        type: string
+
+ghi_blocks.block_preview:
+  path: '/block-preview/{token}'
+  defaults:
+    _controller: '\Drupal\ghi_blocks\Controller\BlockPreviewController::preview'
+  requirements:
+    _permission: 'access content'
+  options:
+    parameters:
+      token:
+        type: string
+
 ghi_blocks.global_config:
   path: '/admin/config/ghi/global-settings'
   defaults:

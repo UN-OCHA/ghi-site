@@ -40,6 +40,11 @@ block.settings:
 block.preview:
   js:
     js/block.preview.js: {}
+  dependencies:
+    - core/drupal
+    - core/drupal.ajax
+    - core/jquery
+    - core/once
 theme:
   js:
     js/theme.js: {}
