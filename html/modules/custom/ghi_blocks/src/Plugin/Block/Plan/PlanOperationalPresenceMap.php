@@ -8,6 +8,7 @@ use Drupal\Core\Block\Attribute\Block;
 use Drupal\Core\Cache\Cache;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Plugin\Context\EntityContextDefinition;
+use Drupal\Core\Render\BubbleableMetadata;
 use Drupal\Core\Url;
 use Drupal\ghi_base_objects\ApiObjects\Location;
 use Drupal\ghi_blocks\Interfaces\LazyMapBlockInterface;
@@ -19,6 +20,7 @@ use Drupal\ghi_blocks\MapObjects\ClusterMapObject;
 use Drupal\ghi_blocks\MapObjects\OrganizationMapObject;
 use Drupal\ghi_blocks\MapObjects\ProjectMapObject;
 use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
+use Drupal\ghi_blocks\Traits\ConfigurationPreviewMapTrait;
 use Drupal\ghi_blocks\Traits\GlobalMapTrait;
 use Drupal\ghi_blocks\Traits\OrganizationsBlockTrait;
 use Drupal\ghi_plans\ApiObjects\Organization;
@@ -48,6 +50,7 @@ use Drupal\hpc_common\Plugin\HPCBlockMetadata;
 class PlanOperationalPresenceMap extends GHIBlockBase implements MultiStepFormBlockInterface, OverrideDefaultTitleBlockInterface, HPCDownloadPNGInterface, LazyMapBlockInterface {
 
   use OrganizationsBlockTrait;
+  use ConfigurationPreviewMapTrait;
   use FtsLinkTrait;
   use GlobalMapTrait;
 
@@ -134,6 +137,33 @@ class PlanOperationalPresenceMap extends GHIBlockBase implements MultiStepFormBl
       'view' => $selected_view,
       'object_id' => $selected_object_id,
     ], fn ($value) => $value !== NULL && $value !== '');
+    $map_settings = [
+      'id' => $chart_id,
+      'data_url' => $block_uuid ? Url::fromRoute('ghi_blocks.map_data', [
+        'plugin_id' => $this->getPluginId(),
+        'block_uuid' => $block_uuid,
+      ], [
+        'query' => $data_url_query,
+      ])->toString() : NULL,
+    ];
+    $attachments = [
+      'library' => ['ghi_blocks/map.gl.operational_presence'],
+      'drupalSettings' => [
+        'plan_operational_presence_map' => [
+          $chart_id => $map_settings,
+        ],
+      ],
+    ];
+
+    if ($this->isConfigurationPreview()) {
+      // Configuration preview must use the submitted block settings instead of
+      // rebuilding the saved block through the lazy map data route.
+      $payload = $this->buildLazyMapPayload($chart_id);
+      if (!$payload->isEmpty()) {
+        $attachments = BubbleableMetadata::mergeAttachments($attachments, $payload->getAttachments());
+        $attachments['drupalSettings']['plan_operational_presence_map'][$chart_id] = $this->getConfigurationPreviewMap($payload->getMap());
+      }
+    }
 
     return [
       '#theme' => 'plan_operational_presence_map',
@@ -141,22 +171,7 @@ class PlanOperationalPresenceMap extends GHIBlockBase implements MultiStepFormBl
       '#chart_class' => $chart_class,
       '#view_switcher' => $this->getViewSwitcher($selected_view),
       '#object_switcher' => $this->getObjectSwitcher($selected_view),
-      '#attached' => [
-        'library' => ['ghi_blocks/map.gl.operational_presence'],
-        'drupalSettings' => [
-          'plan_operational_presence_map' => [
-            $chart_id => [
-              'id' => $chart_id,
-              'data_url' => $block_uuid ? Url::fromRoute('ghi_blocks.map_data', [
-                'plugin_id' => $this->getPluginId(),
-                'block_uuid' => $block_uuid,
-              ], [
-                'query' => $data_url_query,
-              ])->toString() : NULL,
-            ],
-          ],
-        ],
-      ],
+      '#attached' => $attachments,
       '#cache' => [
         'tags' => Cache::mergeTags($this->getCurrentBaseObject()->getCacheTags(), $this->getMapConfigCacheTags()),
       ],
@@ -243,6 +258,7 @@ class PlanOperationalPresenceMap extends GHIBlockBase implements MultiStepFormBl
   private function getMapData() {
     $map_data = [
       'locations' => [],
+      'modal_contents' => [],
     ];
 
     $selected_view = $this->getSelectedView();
@@ -273,12 +289,12 @@ class PlanOperationalPresenceMap extends GHIBlockBase implements MultiStepFormBl
       $location_data->location_name = $location->location->getName();
       $location_data->object_id = $location_id;
       $location_data->object_count = count($objects);
-      $location_data->modal_content = $this->buildModalContent($location->location, $objects, $selected_view, $fts_link);
 
       if (empty($location_data->filepath)) {
         continue;
       }
 
+      $map_data['modal_contents'][(string) $location_id] = $this->buildModalContent($location->location, $objects, $selected_view, $fts_link);
       $map_data['locations'][] = clone $location_data;
     }
     return !empty($map_data['locations']) ? $map_data : NULL;

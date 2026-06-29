@@ -177,10 +177,7 @@
         'source': this.sourceId, // reference the data source
         'layout': {},
         'paint': {
-          'fill-color': {
-            'property': 'object_count',
-            'stops': this.getFillColors(),
-          },
+          'fill-color': this.getFillColorExpression(),
           'fill-opacity': [
             'case',
             ['==', ['get', 'object_count'], 0],
@@ -317,7 +314,7 @@
       }
       let object_id = feature.properties.object_id;
       let object = self.state.getLocationById(object_id);
-      self.showSidebarForObject(object);
+      self.state.showSidebarForObject(object);
     }
 
     /**
@@ -367,7 +364,7 @@
       let $legend_container = state.getContainer().find('.map-legend');
       var $legend = $('<ul>');
       let colors = this.config.colors;
-      for (i in ranges) {
+      for (let i in ranges) {
         let index = parseInt(i, 10);
         if (index == 0) {
           // Do not show the 0-range in the legend.
@@ -402,7 +399,14 @@
      */
     showSidebarForObject = function (object) {
       let state = this.state;
-      let modal_content = object.modal_content;
+      let modal_content = state.getModalContent(object);
+      if (!modal_content && state.hasLazyModalData()) {
+        state.showSidebarForObject(object);
+        return;
+      }
+      if (!modal_content) {
+        return;
+      }
       let build = {
         location_data: modal_content,
         title_heading: modal_content.title_heading,
@@ -432,10 +436,34 @@
     getFillColors = function() {
       let ranges = this.getDataRanges();
       let colors = [];
-      for (i in ranges) {
+      for (let i in ranges) {
         colors.push([ranges[i], this.config.colors[i]]);
       }
       return colors;
+    }
+
+    /**
+     * Get the fill color expression.
+     *
+     * Mapbox interpolates legacy color stops, but the legend represents
+     * discrete buckets. Use a step expression so areas and legend items use the
+     * same bucket boundaries.
+     *
+     * @returns {Array}
+     *   A Mapbox step expression for the area fill colors.
+     */
+    getFillColorExpression = function() {
+      let ranges = this.getDataRanges();
+      let expression = [
+        'step',
+        ['to-number', ['get', 'object_count']],
+        this.config.colors[0],
+      ];
+
+      for (let i = 1; i < ranges.length; i++) {
+        expression.push(ranges[i], this.config.colors[i]);
+      }
+      return expression;
     }
 
     /**

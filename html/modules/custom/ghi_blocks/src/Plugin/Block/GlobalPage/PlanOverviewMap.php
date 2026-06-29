@@ -8,12 +8,14 @@ use Drupal\Core\Cache\Cache;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Plugin\Context\ContextDefinition;
 use Drupal\Core\Plugin\Context\EntityContextDefinition;
+use Drupal\Core\Render\BubbleableMetadata;
 use Drupal\Core\Render\Markup;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\Url;
 use Drupal\ghi_blocks\Interfaces\LazyMapBlockInterface;
 use Drupal\ghi_blocks\Map\MapPayload;
 use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
+use Drupal\ghi_blocks\Traits\ConfigurationPreviewMapTrait;
 use Drupal\ghi_blocks\Traits\GlobalMapTrait;
 use Drupal\ghi_blocks\Traits\GlobalPlanOverviewBlockTrait;
 use Drupal\ghi_blocks\Traits\GlobalSettingsTrait;
@@ -39,6 +41,7 @@ use Drupal\hpc_downloads\Helpers\DownloadHelper;
 )]
 class PlanOverviewMap extends GHIBlockBase implements LazyMapBlockInterface {
 
+  use ConfigurationPreviewMapTrait;
   use GlobalMapTrait;
   use GlobalPlanOverviewBlockTrait;
   use GlobalSettingsTrait;
@@ -63,6 +66,36 @@ class PlanOverviewMap extends GHIBlockBase implements LazyMapBlockInterface {
   public function buildContent() {
     $chart_id = Html::getUniqueId('plan-overview-map');
     $block_uuid = $this->getUuid();
+    $map_settings = [
+      'id' => $chart_id,
+      'data_url' => $block_uuid ? Url::fromRoute('ghi_blocks.map_data', [
+        'plugin_id' => $this->getPluginId(),
+        'block_uuid' => $block_uuid,
+      ], [
+        'query' => [
+          'current_uri' => $this->getCurrentUri(),
+          'map_id' => $chart_id,
+        ],
+      ])->toString() : NULL,
+    ];
+    $attachments = [
+      'library' => ['ghi_blocks/map.gl.plan_overview'],
+      'drupalSettings' => [
+        'plan_overview_map' => [
+          $chart_id => $map_settings,
+        ],
+      ],
+    ];
+
+    if ($this->isConfigurationPreview()) {
+      // Configuration preview must use the submitted block settings instead of
+      // rebuilding the saved block through the lazy map data route.
+      $payload = $this->buildLazyMapPayload($chart_id);
+      if (!$payload->isEmpty()) {
+        $attachments = BubbleableMetadata::mergeAttachments($attachments, $payload->getAttachments());
+        $attachments['drupalSettings']['plan_overview_map'][$chart_id] = $this->getConfigurationPreviewMap($payload->getMap());
+      }
+    }
 
     return [
       '#theme' => 'plan_overview_map',
@@ -73,25 +106,7 @@ class PlanOverviewMap extends GHIBlockBase implements LazyMapBlockInterface {
         '#items' => $this->buildTabLinks(),
         '#gin_lb_theme_suggestions' => FALSE,
       ],
-      '#attached' => [
-        'library' => ['ghi_blocks/map.gl.plan_overview'],
-        'drupalSettings' => [
-          'plan_overview_map' => [
-            $chart_id => [
-              'id' => $chart_id,
-              'data_url' => $block_uuid ? Url::fromRoute('ghi_blocks.map_data', [
-                'plugin_id' => $this->getPluginId(),
-                'block_uuid' => $block_uuid,
-              ], [
-                'query' => [
-                  'current_uri' => $this->getCurrentUri(),
-                  'map_id' => $chart_id,
-                ],
-              ])->toString() : NULL,
-            ],
-          ],
-        ],
-      ],
+      '#attached' => $attachments,
       '#cache' => [
         'tags' => $this->getMapConfigCacheTags(),
       ],

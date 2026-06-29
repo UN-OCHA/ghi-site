@@ -36,6 +36,9 @@
     if (typeof mapConfig.disclaimer != 'undefined') {
       options.disclaimer = mapConfig.disclaimer ?? null;
     }
+    if (typeof mapConfig.modal_data_url != 'undefined') {
+      options.modal_data_url = mapConfig.modal_data_url;
+    }
     return options;
   }
 

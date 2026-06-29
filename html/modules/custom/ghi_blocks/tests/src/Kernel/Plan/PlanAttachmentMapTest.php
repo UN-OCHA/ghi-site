@@ -6,6 +6,7 @@ use Drupal\ghi_blocks\Interfaces\ConfigValidationInterface;
 use Drupal\ghi_blocks\Interfaces\LazyMapBlockInterface;
 use Drupal\ghi_blocks\Interfaces\MultiStepFormBlockInterface;
 use Drupal\ghi_blocks\Interfaces\OverrideDefaultTitleBlockInterface;
+use Drupal\ghi_blocks\Map\MapModalContent;
 use Drupal\ghi_blocks\Map\MapPayload;
 use Drupal\ghi_blocks\Plugin\Block\Plan\PlanAttachmentMap;
 use Drupal\Tests\ghi_blocks\Kernel\PlanBlockKernelTestBase;
@@ -143,6 +144,14 @@ class PlanAttachmentMapTest extends PlanBlockKernelTestBase {
     $this->assertSame('People targeted', $preview_map['json']['people-targeted-0']['label']);
     $this->assertSame('test-map', $preview_map['id']);
     $this->assertSame('plan_attachment_map', $preview_map['settings_key']);
+
+    $token = basename(parse_url($preview_map['modal_data_url'], PHP_URL_PATH));
+    $store = $this->container->get('keyvalue.expirable')
+      ->get(MapModalContent::CONFIGURATION_PREVIEW_COLLECTION);
+    $base_entry = $store->get(MapModalContent::buildStoreKey($token, 'people-targeted-0', MapModalContent::DEFAULT_VARIANT_ID));
+    $variant_entry = $store->get(MapModalContent::buildStoreKey($token, 'people-targeted-0', 'f'));
+    $this->assertSame(['1' => ['html' => '<p>Modal</p>']], $base_entry['modal_contents']);
+    $this->assertSame(['1' => ['html' => '<p>Variant modal</p>']], $variant_entry['modal_contents']);
   }
 
   /**
