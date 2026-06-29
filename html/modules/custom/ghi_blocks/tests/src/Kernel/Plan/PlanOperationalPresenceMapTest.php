@@ -5,6 +5,7 @@ namespace Drupal\Tests\ghi_blocks\Kernel\Plan;
 use Drupal\ghi_blocks\Interfaces\LazyMapBlockInterface;
 use Drupal\ghi_blocks\Interfaces\MultiStepFormBlockInterface;
 use Drupal\ghi_blocks\Interfaces\OverrideDefaultTitleBlockInterface;
+use Drupal\ghi_blocks\Map\MapModalContent;
 use Drupal\ghi_blocks\Plugin\Block\Plan\PlanOperationalPresenceMap;
 use Drupal\Tests\ghi_blocks\Kernel\PlanBlockKernelTestBase;
 
@@ -105,6 +106,40 @@ class PlanOperationalPresenceMapTest extends PlanBlockKernelTestBase {
     $plugin = $this->getBlockPlugin();
     $default_subform = $plugin->getDefaultSubform();
     $this->assertEquals('organizations', $default_subform);
+  }
+
+  /**
+   * Tests that configuration preview removes root modal contents from map data.
+   */
+  public function testConfigurationPreviewMapStripsModalContents(): void {
+    $plugin = $this->getBlockPlugin();
+    $map = [
+      'json' => [
+        'locations' => [
+          [
+            'object_id' => 10,
+            'name' => 'Location',
+          ],
+        ],
+        'modal_contents' => [
+          '10' => ['content' => '<p>Presence modal</p>'],
+        ],
+      ],
+      'id' => 'test-map',
+      'settings_key' => 'plan_operational_presence_map',
+    ];
+
+    $preview_map = $this->callPrivateMethod($plugin, 'getConfigurationPreviewMap', [$map]);
+
+    $this->assertArrayHasKey('modal_data_url', $preview_map);
+    $this->assertArrayNotHasKey('modal_contents', $preview_map['json']);
+    $this->assertSame('Location', $preview_map['json']['locations'][0]['name']);
+
+    $token = basename(parse_url($preview_map['modal_data_url'], PHP_URL_PATH));
+    $store = $this->container->get('keyvalue.expirable')
+      ->get(MapModalContent::CONFIGURATION_PREVIEW_COLLECTION);
+    $entry = $store->get(MapModalContent::buildStoreKey($token, MapModalContent::DEFAULT_DATA_INDEX, MapModalContent::DEFAULT_VARIANT_ID));
+    $this->assertSame(['10' => ['content' => '<p>Presence modal</p>']], $entry['modal_contents']);
   }
 
   /**

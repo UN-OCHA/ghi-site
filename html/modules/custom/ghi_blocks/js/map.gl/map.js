@@ -58,6 +58,40 @@
     },
 
     /**
+     * Prepare cached GeoJSON data for a specific location.
+     *
+     * @param {Object} feature
+     *   The cached feature data.
+     * @param {Object} location
+     *   The location object.
+     * @param {Callable} featureCallback
+     *   An optional callback for the prepared feature.
+     *
+     * @returns {Object}
+     *   The prepared feature data.
+     */
+    prepareGeoJSONFeature: function(feature, location, featureCallback = null) {
+      if (!feature) {
+        return feature;
+      }
+
+      // Treat cache entries as shared geometry. Properties such as object_count
+      // are view-specific and must be applied freshly for each map render.
+      feature = Object.assign({}, feature, {
+        id: Number(location.id),
+        properties: {
+          object_id: location.object_id ?? location.id,
+          location_id: location.id,
+          location_name: location.name,
+        },
+      });
+      if (featureCallback) {
+        feature = featureCallback(feature, location);
+      }
+      return feature;
+    },
+
+    /**
      * Get the GeoJSON data for the given location.
      *
      * @param {Object} location
@@ -98,15 +132,6 @@
             if (!type || !feature) {
               return;
             }
-            feature.id = Number(location.id);
-            feature.properties = {
-              object_id: location.object_id ?? location.id,
-              location_id: location.id,
-              location_name: location.name,
-            };
-            if (featureCallback) {
-              feature = featureCallback(feature, location);
-            }
             self.storage[location.filepath] = feature;
           },
           complete: function () {
@@ -115,7 +140,7 @@
           async: async
         });
       }
-      return this.storage[location.filepath];
+      return this.prepareGeoJSONFeature(this.storage[location.filepath], location, featureCallback);
     },
 
     /**
@@ -151,7 +176,8 @@
         if (storage_filtered.length == 0 || storage_filtered.length == filepaths.length) {
           clearInterval(intervall);
           if (storage_filtered.length > 0) {
-            callback(storage_filtered);
+            let features = locations.map(item => self.getGeoJSON(item)).filter(d => d);
+            callback(features);
           }
           if (state !== null) {
             self.hideThrobber(state);

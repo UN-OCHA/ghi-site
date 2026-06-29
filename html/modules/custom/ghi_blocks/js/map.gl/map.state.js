@@ -368,7 +368,7 @@
           dataType: 'json',
           url: this.getLazyModalDataUrl(),
           data: {
-            data_index: index,
+            data_index: index ?? 'default',
             object_id: object_id,
             variant_id: variant_id,
           },

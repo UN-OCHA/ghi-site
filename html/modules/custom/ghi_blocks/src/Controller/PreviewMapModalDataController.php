@@ -6,7 +6,7 @@ use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
 use Drupal\Core\KeyValueStore\KeyValueExpirableFactoryInterface;
 use Drupal\Core\Session\AccountInterface;
-use Drupal\ghi_blocks\Plugin\Block\Plan\PlanAttachmentMap;
+use Drupal\ghi_blocks\Map\MapModalContent;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -60,15 +60,15 @@ class PreviewMapModalDataController extends ControllerBase implements ContainerI
    *   The modal content response.
    */
   public function data(string $token): JsonResponse {
-    $data_index = $this->currentRequest->query->get('data_index');
+    $data_index = $this->currentRequest->query->get('data_index', MapModalContent::DEFAULT_DATA_INDEX);
     $object_id = $this->currentRequest->query->get('object_id');
-    $variant_id = $this->currentRequest->query->get('variant_id') ?: 'base';
-    if ($data_index === NULL || $object_id === NULL) {
+    $variant_id = $this->currentRequest->query->get('variant_id') ?: MapModalContent::DEFAULT_VARIANT_ID;
+    if ($object_id === NULL) {
       throw new NotFoundHttpException();
     }
 
-    $store = $this->keyValueExpirableFactory->get(PlanAttachmentMap::CONFIGURATION_PREVIEW_MODAL_COLLECTION);
-    $entry = $store->get(implode(':', [$token, $data_index, $variant_id]));
+    $store = $this->keyValueExpirableFactory->get(MapModalContent::CONFIGURATION_PREVIEW_COLLECTION);
+    $entry = $store->get(MapModalContent::buildStoreKey($token, $data_index, $variant_id));
     if (empty($entry)) {
       throw new NotFoundHttpException();
     }
