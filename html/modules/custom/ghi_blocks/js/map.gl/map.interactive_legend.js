@@ -21,13 +21,22 @@
       let self = this;
       this.state = state;
       this.hiddenTypes = [];
+      this.zoomEndHandler = () => {
+        // Update the hidden state when zooming. This is important.
+        self.updateHiddenState();
+      };
 
       // Attach zoom handling. Don't do this as part of the setup as that is
       // called also by state.updateMap().
-      state.getMap().on('zoomend', () => {
-        // Update the hidden state when zooming. This is important.
-        self.updateHiddenState();
-      });
+      state.getMap().on('zoomend', this.zoomEndHandler);
+    }
+
+    /**
+     * Remove event handlers attached by the legend.
+     */
+    destroy = function () {
+      this.state.getMap()?.off('zoomend', this.zoomEndHandler);
+      this.state.getContainer().find('.map-legend ul li.legend-item').off('click.interactiveLegend');
     }
 
     setup = function () {
@@ -48,7 +57,7 @@
         });
       }
       state.getContainer().find('.map-legend ul').addClass('interactive-legend');
-      $items.on('click', function (event) {
+      $items.off('click.interactiveLegend').on('click.interactiveLegend', function (event) {
         state.sidebar?.hide();
 
         // Then get the data type and the disabled state.

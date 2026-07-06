@@ -45,6 +45,7 @@
       this.tooltip = null;
       this.adminLevel = null;
       this.adminLevelControl = null;
+      this.searchControl = null;
       this.modalContentRequests = {};
       this.ready = false;
 
@@ -76,7 +77,8 @@
 
       // Add search box.
       if (this.canSearch()) {
-        this.getMap().addControl(new ghi.searchControl(this, this.getSearchOptions()));
+        this.searchControl = new ghi.searchControl(this, this.getSearchOptions());
+        this.getMap().addControl(this.searchControl);
       }
 
       // Add disclaimer.
@@ -101,6 +103,45 @@
     }
 
     /**
+     * Destroy the map state and any runtime resources it owns.
+     */
+    destroy = function () {
+      this.setIsReady(false);
+      this.tooltip?.destroy?.();
+      this.style?.destroy?.();
+      this.legend?.destroy?.();
+      this.sidebar?.destroy?.();
+      this.throbber?.destroy?.();
+      if (this.adminLevelControl) {
+        this.getMap()?.removeControl(this.adminLevelControl);
+        this.adminLevelControl = null;
+      }
+      if (this.searchControl) {
+        this.getMap()?.removeControl(this.searchControl);
+        this.searchControl = null;
+      }
+      this.getContainer().off('.mapTabs');
+      this.getCanvasContainer().off();
+      if (this.map && typeof this.map.remove == 'function') {
+        this.map.remove();
+      }
+      this.map = null;
+    }
+
+    /**
+     * Get the style class for a style id.
+     *
+     * @param {String} style
+     *   The style id.
+     *
+     * @returns {Function|null}
+     *   The style class, or NULL if none is registered.
+     */
+    getMapStyleClass = function (style) {
+      return this.getMapController().getMapStyleClass(style);
+    }
+
+    /**
      * Get the map style for the given id.
      *
      * @param {Object} options
@@ -113,12 +154,13 @@
      */
     getMapStyle = function (options, config) {
       if (this.style === null && typeof options != 'undefined') {
-        if (options.style === 'circle') {
-          this.style = new ghi.circleMap(this.getMapController(), this, options, config);
+        let styleClass = this.getMapStyleClass(options.style);
+        if (styleClass) {
+          this.style = new styleClass(this.getMapController(), this, options, config);
         }
-        if (options.style === 'choropleth') {
-          this.style = new ghi.choroplethMap(this.getMapController(), this, options, config);
-        }
+      }
+      if (this.style === null) {
+        return null;
       }
       if ((typeof this.style['renderLocations']) != "function") {
         return null;
@@ -1627,7 +1669,7 @@
       let self = this;
 
       // Add tab change behaviour.
-      this.getContainer().find('.map-tabs a.map-tab').click(function (e) {
+      this.getContainer().find('.map-tabs a.map-tab').off('click.mapTabs').on('click.mapTabs', function (e) {
         if ($(this).parents('li').hasClass('active') && $(this).parent('li').find('button.ghi-dropdown__btn').length > 0) {
           // If a map tab is already active and there is a dropdown for variants,
           // open that instead.
@@ -1644,7 +1686,7 @@
       });
 
       // Add variant change behaviour.
-      $(this.getContainerClass() + ' .map-tabs div.cd-dropdown a').click(function (e) {
+      $(this.getContainerClass() + ' .map-tabs div.cd-dropdown a').off('click.mapTabs').on('click.mapTabs', function (e) {
         let parent_index = $(this).parents('li').find('a.map-tab').data('map-index');
         self.switchVariant(parent_index, $(this).data('variant-id'));
         e.preventDefault();

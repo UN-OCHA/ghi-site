@@ -52,6 +52,20 @@
   }
 
   /**
+   * Mark a map as no longer initialized.
+   *
+   * @param {Object} mapConfig
+   *   The map settings.
+   */
+  function markUninitialized(mapConfig) {
+    mapConfig.initialized = false;
+    var registeredMapConfig = getRegisteredMapConfig(mapConfig);
+    if (registeredMapConfig) {
+      registeredMapConfig.initialized = false;
+    }
+  }
+
+  /**
    * Initialize the map once its data and assets are available.
    *
    * @param {Object} mapConfig
@@ -201,11 +215,13 @@
           return;
         }
         observer.disconnect();
+        mapConfig.observer = null;
         requestMap(mapConfig);
       });
     }, {
       rootMargin: '400px 0px'
     });
+    mapConfig.observer = observer;
     observer.observe(observedElement);
   }
 
@@ -247,8 +263,47 @@
     });
   }
 
+  /**
+   * Detach lazy-loaded maps before Drupal removes their markup.
+   *
+   * @param {String} settingsKey
+   *   The Drupal settings key.
+   * @param {Object} context
+   *   The behavior context.
+   * @param {Object} settings
+   *   Drupal behavior settings.
+   * @param {String} trigger
+   *   The Drupal detach trigger.
+   */
+  function detach(settingsKey, context, settings, trigger) {
+    if (trigger !== 'unload' || !settings || !settings[settingsKey] || !window.ghi?.map) {
+      return;
+    }
+    Object.keys(settings[settingsKey]).forEach(function(mapKey) {
+      var mapConfig = settings[settingsKey][mapKey];
+      if (!mapConfig.id) {
+        return;
+      }
+      var $element = $(context).is('#' + mapConfig.id) ? $(context) : $('#' + mapConfig.id, context);
+      if (!$element.length) {
+        return;
+      }
+      if (mapConfig.observer) {
+        mapConfig.observer.disconnect();
+        mapConfig.observer = null;
+      }
+      window.ghi.map.destroy(mapConfig.id);
+      markUninitialized(mapConfig);
+      var registered = registry[mapConfig.settings_key || settingsKey] ?? null;
+      if (registered?.maps) {
+        delete registered.maps[mapConfig.id];
+      }
+    });
+  }
+
   window.ghi.mapLazy = {
     attach: attach,
+    detach: detach,
     initMap: initMap,
     requestMap: requestMap
   };
