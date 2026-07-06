@@ -775,6 +775,9 @@
         let focused_feature = focused_location ? this.getFeatureByObjectId(focused_location.object_id) : null;
         let location_is_visible = this.isOverviewMap() || (focused_location && focused_location.total > 0);
         if (focused_location && focused_feature && location_is_visible) {
+          // The active tab's location object carries the index and variant
+          // used by getModalContent().
+          this.focusedLocation = focused_location;
           this.showSidebarForObject(this.focusedLocation);
         }
         else {
