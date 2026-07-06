@@ -15,7 +15,14 @@
   vertical-align: middle;
 
   .material-icon {
+    font-size: inherit;
     line-height: initial;
+
+    // Material icons replaced font glyphs, so keep tooltip icons inheriting
+    // the surrounding text color instead of the generic tooltip SVG accent.
+    svg {
+      fill: currentColor;
+    }
   }
 
   .modal-link {
