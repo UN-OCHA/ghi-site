@@ -49,6 +49,12 @@
         wrapperSelector: '.plan-operational-presence-map-wrapper',
         buildOptions: buildOptions
       });
+    },
+    detach: function(context, settings, trigger) {
+      if (!window.ghi || !window.ghi.mapLazy) {
+        return;
+      }
+      window.ghi.mapLazy.detach('plan_operational_presence_map', context, settings, trigger);
     }
   };
 

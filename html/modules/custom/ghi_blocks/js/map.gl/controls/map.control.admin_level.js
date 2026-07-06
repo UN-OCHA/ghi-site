@@ -22,6 +22,7 @@
      */
     constructor (state) {
       this.state = state;
+      this.tooltip = null;
     }
 
     /**
@@ -90,7 +91,7 @@
         this._container.appendChild(button);
       }
       // Add a tooltip to the control.
-      tippy($(this._container).get(0), {
+      this.tooltip = tippy($(this._container).get(0), {
         content: Drupal.t('Select Admin Level View'),
       });
 
@@ -104,7 +105,10 @@
      * called by Map#removeControl internally.
      */
     onRemove = function () {
-      this._container.parentNode.removeChild(this._container);
+      this.tooltip?.destroy?.();
+      if (this._container.parentNode) {
+        this._container.parentNode.removeChild(this._container);
+      }
       this._map = undefined;
     }
 

@@ -34,6 +34,14 @@
     }
 
     /**
+     * Remove sidebar markup and attached handlers.
+     */
+    destroy = function () {
+      $(this.container).find('.navigation .link').off();
+      $(this.containerWrapper).remove();
+    }
+
+    /**
      * Show the sidebar.
      *
      * @param {Object} object

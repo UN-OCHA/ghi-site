@@ -53,6 +53,12 @@
         triggerSelector: '.map-tab',
         buildOptions: buildOptions
       });
+    },
+    detach: function(context, settings, trigger) {
+      if (!window.ghi || !window.ghi.mapLazy) {
+        return;
+      }
+      window.ghi.mapLazy.detach('plan_overview_map', context, settings, trigger);
     }
   };
 
