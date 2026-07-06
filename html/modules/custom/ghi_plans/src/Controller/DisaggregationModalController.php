@@ -8,7 +8,7 @@ use Drupal\Core\Render\Markup;
 use Drupal\ghi_plans\ApiObjects\Attachments\Attachment;
 use Drupal\ghi_plans\ApiObjects\Entities\GoverningEntity;
 use Drupal\hpc_api\ApiObjects\Types\MetricType;
-use Drupal\hpc_api\Query\EndpointQueryManager;
+use Drupal\hpc_api\Query\FabricQueryManager;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -26,8 +26,8 @@ class DisaggregationModalController extends ControllerBase {
   /**
    * Public constructor.
    */
-  public function __construct(EndpointQueryManager $endpoint_query_manager) {
-    $this->iconQuery = $endpoint_query_manager->createInstance('icon_query');
+  public function __construct(FabricQueryManager $fabric_query_manager) {
+    $this->iconQuery = $fabric_query_manager->createInstance('icon');
   }
 
   /**
@@ -35,7 +35,7 @@ class DisaggregationModalController extends ControllerBase {
    */
   public static function create(ContainerInterface $container) {
     return new static(
-      $container->get('plugin.manager.endpoint_query_manager'),
+      $container->get('plugin.manager.fabric_query_manager'),
     );
   }
 
