@@ -195,7 +195,9 @@ class DataPoint extends ConfigurationContainerItemPluginBase {
    *   TRUE if the attachment can show disaggregated data, FALSE otherwise.
    */
   public function canShowDisaggregatedData(Attachment $attachment, array $conf) {
-    return $this->getValue() && $attachment->hasDisaggregatedData() && $conf['processing'] == 'single';
+    // Check cheap local conditions before consulting the Fabric-backed
+    // disaggregation availability cache.
+    return $conf['processing'] == 'single' && $attachment->canHaveDisaggregatedData() && $this->getValue() && $attachment->hasDisaggregatedData();
   }
 
   /**

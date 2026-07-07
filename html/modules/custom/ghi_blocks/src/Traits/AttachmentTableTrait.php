@@ -2,13 +2,17 @@
 
 namespace Drupal\ghi_blocks\Traits;
 
-use Drupal\ghi_plans\ApiObjects\Prototypes\AttachmentPrototype;
+use Drupal\ghi_plans\ApiObjects\Attachments\Attachment;
 use Drupal\ghi_plans\ApiObjects\Entities\PlanEntity;
+use Drupal\ghi_plans\ApiObjects\Prototypes\AttachmentPrototype;
+use Drupal\ghi_plans\Traits\PlanQueryTrait;
 
 /**
  * Trait with common logic for attachment based tables.
  */
 trait AttachmentTableTrait {
+
+  use PlanQueryTrait;
 
   /**
    * Get all attachment objects for the given entities.
@@ -26,9 +30,9 @@ trait AttachmentTableTrait {
    */
   public function getEntityObjects() {
     /** @var \Drupal\ghi_plans\Plugin\FabricQuery\EntityQuery $query */
-    $query = $this->getQueryHandler('entities');
+    $query = self::getEntityQuery();
     $plan_id = $this->getCurrentPlanId();
-    return $query->getEntitiesForPlan($plan_id, $this->getPageNode(), 'governing');
+    return $query?->getEntitiesForPlan($plan_id, $this->getPageNode(), 'governing') ?? [];
   }
 
   /**
@@ -43,6 +47,90 @@ trait AttachmentTableTrait {
       return [];
     }
     return $this->getAttachmentsForEntities($entities);
+  }
+
+  /**
+   * Preload disaggregated data availability for an attachment set.
+   *
+   * @param \Drupal\ghi_plans\ApiObjects\Attachments\AttachmentInterface[] $attachments
+   *   The attachment objects.
+   * @param array|null $columns
+   *   The configured table columns, if available.
+   */
+  protected function prefetchDisaggregatedDataAvailability(array $attachments, ?array $columns = NULL): void {
+    $data_point_configs = $columns !== NULL ? $this->getDisaggregationDataPointConfigs($columns) : NULL;
+    if ($data_point_configs === []) {
+      return;
+    }
+    $attachment_ids = [];
+    foreach ($attachments as $attachment) {
+      if (!$attachment instanceof Attachment || !$attachment->canHaveDisaggregatedData()) {
+        continue;
+      }
+      if ($data_point_configs !== NULL && !$this->attachmentHasDisaggregationDataPointValue($attachment, $data_point_configs)) {
+        continue;
+      }
+      $attachment_ids[$attachment->id()] = $attachment->id();
+    }
+    if (count($attachment_ids) < 2) {
+      return;
+    }
+
+    // Prime the request-local availability cache once for all rows. Individual
+    // DataPoint items can then call Attachment::hasDisaggregatedData() without
+    // triggering one Fabric query per attachment.
+    self::getAttachmentQuery()?->hasDisaggregatedDataMultiple($attachment_ids);
+  }
+
+  /**
+   * Check if an attachment has a value for an eligible data point config.
+   *
+   * @param \Drupal\ghi_plans\ApiObjects\Attachments\Attachment $attachment
+   *   The attachment object.
+   * @param array $data_point_configs
+   *   The data point configs.
+   *
+   * @return bool
+   *   TRUE if the attachment has a value, FALSE otherwise.
+   */
+  private function attachmentHasDisaggregationDataPointValue(Attachment $attachment, array $data_point_configs): bool {
+    foreach ($data_point_configs as $data_point_config) {
+      // This mirrors the value lookup used during row rendering and avoids
+      // checking Fabric availability for rows that cannot show a modal anyway.
+      if (!$attachment->isNullValue($attachment->getValue($data_point_config))) {
+        return TRUE;
+      }
+    }
+    return FALSE;
+  }
+
+  /**
+   * Get data point configs that can show disaggregated data.
+   *
+   * @param array $columns
+   *   The configured table columns.
+   *
+   * @return array
+   *   The eligible data point configs.
+   */
+  private function getDisaggregationDataPointConfigs(array $columns): array {
+    $allowed_items = $this->getAllowedItemTypes();
+    $data_point_configs = [];
+    foreach ($columns as $column) {
+      // Only single-value data point columns can render the disaggregation
+      // modal, so other column types should not prefetch Fabric availability.
+      if (($column['item_type'] ?? NULL) != 'data_point') {
+        continue;
+      }
+      if (empty($allowed_items['data_point']['disaggregation_modal'])) {
+        continue;
+      }
+      if (($column['config']['data_point']['processing'] ?? 'single') != 'single') {
+        continue;
+      }
+      $data_point_configs[] = $column['config']['data_point'];
+    }
+    return $data_point_configs;
   }
 
   /**
@@ -69,8 +157,10 @@ trait AttachmentTableTrait {
     if (!$prototype_id) {
       return NULL;
     }
-    /** @var \Drupal\ghi_plans\Plugin\FabricQuery\AttachmentPrototypeQuery $query_handler */
-    $query_handler = $this->getQueryHandler('attachment_prototype');
+    $query_handler = self::getAttachmentPrototypeQuery();
+    if (!$query_handler) {
+      return NULL;
+    }
     $plan_id = $this->getCurrentPlanId();
     if ($plan_id) {
       return $query_handler->getPrototypeByPlanAndId($this->getCurrentPlanId(), $prototype_id);

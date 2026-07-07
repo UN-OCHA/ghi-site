@@ -12,6 +12,7 @@ use Drupal\ghi_plans\Helpers\AttachmentHelper;
 use Drupal\ghi_plans\Traits\AttachmentFilterTrait;
 use Drupal\ghi_plans\Traits\PlanQueryTrait;
 use Drupal\hpc_api\Attribute\FabricQuery;
+use Drupal\hpc_api\Query\FabricQuery as FabricDataQuery;
 use Drupal\hpc_api\Query\FabricQueryBase;
 
 /**
@@ -310,7 +311,6 @@ class AttachmentQuery extends FabricQueryBase {
    *   An array of facts representing raw disaggregation data.
    */
   public function getAttachmentDisaggregatedData(int $attachment_id): array {
-    // Get the attachment facts.
     return $this->fabricClient->createQuery('attachmentFacts', AttachmentFact::getGraphQlItems())
       ->setFilters([
         'AttachmentId' => $attachment_id,
@@ -329,20 +329,93 @@ class AttachmentQuery extends FabricQueryBase {
    *   TRUE if there is disaggregated data for the attachment, FALSE otherwise.
    */
   public function hasDisaggregatedData(int $attachment_id) {
+    $availability = $this->hasDisaggregatedDataMultiple([$attachment_id]);
+    return !empty($availability[$attachment_id]);
+  }
+
+  /**
+   * Check if there is disaggregated data for multiple attachments.
+   *
+   * @param int[] $attachment_ids
+   *   The attachment ids.
+   *
+   * @return bool[]
+   *   The disaggregation availability, keyed by attachment id.
+   */
+  public function hasDisaggregatedDataMultiple(array $attachment_ids): array {
+    $attachment_ids = array_filter(array_map('intval', $attachment_ids), fn($attachment_id) => $attachment_id > 0);
+    $attachment_ids = array_values(array_unique($attachment_ids));
+    sort($attachment_ids);
+    if (empty($attachment_ids)) {
+      return [];
+    }
+
+    $availability = &drupal_static(__METHOD__, []);
+    $missing_attachment_ids = array_values(array_diff($attachment_ids, array_keys($availability)));
+    foreach (array_chunk($missing_attachment_ids, FabricDataQuery::MAX_FILTER_COUNT_ARRAY) as $attachment_id_chunk) {
+      // Default to FALSE before querying so failed Fabric calls do not keep
+      // retrying the same attachments in this request.
+      foreach ($attachment_id_chunk as $attachment_id) {
+        $availability[$attachment_id] = FALSE;
+      }
+      $result = $this->queryDisaggregatedDataAvailability($attachment_id_chunk);
+      $this->applyDisaggregatedDataAvailabilityResult($availability, $result);
+    }
+
+    return array_replace(
+      array_fill_keys($attachment_ids, FALSE),
+      array_intersect_key($availability, array_flip($attachment_ids))
+    );
+  }
+
+  /**
+   * Query disaggregated data availability for the given attachment ids.
+   *
+   * @param int[] $attachment_ids
+   *   The attachment ids.
+   *
+   * @return object|false
+   *   A fabric result object, or FALSE if the query failed.
+   */
+  private function queryDisaggregatedDataAvailability(array $attachment_ids): object|false {
     $filters = [
-      'AttachmentId' => $attachment_id,
+      'AttachmentId' => $attachment_ids,
       'LocationId' => 'NOT NULL',
     ];
-    $queries = [
-      $this->fabricClient->createQuery('attachmentFacts')
-        ->setFilters($filters)
-        ->setAggregation('Id', ['count' => 'Id']),
-      $this->fabricClient->createQuery('measurementFacts')
-        ->setFilters($filters)
-        ->setAggregation('Id', ['count' => 'Id']),
-    ];
-    $result = $this->fabricClient->executeMultiple($queries);
-    return ($result['attachmentFacts']['count'] ?? NULL) > 0 || ($result['measurementFacts']['count'] ?? NULL) > 0;
+    $queries = array_map(
+      fn($query_name) => $this->fabricClient->createQuery($query_name, NULL, $filters)
+        ->setAggregation(['AttachmentId'], ['count' => 'Id']),
+      ['attachmentFacts', 'measurementFacts'],
+    );
+    // executeMultiple() flattens aggregations; this caller needs grouped field
+    // values from both namespaces to map counts back to attachment ids.
+    return $this->fabricClient->query(implode(' ', array_map(fn(FabricDataQuery $query) => $query->toString(), $queries)));
+  }
+
+  /**
+   * Apply a disaggregation availability result to the given availability map.
+   *
+   * @param bool[] $availability
+   *   The availability map, keyed by attachment id.
+   * @param object|false $result
+   *   The fabric result object.
+   */
+  private function applyDisaggregatedDataAvailabilityResult(array &$availability, object|false $result): void {
+    if (!$result) {
+      return;
+    }
+
+    foreach (['attachmentFacts', 'measurementFacts'] as $namespace) {
+      $groups = $result?->{$namespace}?->groupBy ?? [];
+      foreach ($groups as $group) {
+        $attachment_id = $group?->fields?->AttachmentId ?? NULL;
+        $count = $group?->aggregations?->count ?? 0;
+        if (!$attachment_id || $count <= 0) {
+          continue;
+        }
+        $availability[(int) $attachment_id] = TRUE;
+      }
+    }
   }
 
   /**
