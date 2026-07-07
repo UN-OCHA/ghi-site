@@ -76,6 +76,7 @@ class AttachmentTable extends ConfigurationContainerItemPluginBase implements Co
     $plan_entity = $this->getContextValue('plan_entity');
     $attachments = $this->filterAttachments($attachments, $prototype_id, $plan_entity);
     $columns = $this->getColumns();
+    $this->prefetchDisaggregatedDataAvailability($attachments, $columns);
 
     $rows = [];
     $context = $this->getBlockContext();

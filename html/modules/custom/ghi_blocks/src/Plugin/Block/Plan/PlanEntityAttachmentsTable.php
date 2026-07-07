@@ -188,6 +188,7 @@ class PlanEntityAttachmentsTable extends GHIBlockBase implements ConfigurableTab
     if ($this->isGroupedTable()) {
       $attachments = $this->getAttachmentsForCurrentEntity();
     }
+    $this->prefetchDisaggregatedDataAvailability($attachments, $columns);
 
     $context = $this->getBlockContext();
     $current_entity_id = NULL;

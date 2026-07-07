@@ -268,10 +268,13 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
     if (!$attachment instanceof Attachment) {
       return FALSE;
     }
-    if (!$attachment->hasDisaggregatedData()) {
+    if (!$attachment->canHaveDisaggregatedData()) {
       return FALSE;
     }
     $reporting_period = $this->getCurrentReportingPeriod($attachment->getPlanId());
+    // canBeMapped() loads the full disaggregated dataset. A preceding
+    // availability query would check the same underlying facts and then fetch
+    // them again, so the full-data path is the planner source of truth here.
     return $attachment->canBeMapped($reporting_period);
   }
 

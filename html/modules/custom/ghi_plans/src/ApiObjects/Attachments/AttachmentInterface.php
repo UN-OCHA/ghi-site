@@ -107,4 +107,12 @@ interface AttachmentInterface extends ApiObjectInterface {
    */
   public function getPrototype(): ?AttachmentPrototype;
 
+  /**
+   * See if the API says this attachment can have disaggregated data.
+   *
+   * @return bool
+   *   TRUE if disaggregated data can be fetched, FALSE otherwise.
+   */
+  public function canHaveDisaggregatedData(): bool;
+
 }

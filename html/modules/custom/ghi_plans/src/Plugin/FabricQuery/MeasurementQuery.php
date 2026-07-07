@@ -256,7 +256,7 @@ class MeasurementQuery extends FabricQueryBase {
   }
 
   /**
-   * Get disaggregated data for an measurement.
+   * Get disaggregated data for a measurement.
    *
    * @param int $measurement_id
    *   The measurement id.

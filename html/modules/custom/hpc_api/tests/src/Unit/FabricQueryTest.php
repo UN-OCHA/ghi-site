@@ -228,4 +228,35 @@ class FabricQueryTest extends UnitTestCase {
     $this->assertEquals($expected, $actual);
   }
 
+  /**
+   * Data provider for testBuildAggregationQueryString.
+   */
+  public function dataProviderBuildAggregationQueryString() {
+    return [
+      [
+        'Id',
+        ['count' => 'Id'],
+        'test ( first: 10000 ) { groupBy(fields: Id) { aggregations { count(field: Id) } } }',
+      ],
+      [
+        ['AttachmentId'],
+        ['count' => 'Id'],
+        'test ( first: 10000 ) { groupBy(fields: [AttachmentId]) { fields { AttachmentId } aggregations { count(field: Id) } } }',
+      ],
+    ];
+  }
+
+  /**
+   * Test building of aggregated query strings.
+   *
+   * @group FabricQuery
+   * @dataProvider dataProviderBuildAggregationQueryString
+   */
+  public function testBuildAggregationQueryString(array|string $group_field, array $aggregations, string $expected) {
+    $fabric_query = new FabricQuery('test');
+    $fabric_query->setAggregation($group_field, $aggregations);
+    $actual = $fabric_query->buildQueryString();
+    $this->assertEquals($expected, $actual);
+  }
+
 }

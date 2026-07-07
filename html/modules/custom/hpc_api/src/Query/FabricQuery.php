@@ -233,15 +233,15 @@ class FabricQuery implements \Stringable {
   /**
    * Set the aggregation.
    *
-   * @param string $group_field
-   *   The field by which to group.
+   * @param array|string $group_field
+   *   The field or fields by which to group.
    * @param array $aggregations
    *   The aggregations.
    *
    * @return self
    *   Returns the client instance for chaining.
    */
-  public function setAggregation(string $group_field, array $aggregations): self {
+  public function setAggregation(array|string $group_field, array $aggregations): self {
     $this->validateAggregations($aggregations);
     $aggregation = (object) [
       'group_field' => $group_field,
@@ -502,7 +502,7 @@ class FabricQuery implements \Stringable {
    * @return string|null
    *   The fully build aggregation.
    */
-  private function buildAggregationString(?array $aggregation = NULL) {
+  private function buildAggregationString(?object $aggregation = NULL) {
     $aggregation = $aggregation ?? $this->aggregation;
     if (!$aggregation) {
       return NULL;
@@ -514,7 +514,14 @@ class FabricQuery implements \Stringable {
     if (empty($aggregation_strings)) {
       return NULL;
     }
-    return 'groupBy(fields: ' . $aggregation->group_field . ') { aggregations { ' . implode(' ', $aggregation_strings) . ' } }';
+    $group_field = $aggregation->group_field;
+    $group_fields = is_array($group_field) ? $group_field : [$group_field];
+    $group_fields = array_filter(array_map('trim', $group_fields));
+    // Array group fields request the grouped field values back from Fabric.
+    // Keep string group fields on the legacy aggregation-only response shape.
+    $group_field_argument = is_array($group_field) ? '[' . implode(', ', $group_fields) . ']' : reset($group_fields);
+    $field_selection = is_array($group_field) ? ' fields { ' . implode(' ', $group_fields) . ' }' : '';
+    return 'groupBy(fields: ' . $group_field_argument . ') {' . $field_selection . ' aggregations { ' . implode(' ', $aggregation_strings) . ' } }';
   }
 
   /**

@@ -148,6 +148,7 @@ class PlanGoverningEntitiesCaseloadsTable extends GHIBlockBase implements Config
 
     // Filter for the configured attachment prototype id.
     $attachments = $this->filterAttachmentsByPrototype($attachments, $prototype->id());
+    $this->prefetchDisaggregatedDataAvailability($attachments, $columns);
 
     // Group by entity.
     $grouped_attachments = $this->groupAttachmentsByEntityId($attachments);

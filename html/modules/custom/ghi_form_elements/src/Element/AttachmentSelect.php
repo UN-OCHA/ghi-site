@@ -255,7 +255,13 @@ class AttachmentSelect extends FormElementBase {
     // Apply the attachment filters and build the options array.
     $attachment_options = [];
     $entities_in_selection = [];
-    foreach (ArrayHelper::filterArray($attachments, $attachment_filter) as $attachment) {
+    $filtered_attachments = ArrayHelper::filterArray($attachments, $attachment_filter);
+    // The warning column is per row, but availability can be resolved for all
+    // filtered attachments with one batched Fabric lookup.
+    $disaggregated_data_availability = !empty($element['#disagg_warning'])
+      ? self::getAttachmentQuery()->hasDisaggregatedDataMultiple(array_map(fn($attachment) => $attachment->id(), $filtered_attachments))
+      : [];
+    foreach ($filtered_attachments as $attachment) {
       /** @var \Drupal\ghi_plans\ApiObjects\Attachments\Attachment $attachment */
       $entities_in_selection[$attachment->getSourceEntityId()] = TRUE;
       $source_entity = $attachment->getSourceEntity();
@@ -269,7 +275,7 @@ class AttachmentSelect extends FormElementBase {
       ];
 
       if (!empty($element['#disagg_warning'])) {
-        $attachment_options[$attachment->id()]['disagg_data'] = $attachment->hasDisaggregatedData() ? '✓' : '✗';
+        $attachment_options[$attachment->id()]['disagg_data'] = !empty($disaggregated_data_availability[$attachment->id()]) ? '✓' : '✗';
       }
     }
     ArrayHelper::sortArrayByStringKey($attachment_options, 'composed_reference');

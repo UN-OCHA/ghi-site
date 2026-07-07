@@ -747,13 +747,20 @@ class Attachment extends ApiObjectBase implements AttachmentInterface, Disaggreg
   }
 
   /**
-   * See if the API thinks that this attachment can have disaggregated data.
+   * {@inheritdoc}
+   */
+  public function canHaveDisaggregatedData(): bool {
+    return (bool) $this->hasDisaggregatedData;
+  }
+
+  /**
+   * See if the attachment has disaggregated data available.
    *
    * @return bool
    *   TRUE if disaggregated data can be fetched, FALSE otherwise.
    */
   public function hasDisaggregatedData() {
-    return (bool) $this->hasDisaggregatedData && $this->getAttachmentQuery()->hasDisaggregatedData($this->id());
+    return $this->canHaveDisaggregatedData() && $this->getAttachmentQuery()->hasDisaggregatedData($this->id());
   }
 
   /**
@@ -801,7 +808,7 @@ class Attachment extends ApiObjectBase implements AttachmentInterface, Disaggreg
   public function getDisaggregated(): object {
     if (!$this->disaggregated) {
       $facts = [];
-      if ($this->hasDisaggregatedData()) {
+      if ($this->canHaveDisaggregatedData()) {
         $attachment_query = $this->getAttachmentQuery();
         $disaggregated_data = $attachment_query?->getAttachmentDisaggregatedData($this->id());
         $facts = array_map(fn ($item) => new AttachmentFact($item), (array) ($disaggregated_data ?: []));
