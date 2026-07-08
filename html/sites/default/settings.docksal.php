@@ -51,6 +51,10 @@ $config['fabric_graphql.settings'] = [
   'client_secret' => getenv('FABRIC_CLIENT_SECRET'),
 ];
 
+// Keep local Docksal requests direct so developers do not need cron or queue
+// processing to see current remote data while working.
+$config['hpc_remote_data_cache.settings']['enabled'] = FALSE;
+
 // Solr config.
 $config['search_api.server.solr_server']['backend_config']['connector'] = 'standard';
 $config['search_api.server.solr_server']['backend_config']['connector_config']['host'] = 'solr';

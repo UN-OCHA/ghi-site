@@ -3,10 +3,12 @@
 namespace Drupal\Tests\ghi_content\Unit\Plugin\QueueWorker;
 
 use Drupal\Component\Datetime\TimeInterface;
+use Drupal\Core\Cache\CacheTagsInvalidatorInterface;
 use Drupal\Core\Lock\LockBackendInterface;
 use Drupal\Core\Queue\DelayedRequeueException;
 use Drupal\ghi_content\ContentManager\BaseContentManager;
 use Drupal\ghi_content\ContentManager\ManagerFactory;
+use Drupal\ghi_content\Entity\Article;
 use Drupal\ghi_content\Entity\ContentBase;
 use Drupal\ghi_content\Import\TargetedMigrationImporter;
 use Drupal\ghi_content\Plugin\QueueWorker\RemoteRefreshQueue;
@@ -46,6 +48,11 @@ class RemoteRefreshQueueTest extends UnitTestCase {
     $lock->method('acquire')->willReturn(TRUE);
     $lock->expects($this->once())->method('release')->with('ghi_content_remote_refresh:hpc_content_module:article:123');
 
+    $cache_tags_invalidator = $this->createMock(CacheTagsInvalidatorInterface::class);
+    $cache_tags_invalidator->expects($this->once())
+      ->method('invalidateTags')
+      ->with(['hpc_content_module:article:123']);
+
     $logger = $this->createMock(LoggerInterface::class);
     $logger->expects($this->once())
       ->method('info')
@@ -63,6 +70,7 @@ class RemoteRefreshQueueTest extends UnitTestCase {
     $worker = new RemoteRefreshQueue([], 'ghi_content_remote_refresh', []);
     $this->setProtectedProperty($worker, 'managerFactory', $manager_factory);
     $this->setProtectedProperty($worker, 'lock', $lock);
+    $this->setProtectedProperty($worker, 'cacheTagsInvalidator', $cache_tags_invalidator);
     $this->setProtectedProperty($worker, 'logger', $logger);
 
     $worker->processItem((object) [
@@ -91,6 +99,11 @@ class RemoteRefreshQueueTest extends UnitTestCase {
     $lock->method('acquire')->willReturn(TRUE);
     $lock->expects($this->once())->method('release')->with('ghi_content_remote_refresh:hpc_content_module:article:123');
 
+    $cache_tags_invalidator = $this->createMock(CacheTagsInvalidatorInterface::class);
+    $cache_tags_invalidator->expects($this->once())
+      ->method('invalidateTags')
+      ->with(['hpc_content_module:article:123']);
+
     $logger = $this->createMock(LoggerInterface::class);
     $logger->expects($this->once())
       ->method('notice')
@@ -108,6 +121,7 @@ class RemoteRefreshQueueTest extends UnitTestCase {
     $worker = new RemoteRefreshQueue([], 'ghi_content_remote_refresh', []);
     $this->setProtectedProperty($worker, 'managerFactory', $manager_factory);
     $this->setProtectedProperty($worker, 'lock', $lock);
+    $this->setProtectedProperty($worker, 'cacheTagsInvalidator', $cache_tags_invalidator);
     $this->setProtectedProperty($worker, 'logger', $logger);
 
     $worker->processItem((object) [
@@ -122,7 +136,7 @@ class RemoteRefreshQueueTest extends UnitTestCase {
    * Tests that a missing published item is imported and processed.
    */
   public function testMissingPublishedItemIsImportedAndProcessed(): void {
-    $node = $this->createMock(ContentBase::class);
+    $node = $this->createMock(Article::class);
     $node->method('id')->willReturn(789);
 
     $content_manager = $this->createMock(BaseContentManager::class);
@@ -135,6 +149,7 @@ class RemoteRefreshQueueTest extends UnitTestCase {
       ->willReturnOnConsecutiveCalls([], [$node]);
     $content_manager->expects($this->once())->method('updateNodeFromRemote')->with($node)->willReturn(TRUE);
     $content_manager->expects($this->once())->method('saveContentNode')->with($node, FALSE);
+    $content_manager->expects($this->once())->method('loadRemoteContentForNode')->with($node, TRUE);
 
     $manager_factory = $this->createMock(ManagerFactory::class);
     $manager_factory->method('getContentManagerForRemoteType')->with('article')->willReturn($content_manager);
@@ -167,6 +182,11 @@ class RemoteRefreshQueueTest extends UnitTestCase {
     $lock->method('acquire')->willReturn(TRUE);
     $lock->expects($this->once())->method('release')->with('ghi_content_remote_refresh:hpc_content_module:article:123');
 
+    $cache_tags_invalidator = $this->createMock(CacheTagsInvalidatorInterface::class);
+    $cache_tags_invalidator->expects($this->once())
+      ->method('invalidateTags')
+      ->with(['hpc_content_module:article:123']);
+
     $info_messages = [];
     $logger = $this->createMock(LoggerInterface::class);
     $logger->method('info')->willReturnCallback(function (string $message, array $context) use (&$info_messages): void {
@@ -181,6 +201,7 @@ class RemoteRefreshQueueTest extends UnitTestCase {
     $this->setProtectedProperty($worker, 'migrationPluginManager', $migration_plugin_manager);
     $this->setProtectedProperty($worker, 'targetedMigrationImporter', $targeted_migration_importer);
     $this->setProtectedProperty($worker, 'lock', $lock);
+    $this->setProtectedProperty($worker, 'cacheTagsInvalidator', $cache_tags_invalidator);
     $this->setProtectedProperty($worker, 'logger', $logger);
 
     $worker->processItem((object) [
@@ -231,6 +252,11 @@ class RemoteRefreshQueueTest extends UnitTestCase {
     $lock->method('acquire')->willReturn(TRUE);
     $lock->expects($this->once())->method('release')->with('ghi_content_remote_refresh:hpc_content_module:article:123');
 
+    $cache_tags_invalidator = $this->createMock(CacheTagsInvalidatorInterface::class);
+    $cache_tags_invalidator->expects($this->once())
+      ->method('invalidateTags')
+      ->with(['hpc_content_module:article:123']);
+
     $logger = $this->createMock(LoggerInterface::class);
     $logger->expects($this->once())
       ->method('notice')
@@ -249,6 +275,7 @@ class RemoteRefreshQueueTest extends UnitTestCase {
     $this->setProtectedProperty($worker, 'managerFactory', $manager_factory);
     $this->setProtectedProperty($worker, 'migrationPluginManager', $migration_plugin_manager);
     $this->setProtectedProperty($worker, 'lock', $lock);
+    $this->setProtectedProperty($worker, 'cacheTagsInvalidator', $cache_tags_invalidator);
     $this->setProtectedProperty($worker, 'logger', $logger);
 
     $this->expectException(DelayedRequeueException::class);
@@ -299,6 +326,11 @@ class RemoteRefreshQueueTest extends UnitTestCase {
     $lock->method('acquire')->willReturn(TRUE);
     $lock->expects($this->once())->method('release')->with('ghi_content_remote_refresh:hpc_content_module:article:123');
 
+    $cache_tags_invalidator = $this->createMock(CacheTagsInvalidatorInterface::class);
+    $cache_tags_invalidator->expects($this->once())
+      ->method('invalidateTags')
+      ->with(['hpc_content_module:article:123']);
+
     $logger = $this->createMock(LoggerInterface::class);
     $logger->expects($this->once())
       ->method('error')
@@ -318,6 +350,7 @@ class RemoteRefreshQueueTest extends UnitTestCase {
     $this->setProtectedProperty($worker, 'migrationPluginManager', $migration_plugin_manager);
     $this->setProtectedProperty($worker, 'time', $time);
     $this->setProtectedProperty($worker, 'lock', $lock);
+    $this->setProtectedProperty($worker, 'cacheTagsInvalidator', $cache_tags_invalidator);
     $this->setProtectedProperty($worker, 'logger', $logger);
 
     $worker->processItem((object) [
