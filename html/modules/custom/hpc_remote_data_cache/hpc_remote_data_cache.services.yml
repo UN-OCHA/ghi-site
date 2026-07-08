@@ -1,0 +1,20 @@
+services:
+  plugin.manager.remote_data_cache_refresher:
+    class: Drupal\hpc_remote_data_cache\RemoteDataCacheRefresherManager
+    arguments: ['@container.namespaces', '@cache.discovery', '@module_handler']
+  hpc_remote_data_cache.cache:
+    class: Drupal\hpc_remote_data_cache\RemoteDataCache
+    arguments:
+      - '@cache.hpc_remote_data_cache'
+      - '@queue'
+      - '@lock'
+      - '@datetime.time'
+      - '@config.factory'
+      - '@logger.factory'
+      - '@plugin.manager.remote_data_cache_refresher'
+  cache.hpc_remote_data_cache:
+    class: Drupal\Core\Cache\CacheBackendInterface
+    tags:
+      - { name: cache.bin, default_backend: cache.backend.permanent_database }
+    factory: cache_factory:get
+    arguments: [hpc_remote_data_cache]

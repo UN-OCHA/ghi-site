@@ -10,7 +10,7 @@ services:
     parent: default_plugin_manager
   hpc_api.fabric_client:
     class: Drupal\hpc_api\Query\FabricClient
-    arguments: ['@config.factory', '@logger.factory', '@page_cache_kill_switch', '@http_client']
+    arguments: ['@config.factory', '@logger.factory', '@page_cache_kill_switch', '@http_client', '@?hpc_remote_data_cache.cache']
   hpc_api.fabric_query:
     class: Drupal\hpc_api\Query\FabricQuery
     arguments: ['@hpc_api.fabric_client']

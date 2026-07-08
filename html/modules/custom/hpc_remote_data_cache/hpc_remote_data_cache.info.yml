@@ -1,0 +1,9 @@
+name: HPC Remote Data Cache
+description: Provides persistent remote data caching with background refresh.
+package: HPC
+
+type: module
+core_version_requirement: ^10.3 || ^11 || ^12
+
+dependencies:
+  - pcb:pcb

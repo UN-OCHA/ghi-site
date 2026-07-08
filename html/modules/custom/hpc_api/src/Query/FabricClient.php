@@ -10,6 +10,8 @@ use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 use Drupal\Core\PageCache\ResponsePolicy\KillSwitch;
 use Drupal\hpc_api\Helpers\QueryHelper;
 use Drupal\hpc_api\Traits\SimpleCacheTrait;
+use Drupal\hpc_remote_data_cache\RemoteDataCacheInterface;
+use Drupal\hpc_remote_data_cache\RemoteDataCacheItem;
 use Drupal\hpc_common\Helpers\ArrayHelper;
 use GuzzleHttp\ClientInterface;
 use GuzzleHttp\Promise\Utils;
@@ -61,6 +63,13 @@ class FabricClient {
   protected $httpClient;
 
   /**
+   * The remote data cache service.
+   *
+   * @var \Drupal\hpc_remote_data_cache\RemoteDataCacheInterface|null
+   */
+  protected ?RemoteDataCacheInterface $remoteDataCache;
+
+  /**
    * Flag to inidicate if a cache should be used or not. Defaults to TRUE.
    *
    * @var bool
@@ -87,11 +96,12 @@ class FabricClient {
   /**
    * Constructs a new fabric query object.
    */
-  public function __construct(ConfigFactoryInterface $config_factory, LoggerChannelFactoryInterface $logger_factory, KillSwitch $kill_switch, ClientInterface $http_client) {
+  public function __construct(ConfigFactoryInterface $config_factory, LoggerChannelFactoryInterface $logger_factory, KillSwitch $kill_switch, ClientInterface $http_client, ?RemoteDataCacheInterface $remote_data_cache = NULL) {
     $this->configFactory = $config_factory;
     $this->loggerFactory = $logger_factory;
     $this->killSwitch = $kill_switch;
     $this->httpClient = $http_client;
+    $this->remoteDataCache = $remote_data_cache;
 
     $this->useCache = TRUE;
     $this->cacheBaseTime = NULL;
@@ -285,6 +295,45 @@ class FabricClient {
    *   An array of queries, either a FabricQuery objects or strings.
    */
   public function poolDataQueries($queries) {
+    $requests = [];
+    foreach ($queries as $query) {
+      $query = $this->prepareQuery($query);
+      $body = $this->buildRequestBody($query);
+
+      // See if we have a cached version already for this request.
+      $cache_key = $this->getCacheKey([
+        'url' => $this->getEndpointUrl(),
+        'body' => $body,
+      ], NULL, 'query');
+      $use_remote_cache = $this->canUseRemoteDataCache();
+      $remote_cache_cid = $use_remote_cache ? $this->getRemoteDataCacheCid($body) : NULL;
+      if ($this->useCache()) {
+        if ($use_remote_cache) {
+          $remote_cache_item = $this->remoteDataCache->get($remote_cache_cid);
+          if ($this->canUseRemoteCacheItem($remote_cache_item)) {
+            if ($remote_cache_item->isStale()) {
+              $this->remoteDataCache->queueRefresh($remote_cache_item);
+            }
+            continue;
+          }
+        }
+        elseif ($this->cache($cache_key, NULL, FALSE, $this->getCacheBaseTime() ?? NULL)) {
+          continue;
+        }
+      }
+      $requests[] = [
+        'query' => $query,
+        'body' => $body,
+        'cache_key' => $cache_key,
+        'remote_cache_cid' => $remote_cache_cid,
+        'use_remote_cache' => $use_remote_cache,
+      ];
+    }
+
+    if (empty($requests)) {
+      return NULL;
+    }
+
     $access_token = $this->getAccessToken();
     if (!$access_token) {
       $error = 'No access token available for GraphQL request.';
@@ -293,39 +342,37 @@ class FabricClient {
     }
 
     $promises = [];
-    foreach ($queries as $query) {
-      $query = $this->prepareQuery($query);
-      $body = $this->buildRequestBody($query);
-
-      $post_args = [
-        'body' => $body,
-        'headers' => [
-          'Authorization' => 'Bearer ' . $access_token,
-          'Content-Type' => 'application/json',
-          'Accept' => 'application/json',
-        ],
-      ];
-
-      // See if we have a cached version already for this request.
-      $cache_key = $this->getCacheKey([
-        'url' => $this->getEndpointUrl(),
-        'body' => $post_args['body'],
-      ], NULL, 'query');
-      if ($this->useCache() && $this->cache($cache_key, NULL, FALSE, $this->getCacheBaseTime() ?? NULL)) {
-        continue;
-      }
+    foreach ($requests as $request) {
+      $post_args = $this->buildPostArgs($request['body'], $access_token);
       $start = microtime(TRUE);
       $promise = $this->httpClient->postAsync($this->getEndpointUrl(), $post_args);
       $promise->then(
-        function ($response) use ($cache_key, $query, $start) {
-          QueryHelper::endpointCallTimeStorage(preg_replace('/\s+/', ' ', $query . ' (pooled query)'), microtime(TRUE) - $start);
-          $this->processResponse($response, $query, $cache_key);
+        function ($response) use ($request, $start) {
+          QueryHelper::endpointCallTimeStorage(preg_replace('/\s+/', ' ', $request['query'] . ' (pooled query)'), microtime(TRUE) - $start);
+          $data = $this->processResponse($response, $request['query']);
+          if ($data === FALSE || !$this->useCache()) {
+            return;
+          }
+          if ($request['use_remote_cache']) {
+            $this->remoteDataCache->set($request['remote_cache_cid'], $data, [
+              'refresher_id' => 'fabric_graphql',
+              'endpoint_url' => $this->getEndpointUrl(),
+              'request_body' => $request['body'],
+              'context' => [
+                'query' => $request['query'],
+              ],
+            ]);
+            return;
+          }
+          $this->cache($request['cache_key'], $data, FALSE, NULL, $this->getCacheTags());
         },
       );
       $promises[] = $promise;
     }
 
-    Utils::settle($promises)->wait();
+    if ($promises) {
+      Utils::settle($promises)->wait();
+    }
   }
 
   /**
@@ -343,6 +390,70 @@ class FabricClient {
     $query = $this->prepareQuery($query);
     $body = $this->buildRequestBody($query);
 
+    // See if we have a cached version already for this request.
+    $cache_key = $this->getCacheKey([
+      'url' => $this->getEndpointUrl(),
+      'body' => $body,
+    ]);
+    $use_remote_cache = $this->canUseRemoteDataCache();
+    $remote_cache_cid = $use_remote_cache ? $this->getRemoteDataCacheCid($body) : NULL;
+    $remote_cache_item = NULL;
+    if ($this->useCache()) {
+      if ($use_remote_cache) {
+        $remote_cache_item = $this->remoteDataCache->get($remote_cache_cid);
+        if ($this->canUseRemoteCacheItem($remote_cache_item)) {
+          if ($remote_cache_item->isStale()) {
+            $this->remoteDataCache->queueRefresh($remote_cache_item);
+          }
+          return $remote_cache_item->getPayload();
+        }
+      }
+      elseif ($data = $this->cache($cache_key, NULL, FALSE, $this->getCacheBaseTime() ?? NULL)) {
+        // If we have a cached version, use that.
+        return $data;
+      }
+    }
+
+    $data = $this->fetchRemoteGraphQlRequest($body, $query, $error);
+    if ($data !== FALSE) {
+      if ($use_remote_cache && $this->useCache()) {
+        $this->remoteDataCache->set($remote_cache_cid, $data, [
+          'refresher_id' => 'fabric_graphql',
+          'endpoint_url' => $this->getEndpointUrl(),
+          'request_body' => $body,
+          'context' => [
+            'query' => $query,
+          ],
+        ]);
+      }
+      elseif ($this->useCache() && !$this->paginated) {
+        $this->cache($cache_key, $data, FALSE, NULL, $this->getCacheTags());
+      }
+      return $data;
+    }
+
+    if ($use_remote_cache && $this->remoteDataCache->canServeExpiredOnError() && $this->canUseExpiredRemoteCacheItem($remote_cache_item)) {
+      return $remote_cache_item->getPayload();
+    }
+    return FALSE;
+  }
+
+  /**
+   * Fetch a prepared GraphQL request from Fabric without using response cache.
+   *
+   * @param string $body
+   *   The encoded GraphQL request body.
+   * @param string|null $query
+   *   The normalized query string for logging.
+   * @param string|null $error
+   *   Error storage.
+   * @param string|null $endpoint_url
+   *   Optional endpoint URL override.
+   *
+   * @return object|false
+   *   The decoded Fabric data object, or FALSE on failure.
+   */
+  public function fetchRemoteGraphQlRequest(string $body, ?string $query = NULL, ?string &$error = NULL, ?string $endpoint_url = NULL): object|false {
     $access_token = $this->getAccessToken();
     if (!$access_token) {
       $error = 'No access token available for GraphQL request.';
@@ -350,29 +461,13 @@ class FabricClient {
       return FALSE;
     }
 
-    $post_args = [
-      'body' => $body,
-      'headers' => [
-        'Authorization' => 'Bearer ' . $access_token,
-        'Content-Type' => 'application/json',
-        'Accept' => 'application/json',
-      ],
-    ];
+    $query = $query ?? $this->extractQueryFromRequestBody($body) ?? $body;
+    $endpoint_url = $endpoint_url ?? $this->getEndpointUrl();
+    $post_args = $this->buildPostArgs($body, $access_token);
 
-    // See if we have a cached version already for this request.
-    $cache_key = $this->getCacheKey([
-      'url' => $this->getEndpointUrl(),
-      'body' => $post_args['body'],
-    ]);
-    if ($this->useCache() && $data = $this->cache($cache_key, NULL, FALSE, $this->getCacheBaseTime() ?? NULL)) {
-      // If we have a cached version, use that.
-      return $data;
-    }
-
-    // No cached data available, so we run the API request.
     try {
       $start = microtime(TRUE);
-      $response = $this->httpClient->post($this->getEndpointUrl(), $post_args);
+      $response = $this->httpClient->post($endpoint_url, $post_args);
       QueryHelper::endpointCallTimeStorage(preg_replace('/\s+/', ' ', $query), microtime(TRUE) - $start);
     }
     catch (\Exception $e) {
@@ -383,7 +478,101 @@ class FabricClient {
       return FALSE;
     }
 
-    return $this->processResponse($response, $query, $cache_key);
+    return $this->processResponse($response, $query, $error);
+  }
+
+  /**
+   * Check if the persistent remote data cache can be used.
+   *
+   * @return bool
+   *   TRUE if the remote data cache can be used, FALSE otherwise.
+   */
+  private function canUseRemoteDataCache(): bool {
+    return $this->remoteDataCache?->isEnabled() ?? FALSE;
+  }
+
+  /**
+   * Check if a remote cache item can satisfy this request.
+   *
+   * @param \Drupal\hpc_remote_data_cache\RemoteDataCacheItem|null $item
+   *   The remote cache item.
+   *
+   * @return bool
+   *   TRUE if the item can be used, FALSE otherwise.
+   */
+  private function canUseRemoteCacheItem(?RemoteDataCacheItem $item): bool {
+    if (!$item) {
+      return FALSE;
+    }
+    $cache_base_time = $this->getCacheBaseTime();
+    if ($cache_base_time && $item->getFetched() < $cache_base_time) {
+      return FALSE;
+    }
+    // cacheBaseTime is used by import/batch flows that explicitly require
+    // fresh data after a known start time, so do not serve stale entries there.
+    return $cache_base_time ? $item->isFresh() : ($item->isFresh() || $item->isStale());
+  }
+
+  /**
+   * Check if an expired remote cache item can be used after a fetch error.
+   *
+   * @param \Drupal\hpc_remote_data_cache\RemoteDataCacheItem|null $item
+   *   The remote cache item.
+   *
+   * @return bool
+   *   TRUE if the expired item can be used after an error, FALSE otherwise.
+   */
+  private function canUseExpiredRemoteCacheItem(?RemoteDataCacheItem $item): bool {
+    return $item instanceof RemoteDataCacheItem && $item->isExpired() && !$this->getCacheBaseTime();
+  }
+
+  /**
+   * Build a persistent remote data cache id for a Fabric request body.
+   *
+   * @param string $body
+   *   The encoded GraphQL request body.
+   *
+   * @return string
+   *   The cache id.
+   */
+  private function getRemoteDataCacheCid(string $body): string {
+    return $this->remoteDataCache->buildCid('fabric_graphql', $this->getEndpointUrl() . "\n" . $body);
+  }
+
+  /**
+   * Build Fabric request arguments.
+   *
+   * @param string $body
+   *   The encoded GraphQL request body.
+   * @param string $access_token
+   *   The Fabric access token.
+   *
+   * @return array
+   *   The request arguments.
+   */
+  private function buildPostArgs(string $body, string $access_token): array {
+    return [
+      'body' => $body,
+      'headers' => [
+        'Authorization' => 'Bearer ' . $access_token,
+        'Content-Type' => 'application/json',
+        'Accept' => 'application/json',
+      ],
+    ];
+  }
+
+  /**
+   * Extract a query string from an encoded GraphQL request body.
+   *
+   * @param string $body
+   *   The encoded GraphQL request body.
+   *
+   * @return string|null
+   *   The query string, or NULL if the body cannot be decoded.
+   */
+  private function extractQueryFromRequestBody(string $body): ?string {
+    $decoded = Json::decode($body);
+    return is_array($decoded) && isset($decoded['query']) ? (string) $decoded['query'] : NULL;
   }
 
   /**
@@ -421,13 +610,13 @@ class FabricClient {
    *   A response object.
    * @param string $query
    *   The query string.
-   * @param string] $cache_key
-   *   A cache key to use for cache storage.
+   * @param string|null $error
+   *   Error storage.
    *
    * @return object|false
    *   An object holding the result data or FALSE on failure.
    */
-  private function processResponse(ResponseInterface $response, string $query, string $cache_key): false|object {
+  private function processResponse(ResponseInterface $response, string $query, ?string &$error = NULL): false|object {
     if (empty($response) || !$response instanceof ResponseInterface) {
       $this->logError("GraphQL response is empty or invalid for query: @query", [
         '@query' => $query,
@@ -461,16 +650,11 @@ class FabricClient {
           '@status_code' => $response->getStatusCode(),
           '@query' => $query,
         ], $error);
-        // Reset cache to force a new request on following calls.
-        $this->cache($cache_key, NULL, TRUE);
         return FALSE;
       }
 
       // Cast into an object and store in cache.
       $data = (object) iterator_to_array($data);
-      if (!$this->paginated) {
-        $this->cache($cache_key, $data, FALSE, NULL, $this->getCacheTags());
-      }
     }
     catch (JsonMachineException $e) {
       $error = $body;
