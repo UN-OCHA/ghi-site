@@ -1,0 +1,9 @@
+name: GHI Blocks Test
+description: 'Support module for the GHI Blocks module tests.'
+package: GHI
+
+type: module
+core_version_requirement: ^10
+
+dependencies:
+  - ghi_blocks:ghi_blocks
