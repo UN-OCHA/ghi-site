@@ -579,9 +579,9 @@ abstract class GHIBlockBase extends HPCBlockBase implements TrustedCallbackInter
 
     // Handle the title display.
     // @todo This is confusing and needs cleanup.
-    $display_label = $this->configuration['label_display'] && !empty($build_content['#title_processed']) ?? FALSE;
     if ($this->shouldDisplayTitle() && empty($build_content['#title_processed'])) {
       $build['#title'] = $this->label();
+      $display_label = $this->configuration['label_display'] ?? FALSE;
       if ($this instanceof AutomaticTitleBlockInterface || $this instanceof OverrideDefaultTitleBlockInterface) {
         $display_label = TRUE;
       }
@@ -589,14 +589,12 @@ abstract class GHIBlockBase extends HPCBlockBase implements TrustedCallbackInter
         $build['#title'] = $build_content['#title'];
         unset($build_content['#title']);
       }
-    }
 
-    // Make sure the title is hidden if necessary.
-    if (!$display_label || !empty($build_content['#title_processed'])) {
-      unset($build['#title']);
-      $display_label = FALSE;
+      if (!$display_label) {
+        unset($build['#title']);
+      }
+      $this->configuration['label_display'] = $display_label;
     }
-    $this->configuration['label_display'] = $display_label;
 
     if (!empty($build_content['#theme']) && $build_content['#theme'] == 'item_list') {
       $build_content['#context']['plugin_id'] = $this->getPluginId();

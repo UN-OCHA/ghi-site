@@ -27,6 +27,23 @@ class GHIBlockTest extends BlockKernelTestBase {
   const EMBED_CODE_INVALID = '<iframe src="https://invalid.url/CHART_ID"></iframe>';
 
   /**
+   * Modules to enable.
+   *
+   * @var array
+   */
+  protected static $modules = [
+    'layout_builder',
+    'layout_discovery',
+    'migrate',
+    'hpc_api',
+    'ghi_form_elements',
+    'ghi_sections',
+    'ghi_blocks',
+    'ghi_base_objects',
+    'ghi_blocks_test',
+  ];
+
+  /**
    * Tests basic block properties on the example of a datawrapper block.
    */
   public function testBlockPropertiesDatawrapper() {
@@ -133,6 +150,17 @@ class GHIBlockTest extends BlockKernelTestBase {
     catch (ExpectationFailedException $e) {
       fwrite(STDERR, $e->getComparisonFailure()->toString());
     }
+  }
+
+  /**
+   * Tests that optional titles are rendered when enabled.
+   */
+  public function testOptionalTitleBuild() {
+    $plugin = $this->createBlockPlugin('ghi_blocks_optional_title_test', [
+      'markup' => 'Test content',
+    ], [], 'Optional title', TRUE);
+    $build = $plugin->build();
+    $this->assertEquals('Optional title', $build['#title']);
   }
 
   /**
