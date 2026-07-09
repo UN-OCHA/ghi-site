@@ -244,21 +244,6 @@ class FundingData extends ConfigurationContainerItemPluginBase {
     $base_object = $this->getContextValue('base_object');
     $cluster_context = $base_object && $base_object instanceof GoverningEntity ? $base_object : NULL;
 
-    $cache_key = NULL;
-    if ($entity && $entity instanceof ApiObjectInterface) {
-      $cache_key = 'cluster::' . $entity->id() . '::' . $data_type_key;
-    }
-    elseif ($plan_object && !$cluster_context) {
-      $cache_key = 'plan' . $plan_object->id() . '::' . $data_type_key;
-    }
-    elseif ($cluster_context) {
-      $cache_key = 'cluster::' . $cluster_context->getSourceId() . '::' . $data_type_key;
-    }
-
-    if ($cache_key && array_key_exists($cache_key, $values)) {
-      return $values[$cache_key];
-    }
-
     $data_type = $this->getDataType($data_type_key);
     if (!$data_type) {
       return NULL;
@@ -272,6 +257,21 @@ class FundingData extends ConfigurationContainerItemPluginBase {
     $raw_data = $this->getContextValue('raw_data');
     if (is_object($raw_data) && property_exists($raw_data, $property)) {
       return $raw_data->$property;
+    }
+
+    $cache_key = NULL;
+    if ($entity && $entity instanceof ApiObjectInterface) {
+      $cache_key = 'cluster::' . $entity->id() . '::' . $data_type_key;
+    }
+    elseif ($plan_object && !$cluster_context) {
+      $cache_key = 'plan' . $plan_object->id() . '::' . $data_type_key;
+    }
+    elseif ($cluster_context) {
+      $cache_key = 'cluster::' . $cluster_context->getSourceId() . '::' . $data_type_key;
+    }
+
+    if ($cache_key && array_key_exists($cache_key, $values)) {
+      return $values[$cache_key];
     }
 
     $value = NULL;
