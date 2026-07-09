@@ -170,7 +170,7 @@ class FlowSearchQuery extends EndpointQueryBase {
    */
   public function getClusterFundingCoverage($cluster_id, ?float $requirements = 0): float {
     $funding = $this->getClusterTotalFunding($cluster_id);
-    return (float) CommonHelper::calculateRatio($funding, $requirements) * 100;
+    return (float) CommonHelper::calculateRatio($funding, $requirements, 4) * 100;
   }
 
   /**
