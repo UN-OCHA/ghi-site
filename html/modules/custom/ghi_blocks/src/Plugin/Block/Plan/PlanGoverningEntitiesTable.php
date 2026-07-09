@@ -217,6 +217,7 @@ class PlanGoverningEntitiesTable extends GHIBlockBase implements ConfigurableTab
       if ($not_specified_entity && !empty($not_specified_entity->total_funding)) {
         $context['base_object'] = NULL;
         $context['context_node'] = NULL;
+        $context['entity'] = NULL;
         $context['raw_data'] = $not_specified_entity;
 
         $row = [];
@@ -263,6 +264,7 @@ class PlanGoverningEntitiesTable extends GHIBlockBase implements ConfigurableTab
     if (!empty($conf['base']['include_shared_funding']) && $conf['base']['include_shared_funding'] && $flow_search_query->hasSharedClusterFunding()) {
       $context['base_object'] = NULL;
       $context['context_node'] = NULL;
+      $context['entity'] = NULL;
       $context['raw_data'] = (object) [
         'total_funding' => $flow_search_query->getSharedClusterFunding(),
       ];
