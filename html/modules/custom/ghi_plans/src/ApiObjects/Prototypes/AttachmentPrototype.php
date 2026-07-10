@@ -136,7 +136,7 @@ class AttachmentPrototype extends ApiObjectBase {
     );
 
     $this->planId = $data->PlanId;
-    $this->name = $value->Name ?? NULL;
+    $this->name = $value->name->en ?? $value->Name ?? NULL;
     $this->refCode = $data->RefCode;
     $this->type = strtolower($data->Type);
     $this->fields = $this->mapPrototypeFields($fields);

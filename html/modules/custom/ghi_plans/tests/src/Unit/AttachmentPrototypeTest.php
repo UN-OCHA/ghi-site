@@ -31,6 +31,15 @@ class AttachmentPrototypeTest extends ApiObjectTestBase {
   }
 
   /**
+   * Test attachment prototype parsing of configured labels.
+   */
+  public function testAttachmentPrototypeConfiguredLabel() {
+    $prototype = $this->getAttachmentPrototypeFromFixture('5399');
+    $this->assertEquals('Indicateur', $prototype->getName());
+    $this->assertEquals('Indicator', $prototype->getTypeLabel());
+  }
+
+  /**
    * Test attachment prototype parsing of caseload prototypes.
    */
   public function testAttachmentPrototypeCaseload() {
