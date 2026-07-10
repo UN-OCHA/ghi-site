@@ -19,6 +19,14 @@ class LocationQuery extends FabricQueryBase {
   const MAX_LEVEL = 5;
 
   /**
+   * The maximum number of location ids to request in one Fabric query.
+   *
+   * Manual testing indicates that the real limit on the fabric size is 2086,
+   * but let's stay considerably lower just in case.
+   */
+  private const MAX_ID_LOOKUP_BATCH_SIZE = 1500;
+
+  /**
    * Get a location by id.
    *
    * @param int $location_id
@@ -49,11 +57,14 @@ class LocationQuery extends FabricQueryBase {
     $location_ids = array_unique($location_ids);
     sort($location_ids);
 
-    $items = $this->fabricClient->createQuery('locations', Location::getGraphQlItems())
-      ->setFilter('Id', $location_ids)
-      ->setFilter('AdminLevel', 'NOT NULL')
-      ->execute() ?: [];
-    $locations = $this->buildResultObjects($items, Location::class);
+    $locations = [];
+    foreach (array_chunk($location_ids, self::MAX_ID_LOOKUP_BATCH_SIZE) as $location_id_batch) {
+      $items = $this->fabricClient->createQuery('locations', Location::getGraphQlItems())
+        ->setFilter('Id', $location_id_batch)
+        ->setFilter('AdminLevel', 'NOT NULL')
+        ->execute() ?: [];
+      $locations += $this->buildResultObjects($items, Location::class);
+    }
     return $locations;
   }
 
