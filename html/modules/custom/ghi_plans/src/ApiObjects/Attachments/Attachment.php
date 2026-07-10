@@ -1024,12 +1024,14 @@ class Attachment extends ApiObjectBase implements AttachmentInterface, Disaggreg
    *   A measurement object or NULL.
    */
   public function getMeasurement($period_id = 'latest'): ?Measurement {
+    if ($period_id == 'latest') {
+      // "latest" is a user-facing configuration value and means the latest
+      // published reporting period, even if Fabric has newer generated data.
+      return $this->getCurrentMeasurement();
+    }
     $measurements = $this->getMeasurements();
     if (!$measurements) {
       return NULL;
-    }
-    if ($period_id == 'latest') {
-      return reset($measurements);
     }
     foreach ($measurements as $measurement) {
       if ($measurement->getReportingPeriodId() == $period_id) {
@@ -1071,30 +1073,6 @@ class Attachment extends ApiObjectBase implements AttachmentInterface, Disaggreg
   }
 
   /**
-   * Get a specific measurement by the reporting period.
-   *
-   * @param int|string $reporting_period
-   *   The reporting period id or the string 'latest'.
-   *
-   * @return \Drupal\ghi_plans\ApiObjects\Measurements\Measurement|null
-   *   The measurement object or NULL.
-   */
-  protected function getMeasurementByReportingPeriod($reporting_period = 'latest'): ?Measurement {
-    if ($reporting_period == 'latest') {
-      return $this->getCurrentMeasurement();
-    }
-    if ($reporting_period) {
-      $measurements = $this->getMeasurements() ?? [];
-      foreach ($measurements as $measurement) {
-        if ($measurement->getReportingPeriodId() == $reporting_period) {
-          return $measurement;
-        }
-      }
-    }
-    return NULL;
-  }
-
-  /**
    * Get a metric from the measurement specified by the reporting period.
    *
    * @param string $metric_type
@@ -1106,7 +1084,7 @@ class Attachment extends ApiObjectBase implements AttachmentInterface, Disaggreg
    *   The value of the metric for the specified reporting period.
    */
   public function getMeasurementMetricValue($metric_type, $reporting_period = 'latest') {
-    $measurement = $this->getMeasurementByReportingPeriod($reporting_period);
+    $measurement = $this->getMeasurement($reporting_period);
     return $measurement?->getDataPointValue($metric_type) ?? NULL;
   }
 
@@ -1120,7 +1098,7 @@ class Attachment extends ApiObjectBase implements AttachmentInterface, Disaggreg
    *   The value of the metric for the specified reporting period.
    */
   public function getMeasurementComment($reporting_period = 'latest') {
-    $measurement = $this->getMeasurementByReportingPeriod($reporting_period);
+    $measurement = $this->getMeasurement($reporting_period);
     return $measurement?->getComment();
   }
 

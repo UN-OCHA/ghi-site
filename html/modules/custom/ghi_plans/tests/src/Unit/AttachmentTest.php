@@ -11,6 +11,7 @@ use Drupal\ghi_plans\ApiObjects\Attachments\CostAttachment;
 use Drupal\ghi_plans\ApiObjects\Attachments\IndicatorAttachment;
 use Drupal\ghi_plans\ApiObjects\Facts\AttachmentFact;
 use Drupal\ghi_plans\ApiObjects\PlanReportingPeriod;
+use Drupal\ghi_plans\Entity\Plan;
 use Drupal\ghi_plans\Exceptions\InvalidAttachmentTypeException;
 use Drupal\ghi_plans\Helpers\AttachmentHelper;
 use Drupal\hpc_api\ApiObjects\Types\MetricType;
@@ -19,6 +20,17 @@ use Drupal\hpc_api\ApiObjects\Types\MetricType;
  * Tests for API attachment objects.
  */
 class AttachmentTest extends ApiObjectTestBase {
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function tearDown(): void {
+    drupal_static_reset('Drupal\ghi_base_objects\Helpers\BaseObjectHelper::getBaseObjectsFromOriginalIds');
+    foreach ([Attachment::class, CaseloadAttachment::class, CostAttachment::class, IndicatorAttachment::class] as $class) {
+      drupal_static_reset($class . '::cache');
+    }
+    parent::tearDown();
+  }
 
   /**
    * Test data agnostic parts of Attachment.
@@ -169,6 +181,38 @@ class AttachmentTest extends ApiObjectTestBase {
     ];
     $this->expectException(InvalidAttachmentTypeException::class);
     $attachment->getValue($conf);
+  }
+
+  /**
+   * Test that latest measurement values use the latest published period.
+   */
+  public function testLatestMeasurementValueUsesPublishedReportingPeriod() {
+    /** @var \Drupal\ghi_plans\ApiObjects\Attachments\CaseloadAttachment $attachment */
+    $attachment = $this->getAttachmentFromFixture('caseload');
+    $this->assertInstanceOf(CaseloadAttachment::class, $attachment);
+    $this->mockPlanWithLatestPublishedReportingPeriod($attachment->getPlanId(), 2388);
+    $metric_type = $this->mockMetricType(20, 'covered');
+    $location_id = 900001;
+
+    $this->setPrivateProperty($attachment->getMeasurement(2388), 'disaggregated', $this->createDisaggregatedMetricData($metric_type, $location_id, 2388));
+    $this->setPrivateProperty($attachment->getMeasurement(2389), 'disaggregated', $this->createDisaggregatedMetricData($metric_type, $location_id, 2389));
+
+    $this->assertSame(2388, $attachment->getMeasurement('latest')?->getReportingPeriodId());
+    $this->assertEquals(2883267, $attachment->getMeasurementMetricValue('cumulative_reach', 2389));
+    $this->assertEquals(2314453, $attachment->getMeasurementMetricValue('cumulative_reach'));
+    $this->assertEquals(2314453, $attachment->getValueByMetricType('cumulative_reach', 'latest'));
+    $this->assertSame(2388, $attachment->getDisaggregatedData('latest', $metric_type)->locations[$location_id]->totals[$metric_type->id()]);
+
+    $conf = [
+      'processing' => 'single',
+      'data_points' => [
+        [
+          'metric_type' => 'cumulative_reach',
+          'monitoring_period' => 'latest',
+        ],
+      ],
+    ];
+    $this->assertEquals(2314453, $attachment->getValue($conf));
   }
 
   /**
@@ -675,6 +719,77 @@ class AttachmentTest extends ApiObjectTestBase {
     $this->setPrivateProperty($attachment, 'disaggregated', $attachment->buildDisaggregatedData($facts));
 
     return $attachment;
+  }
+
+  /**
+   * Mock a plan object loaded by source id.
+   *
+   * @param int $plan_id
+   *   The plan source id.
+   * @param int $period_id
+   *   The latest published reporting period id.
+   *
+   * @return \Drupal\ghi_plans\Entity\Plan
+   *   The mocked plan object.
+   */
+  private function mockPlanWithLatestPublishedReportingPeriod(int $plan_id, int $period_id): Plan {
+    drupal_static_reset('Drupal\ghi_base_objects\Helpers\BaseObjectHelper::getBaseObjectsFromOriginalIds');
+
+    $plan = $this->createMock(Plan::class);
+    $plan->method('bundle')->willReturn('plan');
+    $plan->method('getSourceId')->willReturn($plan_id);
+    $plan->method('getLastPublishedReportingPeriodId')->willReturn($period_id);
+
+    $entity_storage = $this->createMock('\Drupal\Core\Entity\ContentEntityStorageInterface');
+    $entity_storage->expects($this->any())
+      ->method('loadByProperties')
+      ->with([
+        'type' => 'plan',
+        'field_original_id' => [$plan_id],
+      ])
+      ->willReturn([$plan]);
+
+    $entity_type_manager = $this->createMock('\Drupal\Core\Entity\EntityTypeManagerInterface');
+    $entity_type_manager->expects($this->any())
+      ->method('getStorage')
+      ->with('base_object')
+      ->willReturn($entity_storage);
+
+    $container = \Drupal::getContainer();
+    $container->set('entity_type.manager', $entity_type_manager);
+    \Drupal::setContainer($container);
+
+    return $plan;
+  }
+
+  /**
+   * Create disaggregated data for a single metric and location.
+   *
+   * @param \Drupal\hpc_api\ApiObjects\Types\MetricType $metric_type
+   *   The metric type.
+   * @param int $location_id
+   *   The location id.
+   * @param int $value
+   *   The metric value.
+   *
+   * @return object
+   *   A disaggregated data object.
+   */
+  private function createDisaggregatedMetricData(MetricType $metric_type, int $location_id, int $value): object {
+    return (object) [
+      'locations' => [
+        $location_id => (object) [
+          'totals' => [
+            $metric_type->id() => $value,
+          ],
+          'categories' => [],
+        ],
+      ],
+      'metrics' => [
+        $metric_type->id() => $metric_type,
+      ],
+      'categories' => [],
+    ];
   }
 
   /**
