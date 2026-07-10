@@ -694,8 +694,12 @@ class AttachmentTest extends ApiObjectTestBase {
       ],
     ];
     $this->callPrivateMethod($attachment, 'getTooltip', [$data_point_conf]);
-    $data_point_conf['use_calculation_method'] = FALSE;
-    $this->assertFalse($this->callPrivateMethod($attachment, 'isApiCalculated', [1, $data_point_conf]));
+    $this->assertTrue($this->callPrivateMethod($attachment, 'isApiCalculated', ['measure', []]));
+    $this->assertFalse($this->callPrivateMethod($attachment, 'isApiCalculated', ['target', []]));
+    $this->assertFalse($this->callPrivateMethod($attachment, 'isApiCalculated', [
+      'measure',
+      ['use_calculation_method' => FALSE],
+    ]));
 
     $this->assertTrue($this->callPrivateMethod($attachment, 'isValidCalculatedMethod', [IndicatorAttachment::CALCULATION_METHOD_AVERAGE]));
     $this->assertTrue($this->callPrivateMethod($attachment, 'isValidCalculatedMethod', [IndicatorAttachment::CALCULATION_METHOD_LATEST]));

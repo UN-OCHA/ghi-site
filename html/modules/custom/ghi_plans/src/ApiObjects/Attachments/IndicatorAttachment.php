@@ -170,7 +170,10 @@ class IndicatorAttachment extends Attachment {
    *   TRUE if a calculation method from the API is used, FALSE otherwise.
    */
   private function isApiCalculated(string $metric_type, $data_point_conf) {
-    $use_calculation_method = $data_point_conf['use_calculation_method'] ?? FALSE;
+    $use_calculation_method = TRUE;
+    if (array_key_exists('use_calculation_method', $data_point_conf)) {
+      $use_calculation_method = $data_point_conf['use_calculation_method'] != FALSE;
+    }
     if (!$use_calculation_method) {
       return FALSE;
     }
