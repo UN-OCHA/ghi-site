@@ -56,6 +56,7 @@ class PlanGoverningEntitiesTable extends GHIBlockBase implements ConfigurableTab
       defaultTitle: 'Cluster overview',
       dataSources: [
         'entities' => 'fabric_query:entity',
+        'entity_prototype' => 'fabric_query:entity_prototype',
         'attachment' => 'fabric_query:attachment',
         'flow_search' => 'hpc_api:flow_search_query',
       ],
@@ -491,12 +492,49 @@ class PlanGoverningEntitiesTable extends GHIBlockBase implements ConfigurableTab
     $context = $this->getBlockContext();
     $plan = $context['plan_object'];
     assert($plan instanceof Plan);
+
+    // Prefer the structure label; PlanClusterType can differ from the actual
+    // governing entity prototype used for table rows.
+    if ($prototype_label = $this->getGenericEntityPrototypeName($plan)) {
+      return $prototype_label;
+    }
+
     $t_options = ['langcode' => $plan->getPlanLanguage()];
     $cluster_label_map = [
       Plan::CLUSTER_TYPE_CLUSTER => $this->t('Cluster', [], $t_options),
       Plan::CLUSTER_TYPE_SECTOR => $this->t('Sector', [], $t_options),
     ];
     return $cluster_label_map[$plan->getPlanClusterType()] ?? $cluster_label_map[Plan::CLUSTER_TYPE_CLUSTER];
+  }
+
+  /**
+   * Get the singular governing entity label from the plan prototype.
+   *
+   * @param \Drupal\ghi_plans\Entity\Plan $plan
+   *   The plan object.
+   *
+   * @return string|null
+   *   The prototype label, or NULL if the plan prototype is unavailable.
+   */
+  private function getGenericEntityPrototypeName(Plan $plan): ?string {
+    $plan_id = $plan->getSourceId();
+    if (!$plan_id) {
+      return NULL;
+    }
+
+    /** @var \Drupal\ghi_plans\Plugin\FabricQuery\EntityPrototypeQuery|null $prototype_query */
+    $prototype_query = $this->getQueryHandler('entity_prototype');
+    $plan_prototype = $prototype_query?->getPlanPrototype($plan_id);
+    if (!$plan_prototype) {
+      return NULL;
+    }
+
+    foreach ($plan_prototype->getEntityPrototypes() as $entity_prototype) {
+      if ($entity_prototype->isGoverningEntity()) {
+        return $entity_prototype->getNameSingular();
+      }
+    }
+    return NULL;
   }
 
   /**

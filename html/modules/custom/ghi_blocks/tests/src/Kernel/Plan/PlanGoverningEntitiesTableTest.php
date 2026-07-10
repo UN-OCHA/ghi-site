@@ -8,9 +8,12 @@ use Drupal\ghi_blocks\Interfaces\MultiStepFormBlockInterface;
 use Drupal\ghi_blocks\Interfaces\OverrideDefaultTitleBlockInterface;
 use Drupal\ghi_blocks\Plugin\Block\Plan\PlanGoverningEntitiesTable;
 use Drupal\ghi_plans\ApiObjects\Entities\GoverningEntity;
+use Drupal\ghi_plans\ApiObjects\Prototypes\EntityPrototype;
+use Drupal\ghi_plans\ApiObjects\Prototypes\PlanPrototype;
 use Drupal\ghi_plans\Plugin\EndpointQuery\FlowSearchQuery;
 use Drupal\ghi_plans\Plugin\FabricQuery\AttachmentQuery;
 use Drupal\ghi_plans\Plugin\FabricQuery\EntityQuery;
+use Drupal\ghi_plans\Plugin\FabricQuery\EntityPrototypeQuery;
 use Drupal\ghi_plans\Plugin\FabricQuery\GoverningEntityQuery;
 use Drupal\hpc_api\Plugin\FabricQuery\IconQuery;
 use Drupal\hpc_api\Query\EndpointQueryManager;
@@ -174,13 +177,16 @@ class PlanGoverningEntitiesTableTest extends PlanBlockKernelTestBase {
       'field_original_id' => 7912,
     ]);
     $this->injectPlanEntityQueryStub($plugin, [$cluster]);
+    $this->injectEntityPrototypeQueryStub($plugin, 'Sector');
     $plugin->setQueryHandler('flow_search', $flow_search_query);
 
     $table_data = $this->callPrivateMethod($plugin, 'buildTableData');
 
     $this->assertCount(3, $table_data['rows']);
     $this->assertEquals(52100000, $table_data['rows'][0]['data'][1]['data-value']);
+    $this->assertEquals('<i>Funding to sector not reported</i>', (string) $table_data['rows'][1][0]['data']);
     $this->assertEquals(22600000, $table_data['rows'][1][1]['data-value']);
+    $this->assertEquals('<i>Funding to multiple sector (shared)</i>', (string) $table_data['rows'][2][0]['data']);
     $this->assertEquals(218800000, $table_data['rows'][2][1]['data-value']);
   }
 
@@ -300,6 +306,7 @@ class PlanGoverningEntitiesTableTest extends PlanBlockKernelTestBase {
     $property = $reflection->getProperty('queryHandlers');
     $property->setValue($plugin, [
       'attachment' => $attachment_query->reveal(),
+      'entity_prototype' => $this->mockEntityPrototypeQuery(),
     ]);
 
     return $plugin;
@@ -327,6 +334,62 @@ class PlanGoverningEntitiesTableTest extends PlanBlockKernelTestBase {
       ]);
     }, $clusters));
     $plugin->setQueryHandler('entities', $plan_entity_query->reveal());
+  }
+
+  /**
+   * Inject the entity prototype query stub to the plugin.
+   *
+   * @param \Drupal\ghi_blocks\Plugin\Block\GHIBlockBase $plugin
+   *   The plugin.
+   * @param string|null $governing_entity_label
+   *   The singular governing entity label to return.
+   */
+  private function injectEntityPrototypeQueryStub($plugin, ?string $governing_entity_label = NULL): void {
+    $plugin->setQueryHandler('entity_prototype', $this->mockEntityPrototypeQuery($governing_entity_label));
+  }
+
+  /**
+   * Mock the entity prototype query.
+   *
+   * @param string|null $governing_entity_label
+   *   The singular governing entity label to return.
+   *
+   * @return \Drupal\ghi_plans\Plugin\FabricQuery\EntityPrototypeQuery
+   *   The mocked entity prototype query.
+   */
+  private function mockEntityPrototypeQuery(?string $governing_entity_label = NULL): EntityPrototypeQuery {
+    $entity_prototype_query = $this->prophesize(EntityPrototypeQuery::class);
+    $plan_prototype = $governing_entity_label ? $this->createPlanPrototype($governing_entity_label) : NULL;
+    $entity_prototype_query->getPlanPrototype(Argument::any())->willReturn($plan_prototype);
+    return $entity_prototype_query->reveal();
+  }
+
+  /**
+   * Create a plan prototype object with one governing entity prototype.
+   *
+   * @param string $governing_entity_label
+   *   The singular governing entity label.
+   *
+   * @return \Drupal\ghi_plans\ApiObjects\Prototypes\PlanPrototype
+   *   The plan prototype object.
+   */
+  private function createPlanPrototype(string $governing_entity_label): PlanPrototype {
+    $governing_entity_prototype = new EntityPrototype((object) [
+      'Id' => 4118,
+      'RefCode' => 'CL',
+      'Type' => 'GVE',
+      'PlanId' => 1207,
+      'OrderNumber' => 1,
+      'Value' => (object) [
+        'name' => (object) [
+          'en' => (object) [
+            'singular' => $governing_entity_label,
+            'plural' => $governing_entity_label . 's',
+          ],
+        ],
+      ],
+    ]);
+    return new PlanPrototype([$governing_entity_prototype]);
   }
 
   /**
