@@ -25,7 +25,8 @@ class AttachmentTest extends ApiObjectTestBase {
    * {@inheritdoc}
    */
   protected function tearDown(): void {
-    drupal_static_reset('Drupal\ghi_base_objects\Helpers\BaseObjectHelper::getBaseObjectsFromOriginalIds');
+    drupal_static_reset('getBaseObjectsFromOriginalIds');
+    drupal_static_reset('getQueryInstance');
     foreach ([Attachment::class, CaseloadAttachment::class, CostAttachment::class, IndicatorAttachment::class] as $class) {
       drupal_static_reset($class . '::cache');
     }
@@ -213,6 +214,28 @@ class AttachmentTest extends ApiObjectTestBase {
       ],
     ];
     $this->assertEquals(2314453, $attachment->getValue($conf));
+  }
+
+  /**
+   * Test that cumulative reach uses the last non-empty published period.
+   */
+  public function testCumulativeReachFallsBackToLastNonEmptyPublishedPeriod() {
+    /** @var \Drupal\ghi_plans\ApiObjects\Attachments\CaseloadAttachment $attachment */
+    $attachment = $this->getAttachmentFromFixture('caseload');
+    $this->assertInstanceOf(CaseloadAttachment::class, $attachment);
+    $reporting_periods = $this->mockCaseloadReportingPeriods([2386, 2387, 2388, 2389], $attachment->getPlanId());
+    $this->mockPlanWithLatestPublishedReportingPeriod($attachment->getPlanId(), 2389, $reporting_periods);
+
+    $latest_measurement = $attachment->getMeasurement(2389);
+    $latest_values = $latest_measurement->getValues();
+    $latest_values['cumulative_reach'] = NULL;
+    $this->setPrivateProperty($latest_measurement, 'values', $latest_values);
+
+    $this->assertNull($attachment->getMeasurementMetricValue('cumulative_reach', 2389));
+    $this->assertCount(4, $attachment->getPlanReportingPeriods($attachment->getPlanId(), TRUE));
+    $this->assertSame(2388, $attachment->getLastNonEmptyReportingPeriod('cumulative_reach', $reporting_periods)?->id());
+    $this->assertEquals(2314453, $attachment->getValueByMetricType('cumulative_reach', 'latest'));
+    $this->assertEquals(2314453, $attachment->getValueByMetricType('cumulative_reach', 2389));
   }
 
   /**
@@ -728,12 +751,14 @@ class AttachmentTest extends ApiObjectTestBase {
    *   The plan source id.
    * @param int $period_id
    *   The latest published reporting period id.
+   * @param \Drupal\ghi_plans\ApiObjects\PlanReportingPeriod[] $reporting_periods
+   *   The reporting periods to expose through the mocked plan query.
    *
    * @return \Drupal\ghi_plans\Entity\Plan
    *   The mocked plan object.
    */
-  private function mockPlanWithLatestPublishedReportingPeriod(int $plan_id, int $period_id): Plan {
-    drupal_static_reset('Drupal\ghi_base_objects\Helpers\BaseObjectHelper::getBaseObjectsFromOriginalIds');
+  private function mockPlanWithLatestPublishedReportingPeriod(int $plan_id, int $period_id, array $reporting_periods = []): Plan {
+    drupal_static_reset('getBaseObjectsFromOriginalIds');
 
     $plan = $this->createMock(Plan::class);
     $plan->method('bundle')->willReturn('plan');
@@ -758,6 +783,16 @@ class AttachmentTest extends ApiObjectTestBase {
     $container = \Drupal::getContainer();
     $container->set('entity_type.manager', $entity_type_manager);
     \Drupal::setContainer($container);
+
+    if ($reporting_periods) {
+      drupal_static_reset('getQueryInstance');
+      $plan_query = $this->createMock('\Drupal\ghi_plans\Plugin\FabricQuery\PlanQuery');
+      $plan_query->method('getPlanReportingPeriods')
+        ->with($plan_id)
+        ->willReturn($reporting_periods);
+      $queries = &drupal_static('getQueryInstance', []);
+      $queries['plan'] = $plan_query;
+    }
 
     return $plan;
   }
@@ -813,11 +848,11 @@ class AttachmentTest extends ApiObjectTestBase {
   /**
    * Build an array of dummy reporting periods for the caseload fixtures.
    */
-  private function mockCaseloadReportingPeriods($ids) {
-    $reporting_periods = array_map(function ($id, $period_number) {
+  private function mockCaseloadReportingPeriods($ids, int $plan_id = 1188) {
+    $reporting_periods = array_map(function ($id, $period_number) use ($plan_id) {
       return new PlanReportingPeriod((object) [
         'Id' => $id,
-        'PlanId' => 1188,
+        'PlanId' => $plan_id,
         'MeasurementsGenerated' => TRUE,
         'PeriodNumber' => $period_number,
         'StartDate' => '2024-0' . $period_number . '-01',

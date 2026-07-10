@@ -1262,10 +1262,15 @@ class Attachment extends ApiObjectBase implements AttachmentInterface, Disaggreg
     $value = NULL;
     if ($monitoring_period && $this->isMeasurementField($metric_type)) {
       $measurement = $this->getMeasurement($monitoring_period);
-      return $measurement?->getDataPointValue($metric_type) ?? NULL;
+      $value = $measurement?->getDataPointValue($metric_type) ?? NULL;
+      if ($value !== NULL || !$this->isCumulativeReachFieldType($metric_type) || !$cumulative_logic) {
+        return $value;
+      }
     }
-    $values = $this->getCurrentValues();
-    $value = $values[$metric_type] ?? NULL;
+    else {
+      $values = $this->getCurrentValues();
+      $value = $values[$metric_type] ?? NULL;
+    }
 
     if ($this->isCumulativeReachFieldType($metric_type) && $cumulative_logic) {
       // We have some specific logic for data points of type cumulativeReach.
