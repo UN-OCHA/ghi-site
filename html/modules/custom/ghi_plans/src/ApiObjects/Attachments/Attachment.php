@@ -1395,7 +1395,7 @@ class Attachment extends ApiObjectBase implements AttachmentInterface, Disaggreg
       if (empty($value) && $filter_empty) {
         continue;
       }
-      if (empty($value) && $value !== 0 && $value !== "0" && $filter_null) {
+      if ($this->isNullValue($value) && $filter_null) {
         continue;
       }
       $values[$reporting_period->id()] = (int) $value;

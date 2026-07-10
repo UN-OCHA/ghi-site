@@ -46,6 +46,7 @@ class AttachmentTest extends ApiObjectTestBase {
     $this->assertTrue($attachment->isNullValue(FALSE));
     $this->assertTrue($attachment->isNullValue(''));
     $this->assertFalse($attachment->isNullValue(0));
+    $this->assertFalse($attachment->isNullValue(0.0));
     $this->assertFalse($attachment->isNullValue('0'));
 
     $processing_options = Attachment::getProcessingOptions();
@@ -289,6 +290,13 @@ class AttachmentTest extends ApiObjectTestBase {
       2388 => 2314453,
       2389 => 2883267,
     ];
+    $this->assertEquals($expected, $values);
+
+    $zero_measurement = $attachment->getMeasurement(2387);
+    $zero_values = $zero_measurement->getValues();
+    $zero_values['periodical_reach'] = 0.0;
+    $this->setPrivateProperty($zero_measurement, 'values', $zero_values);
+    $values = $attachment->getValuesForAllReportingPeriods('periodical_reach', FALSE, TRUE, $reporting_periods);
     $this->assertEquals($expected, $values);
   }
 
