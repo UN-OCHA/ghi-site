@@ -130,6 +130,7 @@ class PlanHeadlineFigures extends GHIBlockBase implements MultiStepFormBlockInte
       if (empty($rendered)) {
         continue;
       }
+      $rendered = $this->formatPercentages($rendered);
       $tab = [
         'title' => [
           '#markup' => $group_item->getLabel(),
@@ -168,6 +169,29 @@ class PlanHeadlineFigures extends GHIBlockBase implements MultiStepFormBlockInte
     $build['#block_attributes'] = [
       'class' => ['not-collapsible'],
     ];
+    return $build;
+  }
+
+  /**
+   * Apply compact percentage formatting to headline figure render arrays.
+   *
+   * @param array $build
+   *   A render array.
+   *
+   * @return array
+   *   The render array with headline-specific formatting options applied.
+   */
+  private function formatPercentages(array $build): array {
+    if (($build['#theme'] ?? NULL) == 'hpc_percent') {
+      $build['#compact_precision'] = TRUE;
+    }
+
+    foreach ($build as $key => $value) {
+      if (is_array($value)) {
+        $build[$key] = $this->formatPercentages($value);
+      }
+    }
+
     return $build;
   }
 
