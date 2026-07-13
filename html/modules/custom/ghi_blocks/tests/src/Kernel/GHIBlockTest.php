@@ -164,6 +164,38 @@ class GHIBlockTest extends BlockKernelTestBase {
   }
 
   /**
+   * Tests that override default titles are available on lazy builds.
+   */
+  public function testOverrideDefaultTitleLazyBuild() {
+    $this->config('ghi_blocks.block_settings')
+      ->set('lazy_load', TRUE)
+      ->save();
+
+    $plugin = $this->createBlockPlugin('ghi_blocks_override_default_title_test', [
+      'markup' => 'Test content',
+    ]);
+    $build = $plugin->build();
+
+    $this->assertEquals('Default override title', $build['#title']);
+    $this->assertArrayHasKey('#lazy_builder', $build['content']);
+  }
+
+  /**
+   * Tests that lazy titles are skipped when isEmpty() is not reliable.
+   */
+  public function testOverrideDefaultTitleLazyBuildSkipsUnreliableEmptyCheck() {
+    $this->config('ghi_blocks.block_settings')
+      ->set('lazy_load', TRUE)
+      ->save();
+
+    $plugin = $this->getDocumentLinksBlockPlugin();
+    $build = $plugin->build();
+
+    $this->assertArrayNotHasKey('#title', $build);
+    $this->assertArrayHasKey('#lazy_builder', $build['content']);
+  }
+
+  /**
    * Tests block configuration form on the example of a datawrapper block.
    */
   public function testBlockConfigurationForm() {

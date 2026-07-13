@@ -199,9 +199,11 @@ class PlanEntityAttachmentsTable extends GHIBlockBase implements ConfigurableTab
 
       $context['attachment'] = $attachment;
 
-      if (!$this->isGroupedTable() && (empty($current_entity_id) || $current_entity_id != $attachment->source->entity_id) && in_array($attachment->source->entity_id, $entity_id_options)) {
+      $source_entity_id = $attachment->getSourceEntityId();
+      $is_new_source_entity = empty($current_entity_id) || $current_entity_id != $source_entity_id;
+      if (!$this->isGroupedTable() && $is_new_source_entity && in_array($source_entity_id, $entity_id_options)) {
         $entity = $attachment->getSourceEntity();
-        $current_entity_id = $attachment->source->entity_id;
+        $current_entity_id = $source_entity_id;
         $rows[] = [
           [
             'data' => new FormattableMarkup('@composed_reference: @description', [

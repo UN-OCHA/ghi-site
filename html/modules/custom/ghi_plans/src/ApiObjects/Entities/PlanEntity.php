@@ -56,7 +56,7 @@ class PlanEntity extends EntityObjectBase {
     // @todo Retrieve and store the support information.
     // 'support' => !empty($_entity_version->value->support) ? (array) $_entity_version->value->support : NULL,
     // phpcs:enable
-    $this->name = $data->Name;
+    $this->name = $data->Name != 'N/A in HPC pgsql' ? $data->Name : '';
     $this->parentIds = array_map(fn ($item) => $item->SupportsLogframeEntityId, $data->logframeEntitySupportRel->items ?? []);
     $this->governingEntityParentId = $data->CoordinationEntityId ?? NULL;
     $this->sortOrder = $data->SortOrder ?? NULL;

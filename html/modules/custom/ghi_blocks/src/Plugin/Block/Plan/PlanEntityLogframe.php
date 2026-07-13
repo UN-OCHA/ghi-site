@@ -176,6 +176,13 @@ class PlanEntityLogframe extends GHIBlockBase implements MultiStepFormBlockInter
   /**
    * {@inheritdoc}
    */
+  protected function hasReliableIsEmpty(): bool {
+    return TRUE;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function build() {
     $build = parent::build();
     if (empty($build)) {
