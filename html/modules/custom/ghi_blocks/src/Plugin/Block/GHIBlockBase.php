@@ -406,6 +406,20 @@ abstract class GHIBlockBase extends HPCBlockBase implements TrustedCallbackInter
   }
 
   /**
+   * Whether the block can show its title before lazy content is built.
+   *
+   * This must only be enabled for blocks whose isEmpty() result is known to
+   * match buildContent() returning content. Otherwise a lazy block could render
+   * a title and placeholder, then replace the placeholder with empty content.
+   *
+   * @return bool
+   *   TRUE if the block can safely show its title eagerly, FALSE otherwise.
+   */
+  protected function hasReliableIsEmpty(): bool {
+    return FALSE;
+  }
+
+  /**
    * {@inheritdoc}
    */
   public function build() {
@@ -513,6 +527,9 @@ abstract class GHIBlockBase extends HPCBlockBase implements TrustedCallbackInter
           ],
         ],
       ];
+      if ($this->hasReliableIsEmpty()) {
+        $this->applyTitleDisplay($build);
+      }
       return $build;
     }
 
@@ -577,24 +594,7 @@ abstract class GHIBlockBase extends HPCBlockBase implements TrustedCallbackInter
       return [];
     }
 
-    // Handle the title display.
-    // @todo This is confusing and needs cleanup.
-    if ($this->shouldDisplayTitle() && empty($build_content['#title_processed'])) {
-      $build['#title'] = $this->label();
-      $display_label = $this->configuration['label_display'] ?? FALSE;
-      if ($this instanceof AutomaticTitleBlockInterface || $this instanceof OverrideDefaultTitleBlockInterface) {
-        $display_label = TRUE;
-      }
-      elseif (!empty($build_content['#title'])) {
-        $build['#title'] = $build_content['#title'];
-        unset($build_content['#title']);
-      }
-
-      if (!$display_label) {
-        unset($build['#title']);
-      }
-      $this->configuration['label_display'] = $display_label;
-    }
+    $this->applyTitleDisplay($build, $build_content);
 
     if (!empty($build_content['#theme']) && $build_content['#theme'] == 'item_list') {
       $build_content['#context']['plugin_id'] = $this->getPluginId();
@@ -628,6 +628,35 @@ abstract class GHIBlockBase extends HPCBlockBase implements TrustedCallbackInter
       'max-age' => Cache::mergeMaxAges($this->getCacheMaxAge(), $build_content['#cache']['max-age'] ?? Cache::PERMANENT),
     ];
     return $build;
+  }
+
+  /**
+   * Apply title display rules to a block render array.
+   *
+   * @param array $build
+   *   The block render array.
+   * @param array|null $build_content
+   *   The built block content, if available.
+   */
+  protected function applyTitleDisplay(array &$build, ?array &$build_content = NULL): void {
+    if (!$this->shouldDisplayTitle() || !empty($build_content['#title_processed'])) {
+      return;
+    }
+
+    $build['#title'] = $this->label();
+    $display_label = $this->configuration['label_display'] ?? FALSE;
+    if ($this instanceof AutomaticTitleBlockInterface || $this instanceof OverrideDefaultTitleBlockInterface) {
+      $display_label = TRUE;
+    }
+    elseif (!empty($build_content['#title'])) {
+      $build['#title'] = $build_content['#title'];
+      unset($build_content['#title']);
+    }
+
+    if (!$display_label) {
+      unset($build['#title']);
+    }
+    $this->configuration['label_display'] = $display_label;
   }
 
   /**
