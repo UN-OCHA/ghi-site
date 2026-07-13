@@ -1240,7 +1240,36 @@ class Attachment extends ApiObjectBase implements AttachmentInterface, Disaggreg
       default:
         throw new InvalidAttachmentTypeException(sprintf('Unknown processing type: %s', $conf['processing']));
     }
-    return $this->cache($cache_key, $value);
+    return $this->cache($cache_key, $value, FALSE, NULL, $this->getValueCacheTags());
+  }
+
+  /**
+   * Get cache tags for derived attachment values.
+   *
+   * @return string[]
+   *   The cache tags for this attachment value.
+   */
+  protected function getValueCacheTags(): array {
+    $cache_tags = Cache::mergeTags($this->getCacheTags(), [
+      'attachment_id:' . $this->id(),
+    ]);
+    if ($plan_id = $this->getPlanId()) {
+      $cache_tags = Cache::mergeTags($cache_tags, [
+        'plan_id:' . $plan_id,
+      ]);
+    }
+    if ($source_entity_id = $this->getSourceEntityId()) {
+      $source_entity_type = $this->getSourceEntityType();
+      if ($source_entity_type) {
+        $cache_tags = Cache::mergeTags($cache_tags, [
+          StringHelper::camelCaseToUnderscoreCase($source_entity_type) . '_id:' . $source_entity_id,
+        ]);
+      }
+      $cache_tags = Cache::mergeTags($cache_tags, [
+        'entity_id:' . $source_entity_id,
+      ]);
+    }
+    return $cache_tags;
   }
 
   /**

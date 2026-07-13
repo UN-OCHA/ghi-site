@@ -2,6 +2,8 @@
 
 namespace Drupal\Tests\ghi_plans\Unit;
 
+use Drupal\Component\Datetime\TimeInterface;
+use Drupal\Core\Cache\CacheBackendInterface;
 use Drupal\ghi_base_objects\Entity\BaseObjectChildInterface;
 use Drupal\ghi_base_objects\Entity\BaseObjectInterface;
 use Drupal\ghi_plans\ApiObjects\Prototypes\AttachmentPrototype;
@@ -15,6 +17,7 @@ use Drupal\ghi_plans\Entity\Plan;
 use Drupal\ghi_plans\Exceptions\InvalidAttachmentTypeException;
 use Drupal\ghi_plans\Helpers\AttachmentHelper;
 use Drupal\hpc_api\ApiObjects\Types\MetricType;
+use Prophecy\Argument;
 
 /**
  * Tests for API attachment objects.
@@ -183,6 +186,43 @@ class AttachmentTest extends ApiObjectTestBase {
     ];
     $this->expectException(InvalidAttachmentTypeException::class);
     $attachment->getValue($conf);
+  }
+
+  /**
+   * Test cache tags on derived attachment values.
+   */
+  public function testAttachmentGetValueCacheTags() {
+    $time = $this->prophesize(TimeInterface::class);
+    $time->getRequestTime()->willReturn(1000);
+    $time_service = $time->reveal();
+    $cache_tags = [];
+    $cache_backend = $this->prophesize(CacheBackendInterface::class);
+    $cache_backend->get(Argument::any())->willReturn(FALSE);
+    $cache_backend->set(Argument::any(), Argument::any(), Argument::any(), Argument::any())->will(function ($arguments) use (&$cache_tags) {
+      $cache_tags = $arguments[3];
+    });
+
+    $container = \Drupal::getContainer();
+    $container->set('datetime.time', $time_service);
+    $container->set('cache.default', $cache_backend->reveal());
+    \Drupal::setContainer($container);
+    drupal_static_reset(CaseloadAttachment::class . '::cache');
+
+    /** @var \Drupal\ghi_plans\ApiObjects\Attachments\CaseloadAttachment $attachment */
+    $attachment = $this->getAttachmentFromFixture('caseload');
+    $totals = [
+      $this->mockAttachmentFact(TRUE, 4648210, 'in_need'),
+    ];
+    $this->setPrivateProperty($attachment, 'totals', $totals);
+
+    $conf = [
+      'processing' => 'single',
+      'data_points' => [['metric_type' => 'in_need']],
+    ];
+    $this->assertEquals(4648210, $attachment->getValue($conf));
+
+    $this->assertContains('attachment_id:38529', $cache_tags);
+    $this->assertContains('plan_id:1112', $cache_tags);
   }
 
   /**

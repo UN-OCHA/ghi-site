@@ -153,6 +153,21 @@ class GHIBlockTest extends BlockKernelTestBase {
   }
 
   /**
+   * Tests block content cache varies by current URI.
+   */
+  public function testBlockContentCacheVariesByCurrentUri() {
+    $first_plugin = $this->createBlockPlugin('ghi_blocks_current_uri_test', []);
+    $first_plugin->setCurrentUri('/plan/1189/ge/7460');
+    $first_build = $first_plugin->doBuildContent();
+    $this->assertSame('/plan/1189/ge/7460', $first_build[0]['#markup']);
+
+    $second_plugin = $this->createBlockPlugin('ghi_blocks_current_uri_test', []);
+    $second_plugin->setCurrentUri('/plan/1189/ge/7467');
+    $second_build = $second_plugin->doBuildContent();
+    $this->assertSame('/plan/1189/ge/7467', $second_build[0]['#markup']);
+  }
+
+  /**
    * Tests that optional titles are rendered when enabled.
    */
   public function testOptionalTitleBuild() {
