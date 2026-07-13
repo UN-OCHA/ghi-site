@@ -58,35 +58,37 @@ class PlanQuery extends FabricQueryBase {
    */
   public function getPlansById(array $plan_ids): array {
     $plan_ids = array_unique($plan_ids);
-    $plans = $this->objectStore->getObjects($plan_ids, Plan::getObjectStorageKey());
-    if (count($plans) == count($plan_ids)) {
-      return $plans;
+    $cached_plans = $this->objectStore->getObjects($plan_ids, Plan::getObjectStorageKey());
+    if (count($cached_plans) == count($plan_ids)) {
+      return $cached_plans;
     }
-    $plan_ids = array_diff($plan_ids, array_keys($plans));
+    $missing_plan_ids = array_diff($plan_ids, array_keys($cached_plans));
 
     // Get the plan data.
-    sort($plan_ids);
+    sort($missing_plan_ids);
     $queries = [
       $this->fabricClient->createQuery('plans', Plan::getGraphQlItems())
-        ->setFilter('Id', $plan_ids),
+        ->setFilter('Id', $missing_plan_ids),
       $this->fabricClient->createQuery('planReportingPeriods', PlanReportingPeriod::getGraphQlItems())
-        ->setFilter('PlanId', $plan_ids),
+        ->setFilter('PlanId', $missing_plan_ids),
     ];
     $data = $this->fabricClient->executeMultiple($queries);
     if (empty($data['plans'])) {
-      return [];
+      return $cached_plans;
     }
 
-    $plans = [];
+    $fetched_plans = [];
     foreach ($data['plans'] as $item) {
       // Add the reporting periods.
       $item->planReportingPeriods = array_map(fn ($period) => new PlanReportingPeriod($period), array_filter($data['planReportingPeriods'] ?? [], fn ($period) => $period->PlanId == $item->Id));
       $this->objectStore->addObjectCollection($item->planReportingPeriods, PlanReportingPeriod::getObjectStorageKey(), 'PlanId');
 
-      $plans[$item->Id] = new Plan($item);
+      $fetched_plans[$item->Id] = new Plan($item);
     }
-    $this->objectStore->addObjects($plans);
-    return $plans;
+    $this->objectStore->addObjects($fetched_plans);
+    $plans = $cached_plans + $fetched_plans;
+    $ordered_plans = array_replace(array_fill_keys($plan_ids, NULL), $plans);
+    return array_intersect_key($ordered_plans, $plans);
   }
 
   /**
@@ -116,7 +118,9 @@ class PlanQuery extends FabricQueryBase {
       ->execute();
     $plan_ids = $this->extractIdsFromRawData($items);
     $plans = $this->getPlansById($plan_ids);
-    $this->objectStore->addObjectCollection($plans, Plan::getObjectStorageKey(), 'year');
+    if (count($plans) == count($plan_ids)) {
+      $this->objectStore->addObjectCollection($plans, Plan::getObjectStorageKey(), 'year');
+    }
     return $plans;
   }
 
