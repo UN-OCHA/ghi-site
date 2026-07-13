@@ -175,6 +175,12 @@ class ThemeHelperTest extends UnitTestCase {
         '#percent' => 100,
         '#decimal_format' => 'comma',
       ]],
+      ['hpc_percent', 100, ['compact_precision' => TRUE], [
+        '#theme' => 'hpc_percent',
+        '#percent' => 100,
+        '#decimal_format' => 'point',
+        '#compact_precision' => TRUE,
+      ]],
       // Progress bar.
       ['hpc_progress_bar', 100, [], [
         '#theme' => 'hpc_progress_bar',

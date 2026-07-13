@@ -191,6 +191,7 @@ function hpc_common_preprocess_hpc_percent(array &$vars) {
   $export = $vars['export'];
   $decimal_format = !empty($vars['decimal_format']) ? $vars['decimal_format'] : ThemeHelper::DECIMALS_POINT;
   $precision = $vars['precision'];
+  $compact_precision = !empty($vars['compact_precision']);
   $percent = $vars['percent'] ?? ((float) ($vars['ratio'] ?? 0)) * 100;
 
   if ($percent !== NULL && !is_numeric($percent)) {
@@ -198,7 +199,12 @@ function hpc_common_preprocess_hpc_percent(array &$vars) {
     return;
   }
 
-  $precision = !empty($precision) ? $precision : ($percent == intval($percent) ? 0 : 1);
+  if (empty($precision)) {
+    // Compact precision keeps the default one-decimal behavior unless that
+    // displayed one-decimal value would be a whole number, e.g. 29.97 -> 30%.
+    $precision_percent = $compact_precision ? round($percent, 1) : $percent;
+    $precision = $precision_percent == intval($precision_percent) ? 0 : 1;
+  }
   // Percentages higher than 100 don't need precision. Numbers like 151.2% also
   // produce visual problems sometimes, e.g. in tables.
   if ($percent > 100) {

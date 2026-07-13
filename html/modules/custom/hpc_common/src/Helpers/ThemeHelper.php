@@ -97,11 +97,15 @@ class ThemeHelper {
         ];
 
       case 'hpc_percent':
-        return [
+        $theme_options = [
           '#theme' => $theme_function,
           '#percent' => $value,
           '#decimal_format' => !empty($options['decimal_format']) ? $options['decimal_format'] : self::DECIMALS_POINT,
         ];
+        if (!empty($options['compact_precision'])) {
+          $theme_options['#compact_precision'] = TRUE;
+        }
+        return $theme_options;
 
       case 'hpc_progress_bar':
         return [
