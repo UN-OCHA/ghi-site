@@ -570,12 +570,7 @@ abstract class GHIBlockBase extends HPCBlockBase implements TrustedCallbackInter
    *   The full render array with the block content.
    */
   public function doBuildContent(?array $build = NULL): array {
-    $cache_key = $this->getCacheKey([
-      $this->getPluginId(),
-      $this->getUuid(),
-      md5(json_encode($this->getBlockConfig())),
-      json_encode($this->currentUser->getRoles()),
-    ] + $this->getPageArguments());
+    $cache_key = $this->getCacheKey($this->getContentCacheKeyParts());
 
     $build = $build ?? [
       '#attributes' => [],
@@ -588,7 +583,7 @@ abstract class GHIBlockBase extends HPCBlockBase implements TrustedCallbackInter
       $profile_key = ProfileHelper::profileStart(static::class . ':buildContent');
       $build_content = $this->buildContent();
       ProfileHelper::profileEnd($profile_key);
-      $this->cache($cache_key, $build_content);
+      $this->cache($cache_key, $build_content, FALSE, NULL, $this->getCacheTags());
     }
     if (!$build_content) {
       return [];
@@ -628,6 +623,27 @@ abstract class GHIBlockBase extends HPCBlockBase implements TrustedCallbackInter
       'max-age' => Cache::mergeMaxAges($this->getCacheMaxAge(), $build_content['#cache']['max-age'] ?? Cache::PERMANENT),
     ];
     return $build;
+  }
+
+  /**
+   * Build the context parts for the block content cache key.
+   *
+   * @return array
+   *   Cache key context keyed by stable context names.
+   */
+  protected function getContentCacheKeyParts(): array {
+    $page_node = $this->getPageNode();
+    $base_object = $this->getCurrentBaseObject();
+
+    return [
+      'plugin_id' => $this->getPluginId(),
+      'block_uuid' => $this->getUuid(),
+      'block_config' => md5(json_encode($this->getBlockConfig())),
+      'current_user_roles' => json_encode($this->currentUser->getRoles()),
+      'current_uri' => $this->getCurrentUri(),
+      'page_node' => $page_node?->id(),
+      'base_object' => $base_object?->getUniqueIdentifier(),
+    ] + $this->getPageArguments();
   }
 
   /**
