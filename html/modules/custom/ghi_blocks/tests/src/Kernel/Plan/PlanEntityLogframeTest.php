@@ -160,8 +160,11 @@ class PlanEntityLogframeTest extends PlanBlockKernelTestBase {
     $this->assertIsArray($this->callPrivateMethod($plugin, 'getEntityRefCodeOptions'));
     $this->assertEmpty($this->callPrivateMethod($plugin, 'getEntityRefCodeOptions'));
     $this->assertEmpty($this->callPrivateMethod($plugin, 'getPlanEntities'));
-    $this->assertIsArray($plugin::trustedCallbacks());
-    $this->assertCount(2, $plugin::trustedCallbacks());
+    $trusted_callbacks = $plugin::trustedCallbacks();
+    $this->assertIsArray($trusted_callbacks);
+    $this->assertContains('lazyBuildContent', $trusted_callbacks);
+    $this->assertNotContains('lazyBuildTables', $trusted_callbacks);
+    $this->assertCount(1, $trusted_callbacks);
     $this->assertNull($plugin->getAttachmentsForEntities([]));
 
     $tables = $plugin->buildTables($entity->reveal(), []);

@@ -117,6 +117,22 @@ function ghi_blocks_theme($existing, $type, $theme, $path) {
       'file' => 'ghi_blocks.theme.inc',
       'template' => 'plan-entity-logframe',
     ],
+    'plan_entity_logframe_item' => [
+      'variables' => [
+        'label' => NULL,
+        'description' => NULL,
+        'state' => NULL,
+        'contributes_heading' => NULL,
+        'attachment_tables' => NULL,
+        'wrapper_attributes' => [],
+        'attachment_wrapper_attributes' => [],
+        'tooltip_show_data' => t('Show data'),
+        'tooltip_hide_data' => t('Hide data'),
+        'tooltip_no_data' => t('No data'),
+      ],
+      'file' => 'ghi_blocks.theme.inc',
+      'template' => 'plan-entity-logframe-item',
+    ],
     'ajax_switcher' => [
       'variables' => [
         'options' => NULL,

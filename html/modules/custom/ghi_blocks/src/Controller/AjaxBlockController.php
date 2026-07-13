@@ -4,6 +4,8 @@ namespace Drupal\ghi_blocks\Controller;
 
 use Drupal\Component\Plugin\Exception\ContextException;
 use Drupal\Component\Utility\Html;
+use Drupal\Core\Access\AccessManagerInterface;
+use Drupal\Core\Access\AccessResultInterface;
 use Drupal\Core\Ajax\AjaxHelperTrait;
 use Drupal\Core\Ajax\AjaxResponse;
 use Drupal\Core\Ajax\OpenModalDialogCommand;
@@ -11,13 +13,17 @@ use Drupal\Core\Ajax\ReplaceCommand;
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
 use Drupal\Core\Plugin\Context\EntityContext;
+use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Url;
 use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
+use Drupal\ghi_blocks\Plugin\Block\Plan\PlanEntityLogframe;
 use Drupal\hpc_common\Helpers\BlockHelper;
 use Drupal\layout_builder\Event\SectionComponentBuildRenderArrayEvent;
 use Drupal\layout_builder\LayoutBuilderEvents;
 use Drupal\layout_builder\LayoutEntityHelperTrait;
 use Symfony\Component\DependencyInjection\ContainerInterface;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 /**
@@ -43,6 +49,20 @@ class AjaxBlockController extends ControllerBase implements ContainerInjectionIn
   protected $eventDispatcher;
 
   /**
+   * The access manager.
+   *
+   * @var \Drupal\Core\Access\AccessManagerInterface
+   */
+  protected AccessManagerInterface $accessManager;
+
+  /**
+   * The current user.
+   *
+   * @var \Drupal\Core\Session\AccountInterface
+   */
+  protected AccountInterface $currentAccount;
+
+  /**
    * The router.
    *
    * @var \Drupal\Core\Routing\Router
@@ -56,6 +76,8 @@ class AjaxBlockController extends ControllerBase implements ContainerInjectionIn
     $instance = new static();
     $instance->currentRequest = $container->get('request_stack')->getCurrentRequest();
     $instance->eventDispatcher = $container->get('event_dispatcher');
+    $instance->accessManager = $container->get('access_manager');
+    $instance->currentAccount = $container->get('current_user');
     $instance->router = $container->get('router.no_access_checks');
     return $instance;
   }
@@ -143,6 +165,74 @@ class AjaxBlockController extends ControllerBase implements ContainerInjectionIn
     $ajax_response = new AjaxResponse();
     $ajax_response->addCommand(new ReplaceCommand($selector, $build));
     return $ajax_response;
+  }
+
+  /**
+   * Load a resolved logframe item for a single entity.
+   *
+   * @param string $plugin_id
+   *   The plugin id.
+   * @param string $block_uuid
+   *   The block UUID.
+   * @param string $entity_id
+   *   The logframe entity id.
+   *
+   * @return \Drupal\Core\Ajax\AjaxResponse
+   *   The response object.
+   */
+  public function loadLogframeItem($plugin_id, $block_uuid, $entity_id) {
+    $uri = $this->currentRequest->query->get('current_uri') ?? NULL;
+
+    if (!$this->isAjax() || !$uri) {
+      throw new NotFoundHttpException();
+    }
+
+    if (!$this->checkUriAccess($uri)->isAllowed()) {
+      throw new AccessDeniedHttpException();
+    }
+
+    $block_instance = BlockHelper::getBlockInstance($uri, $plugin_id, $block_uuid);
+    if (!$block_instance instanceof PlanEntityLogframe) {
+      return $this->sendErrorResponse();
+    }
+
+    $build = $block_instance->buildAjaxLogframeItem((int) $entity_id);
+    if (!$build) {
+      return $this->sendErrorResponse();
+    }
+
+    $selector = sprintf(
+      '.item-wrapper[data-logframe-block="%s"][data-logframe-entity="%d"]',
+      Html::escape($block_uuid),
+      (int) $entity_id,
+    );
+
+    $ajax_response = new AjaxResponse();
+    $ajax_response->addCommand(new ReplaceCommand($selector, $build));
+    return $ajax_response;
+  }
+
+  /**
+   * Check access for the page URI used to rebuild a lazy block fragment.
+   *
+   * @param string $uri
+   *   The current page URI supplied by the lazy block request.
+   *
+   * @return \Drupal\Core\Access\AccessResultInterface
+   *   The route access result with cacheability metadata.
+   */
+  protected function checkUriAccess(string $uri): AccessResultInterface {
+    $request = Request::create($uri);
+    try {
+      // The endpoint needs no-access matching only to identify the page route.
+      // Access is checked explicitly below before any block fragment is built.
+      $request->attributes->add($this->router->matchRequest($request));
+    }
+    catch (\Exception $e) {
+      throw new NotFoundHttpException();
+    }
+
+    return $this->accessManager->checkRequest($request, $this->currentAccount, TRUE);
   }
 
   /**
