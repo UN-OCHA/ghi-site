@@ -117,7 +117,7 @@ class AttachmentTable extends ConfigurationContainerItemPluginBase implements Co
       '#sortable' => TRUE,
       '#progress_groups' => TRUE,
       '#empty' => $this->t('No data found for this table.'),
-      '#prototype' => $prototype,
+      '#prototype_id' => $prototype_id,
       '#download_label' => $this->getDownloadLabel() ?? $prototype->getTypeLabel(),
     ];
   }

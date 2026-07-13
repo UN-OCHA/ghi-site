@@ -340,6 +340,7 @@ class PlanEntityLogframe extends GHIBlockBase implements MultiStepFormBlockInter
 
     // Collect the table names for deduplication.
     $table_names = [];
+    $attachment_prototypes = $this->getAttachmentPrototypes();
 
     // Build the actual data tables if applicable, one for each configured
     // table.
@@ -347,7 +348,10 @@ class PlanEntityLogframe extends GHIBlockBase implements MultiStepFormBlockInter
       $tables = $this->buildTables($entity, $conf['tables']);
       foreach ($tables as $key => $table) {
         /** @var \Drupal\ghi_plans\ApiObjects\Prototypes\AttachmentPrototype $prototype */
-        $prototype = $table['#prototype'];
+        $prototype = $attachment_prototypes[$table['#prototype_id'] ?? NULL] ?? NULL;
+        if (!$prototype) {
+          continue;
+        }
         $table_names[$prototype->id()] = $table['#download_label'];
 
         if (!array_key_exists($key, $data)) {
