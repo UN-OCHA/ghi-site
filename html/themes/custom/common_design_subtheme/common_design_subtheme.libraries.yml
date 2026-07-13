@@ -85,6 +85,11 @@ ghi-entity-logframe:
       components/ghi-entity-logframe/ghi-entity-logframe.css: {}
   js:
     components/ghi-entity-logframe/ghi-entity-logframe.js: {}
+  dependencies:
+    - core/drupal
+    - core/drupal.ajax
+    - core/jquery
+    - core/once
 
 # Libraries specific to GHI.
 ghi-grid:

@@ -1,0 +1,36 @@
+{%
+  set wrapper_attributes = create_attribute(wrapper_attributes|default({})).addClass('item-wrapper')
+%}
+{%
+  set wrapper_classes = [
+    'entity-wrapper',
+    attachment_tables is empty ? 'no-tables',
+    contributes_heading is empty ? 'no-alignment',
+  ]
+%}
+<div{{ wrapper_attributes }}>
+  <div class="{{ wrapper_classes|join(' ') }}">
+    <div class="entity-wrapper--inner">
+      <p class="label">{{ label }}</p>
+      <p class="description">{{ description }}</p>
+    </div>
+    {%- if state == 'content' -%}
+      <span class="table-toggle material-icon" tabindex="0" data-toggle="tooltip" data-tippy-content="{{ tooltip_show_data }}" data-tippy-content-open="{{ tooltip_hide_data }}"><svg aria-hidden="true" focusable="false"><use href="#material-symbol-keyboard-arrow-down" xlink:href="#material-symbol-keyboard-arrow-down"></use></svg></span>
+    {%- elseif state == 'empty' -%}
+      <span class="table-no-data material-icon" data-toggle="tooltip" data-tippy-content="{{ tooltip_no_data }}"><svg aria-hidden="true" focusable="false"><use href="#material-symbol-horizontal-rule" xlink:href="#material-symbol-horizontal-rule"></use></svg></span>
+    {%- elseif state in ['pending', 'resolving'] -%}
+      <span class="table-loading material-icon" aria-hidden="true"><svg aria-hidden="true" focusable="false"><use href="#material-symbol-horizontal-rule" xlink:href="#material-symbol-horizontal-rule"></use></svg></span>
+    {%- endif -%}
+  </div>
+  {%- if state == 'content' -%}
+    {%
+      set attachment_wrapper_attributes = create_attribute(attachment_wrapper_attributes|default({})).addClass('attachment-tables-wrapper')
+    %}
+    <div{{ attachment_wrapper_attributes }}>
+      {%- if not contributes_heading is empty -%}
+        {{ contributes_heading }}
+      {%- endif -%}
+      {{ attachment_tables }}
+    </div>
+  {%- endif -%}
+</div>

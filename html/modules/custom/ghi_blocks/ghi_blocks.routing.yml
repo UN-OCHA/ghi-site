@@ -19,6 +19,21 @@ ghi_blocks.load_block:
         block_uuid:
           type: string
 
+ghi_blocks.load_logframe_item:
+  path: '/load-logframe-item/{plugin_id}/{block_uuid}/{entity_id}'
+  defaults:
+    _controller: 'Drupal\ghi_blocks\Controller\AjaxBlockController::loadLogframeItem'
+  requirements:
+    _permission: 'access content'
+  options:
+    parameters:
+        plugin_id:
+          type: string
+        block_uuid:
+          type: string
+        entity_id:
+          type: string
+
 ghi_blocks.map_data:
   path: '/map-data/{plugin_id}/{block_uuid}'
   defaults:

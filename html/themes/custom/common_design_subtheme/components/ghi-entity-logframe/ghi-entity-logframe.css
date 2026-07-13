@@ -75,7 +75,8 @@
 }
 
 .item-list--entity-logframe > .item-wrapper .entity-wrapper span.table-toggle,
-.item-list--entity-logframe > .item-wrapper .entity-wrapper span.table-no-data {
+.item-list--entity-logframe > .item-wrapper .entity-wrapper span.table-no-data,
+.item-list--entity-logframe > .item-wrapper .entity-wrapper span.table-loading {
   flex-grow: 0;
   align-self: center;
   width: fit-content;
@@ -89,6 +90,15 @@
   border-radius: 50%;
   background-color: var(--brand-grey);
   will-change: transform;
+}
+.item-list--entity-logframe > .item-wrapper .entity-wrapper span.table-loading {
+  animation: ghi-logframe-loading 0.8s linear infinite;
+  cursor: default;
+  transition: none;
+}
+.item-list--entity-logframe > .item-wrapper .entity-wrapper span.table-loading svg {
+  transform-box: fill-box;
+  transform-origin: center center;
 }
 
 .item-list--entity-logframe > .item-wrapper .entity-wrapper span.table-toggle.open {
@@ -105,6 +115,16 @@
 .item-list--entity-logframe > .item-wrapper .entity-wrapper.no-tables.no-alignment span.table-no-data {
   display: block;
   visibility: visible;
+}
+
+@keyframes ghi-logframe-loading {
+  0% {
+    transform: rotate(0deg);
+  }
+
+  100% {
+    transform: rotate(1turn);
+  }
 }
 
 .item-list--entity-logframe > .item-wrapper > .attachment-tables-wrapper {
