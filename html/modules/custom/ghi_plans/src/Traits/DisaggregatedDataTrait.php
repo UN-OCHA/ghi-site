@@ -109,7 +109,10 @@ trait DisaggregatedDataTrait {
     $transform = [];
     foreach (array_values($data->metrics) as $metric) {
       /** @var \Drupal\hpc_api\ApiObjects\Types\MetricType $metric */
-      $index = array_flip($attachment->getFieldTypes())[$metric->getMachineName()];
+      $index = $attachment->getPrototype()?->getOriginalIndexByMetricType($metric->getMachineName());
+      if ($index === NULL) {
+        continue;
+      }
       $metric_locations = array_filter($data->locations, fn($item) => array_key_exists($metric->id(), $item->totals));
       $transform[$index] = [
         'metric' => (object) [

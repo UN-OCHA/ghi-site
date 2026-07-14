@@ -26,6 +26,21 @@ class DataPointConfigBackwardsCompatibilityTraitTest extends UnitTestCase {
   }
 
   /**
+   * Test getMetricTypeByIndex prefers original legacy field positions.
+   *
+   * @group DataPointConfigBackwardsCompatibilityTrait
+   */
+  public function testGetMetricTypeByIndexUsesOriginalIndexDefinitions() {
+    $prototype = $this->createMockPrototype(['type_a', 'type_b']);
+    $prototype->method('getMetricTypeByOriginalIndex')
+      ->with(8)
+      ->willReturn('latest_reach');
+
+    $result = $this->getMetricTypeByIndex(8, $prototype);
+    $this->assertSame('latest_reach', $result);
+  }
+
+  /**
    * Test getMetricTypeByIndex returns null for out of bounds index.
    *
    * @group DataPointConfigBackwardsCompatibilityTrait

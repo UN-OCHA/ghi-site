@@ -88,9 +88,68 @@ class AttachmentPrototypeTest extends ApiObjectTestBase {
   }
 
   /**
+   * Test duplicate raw fields keep their original index definitions.
+   */
+  public function testAttachmentPrototypeOriginalFieldDefinitions() {
+    $this->setMetricTypes([
+      $this->createMetricType(14, 'Cumulative reach', 'cumulativeReach', 'Cumulative reach|Personas atendidas (acumulativo)'),
+      $this->createMetricType(30, 'Latest reached', 'latestReach', 'Latest Reached|People reached'),
+    ]);
+
+    $prototype = new AttachmentPrototype((object) [
+      'Id' => 5440,
+      'RefCode' => 'BP',
+      'Type' => 'caseload',
+      'Value' => (object) [
+        'measureFields' => [
+          (object) [
+            'name' => (object) ['en' => 'Personas atendidas (acumulativo)'],
+            'type' => 'cumulativeReach',
+          ],
+          (object) [
+            'name' => (object) ['en' => 'Personas atendidas (acumulativo)'],
+            'type' => 'cumulativeReach',
+          ],
+          (object) [
+            'name' => (object) ['en' => 'Latest Reached'],
+            'type' => 'latestReach',
+          ],
+        ],
+        'metrics' => [
+          (object) [
+            'name' => (object) ['en' => 'Target'],
+            'type' => 'target',
+          ],
+        ],
+        'name' => (object) ['en' => 'Caseload'],
+        'entities' => [],
+      ],
+      'PlanId' => 1090,
+      'CreatedAt' => '2022-09-28T10:09:09.000Z',
+      'UpdatedAt' => '2024-09-13T17:07:39.000Z',
+    ]);
+
+    $this->assertSame([
+      'target',
+      'cumulative_reach',
+      'latest_reach',
+    ], $prototype->getFieldTypes());
+    $this->assertCount(4, $prototype->getFieldDefinitions());
+    $this->assertSame('cumulative_reach', $prototype->getMetricTypeByOriginalIndex(1));
+    $this->assertSame('cumulative_reach', $prototype->getMetricTypeByOriginalIndex(2));
+    $this->assertSame('latest_reach', $prototype->getMetricTypeByOriginalIndex(3));
+    $this->assertSame(3, $prototype->getOriginalIndexByMetricType('latest_reach'));
+  }
+
+  /**
    * Test attachment prototype parsing of caseload prototypes.
    */
   public function testAttachmentPrototypeCaseload() {
+    $this->setMetricTypes([
+      $this->createMetricType(31, 'Reached', 'measure|reached', 'Reached|Atteints|Personas Atendidas'),
+      $this->createMetricType(20, 'Covered', 'covered', 'Covered|Couverts|Personas con Necesidades Cubiertas'),
+    ]);
+
     $prototype = $this->getAttachmentPrototypeFromFixture('caseload');
     $this->assertInstanceOf(AttachmentPrototype::class, $prototype);
     $this->assertEquals('Caseload', $prototype->getName());

@@ -85,6 +85,13 @@ class AttachmentPrototype extends ApiObjectBase {
   protected array $originalFields;
 
   /**
+   * The field definitions keyed by their original legacy position.
+   *
+   * @var array
+   */
+  protected array $fieldDefinitions;
+
+  /**
    * The calculation methods.
    *
    * @var array
@@ -146,6 +153,7 @@ class AttachmentPrototype extends ApiObjectBase {
     $this->measurementFields = $this->mapPrototypeFields($measurement_fields);
     $this->calculatedFields = $this->mapPrototypeFields($calculated_fields);
     $this->originalFields = $fields;
+    $this->fieldDefinitions = $this->mapPrototypeFieldDefinitions($fields);
     $this->calculationMethods = array_map(function ($item) {
       return strtolower($item);
     }, $value->calculationMethod ?? []);
@@ -161,6 +169,52 @@ class AttachmentPrototype extends ApiObjectBase {
    *   An array of strings, key being the types, values the labels.
    */
   private function mapPrototypeFields(array $fields) {
+    $types = $this->resolvePrototypeFieldTypes($fields);
+    $labels = array_map(function ($item) {
+      return $item->name->en;
+    }, $fields);
+
+    return array_combine($types, $labels);
+  }
+
+  /**
+   * Map fields to definitions that preserve the original field positions.
+   *
+   * @param array $fields
+   *   An array of field objects as given in the raw prototype data.
+   *
+   * @return array
+   *   Field definitions keyed by their original position.
+   */
+  private function mapPrototypeFieldDefinitions(array $fields): array {
+    $types = $this->resolvePrototypeFieldTypes($fields);
+    $definitions = [];
+
+    foreach ($fields as $index => $field) {
+      $source = $field->source ?? NULL;
+      $definitions[$index] = [
+        'index' => $index,
+        'label' => $field->name->en ?? NULL,
+        'metric_type' => $types[$index] ?? NULL,
+        'raw_type' => $field->type ?? NULL,
+        'source' => $source ? StringHelper::camelCaseToUnderscoreCase($source) : NULL,
+        'raw_source' => $source,
+      ];
+    }
+
+    return $definitions;
+  }
+
+  /**
+   * Resolve raw prototype field types to local metric type machine names.
+   *
+   * @param array $fields
+   *   An array of field objects as given in the raw prototype data.
+   *
+   * @return string[]
+   *   Resolved metric type machine names keyed by original position.
+   */
+  private function resolvePrototypeFieldTypes(array $fields): array {
     $types = array_map(function ($item) {
       return StringHelper::camelCaseToUnderscoreCase($item->type);
     }, $fields ?? []);
@@ -181,7 +235,7 @@ class AttachmentPrototype extends ApiObjectBase {
         }
       }
     }
-    return array_combine($types, $labels);
+    return $types;
   }
 
   /**
@@ -250,7 +304,7 @@ class AttachmentPrototype extends ApiObjectBase {
    * Get the available fields for this prototype.
    *
    * @return string[]
-   *   An array of field labels, keyed by their index.
+   *   An array of field labels, keyed by metric type.
    */
   public function getFields() {
     return $this->fields;
@@ -260,10 +314,79 @@ class AttachmentPrototype extends ApiObjectBase {
    * Get the available field types for this prototype.
    *
    * @return string[]
-   *   An array of field types, keyed by their index.
+   *   An indexed array of canonical metric types.
    */
   public function getFieldTypes() {
     return array_keys($this->fields);
+  }
+
+  /**
+   * Get the field definitions keyed by their original legacy position.
+   *
+   * @return array
+   *   Field definitions keyed by their original position.
+   */
+  public function getFieldDefinitions(): array {
+    return $this->fieldDefinitions;
+  }
+
+  /**
+   * Get the field definition for the given original index.
+   *
+   * @param int|string $index
+   *   The original field index.
+   *
+   * @return array|null
+   *   The field definition, if found.
+   */
+  public function getFieldDefinitionByOriginalIndex($index): ?array {
+    return $this->fieldDefinitions[$index] ?? NULL;
+  }
+
+  /**
+   * Get the field definition for the given metric type.
+   *
+   * @param string $metric_type
+   *   The metric type.
+   *
+   * @return array|null
+   *   The field definition, if found.
+   */
+  public function getFieldDefinitionByMetricType(string $metric_type): ?array {
+    foreach ($this->fieldDefinitions as $definition) {
+      if (($definition['metric_type'] ?? NULL) == $metric_type) {
+        return $definition;
+      }
+    }
+    return NULL;
+  }
+
+  /**
+   * Get the metric type for a legacy field index.
+   *
+   * @param int $index
+   *   The original field index.
+   *
+   * @return string|null
+   *   The metric type, if found.
+   */
+  public function getMetricTypeByOriginalIndex(int $index): ?string {
+    $definition = $this->getFieldDefinitionByOriginalIndex($index);
+    return $definition['metric_type'] ?? NULL;
+  }
+
+  /**
+   * Get the original field index for a metric type.
+   *
+   * @param string $metric_type
+   *   The metric type.
+   *
+   * @return int|null
+   *   The original field index, if found.
+   */
+  public function getOriginalIndexByMetricType(string $metric_type): ?int {
+    $definition = $this->getFieldDefinitionByMetricType($metric_type);
+    return $definition['index'] ?? NULL;
   }
 
   /**

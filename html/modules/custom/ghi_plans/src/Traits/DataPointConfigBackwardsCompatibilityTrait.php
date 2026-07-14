@@ -40,7 +40,7 @@ trait DataPointConfigBackwardsCompatibilityTrait {
    *   The metric type or NULL.
    */
   public static function getMetricTypeByIndex(int $index, AttachmentPrototype $prototype): ?string {
-    return $prototype->getFieldTypes()[$index] ?? NULL;
+    return $prototype->getMetricTypeByOriginalIndex($index) ?? $prototype->getFieldTypes()[$index] ?? NULL;
   }
 
 }

@@ -304,9 +304,8 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
     $configured_reporting_periods = $this->getConfiguredReportingPeriods($plan_id);
 
     $disaggregated_data = $this->transformDisaggregatedMapData($attachment->getDisaggregatedData($reporting_period_id), $attachment, TRUE);
-    foreach (array_keys(array_values($attachment->getFields())) as $metric_index) {
-      $metric_item = $disaggregated_data[$metric_index] ?? NULL;
-      if (!$metric_item || $attachment->metricItemIsEmpty($metric_item)) {
+    foreach ($disaggregated_data as $metric_index => $metric_item) {
+      if ($attachment->metricItemIsEmpty($metric_item)) {
         continue;
       }
       /** @var \Drupal\hpc_api\ApiObjects\Types\MetricType $metric_object */
