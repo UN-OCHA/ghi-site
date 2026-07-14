@@ -341,6 +341,36 @@ class AttachmentTest extends ApiObjectTestBase {
   }
 
   /**
+   * Test fallback for legacy periodical reach configs on cumulative facts.
+   */
+  public function testPeriodicalReachFallsBackToCumulativeReachWhenOnlyCumulativeReachFactsExist() {
+    /** @var \Drupal\ghi_plans\ApiObjects\Attachments\CaseloadAttachment $attachment */
+    $attachment = $this->getAttachmentFromFixture('caseload');
+    $this->assertInstanceOf(CaseloadAttachment::class, $attachment);
+    $reporting_periods = $this->mockCaseloadReportingPeriods([2386, 2387, 2388, 2389], $attachment->getPlanId());
+    $this->mockPlanWithLatestPublishedReportingPeriod($attachment->getPlanId(), 2389, $reporting_periods);
+
+    $attachment_values = $this->getPrivateProperty($attachment, 'values');
+    unset($attachment_values['periodical_reach']);
+    $this->setPrivateProperty($attachment, 'values', $attachment_values);
+
+    foreach ($attachment->getMeasurements() as $measurement) {
+      $values = $measurement->getValues();
+      unset($values['periodical_reach']);
+      $this->setPrivateProperty($measurement, 'values', $values);
+    }
+
+    $expected = [
+      2386 => 522701,
+      2387 => 1659672,
+      2388 => 2314453,
+      2389 => 2883267,
+    ];
+    $this->assertEquals(2883267, $attachment->getValueByMetricType('periodical_reach', 'latest'));
+    $this->assertEquals($expected, $attachment->getValuesForAllReportingPeriods('periodical_reach', TRUE, TRUE, $reporting_periods));
+  }
+
+  /**
    * Test the getLastNonEmptyReportingPeriod method.
    */
   public function testGetLastNonEmptyReportingPeriod() {
