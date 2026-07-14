@@ -8,9 +8,8 @@ use Drupal\ghi_blocks\Interfaces\MultiStepFormBlockInterface;
 use Drupal\ghi_blocks\Interfaces\OverrideDefaultTitleBlockInterface;
 use Drupal\ghi_blocks\Plugin\Block\Plan\PlanEntityAttachmentsTable;
 use Drupal\ghi_plans\ApiObjects\Attachments\Attachment;
-use Drupal\ghi_plans\ApiObjects\PlanEntityInterface;
+use Drupal\ghi_plans\ApiObjects\Entities\EntityObjectInterface;
 use Drupal\ghi_plans\Plugin\FabricQuery\AttachmentQuery;
-use Drupal\hpc_api\ApiObjects\ApiObjectBase;
 use Drupal\Tests\ghi_blocks\Kernel\PlanBlockKernelTestBase;
 
 /**
@@ -124,7 +123,7 @@ class PlanEntityAttachmentsTableTest extends PlanBlockKernelTestBase {
    * Tests flat table grouping uses attachment source accessors.
    */
   public function testFlatTableUsesAttachmentSourceAccessors() {
-    $source_entity = $this->createSourceEntityStub(21388);
+    $source_entity = $this->mockSourceEntity(21388);
     $attachment = $this->mockAttachmentWithSourceEntity(38544, $source_entity);
 
     $attachment_query = $this->prophesize(AttachmentQuery::class);
@@ -204,13 +203,13 @@ class PlanEntityAttachmentsTableTest extends PlanBlockKernelTestBase {
    *
    * @param int $attachment_id
    *   The attachment id.
-   * @param \Drupal\ghi_plans\ApiObjects\PlanEntityInterface $source_entity
+   * @param \Drupal\ghi_plans\ApiObjects\Entities\EntityObjectInterface $source_entity
    *   The source entity.
    *
    * @return \Drupal\ghi_plans\ApiObjects\Attachments\Attachment
    *   The mocked attachment.
    */
-  private function mockAttachmentWithSourceEntity(int $attachment_id, PlanEntityInterface $source_entity): Attachment {
+  private function mockAttachmentWithSourceEntity(int $attachment_id, EntityObjectInterface $source_entity): Attachment {
     $attachment = $this->getMockBuilder(Attachment::class)
       ->disableOriginalConstructor()
       ->onlyMethods([
@@ -232,122 +231,22 @@ class PlanEntityAttachmentsTableTest extends PlanBlockKernelTestBase {
   }
 
   /**
-   * Create a source entity stub.
+   * Mock a source entity.
    *
    * @param int $entity_id
    *   The entity id.
    *
-   * @return \Drupal\ghi_plans\ApiObjects\PlanEntityInterface
-   *   The source entity.
+   * @return \Drupal\ghi_plans\ApiObjects\Entities\EntityObjectInterface
+   *   The mocked source entity.
    */
-  private function createSourceEntityStub(int $entity_id): PlanEntityInterface {
-    return new class((object) ['Id' => $entity_id]) extends ApiObjectBase implements PlanEntityInterface {
-
-      /**
-       * The composed reference used by the table group heading.
-       *
-       * @var string
-       */
-      private string $composedReference = 'SO1';
-
-      /**
-       * The description used by the table group heading.
-       *
-       * @var string
-       */
-      private string $description = 'Strategic objective';
-
-      /**
-       * {@inheritdoc}
-       */
-      public function __get($name) {
-        return match ($name) {
-          'composed_reference' => $this->composedReference,
-          'description' => $this->description,
-          default => NULL,
-        };
-      }
-
-      /**
-       * {@inheritdoc}
-       */
-      public function __isset($name) {
-        return in_array($name, [
-          'composed_reference',
-          'description',
-        ]);
-      }
-
-      /**
-       * {@inheritdoc}
-       */
-      public function getName() {
-        return 'Strategic Objective';
-      }
-
-      /**
-       * {@inheritdoc}
-       */
-      public function getCustomName($type) {
-        return 'SO1';
-      }
-
-      /**
-       * {@inheritdoc}
-       */
-      public function getDescription(): ?string {
-        return $this->description;
-      }
-
-      /**
-       * {@inheritdoc}
-       */
-      public function getEntityTypeRefCode() {
-        return 'SO';
-      }
-
-      /**
-       * {@inheritdoc}
-       */
-      public function getTypeName() {
-        return 'Strategic objectives';
-      }
-
-      /**
-       * {@inheritdoc}
-       */
-      public function getEntityType() {
-        return 'planEntity';
-      }
-
-      /**
-       * {@inheritdoc}
-       */
-      public function getEntityTypeName() {
-        return 'Plan entity';
-      }
-
-      /**
-       * Get the display name.
-       *
-       * @return string
-       *   The display name.
-       */
-      public function getDisplayName(): string {
-        return 'Strategic Objective';
-      }
-
-      /**
-       * Get the sort key.
-       *
-       * @return string
-       *   The sort key.
-       */
-      public function getSortKey(): string {
-        return '001';
-      }
-
-    };
+  private function mockSourceEntity(int $entity_id): EntityObjectInterface {
+    $source_entity = $this->prophesize(EntityObjectInterface::class);
+    $source_entity->id()->willReturn($entity_id);
+    $source_entity->getComposedReference()->willReturn('SO1');
+    $source_entity->getDescription()->willReturn('Strategic objective');
+    $source_entity->getDisplayName()->willReturn('Strategic Objective');
+    $source_entity->getSortKey()->willReturn('001');
+    return $source_entity->reveal();
   }
 
 }
