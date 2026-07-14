@@ -4,6 +4,7 @@ namespace Drupal\ghi_plans\ApiObjects\Prototypes;
 
 use Drupal\ghi_plans\Traits\PlanQueryTrait;
 use Drupal\hpc_api\ApiObjects\ApiObjectBase;
+use Drupal\hpc_api\ApiObjects\Types\MetricType;
 use Drupal\hpc_api\Helpers\StringHelper;
 
 /**
@@ -167,20 +168,42 @@ class AttachmentPrototype extends ApiObjectBase {
       return $item->name->en;
     }, $fields);
 
-    foreach ($types as $key => $type) {
-      if (count(array_intersect($types, [$type])) > 1) {
+    $original_types = $types;
+    $metric_types = NULL;
+    foreach ($original_types as $key => $type) {
+      if (count(array_intersect($original_types, [$type])) > 1) {
         // There is uncertainty here, so we match for the label. The uncertainty
         // comes from older attachments that have duplicated metric types,
         // example attachment 38036, with 2 measure metrics of type "measure".
-        foreach ($this->getEntityTypeQuery()?->getMetricTypes() ?? [] as $metric_type) {
-          if (!$metric_type->matches($labels[$key])) {
-            continue;
-          }
+        $metric_types = $metric_types ?? $this->getEntityTypeQuery()?->getMetricTypes() ?? [];
+        if ($metric_type = $this->getMatchingMetricType($labels[$key], $metric_types)) {
           $types[$key] = $metric_type->getMachineName();
         }
       }
     }
     return array_combine($types, $labels);
+  }
+
+  /**
+   * Get the matching metric type for the given label.
+   *
+   * @param string $label
+   *   The label to match.
+   * @param \Drupal\hpc_api\ApiObjects\Types\MetricType[] $metric_types
+   *   The available metric types.
+   *
+   * @return \Drupal\hpc_api\ApiObjects\Types\MetricType|null
+   *   The matching metric type, if found.
+   */
+  private function getMatchingMetricType(string $label, array $metric_types): ?MetricType {
+    foreach ([TRUE, FALSE] as $case_sensitive) {
+      foreach ($metric_types as $metric_type) {
+        if ($metric_type->matches($label, $case_sensitive)) {
+          return $metric_type;
+        }
+      }
+    }
+    return NULL;
   }
 
   /**
