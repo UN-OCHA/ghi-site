@@ -93,15 +93,25 @@ class MetricType extends Type {
    *
    * @param string $string
    *   The string to match for.
+   * @param bool $case_sensitive
+   *   Whether to match case-sensitively.
    *
    * @return bool
    *   TRUE if string matches any of the labels, FALSE otherwise.
    */
-  public function matches($string): bool {
-    return strtolower($string) == strtolower($this->locale->fr ?? '')
-        || strtolower($string) == strtolower($this->locale->es ?? '')
-        || strtolower($string) == strtolower($this->name ?? '')
-        || in_array(strtolower($string), $this->lookup);
+  public function matches($string, bool $case_sensitive = FALSE): bool {
+    $labels = array_filter([
+      $this->locale->fr ?? NULL,
+      $this->locale->es ?? NULL,
+      $this->name ?? NULL,
+      ...$this->lookup,
+    ]);
+
+    if ($case_sensitive) {
+      return in_array($string, $labels, TRUE);
+    }
+
+    return in_array(strtolower($string), array_map('strtolower', $labels), TRUE);
   }
 
 }
