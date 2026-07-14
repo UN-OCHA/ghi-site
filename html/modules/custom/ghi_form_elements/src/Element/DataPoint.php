@@ -210,7 +210,7 @@ class DataPoint extends FormElementBase {
     $data_point_selector = FormElementHelper::getStateSelector($element, [
       'data_points',
       0,
-      'index',
+      'metric_type',
     ]);
     $measurement_fields = $attachment_prototype->getMeasurementFields();
     if (!empty($element['#select_monitoring_period'])) {
@@ -262,7 +262,7 @@ class DataPoint extends FormElementBase {
       // submitted checkbox and the index of the second data point.
       $input = $form_state->getUserInput();
       $submitted = NestedArray::getValue($input, array_merge($element['#parents'], ['data_points']));
-      if ($submitted && $submitted[0]['use_calculation_method'] === NULL && $defaults['data_points'][1]['index'] == '' && self::CALCULATION_METHOD_DEFAULT) {
+      if ($submitted && $submitted[0]['use_calculation_method'] === NULL && empty($defaults['data_points'][1]['metric_type']) && self::CALCULATION_METHOD_DEFAULT) {
         // Due to a bug with checkbox elements in ajax contexts, the default
         // value is not correctly set for new instances of a plugin. We catch
         // this situation by manually setting the checked attribute only if the
@@ -275,7 +275,7 @@ class DataPoint extends FormElementBase {
       '#type' => 'select',
       '#title' => t('Data point #2'),
       '#options' => $data_point_options,
-      '#default_value' => $defaults['data_points'][1]['index'] ?? NULL,
+      '#default_value' => $defaults['data_points'][1]['metric_type'] ?? NULL,
       '#ajax' => [
         'event' => 'change',
         'callback' => [static::class, 'updateAjax'],
@@ -285,7 +285,7 @@ class DataPoint extends FormElementBase {
     $data_point_selector_1 = FormElementHelper::getStateSelector($element, [
       'data_points',
       1,
-      'index',
+      'metric_type',
     ]);
     if (!empty($element['#select_monitoring_period'])) {
       $element['data_points'][1]['monitoring_period'] = [
@@ -338,7 +338,7 @@ class DataPoint extends FormElementBase {
       // submitted checkbox and the index of the second data point.
       $input = $form_state->getUserInput();
       $submitted = NestedArray::getValue($input, array_merge($element['#parents'], ['data_points']));
-      if (is_array($submitted) && $submitted[1]['use_calculation_method'] === NULL && $defaults['data_points'][1]['index'] == '' && self::CALCULATION_METHOD_DEFAULT) {
+      if (is_array($submitted) && $submitted[1]['use_calculation_method'] === NULL && empty($defaults['data_points'][1]['metric_type']) && self::CALCULATION_METHOD_DEFAULT) {
         // Due to a bug with checkbox elements in ajax contexts, the default
         // value is not correctly set for new instances of a plugin. We catch
         // this situation by manually setting the checked attribute only if the
@@ -424,7 +424,7 @@ class DataPoint extends FormElementBase {
     assert($attachment === NULL || $attachment instanceof Attachment);
     /** @var \Drupal\ghi_plans\ApiObjects\Prototypes\AttachmentPrototype $attachment_prototype */
     $attachment_prototype = $attachment?->getPrototype() ?? $element['#attachment_prototype'];
-    $options = array_combine($attachment_prototype->getFieldTypes(), $attachment_prototype->getFields());
+    $options = $attachment_prototype->getFields();
     if (empty($element['#disable_empty_fields']) || empty($attachment)) {
       return $options;
     }

@@ -473,8 +473,8 @@ class Attachment extends ApiObjectBase implements AttachmentInterface, Disaggreg
    *   The field if found.
    */
   public function getFieldByIndex($index) {
-    $fields = array_values($this->getFields());
-    return $fields[$index] ?? NULL;
+    $definition = $this->getPrototype()?->getFieldDefinitionByOriginalIndex($index);
+    return $definition['label'] ?? NULL;
   }
 
   /**
@@ -517,8 +517,8 @@ class Attachment extends ApiObjectBase implements AttachmentInterface, Disaggreg
    *   The source field type of the calculated field.
    */
   public function getSourceTypeForCalculatedField($metric_type) {
-    $original_fields = $this->getPrototype()?->getOriginalFields() ?? [];
-    return $original_fields[$metric_type]?->source ?? NULL;
+    $definition = $this->getPrototype()?->getFieldDefinitionByMetricType($metric_type);
+    return $definition['source'] ?? NULL;
   }
 
   /**
@@ -609,8 +609,8 @@ class Attachment extends ApiObjectBase implements AttachmentInterface, Disaggreg
    *   TRUE if the index represents a measurement, FALSE otherwise.
    */
   public function isMeasurementIndex($index) {
-    $field_types = $this->getFieldTypes();
-    return !empty($field_types[$index]) ? $this->isMeasurementField($field_types[$index]) : FALSE;
+    $metric_type = $this->getPrototype()?->getMetricTypeByOriginalIndex($index);
+    return !empty($metric_type) ? $this->isMeasurementField($metric_type) : FALSE;
   }
 
   /**
@@ -652,20 +652,15 @@ class Attachment extends ApiObjectBase implements AttachmentInterface, Disaggreg
     if (!array_key_exists($metric_type, $this->getCalculatedFields())) {
       return FALSE;
     }
-    $fields = $this->getPrototype()?->getOriginalFields();
-    $field = $fields[$metric_type] ?? NULL;
-    if (!$field) {
+    $definition = $this->getPrototype()?->getFieldDefinitionByMetricType($metric_type);
+    if (!$definition) {
       return FALSE;
     }
     $source = $this->getSourceTypeForCalculatedField($metric_type);
     if (!$source) {
       return FALSE;
     }
-    $source_field = $this->getFieldByType($source);
-    if (!$source_field) {
-      return FALSE;
-    }
-    return $this->isMeasurementField($source_field);
+    return $this->isMeasurementField($source);
   }
 
   /**
@@ -1332,7 +1327,7 @@ class Attachment extends ApiObjectBase implements AttachmentInterface, Disaggreg
    *   The data point value.
    */
   public function getValueByIndex($index, $monitoring_period = 'latest', $cumulative_logic = TRUE) {
-    $metric_type = array_values($this->getFieldTypes())[$index] ?? NULL;
+    $metric_type = $this->getPrototype()?->getMetricTypeByOriginalIndex($index);
     return $metric_type ? $this->getValueByMetricType($metric_type, $monitoring_period, $cumulative_logic) : NULL;
   }
 
@@ -1520,8 +1515,8 @@ class Attachment extends ApiObjectBase implements AttachmentInterface, Disaggreg
    */
   public function isCumulativeReachField($metric_type) {
     $cumulative_reach_field = $this->isCumulativeReachFieldType($metric_type);
-    $field = $this->getPrototype()?->getOriginalFields()[$metric_type] ?? NULL;
-    $cumulative_reach_source = $this->isCalculatedField($metric_type) && $field && $this->isCumulativeReachFieldType($field->source);
+    $source = $this->isCalculatedField($metric_type) ? $this->getSourceTypeForCalculatedField($metric_type) : NULL;
+    $cumulative_reach_source = $source && $this->isCumulativeReachFieldType($source);
     return $cumulative_reach_field || $cumulative_reach_source;
   }
 

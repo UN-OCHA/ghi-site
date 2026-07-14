@@ -75,6 +75,13 @@ class AttachmentMatcherTest extends UnitTestCase {
   private function createMockAttachmentPrototype(array $field_types) {
     $prototype = $this->createMock(AttachmentPrototype::class);
     $prototype->method('getFieldTypes')->willReturn($field_types);
+    $prototype->method('getMetricTypeByOriginalIndex')->willReturnCallback(function ($index) use ($field_types) {
+      return $field_types[$index] ?? NULL;
+    });
+    $prototype->method('getOriginalIndexByMetricType')->willReturnCallback(function ($metric_type) use ($field_types) {
+      $index = array_search($metric_type, $field_types);
+      return $index === FALSE ? NULL : $index;
+    });
     return $prototype;
   }
 

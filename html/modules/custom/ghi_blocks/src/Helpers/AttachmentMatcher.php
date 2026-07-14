@@ -89,27 +89,25 @@ class AttachmentMatcher {
    *   Either the original index if no match can be found or a new index.
    */
   public static function matchDataPointOnAttachmentPrototypes($data_point_index, AttachmentPrototype $prototype_1, AttachmentPrototype $prototype_2) {
-    // First get the original and the new fields. These are the types keyed by
-    // the field index.
-    $original_fields = $prototype_1->getFieldTypes();
-    $new_fields = $prototype_2->getFieldTypes();
-    if (!array_key_exists($data_point_index, $original_fields)) {
+    // First get the original and the new metric types for the same legacy
+    // field index.
+    $original_type = $prototype_1->getMetricTypeByOriginalIndex($data_point_index);
+    if (!$original_type) {
       // This is fishy.
       return $data_point_index;
     }
 
-    // Compare the types.
-    if ($original_fields[$data_point_index] == ($new_fields[$data_point_index] ?? NULL)) {
+    if ($original_type == $prototype_2->getMetricTypeByOriginalIndex($data_point_index)) {
       // If they are the same, there is no need to go further.
       return $data_point_index;
     }
     // It's referring to a different type now, let's see if we can find the
     // same as the original type in the set of new fields.
-    $new_index = array_search($original_fields[$data_point_index], $new_fields);
+    $new_index = $prototype_2->getOriginalIndexByMetricType($original_type);
 
     // We either found a new index and can return it, or we didn't and we
     // return the original.
-    return $new_index !== FALSE ? $new_index : $data_point_index;
+    return $new_index ?? $data_point_index;
   }
 
   /**
