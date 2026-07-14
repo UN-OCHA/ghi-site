@@ -258,7 +258,7 @@ class AttachmentTable extends ConfigurationContainerItemPluginBase implements Co
     foreach ($attachments as $attachment) {
       $attachment_options[$attachment->id()] = [
         'id' => $attachment->id(),
-        'composed_reference' => $attachment->composed_reference,
+        'composed_reference' => $attachment->getComposedReference(),
         'description' => $attachment->getDescription(),
       ];
     }

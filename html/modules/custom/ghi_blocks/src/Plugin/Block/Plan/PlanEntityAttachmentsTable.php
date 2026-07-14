@@ -18,6 +18,7 @@ use Drupal\ghi_blocks\Traits\AttachmentTableTrait;
 use Drupal\ghi_form_elements\Helpers\FormElementHelper;
 use Drupal\ghi_form_elements\Traits\ConfigurationContainerTrait;
 use Drupal\ghi_plans\ApiObjects\Attachments\Attachment;
+use Drupal\ghi_plans\ApiObjects\Entities\EntityObjectInterface;
 use Drupal\ghi_plans\ApiObjects\Entities\PlanEntity;
 use Drupal\hpc_api\Helpers\ArrayHelper;
 use Drupal\hpc_common\Plugin\HPCBlockMetadata;
@@ -133,14 +134,15 @@ class PlanEntityAttachmentsTable extends GHIBlockBase implements ConfigurableTab
    * @return \Drupal\ghi_plans\ApiObjects\Entities\EntityObjectInterface|null
    *   The entity object.
    */
-  private function getCurrentEntity() {
+  private function getCurrentEntity(): ?EntityObjectInterface {
     $entity_id = $this->getCurrentEntityId();
     if (!$entity_id) {
       return NULL;
     }
     /** @var \Drupal\ghi_plans\Plugin\FabricQuery\EntityQuery $query */
     $query = $this->getQueryHandler('entities');
-    return $query->getEntity('planEntity', $entity_id) ?? $query->getEntity('governingEntity', $entity_id);
+    $entity = $query->getEntity('planEntity', $entity_id) ?? $query->getEntity('governingEntity', $entity_id);
+    return $entity instanceof EntityObjectInterface ? $entity : NULL;
   }
 
   /**
@@ -207,8 +209,8 @@ class PlanEntityAttachmentsTable extends GHIBlockBase implements ConfigurableTab
         $rows[] = [
           [
             'data' => new FormattableMarkup('@composed_reference: @description', [
-              '@composed_reference' => $entity->composed_reference,
-              '@description' => $entity->description ?? '',
+              '@composed_reference' => $entity->getComposedReference(),
+              '@description' => $entity->getDescription() ?? '',
             ]),
             'colspan' => count($columns),
             'class' => 'group-name',
@@ -260,7 +262,7 @@ class PlanEntityAttachmentsTable extends GHIBlockBase implements ConfigurableTab
     $entity_id = $this->getCurrentEntityId();
     $attachments = array_filter($attachments, function (Attachment $attachment) use ($entity_id) {
       $entity = $attachment->getSourceEntity();
-      if (!$entity) {
+      if (!$entity instanceof EntityObjectInterface) {
         return NULL;
       }
       if ($entity->id() == $entity_id) {
@@ -285,6 +287,9 @@ class PlanEntityAttachmentsTable extends GHIBlockBase implements ConfigurableTab
     $entities = [];
     foreach ($attachments as $attachment) {
       $entity = $attachment->getSourceEntity();
+      if (!$entity instanceof EntityObjectInterface) {
+        continue;
+      }
       $entities[$entity->id()] = $entity;
     }
     // Sort the entities.
@@ -340,7 +345,7 @@ class PlanEntityAttachmentsTable extends GHIBlockBase implements ConfigurableTab
     // Get the attachments and configured columns.
     $entity_options = $this->getCurrentEntityOptionsGrouped();
     $current_entity = $this->getCurrentEntity();
-    $entity_description = $current_entity?->description ?? NULL;
+    $entity_description = $current_entity?->getDescription();
 
     $build = [
       '#type' => 'container',
@@ -355,7 +360,7 @@ class PlanEntityAttachmentsTable extends GHIBlockBase implements ConfigurableTab
         '#uri' => $this->getCurrentUri(),
       ],
       [
-        '#markup' => Markup::create($entity_description),
+        '#markup' => Markup::create((string) $entity_description),
       ],
     ];
     if ($current_entity instanceof PlanEntity && $contributes_to = $this->buildContributesToHeading($current_entity)) {
@@ -561,7 +566,7 @@ class PlanEntityAttachmentsTable extends GHIBlockBase implements ConfigurableTab
     $attachments = $query->getAttachmentsById($attachment_ids);
     // Filter out non-data attachments.
     $attachments = array_filter($attachments, function ($attachment) {
-      return $attachment instanceof Attachment && !empty($attachment->getSourceEntity());
+      return $attachment instanceof Attachment && $attachment->getSourceEntity() instanceof EntityObjectInterface;
     });
     $this->groupAndSortAttachments($attachments);
     return $attachments;
