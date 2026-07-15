@@ -52,6 +52,7 @@ class AjaxSwitcherForm extends FormBase {
     }
 
     $form['#gin_lb_form'] = FALSE;
+    $form['#attached']['library'][] = 'common_design_subtheme/select2';
     $form[$element_key] = [
       '#type' => 'select',
       '#title' => NULL,

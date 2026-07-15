@@ -72,7 +72,53 @@ class OrganizationProjectCounter extends ConfigurationContainerItemPluginBase {
     $plan_object = $this->getContextValue('plan_object');
     $base_object = $this->getContextValue('base_object');
     $organization = $this->getContextValue('organization');
+    $projects = $this->getContextValue('projects');
+    if (is_array($projects)) {
+      $projects_by_organization = $this->getProjectsByOrganization($projects);
+      return $projects_by_organization[$organization->id()] ?? [];
+    }
     return $this->projectQuery->getProjectsForPlanId($plan_object->getSourceId(), $base_object instanceof BaseObjectChildInterface ? $base_object : NULL, $organization->id());
+  }
+
+  /**
+   * Group the given project list by organization.
+   *
+   * @param \Drupal\ghi_plans\ApiObjects\Project[] $projects
+   *   The projects to group.
+   *
+   * @return array[]
+   *   The projects keyed by organization id and project id.
+   */
+  private function getProjectsByOrganization(array $projects): array {
+    $projects_by_organization = &drupal_static(static::class . '::' . __FUNCTION__, []);
+    $cache_key = $this->getProjectsCacheKey();
+    if (!array_key_exists($cache_key, $projects_by_organization)) {
+      $projects_by_organization[$cache_key] = [];
+      foreach ($projects as $project) {
+        foreach ($project->getOrganizations() as $organization) {
+          $projects_by_organization[$cache_key][$organization->id()][$project->id()] = $project;
+        }
+      }
+    }
+    return $projects_by_organization[$cache_key];
+  }
+
+  /**
+   * Get a static cache key for the current plan and optional cluster context.
+   *
+   * @return string
+   *   The cache key.
+   */
+  private function getProjectsCacheKey(): string {
+    $plan_object = $this->getContextValue('plan_object');
+    $base_object = $this->getContextValue('base_object');
+    $parts = [
+      $plan_object instanceof Plan ? $plan_object->id() : NULL,
+      $plan_object instanceof Plan ? $plan_object->getSourceId() : NULL,
+      $base_object instanceof BaseObjectChildInterface ? $base_object->id() : NULL,
+      $base_object instanceof BaseObjectChildInterface ? $base_object->getSourceId() : NULL,
+    ];
+    return implode(':', array_map(fn ($part) => $part ?? 'none', $parts));
   }
 
   /**
