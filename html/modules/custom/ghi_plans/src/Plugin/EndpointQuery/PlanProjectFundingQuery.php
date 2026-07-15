@@ -145,10 +145,10 @@ class PlanProjectFundingQuery extends EndpointQueryBase {
     $requirements = 0;
     $organization_projects = $this->filterProjectsToOrganization($projects, $organization);
     foreach ($organization_projects as $project) {
-      if (empty($this->data[$project->id])) {
+      if (empty($this->data[$project->id()])) {
         continue;
       }
-      $funding = $this->data[$project->id];
+      $funding = $this->data[$project->id()];
       $total_funding += $funding['total_funding'] ?? 0;
       $requirements += $funding['current_requirements'] ?? 0;
     }
@@ -175,10 +175,10 @@ class PlanProjectFundingQuery extends EndpointQueryBase {
     $current_requirements = 0;
     $organization_projects = $this->filterProjectsToOrganization($projects, $organization);
     foreach ($organization_projects as $project) {
-      if (empty($this->data[$project->id])) {
+      if (empty($this->data[$project->id()])) {
         continue;
       }
-      $funding = $this->data[$project->id];
+      $funding = $this->data[$project->id()];
       $original_requirements += $funding['original_requirements'] ?? 0;
       $current_requirements += $funding['current_requirements'] ?? 0;
     }

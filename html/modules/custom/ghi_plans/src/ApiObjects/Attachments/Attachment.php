@@ -1536,7 +1536,7 @@ class Attachment extends ApiObjectBase implements AttachmentInterface, Disaggreg
     $metric_type = $conf['data_points'][0]['metric_type'];
     if ($metric_type && $this->isCumulativeReachFieldType($metric_type)) {
       $period = $this->getLastNonEmptyReportingPeriod($metric_type);
-      $build['#reporting_period'] = $period?->id ?? $build['#reporting_period'];
+      $build['#reporting_period'] = $period?->id() ?? $build['#reporting_period'];
     }
 
     // Prepare the tooltips.
