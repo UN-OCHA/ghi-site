@@ -1195,7 +1195,7 @@ class PlanEntityLogframe extends GHIBlockBase implements MultiStepFormBlockInter
           if ($this->validatePlanEntity($entity, $validation_options)) {
             continue;
           }
-          $form['entity_ids'][$entity->id]['#disabled'] = TRUE;
+          $form['entity_ids'][$entity->id()]['#disabled'] = TRUE;
         }
       }
     }
