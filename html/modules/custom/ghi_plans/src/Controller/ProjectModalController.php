@@ -821,7 +821,7 @@ class ProjectModalController extends ControllerBase {
       $organinizations = $project->getOrganizations();
       $organization_ids_unique = array_unique(array_merge($organization_ids_unique, array_keys($organinizations)));
 
-      $totals['targets'] += $project->target ?? 0;
+      $totals['targets'] += $project->getTarget() ?? 0;
       $totals['requirements'] += $project->getRequirements() ?? 0;
 
       $row = [];
