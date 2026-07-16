@@ -483,7 +483,7 @@ class PlanCaseloadTrendsTable extends GHIBlockBase implements OverrideDefaultTit
         'target_percent' => $target ? CommonHelper::calculateRatio($target, $in_need) * 100 : NULL,
         'reached' => $reached,
         'reached_percent' => $reached ? CommonHelper::calculateRatio($reached, $target) * 100 : NULL,
-        'requirements' => $plan->getRequirements(),
+        'requirements' => (int) $plan->getRequirements(),
         'funding' => $plan->getTotalFunding(),
         'coverage' => $plan->getCoverage(),
         'footnotes' => $plan ? $this->getFootnotesForPlanBaseobject($plan) : NULL,
