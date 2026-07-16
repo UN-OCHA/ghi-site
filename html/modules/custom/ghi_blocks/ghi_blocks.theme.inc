@@ -226,8 +226,9 @@ function ghi_blocks_preprocess_ajax_switcher(&$variables) {
   $block_uuid = $variables['block_uuid'];
   $uri = $variables['uri'];
   $query = $variables['query'];
+  $ajax = $variables['ajax'];
   $default_value = $variables['default_value'];
-  $variables['ajax_switcher'] = \Drupal::formBuilder()->getForm('\Drupal\ghi_blocks\Form\AjaxSwitcherForm', $element_key, $plugin_id, $block_uuid, $options, $default_value, $uri, $query);
+  $variables['ajax_switcher'] = \Drupal::formBuilder()->getForm('\Drupal\ghi_blocks\Form\AjaxSwitcherForm', $element_key, $plugin_id, $block_uuid, $options, $default_value, $uri, $query, $ajax);
 }
 
 /**

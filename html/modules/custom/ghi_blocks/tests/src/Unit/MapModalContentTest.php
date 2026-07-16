@@ -76,4 +76,34 @@ class MapModalContentTest extends UnitTestCase {
     $this->assertSame([['object_id' => 10]], $map['json']['locations']);
   }
 
+  /**
+   * Tests extraction from compact object-filter variants.
+   */
+  public function testExtractFromObjectFilterVariants(): void {
+    $map = [
+      'json' => [
+        'locations' => [
+          ['object_id' => 10],
+        ],
+        'object_filter_variants' => [
+          '100' => [
+            'location_ids' => [10],
+            'modal_contents' => [
+              '10' => ['content' => '<p>Filtered modal</p>'],
+            ],
+          ],
+        ],
+      ],
+    ];
+
+    $entries = MapModalContent::extractFromMap($map);
+
+    $this->assertCount(1, $entries);
+    $this->assertSame(MapModalContent::DEFAULT_DATA_INDEX, $entries[0]['data_index']);
+    $this->assertSame('100', $entries[0]['variant_id']);
+    $this->assertSame(['10' => ['content' => '<p>Filtered modal</p>']], $entries[0]['modal_contents']);
+    $this->assertArrayNotHasKey('modal_contents', $map['json']['object_filter_variants']['100']);
+    $this->assertSame([10], $map['json']['object_filter_variants']['100']['location_ids']);
+  }
+
 }

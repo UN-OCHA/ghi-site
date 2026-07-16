@@ -113,10 +113,48 @@ final class MapModalContent {
     unset($dataset['modal_contents']);
 
     if (empty($dataset['variants']) || !is_array($dataset['variants'])) {
+      // Compact object-filter variants are not full map variants yet, but their
+      // modal content still needs to be moved behind the preview lazy endpoint.
+      self::extractFromObjectFilterVariants($dataset, $data_index, $entries);
       return;
     }
 
     foreach ($dataset['variants'] as $variant_id => &$variant) {
+      if (!is_array($variant)) {
+        continue;
+      }
+      if (isset($variant['modal_contents']) && is_array($variant['modal_contents'])) {
+        $entries[] = [
+          'data_index' => $data_index,
+          'variant_id' => (string) $variant_id,
+          'modal_contents' => $variant['modal_contents'],
+        ];
+      }
+      unset($variant['modal_contents']);
+    }
+    unset($variant);
+    // Some maps ship object filters separately from normal variants to avoid
+    // duplicating full location payloads. Strip their modal HTML as well so
+    // preview responses stay small regardless of variant shape.
+    self::extractFromObjectFilterVariants($dataset, $data_index, $entries);
+  }
+
+  /**
+   * Extract modal content from compact object-filter variants.
+   *
+   * @param array $dataset
+   *   The map data set.
+   * @param string $data_index
+   *   The map data index.
+   * @param array $entries
+   *   The extracted modal content entries.
+   */
+  private static function extractFromObjectFilterVariants(array &$dataset, string $data_index, array &$entries): void {
+    if (empty($dataset['object_filter_variants']) || !is_array($dataset['object_filter_variants'])) {
+      return;
+    }
+
+    foreach ($dataset['object_filter_variants'] as $variant_id => &$variant) {
       if (!is_array($variant)) {
         continue;
       }

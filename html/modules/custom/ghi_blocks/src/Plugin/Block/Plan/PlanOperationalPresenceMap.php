@@ -129,13 +129,11 @@ class PlanOperationalPresenceMap extends GHIBlockBase implements MultiStepFormBl
     $chart_id = Html::getUniqueId('plan-operational-presence-map');
     $chart_class = Html::getClass('plan-operational-presence-map');
     $selected_view = $this->getSelectedView();
-    $selected_object_id = $this->getSelectedObjectId($selected_view);
     $block_uuid = $this->getUuid();
     $data_url_query = array_filter([
       'current_uri' => $this->getCurrentUri(),
       'map_id' => $chart_id,
       'view' => $selected_view,
-      'object_id' => $selected_object_id,
     ], fn ($value) => $value !== NULL && $value !== '');
     $map_settings = [
       'id' => $chart_id,
@@ -183,7 +181,8 @@ class PlanOperationalPresenceMap extends GHIBlockBase implements MultiStepFormBl
    */
   public function buildLazyMapPayload(string $map_id): MapPayload {
     $conf = $this->getBlockConfig();
-    $map_data = $this->getMapData();
+    $selected_view = $this->getSelectedView();
+    $map_data = $this->getMapData($selected_view, NULL, TRUE);
     if (empty($map_data)) {
       return MapPayload::forEmptyMap(
         [
@@ -255,31 +254,46 @@ class PlanOperationalPresenceMap extends GHIBlockBase implements MultiStepFormBl
    * @return array
    *   The map data.
    */
-  private function getMapData() {
-    $map_data = [
-      'locations' => [],
-      'modal_contents' => [],
-    ];
-
-    $selected_view = $this->getSelectedView();
-    $objects_by_location = $this->getMapObjectsByLocation($selected_view);
+  private function getMapData(?string $selected_view = NULL, ?int $object_id = NULL, bool $include_object_filter_variants = FALSE) {
+    $selected_view = $selected_view ?? $this->getSelectedView();
+    // Always build the base map from all objects. The object switcher filters
+    // that data client-side, so the lazy map payload must have every location
+    // available before any object is selected.
+    $objects_by_location = $this->getMapObjectsByLocation($selected_view, $object_id, FALSE);
     if (empty($objects_by_location)) {
       return NULL;
     }
 
-    $plan_object = $this->getCurrentPlanObject();
-
-    $fts_link = NULL;
-    if ($selected_view == 'project' || $selected_view == 'organization') {
-      $data_page = $selected_view == 'project' ? 'projects' : 'recipients';
-      $link_title = $this->t('For more details, view on <img src="@logo_url" />', [
-        '@logo_url' => ThemeHelper::getUriToFtsIcon(),
-      ], [
-        'langcode' => $plan_object?->getPlanLanguage(),
-      ]);
-      $fts_link_build = self::buildFtsLink($link_title, $plan_object, $data_page, $this->getCurrentBaseObject());
-      $fts_link = ThemeHelper::render($fts_link_build, FALSE);
+    $fts_link = $this->getFtsLink($selected_view);
+    $map_data = $this->buildMapDataFromObjectsByLocation($objects_by_location, $selected_view, $fts_link);
+    if ($include_object_filter_variants && !empty($map_data)) {
+      $object_filter_variants = $this->buildObjectFilterVariants($objects_by_location, $selected_view, $fts_link);
+      if (!empty($object_filter_variants)) {
+        $map_data['object_filter_variants'] = $object_filter_variants;
+      }
     }
+
+    return $map_data;
+  }
+
+  /**
+   * Build map data from objects that have already been grouped by location.
+   *
+   * @param array $objects_by_location
+   *   Map objects grouped by location.
+   * @param string $selected_view
+   *   The active view identifier.
+   * @param string|null $fts_link
+   *   A rendered FTS link, if one should be shown in modal content.
+   *
+   * @return array|null
+   *   The map data.
+   */
+  private function buildMapDataFromObjectsByLocation(array $objects_by_location, string $selected_view, ?string $fts_link): ?array {
+    $map_data = [
+      'locations' => [],
+      'modal_contents' => [],
+    ];
 
     // Process the locations.
     foreach ($objects_by_location as $location_id => $location) {
@@ -298,6 +312,80 @@ class PlanOperationalPresenceMap extends GHIBlockBase implements MultiStepFormBl
       $map_data['locations'][] = clone $location_data;
     }
     return !empty($map_data['locations']) ? $map_data : NULL;
+  }
+
+  /**
+   * Build compact client-side object-filter variants for the current map data.
+   *
+   * The base map already carries the full location data. Variants therefore
+   * only need location ids and modal contents whose sidebar HTML has been
+   * rebuilt for the single selected object.
+   *
+   * @param array $objects_by_location
+   *   Map objects grouped by location.
+   * @param string $selected_view
+   *   The active view identifier.
+   * @param string|null $fts_link
+   *   A rendered FTS link, if one should be shown in modal content.
+   *
+   * @return array
+   *   Object filter variants keyed by selectable object id.
+   */
+  private function buildObjectFilterVariants(array $objects_by_location, string $selected_view, ?string $fts_link): array {
+    $locations_by_object = [];
+    foreach ($objects_by_location as $location_id => $location) {
+      foreach ($location->objects ?? [] as $object_id => $object) {
+        // Invert the location grouping so each switcher option can rebuild
+        // location modal content for only the selected object.
+        $locations_by_object[$object_id][$location_id] = (object) [
+          'location' => $location->location,
+          'objects' => [
+            $object_id => $object,
+          ],
+        ];
+      }
+    }
+
+    $variants = [];
+    foreach ($locations_by_object as $object_id => $locations) {
+      $variant_data = $this->buildMapDataFromObjectsByLocation($locations, $selected_view, $fts_link);
+      if (empty($variant_data)) {
+        continue;
+      }
+      // Keep variants compact: the client can rehydrate full location objects
+      // from the base map by these ids, while modal content must stay specific
+      // to the selected object.
+      $variants[(string) $object_id] = [
+        'location_ids' => array_map(fn ($location) => (int) $location->object_id, $variant_data['locations']),
+        'modal_contents' => $variant_data['modal_contents'],
+      ];
+    }
+    return $variants;
+  }
+
+  /**
+   * Build the FTS link shown in location modal content.
+   *
+   * @param string $selected_view
+   *   The active view identifier.
+   *
+   * @return string|null
+   *   A rendered FTS link, if applicable.
+   */
+  private function getFtsLink(string $selected_view): ?string {
+    if ($selected_view != 'project' && $selected_view != 'organization') {
+      return NULL;
+    }
+
+    $plan_object = $this->getCurrentPlanObject();
+    $data_page = $selected_view == 'project' ? 'projects' : 'recipients';
+    $link_title = $this->t('For more details, view on <img src="@logo_url" />', [
+      '@logo_url' => ThemeHelper::getUriToFtsIcon(),
+    ], [
+      'langcode' => $plan_object?->getPlanLanguage(),
+    ]);
+    $fts_link_build = self::buildFtsLink($link_title, $plan_object, $data_page, $this->getCurrentBaseObject());
+    return ThemeHelper::render($fts_link_build, FALSE);
   }
 
   /**
@@ -414,13 +502,16 @@ class PlanOperationalPresenceMap extends GHIBlockBase implements MultiStepFormBl
    *   The currently selected view.
    * @param int|null $object_id
    *   Optional: Restrict to the given object id.
+   * @param bool $use_selected_object
+   *   Whether to fall back to the selected request object when no explicit
+   *   object id is passed.
    *
    * @return array
    *   An array of map objects.
    */
-  private function getMapObjectsByLocation(?string $selected_view = NULL, ?int $object_id = NULL) {
+  private function getMapObjectsByLocation(?string $selected_view = NULL, ?int $object_id = NULL, bool $use_selected_object = TRUE) {
     $selected_view = $selected_view ?? $this->getSelectedView();
-    $object_id = $object_id ?? $this->getSelectedObjectId($selected_view);
+    $object_id = $object_id ?? ($use_selected_object ? $this->getSelectedObjectId($selected_view) : NULL);
     $objects = $this->getMapObjects($selected_view);
     $objects_by_location = [];
     foreach ($objects as $object) {
@@ -731,6 +822,7 @@ class PlanOperationalPresenceMap extends GHIBlockBase implements MultiStepFormBl
       '#plugin_id' => $this->getPluginId(),
       '#block_uuid' => $this->getUuid(),
       '#uri' => $this->getCurrentUri(),
+      '#ajax' => FALSE,
       '#query' => array_filter([
         'view' => $selected_view ?? NULL,
       ]),
