@@ -92,9 +92,9 @@
   will-change: transform;
 }
 .item-list--entity-logframe > .item-wrapper .entity-wrapper span.table-loading {
-  animation: ghi-logframe-loading 0.8s linear infinite;
   cursor: default;
   transition: none;
+  animation: ghi-logframe-loading 0.8s linear infinite;
 }
 .item-list--entity-logframe > .item-wrapper .entity-wrapper span.table-loading svg {
   transform-box: fill-box;
@@ -123,7 +123,7 @@
   }
 
   100% {
-    transform: rotate(1turn);
+    transform: rotate(360deg);
   }
 }
 

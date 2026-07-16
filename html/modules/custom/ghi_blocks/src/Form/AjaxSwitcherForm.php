@@ -24,7 +24,7 @@ class AjaxSwitcherForm extends FormBase {
   /**
    * {@inheritdoc}
    */
-  public function buildForm(array $form, FormStateInterface $form_state, $element_key = NULL, $plugin_id = NULL, $block_uuid = NULL, $options = NULL, $default_value = NULL, $uri = NULL, $query = []) {
+  public function buildForm(array $form, FormStateInterface $form_state, $element_key = NULL, $plugin_id = NULL, $block_uuid = NULL, $options = NULL, $default_value = NULL, $uri = NULL, $query = [], $ajax = TRUE) {
     $url = !empty($plugin_id) && !empty($block_uuid) ? Url::fromRoute('ghi_blocks.load_block', [
       'plugin_id' => $plugin_id,
       'block_uuid' => $block_uuid,
@@ -53,13 +53,15 @@ class AjaxSwitcherForm extends FormBase {
 
     $form['#gin_lb_form'] = FALSE;
     $form['#attached']['library'][] = 'common_design_subtheme/select2';
+    // Some switchers keep the same form markup but handle changes locally in
+    // JavaScript, so the Drupal Ajax handler must be opt-in per instance.
     $form[$element_key] = [
       '#type' => 'select',
       '#title' => NULL,
       '#gin_lb_form_element' => FALSE,
       '#options' => $options,
       '#default_value' => $default_value,
-      '#ajax' => $url ? [
+      '#ajax' => $ajax && $url ? [
         'wrapper' => Html::getId('block-' . $block_uuid),
         'event' => 'change',
         'progress' => 'throbber',

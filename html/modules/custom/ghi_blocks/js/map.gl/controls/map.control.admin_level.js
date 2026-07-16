@@ -141,6 +141,13 @@
      *   The active admin level.
      */
     updateControl = function (admin_level) {
+      let admin_level_options = this.state.getAdminLevelOptions().map((value) => parseInt(value, 10));
+      $(this._container).find('button[data-admin-level]').each(function () {
+        let button_level = parseInt(this.getAttribute('data-admin-level'), 10);
+        let is_available = admin_level_options.indexOf(button_level) !== -1;
+        $(this).toggleClass('disabled', !is_available);
+        this.setAttribute('tabindex', is_available ? 0 : -1);
+      });
       $(this._container).find('button[data-admin-level]').removeClass('active');
       $(this._container).find('button[data-admin-level=' + admin_level + ']').addClass('active');
     }

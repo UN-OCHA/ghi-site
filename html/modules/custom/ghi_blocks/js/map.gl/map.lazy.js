@@ -103,6 +103,9 @@
     }
     markInitialized(mapConfig);
     ghi.map.init(mapConfig.id, mapConfig.json, options);
+    // Let block-specific behaviors apply controls that depend on the map state,
+    // such as client-side object filters initialized from rendered form values.
+    $(element).trigger('ghi:map-ready', [mapConfig, window.ghi.map.getMapState(mapConfig.id)]);
   }
 
   /**

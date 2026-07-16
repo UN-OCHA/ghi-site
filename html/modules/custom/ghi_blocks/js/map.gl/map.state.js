@@ -467,16 +467,21 @@
      * @returns
      */
     setAdminLevel = function (admin_level = null) {
-      if (!admin_level) {
-        admin_level = Math.min(...this.getAdminLevelOptions());
+      let admin_level_options = this.getAdminLevelOptions();
+      let normalized_admin_level = parseInt(admin_level, 10);
+      if (admin_level === null || Number.isNaN(normalized_admin_level) || admin_level_options.indexOf(normalized_admin_level) === -1) {
+        // Pick the lowest admin level that has data for the current variant.
+        // Object filters can remove all locations for the previously active
+        // level, so stale control state must be normalized before repainting.
+        normalized_admin_level = admin_level_options.length ? Math.min.apply(Math, admin_level_options) : null;
       }
-      if (this.adminLevel == admin_level) {
+      if (this.adminLevel === normalized_admin_level) {
         return;
       }
-      this.adminLevel = admin_level;
+      this.adminLevel = normalized_admin_level;
       if (this.isReady() && this.canSelectAdminLevel()) {
         this.updateMap(this.animationDuration, true);
-        this.adminLevelControl.updateControl(admin_level);
+        this.adminLevelControl?.updateControl?.(normalized_admin_level);
         if (this.sidebar?.isVisible()) {
           this.sidebar.hide();
         }
@@ -500,12 +505,44 @@
      *   An array of sequential numbers for the admin level.
      */
     getAdminLevelOptions = function () {
-      let data = this.getData();
-      let locations = typeof data.locations != 'undefined' ? data.locations : [];
-      let locations_admin_level = locations.map(function (item) { return item.admin_level; });
+      // Read from getLocations() rather than raw data so object-filter variants
+      // only expose admin levels that still have visible locations.
+      let locations = this.getLocations(false);
+      let locations_admin_level = locations.map(function (item) {
+        return parseInt(item.admin_level, 10);
+      }).filter(function (admin_level) {
+        return !Number.isNaN(admin_level);
+      });
       // Create an array with unique values. Sort it, because the order of the
       // locations is not guaranteed to be in the order of their admin level.
-      return [...new Set(locations_admin_level)].sort();
+      return [...new Set(locations_admin_level)].sort(function (a, b) {
+        return a - b;
+      });
+    }
+
+    /**
+     * Refresh the current map after data availability has changed.
+     */
+    refreshAdminLevelForCurrentData = function () {
+      if (!this.canSelectAdminLevel()) {
+        this.updateMap(this.animationDuration);
+        return;
+      }
+
+      let admin_level_options = this.getAdminLevelOptions();
+      let current_admin_level = parseInt(this.getAdminLevel(), 10);
+      let next_admin_level = admin_level_options.indexOf(current_admin_level) !== -1 ? current_admin_level : null;
+      if (next_admin_level === null && admin_level_options.length) {
+        next_admin_level = Math.min.apply(Math, admin_level_options);
+      }
+
+      if (this.adminLevel !== next_admin_level) {
+        this.setAdminLevel(next_admin_level);
+        return;
+      }
+
+      this.updateMap(this.animationDuration);
+      this.adminLevelControl?.updateControl?.(next_admin_level);
     }
 
     /**
@@ -708,11 +745,17 @@
      * @param {Number} variant_id
      */
     setVariantId = function (index, variant_id) {
+      if (!variant_id) {
+        this.currentIndex = this.hasMapTabs() ? index : null;
+        this.variantId = null;
+        return true;
+      }
       if (!this.hasVariant(index, variant_id)) {
         return false;
       }
-      this.currentIndex = index;
+      this.currentIndex = this.hasMapTabs() ? index : null;
       this.variantId = variant_id;
+      return true;
     }
 
     /**
@@ -735,8 +778,71 @@
      *   TRUE if the current data has the given variant id, FALSE otherwise.
      */
     hasVariant = function (index, variant_id) {
-      let data = this.getDataForIndex(index);
+      let data = this.hasMapTabs() ? this.getDataForIndex(index) : this.getData();
       return data && data.hasOwnProperty('variants') && Object.keys(data.variants).length > 0 && data.variants.hasOwnProperty(variant_id);
+    }
+
+    /**
+     * Build a normal map variant from compact object-filter data.
+     *
+     * @param {String|Number} variant_id
+     *   The selected object id.
+     *
+     * @returns {Boolean}
+     *   TRUE if the variant exists or could be built.
+     */
+    ensureObjectFilterVariant = function (variant_id) {
+      if (!variant_id) {
+        return true;
+      }
+
+      let data = this.getData();
+      if (!data) {
+        return false;
+      }
+      data.variants = data.variants || {};
+      if (data.variants[variant_id]) {
+        return true;
+      }
+
+      let filter_variant = data.object_filter_variants?.[variant_id];
+      if (!filter_variant || !Array.isArray(filter_variant.location_ids)) {
+        return false;
+      }
+
+      // Compact variants only store ids and modal content. Reuse the base
+      // location objects so geometry paths, labels, and pcodes stay identical
+      // between the unfiltered and filtered map states.
+      let locations_by_id = {};
+      (data.locations || []).forEach(function (location) {
+        locations_by_id[String(location.object_id ?? location.location_id ?? location.id)] = location;
+      });
+      data.variants[variant_id] = {
+        locations: filter_variant.location_ids.map(function (location_id) {
+          let location = locations_by_id[String(location_id)] ?? null;
+          return location ? Object.assign({}, location, {object_count: 1}) : null;
+        }).filter(function (location) {
+          return location !== null;
+        }),
+        modal_contents: filter_variant.modal_contents || {},
+      };
+      return data.variants[variant_id].locations.length > 0;
+    }
+
+    /**
+     * Switch the active object-filter variant.
+     *
+     * @param {String|Number|null} variant_id
+     *   The selected object id.
+     *
+     * @returns {Boolean}
+     *   TRUE if the active variant could be set.
+     */
+    setObjectFilterVariant = function (variant_id) {
+      if (!this.ensureObjectFilterVariant(variant_id)) {
+        return false;
+      }
+      return this.setVariantId(null, variant_id || null);
     }
 
     /**

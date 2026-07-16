@@ -477,7 +477,13 @@
       let object_counts = state.getLocations().filter(function(d) {
         return d.admin_level == state.getAdminLevel();
       }).map(d => d.object_count);
+      if (!object_counts.length) {
+        return [0];
+      }
       let max_count = Math.max.apply(Math, object_counts);
+      if (!Number.isFinite(max_count) || max_count <= 0) {
+        return [0];
+      }
       let range_count = Math.min(5, max_count);
 
       // We have 4 steps between 0 and the max count.

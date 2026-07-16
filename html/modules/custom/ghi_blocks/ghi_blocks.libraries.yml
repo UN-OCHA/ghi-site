@@ -152,6 +152,8 @@ map.gl.operational_presence:
     js/map.gl/map.plan_operational_presence.js: {}
   dependencies:
     - ghi_blocks/map.gl.lazy
+    - core/jquery
+    - core/once
 
 modal:
   js:
