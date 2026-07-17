@@ -453,6 +453,52 @@ class EndpointQueryTest extends UnitTestCase {
   }
 
   /**
+   * Test that an invalid remote data cache hit falls back to HTTP.
+   */
+  public function testInvalidRemoteDataCacheHitFallsBackToHttpRequest(): void {
+    $invalid_payload = '{"status":"error","code":"TemporaryError","message":"No data"}';
+    $payload = file_get_contents(__DIR__ . '/Mocks/usage-year-location-id-1.json');
+    $item = $this->createRemoteDataCacheItem($invalid_payload, 1000, 1200, 1600);
+    $remote_cache = $this->mockRemoteDataCache($item);
+    $remote_cache->set('hpc_api_endpoint:test', $payload, Argument::type('array'))->shouldBeCalledOnce();
+
+    $client = $this->prophesize('GuzzleHttp\Client');
+    $client->get('https://api.hpc.tools/v1/fts/flow/usage-years/location/1', Argument::any())
+      ->willReturn(new Response(200, [], $payload))
+      ->shouldBeCalledOnce();
+
+    $query = $this->createRemoteDataEndpointQuery($client->reveal(), $remote_cache->reveal());
+    $query->setArguments([
+      'endpoint' => 'fts/flow/usage-years/location/1',
+    ]);
+
+    $this->assertEquals($this->getUsageYearApiMockResponse(), $query->getData());
+  }
+
+  /**
+   * Test that invalid HTTP 200 responses are not stored permanently.
+   */
+  public function testRemoteDataCacheMissDoesNotStoreInvalidResponseBody(): void {
+    $invalid_payload = '{"status":"error","code":"TemporaryError","message":"No data"}';
+    $remote_cache = $this->prophesize(RemoteDataCacheInterface::class);
+    $remote_cache->isEnabled()->willReturn(TRUE);
+    $remote_cache->buildCid('hpc_api_endpoint', Argument::type('string'))->willReturn('hpc_api_endpoint:test');
+    $remote_cache->get('hpc_api_endpoint:test')->willReturn(NULL);
+    $remote_cache->set('hpc_api_endpoint:test', $invalid_payload, Argument::type('array'))->shouldNotBeCalled();
+
+    $client = $this->prophesize('GuzzleHttp\Client');
+    $client->get('https://api.hpc.tools/v1/fts/flow/usage-years/location/1', Argument::any())
+      ->willReturn(new Response(200, [], $invalid_payload));
+
+    $query = $this->createRemoteDataEndpointQuery($client->reveal(), $remote_cache->reveal());
+    $query->setArguments([
+      'endpoint' => 'fts/flow/usage-years/location/1',
+    ]);
+
+    $this->assertFalse($query->getData());
+  }
+
+  /**
    * Test that persistent endpoint cache ids vary by resolved auth headers.
    */
   public function testRemoteDataCacheCidIncludesAuthHeaderFingerprint(): void {

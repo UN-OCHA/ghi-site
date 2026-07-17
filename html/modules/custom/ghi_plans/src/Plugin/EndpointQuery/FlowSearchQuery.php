@@ -48,20 +48,31 @@ class FlowSearchQuery extends EndpointQueryBase {
       'report' => 3,
     ];
     $cache_key = $this->getCacheKey(['type' => 'cluster_summary'] + $this->getPlaceholders() + $query_args);
-    if ($summary_data = $this->getCache($cache_key)) {
+    $runtime_cache = &drupal_static(__METHOD__, []);
+    if (array_key_exists($cache_key, $runtime_cache)) {
+      return $runtime_cache[$cache_key];
+    }
+    $summary_data = $this->getCache($cache_key);
+    if ($summary_data !== NULL) {
+      $runtime_cache[$cache_key] = $summary_data;
       return $summary_data;
     }
     $data = parent::getData($placeholders, $query_args);
-    if (empty($data)) {
-      $this->setCache($cache_key, []);
-      return [];
+    if ($data === FALSE || $data === NULL) {
+      $runtime_cache[$cache_key] = [];
+      return $runtime_cache[$cache_key];
     }
 
-    $clusters = $data->report3?->fundingTotals?->objects[0]?->objectsBreakdown ?? [];
-    $totals = $data->report3?->fundingTotals?->objects[0]?->totalBreakdown ?? NULL;
-    if (empty($clusters) || empty($totals)) {
-      $this->setCache($cache_key, []);
-      return [];
+    $funding_totals = $data->report3?->fundingTotals?->objects[0] ?? NULL;
+    if (!$funding_totals || !property_exists($funding_totals, 'objectsBreakdown') || !property_exists($funding_totals, 'totalBreakdown')) {
+      $runtime_cache[$cache_key] = [];
+      return $runtime_cache[$cache_key];
+    }
+    $clusters = $funding_totals->objectsBreakdown ?? [];
+    $totals = $funding_totals->totalBreakdown ?? NULL;
+    if (!is_array($clusters) || empty($totals)) {
+      $runtime_cache[$cache_key] = [];
+      return $runtime_cache[$cache_key];
     }
 
     $summary_data = (object) [
@@ -81,7 +92,8 @@ class FlowSearchQuery extends EndpointQueryBase {
       ],
     ];
     $this->setCache($cache_key, $summary_data);
-    return $summary_data;
+    $runtime_cache[$cache_key] = $summary_data;
+    return $runtime_cache[$cache_key];
   }
 
   /**
