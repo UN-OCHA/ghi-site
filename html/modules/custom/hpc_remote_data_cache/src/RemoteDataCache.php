@@ -24,6 +24,7 @@ class RemoteDataCache implements RemoteDataCacheInterface {
    */
   public function __construct(
     private readonly CacheBackendInterface $cacheBackend,
+    private readonly RemoteDataCacheIndexInterface $index,
     private readonly QueueFactory $queueFactory,
     private readonly LockBackendInterface $lock,
     private readonly TimeInterface $time,
@@ -196,6 +197,32 @@ class RemoteDataCache implements RemoteDataCacheInterface {
   }
 
   /**
+   * {@inheritdoc}
+   */
+  public function prune(?int $limit = NULL): int {
+    $limit = $limit ?? $this->getPositiveInt(NULL, 'prune_batch_size');
+    if ($limit <= 0) {
+      return 0;
+    }
+
+    $deleted = 0;
+    $expired_retention_ttl = $this->getPositiveInt(NULL, 'expired_retention_ttl');
+    $expired_cutoff = $this->time->getRequestTime() - $expired_retention_ttl;
+    $deleted += $this->deleteIndexedItems($this->index->getExpiredCids($expired_cutoff, $limit));
+
+    $remaining = $limit - $deleted;
+    $max_items = $this->getPositiveInt(NULL, 'max_items');
+    if ($remaining > 0 && $max_items > 0) {
+      $overflow = $this->index->count() - $max_items;
+      if ($overflow > 0) {
+        $deleted += $this->deleteIndexedItems($this->index->getOldestCids(min($overflow, $remaining)));
+      }
+    }
+
+    return $deleted;
+  }
+
+  /**
    * Mark a cache refresh as failed.
    *
    * @param \Drupal\hpc_remote_data_cache\RemoteDataCacheItem $item
@@ -246,6 +273,27 @@ class RemoteDataCache implements RemoteDataCacheInterface {
       'hpc_remote_data_cache:' . ($data['refresher_id'] ?? 'unknown'),
     ], (array) ($data['cache_tags'] ?? []));
     $this->cacheBackend->set($cid, $data, Cache::PERMANENT, $tags);
+    $this->index->upsert($cid, $data);
+  }
+
+  /**
+   * Delete indexed cache items from the payload cache and metadata index.
+   *
+   * @param string[] $cids
+   *   Cache ids to delete.
+   *
+   * @return int
+   *   The number of cache ids deleted.
+   */
+  private function deleteIndexedItems(array $cids): int {
+    $cids = array_values(array_unique(array_filter($cids)));
+    if ($cids === []) {
+      return 0;
+    }
+
+    $this->cacheBackend->deleteMultiple($cids);
+    $this->index->deleteMultiple($cids);
+    return count($cids);
   }
 
   /**

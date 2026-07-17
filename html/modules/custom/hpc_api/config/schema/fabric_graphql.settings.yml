@@ -32,3 +32,15 @@ fabric_graphql.settings:
       label: 'The client secret'
       constraints:
         NotNull: []
+    connect_timeout:
+      type: integer
+      label: 'The connect timeout for Fabric GraphQL requests'
+      constraints:
+        Range:
+          min: 1
+    timeout:
+      type: integer
+      label: 'The total timeout for Fabric GraphQL requests'
+      constraints:
+        Range:
+          min: 1

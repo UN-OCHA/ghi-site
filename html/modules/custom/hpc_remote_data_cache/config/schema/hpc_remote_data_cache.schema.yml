@@ -38,3 +38,21 @@ hpc_remote_data_cache.settings:
       constraints:
         Range:
           min: 0
+    expired_retention_ttl:
+      type: integer
+      label: 'Seconds to retain expired cache items for error fallback'
+      constraints:
+        Range:
+          min: 0
+    max_items:
+      type: integer
+      label: 'Maximum number of indexed cache items; 0 disables the item cap'
+      constraints:
+        Range:
+          min: 0
+    prune_batch_size:
+      type: integer
+      label: 'Maximum number of cache items to prune per cron run'
+      constraints:
+        Range:
+          min: 0
