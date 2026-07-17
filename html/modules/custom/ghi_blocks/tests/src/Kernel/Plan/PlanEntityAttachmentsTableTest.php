@@ -219,6 +219,7 @@ class PlanEntityAttachmentsTableTest extends PlanBlockKernelTestBase {
         'getTitle',
         'getDescription',
         'canHaveDisaggregatedData',
+        'getValueCacheTags',
       ])
       ->getMock();
     $attachment->method('id')->willReturn($attachment_id);
@@ -227,6 +228,7 @@ class PlanEntityAttachmentsTableTest extends PlanBlockKernelTestBase {
     $attachment->method('getTitle')->willReturn('Indicator 1');
     $attachment->method('getDescription')->willReturn('Indicator description');
     $attachment->method('canHaveDisaggregatedData')->willReturn(FALSE);
+    $attachment->method('getValueCacheTags')->willReturn(['attachment_id:' . $attachment_id]);
     return $attachment;
   }
 
