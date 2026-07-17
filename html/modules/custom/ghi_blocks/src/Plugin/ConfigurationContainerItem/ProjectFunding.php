@@ -9,6 +9,7 @@ use Drupal\ghi_blocks\Traits\ConfigurationItemClusterRestrictTrait;
 use Drupal\ghi_blocks\Traits\ConfigurationItemValuePreviewTrait;
 use Drupal\ghi_form_elements\Attribute\ConfigurationContainerItem;
 use Drupal\ghi_form_elements\ConfigurationContainerItemPluginBase;
+use Drupal\ghi_plans\ApiObjects\Organization;
 use Drupal\hpc_common\Traits\RenderArrayTrait;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -110,9 +111,12 @@ class ProjectFunding extends ConfigurationContainerItemPluginBase {
     $value = NULL;
     switch ($data_type) {
       case 'original_requirements':
-      case 'current_requirements':
       case 'total_funding':
         $value = $this->projectFundingQuery->getSumForOrganization($data_type, $organization, $projects);
+        break;
+
+      case 'current_requirements':
+        $value = $this->getCurrentRequirementsForOrganization($organization, $projects);
         break;
 
       case 'coverage':
@@ -124,6 +128,27 @@ class ProjectFunding extends ConfigurationContainerItemPluginBase {
         break;
     }
     return $value;
+  }
+
+  /**
+   * Get the current requirements for an organization from loaded projects.
+   *
+   * @param \Drupal\ghi_plans\ApiObjects\Organization $organization
+   *   The organization to retrieve requirements for.
+   * @param \Drupal\ghi_plans\ApiObjects\Project[] $projects
+   *   The projects available in the current table context.
+   *
+   * @return float
+   *   The sum of the organization's current project requirements.
+   */
+  private function getCurrentRequirementsForOrganization(Organization $organization, array $projects): float {
+    $requirements = 0.0;
+    foreach ($projects as $project) {
+      if ($project->hasOrganization($organization)) {
+        $requirements += $project->getRequirements();
+      }
+    }
+    return $requirements;
   }
 
   /**
