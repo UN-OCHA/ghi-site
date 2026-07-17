@@ -149,15 +149,16 @@ class PlanOverviewQuery extends FabricQueryBase {
     if ($this->plans === NULL) {
       $this->retrievePlans();
     }
+    $plans = $this->plans;
     if ($filter) {
       // Filter by visibility settings.
-      $this->filterPlansByVisibilityOnGlobalPages($this->plans);
+      $this->filterPlansByVisibilityOnGlobalPages($plans);
     }
 
-    uasort($this->plans, function (PlanOverviewPlan $a, PlanOverviewPlan $b) {
+    uasort($plans, function (PlanOverviewPlan $a, PlanOverviewPlan $b) {
       return strnatcmp($a->getName(), $b->getName());
     });
-    return $this->plans;
+    return $plans;
   }
 
   /**
@@ -169,7 +170,7 @@ class PlanOverviewQuery extends FabricQueryBase {
    * @return \Drupal\ghi_plans\ApiObjects\Partials\PlanOverviewPlan[]
    *   An array of GHO plans.
    */
-  public function getGhoPlans(bool $filter = FALSE): array {
+  public function getGhoPlans(bool $filter = TRUE): array {
     $plans = $this->getPlans($filter);
     if (empty($plans)) {
       return [];
@@ -181,10 +182,10 @@ class PlanOverviewQuery extends FabricQueryBase {
   }
 
   /**
-   * Get the total requirements for all plans.
+   * Get the total requirements for globally visible plans.
    *
    * @return float
-   *   The sum of requirements for all GHO plans.
+   *   The sum of requirements for globally visible GHO plans.
    */
   public function getTotalRequirements(): float {
     $plans = $this->getGhoPlans();
@@ -199,10 +200,10 @@ class PlanOverviewQuery extends FabricQueryBase {
   }
 
   /**
-   * Get the total funding for all plans.
+   * Get the total funding for globally visible plans.
    *
    * @return float
-   *   The sum of funding for all GHO plans.
+   *   The sum of funding for globally visible GHO plans.
    */
   public function getTotalFunding(): float {
     $plans = $this->getGhoPlans();
@@ -217,18 +218,15 @@ class PlanOverviewQuery extends FabricQueryBase {
   }
 
   /**
-   * Get the number of affected countries for the GHO plans.
+   * Get the number of affected countries for globally visible GHO plans.
    *
    * @return int
-   *   The number of unique countries of all GHO plans.
+   *   The number of unique countries of globally visible GHO plans.
    */
   public function getNumberOfGhoCountries(): int {
-    // Get the GHO plans, but make sure they are not filtered for visibility.
-    // The number of affected countries will appear only in the key figures
-    // element, where we want the number of countries for all GHO plans
-    // independently of whether specific plans are hidden from global pages or
-    // not.
-    $plans = $this->getGhoPlans(FALSE);
+    // Use the same visibility-filtered plan set as the global plan table so
+    // the headline figures stay in sync with the displayed rows.
+    $plans = $this->getGhoPlans();
     if (empty($plans)) {
       return 0;
     }
@@ -261,11 +259,9 @@ class PlanOverviewQuery extends FabricQueryBase {
    *   An array keyed by the type and valued by the total sum of that type
    */
   public function getCaseloadTotalValues(array $types): array {
-    // Get the GHO plans, but make sure they are not filtered for visibility.
-    // The caseload totals will appear only in the key figures element, where
-    // we want the full GHO figures independently of whether specific plans are
-    // hidden from global pages or not.
-    $plans = $this->getGhoPlans(FALSE);
+    // Use the same visibility-filtered plan set as the global plan table so
+    // headline totals are the sum of the displayed plan rows.
+    $plans = $this->getGhoPlans();
 
     // Setting up the array keyed by the types and values as 0.
     $caseload_totals = array_fill_keys(array_keys($types), 0);
