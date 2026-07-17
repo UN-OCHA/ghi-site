@@ -387,44 +387,52 @@ class EndpointQuery {
       }
     }
 
-    if ($response_data === NULL) {
-      // No cached data available, so we run the API request.
-      $response = $this->sendQuery();
-      if (empty($response) || !$response instanceof ResponseInterface) {
-        if ($use_remote_cache && $this->remoteDataCache->canServeExpiredOnError() && $this->canUseExpiredRemoteCacheItem($remote_cache_item)) {
-          return $this->processResponseData($remote_cache_item->getPayload(), $cache_key);
-        }
-        return FALSE;
+    if ($response_data !== NULL) {
+      $processed_data = $this->processResponseData($response_data, $cache_key);
+      if ($processed_data !== FALSE) {
+        return $processed_data;
       }
-      if ($response->getStatusCode() != 200) {
-        $this->handleError($response, $endpoint_url);
-        if ($use_remote_cache && $this->remoteDataCache->canServeExpiredOnError() && $this->canUseExpiredRemoteCacheItem($remote_cache_item)) {
-          return $this->processResponseData($remote_cache_item->getPayload(), $cache_key);
-        }
-        return FALSE;
-      }
-
-      // Store the result in the static cache variable.
-      if ($response->getStatusCode() == 200) {
-        // Only cache the response, if the call returned successfully.
-        $response_data = (string) $response->getBody();
-        if ($use_remote_cache) {
-          $this->remoteDataCache->set($remote_cache_cid, $response_data, [
-            'refresher_id' => 'hpc_api_endpoint',
-            'endpoint_url' => $endpoint_url,
-            'context' => [
-              'auth_method' => $this->getAuthMethod(),
-            ],
-            'cache_tags' => $this->getCacheTags(),
-            'fresh_ttl' => (int) $this->configService->get('cache_lifetime'),
-          ]);
-        }
-        else {
-          $this->cache($cache_key, $response_data, FALSE, NULL, $this->getCacheTags());
-        }
-      }
+      $this->cache($cache_key, NULL, TRUE);
+      $response_data = NULL;
     }
-    return $this->processResponseData($response_data, $cache_key);
+
+    // No valid cached data available, so we run the API request.
+    $response = $this->sendQuery();
+    if (empty($response) || !$response instanceof ResponseInterface) {
+      if ($use_remote_cache && $this->remoteDataCache->canServeExpiredOnError() && $this->canUseExpiredRemoteCacheItem($remote_cache_item)) {
+        return $this->processResponseData($remote_cache_item->getPayload(), $cache_key);
+      }
+      return FALSE;
+    }
+    if ($response->getStatusCode() != 200) {
+      $this->handleError($response, $endpoint_url);
+      if ($use_remote_cache && $this->remoteDataCache->canServeExpiredOnError() && $this->canUseExpiredRemoteCacheItem($remote_cache_item)) {
+        return $this->processResponseData($remote_cache_item->getPayload(), $cache_key);
+      }
+      return FALSE;
+    }
+
+    $response_data = (string) $response->getBody();
+    $processed_data = $this->processResponseData($response_data, $cache_key);
+    if ($processed_data === FALSE) {
+      return FALSE;
+    }
+
+    if ($use_remote_cache) {
+      $this->remoteDataCache->set($remote_cache_cid, $response_data, [
+        'refresher_id' => 'hpc_api_endpoint',
+        'endpoint_url' => $endpoint_url,
+        'context' => [
+          'auth_method' => $this->getAuthMethod(),
+        ],
+        'cache_tags' => $this->getCacheTags(),
+        'fresh_ttl' => (int) $this->configService->get('cache_lifetime'),
+      ]);
+    }
+    else {
+      $this->cache($cache_key, $response_data, FALSE, NULL, $this->getCacheTags());
+    }
+    return $processed_data;
   }
 
   /**
@@ -439,8 +447,9 @@ class EndpointQuery {
    *   The processed data or FALSE.
    */
   private function processResponseData(string $response, string $cache_key) {
-    if (empty($response)) {
-      return [];
+    if ($response === '') {
+      $this->cache($cache_key, NULL, TRUE);
+      return FALSE;
     }
 
     // Now handle the JSON response, extract the data.
@@ -464,7 +473,12 @@ class EndpointQuery {
       }
     }
 
-    if (!is_array($data) && !is_object($data) && (is_countable($data) && !count($data))) {
+    if ($data === NULL) {
+      $this->cache($cache_key, NULL, TRUE);
+      return FALSE;
+    }
+
+    if (is_countable($data) && !count($data)) {
       return [];
     }
 
@@ -614,14 +628,19 @@ class EndpointQuery {
         if ($use_remote_cache) {
           $remote_cache_item = $this->remoteDataCache->get($remote_cache_cid);
           if ($this->canUseRemoteCacheItem($remote_cache_item)) {
-            if ($remote_cache_item->isStale()) {
-              $this->remoteDataCache->queueRefresh($remote_cache_item);
+            if ($this->processResponseData($remote_cache_item->getPayload(), $cache_key) !== FALSE) {
+              if ($remote_cache_item->isStale()) {
+                $this->remoteDataCache->queueRefresh($remote_cache_item);
+              }
+              continue;
             }
-            continue;
           }
         }
-        elseif ($this->cache($cache_key, NULL, FALSE, $this->getCacheBaseTime())) {
-          continue;
+        else {
+          $response_data = $this->cache($cache_key, NULL, FALSE, $this->getCacheBaseTime());
+          if ($response_data !== NULL && $this->processResponseData($response_data, $cache_key) !== FALSE) {
+            continue;
+          }
         }
       }
       // No cached data available, so we run the API request.
@@ -640,27 +659,26 @@ class EndpointQuery {
             return FALSE;
           }
 
-          // Store the result in the static cache variable.
-          if ($response->getStatusCode() == 200) {
-            // Only cache the response, if the call returned successfully.
-            $response_data = (string) $response->getBody();
-            if ($use_remote_cache) {
-              $this->remoteDataCache->set($remote_cache_cid, $response_data, [
-                'refresher_id' => 'hpc_api_endpoint',
-                'endpoint_url' => $endpoint_url,
-                'context' => [
-                  'auth_method' => $this->getAuthMethod(),
-                ],
-                'cache_tags' => $this->getCacheTags(),
-                'fresh_ttl' => (int) $this->configService->get('cache_lifetime'),
-              ]);
-            }
-            else {
-              $this->cache($cache_key, $response_data, FALSE, NULL, $this->getCacheTags());
-            }
+          $response_data = (string) $response->getBody();
+          $processed_data = $this->processResponseData($response_data, $cache_key);
+          if ($processed_data === FALSE) {
+            return FALSE;
           }
 
-          $this->processResponseData($response_data, $cache_key);
+          if ($use_remote_cache) {
+            $this->remoteDataCache->set($remote_cache_cid, $response_data, [
+              'refresher_id' => 'hpc_api_endpoint',
+              'endpoint_url' => $endpoint_url,
+              'context' => [
+                'auth_method' => $this->getAuthMethod(),
+              ],
+              'cache_tags' => $this->getCacheTags(),
+              'fresh_ttl' => (int) $this->configService->get('cache_lifetime'),
+            ]);
+          }
+          else {
+            $this->cache($cache_key, $response_data, FALSE, NULL, $this->getCacheTags());
+          }
         },
       );
       $promises[] = $promise;
