@@ -2,6 +2,7 @@
 
 namespace Drupal\hpc_api\Query;
 
+use Drupal\Core\Cache\Cache;
 use Drupal\hpc_common\Helpers\ArrayHelper;
 
 /**
@@ -55,6 +56,13 @@ class FabricQuery implements \Stringable {
    * @var object|null
    */
   private ?object $aggregation = NULL;
+
+  /**
+   * Explicit cache tags for the query.
+   *
+   * @var string[]
+   */
+  private array $cacheTags = [];
 
   /**
    * The limit.
@@ -140,6 +148,30 @@ class FabricQuery implements \Stringable {
     $this->validateFilters($filters);
     $this->filters = $filters;
     return $this;
+  }
+
+  /**
+   * Set cache tags for this query.
+   *
+   * @param string[] $cache_tags
+   *   The cache tags.
+   *
+   * @return self
+   *   Returns the client instance for chaining.
+   */
+  public function setCacheTags(array $cache_tags): self {
+    $this->cacheTags = Cache::mergeTags($this->cacheTags, $cache_tags);
+    return $this;
+  }
+
+  /**
+   * Get cache tags for this query.
+   *
+   * @return string[]
+   *   The cache tags.
+   */
+  public function getCacheTags(): array {
+    return Cache::mergeTags($this->cacheTags, $this->getFilterCacheTags($this->filters));
   }
 
   /**
@@ -522,6 +554,132 @@ class FabricQuery implements \Stringable {
     $group_field_argument = is_array($group_field) ? '[' . implode(', ', $group_fields) . ']' : reset($group_fields);
     $field_selection = is_array($group_field) ? ' fields { ' . implode(' ', $group_fields) . ' }' : '';
     return 'groupBy(fields: ' . $group_field_argument . ') {' . $field_selection . ' aggregations { ' . implode(' ', $aggregation_strings) . ' } }';
+  }
+
+  /**
+   * Build cache tags from filters that identify common remote data entities.
+   *
+   * @param array $filters
+   *   The query filters.
+   *
+   * @return string[]
+   *   The cache tags.
+   */
+  private function getFilterCacheTags(array $filters): array {
+    $cache_tags = [];
+    foreach ($filters as $key => $value) {
+      if (is_string($key)) {
+        $prefixes = $key === 'EntityId' ? $this->getEntityIdCacheTagPrefixes($filters) : array_filter([$this->getFilterCacheTagPrefix($key)]);
+        foreach ($prefixes as $prefix) {
+          foreach ($this->getNumericFilterValues($value) as $id) {
+            $cache_tags = Cache::mergeTags($cache_tags, [$prefix . ':' . $id]);
+          }
+        }
+      }
+      if (is_array($value)) {
+        $cache_tags = Cache::mergeTags($cache_tags, $this->getFilterCacheTags($value));
+      }
+    }
+    return $cache_tags;
+  }
+
+  /**
+   * Get cache tag prefixes for an entity id filter.
+   *
+   * @param array $filters
+   *   The query filters containing the entity id.
+   *
+   * @return string[]
+   *   The cache tag prefixes.
+   */
+  private function getEntityIdCacheTagPrefixes(array $filters): array {
+    $prefixes = ['entity_id'];
+    $entity_main_types = $this->getScalarFilterValues($filters['EntityMainType'] ?? NULL);
+    foreach ($entity_main_types as $entity_main_type) {
+      $prefix = match ($entity_main_type) {
+        'Plan' => 'plan_id',
+        'LogframeEntity' => 'plan_entity_id',
+        'CoordinationEntity' => 'governing_entity_id',
+        default => NULL,
+      };
+      if ($prefix) {
+        $prefixes[] = $prefix;
+      }
+    }
+    return array_values(array_unique($prefixes));
+  }
+
+  /**
+   * Get a cache tag prefix for a filter key.
+   *
+   * @param string $filter_key
+   *   The filter key.
+   *
+   * @return string|null
+   *   The cache tag prefix, if one is known.
+   */
+  private function getFilterCacheTagPrefix(string $filter_key): ?string {
+    return match ($filter_key) {
+      'PlanId' => 'plan_id',
+      'AttachmentId' => 'attachment_id',
+      'MeasurementId' => 'measurement_id',
+      'Id' => $this->getPrimaryIdCacheTagPrefix(),
+      default => NULL,
+    };
+  }
+
+  /**
+   * Get the cache tag prefix for primary id filters on this query namespace.
+   *
+   * @return string|null
+   *   The cache tag prefix, if one is known.
+   */
+  private function getPrimaryIdCacheTagPrefix(): ?string {
+    return match ($this->queryName) {
+      'attachments' => 'attachment_id',
+      'measurements' => 'measurement_id',
+      'plans' => 'plan_id',
+      'logframeEntities' => 'entity_id',
+      'coordinationEntities' => 'governing_entity_id',
+      default => NULL,
+    };
+  }
+
+  /**
+   * Extract positive numeric ids from a filter value.
+   *
+   * @param mixed $value
+   *   The filter value.
+   *
+   * @return int[]
+   *   The numeric ids.
+   */
+  private function getNumericFilterValues(mixed $value): array {
+    $values = array_filter($this->getScalarFilterValues($value), fn ($item) => is_numeric($item) && (int) $item > 0);
+    return array_values(array_unique(array_map('intval', $values)));
+  }
+
+  /**
+   * Extract scalar values from a possibly nested filter value.
+   *
+   * @param mixed $value
+   *   The filter value.
+   *
+   * @return array
+   *   The scalar values.
+   */
+  private function getScalarFilterValues(mixed $value): array {
+    if (is_scalar($value)) {
+      return [$value];
+    }
+    if (!is_array($value)) {
+      return [];
+    }
+    $values = [];
+    foreach ($value as $item) {
+      $values = array_merge($values, $this->getScalarFilterValues($item));
+    }
+    return $values;
   }
 
   /**

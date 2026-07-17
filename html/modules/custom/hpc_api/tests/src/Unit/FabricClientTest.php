@@ -102,6 +102,37 @@ class FabricClientTest extends UnitTestCase {
   }
 
   /**
+   * Test that Fabric query filter tags are written to the remote data cache.
+   */
+  public function testRemoteDataCacheStoresDerivedQueryTags(): void {
+    $http_client = new class() extends Client {
+
+      /**
+       * {@inheritdoc}
+       */
+      public function post($uri, array $options = []): ResponseInterface {
+        return new Response(200, [], '{"data":{"attachments":{"items":[{"Id":52188}]}}}');
+      }
+
+    };
+
+    $remote_cache = $this->prophesize(RemoteDataCacheInterface::class);
+    $remote_cache->isEnabled()->willReturn(TRUE);
+    $remote_cache->buildCid('fabric_graphql', Argument::type('string'))->willReturn('fabric_graphql:test');
+    $remote_cache->get('fabric_graphql:test')->willReturn(NULL);
+    $remote_cache->set('fabric_graphql:test', Argument::type('object'), Argument::that(function (array $metadata) {
+      return in_array('attachment_id:52188', $metadata['cache_tags'] ?? [], TRUE)
+        && in_array('plan_id:1263', $metadata['cache_tags'] ?? [], TRUE);
+    }))->shouldBeCalledOnce();
+
+    $client = $this->createFabricClientWithAccessToken($http_client, $remote_cache->reveal());
+    $client->query($client->createQuery('attachments', ['Id'], [
+      'Id' => 52188,
+      'PlanId' => 1263,
+    ]));
+  }
+
+  /**
    * Create a Fabric client under test.
    *
    * @param \GuzzleHttp\ClientInterface $http_client
@@ -137,11 +168,13 @@ class FabricClientTest extends UnitTestCase {
    *
    * @param \GuzzleHttp\ClientInterface $http_client
    *   The HTTP client.
+   * @param \Drupal\hpc_remote_data_cache\RemoteDataCacheInterface|null $remote_cache
+   *   The remote data cache.
    *
    * @return \Drupal\hpc_api\Query\FabricClient
    *   The Fabric client.
    */
-  private function createFabricClientWithAccessToken(ClientInterface $http_client): FabricClient {
+  private function createFabricClientWithAccessToken(ClientInterface $http_client, ?RemoteDataCacheInterface $remote_cache = NULL): FabricClient {
     $config_factory = $this->getConfigFactoryStub([
       'fabric_graphql.settings' => [
         'workspace_id' => 'workspace',
@@ -157,6 +190,7 @@ class FabricClientTest extends UnitTestCase {
       $this->prophesize(LoggerChannelFactoryInterface::class)->reveal(),
       $this->prophesize(KillSwitch::class)->reveal(),
       $http_client,
+      $remote_cache,
     ) extends FabricClient {
 
       /**

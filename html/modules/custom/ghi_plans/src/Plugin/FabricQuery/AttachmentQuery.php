@@ -2,6 +2,7 @@
 
 namespace Drupal\ghi_plans\Plugin\FabricQuery;
 
+use Drupal\Core\Cache\Cache;
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\ghi_plans\ApiObjects\Attachments\Attachment;
@@ -387,9 +388,13 @@ class AttachmentQuery extends FabricQueryBase {
         ->setAggregation(['AttachmentId'], ['count' => 'Id']),
       ['attachmentFacts', 'measurementFacts'],
     );
+    $cache_tags = [];
+    foreach ($queries as $query) {
+      $cache_tags = Cache::mergeTags($cache_tags, $query->getCacheTags());
+    }
     // executeMultiple() flattens aggregations; this caller needs grouped field
     // values from both namespaces to map counts back to attachment ids.
-    return $this->fabricClient->query(implode(' ', array_map(fn(FabricDataQuery $query) => $query->toString(), $queries)));
+    return $this->fabricClient->query(implode(' ', array_map(fn(FabricDataQuery $query) => $query->toString(), $queries)), cache_tags: $cache_tags);
   }
 
   /**

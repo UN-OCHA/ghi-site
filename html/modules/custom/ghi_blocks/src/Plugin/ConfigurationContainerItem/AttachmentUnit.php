@@ -43,4 +43,12 @@ class AttachmentUnit extends ConfigurationContainerItemPluginBase {
     return $attachment->getUnitLabel($langcode);
   }
 
+  /**
+   * {@inheritdoc}
+   */
+  public function getCacheTags() {
+    $attachment = $this->getContextValue('attachment');
+    return $attachment instanceof Attachment ? $attachment->getValueCacheTags() : [];
+  }
+
 }

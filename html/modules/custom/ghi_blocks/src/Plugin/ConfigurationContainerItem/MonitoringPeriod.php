@@ -3,6 +3,7 @@
 namespace Drupal\ghi_blocks\Plugin\ConfigurationContainerItem;
 
 use Drupal\Component\Utility\Html;
+use Drupal\Core\Cache\Cache;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\ghi_form_elements\Attribute\ConfigurationContainerItem;
@@ -62,7 +63,16 @@ class MonitoringPeriod extends ConfigurationContainerItemPluginBase {
     if (!$attachment) {
       return NULL;
     }
-    return $attachment->formatMonitoringPeriod($this->get('display_type'));
+    $build = $attachment->formatMonitoringPeriod($this->get('display_type'));
+    $build['#cache']['tags'] = Cache::mergeTags($build['#cache']['tags'] ?? [], $attachment->getValueCacheTags());
+    return $build;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getCacheTags() {
+    return $this->getAttachmentObject()?->getValueCacheTags() ?? [];
   }
 
   /**

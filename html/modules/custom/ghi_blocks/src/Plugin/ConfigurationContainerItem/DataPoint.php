@@ -4,6 +4,7 @@ namespace Drupal\ghi_blocks\Plugin\ConfigurationContainerItem;
 
 use Drupal\Component\Serialization\Json;
 use Drupal\Component\Utility\Html;
+use Drupal\Core\Cache\Cache;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Link;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
@@ -119,6 +120,7 @@ class DataPoint extends ConfigurationContainerItemPluginBase {
     }
     $config = $this->getPluginConfiguration();
     $build = $attachment->formatValue($conf);
+    $build['#cache']['tags'] = Cache::mergeTags($build['#cache']['tags'] ?? [], $attachment->getValueCacheTags());
     $metric_type = $conf['data_points'][0]['metric_type'] ?? NULL;
     if (is_string($metric_type) && !empty($config['disaggregation_modal']) && $this->canShowDisaggregatedData($attachment, $conf)) {
       $link_url = Url::fromRoute('ghi_plans.modal_content.dissaggregation', [
@@ -170,6 +172,13 @@ class DataPoint extends ConfigurationContainerItemPluginBase {
       $cell['export_commentary'] = $tooltip['monitoring_period']['#tooltip'] ?? NULL;
     }
     return $cell;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getCacheTags() {
+    return $this->getAttachmentObject()?->getValueCacheTags() ?? [];
   }
 
   /**

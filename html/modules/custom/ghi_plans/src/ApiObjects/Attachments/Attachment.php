@@ -1251,7 +1251,7 @@ class Attachment extends ApiObjectBase implements AttachmentInterface, Disaggreg
    * @return string[]
    *   The cache tags for this attachment value.
    */
-  protected function getValueCacheTags(): array {
+  public function getValueCacheTags(): array {
     $cache_tags = Cache::mergeTags($this->getCacheTags(), [
       'attachment_id:' . $this->id(),
     ]);

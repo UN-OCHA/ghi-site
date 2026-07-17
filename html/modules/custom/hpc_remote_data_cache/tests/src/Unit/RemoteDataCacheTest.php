@@ -5,6 +5,7 @@ namespace Drupal\Tests\hpc_remote_data_cache\Unit;
 use Drupal\Component\Datetime\TimeInterface;
 use Drupal\Core\Cache\Cache;
 use Drupal\Core\Cache\CacheBackendInterface;
+use Drupal\Core\Cache\CacheTagsInvalidatorInterface;
 use Drupal\Core\Lock\LockBackendInterface;
 use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 use Drupal\Core\Queue\QueueFactory;
@@ -153,7 +154,10 @@ class RemoteDataCacheTest extends UnitTestCase {
     $refresher_manager = $this->prophesize(RemoteDataCacheRefresherManager::class);
     $refresher_manager->createInstance('fabric_graphql')->willReturn($refresher->reveal());
 
-    $cache = $this->createRemoteDataCache($cache_backend->reveal(), 2000, NULL, $lock->reveal(), $refresher_manager->reveal(), $index->reveal());
+    $cache_tags_invalidator = $this->prophesize(CacheTagsInvalidatorInterface::class);
+    $cache_tags_invalidator->invalidateTags(['remote:article:1'])->shouldBeCalledOnce();
+
+    $cache = $this->createRemoteDataCache($cache_backend->reveal(), 2000, NULL, $lock->reveal(), $refresher_manager->reveal(), $index->reveal(), $cache_tags_invalidator->reveal());
     $this->assertTrue($cache->refresh('fabric:test'));
   }
 
@@ -215,13 +219,15 @@ class RemoteDataCacheTest extends UnitTestCase {
    *   The refresher plugin manager.
    * @param \Drupal\hpc_remote_data_cache\RemoteDataCacheIndexInterface|null $index
    *   The cache metadata index.
+   * @param \Drupal\Core\Cache\CacheTagsInvalidatorInterface|null $cache_tags_invalidator
+   *   The cache tags invalidator.
    * @param array $settings
    *   Settings overrides.
    *
    * @return \Drupal\hpc_remote_data_cache\RemoteDataCache
    *   The remote data cache service.
    */
-  private function createRemoteDataCache(CacheBackendInterface $cache_backend, int $request_time, ?QueueFactory $queue_factory = NULL, ?LockBackendInterface $lock = NULL, ?RemoteDataCacheRefresherManager $refresher_manager = NULL, ?RemoteDataCacheIndexInterface $index = NULL, array $settings = []): RemoteDataCache {
+  private function createRemoteDataCache(CacheBackendInterface $cache_backend, int $request_time, ?QueueFactory $queue_factory = NULL, ?LockBackendInterface $lock = NULL, ?RemoteDataCacheRefresherManager $refresher_manager = NULL, ?RemoteDataCacheIndexInterface $index = NULL, ?CacheTagsInvalidatorInterface $cache_tags_invalidator = NULL, array $settings = []): RemoteDataCache {
     $time = $this->prophesize(TimeInterface::class);
     $time->getRequestTime()->willReturn($request_time);
     $settings += [
@@ -248,6 +254,7 @@ class RemoteDataCacheTest extends UnitTestCase {
       ]),
       $this->prophesize(LoggerChannelFactoryInterface::class)->reveal(),
       $refresher_manager ?? $this->prophesize(RemoteDataCacheRefresherManager::class)->reveal(),
+      $cache_tags_invalidator ?? $this->prophesize(CacheTagsInvalidatorInterface::class)->reveal(),
     );
   }
 

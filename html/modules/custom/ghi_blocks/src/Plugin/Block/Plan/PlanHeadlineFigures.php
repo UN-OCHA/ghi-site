@@ -3,6 +3,7 @@
 namespace Drupal\ghi_blocks\Plugin\Block\Plan;
 
 use Drupal\Core\Block\Attribute\Block;
+use Drupal\Core\Cache\Cache;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Plugin\Context\EntityContextDefinition;
@@ -95,6 +96,7 @@ class PlanHeadlineFigures extends GHIBlockBase implements MultiStepFormBlockInte
       return NULL;
     }
 
+    $cache_tags = [];
     $tabs = [];
     foreach ($tree as $group) {
       $rendered = [];
@@ -117,6 +119,7 @@ class PlanHeadlineFigures extends GHIBlockBase implements MultiStepFormBlockInte
         if (!$item_type->isValid()) {
           continue;
         }
+        $cache_tags = Cache::mergeTags($cache_tags, $item_type->getCacheTags());
 
         $rendered[] = [
           '#type' => 'item',
@@ -160,7 +163,11 @@ class PlanHeadlineFigures extends GHIBlockBase implements MultiStepFormBlockInte
       return;
     }
 
-    $build = [];
+    $build = [
+      '#cache' => [
+        'tags' => $cache_tags,
+      ],
+    ];
     $build[] = [
       '#theme' => 'tab_container',
       '#tabs' => $tabs,

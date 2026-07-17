@@ -3,6 +3,7 @@
 namespace Drupal\ghi_blocks\Plugin\ConfigurationContainerItem;
 
 use Drupal\Component\Utility\SortArray;
+use Drupal\Core\Cache\Cache;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\ghi_blocks\Interfaces\AttachmentTableInterface;
@@ -79,8 +80,10 @@ class AttachmentTable extends ConfigurationContainerItemPluginBase implements Co
     $this->prefetchDisaggregatedDataAvailability($attachments, $columns);
 
     $rows = [];
+    $cache_tags = [];
     $context = $this->getBlockContext();
     foreach ($attachments as $attachment) {
+      $cache_tags = Cache::mergeTags($cache_tags, $attachment->getValueCacheTags());
       $context['attachment'] = $attachment;
       $row = [];
       $skip_row = FALSE;
@@ -88,6 +91,7 @@ class AttachmentTable extends ConfigurationContainerItemPluginBase implements Co
 
         /** @var \Drupal\ghi_form_elements\ConfigurationContainerItemPluginInterface $item_type */
         $item_type = $this->getItemTypePluginForColumn($column, $context);
+        $cache_tags = Cache::mergeTags($cache_tags, $item_type->getCacheTags());
 
         // Then add the value to the row.
         $cell = $item_type->getTableCell();
@@ -119,7 +123,24 @@ class AttachmentTable extends ConfigurationContainerItemPluginBase implements Co
       '#empty' => $this->t('No data found for this table.'),
       '#prototype_id' => $prototype_id,
       '#download_label' => $this->getDownloadLabel() ?? $prototype->getTypeLabel(),
+      '#cache' => [
+        'tags' => $cache_tags,
+      ],
     ];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getCacheTags() {
+    $cache_tags = [];
+    $attachments = $this->getContextValue('attachments') ?? [];
+    foreach ($attachments as $attachment) {
+      if ($attachment instanceof Attachment) {
+        $cache_tags = Cache::mergeTags($cache_tags, $attachment->getValueCacheTags());
+      }
+    }
+    return $cache_tags;
   }
 
   /**
