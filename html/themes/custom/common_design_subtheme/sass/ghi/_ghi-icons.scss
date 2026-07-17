@@ -28,12 +28,17 @@ tbody td {
     width: 2rem;
     height: 1rem;
 
-    svg {
+    svg,
+    .cluster-icon__image {
       position: relative;
       top: 10%;
       left: 0;
       width: 1.2rem;
       height: 1.2rem;
+    }
+
+    .cluster-icon__image {
+      object-fit: contain;
     }
   }
 }

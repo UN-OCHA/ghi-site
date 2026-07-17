@@ -142,17 +142,32 @@ class OrganizationClusterList extends ConfigurationContainerItemPluginBase {
       ];
     }
     if ($display_icons) {
-      $content = array_map(function ($cluster) {
-        return [
-          0 => [
-            '#theme' => 'hpc_tooltip',
-            '#tooltip' => $cluster->getName(),
-            '#tag_content' => [
-              '#markup' => Markup::create($this->iconQuery->getIconEmbedCode($cluster->getIcon())),
+      $content = [];
+      foreach ($clusters as $cluster) {
+        $icon_uri = $this->iconQuery->getMonochromeIconUri($cluster->getIcon());
+        if (!$icon_uri) {
+          continue;
+        }
+        $content[] = [
+          '#theme' => 'hpc_tooltip',
+          '#tooltip' => $cluster->getName(),
+          '#tag_content' => [
+            '#type' => 'html_tag',
+            '#tag' => 'span',
+            '#attributes' => [
+              'class' => ['cluster-icon', 'icon'],
+            ],
+            'icon' => [
+              '#theme' => 'image',
+              '#uri' => $icon_uri,
+              '#alt' => '',
+              '#attributes' => [
+                'class' => ['cluster-icon__image'],
+              ],
             ],
           ],
         ];
-      }, $clusters);
+      }
     }
     return [
       '#type' => 'container',
