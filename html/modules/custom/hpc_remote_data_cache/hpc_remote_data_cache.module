@@ -1,0 +1,13 @@
+<?php
+
+/**
+ * @file
+ * Module hooks for hpc_remote_data_cache.
+ */
+
+/**
+ * Implements hook_cron().
+ */
+function hpc_remote_data_cache_cron(): void {
+  \Drupal::service('hpc_remote_data_cache.cache')->prune();
+}

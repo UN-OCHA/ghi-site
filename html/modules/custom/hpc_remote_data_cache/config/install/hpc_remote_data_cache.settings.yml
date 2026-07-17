@@ -5,3 +5,6 @@ refresh_lock_ttl: 300
 refresh_retry_base: 300
 serve_expired_on_error: true
 max_payload_size: 0
+expired_retention_ttl: 604800
+max_items: 10000
+prune_batch_size: 500

@@ -6,12 +6,17 @@ services:
     class: Drupal\hpc_remote_data_cache\RemoteDataCache
     arguments:
       - '@cache.hpc_remote_data_cache'
+      - '@hpc_remote_data_cache.index'
       - '@queue'
       - '@lock'
       - '@datetime.time'
       - '@config.factory'
       - '@logger.factory'
       - '@plugin.manager.remote_data_cache_refresher'
+  hpc_remote_data_cache.index:
+    class: Drupal\hpc_remote_data_cache\RemoteDataCacheDatabaseIndex
+    arguments:
+      - '@database'
   cache.hpc_remote_data_cache:
     class: Drupal\Core\Cache\CacheBackendInterface
     tags:

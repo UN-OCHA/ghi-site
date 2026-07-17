@@ -34,6 +34,9 @@ class FabricClient {
 
   const LOG_ID = 'FABRIC API';
 
+  private const DEFAULT_CONNECT_TIMEOUT = 2;
+  private const DEFAULT_TIMEOUT = 8;
+
   /**
    * The config factory service.
    *
@@ -551,6 +554,7 @@ class FabricClient {
    *   The request arguments.
    */
   private function buildPostArgs(string $body, string $access_token): array {
+    $config = $this->configFactory->get('fabric_graphql.settings');
     return [
       'body' => $body,
       'headers' => [
@@ -558,7 +562,24 @@ class FabricClient {
         'Content-Type' => 'application/json',
         'Accept' => 'application/json',
       ],
+      'connect_timeout' => $this->getPositiveConfigValue($config->get('connect_timeout'), self::DEFAULT_CONNECT_TIMEOUT),
+      'timeout' => $this->getPositiveConfigValue($config->get('timeout'), self::DEFAULT_TIMEOUT),
     ];
+  }
+
+  /**
+   * Get a positive numeric config value.
+   *
+   * @param mixed $value
+   *   The configured value.
+   * @param int|float $default
+   *   The default value.
+   *
+   * @return int|float
+   *   The config value or default.
+   */
+  private function getPositiveConfigValue(mixed $value, int|float $default): int|float {
+    return is_numeric($value) && $value > 0 ? $value + 0 : $default;
   }
 
   /**

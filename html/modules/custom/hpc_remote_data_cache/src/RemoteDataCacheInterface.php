@@ -81,4 +81,15 @@ interface RemoteDataCacheInterface {
    */
   public function refresh(string $cid): bool;
 
+  /**
+   * Prune indexed cache items that are outside retention limits.
+   *
+   * @param int|null $limit
+   *   Optional maximum number of cache items to prune.
+   *
+   * @return int
+   *   The number of cache items pruned.
+   */
+  public function prune(?int $limit = NULL): int;
+
 }

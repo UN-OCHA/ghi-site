@@ -73,11 +73,31 @@ class ConfigForm extends ConfigFormBase {
       '#required' => TRUE,
     ];
 
+    $form['connect_timeout'] = [
+      '#type' => 'number',
+      '#title' => $this->t('Connect timeout'),
+      '#description' => $this->t('The maximum time in seconds for opening connections to the HPC API.'),
+      '#default_value' => $config->get('connect_timeout'),
+      '#min' => 1,
+      '#step' => 1,
+      '#required' => TRUE,
+    ];
+
     $form['timeout'] = [
       '#type' => 'number',
-      '#title' => $this->t('Timeout'),
-      '#description' => $this->t('The global timeout in seconds for requests to the HPC API.'),
+      '#title' => $this->t('Total timeout'),
+      '#description' => $this->t('The maximum total time in seconds for requests to the HPC API.'),
       '#default_value' => $config->get('timeout'),
+      '#min' => 1,
+      '#step' => 1,
+      '#required' => TRUE,
+    ];
+
+    $form['flow_custom_search_timeout'] = [
+      '#type' => 'number',
+      '#title' => $this->t('Custom search timeout'),
+      '#description' => $this->t('The maximum total time in seconds for legacy custom search requests to the HPC API.'),
+      '#default_value' => $config->get('flow_custom_search_timeout'),
       '#min' => 1,
       '#step' => 1,
       '#required' => TRUE,
@@ -123,7 +143,9 @@ class ConfigForm extends ConfigFormBase {
     $config->set('auth_password', $form_state->getValue('auth_password'));
     $config->set('api_key', $form_state->getValue('api_key'));
     $config->set('public_base_path', $form_state->getValue('public_base_path'));
+    $config->set('connect_timeout', $form_state->getValue('connect_timeout'));
     $config->set('timeout', $form_state->getValue('timeout'));
+    $config->set('flow_custom_search_timeout', $form_state->getValue('flow_custom_search_timeout'));
     $config->set('cache_lifetime', $form_state->getValue('cache_lifetime'));
     $config->set('use_gzip_compression', $form_state->getValue('use_gzip_compression'));
     $config->set('log_api_errors', $form_state->getValue('log_api_errors'));

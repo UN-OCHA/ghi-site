@@ -11,6 +11,7 @@ use Drupal\Core\Queue\QueueFactory;
 use Drupal\Core\Queue\QueueInterface;
 use Drupal\Tests\UnitTestCase;
 use Drupal\hpc_remote_data_cache\RemoteDataCache;
+use Drupal\hpc_remote_data_cache\RemoteDataCacheIndexInterface;
 use Drupal\hpc_remote_data_cache\RemoteDataCacheItem;
 use Drupal\hpc_remote_data_cache\RemoteDataCacheRefresherManager;
 use Drupal\hpc_remote_data_cache\RemoteDataCacheRefresherInterface;
@@ -42,8 +43,14 @@ class RemoteDataCacheTest extends UnitTestCase {
         && $data['cache_tags'] === ['remote:article:1']
         && $data['refresher_id'] === 'fabric_graphql';
     }), Cache::PERMANENT, Argument::that(fn (array $tags) => in_array('remote:article:1', $tags, TRUE)))->shouldBeCalledOnce();
+    $index = $this->prophesize(RemoteDataCacheIndexInterface::class);
+    $index->upsert('fabric:test', Argument::that(function (array $data) use ($payload) {
+      return $data['payload'] === $payload
+        && $data['fresh_until'] === 1060
+        && $data['stale_until'] === 1180;
+    }))->shouldBeCalledOnce();
 
-    $cache = $this->createRemoteDataCache($cache_backend->reveal(), 1000);
+    $cache = $this->createRemoteDataCache($cache_backend->reveal(), 1000, index: $index->reveal());
     $cache->set('fabric:test', $payload, [
       'refresher_id' => 'fabric_graphql',
       'endpoint_url' => 'https://fabric.example.test/graphql',
@@ -85,6 +92,10 @@ class RemoteDataCacheTest extends UnitTestCase {
     $cache_backend->set('fabric:test', Argument::that(function (array $data) {
       return $data['refresh_queued'] === TRUE && $data['changed'] === 1100;
     }), Cache::PERMANENT, Argument::type('array'))->shouldBeCalledOnce();
+    $index = $this->prophesize(RemoteDataCacheIndexInterface::class);
+    $index->upsert('fabric:test', Argument::that(function (array $data) {
+      return $data['refresh_queued'] === TRUE && $data['changed'] === 1100;
+    }))->shouldBeCalledOnce();
 
     $queue = $this->prophesize(QueueInterface::class);
     $queue->createItem(Argument::that(fn (object $data) => $data->cid === 'fabric:test'))->shouldBeCalledOnce();
@@ -95,7 +106,7 @@ class RemoteDataCacheTest extends UnitTestCase {
     $lock->acquire('hpc_remote_data_cache:fabric:test:queue', 30)->willReturn(TRUE);
     $lock->release('hpc_remote_data_cache:fabric:test:queue')->shouldBeCalledOnce();
 
-    $cache = $this->createRemoteDataCache($cache_backend->reveal(), 1100, $queue_factory->reveal(), $lock->reveal());
+    $cache = $this->createRemoteDataCache($cache_backend->reveal(), 1100, $queue_factory->reveal(), $lock->reveal(), index: $index->reveal());
     $this->assertTrue($cache->queueRefresh('fabric:test'));
   }
 
@@ -122,6 +133,15 @@ class RemoteDataCacheTest extends UnitTestCase {
         && $data['fresh_until'] === 2300
         && $data['stale_until'] === 2900;
     }), Cache::PERMANENT, Argument::type('array'))->shouldBeCalled();
+    $index = $this->prophesize(RemoteDataCacheIndexInterface::class);
+    $index->upsert('fabric:test', Argument::that(function (array $data) {
+      return $data['refresh_queued'] === FALSE && $data['refreshing_until'] === 2300;
+    }))->shouldBeCalled();
+    $index->upsert('fabric:test', Argument::that(function (array $data) use ($new_payload) {
+      return $data['payload'] === $new_payload
+        && $data['fresh_until'] === 2300
+        && $data['stale_until'] === 2900;
+    }))->shouldBeCalled();
 
     $lock = $this->prophesize(LockBackendInterface::class);
     $lock->acquire('hpc_remote_data_cache:fabric:test:refresh', 300)->willReturn(TRUE);
@@ -133,8 +153,51 @@ class RemoteDataCacheTest extends UnitTestCase {
     $refresher_manager = $this->prophesize(RemoteDataCacheRefresherManager::class);
     $refresher_manager->createInstance('fabric_graphql')->willReturn($refresher->reveal());
 
-    $cache = $this->createRemoteDataCache($cache_backend->reveal(), 2000, NULL, $lock->reveal(), $refresher_manager->reveal());
+    $cache = $this->createRemoteDataCache($cache_backend->reveal(), 2000, NULL, $lock->reveal(), $refresher_manager->reveal(), $index->reveal());
     $this->assertTrue($cache->refresh('fabric:test'));
+  }
+
+  /**
+   * Test that pruning deletes expired payload and index records.
+   */
+  public function testPruneDeletesExpiredIndexedItems(): void {
+    $cache_backend = $this->prophesize(CacheBackendInterface::class);
+    $cache_backend->deleteMultiple(['expired:a', 'expired:b'])->shouldBeCalledOnce();
+
+    $index = $this->prophesize(RemoteDataCacheIndexInterface::class);
+    $index->getExpiredCids(1900, 2)->willReturn(['expired:a', 'expired:b']);
+    $index->deleteMultiple(['expired:a', 'expired:b'])->shouldBeCalledOnce();
+    $index->count()->shouldNotBeCalled();
+
+    $cache = $this->createRemoteDataCache($cache_backend->reveal(), 2000, index: $index->reveal(), settings: [
+      'expired_retention_ttl' => 100,
+      'max_items' => 0,
+      'prune_batch_size' => 2,
+    ]);
+
+    $this->assertSame(2, $cache->prune());
+  }
+
+  /**
+   * Test that pruning enforces the configured item cap.
+   */
+  public function testPruneEnforcesMaxIndexedItems(): void {
+    $cache_backend = $this->prophesize(CacheBackendInterface::class);
+    $cache_backend->deleteMultiple(['old:a', 'old:b'])->shouldBeCalledOnce();
+
+    $index = $this->prophesize(RemoteDataCacheIndexInterface::class);
+    $index->getExpiredCids(1900, 5)->willReturn([]);
+    $index->count()->willReturn(12);
+    $index->getOldestCids(2)->willReturn(['old:a', 'old:b']);
+    $index->deleteMultiple(['old:a', 'old:b'])->shouldBeCalledOnce();
+
+    $cache = $this->createRemoteDataCache($cache_backend->reveal(), 2000, index: $index->reveal(), settings: [
+      'expired_retention_ttl' => 100,
+      'max_items' => 10,
+      'prune_batch_size' => 5,
+    ]);
+
+    $this->assertSame(2, $cache->prune());
   }
 
   /**
@@ -150,29 +213,38 @@ class RemoteDataCacheTest extends UnitTestCase {
    *   The lock backend.
    * @param \Drupal\hpc_remote_data_cache\RemoteDataCacheRefresherManager|null $refresher_manager
    *   The refresher plugin manager.
+   * @param \Drupal\hpc_remote_data_cache\RemoteDataCacheIndexInterface|null $index
+   *   The cache metadata index.
+   * @param array $settings
+   *   Settings overrides.
    *
    * @return \Drupal\hpc_remote_data_cache\RemoteDataCache
    *   The remote data cache service.
    */
-  private function createRemoteDataCache(CacheBackendInterface $cache_backend, int $request_time, ?QueueFactory $queue_factory = NULL, ?LockBackendInterface $lock = NULL, ?RemoteDataCacheRefresherManager $refresher_manager = NULL): RemoteDataCache {
+  private function createRemoteDataCache(CacheBackendInterface $cache_backend, int $request_time, ?QueueFactory $queue_factory = NULL, ?LockBackendInterface $lock = NULL, ?RemoteDataCacheRefresherManager $refresher_manager = NULL, ?RemoteDataCacheIndexInterface $index = NULL, array $settings = []): RemoteDataCache {
     $time = $this->prophesize(TimeInterface::class);
     $time->getRequestTime()->willReturn($request_time);
+    $settings += [
+      'enabled' => TRUE,
+      'default_fresh_ttl' => 60,
+      'default_stale_ttl' => 120,
+      'refresh_lock_ttl' => 300,
+      'refresh_retry_base' => 300,
+      'serve_expired_on_error' => TRUE,
+      'max_payload_size' => 0,
+      'expired_retention_ttl' => 604800,
+      'max_items' => 10000,
+      'prune_batch_size' => 500,
+    ];
 
     return new RemoteDataCache(
       $cache_backend,
+      $index ?? $this->prophesize(RemoteDataCacheIndexInterface::class)->reveal(),
       $queue_factory ?? $this->prophesize(QueueFactory::class)->reveal(),
       $lock ?? $this->prophesize(LockBackendInterface::class)->reveal(),
       $time->reveal(),
       $this->getConfigFactoryStub([
-        'hpc_remote_data_cache.settings' => [
-          'enabled' => TRUE,
-          'default_fresh_ttl' => 60,
-          'default_stale_ttl' => 120,
-          'refresh_lock_ttl' => 300,
-          'refresh_retry_base' => 300,
-          'serve_expired_on_error' => TRUE,
-          'max_payload_size' => 0,
-        ],
+        'hpc_remote_data_cache.settings' => $settings,
       ]),
       $this->prophesize(LoggerChannelFactoryInterface::class)->reveal(),
       $refresher_manager ?? $this->prophesize(RemoteDataCacheRefresherManager::class)->reveal(),

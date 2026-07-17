@@ -49,6 +49,14 @@ cache.hpc_remote_data_cache:
 Because the bin uses PCB's permanent database backend, `drush cr` does not clear
 the cached remote responses. Drupal cache-tag invalidation still applies.
 
+Queryable cache metadata is stored separately in
+`hpc_remote_data_cache_index`. The payload remains in the PCB cache table, while
+the index stores timestamps, payload size, source, and refresh state so pruning
+can use indexed SQL instead of deserializing cache blobs.
+
+Existing cache rows are not backfilled into the index automatically. A row is
+indexed when the remote data cache service writes or updates it.
+
 ## Current Consumers
 
 - `hpc_api`: Fabric GraphQL responses via refresher plugin `fabric_graphql`.
@@ -87,6 +95,21 @@ The default settings are in `hpc_remote_data_cache.settings`:
   errors.
 - `max_payload_size`: optional maximum serialized payload size. `0` means no
   limit.
+- `expired_retention_ttl`: seconds to keep expired items available for
+  `serve_expired_on_error` before pruning can delete them.
+- `max_items`: maximum number of indexed items to retain. `0` disables this cap.
+- `prune_batch_size`: maximum number of indexed items to delete during one cron
+  run.
+
+## Pruning
+
+Cron prunes indexed cache entries in two passes:
+
+- items whose `stale_until` timestamp is older than `expired_retention_ttl`
+- oldest indexed items over the configured `max_items` cap
+
+Pruning deletes both the PCB cache payload row and the matching index row.
+Because the index is maintained on writes, pruning does not deserialize payloads.
 
 ## Local Development
 

@@ -11,6 +11,7 @@ use Drupal\hpc_remote_data_cache\RemoteDataCacheInterface;
 use Drupal\hpc_remote_data_cache\RemoteDataCacheItem;
 use GuzzleHttp\Client;
 use GuzzleHttp\ClientInterface;
+use GuzzleHttp\Psr7\Response;
 use PHPUnit\Framework\Assert;
 use Prophecy\Argument;
 use Prophecy\PhpUnit\ProphecyTrait;
@@ -67,6 +68,40 @@ class FabricClientTest extends UnitTestCase {
   }
 
   /**
+   * Test request timeout options for Fabric GraphQL requests.
+   */
+  public function testFabricRequestUsesConfiguredTimeouts(): void {
+    $http_client = new class() extends Client {
+
+      /**
+       * Captured requests.
+       *
+       * @var array
+       */
+      public array $requests = [];
+
+      /**
+       * {@inheritdoc}
+       */
+      public function post($uri, array $options = []): ResponseInterface {
+        $this->requests[] = [
+          'uri' => $uri,
+          'options' => $options,
+        ];
+        return new Response(200, [], '{"data":{"plans":{"items":[]}}}');
+      }
+
+    };
+
+    $client = $this->createFabricClientWithAccessToken($http_client);
+    $client->disableCache();
+    $client->query('plans { items { Id } }');
+
+    $this->assertSame(2, $http_client->requests[0]['options']['connect_timeout']);
+    $this->assertSame(8, $http_client->requests[0]['options']['timeout']);
+  }
+
+  /**
    * Create a Fabric client under test.
    *
    * @param \GuzzleHttp\ClientInterface $http_client
@@ -83,6 +118,8 @@ class FabricClientTest extends UnitTestCase {
         'workspace_id' => 'workspace',
         'endpoint_id' => 'endpoint',
         'host' => 'fabric.example.test',
+        'connect_timeout' => 2,
+        'timeout' => 8,
       ],
     ]);
 
@@ -93,6 +130,43 @@ class FabricClientTest extends UnitTestCase {
       $http_client,
       $remote_cache,
     );
+  }
+
+  /**
+   * Create a Fabric client with a test access token.
+   *
+   * @param \GuzzleHttp\ClientInterface $http_client
+   *   The HTTP client.
+   *
+   * @return \Drupal\hpc_api\Query\FabricClient
+   *   The Fabric client.
+   */
+  private function createFabricClientWithAccessToken(ClientInterface $http_client): FabricClient {
+    $config_factory = $this->getConfigFactoryStub([
+      'fabric_graphql.settings' => [
+        'workspace_id' => 'workspace',
+        'endpoint_id' => 'endpoint',
+        'host' => 'fabric.example.test',
+        'connect_timeout' => 2,
+        'timeout' => 8,
+      ],
+    ]);
+
+    return new class(
+      $config_factory,
+      $this->prophesize(LoggerChannelFactoryInterface::class)->reveal(),
+      $this->prophesize(KillSwitch::class)->reveal(),
+      $http_client,
+    ) extends FabricClient {
+
+      /**
+       * {@inheritdoc}
+       */
+      public function getAccessToken(): ?string {
+        return 'token';
+      }
+
+    };
   }
 
   /**
