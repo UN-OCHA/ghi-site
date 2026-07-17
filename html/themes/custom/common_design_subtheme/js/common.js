@@ -250,7 +250,11 @@
               if ($table.hasClass('filtered')) {
                 return;
               }
-              Drupal.CommonDesignSubtheme.SoftLimit.applyLimit($table);
+              // Sorttable's click handler rearranges the rows after this
+              // listener, so reapply the limit once that work is complete.
+              window.setTimeout(() => {
+                Drupal.CommonDesignSubtheme.SoftLimit.applyLimit($table);
+              });
             });
           }
 
