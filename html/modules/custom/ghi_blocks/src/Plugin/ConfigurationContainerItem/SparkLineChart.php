@@ -294,7 +294,17 @@ class SparkLineChart extends ConfigurationContainerItemPluginBase {
       '#reporting_period_ids' => array_keys($data),
       '#baseline_value' => $show_baseline ? $attachment->getMeasurementMetricValue($baseline, $last_reporting_period?->id() ?? 'latest') : NULL,
       '#tooltips' => $tooltips,
+      '#cache' => [
+        'tags' => $attachment->getValueCacheTags(),
+      ],
     ];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getCacheTags() {
+    return $this->getAttachmentObject()?->getValueCacheTags() ?? [];
   }
 
   /**

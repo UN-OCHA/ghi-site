@@ -583,7 +583,8 @@ abstract class GHIBlockBase extends HPCBlockBase implements TrustedCallbackInter
       $profile_key = ProfileHelper::profileStart(static::class . ':buildContent');
       $build_content = $this->buildContent();
       ProfileHelper::profileEnd($profile_key);
-      $this->cache($cache_key, $build_content, FALSE, NULL, $this->getCacheTags());
+      $cache_tags = is_array($build_content) ? Cache::mergeTags($this->getCacheTags(), $this->collectRenderArrayCacheTags($build_content)) : $this->getCacheTags();
+      $this->cache($cache_key, $build_content, FALSE, NULL, $cache_tags);
     }
     if (!$build_content) {
       return [];
@@ -619,10 +620,27 @@ abstract class GHIBlockBase extends HPCBlockBase implements TrustedCallbackInter
     // set.
     $build['#cache'] = [
       'contexts' => Cache::mergeContexts($this->getCacheContexts(), $build_content['#cache']['contexts'] ?? []),
-      'tags' => Cache::mergeTags($this->getCacheTags(), $build_content['#cache']['tags'] ?? []),
+      'tags' => Cache::mergeTags($this->getCacheTags(), $this->collectRenderArrayCacheTags($build_content)),
       'max-age' => Cache::mergeMaxAges($this->getCacheMaxAge(), $build_content['#cache']['max-age'] ?? Cache::PERMANENT),
     ];
     return $build;
+  }
+
+  /**
+   * Collect cache tags from a render array and nested render-array structures.
+   *
+   * @param array $build
+   *   A render array or nested render-array value.
+   *
+   * @return string[]
+   *   Cache tags found in the structure.
+   */
+  private function collectRenderArrayCacheTags(array $build): array {
+    $cache_tags = $build['#cache']['tags'] ?? [];
+    foreach (Element::children($build) as $child) {
+      $cache_tags = Cache::mergeTags($cache_tags, $this->collectRenderArrayCacheTags($build[$child]));
+    }
+    return $cache_tags;
   }
 
   /**

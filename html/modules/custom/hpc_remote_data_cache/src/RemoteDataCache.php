@@ -5,6 +5,7 @@ namespace Drupal\hpc_remote_data_cache;
 use Drupal\Component\Datetime\TimeInterface;
 use Drupal\Core\Cache\Cache;
 use Drupal\Core\Cache\CacheBackendInterface;
+use Drupal\Core\Cache\CacheTagsInvalidatorInterface;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Lock\LockBackendInterface;
 use Drupal\Core\Logger\LoggerChannelFactoryInterface;
@@ -31,6 +32,7 @@ class RemoteDataCache implements RemoteDataCacheInterface {
     private readonly ConfigFactoryInterface $configFactory,
     private readonly LoggerChannelFactoryInterface $loggerFactory,
     private readonly RemoteDataCacheRefresherManager $refresherManager,
+    private readonly CacheTagsInvalidatorInterface $cacheTagsInvalidator,
   ) {}
 
   /**
@@ -172,12 +174,16 @@ class RemoteDataCache implements RemoteDataCacheInterface {
       $refresher = $this->refresherManager->createInstance($item->getRefresherId());
       $result = $refresher->refresh($item);
       if ($result->isSuccess()) {
+        $cache_tags = $item->getCacheTags();
+        if ($cache_tags) {
+          $this->cacheTagsInvalidator->invalidateTags($cache_tags);
+        }
         $this->set($cid, $result->getData(), [
           'refresher_id' => $item->getRefresherId(),
           'endpoint_url' => $item->getEndpointUrl(),
           'request_body' => $item->getRequestBody(),
           'context' => $item->getContext(),
-          'cache_tags' => $item->getCacheTags(),
+          'cache_tags' => $cache_tags,
           'fresh_ttl' => max(0, $item->getFreshUntil() - $item->getFetched()),
           'stale_ttl' => max(0, $item->getStaleUntil() - $item->getFreshUntil()),
         ]);

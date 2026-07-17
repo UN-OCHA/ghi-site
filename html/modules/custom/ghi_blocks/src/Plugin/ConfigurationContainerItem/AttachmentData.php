@@ -2,6 +2,7 @@
 
 namespace Drupal\ghi_blocks\Plugin\ConfigurationContainerItem;
 
+use Drupal\Core\Cache\Cache;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\Markup;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
@@ -248,6 +249,7 @@ class AttachmentData extends ConfigurationContainerItemPluginBase {
     }
     $data_point = $this->getDataPointConfig();
     $build = $attachment->formatValue($data_point);
+    $build['#cache']['tags'] = Cache::mergeTags($build['#cache']['tags'] ?? [], $attachment->getValueCacheTags());
 
     // See what property to use for footnotes if any.
     $metric_type = $data_point['data_points'][0]['metric_type'];
@@ -262,6 +264,13 @@ class AttachmentData extends ConfigurationContainerItemPluginBase {
       $build['tooltips']['#tooltips'][] = $this->buildFootnoteTooltip($footnotes, $property);
     }
     return $build;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getCacheTags() {
+    return $this->getAttachmentObject()?->getValueCacheTags() ?? [];
   }
 
   /**

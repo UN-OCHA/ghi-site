@@ -5,6 +5,7 @@ namespace Drupal\ghi_form_elements;
 use Drupal\Component\Plugin\PluginBase;
 use Drupal\Component\Utility\Html;
 use Drupal\Component\Utility\NestedArray;
+use Drupal\Core\Cache\Cache;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Form\SubformStateInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
@@ -185,9 +186,29 @@ abstract class ConfigurationContainerItemPluginBase extends PluginBase implement
    * {@inheritdoc}
    */
   public function getRenderArray() {
-    return [
+    $build = [
       '#markup' => $this->getValue(),
     ];
+    if ($cache_tags = $this->getCacheTags()) {
+      $build['#cache']['tags'] = Cache::mergeTags($build['#cache']['tags'] ?? [], $cache_tags);
+    }
+    return $build;
+  }
+
+  /**
+   * Apply this item's cache tags to a render array.
+   *
+   * @param array $build
+   *   The render array.
+   *
+   * @return array
+   *   The render array with cache tags applied.
+   */
+  protected function applyCacheTags(array $build): array {
+    if ($cache_tags = $this->getCacheTags()) {
+      $build['#cache']['tags'] = Cache::mergeTags($build['#cache']['tags'] ?? [], $cache_tags);
+    }
+    return $build;
   }
 
   /**

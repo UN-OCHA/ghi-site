@@ -4,6 +4,7 @@ namespace Drupal\hpc_api\Query;
 
 use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Component\Serialization\Json;
+use Drupal\Core\Cache\Cache;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\DependencyInjection\DependencySerializationTrait;
 use Drupal\Core\Logger\LoggerChannelFactoryInterface;
@@ -284,10 +285,11 @@ class FabricClient {
    *   The result from the fabric query or FALSE on failure.
    */
   public function executeMultiple(array $queries): false|array {
+    $cache_tags = $this->getQueryListCacheTags($queries);
     $query_strings = array_map(fn ($query) => $query->toString(), $queries);
     $query_names = array_map(fn ($query) => $query->getQueryName(), $queries);
 
-    $data = $this->query(implode(' ', $query_strings));
+    $data = $this->query(implode(' ', $query_strings), cache_tags: $cache_tags);
     return is_object($data) ? array_map(fn ($query_name) => $this->getItems($data, $query_name), array_combine($query_names, $query_names)) : FALSE;
   }
 
@@ -300,6 +302,7 @@ class FabricClient {
   public function poolDataQueries($queries) {
     $requests = [];
     foreach ($queries as $query) {
+      $cache_tags = $this->getQueryCacheTags($query);
       $query = $this->prepareQuery($query);
       $body = $this->buildRequestBody($query);
 
@@ -330,6 +333,7 @@ class FabricClient {
         'cache_key' => $cache_key,
         'remote_cache_cid' => $remote_cache_cid,
         'use_remote_cache' => $use_remote_cache,
+        'cache_tags' => $cache_tags,
       ];
     }
 
@@ -364,10 +368,11 @@ class FabricClient {
               'context' => [
                 'query' => $request['query'],
               ],
+              'cache_tags' => $request['cache_tags'],
             ]);
             return;
           }
-          $this->cache($request['cache_key'], $data, FALSE, NULL, $this->getCacheTags());
+          $this->cache($request['cache_key'], $data, FALSE, NULL, $request['cache_tags']);
         },
       );
       $promises[] = $promise;
@@ -383,13 +388,16 @@ class FabricClient {
    *
    * @param string|\Drupal\hpc_api\Query\FabricQuery $query
    *   The payload to send to the fabric.
-   * @param string $error
+   * @param string|null $error
    *   Optional: Error storage.
+   * @param string[] $cache_tags
+   *   Optional cache tags for the query.
    *
    * @return object|array|false
    *   The result from the fabric query or FALSE on failure.
    */
-  public function query(string|FabricQuery $query, ?string &$error = NULL) {
+  public function query(string|FabricQuery $query, ?string &$error = NULL, array $cache_tags = []) {
+    $cache_tags = Cache::mergeTags($cache_tags, $this->getQueryCacheTags($query));
     $query = $this->prepareQuery($query);
     $body = $this->buildRequestBody($query);
 
@@ -427,10 +435,11 @@ class FabricClient {
           'context' => [
             'query' => $query,
           ],
+          'cache_tags' => $cache_tags,
         ]);
       }
       elseif ($this->useCache() && !$this->paginated) {
-        $this->cache($cache_key, $data, FALSE, NULL, $this->getCacheTags());
+        $this->cache($cache_key, $data, FALSE, NULL, $cache_tags);
       }
       return $data;
     }
@@ -622,6 +631,36 @@ class FabricClient {
    */
   private function buildRequestBody(string $query): string {
     return Json::encode(['query' => $query]);
+  }
+
+  /**
+   * Get cache tags for a query.
+   *
+   * @param string|\Drupal\hpc_api\Query\FabricQuery $query
+   *   The query.
+   *
+   * @return string[]
+   *   The cache tags.
+   */
+  private function getQueryCacheTags(string|FabricQuery $query): array {
+    return $query instanceof FabricQuery ? $query->getCacheTags() : $this->getCacheTags();
+  }
+
+  /**
+   * Get merged cache tags for multiple queries.
+   *
+   * @param \Drupal\hpc_api\Query\FabricQuery[] $queries
+   *   The queries.
+   *
+   * @return string[]
+   *   The cache tags.
+   */
+  private function getQueryListCacheTags(array $queries): array {
+    $cache_tags = [];
+    foreach ($queries as $query) {
+      $cache_tags = Cache::mergeTags($cache_tags, $this->getQueryCacheTags($query));
+    }
+    return $cache_tags;
   }
 
   /**

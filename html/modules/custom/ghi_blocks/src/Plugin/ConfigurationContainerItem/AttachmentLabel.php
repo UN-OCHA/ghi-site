@@ -111,4 +111,12 @@ class AttachmentLabel extends ConfigurationContainerItemPluginBase {
     return $prefix;
   }
 
+  /**
+   * {@inheritdoc}
+   */
+  public function getCacheTags() {
+    $attachment = $this->getContextValue('attachment');
+    return $attachment instanceof Attachment ? $attachment->getValueCacheTags() : [];
+  }
+
 }
