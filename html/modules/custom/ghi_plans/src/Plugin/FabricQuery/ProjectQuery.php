@@ -130,9 +130,17 @@ class ProjectQuery extends FabricQueryBase {
    *   An array of project objects.
    */
   public function getProjectsForPlanId(int $plan_id, ?BaseObjectChildInterface $context_base_object = NULL, ?int $organization_id = NULL): array {
+    $filters = [
+      'PlanId' => $plan_id,
+      'IsPublished' => TRUE,
+    ];
+    if ($context_base_object instanceof GoverningEntity) {
+      // Limit the project payload before its related data is hydrated below.
+      $filters['coordinationEntity'] = ['Id' => $context_base_object->getSourceId()];
+    }
+
     $items = $this->fabricClient->createQuery('projects', Project::getGraphQlItems())
-      ->setFilter('PlanId', $plan_id)
-      ->setFilter('IsPublished', TRUE)
+      ->setFilters($filters)
       ->setOrderBy(['ProjectCode' => 'ASC'])
       ->execute() ?: [];
 
