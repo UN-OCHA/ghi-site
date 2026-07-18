@@ -38,15 +38,21 @@ class FlowSearchQueryTest extends UnitTestCase {
   }
 
   /**
-   * Tests that cached empty summaries are treated as cache hits.
+   * Tests that persisted empty summaries are ignored.
    */
-  public function testCachedEmptyClusterSummaryAvoidsEndpointCall(): void {
+  public function testPersistedEmptyClusterSummaryIsIgnored(): void {
     $cache = ['cluster-summary-cache-key' => []];
+    $set_cache_calls = 0;
     $get_data_calls = 0;
-    $query = $this->mockFlowSearchQuery($this->createClusterSummaryEndpointData(), $cache, get_data_calls: $get_data_calls);
+    $reset_cache_calls = 0;
+    $query = $this->mockFlowSearchQuery($this->createClusterSummaryEndpointData(), $cache, $set_cache_calls, $get_data_calls, $reset_cache_calls);
 
-    $this->assertSame([], $query->getClusterSummaryData());
-    $this->assertSame(0, $get_data_calls);
+    $summary = $query->getClusterSummaryData();
+
+    $this->assertSame(1, $get_data_calls);
+    $this->assertSame(1, $set_cache_calls);
+    $this->assertSame(1, $reset_cache_calls);
+    $this->assertSame(4304843, $summary->clusters[0]->total_funding);
   }
 
   /**
@@ -93,11 +99,13 @@ class FlowSearchQueryTest extends UnitTestCase {
    *   Set-cache call counter.
    * @param int $get_data_calls
    *   Endpoint get-data call counter.
+   * @param int $reset_cache_calls
+   *   Cache reset call counter.
    *
    * @return \Drupal\ghi_plans\Plugin\EndpointQuery\FlowSearchQuery
    *   The flow search query.
    */
-  private function mockFlowSearchQuery(mixed $endpoint_data, array &$cache, int &$set_cache_calls = 0, int &$get_data_calls = 0): FlowSearchQuery {
+  private function mockFlowSearchQuery(mixed $endpoint_data, array &$cache, int &$set_cache_calls = 0, int &$get_data_calls = 0, int &$reset_cache_calls = 0): FlowSearchQuery {
     $endpoint_query = $this->mockEndpointQuery($endpoint_data, $get_data_calls);
 
     $query = $this->getMockBuilder(FlowSearchQuery::class)
@@ -114,11 +122,18 @@ class FlowSearchQueryTest extends UnitTestCase {
         $this->prophesize(AccountProxyInterface::class)->reveal(),
         $this->prophesize(CacheBackendInterface::class)->reveal(),
       ])
-      ->onlyMethods(['getCache', 'setCache'])
+      ->onlyMethods(['getCache', 'setCache', 'cache'])
       ->getMock();
 
     $query->method('getCache')->willReturnCallback(function () use (&$cache) {
       return $cache['cluster-summary-cache-key'] ?? NULL;
+    });
+    $query->method('cache')->willReturnCallback(function ($cache_key, $data = NULL, $reset = FALSE) use (&$cache, &$reset_cache_calls) {
+      if ($data === NULL && $reset === TRUE) {
+        $reset_cache_calls++;
+        unset($cache['cluster-summary-cache-key']);
+      }
+      return NULL;
     });
     $query->method('setCache')->willReturnCallback(function ($cache_key, $data) use (&$cache, &$set_cache_calls) {
       $set_cache_calls++;

@@ -175,7 +175,10 @@ class AttachmentTest extends ApiObjectTestBase {
     $this->assertEquals(3124881 / 4648210, $attachment->getValue($conf));
     $conf['calculation'] = 'percentage';
     $this->assertEquals(1 / 3124881 * 4648210, $attachment->getValue($conf));
+    $conf['data_points'][1]['metric_type'] = NULL;
+    $this->assertNull($attachment->getValue($conf));
 
+    $conf['data_points'][1]['metric_type'] = 'target';
     $conf['calculation'] = 'INVALID CALCULATION TYPE';
     $this->expectException(InvalidAttachmentTypeException::class);
     $attachment->getValue($conf);
@@ -764,6 +767,11 @@ class AttachmentTest extends ApiObjectTestBase {
       ],
     ];
     $this->callPrivateMethod($attachment, 'getTooltip', [$data_point_conf]);
+    $data_point_conf['data_points'] = [
+      0 => ['index' => 99],
+      1 => ['metric_type' => 'total_population'],
+    ];
+    $this->assertNull($this->callPrivateMethod($attachment, 'getTooltip', [$data_point_conf]));
     $this->assertTrue($this->callPrivateMethod($attachment, 'isApiCalculated', ['measure', []]));
     $this->assertFalse($this->callPrivateMethod($attachment, 'isApiCalculated', ['target', []]));
     $this->assertFalse($this->callPrivateMethod($attachment, 'isApiCalculated', [

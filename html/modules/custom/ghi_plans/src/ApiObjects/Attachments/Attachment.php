@@ -1419,8 +1419,14 @@ class Attachment extends ApiObjectBase implements AttachmentInterface, Disaggreg
    *   given configuration.
    */
   private function getCalculatedValue(array $conf, ?array $reporting_periods = NULL) {
-    $value_1 = (float) $this->getSingleValue($conf['data_points'][0]['metric_type'], $reporting_periods, $conf['data_points'][0]);
-    $value_2 = (float) $this->getSingleValue($conf['data_points'][1]['metric_type'], $reporting_periods, $conf['data_points'][1]);
+    $metric_type_1 = $conf['data_points'][0]['metric_type'] ?? NULL;
+    $metric_type_2 = $conf['data_points'][1]['metric_type'] ?? NULL;
+    if (empty($metric_type_1) || empty($metric_type_2)) {
+      return NULL;
+    }
+
+    $value_1 = (float) $this->getSingleValue($metric_type_1, $reporting_periods, $conf['data_points'][0]);
+    $value_2 = (float) $this->getSingleValue($metric_type_2, $reporting_periods, $conf['data_points'][1]);
 
     switch ($conf['calculation']) {
       case 'addition':
@@ -1533,7 +1539,7 @@ class Attachment extends ApiObjectBase implements AttachmentInterface, Disaggreg
       $build['#reporting_period'] = $conf['data_points'][0]['monitoring_period'];
     }
 
-    $metric_type = $conf['data_points'][0]['metric_type'];
+    $metric_type = $conf['data_points'][0]['metric_type'] ?? NULL;
     if ($metric_type && $this->isCumulativeReachFieldType($metric_type)) {
       $period = $this->getLastNonEmptyReportingPeriod($metric_type);
       $build['#reporting_period'] = $period?->id() ?? $build['#reporting_period'];
@@ -1585,7 +1591,7 @@ class Attachment extends ApiObjectBase implements AttachmentInterface, Disaggreg
    */
   public function getTooltip($conf) {
     $this->handleKnownConfigIssues($conf);
-    $metric_type = $conf['data_points'][0]['metric_type'];
+    $metric_type = $conf['data_points'][0]['metric_type'] ?? NULL;
     if (empty($metric_type)) {
       return NULL;
     }
@@ -1634,8 +1640,8 @@ class Attachment extends ApiObjectBase implements AttachmentInterface, Disaggreg
       return TRUE;
     }
     $data_points = $conf['data_points'];
-    $data_point_1 = $data_points[0]['metric_type'];
-    $data_point_2 = $data_points[1]['metric_type'];
+    $data_point_1 = $data_points[0]['metric_type'] ?? NULL;
+    $data_point_2 = $data_points[1]['metric_type'] ?? NULL;
     switch ($conf['processing']) {
       case 'single':
         return $this->isMeasurementField($data_point_1);
@@ -1659,8 +1665,8 @@ class Attachment extends ApiObjectBase implements AttachmentInterface, Disaggreg
    */
   protected function isCalculatedMeasurement(array $conf) {
     $data_points = $conf['data_points'];
-    $data_point_1 = $data_points[0]['metric_type'];
-    $data_point_2 = $data_points[1]['metric_type'];
+    $data_point_1 = $data_points[0]['metric_type'] ?? NULL;
+    $data_point_2 = $data_points[1]['metric_type'] ?? NULL;
     switch ($conf['processing']) {
       case 'single':
         return $this->isCalculatedMeasurmentField($data_point_1);
