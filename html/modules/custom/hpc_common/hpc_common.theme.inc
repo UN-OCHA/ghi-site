@@ -199,20 +199,21 @@ function hpc_common_preprocess_hpc_percent(array &$vars) {
     return;
   }
 
+  $display_percent = round((float) $percent, 10);
   if (empty($precision)) {
     // Compact precision keeps the default one-decimal behavior unless that
     // displayed one-decimal value would be a whole number, e.g. 29.97 -> 30%.
-    $precision_percent = $compact_precision ? round($percent, 1) : $percent;
+    $precision_percent = $compact_precision ? round($display_percent, 1) : $display_percent;
     $precision = $precision_percent == intval($precision_percent) ? 0 : 1;
   }
   // Percentages higher than 100 don't need precision. Numbers like 151.2% also
   // produce visual problems sometimes, e.g. in tables.
-  if ($percent > 100) {
+  if ($display_percent > 100) {
     $precision = 0;
   }
   $dec_point = $decimal_format == ThemeHelper::DECIMALS_POINT ? '.' : ',';
   $thousands_sep = $decimal_format == ThemeHelper::DECIMALS_POINT ? ',' : '.';
-  $formatted = number_format($percent, $precision, $dec_point, $thousands_sep);
+  $formatted = number_format($display_percent, $precision, $dec_point, $thousands_sep);
   $suffix = $export ? '%' : '<span class="suffix">%</span>';
 
   $vars['output'] = Markup::create(trim($formatted . $suffix));

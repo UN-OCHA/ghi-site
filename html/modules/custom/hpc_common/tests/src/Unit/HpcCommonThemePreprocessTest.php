@@ -29,6 +29,8 @@ class HpcCommonThemePreprocessTest extends UnitTestCase {
       [15.96, NULL, TRUE, '16<span class="suffix">%</span>'],
       [16.14, NULL, TRUE, '16.1<span class="suffix">%</span>'],
       [16.04, 1, TRUE, '16.0<span class="suffix">%</span>'],
+      [29.349999999999998, NULL, TRUE, '29.4<span class="suffix">%</span>'],
+      [29.344999999999999, NULL, TRUE, '29.3<span class="suffix">%</span>'],
     ];
   }
 
