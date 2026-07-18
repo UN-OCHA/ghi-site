@@ -94,7 +94,7 @@ class DataPoint extends ConfigurationContainerItemPluginBase {
    */
   public function getLabel() {
     $conf = $this->getDataPointConfig();
-    if (array_key_exists('label', $conf) && !empty($conf['label'])) {
+    if ($conf && array_key_exists('label', $conf) && !empty($conf['label'])) {
       return trim($conf['label']);
     }
     return parent::getLabel();
@@ -106,7 +106,7 @@ class DataPoint extends ConfigurationContainerItemPluginBase {
   public function getValue() {
     $attachment = $this->getAttachmentObject();
     $conf = $this->getDataPointConfig();
-    return $attachment && $conf ? $attachment->getValue($conf) : NULL;
+    return $attachment && $conf && $this->hasRequiredMetricTypes($conf) ? $attachment->getValue($conf) : NULL;
   }
 
   /**
@@ -252,6 +252,25 @@ class DataPoint extends ConfigurationContainerItemPluginBase {
       $this->updateDataPointConfiguration($conf, $attachment_prototype);
     }
     return $conf;
+  }
+
+  /**
+   * Check whether the normalized data point config has the required metrics.
+   *
+   * @param array $conf
+   *   The normalized data point configuration.
+   *
+   * @return bool
+   *   TRUE if the config can produce a data value, FALSE otherwise.
+   */
+  private function hasRequiredMetricTypes(array $conf): bool {
+    if (empty($conf['data_points'][0]['metric_type'])) {
+      return FALSE;
+    }
+    if (($conf['processing'] ?? 'single') == 'calculated' && empty($conf['data_points'][1]['metric_type'])) {
+      return FALSE;
+    }
+    return TRUE;
   }
 
   /**

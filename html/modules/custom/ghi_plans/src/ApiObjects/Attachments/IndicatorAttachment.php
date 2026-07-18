@@ -75,6 +75,11 @@ class IndicatorAttachment extends Attachment {
 
     $this->handleKnownConfigIssues($conf);
 
+    $metric_type = $conf['data_points'][0]['metric_type'] ?? NULL;
+    if (empty($metric_type)) {
+      return $tooltip;
+    }
+
     // Get the last published monitoring period based on the selected periods
     // if any.
     $monitoring_period = $conf['data_points'][0]['monitoring_period'] ?? 'latest';
@@ -84,7 +89,6 @@ class IndicatorAttachment extends Attachment {
       return $tooltip;
     }
 
-    $metric_type = $conf['data_points'][0]['metric_type'];
     $value = $this->getSingleValue($metric_type, NULL, $conf['data_points'][0]);
 
     if ($this->isNullValue($value)) {

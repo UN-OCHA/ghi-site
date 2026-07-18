@@ -173,7 +173,10 @@ class PlanEntity extends EntityObjectBase {
    * {@inheritdoc}
    */
   public function getSortKey(): ?string {
-    return $this->sortOrder ?? parent::getSortKey();
+    if ($this->sortOrder !== NULL) {
+      return (string) $this->sortOrder . $this->getCustomReference();
+    }
+    return parent::getSortKey();
   }
 
   /**

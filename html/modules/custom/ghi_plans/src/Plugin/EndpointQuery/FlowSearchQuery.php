@@ -53,9 +53,12 @@ class FlowSearchQuery extends EndpointQueryBase {
       return $runtime_cache[$cache_key];
     }
     $summary_data = $this->getCache($cache_key);
-    if ($summary_data !== NULL) {
+    if (is_object($summary_data) && property_exists($summary_data, 'clusters') && property_exists($summary_data, 'totals')) {
       $runtime_cache[$cache_key] = $summary_data;
       return $summary_data;
+    }
+    if ($summary_data !== NULL) {
+      $this->cache($cache_key, NULL, TRUE);
     }
     $data = parent::getData($placeholders, $query_args);
     if ($data === FALSE || $data === NULL) {

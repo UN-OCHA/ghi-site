@@ -97,8 +97,22 @@ class EntityObjectTest extends ApiObjectTestBase {
     $this->assertEquals('SO', $entity->getEntityTypeRefCode());
     $this->assertEquals('Reduce morbidity and mortality among the most vulnerable people of all genders and diversities by addressing hunger, acute malnutrition, public health threats, outbreaks, abuse, violence, and exposure to explosive ordnance.', $entity->getDescription());
     $this->assertEquals(0, $entity->getOrderNumber());
-    $this->assertEquals(0, $entity->getSortKey());
+    $this->assertEquals('01', $entity->getSortKey());
     $this->assertEquals([], $entity->getTags());
+  }
+
+  /**
+   * Test that plan entity sort keys include the custom reference.
+   */
+  public function testPlanEntitySortKeyUsesCustomReference(): void {
+    $entity_data = clone $this->getApiObjectFixture('Entities', 'plan_entity');
+    $entity_data->SortOrder = 4;
+    $entity_data->CustomReference = '3';
+
+    $entity = new PlanEntity($entity_data);
+    (new \ReflectionClass($entity::class))->getProperty('prototype')->setValue($entity, $this->getEntityPrototypeFromFixture(4254));
+
+    $this->assertSame('43', $entity->getSortKey());
   }
 
 }
