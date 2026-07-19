@@ -243,8 +243,8 @@ class AttachmentTest extends ApiObjectTestBase {
     $this->setPrivateProperty($attachment->getMeasurement(2389), 'disaggregated', $this->createDisaggregatedMetricData($metric_type, $location_id, 2389));
 
     $this->assertSame(2388, $attachment->getMeasurement('latest')?->getReportingPeriodId());
-    $this->assertEquals(2883267, $attachment->getMeasurementMetricValue('cumulative_reach', 2389));
-    $this->assertEquals(2314453, $attachment->getMeasurementMetricValue('cumulative_reach'));
+    $this->assertEquals(2883267, $attachment->getMeasurement(2389)?->getDataPointValue('cumulative_reach'));
+    $this->assertEquals(2314453, $attachment->getMeasurement('latest')?->getDataPointValue('cumulative_reach'));
     $this->assertEquals(2314453, $attachment->getValueByMetricType('cumulative_reach', 'latest'));
     $this->assertSame(2388, $attachment->getDisaggregatedData('latest', $metric_type)->locations[$location_id]->totals[$metric_type->id()]);
 
@@ -275,7 +275,7 @@ class AttachmentTest extends ApiObjectTestBase {
     $latest_values['cumulative_reach'] = NULL;
     $this->setPrivateProperty($latest_measurement, 'values', $latest_values);
 
-    $this->assertNull($attachment->getMeasurementMetricValue('cumulative_reach', 2389));
+    $this->assertNull($attachment->getMeasurement(2389)?->getDataPointValue('cumulative_reach'));
     $this->assertCount(4, $attachment->getPlanReportingPeriods($attachment->getPlanId(), TRUE));
     $this->assertSame(2388, $attachment->getLastNonEmptyReportingPeriod('cumulative_reach', $reporting_periods)?->id());
     $this->assertEquals(2314453, $attachment->getValueByMetricType('cumulative_reach', 'latest'));
@@ -679,7 +679,7 @@ class AttachmentTest extends ApiObjectTestBase {
     $this->assertEquals(4648210, $attachment->getCaseloadValue('in_need'));
     $this->assertEquals(4648210, $attachment->getCaseloadValue('in_need', 'In need'));
 
-    $this->assertEquals(2883267, $attachment->getMeasurementMetricValue('cumulative_reach', 2389));
+    $this->assertEquals(2883267, $attachment->getMeasurement(2389)?->getDataPointValue('cumulative_reach'));
     $this->assertEquals([
       'in_need' => 4648210,
       'target' => 3124881,
