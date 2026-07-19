@@ -105,13 +105,26 @@ class SparkLineChart extends ConfigurationContainerItemPluginBase {
   /**
    * Get the configured data point.
    *
-   * Contains BC logic to update mretric indexes to metric types on the fly.
+   * Contains BC logic to update metric indexes to metric types on the fly.
    *
    * @return string
    *   The configured data point in the form of the selected metric type.
    */
   private function getConfiguredDataPoint() {
-    $data_point = $this->get('data_point');
+    return $this->getConfiguredMetricType('data_point');
+  }
+
+  /**
+   * Get a configured metric type.
+   *
+   * @param string $config_key
+   *   The configuration key to resolve.
+   *
+   * @return string|null
+   *   The configured metric type.
+   */
+  private function getConfiguredMetricType(string $config_key): ?string {
+    $data_point = $this->get($config_key);
     $prototype = $this->getAttachmentObject()?->getPrototype();
     if (is_numeric($data_point) && $prototype) {
       $data_point = $this->getMetricTypeByIndex($data_point, $prototype);
@@ -217,34 +230,17 @@ class SparkLineChart extends ConfigurationContainerItemPluginBase {
     }
     $show_baseline = $this->get('show_baseline');
     $use_calculation_method = $this->get('use_calculation_method');
-    $baseline = $show_baseline ? $this->get('baseline') : NULL;
+    $baseline = $show_baseline ? $this->getConfiguredMetricType('baseline') : NULL;
     $options = $attachment->getFields();
     $decimal_format = $plan_object->getDecimalFormat();
 
     // Get the monitoring periods.
     $reporting_periods = $this->getReportingPeriods();
     $last_reporting_period = $attachment->getLastNonEmptyReportingPeriod($data_point, $reporting_periods);
-    $values = $attachment->getValuesForAllReportingPeriods($data_point, FALSE, TRUE, $reporting_periods);
-
     // Create the data / label arrays for all configured monitoring periods.
-    $data = [];
+    $data = $this->getSparklineData($attachment, $data_point, $reporting_periods, $use_calculation_method);
     $tooltips = [];
-    $accumulated_reporting_periods = [];
     foreach ($reporting_periods as $reporting_period) {
-      if ($attachment instanceof IndicatorAttachment) {
-        if ($use_calculation_method) {
-          $accumulated_reporting_periods[$reporting_period->id()] = $reporting_period;
-          $data[$reporting_period->id()] = $attachment->getSingleValue($data_point, $accumulated_reporting_periods);
-        }
-        else {
-          $data[$reporting_period->id()] = $values[$reporting_period->id()] ?? NULL;
-        }
-      }
-      else {
-        // Caseloads.
-        $data[$reporting_period->id()] = $attachment->getMeasurementMetricValue($data_point, $reporting_period->id());
-      }
-
       // Check if this measurement is an actual NULL, in which case we want to
       // hide the tooltip.
       $null_measurement = $data[$reporting_period->id()] === NULL;
@@ -252,18 +248,17 @@ class SparkLineChart extends ConfigurationContainerItemPluginBase {
         $tooltips[$reporting_period->id()] = NULL;
         continue;
       }
-      $totals = $attachment->getCurrentValues();
 
       // Prepare the tooltip items.
       $tooltip_items = [];
 
       // Add a baseline if needed.
-      if ($show_baseline) {
+      if ($show_baseline && $baseline) {
         $tooltip_items[] = [
-          'label' => $options[$baseline],
+          'label' => $options[$baseline] ?? $baseline,
           'value' => [
             '#theme' => 'hpc_amount',
-            '#amount' => $totals[$baseline],
+            '#amount' => $this->getBaselineValue($attachment, $baseline, $reporting_period->id()),
             '#scale' => 'full',
             '#decimal_format' => $decimal_format,
           ],
@@ -292,12 +287,59 @@ class SparkLineChart extends ConfigurationContainerItemPluginBase {
       '#theme' => 'hpc_sparkline',
       '#data' => $data,
       '#reporting_period_ids' => array_keys($data),
-      '#baseline_value' => $show_baseline ? $attachment->getMeasurementMetricValue($baseline, $last_reporting_period?->id() ?? 'latest') : NULL,
+      '#baseline_value' => $show_baseline && $baseline ? $this->getBaselineValue($attachment, $baseline, $last_reporting_period?->id() ?? 'latest') : NULL,
       '#tooltips' => $tooltips,
       '#cache' => [
         'tags' => $attachment->getValueCacheTags(),
       ],
     ];
+  }
+
+  /**
+   * Get sparkline values for all configured reporting periods.
+   *
+   * @param \Drupal\ghi_plans\ApiObjects\Attachments\Attachment $attachment
+   *   The attachment to read values from.
+   * @param string $data_point
+   *   The metric type to render.
+   * @param \Drupal\ghi_plans\ApiObjects\PlanReportingPeriod[] $reporting_periods
+   *   Reporting periods keyed by id.
+   * @param bool $use_calculation_method
+   *   TRUE if indicator values should be accumulated/calculated by API method.
+   *
+   * @return mixed[]
+   *   Sparkline values keyed by reporting period id.
+   */
+  protected function getSparklineData(Attachment $attachment, string $data_point, array $reporting_periods, bool $use_calculation_method): array {
+    $values = $attachment->getValuesForAllReportingPeriods($data_point, FALSE, TRUE, $reporting_periods);
+    $data = [];
+    $accumulated_reporting_periods = [];
+    foreach ($reporting_periods as $reporting_period) {
+      if ($attachment instanceof IndicatorAttachment && $use_calculation_method) {
+        $accumulated_reporting_periods[$reporting_period->id()] = $reporting_period;
+        $data[$reporting_period->id()] = $attachment->getSingleValue($data_point, $accumulated_reporting_periods);
+        continue;
+      }
+      $data[$reporting_period->id()] = $values[$reporting_period->id()] ?? NULL;
+    }
+    return $data;
+  }
+
+  /**
+   * Get a normalized baseline value.
+   *
+   * @param \Drupal\ghi_plans\ApiObjects\Attachments\Attachment $attachment
+   *   The attachment to read values from.
+   * @param string $baseline
+   *   The baseline metric type.
+   * @param int|string $reporting_period
+   *   The reporting period id or the string 'latest'.
+   *
+   * @return mixed
+   *   The baseline value.
+   */
+  protected function getBaselineValue(Attachment $attachment, string $baseline, $reporting_period = 'latest') {
+    return $attachment->getValueByMetricType($baseline, $reporting_period);
   }
 
   /**

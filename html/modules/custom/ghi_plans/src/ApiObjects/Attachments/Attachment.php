@@ -1075,22 +1075,6 @@ class Attachment extends ApiObjectBase implements AttachmentInterface, Disaggreg
   }
 
   /**
-   * Get a metric from the measurement specified by the reporting period.
-   *
-   * @param string $metric_type
-   *   The metric type of the data point.
-   * @param int|string $reporting_period
-   *   The id of the reporting period or the string 'latest'.
-   *
-   * @return int|float|null
-   *   The value of the metric for the specified reporting period.
-   */
-  public function getMeasurementMetricValue($metric_type, $reporting_period = 'latest') {
-    $measurement = $this->getMeasurement($reporting_period);
-    return $measurement?->getDataPointValue($metric_type) ?? NULL;
-  }
-
-  /**
    * Get a comment tooltip for the current measurement.
    *
    * @param int|string $reporting_period
