@@ -3,6 +3,7 @@
 namespace Drupal\Tests\hpc_api\Unit;
 
 use Drupal\Component\Datetime\TimeInterface;
+use Drupal\Core\Cache\CacheBackendInterface;
 use Drupal\Core\Cache\NullBackend;
 use Drupal\Core\DependencyInjection\ContainerBuilder;
 use Drupal\hpc_api\ApiObjects\ApiObjectBase;
@@ -111,6 +112,29 @@ class ObjectStoreTest extends UnitTestCase {
     $this->assertCount(3, $object_store->getObjectCollection($storage_key, 'Code', 'CODERED'));
     $this->assertCount(3, $object_store->getObjects(['CODEBLUE'], $storage_key, 'Code'));
     $this->assertCount(3, $object_store->getObjects(['CODERED'], $storage_key, 'Code'));
+  }
+
+  /**
+   * Test that the object store does not use a persistent cache backend.
+   *
+   * @group ObjectStore
+   */
+  public function testObjectStoreDoesNotUsePersistentCache() {
+    $cache = $this->createMock(CacheBackendInterface::class);
+    $cache->expects($this->never())->method('get');
+    $cache->expects($this->never())->method('getMultiple');
+    $cache->expects($this->never())->method('set');
+    \Drupal::getContainer()->set('cache.default', $cache);
+
+    $object_store = new ObjectStore();
+    $storage_key = CustomApiObject::getObjectStorageKey();
+
+    $object_store->addObjects([$this->objects[1], $this->objects[2]]);
+    $object_store->addRequestedIds($storage_key, [1, 2]);
+
+    $this->assertEquals($this->objects[1], $object_store->getObject(1, $storage_key));
+    $this->assertCount(2, $object_store->getObjects(['CODEBLUE'], $storage_key, 'Code'));
+    $this->assertSame([1, 2], $object_store->getRequestedIds($storage_key, 'id'));
   }
 
 }
