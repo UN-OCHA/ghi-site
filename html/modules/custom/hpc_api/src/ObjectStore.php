@@ -4,14 +4,12 @@ namespace Drupal\hpc_api;
 
 use Drupal\hpc_api\ApiObjects\ApiObjectInterface;
 use Drupal\hpc_api\Traits\ObjectFilterTrait;
-use Drupal\hpc_api\Traits\SimpleCacheTrait;
 
 /**
  * Class representing an object store for Api objects.
  */
 class ObjectStore {
 
-  use SimpleCacheTrait;
   use ObjectFilterTrait;
 
   /**
@@ -20,6 +18,18 @@ class ObjectStore {
    * @var bool
    */
   protected bool $enabled = TRUE;
+
+  /**
+   * Request-local object storage keyed by API object storage key.
+   *
+   * This intentionally avoids Drupal's persistent cache bins. The underlying
+   * Fabric responses are cached separately; persisting this denormalized object
+   * graph would create large memcache values that every small lookup must
+   * deserialize.
+   *
+   * @var array<string, array>
+   */
+  protected array $storage = [];
 
   /**
    * Get the ids already requested, identified by key.
@@ -35,12 +45,11 @@ class ObjectStore {
     if (!$this->enabled) {
       return;
     }
-    $storage = $this->cache($storage_key) ?: [];
+    $storage = &$this->getStorage($storage_key);
     $key = $key ?? 'id';
     $storage['requested_ids'] = $storage['requested_ids'] ?? [];
     $storage['requested_ids'][$key] = $storage['requested_ids'][$key] ?? [];
     $storage['requested_ids'][$key] = array_unique(array_merge($storage['requested_ids'][$key], $ids));
-    $this->cache($storage_key, $storage);
   }
 
   /**
@@ -58,7 +67,7 @@ class ObjectStore {
     if (!$this->enabled) {
       return [];
     }
-    $storage = $this->cache($storage_key) ?: [];
+    $storage = $this->storage[$storage_key] ?? [];
     return $storage['requested_ids'][$key] ?? [];
   }
 
@@ -72,7 +81,7 @@ class ObjectStore {
     if (!$this->enabled) {
       return;
     }
-    $storage = $this->cache($object->getObjectStorageKey()) ?: [];
+    $storage = &$this->getStorage($object->getObjectStorageKey());
     $storage['objects'] = $storage['objects'] ?? [];
     $storage['objects'][$object->id()] = $object;
     // Create a lookup.
@@ -89,7 +98,6 @@ class ObjectStore {
       $storage[$property_name][$property_value] = $storage[$property_name][$property_value] ?? [];
       $storage[$property_name][$property_value][$object->id()] = $object->id();
     }
-    $this->cache($object->getObjectStorageKey(), $storage);
   }
 
   /**
@@ -122,7 +130,7 @@ class ObjectStore {
     if (!$this->enabled) {
       return NULL;
     }
-    $storage = $this->cache($storage_key) ?: [];
+    $storage = $this->storage[$storage_key] ?? [];
     $storage['objects'] = $storage['objects'] ?? [];
     return $storage['objects'][$key] ?? NULL;
   }
@@ -149,7 +157,7 @@ class ObjectStore {
     if (!$this->enabled) {
       return [];
     }
-    $storage = $this->cache($storage_key) ?: [];
+    $storage = $this->storage[$storage_key] ?? [];
     $storage['objects'] = $storage['objects'] ?? [];
     if ($property === NULL) {
       return array_intersect_key($storage['objects'], array_flip($keys));
@@ -179,7 +187,7 @@ class ObjectStore {
     if (!$this->enabled) {
       return [];
     }
-    $storage = $this->cache($storage_key) ?: [];
+    $storage = $this->storage[$storage_key] ?? [];
     return $storage['objects'] ?? [];
   }
 
@@ -197,7 +205,7 @@ class ObjectStore {
     if (!$this->enabled) {
       return;
     }
-    $storage = $this->cache($storage_key) ?? [];
+    $storage = &$this->getStorage($storage_key);
     $storage['collections'] = $storage['collections'] ?? [];
     $collection_key_method = 'get' . ucfirst(strtolower($collection_key));
     foreach ($objects as $object) {
@@ -212,7 +220,6 @@ class ObjectStore {
       $storage['collections'][$collection_key][$property_value] = $storage['collections'][$collection_key][$property_value] ?? [];
       $storage['collections'][$collection_key][$property_value][$object->id()] = $object->id();
     }
-    $this->cache($storage_key, $storage);
     $this->addObjects($objects);
   }
 
@@ -233,10 +240,26 @@ class ObjectStore {
     if (!$this->enabled) {
       return [];
     }
-    $storage = $this->cache($storage_key) ?? [];
+    $storage = $this->storage[$storage_key] ?? [];
     $storage['collections'] = $storage['collections'] ?? [];
     $object_ids = $storage['collections'][$collection_key][$collection_value] ?? [];
     return !empty($object_ids) ? $this->getObjects($object_ids, $storage_key) : [];
+  }
+
+  /**
+   * Get writable storage for the given storage key.
+   *
+   * @param string $storage_key
+   *   The object storage key.
+   *
+   * @return array
+   *   The writable storage array.
+   */
+  private function &getStorage(string $storage_key): array {
+    if (!array_key_exists($storage_key, $this->storage)) {
+      $this->storage[$storage_key] = [];
+    }
+    return $this->storage[$storage_key];
   }
 
   /**
@@ -244,6 +267,7 @@ class ObjectStore {
    */
   public function disable(): void {
     $this->enabled = FALSE;
+    $this->storage = [];
   }
 
 }
