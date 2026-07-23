@@ -14,9 +14,11 @@ use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\Url;
 use Drupal\ghi_blocks\Helpers\AttachmentMatcher;
 use Drupal\ghi_blocks\Interfaces\ConfigValidationInterface;
+use Drupal\ghi_blocks\Interfaces\LazyMapDataFragmentBlockInterface;
 use Drupal\ghi_blocks\Interfaces\LazyMapBlockInterface;
 use Drupal\ghi_blocks\Interfaces\MultiStepFormBlockInterface;
 use Drupal\ghi_blocks\Interfaces\OverrideDefaultTitleBlockInterface;
+use Drupal\ghi_blocks\Map\MapDataFragment;
 use Drupal\ghi_blocks\Map\MapPayload;
 use Drupal\ghi_blocks\Plugin\Block\BlockCommentInterface;
 use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
@@ -27,9 +29,9 @@ use Drupal\ghi_blocks\Traits\GlobalMapTrait;
 use Drupal\ghi_geojson\GeoJsonLocationInterface;
 use Drupal\ghi_plans\ApiObjects\Attachments\AttachmentInterface;
 use Drupal\ghi_plans\ApiObjects\Attachments\Attachment;
+use Drupal\ghi_plans\ApiObjects\PlanReportingPeriod;
 use Drupal\ghi_plans\Traits\AttachmentFilterTrait;
 use Drupal\ghi_plans\Traits\DataPointConfigBackwardsCompatibilityTrait;
-use Drupal\ghi_plans\Traits\DisaggregatedDataTrait;
 use Drupal\ghi_plans\Traits\PlanReportingPeriodTrait;
 use Drupal\ghi_sections\Entity\SectionNodeInterface;
 use Drupal\ghi_subpages\Entity\SubpageNodeInterface;
@@ -50,14 +52,13 @@ use Drupal\hpc_downloads\Interfaces\HPCDownloadPNGInterface;
     'plan_cluster' => new EntityContextDefinition('entity:base_object', new TranslatableMarkup('Cluster'), required: FALSE, constraints: ['Bundle' => 'governing_entity']),
   ],
 )]
-class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterface, OverrideDefaultTitleBlockInterface, HPCDownloadPNGInterface, ConfigValidationInterface, BlockCommentInterface, LazyMapBlockInterface {
+class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterface, OverrideDefaultTitleBlockInterface, HPCDownloadPNGInterface, ConfigValidationInterface, BlockCommentInterface, LazyMapBlockInterface, LazyMapDataFragmentBlockInterface {
 
   use AttachmentFilterTrait;
   use BlockCommentTrait;
   use ConfigValidationTrait;
   use ConfigurationPreviewMapTrait;
   use DataPointConfigBackwardsCompatibilityTrait;
-  use DisaggregatedDataTrait;
   use GlobalMapTrait;
   use PlanReportingPeriodTrait;
 
@@ -73,6 +74,7 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
         'attachment' => 'fabric_query:attachment',
         'country' => 'fabric_query:country',
         'entities' => 'fabric_query:entity',
+        'location' => 'fabric_query:location',
       ],
       configForms: [
         'attachments' => [
@@ -92,8 +94,7 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
    * {@inheritdoc}
    */
   public function isEmpty(): bool {
-    $attachment = $this->getDefaultAttachment();
-    return (!$attachment || !$this->attachmentCanBeMapped($attachment));
+    return !$this->getDefaultAttachment();
   }
 
   /**
@@ -117,7 +118,7 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
    */
   public function buildContent() {
     $attachment = $this->getDefaultAttachment();
-    if (!$attachment || !$this->attachmentCanBeMapped($attachment)) {
+    if (!$attachment) {
       // Nothing to show.
       return NULL;
     }
@@ -190,8 +191,8 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
    * {@inheritdoc}
    */
   public function buildLazyMapPayload(string $map_id): MapPayload {
-    $attachment = $this->getDefaultAttachment();
-    if (!$attachment || !$this->attachmentCanBeMapped($attachment)) {
+    $attachment = $this->getDefaultAttachment(TRUE);
+    if (!$attachment) {
       return MapPayload::forEmptyMap(
         [
           'id' => $map_id,
@@ -228,6 +229,9 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
       $outline_country['location_name'] = $outline_country['name'];
     }
 
+    // The initial map payload is still compact: buildCircleMap() includes
+    // metadata for all selectable tabs/variants and a full data slice only for
+    // the default tab. Other tabs/variants are hydrated through slice_data_url.
     $map_settings = [
       'json' => $map['data'],
       'id' => $map_id,
@@ -237,6 +241,8 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
       'label_min_zoom' => (int) ($conf['map']['common']['label_min_zoom'] ?? 6),
       'style' => $style,
       'outline_country' => $outline_country,
+      'slice_data_url' => $this->getLazyMapFragmentUrl('ghi_blocks.map_data_fragment', $map_id, $attachment),
+      'modal_data_url' => $this->getLazyMapFragmentUrl('ghi_blocks.map_modal_data', $map_id, $attachment),
     ] + $map['settings'];
 
     $cache_metadata = CacheableMetadata::createFromRenderArray($map);
@@ -256,6 +262,46 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
   }
 
   /**
+   * {@inheritdoc}
+   */
+  public function buildLazyMapDataFragment(string $map_id, string $data_index, ?string $variant_id = NULL): ?MapDataFragment {
+    $attachment = $this->getDefaultAttachment(TRUE);
+    if (!$attachment) {
+      return NULL;
+    }
+
+    // Rebuild the compact definitions so the request can resolve the selected
+    // data index/variant without trusting client-supplied metric ids.
+    $metadata = $this->buildCircleMapMetadata($attachment);
+    $slice = $this->buildCircleMapDataSlice($attachment, $data_index, $variant_id, $metadata);
+    if ($slice === NULL) {
+      return NULL;
+    }
+
+    return new MapDataFragment($slice, $this->getMapFragmentCacheability($attachment));
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function buildLazyMapModalFragment(string $map_id, string $data_index, string $object_id, ?string $variant_id = NULL): ?MapDataFragment {
+    $attachment = $this->getDefaultAttachment(TRUE);
+    if (!$attachment || !is_numeric($object_id)) {
+      return NULL;
+    }
+
+    // Modal requests use the same definitions as data-slice requests, but
+    // hydrate only the selected location's breakdown for the sidebar.
+    $metadata = $this->buildCircleMapMetadata($attachment);
+    $modal_content = $this->buildCircleMapModalContent($attachment, $data_index, $variant_id, (int) $object_id, $metadata);
+    if ($modal_content === NULL) {
+      return NULL;
+    }
+
+    return new MapDataFragment($modal_content, $this->getMapFragmentCacheability($attachment));
+  }
+
+  /**
    * Check if the given attachment can be mapped.
    *
    * @param \Drupal\ghi_plans\ApiObjects\Attachments\AttachmentInterface $attachment
@@ -271,17 +317,33 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
     if (!$attachment->canHaveDisaggregatedData()) {
       return FALSE;
     }
-    $reporting_period = $this->getCurrentReportingPeriod($attachment->getPlanId());
-    // canBeMapped() loads the full disaggregated dataset. A preceding
-    // availability query would check the same underlying facts and then fetch
-    // them again, so the full-data path is the planner source of truth here.
-    return $attachment->canBeMapped($reporting_period);
+    $availability = $this->getMappableDataAvailability([$attachment]);
+    return !empty($availability[$attachment->id()]);
+  }
+
+  /**
+   * Check whether an attachment is a candidate for map rendering.
+   *
+   * This intentionally uses cheap attachment metadata only. Full
+   * disaggregated-data loading happens when the lazy map payload is requested.
+   *
+   * @param \Drupal\ghi_plans\ApiObjects\Attachments\AttachmentInterface $attachment
+   *   The attachment to check.
+   *
+   * @return bool
+   *   TRUE if the attachment can be considered for map rendering.
+   */
+  private function attachmentHasMapPotential(AttachmentInterface $attachment): bool {
+    return $attachment instanceof Attachment
+      && $attachment->canHaveDisaggregatedData()
+      && $attachment->getPlanId() == $this->getCurrentPlanId();
   }
 
   /**
    * Map builder for circle maps.
    */
   private function buildCircleMap() {
+    $attachment = $this->getDefaultAttachment();
     $map = [
       'data' => [],
       'tabs' => [
@@ -292,86 +354,23 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
       'settings' => [],
     ];
 
-    $attachment = $this->getDefaultAttachment();
-    $plan_base_object = $attachment->getPlanObject();
-    $plan_id = $plan_base_object->getSourceId();
-    $decimal_format = $plan_base_object->getDecimalFormat();
-    $reporting_periods = $this->getPlanReportingPeriods($plan_id);
-    $reporting_periods_rendered = array_map(function ($reporting_period) {
-      return $reporting_period->format('Monitoring period #@period_number: @date_range');
-    }, $reporting_periods);
-    $reporting_period_id = $this->getCurrentReportingPeriod($plan_id);
-    $configured_reporting_periods = $this->getConfiguredReportingPeriods($plan_id);
-
-    $disaggregated_data = $this->transformDisaggregatedMapData($attachment->getDisaggregatedData($reporting_period_id), $attachment, TRUE);
-    foreach ($disaggregated_data as $metric_index => $metric_item) {
-      if ($attachment->metricItemIsEmpty($metric_item)) {
-        continue;
-      }
-      /** @var \Drupal\hpc_api\ApiObjects\Types\MetricType $metric_object */
-      $metric_object = $metric_item['metric_object'];
-      $metric_type = $metric_object->getMachineName();
-      $metric_label = $this->getMetricLabel($metric_object, $plan_base_object->getPlanLanguage());
-      $metric_map_key = $metric_type . '-' . $metric_index;
-      $metric_map_data = $this->prepareMetricItemMapData($metric_label, $metric_item, $decimal_format, $reporting_period_id ? $reporting_periods[$reporting_period_id] : NULL);
-      $map['data'][$metric_map_key] = [
-        'label' => $metric_label,
-        'metric' => $metric_item['metric'],
-        'unit_type' => $metric_item['unit_type'],
-        'locations' => array_values($metric_map_data['location_data']),
-        'modal_contents' => $metric_map_data['modal_contents'],
-        'variants' => [],
-      ];
-      CacheableMetadata::createFromObject($attachment)->applyTo($map);
-    }
-
+    // Metadata is the lightweight map shape: labels, metrics, variant shells,
+    // and internal definitions. It is cheap enough to compute once and then
+    // reuse while hydrating the default slice below.
+    $metadata = $this->buildCircleMapMetadata($attachment);
+    $map['data'] = $metadata['data'];
+    $map['settings'] = $metadata['settings'];
     if (empty($map['data'])) {
-      // No data, no widget.
       return $map;
     }
 
-    // If more than one monitoring periods have been selected, add a a variant
-    // drop-down.
-    if (count($configured_reporting_periods) > 1) {
-      $disaggregated_data_multiple_periods = $attachment->getDisaggregatedDataMultiple($configured_reporting_periods);
-      if (!empty($disaggregated_data_multiple_periods)) {
-        foreach ($disaggregated_data_multiple_periods as $period_data) {
-          /** @var \Drupal\ghi_plans\ApiObjects\PlanReportingPeriod $reporting_period */
-          $reporting_period = $period_data['reporting_period'];
-          foreach ($period_data['disaggregated_data'] as $metric_index => $metric_item) {
-            /** @var \Drupal\hpc_api\ApiObjects\Types\MetricType $metric_object */
-            $metric_object = $metric_item['metric_object'];
-            $metric_type = $metric_object->getMachineName();
-            $metric_label = $this->getMetricLabel($metric_object, $plan_base_object->getPlanLanguage());
-            $metric_map_key = $metric_type . '-' . $metric_index;
-            if (empty($map['data'][$metric_map_key])) {
-              continue;
-            }
-            if ($attachment->metricItemIsEmpty($metric_item)) {
-              continue;
-            }
-            if (!empty($map['data'][$metric_map_key]['variants'][$reporting_period->id()])) {
-              continue;
-            }
-            if (!$attachment->isMeasurementField($metric_item['metric']->name->en)) {
-              continue;
-            }
-            $metric_map_data = $this->prepareMetricItemMapData($metric_label, $metric_item, $decimal_format, $reporting_period);
-            $map['data'][$metric_map_key]['variants'][$reporting_period->id()] = [
-              'label' => $reporting_periods_rendered[$reporting_period->id()],
-              'tab_label' => $reporting_period->getPeriodNumber(),
-              'locations' => $metric_map_data['location_data'],
-              'modal_contents' => $metric_map_data['modal_contents'],
-            ];
-            CacheableMetadata::createFromObject($attachment)->applyTo($map);
-          }
-        }
-      }
+    // The browser needs one complete slice to paint the initial map and to
+    // size relative circle radii. Every other tab/variant remains a lazy shell.
+    $default_data_index = array_key_first($map['data']);
+    $default_slice = $this->buildCircleMapDataSlice($attachment, $default_data_index, NULL, $metadata);
+    if (!empty($default_slice)) {
+      $map['data'][$default_data_index] = array_replace($map['data'][$default_data_index], $default_slice);
     }
-
-    // Calculate the grouped sizes, so that the circle sizes are relative to a
-    // common max value on all available map tabs.
-    $this->calculateGroupedSizes($map['data']);
 
     // Build the map tabs.
     foreach ($map['data'] as $key => $item) {
@@ -436,34 +435,467 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
   }
 
   /**
-   * Calculate the grouped size of each location item based.
+   * Build compact metadata for all selectable circle-map tabs and variants.
    *
-   * @param array $data
-   *   A map data array with tab data keyed by the tab key.
+   * The returned array has two different audiences:
+   * - data/settings are sent to the browser as lightweight tab/variant shells.
+   * - definitions stay server-side and map opaque data indexes back to Fabric
+   *   metric ids, measurement ids, and reporting periods for later fragments.
+   *
+   * @param \Drupal\ghi_plans\ApiObjects\Attachments\Attachment $attachment
+   *   The attachment.
+   *
+   * @return array
+   *   Map metadata and internal data definitions.
    */
-  private function calculateGroupedSizes(&$data) {
-    $ranges = ['min' => 0, 'max' => 0];
-    foreach ($data as $tab_data) {
-      $tab_min = array_reduce($tab_data['locations'], function ($carry, $item) {
-        $value = is_numeric($item['total']) ? $item['total'] : 0;
-        return $carry > $value ? $value : $carry;
-      }, 0);
-      $tab_max = array_reduce($tab_data['locations'], function ($carry, $item) {
-        $value = is_numeric($item['total']) ? $item['total'] : 0;
-        return $carry < $value ? $value : $carry;
-      }, 0);
+  private function buildCircleMapMetadata(Attachment $attachment): array {
+    $map = [
+      'data' => [],
+      'definitions' => [],
+      'settings' => [
+        'radius_scale_max' => 0,
+      ],
+    ];
+    $plan_base_object = $attachment->getPlanObject();
+    $plan_id = $plan_base_object->getSourceId();
+    $reporting_periods = $this->getPlanReportingPeriods($plan_id);
+    $current_reporting_period_id = $this->getCurrentReportingPeriod($plan_id);
+    $configured_reporting_periods = $this->getConfiguredReportingPeriods($plan_id);
+    $measurement_ids_by_period_id = $this->getMeasurementIdsByReportingPeriod($attachment, array_filter(array_unique(array_merge(
+      $configured_reporting_periods,
+      [$current_reporting_period_id],
+    ))));
 
-      $ranges['min'] = min($ranges['min'], $tab_min);
-      $ranges['max'] = max($ranges['max'], $tab_max);
+    /** @var \Drupal\ghi_plans\Plugin\FabricQuery\AttachmentQuery|null $query */
+    $query = $this->getQueryHandler('attachment');
+    $summary = $query?->getMappableMapMetricSummary($attachment->id(), array_values($measurement_ids_by_period_id)) ?? [
+      'base' => [],
+      'measurements' => [],
+      'max' => 0,
+    ];
+    $map['settings']['radius_scale_max'] = $summary['max'] ?? 0;
+
+    $current_measurement_id = $current_reporting_period_id ? ($measurement_ids_by_period_id[$current_reporting_period_id] ?? NULL) : NULL;
+    $current_metric_ids = array_unique(array_merge(
+      array_keys($summary['base'] ?? []),
+      array_keys($summary['measurements'][$current_measurement_id] ?? []),
+    ));
+    $metric_items = $this->buildCircleMapMetricItems($attachment, $current_metric_ids, $current_reporting_period_id, $current_measurement_id);
+    foreach ($metric_items as $metric_item) {
+      $map['data'][$metric_item['key']] = $metric_item['data'];
+      $map['definitions'][$metric_item['key']] = $metric_item['definition'];
     }
 
-    foreach ($data as &$item) {
-      foreach ($item['locations'] as &$location) {
-        $max = $ranges['max'];
-        $relative_size = ($max > 0 ? 10 / $max * $location['total'] : 1) * 4;
-        $location['radius_factor'] = $relative_size > 1 ? $relative_size : 1;
+    if (count($configured_reporting_periods) > 1) {
+      $this->addCircleMapVariantMetadata($map, $attachment, $configured_reporting_periods, $reporting_periods, $measurement_ids_by_period_id, $summary);
+    }
+    return $map;
+  }
+
+  /**
+   * Build compact metric entries for the given metric type ids.
+   *
+   * @param \Drupal\ghi_plans\ApiObjects\Attachments\Attachment $attachment
+   *   The attachment.
+   * @param int[] $metric_type_ids
+   *   Metric type ids.
+   * @param int|null $reporting_period_id
+   *   The selected reporting period id.
+   * @param int|null $measurement_id
+   *   The selected measurement id.
+   *
+   * @return array
+   *   Metric entries.
+   */
+  private function buildCircleMapMetricItems(Attachment $attachment, array $metric_type_ids, ?int $reporting_period_id, ?int $measurement_id): array {
+    /** @var \Drupal\ghi_plans\Plugin\FabricQuery\AttachmentQuery|null $query */
+    $query = $this->getQueryHandler('attachment');
+    $plan_base_object = $attachment->getPlanObject();
+    $items = [];
+    foreach ($metric_type_ids as $metric_type_id) {
+      $metric_type = $query?->getMetricType((int) $metric_type_id);
+      if (!$metric_type instanceof MetricType) {
+        continue;
+      }
+      $metric_index = $attachment->getPrototype()?->getOriginalIndexByMetricType($metric_type->getMachineName());
+      if ($metric_index === NULL) {
+        continue;
+      }
+      $metric_map_key = $metric_type->getMachineName() . '-' . $metric_index;
+      $items[$metric_index] = [
+        'key' => $metric_map_key,
+        'data' => [
+          'label' => $this->getMetricLabel($metric_type, $plan_base_object->getPlanLanguage()),
+          'metric' => $this->buildMapMetric($metric_type),
+          'unit_type' => $attachment->getUnitType(),
+          'locations' => [],
+          'variants' => [],
+          'lazy' => TRUE,
+          'slice_loaded' => FALSE,
+        ],
+        'definition' => [
+          'metric_type_id' => (int) $metric_type_id,
+          'metric_type' => $metric_type,
+          'reporting_period_id' => $reporting_period_id,
+          'measurement_id' => $measurement_id,
+        ],
+      ];
+    }
+    ksort($items);
+    return $items;
+  }
+
+  /**
+   * Add compact reporting-period variant metadata.
+   *
+   * @param array $map
+   *   The map metadata.
+   * @param \Drupal\ghi_plans\ApiObjects\Attachments\Attachment $attachment
+   *   The attachment.
+   * @param int[] $configured_reporting_periods
+   *   Configured reporting period ids.
+   * @param \Drupal\ghi_plans\ApiObjects\PlanReportingPeriod[] $reporting_periods
+   *   Reporting period objects.
+   * @param int[] $measurement_ids_by_period_id
+   *   Measurement ids keyed by reporting period id.
+   * @param array $summary
+   *   Grouped metric summary data.
+   */
+  private function addCircleMapVariantMetadata(array &$map, Attachment $attachment, array $configured_reporting_periods, array $reporting_periods, array $measurement_ids_by_period_id, array $summary): void {
+    foreach ($configured_reporting_periods as $reporting_period_id) {
+      if (empty($reporting_periods[$reporting_period_id]) || empty($measurement_ids_by_period_id[$reporting_period_id])) {
+        continue;
+      }
+      $measurement_id = $measurement_ids_by_period_id[$reporting_period_id];
+      foreach ($summary['measurements'][$measurement_id] ?? [] as $metric_type_id => $metric_summary) {
+        $metric_items = $this->buildCircleMapMetricItems($attachment, [(int) $metric_type_id], $reporting_period_id, $measurement_id);
+        $metric_item = reset($metric_items);
+        if (empty($metric_item) || empty($map['data'][$metric_item['key']])) {
+          continue;
+        }
+        $metric = $metric_item['data']['metric'];
+        if (!$attachment->isMeasurementField($metric->name->en)) {
+          continue;
+        }
+        $map['data'][$metric_item['key']]['variants'][$reporting_period_id] = [
+          'label' => $reporting_periods[$reporting_period_id]->format('Monitoring period #@period_number: @date_range'),
+          'tab_label' => $reporting_periods[$reporting_period_id]->getPeriodNumber(),
+          'locations' => [],
+          'lazy' => TRUE,
+          'slice_loaded' => FALSE,
+        ];
+        $map['definitions'][$metric_item['key']]['variants'][$reporting_period_id] = [
+          'metric_type_id' => (int) $metric_type_id,
+          'metric_type' => $metric_item['definition']['metric_type'],
+          'reporting_period_id' => $reporting_period_id,
+          'measurement_id' => $measurement_id,
+        ];
       }
     }
+  }
+
+  /**
+   * Build a data slice for one map tab or variant.
+   *
+   * A data slice is the map-facing payload for one selectable metric/period. It
+   * contains locations, values, metric totals, and the loaded marker. It does
+   * not contain modal/sidebar details; those are loaded per location by
+   * buildCircleMapModalContent().
+   *
+   * @param \Drupal\ghi_plans\ApiObjects\Attachments\Attachment $attachment
+   *   The attachment.
+   * @param string $data_index
+   *   The data index.
+   * @param string|null $variant_id
+   *   The selected variant id, if any.
+   * @param array|null $metadata
+   *   Optional circle map metadata.
+   *
+   * @return array|null
+   *   The data slice, or NULL if the requested slice is invalid.
+   */
+  private function buildCircleMapDataSlice(Attachment $attachment, string $data_index, ?string $variant_id = NULL, ?array $metadata = NULL): ?array {
+    $metadata = $metadata ?? $this->buildCircleMapMetadata($attachment);
+    $definition = $this->getCircleMapDataDefinition($metadata, $data_index, $variant_id);
+    if (!$definition) {
+      return NULL;
+    }
+
+    /** @var \Drupal\ghi_plans\Plugin\FabricQuery\AttachmentQuery|null $query */
+    $query = $this->getQueryHandler('attachment');
+    if (!$query) {
+      return NULL;
+    }
+
+    // The query layer owns Fabric fact aggregation; the block only enriches
+    // normalized totals with location geometry/search data and radius sizing.
+    $totals_by_location_id = $query->getAttachmentMapLocationTotals($attachment->id(), $definition['metric_type_id'], $definition['measurement_id']);
+    $locations = $this->buildMapLocationData($totals_by_location_id, $metadata['settings']['radius_scale_max'] ?? 0);
+
+    return [
+      'metric' => $this->buildMapMetric($definition['metric_type'], array_sum($totals_by_location_id)),
+      'locations' => array_values($locations),
+      'lazy' => TRUE,
+      'slice_loaded' => TRUE,
+    ];
+  }
+
+  /**
+   * Build modal content for one map location.
+   *
+   * This is deliberately a single-location payload. Loading modal content only
+   * when a sidebar is opened keeps large maps from holding every category
+   * breakdown in the initial map data slice.
+   *
+   * @param \Drupal\ghi_plans\ApiObjects\Attachments\Attachment $attachment
+   *   The attachment.
+   * @param string $data_index
+   *   The data index.
+   * @param string|null $variant_id
+   *   The selected variant id, if any.
+   * @param int $location_id
+   *   The location id.
+   * @param array|null $metadata
+   *   Optional circle map metadata.
+   *
+   * @return array|null
+   *   The modal content, or NULL if unavailable.
+   */
+  private function buildCircleMapModalContent(Attachment $attachment, string $data_index, ?string $variant_id, int $location_id, ?array $metadata = NULL): ?array {
+    $metadata = $metadata ?? $this->buildCircleMapMetadata($attachment);
+    $definition = $this->getCircleMapDataDefinition($metadata, $data_index, $variant_id);
+    if (!$definition) {
+      return NULL;
+    }
+
+    /** @var \Drupal\ghi_plans\Plugin\FabricQuery\AttachmentQuery|null $query */
+    $query = $this->getQueryHandler('attachment');
+    /** @var \Drupal\ghi_base_objects\Plugin\FabricQuery\LocationQuery|null $location_query */
+    $location_query = $this->getQueryHandler('location');
+    if (!$query || !$location_query || !method_exists($location_query, 'getLocationsById')) {
+      return NULL;
+    }
+
+    $locations = $location_query->getLocationsById([$location_id]);
+    $location = $locations[$location_id] ?? NULL;
+    if (!$location instanceof GeoJsonLocationInterface) {
+      return NULL;
+    }
+
+    // Category detection and label resolution stay in the fact/query layer.
+    $breakdown = $query->getAttachmentMapModalBreakdown($attachment->id(), $definition['metric_type_id'], $location_id, $definition['measurement_id']);
+    $location_data = $location->getGeoJsonLocationData();
+    $reporting_period = $this->getReportingPeriodForDefinition($attachment, $definition);
+    $monitoring_period = $reporting_period && $attachment->isMeasurementField($definition['metric_type']->getName())
+      ? $reporting_period->format('Monitoring period #@period_number<br>@date_range')
+      : NULL;
+
+    return [
+      'object_id' => $location_id,
+      'location_id' => $location_id,
+      'title' => $location->getName(),
+      'admin_level' => $location_data['admin_level'],
+      'pcode' => $location_data['pcode'],
+      'total' => $breakdown['total'] ?? 0,
+      'metric_label' => $metadata['data'][$data_index]['label'],
+      'monitoring_period' => $monitoring_period,
+      'categories' => $breakdown['categories'] ?? [],
+    ];
+  }
+
+  /**
+   * Get the internal definition for a data slice.
+   *
+   * @param array $metadata
+   *   Circle map metadata.
+   * @param string $data_index
+   *   The data index.
+   * @param string|null $variant_id
+   *   The selected variant id, if any.
+   *
+   * @return array|null
+   *   The data definition, if available.
+   */
+  private function getCircleMapDataDefinition(array $metadata, string $data_index, ?string $variant_id = NULL): ?array {
+    $definition = $metadata['definitions'][$data_index] ?? NULL;
+    if (!$definition) {
+      return NULL;
+    }
+    if ($variant_id !== NULL && $variant_id !== '') {
+      return $definition['variants'][$variant_id] ?? NULL;
+    }
+    return $definition;
+  }
+
+  /**
+   * Build cacheability metadata for map fragments.
+   *
+   * @param \Drupal\ghi_plans\ApiObjects\Attachments\Attachment $attachment
+   *   The selected attachment.
+   *
+   * @return \Drupal\Core\Cache\CacheableMetadata
+   *   Cacheability metadata.
+   */
+  private function getMapFragmentCacheability(Attachment $attachment): CacheableMetadata {
+    $cache_metadata = CacheableMetadata::createFromObject($attachment);
+    $cache_metadata
+      ->addCacheableDependency($this->getCurrentBaseObject())
+      ->addCacheTags($this->getMapConfigCacheTags());
+    return $cache_metadata;
+  }
+
+  /**
+   * Build a route URL for a lazy map fragment endpoint.
+   *
+   * @param string $route_name
+   *   The route name.
+   * @param string $map_id
+   *   The map element id.
+   * @param \Drupal\ghi_plans\ApiObjects\Attachments\Attachment $attachment
+   *   The selected attachment.
+   *
+   * @return string|null
+   *   The fragment URL, if the block has a UUID.
+   */
+  private function getLazyMapFragmentUrl(string $route_name, string $map_id, Attachment $attachment): ?string {
+    $block_uuid = $this->getUuid();
+    if (!$block_uuid) {
+      return NULL;
+    }
+    return Url::fromRoute($route_name, [
+      'plugin_id' => $this->getPluginId(),
+      'block_uuid' => $block_uuid,
+    ], [
+      'query' => [
+        'current_uri' => $this->getCurrentUri(),
+        'map_id' => $map_id,
+        'attachment_id' => $attachment->id(),
+      ],
+    ])->toString();
+  }
+
+  /**
+   * Build the compact metric object consumed by the map JS.
+   *
+   * @param \Drupal\hpc_api\ApiObjects\Types\MetricType $metric_type
+   *   The metric type.
+   * @param float|int $value
+   *   The metric value.
+   *
+   * @return object
+   *   The metric object.
+   */
+  private function buildMapMetric(MetricType $metric_type, float|int $value = 0): object {
+    return (object) [
+      'name' => (object) [
+        'en' => $metric_type->getName(),
+      ],
+      'type' => $metric_type->getMachineName(),
+      'value' => $value,
+    ];
+  }
+
+  /**
+   * Get measurement ids keyed by reporting period id.
+   *
+   * @param \Drupal\ghi_plans\ApiObjects\Attachments\Attachment $attachment
+   *   The attachment.
+   * @param array $reporting_period_ids
+   *   Reporting period ids.
+   *
+   * @return int[]
+   *   Measurement ids keyed by reporting period id.
+   */
+  private function getMeasurementIdsByReportingPeriod(Attachment $attachment, array $reporting_period_ids): array {
+    $measurement_ids = [];
+    foreach ($reporting_period_ids as $reporting_period_id) {
+      if (!$reporting_period_id || !is_numeric($reporting_period_id)) {
+        continue;
+      }
+      $measurement = $attachment->getMeasurement((int) $reporting_period_id);
+      if ($measurement) {
+        $measurement_ids[(int) $reporting_period_id] = $measurement->id();
+      }
+    }
+    return $measurement_ids;
+  }
+
+  /**
+   * Build map location data for the given totals.
+   *
+   * @param float[] $totals_by_location_id
+   *   Totals keyed by location id.
+   * @param float|int $radius_scale_max
+   *   The max value used for relative circle sizing.
+   *
+   * @return array
+   *   Map location data keyed by location id.
+   */
+  private function buildMapLocationData(array $totals_by_location_id, float|int $radius_scale_max): array {
+    if (empty($totals_by_location_id)) {
+      return [];
+    }
+    $location_query = $this->getQueryHandler('location');
+    if (!$location_query || !method_exists($location_query, 'getLocationsById')) {
+      return [];
+    }
+    $locations = $location_query->getLocationsById(array_keys($totals_by_location_id));
+    $location_data = [];
+    foreach ($locations as $location_id => $location) {
+      if (!$location instanceof GeoJsonLocationInterface || $location->getAdminLevel() == 0) {
+        continue;
+      }
+      $total = $totals_by_location_id[$location_id] ?? 0;
+      if ($total <= 0) {
+        continue;
+      }
+      $item = $location->getGeoJsonLocationData() + [
+        'object_id' => $location_id,
+        'location_id' => $location_id,
+        'location_name' => $location->getName(),
+        'object_title' => $location->getName(),
+      ];
+      $item['total'] = $total;
+      $item['radius_factor'] = $this->calculateRadiusFactor($total, $radius_scale_max);
+      $location_data[$location_id] = $item;
+    }
+    return $location_data;
+  }
+
+  /**
+   * Get the reporting period for a data definition.
+   *
+   * @param \Drupal\ghi_plans\ApiObjects\Attachments\Attachment $attachment
+   *   The attachment.
+   * @param array $definition
+   *   A map data definition.
+   *
+   * @return \Drupal\ghi_plans\ApiObjects\PlanReportingPeriod|null
+   *   The reporting period, if any.
+   */
+  private function getReportingPeriodForDefinition(Attachment $attachment, array $definition): ?PlanReportingPeriod {
+    $reporting_period_id = $definition['reporting_period_id'] ?? NULL;
+    if (!$reporting_period_id) {
+      return NULL;
+    }
+    $reporting_periods = $this->getPlanReportingPeriods($attachment->getPlanId());
+    return $reporting_periods[$reporting_period_id] ?? NULL;
+  }
+
+  /**
+   * Calculate the relative radius factor for one location value.
+   *
+   * @param float|int $value
+   *   The location value.
+   * @param float|int $max
+   *   The global max value for this map.
+   *
+   * @return float|int
+   *   The radius factor.
+   */
+  private function calculateRadiusFactor(float|int $value, float|int $max): float|int {
+    $relative_size = ($max > 0 ? 10 / $max * $value : 1) * 4;
+    return $relative_size > 1 ? $relative_size : 1;
   }
 
   /**
@@ -531,53 +963,6 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
       $metric_label = $conf['map']['metric_labels'][$metric_type];
     }
     return $metric_label ?: $metric_object->getLabel($langcode);
-  }
-
-  /**
-   * Prepare the data for full metric item, that includes locations and modals.
-   */
-  private function prepareMetricItemMapData($metric_label, $metric_item, $decimal_format, $reporting_period = NULL) {
-    $locations = $metric_item['locations'];
-
-    $location_data = [];
-    $modal_contents = [];
-
-    foreach ($locations as $key => $location) {
-      if (empty($location['map_data'])) {
-        continue;
-      }
-      $location_data[$key] = $location['map_data'];
-      $location['categories'] = array_filter($location['categories'], function ($category) {
-        return $category['data'] !== NULL;
-      });
-      // The rendering is fully done in the client, to save execution time on
-      // plans with a huge number of locations.
-      // See Drupal.hpc_map.planModalContent().
-      $modal_contents[(string) $location['id']] = [
-        'object_id' => $location['id'],
-        'location_id' => $location['id'],
-        'title' => $location['name'],
-        'admin_level' => $location['map_data']['admin_level'],
-        'pcode' => $location['map_data']['pcode'],
-        'total' => $location['total'],
-        'metric_label' => $metric_label,
-        // The categories key is what makes this renderable in the client by
-        // map.js.
-        'categories' => array_map(function ($category) {
-          return (object) [
-            'name' => $category['name'],
-            'value' => $category['data'],
-          ];
-        }, $location['categories']),
-
-      ];
-    }
-
-    return [
-      'location_data' => $location_data,
-      'modal_contents' => $modal_contents,
-      'monitoring_period' => $reporting_period && $metric_item['is_measurement'] ? $reporting_period->format('Monitoring period #@period_number<br>@date_range') : NULL,
-    ];
   }
 
   /**
@@ -855,15 +1240,25 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
   /**
    * Get the default attachment to show on initial widget rendering.
    *
-   * @return \Drupal\ghi_plans\ApiObjects\Attachments\Attachment
-   *   An attachment object.
+   * @param bool $require_map_data
+   *   Whether to require the selected attachment to have full map data.
+   *
+   * @return \Drupal\ghi_plans\ApiObjects\Attachments\Attachment|null
+   *   An attachment object, or NULL if none is available.
    */
-  private function getDefaultAttachment() {
-    $default_attachment = &drupal_static($this->getUuid() . '::' . __METHOD__, NULL);
+  private function getDefaultAttachment(bool $require_map_data = FALSE) {
+    $request = $this->requestStack->getCurrentRequest();
+    $requested_attachment_id = $request->request->get('attachment_id')
+      ?? $request->query->get('attachment_id')
+      ?? NULL;
+    $cache_key = implode(':', [
+      $this->getUuid() . '::' . __METHOD__,
+      (int) $require_map_data,
+      $requested_attachment_id ?? '',
+    ]);
+    $default_attachment = &drupal_static($cache_key, NULL);
     if ($default_attachment === NULL) {
       $conf = $this->getBlockConfig();
-      $request = $this->requestStack->getCurrentRequest();
-      $requested_attachment_id = $request->request->get('attachment_id') ?? $request->query->get('attachment_id') ?? NULL;
       $default_attachment_id = $conf['map']['common']['default_attachment'] ?? NULL;
       $attachments = $this->getSelectedAttachments();
       $attachment = NULL;
@@ -880,14 +1275,11 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
       if (!$attachment instanceof Attachment) {
         $default_attachment = FALSE;
       }
-      elseif (!$this->attachmentCanBeMapped($attachment)) {
-        $default_attachment = FALSE;
-      }
-      elseif ($attachment->getPlanId() != $this->getCurrentPlanId()) {
+      elseif ($require_map_data && !$this->attachmentCanBeMapped($attachment)) {
         $default_attachment = FALSE;
       }
     }
-    return $default_attachment;
+    return $default_attachment ?: NULL;
   }
 
   /**
@@ -897,15 +1289,65 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
    *   An array of attachment objects, keyed by the attachment id.
    */
   private function getSelectedAttachments() {
+    $selected_attachments = &drupal_static($this->getUuid() . '::' . __METHOD__, NULL);
+    if ($selected_attachments !== NULL) {
+      return $selected_attachments;
+    }
+
     $entities = $this->getConfiguredEntities();
     if (empty($entities)) {
+      $selected_attachments = [];
       return [];
     }
     $attachments = $this->getConfiguredAttachments();
-    $attachments = array_filter($attachments, function (AttachmentInterface $attachment) {
-      return $this->attachmentCanBeMapped($attachment);
-    });
-    return $attachments;
+    $attachments = array_filter(
+      $attachments,
+      fn (AttachmentInterface $attachment) => $this->attachmentHasMapPotential($attachment),
+    );
+    if (empty($attachments)) {
+      $selected_attachments = [];
+      return [];
+    }
+
+    $availability = $this->getMappableDataAvailability($attachments);
+    $selected_attachments = array_filter(
+      $attachments,
+      fn (Attachment $attachment) => !empty($availability[$attachment->id()]),
+    );
+    return $selected_attachments;
+  }
+
+  /**
+   * Get mappable data availability for the given attachments.
+   *
+   * @param \Drupal\ghi_plans\ApiObjects\Attachments\Attachment[] $attachments
+   *   The attachments to check.
+   *
+   * @return bool[]
+   *   Availability keyed by attachment id.
+   */
+  private function getMappableDataAvailability(array $attachments): array {
+    $attachment_ids = [];
+    $measurement_ids_by_attachment_id = [];
+    foreach ($attachments as $attachment) {
+      if (!$attachment instanceof Attachment) {
+        continue;
+      }
+      $attachment_id = $attachment->id();
+      $attachment_ids[$attachment_id] = $attachment_id;
+      $reporting_period = $this->getCurrentReportingPeriod($attachment->getPlanId());
+      $measurement = $reporting_period ? $attachment->getMeasurement($reporting_period) : NULL;
+      if ($measurement) {
+        $measurement_ids_by_attachment_id[$attachment_id] = [$measurement->id()];
+      }
+    }
+    if (empty($attachment_ids)) {
+      return [];
+    }
+
+    /** @var \Drupal\ghi_plans\Plugin\FabricQuery\AttachmentQuery|null $query */
+    $query = $this->getQueryHandler('attachment');
+    return $query?->hasMappableDataMultiple($attachment_ids, $measurement_ids_by_attachment_id) ?? [];
   }
 
   /**

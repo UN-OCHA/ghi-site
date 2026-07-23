@@ -8,11 +8,13 @@ use Drupal\Core\Access\AccessResultInterface;
 use Drupal\Core\Ajax\HtmlCommand;
 use Drupal\Core\Ajax\RemoveCommand;
 use Drupal\Core\Cache\CacheableAjaxResponse;
+use Drupal\Core\Cache\CacheableJsonResponse;
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
 use Drupal\Core\Routing\Router;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\ghi_blocks\Ajax\MapInitCommand;
+use Drupal\ghi_blocks\Interfaces\LazyMapDataFragmentBlockInterface;
 use Drupal\ghi_blocks\Interfaces\LazyMapBlockInterface;
 use Drupal\hpc_common\Helpers\BlockHelper;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -67,6 +69,10 @@ class MapDataController extends ControllerBase implements ContainerInjectionInte
   /**
    * Get the map payload for a lazy map block.
    *
+   * This is the first lazy request for a map. It returns Drupal Ajax commands
+   * that replace any server-rendered shell markup and initialize the map JS.
+   * Follow-up JSON-only requests use dataFragment() and modalData().
+   *
    * @param string $plugin_id
    *   The block plugin ID.
    * @param string $block_uuid
@@ -76,13 +82,12 @@ class MapDataController extends ControllerBase implements ContainerInjectionInte
    *   The cacheable map data response.
    */
   public function data(string $plugin_id, string $block_uuid): CacheableAjaxResponse {
-    $uri = $this->currentRequest->query->get('current_uri');
     $map_id = $this->currentRequest->query->get('map_id');
-    if (empty($uri) || empty($map_id)) {
+    if (empty($map_id)) {
       throw new NotFoundHttpException();
     }
 
-    $access = $this->checkUriAccess($uri);
+    $access = $this->checkUriAccess($this->getCurrentUri());
     if (!$access->isAllowed()) {
       $response = new CacheableAjaxResponse();
       $response->setStatusCode(403);
@@ -90,7 +95,7 @@ class MapDataController extends ControllerBase implements ContainerInjectionInte
       return $response;
     }
 
-    $block = BlockHelper::getBlockInstance($uri, $plugin_id, $block_uuid);
+    $block = $this->getMapBlock($plugin_id, $block_uuid);
     if (!$block instanceof LazyMapBlockInterface) {
       throw new NotFoundHttpException();
     }
@@ -113,6 +118,128 @@ class MapDataController extends ControllerBase implements ContainerInjectionInte
 
     $response->addCacheableDependency($payload->getCacheability());
     return $response;
+  }
+
+  /**
+   * Get a lazy map data fragment.
+   *
+   * This endpoint returns the data slice for one map tab or variant. The slice
+   * is JSON-only and is merged into the existing browser-side map settings; it
+   * does not include the one-location sidebar/modal content handled below.
+   *
+   * @param string $plugin_id
+   *   The block plugin ID.
+   * @param string $block_uuid
+   *   The block UUID.
+   *
+   * @return \Drupal\Core\Cache\CacheableJsonResponse
+   *   The cacheable map data fragment response.
+   */
+  public function dataFragment(string $plugin_id, string $block_uuid): CacheableJsonResponse {
+    $map_id = $this->currentRequest->query->get('map_id');
+    $data_index = $this->currentRequest->query->get('data_index');
+    $variant_id = $this->currentRequest->query->get('variant_id') ?: NULL;
+    if (empty($map_id) || empty($data_index)) {
+      throw new NotFoundHttpException();
+    }
+
+    $access = $this->checkUriAccess($this->getCurrentUri());
+    if (!$access->isAllowed()) {
+      $response = new CacheableJsonResponse([], 403);
+      $response->addCacheableDependency($access);
+      return $response;
+    }
+
+    $block = $this->getMapBlock($plugin_id, $block_uuid);
+    if (!$block instanceof LazyMapDataFragmentBlockInterface) {
+      throw new NotFoundHttpException();
+    }
+
+    $fragment = $block->buildLazyMapDataFragment($map_id, $data_index, $variant_id);
+    if (!$fragment) {
+      throw new NotFoundHttpException();
+    }
+
+    $response = new CacheableJsonResponse($fragment->getData());
+    $response->addCacheableDependency($access);
+    $response->addCacheableDependency($fragment->getCacheability());
+    return $response;
+  }
+
+  /**
+   * Get lazy modal content for a map location.
+   *
+   * This endpoint returns exactly one location's sidebar/modal payload for the
+   * active data index and variant. Keeping this separate from dataFragment()
+   * prevents a loaded map slice from also loading every sidebar row.
+   *
+   * @param string $plugin_id
+   *   The block plugin ID.
+   * @param string $block_uuid
+   *   The block UUID.
+   *
+   * @return \Drupal\Core\Cache\CacheableJsonResponse
+   *   The cacheable modal content response.
+   */
+  public function modalData(string $plugin_id, string $block_uuid): CacheableJsonResponse {
+    $map_id = $this->currentRequest->query->get('map_id');
+    $data_index = $this->currentRequest->query->get('data_index');
+    $object_id = $this->currentRequest->query->get('object_id');
+    $variant_id = $this->currentRequest->query->get('variant_id') ?: NULL;
+    if (empty($map_id) || empty($data_index) || $object_id === NULL) {
+      throw new NotFoundHttpException();
+    }
+
+    $access = $this->checkUriAccess($this->getCurrentUri());
+    if (!$access->isAllowed()) {
+      $response = new CacheableJsonResponse([], 403);
+      $response->addCacheableDependency($access);
+      return $response;
+    }
+
+    $block = $this->getMapBlock($plugin_id, $block_uuid);
+    if (!$block instanceof LazyMapDataFragmentBlockInterface) {
+      throw new NotFoundHttpException();
+    }
+
+    $fragment = $block->buildLazyMapModalFragment($map_id, $data_index, $object_id, $variant_id);
+    if (!$fragment) {
+      throw new NotFoundHttpException();
+    }
+
+    $response = new CacheableJsonResponse($fragment->getData());
+    $response->addCacheableDependency($access);
+    $response->addCacheableDependency($fragment->getCacheability());
+    return $response;
+  }
+
+  /**
+   * Get the current page URI from the query.
+   *
+   * @return string
+   *   The current page URI.
+   */
+  private function getCurrentUri(): string {
+    $uri = $this->currentRequest->query->get('current_uri');
+    if (empty($uri)) {
+      throw new NotFoundHttpException();
+    }
+    return $uri;
+  }
+
+  /**
+   * Get the lazy map block for the current page URI.
+   *
+   * @param string $plugin_id
+   *   The block plugin ID.
+   * @param string $block_uuid
+   *   The block UUID.
+   *
+   * @return object|null
+   *   The block instance, if found.
+   */
+  private function getMapBlock(string $plugin_id, string $block_uuid): ?object {
+    return BlockHelper::getBlockInstance($this->getCurrentUri(), $plugin_id, $block_uuid);
   }
 
   /**

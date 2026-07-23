@@ -23,6 +23,19 @@ class FabricQuery implements \Stringable {
   const DEFAULT_LIMIT = 10000;
 
   /**
+   * Fabric filter operators that can be passed explicitly.
+   */
+  private const FILTER_OPERATORS = [
+    'eq',
+    'gt',
+    'gte',
+    'in',
+    'isNull',
+    'lt',
+    'lte',
+  ];
+
+  /**
    * The query name.
    *
    * @var string
@@ -448,6 +461,9 @@ class FabricQuery implements \Stringable {
           $strings[] = $this->buildListFilterString($key, $value, FALSE);
         }
       }
+      elseif (is_array($value) && $this->isOperatorFilter($value)) {
+        $strings[] = $this->buildOperatorFilterString($key, $value);
+      }
       elseif (is_array($value)) {
         // Anything else is treated like a sub filter, e.g.:
         // filter -> location relation -> location -> location property.
@@ -481,6 +497,67 @@ class FabricQuery implements \Stringable {
   private function buildListFilterString(string $key, array $values, bool $numeric): string {
     $value_string = $numeric ? implode(',', $values) : '"' . implode('", "', $values) . '"';
     return $key . ': { in: [' . $value_string . '] }';
+  }
+
+  /**
+   * Check if the given filter value is an explicit operator filter.
+   *
+   * @param array $filter
+   *   The filter value.
+   *
+   * @return bool
+   *   TRUE if the filter value only contains supported operator keys.
+   */
+  private function isOperatorFilter(array $filter): bool {
+    if (ArrayHelper::all(array_keys($filter), 'is_integer')) {
+      return FALSE;
+    }
+    return empty(array_diff(array_keys($filter), self::FILTER_OPERATORS));
+  }
+
+  /**
+   * Build an explicit operator filter string.
+   *
+   * @param string $key
+   *   The filter key.
+   * @param array $operators
+   *   The operator filter values.
+   *
+   * @return string
+   *   The filter string.
+   */
+  private function buildOperatorFilterString(string $key, array $operators): string {
+    $operator_strings = [];
+    foreach ($operators as $operator => $value) {
+      $operator_strings[] = $operator . ': ' . $this->buildFilterValueString($value);
+    }
+    return $key . ': { ' . implode(' ', $operator_strings) . ' }';
+  }
+
+  /**
+   * Build a scalar or list filter value string.
+   *
+   * @param mixed $value
+   *   The filter value.
+   *
+   * @return string
+   *   The value string.
+   */
+  private function buildFilterValueString(mixed $value): string {
+    if (is_bool($value)) {
+      return $value ? 'true' : 'false';
+    }
+    if (is_numeric($value)) {
+      return (string) $value;
+    }
+    if (is_array($value)) {
+      $values = array_map(fn ($item) => $this->buildFilterValueString($item), $value);
+      return '[' . implode(', ', $values) . ']';
+    }
+    if ($value === NULL) {
+      return 'null';
+    }
+    return '"' . $value . '"';
   }
 
   /**

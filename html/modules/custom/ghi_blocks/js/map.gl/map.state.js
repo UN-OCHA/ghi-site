@@ -46,7 +46,11 @@
       this.adminLevel = null;
       this.adminLevelControl = null;
       this.searchControl = null;
+      // Lazy map request caches store jQuery promises, not raw responses. That
+      // lets a click/search retry attach to an in-flight request instead of
+      // starting duplicate HTTP calls for the same slice or modal content.
       this.modalContentRequests = {};
+      this.dataSliceRequests = {};
       this.ready = false;
 
       // Chose the right admin level to start with.
@@ -300,6 +304,16 @@
       return this.options;
     }
 
+    /*
+     * Lazy map terminology used below:
+     *
+     * A data slice is the locations/metric payload for one tab or variant. It
+     * is enough to render circles, update relative sizing, and power search for
+     * the active selection. A modal content request is narrower: it loads one
+     * location's sidebar data inside that active slice. Both travel over JSON
+     * fragment endpoints, but they are not interchangeable payload shapes.
+     */
+
     /**
      * Check if modal contents can be lazy-loaded for this map.
      *
@@ -318,6 +332,141 @@
      */
     getLazyModalDataUrl = function () {
       return this.getOptions().modal_data_url ?? null;
+    }
+
+    /**
+     * Check if data slices can be lazy-loaded for this map.
+     *
+     * @returns {Boolean}
+     *   TRUE if a data slice URL is available, FALSE otherwise.
+     */
+    hasLazyDataSlices = function () {
+      return typeof this.getOptions().slice_data_url != 'undefined' && this.getOptions().slice_data_url !== null;
+    }
+
+    /**
+     * Get the data slice endpoint for this map.
+     *
+     * @returns {String|null}
+     *   The data slice URL, if available.
+     */
+    getLazyDataSliceUrl = function () {
+      return this.getOptions().slice_data_url ?? null;
+    }
+
+    /**
+     * Get the target data object for a tab or variant.
+     *
+     * @param {String|null} index
+     *   The current map tab index.
+     * @param {String|null} variant_id
+     *   The current variant id.
+     *
+     * @returns {Object|null}
+     *   The data target, if available.
+     */
+    getDataSliceTarget = function (index = null, variant_id = null) {
+      index = index ?? this.getCurrentIndex();
+      let data = this.hasMapTabs() && index !== null ? this.getDataForIndex(index) : this.getData();
+      if (!data) {
+        return null;
+      }
+      if (variant_id) {
+        return data.variants?.[variant_id] ?? null;
+      }
+      return data;
+    }
+
+    /**
+     * Check if a tab or variant data slice has already been loaded.
+     *
+     * @param {String|null} index
+     *   The current map tab index.
+     * @param {String|null} variant_id
+     *   The current variant id.
+     *
+     * @returns {Boolean}
+     *   TRUE if the slice is available.
+     */
+    dataSliceIsLoaded = function (index = null, variant_id = null) {
+      let target = this.getDataSliceTarget(index, variant_id);
+      return target !== null && (!target.lazy || target.slice_loaded);
+    }
+
+    /**
+     * Store a loaded data slice.
+     *
+     * @param {String|null} index
+     *   The current map tab index.
+     * @param {String|null} variant_id
+     *   The current variant id.
+     * @param {Object} data_slice
+     *   The loaded data slice.
+     */
+    setDataSlice = function (index = null, variant_id = null, data_slice = {}) {
+      index = index ?? this.getCurrentIndex();
+      let data = this.hasMapTabs() && index !== null ? this.getDataForIndex(index) : this.getData();
+      if (!data) {
+        return;
+      }
+      if (variant_id) {
+        // Variant shells are present in the initial payload so menus can be
+        // rendered before the values arrive. Merge the fetched slice into that
+        // shell to keep labels/tab metadata that were already sent.
+        data.variants = data.variants ?? {};
+        data.variants[variant_id] = Object.assign({}, data.variants[variant_id] ?? {}, data_slice);
+        return;
+      }
+      Object.assign(data, data_slice);
+    }
+
+    /**
+     * Load a tab or variant data slice when needed.
+     *
+     * @param {String|null} index
+     *   The current map tab index.
+     * @param {String|null} variant_id
+     *   The current variant id.
+     *
+     * @returns {Object}
+     *   A jQuery promise.
+     */
+    loadDataSlice = function (index = null, variant_id = null) {
+      if (this.dataSliceIsLoaded(index, variant_id) || !this.hasLazyDataSlices()) {
+        return $.Deferred().resolve(this.getDataSliceTarget(index, variant_id)).promise();
+      }
+
+      // The key matches the slice identity, not the endpoint URL. Attachment
+      // and map identity are already fixed by the map options, while index and
+      // variant are the only user-selectable parts of the slice.
+      let request_key = [index ?? 'default', variant_id ?? 'base'].join(':');
+      if (typeof this.dataSliceRequests[request_key] == 'undefined') {
+        let deferred = $.Deferred();
+        this.dataSliceRequests[request_key] = deferred.promise();
+        this.getMapController().showThrobber(this);
+        $.ajax({
+          dataType: 'json',
+          url: this.getLazyDataSliceUrl(),
+          data: {
+            data_index: index ?? 'default',
+            variant_id: variant_id,
+          },
+          success: (response) => {
+            // Store the slice in the same structure that the initial payload
+            // uses. Styles/search controls can then read from getLocations()
+            // without caring whether the data was eager or lazy.
+            this.setDataSlice(index, variant_id, response);
+            deferred.resolve(response);
+          },
+          error: () => {
+            delete this.dataSliceRequests[request_key];
+            deferred.reject();
+          },
+          complete: () => this.getMapController().hideThrobber(this)
+        });
+      }
+
+      return this.dataSliceRequests[request_key];
     }
 
     /**
@@ -343,6 +492,9 @@
       }
 
       let object_id = parseInt(object.object_id ?? object.location_id ?? object.id);
+      // Modal content may come from three generations of map payloads: the
+      // active variant store, the base data store, or older/eager location
+      // objects that still embed modal_content directly.
       if (variant_id && data.variants?.[variant_id]?.modal_contents?.[object_id]) {
         return data.variants[variant_id].modal_contents[object_id];
       }
@@ -400,6 +552,9 @@
       let index = object.index ?? this.getCurrentIndex();
       let variant_id = object.variant_id ?? this.getVariantId();
       let object_id = String(object.object_id ?? object.location_id ?? object.id);
+      // Include object id in addition to the active slice identity. A modal
+      // fragment is scoped to one location, so sharing by slice alone would
+      // return the wrong sidebar content.
       let request_key = [index ?? 'default', variant_id ?? 'base', object_id].join(':');
 
       if (typeof this.modalContentRequests[request_key] == 'undefined') {
@@ -871,25 +1026,27 @@
         }
       }
 
-      // Update the map.
-      this.updateMap(this.animationDuration, true);
+      this.loadDataSlice(index).done(() => {
+        // Update the map.
+        this.updateMap(this.animationDuration, true);
 
-      if (this.sidebar?.isVisible()) {
-        // If we have an open popup, keep it open and update the content, or
-        // close it if there is nothing to show.
-        let focused_location = this.focusedLocation ? this.getLocationById(this.focusedLocation.object_id) : null;
-        let focused_feature = focused_location ? this.getFeatureByObjectId(focused_location.object_id) : null;
-        let location_is_visible = this.isOverviewMap() || (focused_location && focused_location.total > 0);
-        if (focused_location && focused_feature && location_is_visible) {
-          // The active tab's location object carries the index and variant
-          // used by getModalContent().
-          this.focusedLocation = focused_location;
-          this.showSidebarForObject(this.focusedLocation);
+        if (this.sidebar?.isVisible()) {
+          // If we have an open popup, keep it open and update the content, or
+          // close it if there is nothing to show.
+          let focused_location = this.focusedLocation ? this.getLocationById(this.focusedLocation.object_id) : null;
+          let focused_feature = focused_location ? this.getFeatureByObjectId(focused_location.object_id) : null;
+          let location_is_visible = this.isOverviewMap() || (focused_location && focused_location.total > 0);
+          if (focused_location && focused_feature && location_is_visible) {
+            // The active tab's location object carries the index and variant
+            // used by getModalContent().
+            this.focusedLocation = focused_location;
+            this.showSidebarForObject(this.focusedLocation);
+          }
+          else {
+            this.hideSidebar();
+          }
         }
-        else {
-          this.hideSidebar();
-        }
-      }
+      });
     }
 
     /**
@@ -901,27 +1058,33 @@
      *   The variant id.
      */
     switchVariant = function (index, variant_id) {
-      if (this.setVariantId(index, variant_id) === false) {
-        // The variant can't be set, so we abort.
+      if (!this.hasVariant(index, variant_id)) {
         return;
       }
 
-      let $item = this.getContainer().find('.map-tabs a[data-map-index="' + index + '"]').parent('li');
-      let $toggle = $item.find('.variant-toggle');
-      let variant = this.getDataForIndex(index).variants[variant_id];
+      this.loadDataSlice(index, variant_id).done(() => {
+        if (this.setVariantId(index, variant_id) === false) {
+          // The variant can't be set, so we abort.
+          return;
+        }
 
-      // Mark the variant tab as active.
-      this.getContainer().find('.map-tabs div.cd-dropdown a').removeClass('active');
-      $item.find('.cd-dropdown').find('a[data-variant-id="' + variant_id + '"]').addClass('active');
+        let $item = this.getContainer().find('.map-tabs a[data-map-index="' + index + '"]').parent('li');
+        let $toggle = $item.find('.variant-toggle');
+        let variant = this.getDataForIndex(index).variants[variant_id];
 
-      // Update the dropdown label.
-      $toggle.find('button .ghi-dropdown__btn-label').html('#' + variant.tab_label);
+        // Mark the variant tab as active.
+        this.getContainer().find('.map-tabs div.cd-dropdown a').removeClass('active');
+        $item.find('.cd-dropdown').find('a[data-variant-id="' + variant_id + '"]').addClass('active');
 
-      // Store the currently used variant id.
-      $toggle.data('variant-id', variant_id);
+        // Update the dropdown label.
+        $toggle.find('button .ghi-dropdown__btn-label').html('#' + variant.tab_label);
 
-      // And hand over to the general tab switching which updates the data in the map.
-      this.switchTab(index);
+        // Store the currently used variant id.
+        $toggle.data('variant-id', variant_id);
+
+        // And hand over to the general tab switching which updates the data in the map.
+        this.switchTab(index);
+      });
     }
 
     /**

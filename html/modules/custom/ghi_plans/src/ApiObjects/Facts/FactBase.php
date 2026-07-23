@@ -20,6 +20,53 @@ abstract class FactBase extends ApiObjectBase {
   use PlanQueryTrait;
 
   /**
+   * Fact properties that identify disaggregation categories.
+   *
+   * This is the single source for translating between raw Fabric fact fields,
+   * fact object properties, and category query namespaces. Map queries use the
+   * field names for lightweight filters, while modal rendering uses the
+   * namespaces to resolve readable category labels.
+   */
+  private const DISAGGREGATION_CATEGORY_PROPERTIES = [
+    'genderId' => [
+      'field' => 'GenderId',
+      'namespace' => 'genders',
+    ],
+    'ageGroupId' => [
+      'field' => 'AgeGroupId',
+      'namespace' => 'ageGroups',
+    ],
+    'populationStatusId' => [
+      'field' => 'PopulationStatusId',
+      'namespace' => 'populationStatuses',
+    ],
+    'settlementTypeId' => [
+      'field' => 'SettlementTypeId',
+      'namespace' => 'settlementTypes',
+    ],
+    'disabilityStatusId' => [
+      'field' => 'DisabilityStatusId',
+      'namespace' => 'disabilityStatuses',
+    ],
+    'healthInterventionCategoryId' => [
+      'field' => 'HealthInterventionCategoryId',
+      'namespace' => 'healthInterventionCategories',
+    ],
+    'maternalStatusId' => [
+      'field' => 'MaternalStatusId',
+      'namespace' => 'maternalStatuses',
+    ],
+    'disaggregationCategoryOtherId' => [
+      'field' => 'DisaggregationCategoryOtherId',
+      'namespace' => 'disaggregationCategoryOthers',
+    ],
+    'deliveryModalityId' => [
+      'field' => 'DeliveryModalityId',
+      'namespace' => 'deliveryModalities',
+    ],
+  ];
+
+  /**
    * The attachment id.
    *
    * @var int
@@ -206,6 +253,51 @@ abstract class FactBase extends ApiObjectBase {
   }
 
   /**
+   * Get the raw Fabric field names that identify disaggregation categories.
+   *
+   * @return string[]
+   *   The disaggregation category field names.
+   */
+  public static function getDisaggregationCategoryFieldNames(): array {
+    return array_column(self::DISAGGREGATION_CATEGORY_PROPERTIES, 'field');
+  }
+
+  /**
+   * Check whether a raw fact row has disaggregation categories.
+   *
+   * @param object $fact
+   *   The raw Fabric fact row.
+   *
+   * @return bool
+   *   TRUE if the fact row has any category field set.
+   */
+  public static function rawFactHasDisaggregationCategories(object $fact): bool {
+    foreach (self::getDisaggregationCategoryFieldNames() as $field_name) {
+      // Raw Fabric rows use NULL category ids for location totals.
+      if (!empty($fact->{$field_name})) {
+        return TRUE;
+      }
+    }
+    return FALSE;
+  }
+
+  /**
+   * Check whether this fact has disaggregation categories.
+   *
+   * @return bool
+   *   TRUE if this fact has any category property set.
+   */
+  public function hasDisaggregationCategories(): bool {
+    foreach (array_keys(self::DISAGGREGATION_CATEGORY_PROPERTIES) as $property_name) {
+      // Instantiated facts expose the same ids through normalized properties.
+      if (property_exists($this, $property_name) && !empty($this->{$property_name})) {
+        return TRUE;
+      }
+    }
+    return FALSE;
+  }
+
+  /**
    * Get an identifier for the used categories.
    *
    * @return string|null
@@ -240,24 +332,15 @@ abstract class FactBase extends ApiObjectBase {
    *   An array of category.
    */
   public function getCategories() {
-    $category_properties = [
-      'genderId' => 'genders',
-      'ageGroupId' => 'ageGroups',
-      'populationStatusId' => 'populationStatuses',
-      'settlementTypeId' => 'settlementTypes',
-      'disabilityStatusId' => 'disabilityStatuses',
-      'healthInterventionCategoryId' => 'healthInterventionCategories',
-      'maternalStatusId' => 'maternalStatuses',
-      'disaggregationCategoryOtherId' => 'disaggregationCategoryOthers',
-      'deliveryModalityId' => 'deliveryModalities',
-    ];
     $category_query = $this->getCategoryQuery();
     $categories = [];
-    foreach ($category_properties as $property_name => $namespace) {
+    foreach (self::DISAGGREGATION_CATEGORY_PROPERTIES as $property_name => $category_info) {
       if (!property_exists($this, $property_name) || empty($this->$property_name)) {
         continue;
       }
-      $category = $category_query?->getCategory($namespace, $this->$property_name);
+      // Category ids are scoped by namespace in Fabric, so the raw id alone is
+      // not enough to resolve a label.
+      $category = $category_query?->getCategory($category_info['namespace'], $this->$property_name);
       if (!$category) {
         continue;
       }

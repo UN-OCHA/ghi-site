@@ -3,12 +3,15 @@
 namespace Drupal\Tests\ghi_blocks\Kernel\Plan;
 
 use Drupal\ghi_blocks\Interfaces\ConfigValidationInterface;
+use Drupal\ghi_blocks\Interfaces\LazyMapDataFragmentBlockInterface;
 use Drupal\ghi_blocks\Interfaces\LazyMapBlockInterface;
 use Drupal\ghi_blocks\Interfaces\MultiStepFormBlockInterface;
 use Drupal\ghi_blocks\Interfaces\OverrideDefaultTitleBlockInterface;
 use Drupal\ghi_blocks\Map\MapModalContent;
 use Drupal\ghi_blocks\Map\MapPayload;
 use Drupal\ghi_blocks\Plugin\Block\Plan\PlanAttachmentMap;
+use Drupal\ghi_plans\ApiObjects\Attachments\Attachment;
+use Drupal\ghi_plans\Plugin\FabricQuery\AttachmentQuery;
 use Drupal\Tests\ghi_blocks\Kernel\PlanBlockKernelTestBase;
 
 /**
@@ -42,6 +45,7 @@ class PlanAttachmentMapTest extends PlanBlockKernelTestBase {
     $this->assertArrayHasKey('attachment', $metadata->dataSources);
     $this->assertArrayHasKey('country', $metadata->dataSources);
     $this->assertArrayHasKey('entities', $metadata->dataSources);
+    $this->assertArrayHasKey('location', $metadata->dataSources);
   }
 
   /**
@@ -54,6 +58,7 @@ class PlanAttachmentMapTest extends PlanBlockKernelTestBase {
     $this->assertInstanceOf(OverrideDefaultTitleBlockInterface::class, $plugin);
     $this->assertInstanceOf(ConfigValidationInterface::class, $plugin);
     $this->assertInstanceOf(LazyMapBlockInterface::class, $plugin);
+    $this->assertInstanceOf(LazyMapDataFragmentBlockInterface::class, $plugin);
   }
 
   /**
@@ -111,6 +116,68 @@ class PlanAttachmentMapTest extends PlanBlockKernelTestBase {
   }
 
   /**
+   * Tests that initial visibility checks avoid full map data hydration.
+   */
+  public function testInitialVisibilityCheckUsesMappableDataLookup(): void {
+    $attachments = [
+      52205 => $this->mockMappableAttachment(52205, 1263, 'Protection'),
+      52202 => $this->mockMappableAttachment(52202, 1263, 'Child Protection'),
+    ];
+    $query = $this->getMockBuilder(AttachmentQuery::class)
+      ->disableOriginalConstructor()
+      ->onlyMethods([
+        'getAttachmentsById',
+        'hasMappableDataMultiple',
+        'getAttachmentDisaggregatedData',
+      ])
+      ->getMock();
+    $query->expects($this->once())
+      ->method('getAttachmentsById')
+      ->with($this->callback(fn (array $ids) => $ids == [52205 => 52205, 52202 => 52202]))
+      ->willReturn($attachments);
+    $query->expects($this->once())
+      ->method('hasMappableDataMultiple')
+      ->with(
+        $this->callback(fn (array $ids) => $ids == [52205 => 52205, 52202 => 52202]),
+        [],
+      )
+      ->willReturn([
+        52205 => TRUE,
+        52202 => TRUE,
+      ]);
+    $query->expects($this->never())
+      ->method('getAttachmentDisaggregatedData');
+
+    $plugin = $this->getBlockPlugin([
+      'attachments' => [
+        'entity_attachments' => [
+          'entities' => [
+            'entity_ids' => [
+              1263 => 0,
+              7910 => 7910,
+            ],
+          ],
+          'attachments' => [
+            'attachment_id' => [
+              52205 => 52205,
+              52202 => 52202,
+            ],
+          ],
+        ],
+      ],
+      'map' => [
+        'common' => [
+          'default_attachment' => 52205,
+          'comment' => NULL,
+        ],
+      ],
+    ], ['field_original_id' => 1263]);
+    $plugin->setQueryHandler('attachment', $query);
+
+    $this->assertFalse($plugin->isEmpty());
+  }
+
+  /**
    * Tests that configuration preview removes modal contents from map data.
    */
   public function testConfigurationPreviewMapStripsModalContents(): void {
@@ -160,8 +227,8 @@ class PlanAttachmentMapTest extends PlanBlockKernelTestBase {
    * @return \Drupal\ghi_blocks\Plugin\Block\Plan\PlanAttachmentMap
    *   The block plugin instance.
    */
-  private function getBlockPlugin() {
-    $configuration = [
+  private function getBlockPlugin(array $configuration = [], array $plan_values = []) {
+    $configuration = $configuration ?: [
       'attachments' => [
         'attachment_id' => NULL,
       ],
@@ -172,9 +239,39 @@ class PlanAttachmentMapTest extends PlanBlockKernelTestBase {
       ],
     ];
 
-    $contexts = $this->getPlanSectionContexts();
+    $contexts = $this->getPlanSectionContexts($plan_values);
 
     return $this->createBlockPlugin('plan_attachment_map', $configuration, $contexts);
+  }
+
+  /**
+   * Mock an attachment that can be considered for map rendering.
+   *
+   * @param int $attachment_id
+   *   The attachment id.
+   * @param int $plan_id
+   *   The plan id.
+   * @param string $description
+   *   The attachment description.
+   *
+   * @return \Drupal\ghi_plans\ApiObjects\Attachments\Attachment
+   *   The mocked attachment.
+   */
+  private function mockMappableAttachment(int $attachment_id, int $plan_id, string $description): Attachment {
+    $attachment = $this->getMockBuilder(Attachment::class)
+      ->disableOriginalConstructor()
+      ->onlyMethods([
+        'id',
+        'canHaveDisaggregatedData',
+        'getPlanId',
+        'getDescription',
+      ])
+      ->getMock();
+    $attachment->method('id')->willReturn($attachment_id);
+    $attachment->method('canHaveDisaggregatedData')->willReturn(TRUE);
+    $attachment->method('getPlanId')->willReturn($plan_id);
+    $attachment->method('getDescription')->willReturn($description);
+    return $attachment;
   }
 
 }
