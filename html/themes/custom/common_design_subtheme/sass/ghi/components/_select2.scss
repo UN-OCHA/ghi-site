@@ -139,14 +139,19 @@ div.ajax-switcher-wrapper {
       }
     }
 
-    ul.selectric-group {
-      li {
-        padding-left: 2rem;
-        font-weight: normal;
+    .select2-results__option--group {
+      padding: 0;
 
-        &.selectric-group-label {
-          padding-left: 18px;
-          font-weight: bold;
+      .select2-results__group {
+        display: block;
+        padding: 8px 18px;
+        font-weight: bold;
+      }
+
+      .select2-results__options--nested {
+        .select2-results__option {
+          padding-left: 2rem;
+          font-weight: normal;
         }
       }
     }
