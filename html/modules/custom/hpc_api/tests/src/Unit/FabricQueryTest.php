@@ -102,6 +102,24 @@ class FabricQueryTest extends UnitTestCase {
       ],
       'and: [{or: [{ Id: { in: [' . implode(',', $one_to_hundred) . '] } }, { Id: { in: [101] } }]}, {or: [{ ParentId: { in: [' . implode(',', range(101, 200)) . '] } }, { ParentId: { in: [201] } }]}]',
     ];
+    $cases[] = [
+      [
+        'ValueNum' => [
+          'gt' => 0,
+        ],
+      ],
+      'ValueNum: { gt: 0 }',
+    ];
+    $cases[] = [
+      [
+        'location' => [
+          'AdminLevel' => [
+            'gt' => 0,
+          ],
+        ],
+      ],
+      'location: { AdminLevel: { gt: 0 } }',
+    ];
     return $cases;
   }
 

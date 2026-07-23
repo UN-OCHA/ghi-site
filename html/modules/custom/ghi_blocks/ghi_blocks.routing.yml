@@ -47,6 +47,32 @@ ghi_blocks.map_data:
         block_uuid:
           type: string
 
+ghi_blocks.map_data_fragment:
+  path: '/map-data/{plugin_id}/{block_uuid}/fragment'
+  defaults:
+    _controller: '\Drupal\ghi_blocks\Controller\MapDataController::dataFragment'
+  requirements:
+    _permission: 'access content'
+  options:
+    parameters:
+        plugin_id:
+          type: string
+        block_uuid:
+          type: string
+
+ghi_blocks.map_modal_data:
+  path: '/map-data/{plugin_id}/{block_uuid}/modal'
+  defaults:
+    _controller: '\Drupal\ghi_blocks\Controller\MapDataController::modalData'
+  requirements:
+    _permission: 'access content'
+  options:
+    parameters:
+        plugin_id:
+          type: string
+        block_uuid:
+          type: string
+
 ghi_blocks.map_preview_modal_data:
   path: '/map-preview-modal-data/{token}'
   defaults:

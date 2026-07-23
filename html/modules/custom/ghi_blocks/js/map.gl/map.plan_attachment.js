@@ -40,6 +40,11 @@
     if (typeof mapConfig.modal_data_url != 'undefined') {
       options.modal_data_url = mapConfig.modal_data_url;
     }
+    if (typeof mapConfig.slice_data_url != 'undefined') {
+      // slice_data_url hydrates a tab/variant's map data. modal_data_url above
+      // hydrates a single sidebar payload for a location inside that slice.
+      options.slice_data_url = mapConfig.slice_data_url;
+    }
     return options;
   }
 

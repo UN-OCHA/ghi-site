@@ -65,6 +65,43 @@ class MapDataControllerTest extends KernelTestBase {
   }
 
   /**
+   * Tests that inaccessible page URIs do not return map fragments.
+   */
+  public function testDataFragmentDeniesInaccessibleCurrentUri(): void {
+    $request = Request::create('/map-data/plan_attachment_map/block_uuid/fragment', 'GET', [
+      'current_uri' => '/admin',
+      'map_id' => 'test-map',
+      'data_index' => 'people-targeted-0',
+    ]);
+    $this->container->get('request_stack')->push($request);
+
+    $controller = MapDataController::create($this->container);
+    $response = $controller->dataFragment('plan_attachment_map', 'block_uuid');
+
+    $this->assertSame(403, $response->getStatusCode());
+    $this->assertContains('user.permissions', $response->getCacheableMetadata()->getCacheContexts());
+  }
+
+  /**
+   * Tests that inaccessible page URIs do not return map modal data.
+   */
+  public function testModalDataDeniesInaccessibleCurrentUri(): void {
+    $request = Request::create('/map-data/plan_attachment_map/block_uuid/modal', 'GET', [
+      'current_uri' => '/admin',
+      'map_id' => 'test-map',
+      'data_index' => 'people-targeted-0',
+      'object_id' => '10',
+    ]);
+    $this->container->get('request_stack')->push($request);
+
+    $controller = MapDataController::create($this->container);
+    $response = $controller->modalData('plan_attachment_map', 'block_uuid');
+
+    $this->assertSame(403, $response->getStatusCode());
+    $this->assertContains('user.permissions', $response->getCacheableMetadata()->getCacheContexts());
+  }
+
+  /**
    * Tests that modal data can be loaded for maps without tabs.
    */
   public function testPreviewModalDataUsesDefaultDataIndex(): void {
