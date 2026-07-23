@@ -1,79 +1,8 @@
 .block-plan-attachment-map {
-  .form-type-select {
-    margin: 0;
 
-    .selectric-wrapper {
-      display: inline-block;
-    }
-
-    .selectric {
-      display: inline-block;
-      overflow: visible;
-      white-space: nowrap;
-      border: none;
-      background-color: transparent;
-
-      .label {
-        display: inline-block;
-        height: auto !important;
-        margin: 0;
-        // Covers the SVG to make it seem clickable.
-        padding-right: 24px;
-        white-space: nowrap;
-        color: var(--hpc-orange);
-        background-color: transparent;
-        font-size: var(--cd-font-size--base);
-        font-weight: bold;
-
-        &::after {
-          display: none;
-        }
-      }
-      .icon {
-        position: absolute;
-        top: 13px;
-        right: 6px;
-        width: 12px;
-        height: 12px;
-        fill: var(--hpc-orange);
-      }
-    }
-
-    .selectric-items {
-      position: absolute;
-      z-index: z-index(default);
-      top: 0;
-      left: -19px;
-      width: auto !important;
-      border-radius: 3px;
-      background-color: $cd-white;
-
-      ul li {
-        padding: 8px 18px;
-        white-space: nowrap;
-        border-top: none;
-        border-bottom: none;
-        font-size: var(--cd-font-size--base);
-        font-weight: bold;
-
-        &.selected {
-          color: var(--hpc-orange);
-          background-color: transparent;
-        }
-      }
-
-      ul.selectric-group {
-        li {
-          padding-left: 2rem;
-          font-weight: normal;
-
-          &.selectric-group-label {
-            padding-left: 18px;
-            font-weight: bold;
-          }
-        }
-      }
-    }
+  .ajax-switcher-wrapper > form .form-item > .select2-container--open {
+    right: auto !important;
+    left: 0 !important;
   }
 
   div.block-links {
