@@ -346,10 +346,6 @@ trait GlobalSettingsTrait {
         '#title' => $this->t('Show plan type icons'),
         '#description' => $this->t('If checked, icon-like flags will be added to the plan name column of plan tables on global pages. The label text is an automatically generated uppercased abbreviation based on the plan type initials, e.g. <em>Flash appeal</em> becomes <em>FA</em>.'),
       ],
-      'use_latest_plan_data' => [
-        '#title' => $this->t('Use latest plan data'),
-        '#description' => $this->t('Check if the plan data for this homepage year should be retrieved using the argument <em>version=latest</em>. This only affects logged-in users.'),
-      ],
       'funding' => [
         '#title' => $this->t('Show funding values'),
         '#description' => $this->t('Check to show funding values on global pages.'),

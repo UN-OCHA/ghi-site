@@ -17,9 +17,6 @@ ghi_blocks.global_settings:
       plan_type_icons:
         type: boolean
         label: 'Show plan type icons'
-      use_latest_plan_data:
-        type: boolean
-        label: 'Use the latest plan data'
       funding:
         type: boolean
         label: 'Show funding'
