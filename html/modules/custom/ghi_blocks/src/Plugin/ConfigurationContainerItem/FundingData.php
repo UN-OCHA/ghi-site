@@ -202,7 +202,7 @@ class FundingData extends ConfigurationContainerItemPluginBase {
    *   The requirements.
    */
   private function getRequirements(string $entity_type, int $entity_id): ?float {
-    return $this->getCostAttachment($entity_type, $entity_id)?->getRequirements();
+    return $this->getCostAttachment($entity_type, $entity_id)?->getRequirements() ?? 0.0;
   }
 
   /**
@@ -217,7 +217,7 @@ class FundingData extends ConfigurationContainerItemPluginBase {
    *   The original requirements.
    */
   private function getOriginalRequirements(string $entity_type, int $entity_id): ?float {
-    return $this->getCostAttachment($entity_type, $entity_id)?->getOriginalRequirements();
+    return $this->getCostAttachment($entity_type, $entity_id)?->getOriginalRequirements() ?? 0.0;
   }
 
   /**
@@ -362,9 +362,12 @@ class FundingData extends ConfigurationContainerItemPluginBase {
    */
   public function getValueForCluster($cluster_id, $property) {
     $values = &drupal_static(__CLASS__ . '::' . __METHOD__, []);
-    $values[$cluster_id] = $values[$cluster_id] ?? [];
-    if (array_key_exists($property, $values[$cluster_id])) {
-      return $values[$cluster_id][$property];
+    $plan_object = $this->getContextValue('plan_object');
+    $plan_id = $plan_object instanceof Plan ? $plan_object->getSourceId() : 0;
+    $cache_key = $plan_id . '::' . $cluster_id;
+    $values[$cache_key] = $values[$cache_key] ?? [];
+    if (array_key_exists($property, $values[$cache_key])) {
+      return $values[$cache_key][$property];
     }
     switch ($property) {
       case 'current_requirements':
@@ -390,11 +393,11 @@ class FundingData extends ConfigurationContainerItemPluginBase {
         break;
 
       default:
-        $value = $this->flowSearchQuery->getClusterPropertyById($cluster_id, $property, 0);
+        $value = $this->flowSearchQuery->getClusterPropertyById($cluster_id, $property);
         break;
     }
 
-    $values[$cluster_id][$property] = $value;
+    $values[$cache_key][$property] = $value;
     return $value;
   }
 
@@ -433,10 +436,11 @@ class FundingData extends ConfigurationContainerItemPluginBase {
       return array_sum(array_map(fn (CostAttachment $attachment): float => $attachment->getRequirements(), $attachments));
     }
 
-    $values = array_map(function ($cluster_id) use ($property) {
+    $cluster_values = array_map(function ($cluster_id) use ($property) {
       return $this->getValueForCluster($cluster_id, $property);
     }, $cluster_ids);
-    $value = array_sum($values);
+    $numeric_values = array_filter($cluster_values, 'is_numeric');
+    $value = count($numeric_values) == count($cluster_values) ? array_sum($numeric_values) : NULL;
     $values[$plan_id][$property] = $value;
     return $value;
   }
@@ -460,10 +464,11 @@ class FundingData extends ConfigurationContainerItemPluginBase {
     /** @var \Drupal\ghi_base_objects\Entity\BaseObjectInterface $base_object */
     $base_object = $this->getContextValue('base_object');
 
-    $rendered = $this->buildRenderArray($theme_function, $this->getValue($data_type_key, $cluster_restrict), [
+    $value = $this->getValue($data_type_key, $cluster_restrict);
+    $rendered = $value !== NULL ? $this->buildRenderArray($theme_function, $value, [
       'scale' => $scale,
       'decimal_format' => $plan_object->getDecimalFormat(),
-    ] + $theme_options);
+    ] + $theme_options) : ['#markup' => ''];
 
     // See if we need to add a footnote.
     $footnote = NULL;
@@ -484,7 +489,7 @@ class FundingData extends ConfigurationContainerItemPluginBase {
       ] : NULL;
     }
 
-    return [
+    $build = [
       '#type' => 'container',
       'content' => $rendered,
       'tooltips' => [
@@ -495,6 +500,33 @@ class FundingData extends ConfigurationContainerItemPluginBase {
         ],
       ],
     ];
+
+    if ($value === NULL && $this->isClusterFundingDataType($data_type, $cluster_restrict)) {
+      $build['#cache']['max-age'] = 0;
+    }
+    return $build;
+  }
+
+  /**
+   * Check if a data type depends on the cluster-scoped FTS summary.
+   *
+   * @param array $data_type
+   *   The data type definition.
+   * @param array|null $cluster_restrict
+   *   A cluster restriction to apply.
+   *
+   * @return bool
+   *   TRUE if the value is derived from cluster-scoped FTS funding data.
+   */
+  private function isClusterFundingDataType(array $data_type, ?array $cluster_restrict = NULL): bool {
+    $property = $data_type['property'] ?? NULL;
+    if (!in_array($property, ['total_funding', 'funding_gap', 'funding_coverage'], TRUE)) {
+      return FALSE;
+    }
+
+    $entity = $this->getContextValue('entity');
+    $base_object = $this->getContextValue('base_object');
+    return $entity instanceof ApiObjectInterface || $base_object instanceof GoverningEntity || (!empty($cluster_restrict['type']) && $cluster_restrict['type'] != 'none');
   }
 
   /**

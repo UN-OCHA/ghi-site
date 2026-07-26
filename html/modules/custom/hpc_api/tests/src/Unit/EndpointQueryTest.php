@@ -425,6 +425,30 @@ class EndpointQueryTest extends UnitTestCase {
   }
 
   /**
+   * Test that a failed live refresh falls back to cached remote data.
+   */
+  public function testFailedLiveRefreshFallsBackToRemoteDataCacheItem(): void {
+    $payload = file_get_contents(__DIR__ . '/Mocks/usage-year-location-id-1.json');
+    $item = $this->createRemoteDataCacheItem($payload, 1000, 900, 1600, 800);
+
+    $remote_cache = $this->mockRemoteDataCache($item);
+    $remote_cache->canServeExpiredOnError()->willReturn(TRUE);
+
+    $client = $this->prophesize('GuzzleHttp\Client');
+    $client->get('https://api.hpc.tools/v1/fts/flow/usage-years/location/1', Argument::any())
+      ->willReturn(new Response(504, [], 'Gateway Timeout'))
+      ->shouldBeCalledOnce();
+
+    $query = $this->createRemoteDataEndpointQuery($client->reveal(), $remote_cache->reveal());
+    $query->setArguments([
+      'endpoint' => 'fts/flow/usage-years/location/1',
+      'cache_base_time' => 500,
+    ]);
+
+    $this->assertEquals($this->getUsageYearApiMockResponse(), $query->getData());
+  }
+
+  /**
    * Test that a remote cache miss stores a successful endpoint response.
    */
   public function testRemoteDataCacheMissStoresResponseBody(): void {
@@ -770,11 +794,13 @@ class EndpointQueryTest extends UnitTestCase {
    *   The fresh-until timestamp.
    * @param int $stale_until
    *   The stale-until timestamp.
+   * @param int $fetched
+   *   The fetched timestamp.
    *
    * @return \Drupal\hpc_remote_data_cache\RemoteDataCacheItem
    *   The remote data cache item.
    */
-  private function createRemoteDataCacheItem(string $payload, int $request_time, int $fresh_until, int $stale_until): RemoteDataCacheItem {
+  private function createRemoteDataCacheItem(string $payload, int $request_time, int $fresh_until, int $stale_until, int $fetched = 100): RemoteDataCacheItem {
     return new RemoteDataCacheItem(
       'hpc_api_endpoint:test',
       'hpc_api_endpoint',
@@ -784,7 +810,7 @@ class EndpointQueryTest extends UnitTestCase {
       $payload,
       100,
       100,
-      100,
+      $fetched,
       $fresh_until,
       $stale_until,
       FALSE,

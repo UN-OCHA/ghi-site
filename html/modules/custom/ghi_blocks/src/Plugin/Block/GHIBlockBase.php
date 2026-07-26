@@ -584,7 +584,10 @@ abstract class GHIBlockBase extends HPCBlockBase implements TrustedCallbackInter
       $build_content = $this->buildContent();
       ProfileHelper::profileEnd($profile_key);
       $cache_tags = is_array($build_content) ? Cache::mergeTags($this->getCacheTags(), $this->collectRenderArrayCacheTags($build_content)) : $this->getCacheTags();
-      $this->cache($cache_key, $build_content, FALSE, NULL, $cache_tags);
+      $cache_max_age = is_array($build_content) ? Cache::mergeMaxAges($this->getCacheMaxAge(), $build_content['#cache']['max-age'] ?? Cache::PERMANENT) : $this->getCacheMaxAge();
+      if ($cache_max_age !== 0) {
+        $this->cache($cache_key, $build_content, FALSE, NULL, $cache_tags);
+      }
     }
     if (!$build_content) {
       return [];

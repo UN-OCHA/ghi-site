@@ -3,7 +3,7 @@
 namespace Drupal\ghi_blocks\Plugin\Block\Plan;
 
 use Drupal\Core\Block\Attribute\Block;
-use Drupal\Core\Cache\Cache;
+use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Plugin\Context\EntityContextDefinition;
@@ -96,7 +96,7 @@ class PlanHeadlineFigures extends GHIBlockBase implements MultiStepFormBlockInte
       return NULL;
     }
 
-    $cache_tags = [];
+    $cacheability = new CacheableMetadata();
     $tabs = [];
     foreach ($tree as $group) {
       $rendered = [];
@@ -119,12 +119,15 @@ class PlanHeadlineFigures extends GHIBlockBase implements MultiStepFormBlockInte
         if (!$item_type->isValid()) {
           continue;
         }
-        $cache_tags = Cache::mergeTags($cache_tags, $item_type->getCacheTags());
+        $item_build = $item_type->getRenderArray();
+        $item_cacheability = is_array($item_build) ? CacheableMetadata::createFromRenderArray($item_build) : new CacheableMetadata();
+        $item_cacheability->addCacheTags($item_type->getCacheTags());
+        $cacheability = $cacheability->merge($item_cacheability);
 
         $rendered[] = [
           '#type' => 'item',
           '#title' => $item_type->getLabel(),
-          0 => $item_type->getRenderArray(),
+          0 => $item_build,
           '#wrapper_attributes' => [
             'class' => $item_type->getClasses(),
           ] + $item_type->getDataAttributes(),
@@ -163,11 +166,8 @@ class PlanHeadlineFigures extends GHIBlockBase implements MultiStepFormBlockInte
       return;
     }
 
-    $build = [
-      '#cache' => [
-        'tags' => $cache_tags,
-      ],
-    ];
+    $build = [];
+    $cacheability->applyTo($build);
     $build[] = [
       '#theme' => 'tab_container',
       '#tabs' => $tabs,

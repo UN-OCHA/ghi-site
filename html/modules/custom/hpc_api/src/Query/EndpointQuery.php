@@ -399,14 +399,14 @@ class EndpointQuery {
     // No valid cached data available, so we run the API request.
     $response = $this->sendQuery();
     if (empty($response) || !$response instanceof ResponseInterface) {
-      if ($use_remote_cache && $this->remoteDataCache->canServeExpiredOnError() && $this->canUseExpiredRemoteCacheItem($remote_cache_item)) {
+      if ($use_remote_cache && $this->canUseRemoteCacheItemAfterFetchError($remote_cache_item)) {
         return $this->processResponseData($remote_cache_item->getPayload(), $cache_key);
       }
       return FALSE;
     }
     if ($response->getStatusCode() != 200) {
       $this->handleError($response, $endpoint_url);
-      if ($use_remote_cache && $this->remoteDataCache->canServeExpiredOnError() && $this->canUseExpiredRemoteCacheItem($remote_cache_item)) {
+      if ($use_remote_cache && $this->canUseRemoteCacheItemAfterFetchError($remote_cache_item)) {
         return $this->processResponseData($remote_cache_item->getPayload(), $cache_key);
       }
       return FALSE;
@@ -900,16 +900,23 @@ class EndpointQuery {
   }
 
   /**
-   * Check if an expired remote cache item can be used after a fetch error.
+   * Check if a remote cache item can be used after a fetch error.
    *
    * @param \Drupal\hpc_remote_data_cache\RemoteDataCacheItem|null $item
    *   The remote cache item.
    *
    * @return bool
-   *   TRUE if the expired item can be used after an error, FALSE otherwise.
+   *   TRUE if the item can be used after an error, FALSE otherwise.
    */
-  private function canUseExpiredRemoteCacheItem(?RemoteDataCacheItem $item): bool {
-    return $item instanceof RemoteDataCacheItem && $item->isExpired() && !$this->getCacheBaseTime();
+  private function canUseRemoteCacheItemAfterFetchError(?RemoteDataCacheItem $item): bool {
+    if (!$item instanceof RemoteDataCacheItem || !$this->remoteDataCache->canServeExpiredOnError()) {
+      return FALSE;
+    }
+    $cache_base_time = $this->getCacheBaseTime();
+    if ($cache_base_time && $item->getFetched() < $cache_base_time) {
+      return FALSE;
+    }
+    return TRUE;
   }
 
   /**
