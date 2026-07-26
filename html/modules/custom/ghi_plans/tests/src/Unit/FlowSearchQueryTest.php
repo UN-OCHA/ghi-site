@@ -64,8 +64,8 @@ class FlowSearchQueryTest extends UnitTestCase {
     $get_data_calls = 0;
     $query = $this->mockFlowSearchQuery(FALSE, $cache, $set_cache_calls, $get_data_calls);
 
-    $this->assertSame([], $query->getClusterSummaryData());
-    $this->assertSame([], $query->getClusterSummaryData());
+    $this->assertNull($query->getClusterSummaryData());
+    $this->assertNull($query->getClusterSummaryData());
     $this->assertSame(1, $get_data_calls);
     $this->assertSame(0, $set_cache_calls);
   }
@@ -86,6 +86,51 @@ class FlowSearchQueryTest extends UnitTestCase {
     $this->assertCount(1, $summary->clusters);
     $this->assertSame(4304843, $summary->clusters[0]->total_funding);
     $this->assertSame(129756095, $summary->totals->total_funding);
+  }
+
+  /**
+   * Tests that omitted clusters in valid summary data are treated as zero.
+   */
+  public function testOmittedClusterFundingDefaultsToZero(): void {
+    $cache = [];
+    $set_cache_calls = 0;
+    $get_data_calls = 0;
+    $query = $this->mockFlowSearchQuery($this->createClusterSummaryEndpointData(), $cache, $set_cache_calls, $get_data_calls);
+
+    $this->assertSame(4304843.0, $query->getClusterTotalFunding(4571));
+    $this->assertSame(0.0, $query->getClusterTotalFunding(9999));
+    $this->assertSame(1000000.0, $query->getClusterFundingGap(9999, 1000000));
+    $this->assertSame(0.0, $query->getClusterFundingCoverage(9999, 1000000));
+    $this->assertNull($query->getClusterFundingCoverage(4571, NULL));
+  }
+
+  /**
+   * Tests that unavailable summary data is not invented as zero funding.
+   */
+  public function testUnavailableClusterSummaryDoesNotInventZero(): void {
+    $cache = [];
+    $set_cache_calls = 0;
+    $get_data_calls = 0;
+    $query = $this->mockFlowSearchQuery(FALSE, $cache, $set_cache_calls, $get_data_calls);
+
+    $this->assertNull($query->getClusterTotalFunding(9999));
+    $this->assertNull($query->getClusterFundingGap(9999, 1000000));
+    $this->assertNull($query->getClusterFundingCoverage(9999, 1000000));
+  }
+
+  /**
+   * Tests that a reported zero funding value is still returned as zero.
+   */
+  public function testReportedZeroClusterFundingIsPreserved(): void {
+    $endpoint_data = $this->createClusterSummaryEndpointData();
+    $endpoint_data->report3->fundingTotals->objects[0]->objectsBreakdown[0]->totalFunding = 0;
+    $cache = [];
+    $set_cache_calls = 0;
+    $get_data_calls = 0;
+    $query = $this->mockFlowSearchQuery($endpoint_data, $cache, $set_cache_calls, $get_data_calls);
+
+    $this->assertSame(0.0, $query->getClusterTotalFunding(4571));
+    $this->assertSame(0.0, $query->getClusterTotalFunding(9999));
   }
 
   /**

@@ -7,6 +7,7 @@ use Drupal\ghi_base_objects\Entity\BaseObjectInterface;
 use Drupal\ghi_blocks\Interfaces\MultiStepFormBlockInterface;
 use Drupal\ghi_blocks\Interfaces\OverrideDefaultTitleBlockInterface;
 use Drupal\ghi_blocks\Plugin\Block\Plan\PlanGoverningEntitiesTable;
+use Drupal\ghi_blocks\Plugin\ConfigurationContainerItem\FundingData;
 use Drupal\ghi_plans\ApiObjects\Entities\GoverningEntity;
 use Drupal\ghi_plans\ApiObjects\Prototypes\EntityPrototype;
 use Drupal\ghi_plans\ApiObjects\Prototypes\PlanPrototype;
@@ -127,6 +128,58 @@ class PlanGoverningEntitiesTableTest extends PlanBlockKernelTestBase {
   }
 
   /**
+   * Tests that missing cost attachments render as zero requirements.
+   */
+  public function testMissingCostAttachmentRendersZeroRequirements(): void {
+    $flow_search_query = $this->mockFlowSearchQuery([
+      'cluster_funding' => 0,
+      'not_reported_funding' => 0,
+      'shared_funding' => 0,
+    ]);
+
+    $endpoint_query_manager = $this->prophesize(EndpointQueryManager::class);
+    $endpoint_query_manager->hasDefinition(Argument::any())->willReturn(FALSE);
+    $endpoint_query_manager->createInstance('flow_search_query')->willReturn($flow_search_query);
+    $container = \Drupal::getContainer();
+    $container->set('plugin.manager.endpoint_query_manager', $endpoint_query_manager->reveal());
+    $container->set('plugin.manager.fabric_query_manager', $this->mockFabricQueryManager());
+    \Drupal::setContainer($container);
+
+    $plugin = $this->getBlockPlugin([
+      'table' => [
+        'columns' => [
+          [
+            'id' => 0,
+            'item_type' => 'entity_name',
+            'config' => [
+              'label' => 'Cluster name',
+            ],
+          ],
+          [
+            'id' => 1,
+            'item_type' => 'funding_data',
+            'config' => [
+              'label' => 'Requirements',
+              'data_type' => 'current_requirements',
+            ],
+          ],
+        ],
+      ],
+    ]);
+    $cluster = $this->createBaseObject(['type' => 'governing_entity']);
+    $this->injectPlanEntityQueryStub($plugin, [$cluster]);
+
+    $table_data = $this->callPrivateMethod($plugin, 'buildTableData');
+    $requirements_cell = $table_data['rows'][0]['data'][1];
+
+    $this->assertSame(0.0, $requirements_cell['data-value']);
+    $this->assertSame(0.0, $requirements_cell['data-raw-value']);
+    $this->assertSame(0.0, $requirements_cell['export_value']);
+    $this->assertContains('empty', $requirements_cell['class']);
+    $this->assertNotContains('not-available', $requirements_cell['class']);
+  }
+
+  /**
    * Tests that special funding rows use their raw funding data.
    */
   public function testBuildTableDataSpecialFundingRows() {
@@ -191,12 +244,104 @@ class PlanGoverningEntitiesTableTest extends PlanBlockKernelTestBase {
   }
 
   /**
+   * Tests that missing funding data makes the table build uncacheable.
+   */
+  public function testMissingFundingBubblesUncacheableMetadata() {
+    $flow_search_query = $this->mockFlowSearchQuery([
+      'cluster_funding' => NULL,
+      'not_reported_funding' => 0,
+      'shared_funding' => 0,
+    ]);
+
+    $endpoint_query_manager = $this->prophesize(EndpointQueryManager::class);
+    $endpoint_query_manager->createInstance('flow_search_query')->willReturn($flow_search_query);
+    $container = \Drupal::getContainer();
+    $container->set('plugin.manager.endpoint_query_manager', $endpoint_query_manager->reveal());
+    $container->set('plugin.manager.fabric_query_manager', $this->mockFabricQueryManager());
+    \Drupal::setContainer($container);
+
+    $plugin = $this->getBlockPlugin([
+      'table' => [
+        'columns' => [
+          [
+            'id' => 0,
+            'item_type' => 'funding_data',
+            'config' => [
+              'label' => 'Funding',
+              'data_type' => 'funding_totals',
+            ],
+          ],
+        ],
+      ],
+    ]);
+    $cluster = $this->createBaseObject([
+      'type' => 'governing_entity',
+      'name' => 'Water, Sanitation and Hygiene',
+      'field_original_id' => 7912,
+    ]);
+    $this->injectPlanEntityQueryStub($plugin, [$cluster]);
+    $plugin->setQueryHandler('flow_search', $flow_search_query);
+
+    $build = $plugin->buildContent();
+
+    $this->assertSame(0, $build['#cache']['max-age']);
+  }
+
+  /**
+   * Tests that partially missing cluster-restricted funding is uncacheable.
+   */
+  public function testPartiallyMissingClusterRestrictedFundingBubblesUncacheableMetadata(): void {
+    $plan = $this->createPlanBaseObject([
+      'field_original_id' => 1207,
+    ]);
+
+    $flow_search_query = $this->prophesize(FlowSearchQuery::class);
+    $flow_search_query->setPlaceholder(Argument::cetera())->willReturn(NULL);
+    $flow_search_query->getClusterIds()->willReturn([7912, 7913]);
+    $flow_search_query->getClusterTotalFunding(7912)->willReturn(1250000.0);
+    $flow_search_query->getClusterTotalFunding(7913)->willReturn(NULL);
+
+    $cluster_query = $this->prophesize(GoverningEntityQuery::class);
+    $cluster_query->getTaggedClustersForPlan(1207, 'wash')->willReturn([
+      7912 => TRUE,
+      7913 => TRUE,
+    ]);
+
+    $item = new FundingData([], 'funding_data', [
+      'label' => 'Financial data',
+    ]);
+    $item->flowSearchQuery = $flow_search_query->reveal();
+    $item->clusterQuery = $cluster_query->reveal();
+    $item->attachmentQuery = $this->prophesize(AttachmentQuery::class)->reveal();
+    $item->setConfig([
+      'data_type' => 'funding_totals',
+      'cluster_restrict' => [
+        'type' => 'tag_include',
+        'tag' => 'wash',
+      ],
+    ]);
+    $item->setContext([
+      'plan_object' => $plan,
+      'base_object' => $plan,
+    ]);
+
+    $build = $item->getRenderArray();
+
+    $this->assertSame(0, $build['#cache']['max-age']);
+  }
+
+  /**
    * Tests the buildDownloadData method.
    */
   public function testBuildDownloadData() {
     $plugin = $this->getBlockPlugin();
+    $cluster = $this->createBaseObject(['type' => 'governing_entity']);
+    $this->injectPlanEntityQueryStub($plugin, [$cluster]);
     $table_data = $this->callPrivateMethod($plugin, 'buildTableData');
-    $this->assertEquals($table_data, $plugin->buildDownloadData());
+    $download_data = $plugin->buildDownloadData();
+    $this->assertSame(['header', 'rows'], array_keys($download_data));
+    $this->assertEquals($table_data['header'], $download_data['header']);
+    $this->assertEquals($table_data['rows'], $download_data['rows']);
   }
 
   /**
@@ -425,6 +570,7 @@ class PlanGoverningEntitiesTableTest extends PlanBlockKernelTestBase {
     $icon_query = $this->prophesize(IconQuery::class);
     $governing_entity_query = $this->prophesize(GoverningEntityQuery::class);
     $attachment_query = $this->prophesize(AttachmentQuery::class);
+    $attachment_query->getAttachmentsByObject(Argument::cetera())->willReturn([]);
 
     $fabric_query_manager = $this->prophesize(FabricQueryManager::class);
     $fabric_query_manager->hasDefinition(Argument::any())->willReturn(FALSE);

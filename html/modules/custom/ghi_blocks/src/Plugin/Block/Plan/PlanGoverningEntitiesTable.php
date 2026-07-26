@@ -3,6 +3,7 @@
 namespace Drupal\ghi_blocks\Plugin\Block\Plan;
 
 use Drupal\Core\Block\Attribute\Block;
+use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Plugin\Context\EntityContextDefinition;
 use Drupal\Core\Render\Markup;
@@ -14,6 +15,7 @@ use Drupal\ghi_blocks\Interfaces\OverrideDefaultTitleBlockInterface;
 use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
 use Drupal\ghi_blocks\Traits\ConfigurationItemClusterRestrictTrait;
 use Drupal\ghi_blocks\Traits\TableSoftLimitTrait;
+use Drupal\ghi_form_elements\ConfigurationContainerItemPluginInterface;
 use Drupal\ghi_form_elements\Traits\ConfigurationContainerTrait;
 use Drupal\ghi_plans\ApiObjects\Entities\EntityObjectInterface;
 use Drupal\ghi_plans\ApiObjects\Entities\GoverningEntity;
@@ -103,7 +105,7 @@ class PlanGoverningEntitiesTable extends GHIBlockBase implements ConfigurableTab
     if (empty($table_data)) {
       return NULL;
     }
-    return [
+    $build = [
       '#theme' => 'table',
       '#header' => $table_data['header'],
       '#rows' => $table_data['rows'],
@@ -112,6 +114,8 @@ class PlanGoverningEntitiesTable extends GHIBlockBase implements ConfigurableTab
       '#progress_groups' => TRUE,
       '#block_id' => $this->getBlockId(),
     ];
+    $table_data['cacheability']->applyTo($build);
+    return $build;
   }
 
   /**
@@ -158,6 +162,7 @@ class PlanGoverningEntitiesTable extends GHIBlockBase implements ConfigurableTab
     $attachments_query->getAttachmentsByObject('governingEntity', $entity_ids, ['cost']);
 
     $rows = [];
+    $cacheability = new CacheableMetadata();
     $subpage_nodes = $this->subpageManager->loadSubpagesForBaseObjects($objects);
     foreach ($entities as $entity) {
       $base_object = $objects[$entity->id()] ?? NULL;
@@ -184,6 +189,7 @@ class PlanGoverningEntitiesTable extends GHIBlockBase implements ConfigurableTab
 
         // Then add the value to the row.
         $cell = $item_type->getTableCell();
+        $cacheability = $cacheability->merge($this->getTableCellCacheability($cell, $item_type));
 
         if ($item_type->getColumnType() == 'amount') {
           $cell['data-progress-group'] = 'amount-' . $key;
@@ -242,7 +248,9 @@ class PlanGoverningEntitiesTable extends GHIBlockBase implements ConfigurableTab
           }
           elseif ($item_type->getPluginId() == 'funding_data' && $item_type->get('data_type') == 'funding_totals') {
             // Add the funding.
-            $row[] = $item_type->getTableCell();
+            $cell = $item_type->getTableCell();
+            $cacheability = $cacheability->merge($this->getTableCellCacheability($cell, $item_type));
+            $row[] = $cell;
           }
           else {
             $row[] = [
@@ -293,7 +301,9 @@ class PlanGoverningEntitiesTable extends GHIBlockBase implements ConfigurableTab
           /** @var \Drupal\ghi_blocks\Plugin\ConfigurationContainerItem\FundingData $item_type */
           $item_type->disableFtsLink();
           // Add the funding.
-          $row[] = $item_type->getTableCell();
+          $cell = $item_type->getTableCell();
+          $cacheability = $cacheability->merge($this->getTableCellCacheability($cell, $item_type));
+          $row[] = $cell;
         }
         else {
           $row[] = [
@@ -314,7 +324,28 @@ class PlanGoverningEntitiesTable extends GHIBlockBase implements ConfigurableTab
     return [
       'header' => $header,
       'rows' => $rows,
+      'cacheability' => $cacheability,
     ];
+  }
+
+  /**
+   * Get cacheability metadata from a table cell.
+   *
+   * @param array $cell
+   *   The table cell.
+   * @param \Drupal\ghi_form_elements\ConfigurationContainerItemPluginInterface $item_type
+   *   The item type plugin that built the cell.
+   *
+   * @return \Drupal\Core\Cache\CacheableMetadata
+   *   The cacheability metadata for the cell.
+   */
+  private function getTableCellCacheability(array $cell, ConfigurationContainerItemPluginInterface $item_type): CacheableMetadata {
+    $cacheability = new CacheableMetadata();
+    $cacheability->addCacheTags($item_type->getCacheTags());
+    if (is_array($cell['data'] ?? NULL)) {
+      $cacheability = $cacheability->merge(CacheableMetadata::createFromRenderArray($cell['data']));
+    }
+    return $cacheability;
   }
 
   /**
@@ -578,7 +609,11 @@ class PlanGoverningEntitiesTable extends GHIBlockBase implements ConfigurableTab
    * {@inheritdoc}
    */
   public function buildDownloadData() {
-    return $this->buildTableData();
+    $table_data = $this->buildTableData();
+    return $table_data ? [
+      'header' => $table_data['header'],
+      'rows' => $table_data['rows'],
+    ] : $table_data;
   }
 
 }

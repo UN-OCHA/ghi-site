@@ -62,19 +62,19 @@ class FlowSearchQuery extends EndpointQueryBase {
     }
     $data = parent::getData($placeholders, $query_args);
     if ($data === FALSE || $data === NULL) {
-      $runtime_cache[$cache_key] = [];
+      $runtime_cache[$cache_key] = NULL;
       return $runtime_cache[$cache_key];
     }
 
     $funding_totals = $data->report3?->fundingTotals?->objects[0] ?? NULL;
     if (!$funding_totals || !property_exists($funding_totals, 'objectsBreakdown') || !property_exists($funding_totals, 'totalBreakdown')) {
-      $runtime_cache[$cache_key] = [];
+      $runtime_cache[$cache_key] = NULL;
       return $runtime_cache[$cache_key];
     }
     $clusters = $funding_totals->objectsBreakdown ?? [];
     $totals = $funding_totals->totalBreakdown ?? NULL;
     if (!is_array($clusters) || empty($totals)) {
-      $runtime_cache[$cache_key] = [];
+      $runtime_cache[$cache_key] = NULL;
       return $runtime_cache[$cache_key];
     }
 
@@ -146,14 +146,19 @@ class FlowSearchQuery extends EndpointQueryBase {
    *
    * @param int $cluster_id
    *   The cluster id.
-   * @param int $default
+   * @param float|null $default
    *   Optional default value.
    *
-   * @return float
-   *   The total funding for the given cluster id.
+   * @return float|null
+   *   The total funding for the given cluster id, or NULL if unavailable.
    */
-  public function getClusterTotalFunding($cluster_id, $default = 0): float {
-    return (float) $this->getClusterPropertyById($cluster_id, 'total_funding', $default);
+  public function getClusterTotalFunding($cluster_id, $default = NULL): ?float {
+    $summary_data = $this->getClusterSummaryData();
+    if (!is_object($summary_data)) {
+      return NULL;
+    }
+    $funding = $this->getClusterPropertyById($cluster_id, 'total_funding', $default ?? 0);
+    return $funding !== NULL ? (float) $funding : NULL;
   }
 
   /**
@@ -161,14 +166,17 @@ class FlowSearchQuery extends EndpointQueryBase {
    *
    * @param int $cluster_id
    *   The cluster id.
-   * @param float $requirements
+   * @param float|null $requirements
    *   The requirements to compare the funding against.
    *
-   * @return float
-   *   The funding gap for the given cluster id.
+   * @return float|null
+   *   The funding gap for the given cluster id, or NULL if unavailable.
    */
-  public function getClusterFundingGap(int $cluster_id, float $requirements): float {
+  public function getClusterFundingGap(int $cluster_id, ?float $requirements): ?float {
     $funding = $this->getClusterTotalFunding($cluster_id);
+    if ($funding === NULL || $requirements === NULL) {
+      return NULL;
+    }
     return $requirements - $funding;
   }
 
@@ -177,14 +185,17 @@ class FlowSearchQuery extends EndpointQueryBase {
    *
    * @param int $cluster_id
    *   The cluster id.
-   * @param float $requirements
+   * @param float|null $requirements
    *   The requirements to compare the funding against.
    *
-   * @return float
-   *   The funding coverage for the given cluster id.
+   * @return float|null
+   *   The funding coverage for the given cluster id, or NULL if unavailable.
    */
-  public function getClusterFundingCoverage($cluster_id, ?float $requirements = 0): float {
+  public function getClusterFundingCoverage($cluster_id, ?float $requirements = 0): ?float {
     $funding = $this->getClusterTotalFunding($cluster_id);
+    if ($funding === NULL || $requirements === NULL) {
+      return NULL;
+    }
     return (float) CommonHelper::calculateRatio($funding, $requirements, 4) * 100;
   }
 
