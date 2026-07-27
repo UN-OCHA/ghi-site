@@ -198,13 +198,6 @@ class Attachment extends ApiObjectBase implements AttachmentInterface, Disaggreg
   ];
 
   /**
-   * Metric type fallbacks for legacy configs against Fabric facts.
-   */
-  const EMPTY_METRIC_TYPE_FALLBACKS = [
-    'periodical_reach' => 'cumulative_reach',
-  ];
-
-  /**
    * Define the dimension items used in queries.
    */
   const GRAPHQL_ITEMS = [
@@ -1278,9 +1271,6 @@ class Attachment extends ApiObjectBase implements AttachmentInterface, Disaggreg
     if ($monitoring_period && $this->isMeasurementField($metric_type)) {
       $measurement = $this->getMeasurement($monitoring_period);
       $value = $measurement?->getDataPointValue($metric_type) ?? NULL;
-      if ($value === NULL && $fallback_metric_type = $this->getFallbackMetricType($metric_type)) {
-        return $this->getValueByMetricType($fallback_metric_type, $monitoring_period, $cumulative_logic);
-      }
       if ($value !== NULL || !$this->isCumulativeReachFieldType($metric_type) || !$cumulative_logic) {
         return $value;
       }
@@ -1288,9 +1278,6 @@ class Attachment extends ApiObjectBase implements AttachmentInterface, Disaggreg
     else {
       $values = $this->getCurrentValues();
       $value = $values[$metric_type] ?? NULL;
-      if ($value === NULL && $fallback_metric_type = $this->getFallbackMetricType($metric_type)) {
-        return $this->getValueByMetricType($fallback_metric_type, $monitoring_period, $cumulative_logic);
-      }
     }
 
     if ($this->isCumulativeReachFieldType($metric_type) && $cumulative_logic) {
@@ -1306,47 +1293,6 @@ class Attachment extends ApiObjectBase implements AttachmentInterface, Disaggreg
 
     }
     return $value;
-  }
-
-  /**
-   * Get a compatible metric type for missing Fabric facts.
-   *
-   * @param string $metric_type
-   *   The requested metric type.
-   *
-   * @return string|null
-   *   A fallback metric type, if one is available.
-   */
-  private function getFallbackMetricType(string $metric_type): ?string {
-    $fallback_metric_type = self::EMPTY_METRIC_TYPE_FALLBACKS[$metric_type] ?? NULL;
-    if (!$fallback_metric_type) {
-      return NULL;
-    }
-    if ($this->hasMetricTypeFacts($metric_type) || !$this->hasMetricTypeFacts($fallback_metric_type)) {
-      return NULL;
-    }
-    return $fallback_metric_type;
-  }
-
-  /**
-   * Check whether this attachment has facts for a metric type.
-   *
-   * @param string $metric_type
-   *   The metric type.
-   *
-   * @return bool
-   *   TRUE if the metric type is present in attachment or measurement facts.
-   */
-  private function hasMetricTypeFacts(string $metric_type): bool {
-    if (array_key_exists($metric_type, $this->values)) {
-      return TRUE;
-    }
-    foreach ($this->getMeasurements() as $measurement) {
-      if (array_key_exists($metric_type, $measurement->getValues())) {
-        return TRUE;
-      }
-    }
-    return FALSE;
   }
 
   /**

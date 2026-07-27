@@ -344,9 +344,9 @@ class AttachmentTest extends ApiObjectTestBase {
   }
 
   /**
-   * Test fallback for legacy periodical reach configs on cumulative facts.
+   * Test periodical reach configs do not use cumulative reach facts.
    */
-  public function testPeriodicalReachFallsBackToCumulativeReachWhenOnlyCumulativeReachFactsExist() {
+  public function testPeriodicalReachDoesNotUseCumulativeReachWhenOnlyCumulativeReachFactsExist() {
     /** @var \Drupal\ghi_plans\ApiObjects\Attachments\CaseloadAttachment $attachment */
     $attachment = $this->getAttachmentFromFixture('caseload');
     $this->assertInstanceOf(CaseloadAttachment::class, $attachment);
@@ -363,14 +363,8 @@ class AttachmentTest extends ApiObjectTestBase {
       $this->setPrivateProperty($measurement, 'values', $values);
     }
 
-    $expected = [
-      2386 => 522701,
-      2387 => 1659672,
-      2388 => 2314453,
-      2389 => 2883267,
-    ];
-    $this->assertEquals(2883267, $attachment->getValueByMetricType('periodical_reach', 'latest'));
-    $this->assertEquals($expected, $attachment->getValuesForAllReportingPeriods('periodical_reach', TRUE, TRUE, $reporting_periods));
+    $this->assertNull($attachment->getValueByMetricType('periodical_reach', 'latest'));
+    $this->assertSame([], $attachment->getValuesForAllReportingPeriods('periodical_reach', TRUE, TRUE, $reporting_periods));
   }
 
   /**
