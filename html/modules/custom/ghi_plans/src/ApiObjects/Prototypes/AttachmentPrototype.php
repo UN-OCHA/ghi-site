@@ -459,6 +459,7 @@ class AttachmentPrototype extends ApiObjectBase {
       case 'periodical_measure':
       case 'cumulative_measure':
       case 'measure':
+      case 'custom_measure':
         return (string) $this->t('Measure', [], ['langcode' => $langcode]);
     }
     $fields = $this->getFields();
