@@ -106,7 +106,7 @@ class PlanOverviewQuery extends FabricQueryBase {
     $plan_ids = $this->extractIds($plans);
     /** @var \Drupal\ghi_plans\Entity\Plan[] $plan_objects */
     $plan_objects = BaseObjectHelper::getBaseObjectsFromOriginalIds($plan_ids, 'plan');
-    $this->attachmentPrototypeQuery->getDataPrototypesForPlans($plan_ids);
+    $this->attachmentPrototypeQuery->getDataPrototypesForPlans($plan_ids, FALSE);
 
     $attachments = $this->attachmentQuery->getAttachmentsByObject('plan', $plan_ids, ['caseload', 'cost']);
     $caseloads_by_plan = [];

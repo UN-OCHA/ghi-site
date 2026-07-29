@@ -169,7 +169,7 @@ class RemoteDataCacheTest extends UnitTestCase {
     $cache_backend->deleteMultiple(['expired:a', 'expired:b'])->shouldBeCalledOnce();
 
     $index = $this->prophesize(RemoteDataCacheIndexInterface::class);
-    $index->getExpiredCids(1900, 2)->willReturn(['expired:a', 'expired:b']);
+    $index->getExpiredCids(1900, 2, ['hpc_api_endpoint'])->willReturn(['expired:a', 'expired:b']);
     $index->deleteMultiple(['expired:a', 'expired:b'])->shouldBeCalledOnce();
     $index->count()->shouldNotBeCalled();
 
@@ -190,9 +190,9 @@ class RemoteDataCacheTest extends UnitTestCase {
     $cache_backend->deleteMultiple(['old:a', 'old:b'])->shouldBeCalledOnce();
 
     $index = $this->prophesize(RemoteDataCacheIndexInterface::class);
-    $index->getExpiredCids(1900, 5)->willReturn([]);
-    $index->count()->willReturn(12);
-    $index->getOldestCids(2)->willReturn(['old:a', 'old:b']);
+    $index->getExpiredCids(1900, 5, ['hpc_api_endpoint'])->willReturn([]);
+    $index->count(['hpc_api_endpoint'])->willReturn(12);
+    $index->getOldestCids(2, ['hpc_api_endpoint'])->willReturn(['old:a', 'old:b']);
     $index->deleteMultiple(['old:a', 'old:b'])->shouldBeCalledOnce();
 
     $cache = $this->createRemoteDataCache($cache_backend->reveal(), 2000, index: $index->reveal(), settings: [
@@ -241,6 +241,7 @@ class RemoteDataCacheTest extends UnitTestCase {
       'expired_retention_ttl' => 604800,
       'max_items' => 10000,
       'prune_batch_size' => 500,
+      'prune_excluded_sources' => ['hpc_api_endpoint'],
     ];
 
     return new RemoteDataCache(

@@ -640,6 +640,7 @@ class AttachmentTest extends ApiObjectTestBase {
     $this->assertEquals('plan', $attachment->getSourceEntityType());
     $this->assertEquals('Plan', $attachment->getSourceEntityTypeLabel());
     $this->assertEmpty($attachment->getSourceEntity());
+    $this->assertContains(AttachmentPrototype::FIELD_OVERRIDES_CACHE_TAG, $attachment->getValueCacheTags());
 
     $base_object = $this->prophesize(BaseObjectInterface::class);
     $base_object->getSourceId()->willReturn(1000);

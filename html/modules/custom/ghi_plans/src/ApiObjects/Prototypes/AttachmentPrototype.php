@@ -123,6 +123,20 @@ class AttachmentPrototype extends ApiObjectBase {
     'caseload' => 'Caseload',
   ];
 
+  const FIELD_GROUP_PLANNING = 'planning';
+
+  const FIELD_GROUP_MEASUREMENT = 'measurement';
+
+  /**
+   * Cache tag for attachment prototype field overrides.
+   */
+  public const FIELD_OVERRIDES_CACHE_TAG = 'ghi_plans:attachment_prototype_field_overrides';
+
+  const INTERNAL_FIELD_QUALIFIERS = [
+    'periodical' => 'periodical',
+    'cumulative' => 'cumulative',
+  ];
+
   /**
    * {@inheritdoc}
    */
@@ -147,32 +161,33 @@ class AttachmentPrototype extends ApiObjectBase {
     $this->name = $value->name->en ?? $value->Name ?? NULL;
     $this->refCode = $data->RefCode;
     $this->type = strtolower($data->Type);
-    $this->fields = $this->mapPrototypeFields($fields);
     $this->entityRefCodes = $value->entities ?? [];
-    $this->metricFields = $this->mapPrototypeFields($metric_fields);
-    $this->measurementFields = $this->mapPrototypeFields($measurement_fields);
-    $this->calculatedFields = $this->mapPrototypeFields($calculated_fields);
     $this->originalFields = $fields;
     $this->fieldDefinitions = $this->mapPrototypeFieldDefinitions($fields);
+    $metric_field_count = count($metric_fields);
+    $measurement_field_count = count($measurement_fields);
+    $this->fields = $this->mapPrototypeFields($this->fieldDefinitions);
+    $this->metricFields = $this->mapPrototypeFields(array_slice($this->fieldDefinitions, 0, $metric_field_count));
+    $this->measurementFields = $this->mapPrototypeFields(array_slice($this->fieldDefinitions, $metric_field_count, $measurement_field_count));
+    $this->calculatedFields = $this->mapPrototypeFields(array_slice($this->fieldDefinitions, $metric_field_count + $measurement_field_count));
     $this->calculationMethods = array_map(function ($item) {
       return strtolower($item);
     }, $value->calculationMethod ?? []);
+    $this->setCacheTags([self::FIELD_OVERRIDES_CACHE_TAG]);
   }
 
   /**
    * Map the given fields to a simple type -> label list.
    *
-   * @param array $fields
-   *   An array of field objects as given in the raw prototype data.
+   * @param array $definitions
+   *   Resolved field definitions.
    *
    * @return string[]
    *   An array of strings, key being the types, values the labels.
    */
-  private function mapPrototypeFields(array $fields) {
-    $types = $this->resolvePrototypeFieldTypes($fields);
-    $labels = array_map(function ($item) {
-      return $item->name->en;
-    }, $fields);
+  private function mapPrototypeFields(array $definitions): array {
+    $types = array_column($definitions, 'metric_type');
+    $labels = array_column($definitions, 'label');
 
     return array_combine($types, $labels);
   }
@@ -318,6 +333,306 @@ class AttachmentPrototype extends ApiObjectBase {
    */
   public function getFieldTypes() {
     return array_keys($this->fields);
+  }
+
+  /**
+   * Add a field definition inferred from actual attachment fact data.
+   *
+   * @param \Drupal\hpc_api\ApiObjects\Types\MetricType $metric_type
+   *   The metric type to add.
+   * @param string $field_group
+   *   The prototype field group to add to.
+   * @param string|null $label
+   *   An optional field label.
+   */
+  public function addMissingMetricTypeField(MetricType $metric_type, string $field_group, ?string $label = NULL): void {
+    $metric_type_name = $metric_type->getMachineName();
+    if (array_key_exists($metric_type_name, $this->fields)) {
+      $this->addMetricTypeToFieldGroup($metric_type_name, $label ?? $this->fields[$metric_type_name], $field_group);
+      return;
+    }
+
+    $label = $label ?? $this->getDefaultInternalFieldLabel($metric_type, $field_group);
+    $raw_type = $metric_type->getRawData()?->HPCType ?? NULL;
+    $index = empty($this->fieldDefinitions) ? 0 : max(array_map('intval', array_keys($this->fieldDefinitions))) + 1;
+
+    $this->fields[$metric_type_name] = $label;
+    $this->addMetricTypeToFieldGroup($metric_type_name, $label, $field_group);
+    $this->fieldDefinitions[$index] = [
+      'index' => $index,
+      'label' => $label,
+      'metric_type' => $metric_type_name,
+      'raw_type' => $raw_type,
+      'source' => NULL,
+      'raw_source' => NULL,
+    ];
+  }
+
+  /**
+   * Replace an original prototype field with a corrected metric type.
+   *
+   * @param int $index
+   *   The original field index to replace.
+   * @param \Drupal\hpc_api\ApiObjects\Types\MetricType $metric_type
+   *   The metric type to use for the original field index.
+   * @param string $field_group
+   *   The prototype field group to put the corrected field in.
+   * @param string|null $label
+   *   An optional replacement field label.
+   */
+  public function replaceMetricTypeField(int $index, MetricType $metric_type, string $field_group, ?string $label = NULL): void {
+    if (!array_key_exists($index, $this->fieldDefinitions)) {
+      throw new \InvalidArgumentException(sprintf('Attachment prototype field index %d does not exist.', $index));
+    }
+
+    $definition = $this->fieldDefinitions[$index];
+    $old_metric_type = $definition['metric_type'] ?? NULL;
+    $metric_type_name = $metric_type->getMachineName();
+    $label = $label ?? $definition['label'] ?? $this->getDefaultInternalFieldLabel($metric_type, $field_group);
+
+    $this->fieldDefinitions[$index] = $definition + [
+      'index' => $index,
+      'source' => NULL,
+      'raw_source' => NULL,
+    ];
+    $this->fieldDefinitions[$index]['label'] = $label;
+    $this->fieldDefinitions[$index]['metric_type'] = $metric_type_name;
+    $this->fieldDefinitions[$index]['raw_type'] = $metric_type->getRawData()?->HPCType ?? $definition['raw_type'] ?? NULL;
+
+    $remove_old_metric_type = $old_metric_type && !$this->fieldDefinitionUsesMetricType($old_metric_type);
+    $this->replaceMetricTypeInFieldCollections($old_metric_type, $metric_type_name, $label, $field_group, $remove_old_metric_type);
+  }
+
+  /**
+   * Add an existing metric type to the appropriate field group.
+   *
+   * @param string $metric_type
+   *   The metric type machine name.
+   * @param string $label
+   *   The field label.
+   * @param string $field_group
+   *   The field group to add to.
+   */
+  private function addMetricTypeToFieldGroup(string $metric_type, string $label, string $field_group): void {
+    switch ($field_group) {
+      case self::FIELD_GROUP_PLANNING:
+        $this->metricFields[$metric_type] = $label;
+        return;
+
+      case self::FIELD_GROUP_MEASUREMENT:
+        $this->measurementFields[$metric_type] = $label;
+        return;
+    }
+
+    throw new \InvalidArgumentException(sprintf('Unsupported attachment prototype field group %s.', $field_group));
+  }
+
+  /**
+   * Replace a metric type key in all field collections.
+   *
+   * @param string|null $old_metric_type
+   *   The old metric type machine name.
+   * @param string $metric_type
+   *   The new metric type machine name.
+   * @param string $label
+   *   The field label.
+   * @param string $field_group
+   *   The field group to add the new metric type to.
+   * @param bool $remove_old_metric_type
+   *   Whether the old metric type should be removed from all collections.
+   */
+  private function replaceMetricTypeInFieldCollections(?string $old_metric_type, string $metric_type, string $label, string $field_group, bool $remove_old_metric_type): void {
+    if ($remove_old_metric_type) {
+      unset($this->fields[$old_metric_type], $this->metricFields[$old_metric_type], $this->measurementFields[$old_metric_type], $this->calculatedFields[$old_metric_type]);
+    }
+
+    $replace_metric_type = $old_metric_type === $metric_type || $remove_old_metric_type ? $old_metric_type : NULL;
+    $this->fields = $this->replaceMetricTypeKey($this->fields, $replace_metric_type, $metric_type, $label);
+    switch ($field_group) {
+      case self::FIELD_GROUP_PLANNING:
+        $this->metricFields = $this->replaceMetricTypeKey($this->metricFields, $replace_metric_type, $metric_type, $label);
+        unset($this->measurementFields[$metric_type], $this->calculatedFields[$metric_type]);
+        return;
+
+      case self::FIELD_GROUP_MEASUREMENT:
+        $this->measurementFields = $this->replaceMetricTypeKey($this->measurementFields, $replace_metric_type, $metric_type, $label);
+        unset($this->metricFields[$metric_type], $this->calculatedFields[$metric_type]);
+        return;
+    }
+
+    throw new \InvalidArgumentException(sprintf('Unsupported attachment prototype field group %s.', $field_group));
+  }
+
+  /**
+   * Replace a metric type key in a keyed field-label list.
+   *
+   * @param string[] $fields
+   *   The keyed field list.
+   * @param string|null $old_metric_type
+   *   The old metric type machine name.
+   * @param string $metric_type
+   *   The new metric type machine name.
+   * @param string $label
+   *   The field label.
+   *
+   * @return string[]
+   *   The updated keyed field list.
+   */
+  private function replaceMetricTypeKey(array $fields, ?string $old_metric_type, string $metric_type, string $label): array {
+    if ($old_metric_type === $metric_type && array_key_exists($metric_type, $fields)) {
+      $fields[$metric_type] = $label;
+      return $fields;
+    }
+
+    $updated_fields = [];
+    $replaced = FALSE;
+    foreach ($fields as $field_metric_type => $field_label) {
+      if ($field_metric_type === $metric_type) {
+        continue;
+      }
+      if ($old_metric_type !== NULL && $field_metric_type === $old_metric_type) {
+        $updated_fields[$metric_type] = $label;
+        $replaced = TRUE;
+        continue;
+      }
+      $updated_fields[$field_metric_type] = $field_label;
+    }
+
+    if (!$replaced) {
+      $updated_fields[$metric_type] = $label;
+    }
+    return $updated_fields;
+  }
+
+  /**
+   * Check whether any field definition uses the given metric type.
+   *
+   * @param string $metric_type
+   *   The metric type machine name.
+   *
+   * @return bool
+   *   TRUE if the metric type is still used, FALSE otherwise.
+   */
+  private function fieldDefinitionUsesMetricType(string $metric_type): bool {
+    foreach ($this->fieldDefinitions as $definition) {
+      if (($definition['metric_type'] ?? NULL) === $metric_type) {
+        return TRUE;
+      }
+    }
+    return FALSE;
+  }
+
+  /**
+   * Get a label for a field inferred from actual attachment fact data.
+   *
+   * @param \Drupal\hpc_api\ApiObjects\Types\MetricType $metric_type
+   *   The metric type to label.
+   * @param string $field_group
+   *   The prototype field group being added to.
+   *
+   * @return string
+   *   The inferred field label.
+   */
+  private function getDefaultInternalFieldLabel(MetricType $metric_type, string $field_group): string {
+    $metric_type_name = $metric_type->getMachineName();
+    return $this->deriveInternalFieldLabelFromSibling($metric_type_name, $field_group) ?? $metric_type->getLabel();
+  }
+
+  /**
+   * Derive a label for a missing metric type from a related prototype field.
+   *
+   * @param string $metric_type
+   *   The missing metric type machine name.
+   * @param string $field_group
+   *   The prototype field group being added to.
+   *
+   * @return string|null
+   *   The derived field label, if one can be built.
+   */
+  private function deriveInternalFieldLabelFromSibling(string $metric_type, string $field_group): ?string {
+    $parsed_metric_type = $this->parseQualifiedMetricType($metric_type);
+    if (!$parsed_metric_type) {
+      return NULL;
+    }
+
+    [$qualifier, $base_metric_type] = $parsed_metric_type;
+    $fields = $this->getFieldsForFieldGroup($field_group);
+
+    foreach (array_keys(self::INTERNAL_FIELD_QUALIFIERS) as $sibling_qualifier) {
+      if ($sibling_qualifier === $qualifier) {
+        continue;
+      }
+
+      $sibling_metric_type = $sibling_qualifier . '_' . $base_metric_type;
+      if (!array_key_exists($sibling_metric_type, $fields)) {
+        continue;
+      }
+
+      $label = $this->replaceInternalFieldLabelQualifier($fields[$sibling_metric_type], self::INTERNAL_FIELD_QUALIFIERS[$qualifier]);
+      if ($label) {
+        return $label;
+      }
+    }
+
+    return NULL;
+  }
+
+  /**
+   * Parse the qualifier and base metric type from a metric type machine name.
+   *
+   * @param string $metric_type
+   *   The metric type machine name.
+   *
+   * @return array|null
+   *   The qualifier and base metric type, or NULL if there is no qualifier.
+   */
+  private function parseQualifiedMetricType(string $metric_type): ?array {
+    foreach (array_keys(self::INTERNAL_FIELD_QUALIFIERS) as $qualifier) {
+      $prefix = $qualifier . '_';
+      if (str_starts_with($metric_type, $prefix)) {
+        return [$qualifier, substr($metric_type, strlen($prefix))];
+      }
+    }
+    return NULL;
+  }
+
+  /**
+   * Replace the trailing parenthetical field label qualifier.
+   *
+   * @param string $label
+   *   The existing field label.
+   * @param string $qualifier
+   *   The replacement qualifier.
+   *
+   * @return string|null
+   *   The label with the replacement qualifier, if possible.
+   */
+  private function replaceInternalFieldLabelQualifier(string $label, string $qualifier): ?string {
+    if (!preg_match('/^(.*?)\s*\([^()]*\)\s*$/', $label, $matches)) {
+      return NULL;
+    }
+    return trim($matches[1]) . ' (' . $qualifier . ')';
+  }
+
+  /**
+   * Get the fields for a prototype field group.
+   *
+   * @param string $field_group
+   *   The field group.
+   *
+   * @return string[]
+   *   The fields for the group.
+   */
+  private function getFieldsForFieldGroup(string $field_group): array {
+    switch ($field_group) {
+      case self::FIELD_GROUP_PLANNING:
+        return $this->metricFields;
+
+      case self::FIELD_GROUP_MEASUREMENT:
+        return $this->measurementFields;
+    }
+
+    throw new \InvalidArgumentException(sprintf('Unsupported attachment prototype field group %s.', $field_group));
   }
 
   /**

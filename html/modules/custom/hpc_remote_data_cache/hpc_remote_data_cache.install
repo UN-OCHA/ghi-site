@@ -38,6 +38,16 @@ function hpc_remote_data_cache_update_10001() {
 }
 
 /**
+ * Exclude legacy HPC API endpoint entries from remote cache pruning.
+ */
+function hpc_remote_data_cache_update_10002() {
+  $config = \Drupal::configFactory()->getEditable('hpc_remote_data_cache.settings');
+  if ($config->get('prune_excluded_sources') === NULL) {
+    $config->set('prune_excluded_sources', ['hpc_api_endpoint'])->save(TRUE);
+  }
+}
+
+/**
  * Build the remote data cache metadata index schema.
  *
  * @return array

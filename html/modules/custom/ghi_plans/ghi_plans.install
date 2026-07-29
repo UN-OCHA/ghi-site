@@ -5,6 +5,9 @@
  * Defines install and uninstall hooks.
  */
 
+use Drupal\ghi_plans\ApiObjects\Prototypes\AttachmentPrototype;
+use Drupal\ghi_plans\Plugin\FabricQuery\AttachmentPrototypeQuery;
+
 /**
  * Implements hook_uninstall().
  */
@@ -18,4 +21,553 @@ function ghi_plans_uninstall() {
   \Drupal::configFactory()->getEditable('migrate_plus.migration.plan_costing')->delete();
   \Drupal::configFactory()->getEditable('migrate_plus.migration.plan_type')->delete();
 
+}
+
+/**
+ * Seed known attachment prototype field overrides.
+ */
+function ghi_plans_update_10001(): string {
+  $store = \Drupal::keyValue(AttachmentPrototypeQuery::FIELD_OVERRIDES_KEY_VALUE_COLLECTION);
+  $overrides = $store->get(AttachmentPrototypeQuery::FIELD_OVERRIDES_KEY, []);
+  $overrides = is_array($overrides) ? $overrides : [];
+  $addition_overrides = [
+    3223 => [
+      [
+        'metric_type' => 'baseline',
+        'field_group' => 'planning',
+        'label' => 'Baseline',
+      ],
+    ],
+    3253 => [
+      [
+        'metric_type' => 'affected',
+        'field_group' => 'planning',
+        'label' => 'People Affected',
+      ],
+    ],
+    3259 => [
+      [
+        'metric_type' => 'affected',
+        'field_group' => 'planning',
+        'label' => 'People Affected',
+      ],
+    ],
+    3283 => [
+      [
+        'metric_type' => 'affected',
+        'field_group' => 'planning',
+        'label' => 'People Affected',
+      ],
+    ],
+    3410 => [
+      [
+        'metric_type' => 'baseline',
+        'field_group' => 'planning',
+        'label' => 'Baseline',
+      ],
+    ],
+    3809 => [
+      [
+        'metric_type' => 'baseline',
+        'field_group' => 'planning',
+        'label' => 'Baseline',
+      ],
+    ],
+    3871 => [
+      [
+        'metric_type' => 'custom',
+        'field_group' => 'planning',
+        'label' => 'Target Covid',
+      ],
+    ],
+    3880 => [
+      [
+        'metric_type' => 'custom',
+        'field_group' => 'planning',
+        'label' => 'InNeed Covid',
+      ],
+    ],
+    4041 => [
+      [
+        'metric_type' => 'custom',
+        'field_group' => 'planning',
+        'label' => 'InNeed Covid',
+      ],
+    ],
+    4050 => [
+      [
+        'metric_type' => 'custom',
+        'field_group' => 'planning',
+        'label' => 'Population Covid',
+      ],
+    ],
+    4059 => [
+      [
+        'metric_type' => 'custom',
+        'field_group' => 'planning',
+        'label' => 'Target Covid',
+      ],
+    ],
+    4075 => [
+      [
+        'metric_type' => 'periodical_reach',
+        'field_group' => 'measurement',
+        'label' => 'Reached Core Periodic',
+      ],
+    ],
+    4111 => [
+      [
+        'metric_type' => 'periodical_reach',
+        'field_group' => 'measurement',
+        'label' => 'Reached Core Periodic',
+      ],
+    ],
+    4126 => [
+      [
+        'metric_type' => 'reached',
+        'field_group' => 'measurement',
+        'label' => 'Reached',
+      ],
+    ],
+    4296 => [
+      [
+        'metric_type' => 'custom',
+        'field_group' => 'planning',
+        'label' => 'InNeed Covid',
+      ],
+    ],
+    5133 => [
+      [
+        'metric_type' => 'periodical_reach',
+        'field_group' => 'measurement',
+        'label' => 'Reached Core Periodic',
+      ],
+    ],
+    5246 => [
+      [
+        'metric_type' => 'measure',
+        'field_group' => 'measurement',
+        'label' => 'Measure',
+      ],
+    ],
+    5250 => [
+      [
+        'metric_type' => 'periodical_reach',
+        'field_group' => 'measurement',
+        'label' => 'Reached Core Periodic',
+      ],
+    ],
+  ];
+  $replacement_overrides = [
+    2881 => [
+      // Replaces "Reached" (measure).
+      3 => [
+        'metric_type' => 'reached',
+        'field_group' => 'measurement',
+        'label' => 'Reached',
+      ],
+    ],
+    2884 => [
+      // Replaces "Affected" (custom).
+      0 => [
+        'metric_type' => 'affected',
+        'field_group' => 'planning',
+        'label' => 'People Affected',
+      ],
+    ],
+    3259 => [
+      // Replaces "People reached (periodical)" (periodical_reach).
+      3 => [
+        'metric_type' => 'cumulative_reach',
+        'field_group' => 'measurement',
+        'label' => 'Reached Core Cumulative',
+      ],
+    ],
+    3283 => [
+      // Replaces "People reached (periodical)" (periodical_reach).
+      3 => [
+        'metric_type' => 'cumulative_reach',
+        'field_group' => 'measurement',
+        'label' => 'Reached Core Cumulative',
+      ],
+    ],
+    3461 => [
+      // Replaces "Reached" (measure).
+      3 => [
+        'metric_type' => 'reached',
+        'field_group' => 'measurement',
+        'label' => 'Reached',
+      ],
+    ],
+    3871 => [
+      // Replaces "People reached (periodical)" (periodical_reach).
+      5 => [
+        'metric_type' => 'cumulative_reach',
+        'field_group' => 'measurement',
+        'label' => 'Reached Core Cumulative',
+      ],
+    ],
+    3879 => [
+      // Replaces "People reached (periodical)" (periodical_reach).
+      2 => [
+        'metric_type' => 'cumulative_reach',
+        'field_group' => 'measurement',
+        'label' => 'Reached Core Cumulative',
+      ],
+    ],
+    3880 => [
+      // Replaces "People reached (periodical)" (periodical_reach).
+      5 => [
+        'metric_type' => 'cumulative_reach',
+        'field_group' => 'measurement',
+        'label' => 'Reached Core Cumulative',
+      ],
+    ],
+    4030 => [
+      // Replaces "dans le besoin" (in need).
+      0 => [
+        'metric_type' => 'in_need',
+        'field_group' => 'planning',
+      ],
+    ],
+    4033 => [
+      // Replaces "Personnes atteintes (par période)" (periodical_reach).
+      2 => [
+        'metric_type' => 'cumulative_reach',
+        'field_group' => 'measurement',
+      ],
+    ],
+    4034 => [
+      // Replaces "Personnes atteintes (par période)" (periodical_reach).
+      5 => [
+        'metric_type' => 'cumulative_reach',
+        'field_group' => 'measurement',
+      ],
+    ],
+    4076 => [
+      // Replaces "Personnes atteintes (par période)" (periodical_reach).
+      2 => [
+        'metric_type' => 'cumulative_reach',
+        'field_group' => 'measurement',
+      ],
+    ],
+    4077 => [
+      // Replaces "Personnes atteintes (par période)" (periodical_reach).
+      5 => [
+        'metric_type' => 'cumulative_reach',
+        'field_group' => 'measurement',
+      ],
+    ],
+    4126 => [
+      // Replaces "In Need" (in_need).
+      0 => [
+        'metric_type' => 'baseline',
+        'field_group' => 'planning',
+        'label' => 'Baseline',
+      ],
+    ],
+    4131 => [
+      // Replaces "People reached (periodical)" (periodical_reach).
+      5 => [
+        'metric_type' => 'cumulative_reach',
+        'field_group' => 'measurement',
+        'label' => 'Reached Core Cumulative',
+      ],
+    ],
+    4585 => [
+      // Replaces "Personas atendidas (acumulativo)" (cumulative_reach).
+      2 => [
+        'metric_type' => 'periodical_reach',
+        'field_group' => 'measurement',
+      ],
+    ],
+    4586 => [
+      // Replaces "Personas atendidas (acumulativo)" (cumulative_reach).
+      5 => [
+        'metric_type' => 'periodical_reach',
+        'field_group' => 'measurement',
+      ],
+    ],
+    4700 => [
+      // Replaces "Personas atendidas (acumulativo)" (cumulative_reach).
+      2 => [
+        'metric_type' => 'periodical_reach',
+        'field_group' => 'measurement',
+      ],
+    ],
+    4701 => [
+      // Replaces "Personas atendidas (acumulativo)" (cumulative_reach).
+      5 => [
+        'metric_type' => 'periodical_reach',
+        'field_group' => 'measurement',
+      ],
+    ],
+    4714 => [
+      // Replaces "Reached" (measure).
+      2 => [
+        'metric_type' => 'reached',
+        'field_group' => 'measurement',
+        'label' => 'Reached',
+      ],
+    ],
+    4718 => [
+      // Replaces "People reached (periodical)" (periodical_reach).
+      3 => [
+        'metric_type' => 'cumulative_reach',
+        'field_group' => 'measurement',
+        'label' => 'Reached Core Cumulative',
+      ],
+    ],
+    4719 => [
+      // Replaces "People reached (periodical)" (periodical_reach).
+      5 => [
+        'metric_type' => 'cumulative_reach',
+        'field_group' => 'measurement',
+        'label' => 'Reached Core Cumulative',
+      ],
+    ],
+    4896 => [
+      // Replaces "Personas atendidas (acumulativo)" (cumulative_reach).
+      2 => [
+        'metric_type' => 'periodical_reach',
+        'field_group' => 'measurement',
+      ],
+    ],
+    4897 => [
+      // Replaces "Personas atendidas (acumulativo)" (cumulative_reach).
+      5 => [
+        'metric_type' => 'periodical_reach',
+        'field_group' => 'measurement',
+      ],
+    ],
+    4905 => [
+      // Replaces "Personas atendidas (acumulativo)" (cumulative_reach).
+      2 => [
+        'metric_type' => 'periodical_reach',
+        'field_group' => 'measurement',
+      ],
+    ],
+    4906 => [
+      // Replaces "Personas atendidas (acumulativo)" (cumulative_reach).
+      5 => [
+        'metric_type' => 'periodical_reach',
+        'field_group' => 'measurement',
+      ],
+    ],
+    4915 => [
+      // Replaces "Personas atendidas (acumulativo)" (cumulative_reach).
+      5 => [
+        'metric_type' => 'periodical_reach',
+        'field_group' => 'measurement',
+      ],
+    ],
+    5170 => [
+      // Replaces "Personas atendidas (acumulativo)" (cumulative_reach).
+      2 => [
+        'metric_type' => 'periodical_reach',
+        'field_group' => 'measurement',
+      ],
+    ],
+    5171 => [
+      // Replaces "Personas atendidas (acumulativo)" (cumulative_reach).
+      5 => [
+        'metric_type' => 'periodical_reach',
+        'field_group' => 'measurement',
+      ],
+    ],
+    5179 => [
+      // Replaces "Personas atendidas (acumulativo)" (cumulative_reach).
+      2 => [
+        'metric_type' => 'periodical_reach',
+        'field_group' => 'measurement',
+      ],
+    ],
+    5180 => [
+      // Replaces "Personas atendidas (acumulativo)" (cumulative_reach).
+      5 => [
+        'metric_type' => 'periodical_reach',
+        'field_group' => 'measurement',
+      ],
+    ],
+    5188 => [
+      // Replaces "Personas atendidas (acumulativo)" (cumulative_reach).
+      2 => [
+        'metric_type' => 'periodical_reach',
+        'field_group' => 'measurement',
+      ],
+    ],
+    5189 => [
+      // Replaces "Personas atendidas (acumulativo)" (cumulative_reach).
+      5 => [
+        'metric_type' => 'periodical_reach',
+        'field_group' => 'measurement',
+      ],
+    ],
+    5224 => [
+      // Replaces "Personas atendidas (acumulativo)" (cumulative_reach).
+      2 => [
+        'metric_type' => 'periodical_reach',
+        'field_group' => 'measurement',
+      ],
+    ],
+    5225 => [
+      // Replaces "Personas atendidas (acumulativo)" (cumulative_reach).
+      5 => [
+        'metric_type' => 'periodical_reach',
+        'field_group' => 'measurement',
+      ],
+    ],
+    5287 => [
+      // Replaces "Personas atendidas (acumulativo)" (cumulative_reach).
+      2 => [
+        'metric_type' => 'periodical_reach',
+        'field_group' => 'measurement',
+      ],
+    ],
+    5288 => [
+      // Replaces "Personas atendidas (acumulativo)" (cumulative_reach).
+      5 => [
+        'metric_type' => 'periodical_reach',
+        'field_group' => 'measurement',
+      ],
+    ],
+    5623 => [
+      // Replaces "People reached (periodical)" (periodical_reach).
+      5 => [
+        'metric_type' => 'cumulative_reach',
+        'field_group' => 'measurement',
+        'label' => 'Reached Core Cumulative',
+      ],
+    ],
+    5647 => [
+      // Replaces "People covered" (covered).
+      6 => [
+        'metric_type' => 'cumulative_reach',
+        'field_group' => 'measurement',
+      ],
+    ],
+    5677 => [
+      // Replaces "People reached (periodical)" (periodical_reach).
+      5 => [
+        'metric_type' => 'cumulative_reach',
+        'field_group' => 'measurement',
+        'label' => 'Reached Core Cumulative',
+      ],
+    ],
+    5699 => [
+      // Replaces "People reached (periodical)" (periodical_reach).
+      5 => [
+        'metric_type' => 'cumulative_reach',
+        'field_group' => 'measurement',
+        'label' => 'Reached Core Cumulative',
+      ],
+    ],
+  ];
+  $overrides['additions'] = is_array($overrides['additions'] ?? NULL) ? $overrides['additions'] : [];
+  foreach ($addition_overrides as $prototype_id => $prototype_additions) {
+    $overrides['additions'][$prototype_id] = is_array($overrides['additions'][$prototype_id] ?? NULL) ? $overrides['additions'][$prototype_id] : [];
+    foreach ($prototype_additions as $addition) {
+      if (!in_array($addition, $overrides['additions'][$prototype_id], TRUE)) {
+        $overrides['additions'][$prototype_id][] = $addition;
+      }
+    }
+  }
+
+  $overrides['replacements'] = is_array($overrides['replacements'] ?? NULL) ? $overrides['replacements'] : [];
+  foreach ($replacement_overrides as $prototype_id => $prototype_replacements) {
+    $overrides['replacements'][$prototype_id] = is_array($overrides['replacements'][$prototype_id] ?? NULL) ? $overrides['replacements'][$prototype_id] : [];
+    foreach ($prototype_replacements as $index => $replacement) {
+      $overrides['replacements'][$prototype_id][$index] = $replacement;
+    }
+  }
+  $store->set(AttachmentPrototypeQuery::FIELD_OVERRIDES_KEY, $overrides);
+
+  return (string) t('Configured known attachment prototype field overrides.');
+}
+
+/**
+ * Use the prototype label for the plan 934 target column.
+ */
+function ghi_plans_update_10002(): string {
+  $store = \Drupal::keyValue(AttachmentPrototypeQuery::FIELD_OVERRIDES_KEY_VALUE_COLLECTION);
+  $overrides = $store->get(AttachmentPrototypeQuery::FIELD_OVERRIDES_KEY, []);
+  if (is_array($overrides['additions'][4171] ?? NULL)) {
+    $overrides['additions'][4171] = array_values(array_filter($overrides['additions'][4171], function (array $addition): bool {
+      return ($addition['metric_type'] ?? NULL) !== 'in_need' || ($addition['field_group'] ?? NULL) !== AttachmentPrototype::FIELD_GROUP_PLANNING;
+    }));
+    if (empty($overrides['additions'][4171])) {
+      unset($overrides['additions'][4171]);
+    }
+    $store->set(AttachmentPrototypeQuery::FIELD_OVERRIDES_KEY, $overrides);
+  }
+
+  $plans = \Drupal::entityTypeManager()->getStorage('base_object')->loadByProperties([
+    'type' => 'plan',
+    'field_original_id' => 934,
+  ]);
+  $plan = reset($plans);
+  if (!$plan) {
+    return (string) t('Plan 934 was not found; no logframe column label was updated.');
+  }
+
+  $nodes = \Drupal::entityTypeManager()->getStorage('node')->loadByProperties([
+    'type' => 'section',
+    'field_base_object' => $plan->id(),
+  ]);
+  $updated = 0;
+  foreach ($nodes as $node) {
+    if (!$node->hasField('layout_builder__layout')) {
+      continue;
+    }
+
+    $sections = $node->get('layout_builder__layout')->getValue();
+    $changed = FALSE;
+    foreach ($sections as &$section_item) {
+      /** @var \Drupal\layout_builder\Section $section */
+      $section = $section_item['section'];
+      foreach ($section->getComponents() as $component) {
+        if ($component->getPluginId() !== 'plan_entity_logframe') {
+          continue;
+        }
+
+        $configuration = $component->get('configuration');
+        $component_changed = FALSE;
+        if (!is_array($configuration['hpc']['tables']['attachment_tables'] ?? NULL)) {
+          continue;
+        }
+        foreach ($configuration['hpc']['tables']['attachment_tables'] as &$table) {
+          if (($table['config']['attachment_prototype'] ?? NULL) != 4171) {
+            continue;
+          }
+          if (!is_array($table['config']['table_form']['columns'] ?? NULL)) {
+            continue;
+          }
+          foreach ($table['config']['table_form']['columns'] as &$column) {
+            $data_point_index = $column['config']['data_point']['data_points'][0]['index'] ?? NULL;
+            if (($column['item_type'] ?? NULL) === 'data_point' && $data_point_index == 1 && ($column['config']['label'] ?? NULL) === 'Measure') {
+              $column['config']['label'] = '';
+              $changed = TRUE;
+              $component_changed = TRUE;
+            }
+          }
+          unset($column);
+        }
+        unset($table);
+
+        if ($component_changed) {
+          $component->setConfiguration($configuration);
+        }
+      }
+    }
+    unset($section_item);
+
+    if ($changed) {
+      $node->get('layout_builder__layout')->setValue($sections);
+      $node->setSyncing(TRUE);
+      $node->save();
+      $updated++;
+    }
+  }
+
+  return (string) t('Updated the plan 934 target column label on @count section.', ['@count' => $updated]);
 }

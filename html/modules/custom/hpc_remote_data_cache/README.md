@@ -60,6 +60,8 @@ indexed when the remote data cache service writes or updates it.
 ## Current Consumers
 
 - `hpc_api`: Fabric GraphQL responses via refresher plugin `fabric_graphql`.
+- `hpc_api`: legacy HPC API endpoint responses via refresher plugin
+  `hpc_api_endpoint`.
 - `ghi_content`: HPC Content Module GraphQL responses via refresher plugin
   `hpc_content_module_graphql`.
 
@@ -100,6 +102,10 @@ The default settings are in `hpc_remote_data_cache.settings`:
 - `max_items`: maximum number of indexed items to retain. `0` disables this cap.
 - `prune_batch_size`: maximum number of indexed items to delete during one cron
   run.
+- `prune_excluded_sources`: source prefixes that pruning must not delete or
+  count against `max_items`. By default, legacy HPC API endpoint responses are
+  excluded because that remote system is outside this site's control and the
+  stored expired response can still be useful as an error fallback.
 
 ## Pruning
 
@@ -107,6 +113,9 @@ Cron prunes indexed cache entries in two passes:
 
 - items whose `stale_until` timestamp is older than `expired_retention_ttl`
 - oldest indexed items over the configured `max_items` cap
+
+Sources listed in `prune_excluded_sources` are skipped by both passes and are
+not counted toward the `max_items` overflow calculation.
 
 Pruning deletes both the PCB cache payload row and the matching index row.
 Because the index is maintained on writes, pruning does not deserialize payloads.
