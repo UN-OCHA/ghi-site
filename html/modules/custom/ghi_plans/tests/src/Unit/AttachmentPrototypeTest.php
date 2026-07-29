@@ -88,6 +88,62 @@ class AttachmentPrototypeTest extends ApiObjectTestBase {
   }
 
   /**
+   * Test duplicate raw field types are resolved consistently across groups.
+   */
+  public function testAttachmentPrototypeDuplicateMeasureFieldsAcrossGroups() {
+    $this->setMetricTypes([
+      $this->createMetricType(3, 'People In Need', 'inNeed', 'Value|People in need'),
+      $this->createMetricType(5, 'People Targeted', 'target', 'Target|People targeted'),
+      $this->createMetricType(21, 'Measure', 'measure', 'Measure|Mesure|Medida'),
+    ]);
+
+    $prototype = new AttachmentPrototype((object) [
+      'Id' => 4171,
+      'RefCode' => 'IN',
+      'Type' => 'indicator',
+      'Value' => (object) [
+        'measureFields' => [
+          (object) [
+            'name' => (object) ['en' => 'Measure'],
+            'type' => 'measure',
+          ],
+        ],
+        'metrics' => [
+          (object) [
+            'name' => (object) ['en' => 'Value'],
+            'type' => 'measure',
+          ],
+          (object) [
+            'name' => (object) ['en' => 'Target'],
+            'type' => 'target',
+          ],
+        ],
+        'name' => (object) ['en' => 'Indicator'],
+        'entities' => [],
+      ],
+      'PlanId' => 934,
+      'CreatedAt' => '2020-01-01T00:00:00.000Z',
+      'UpdatedAt' => '2020-01-01T00:00:00.000Z',
+    ]);
+
+    $this->assertSame([
+      'in_need' => 'Value',
+      'target' => 'Target',
+      'measure' => 'Measure',
+    ], $prototype->getFields());
+    $this->assertSame([
+      'in_need' => 'Value',
+      'target' => 'Target',
+    ], $prototype->getPlanningFields());
+    $this->assertSame([
+      'measure' => 'Measure',
+    ], $prototype->getMeasurementFields());
+    $this->assertSame('in_need', $prototype->getMetricTypeByOriginalIndex(0));
+    $this->assertSame('target', $prototype->getMetricTypeByOriginalIndex(1));
+    $this->assertSame('measure', $prototype->getMetricTypeByOriginalIndex(2));
+  }
+
+  /**
    * Test duplicate raw fields keep their original index definitions.
    */
   public function testAttachmentPrototypeOriginalFieldDefinitions() {
@@ -139,6 +195,142 @@ class AttachmentPrototypeTest extends ApiObjectTestBase {
     $this->assertSame('cumulative_reach', $prototype->getMetricTypeByOriginalIndex(2));
     $this->assertSame('latest_reach', $prototype->getMetricTypeByOriginalIndex(3));
     $this->assertSame(3, $prototype->getOriginalIndexByMetricType('latest_reach'));
+  }
+
+  /**
+   * Test missing metric type fields can be added from fact data.
+   */
+  public function testAttachmentPrototypeAddsMissingMetricTypeField() {
+    $prototype = new AttachmentPrototype((object) [
+      'Id' => 5647,
+      'RefCode' => 'BP',
+      'Type' => 'caseload',
+      'Value' => (object) [
+        'measureFields' => [
+          (object) [
+            'name' => (object) ['en' => 'People reached (periodical)'],
+            'type' => 'periodicalReach',
+          ],
+          (object) [
+            'name' => (object) ['en' => 'People covered'],
+            'type' => 'covered',
+          ],
+        ],
+        'metrics' => [
+          (object) [
+            'name' => (object) ['en' => 'People targeted'],
+            'type' => 'target',
+          ],
+        ],
+        'name' => (object) ['en' => 'Caseload'],
+        'entities' => [],
+      ],
+      'PlanId' => 1143,
+      'CreatedAt' => '2022-09-28T10:09:09.000Z',
+      'UpdatedAt' => '2024-09-13T17:07:39.000Z',
+    ]);
+
+    $metric_type = $this->createMetricType(14, 'Cumulative reach', 'cumulativeReach', 'Cumulative reach');
+    $prototype->addMissingMetricTypeField($metric_type, AttachmentPrototype::FIELD_GROUP_MEASUREMENT);
+    $prototype->addMissingMetricTypeField($metric_type, AttachmentPrototype::FIELD_GROUP_MEASUREMENT);
+
+    $this->assertSame([
+      'target',
+      'periodical_reach',
+      'covered',
+      'cumulative_reach',
+    ], $prototype->getFieldTypes());
+    $this->assertSame('People reached (cumulative)', $prototype->getFields()['cumulative_reach']);
+    $this->assertSame('People reached (cumulative)', $prototype->getMeasurementFields()['cumulative_reach']);
+    $this->assertSame(3, $prototype->getOriginalIndexByMetricType('cumulative_reach'));
+    $this->assertSame('cumulative_reach', $prototype->getMetricTypeByOriginalIndex(3));
+    $this->assertCount(4, $prototype->getFieldDefinitions());
+  }
+
+  /**
+   * Test original metric type fields can be replaced.
+   */
+  public function testAttachmentPrototypeReplacesMetricTypeField() {
+    $prototype = new AttachmentPrototype((object) [
+      'Id' => 5647,
+      'RefCode' => 'BP',
+      'Type' => 'caseload',
+      'Value' => (object) [
+        'measureFields' => [
+          (object) [
+            'name' => (object) ['en' => 'People reached (periodical)'],
+            'type' => 'periodicalReach',
+          ],
+          (object) [
+            'name' => (object) ['en' => 'People covered'],
+            'type' => 'covered',
+          ],
+        ],
+        'metrics' => [
+          (object) [
+            'name' => (object) ['en' => 'People targeted'],
+            'type' => 'target',
+          ],
+        ],
+        'name' => (object) ['en' => 'Caseload'],
+        'entities' => [],
+      ],
+      'PlanId' => 1143,
+      'CreatedAt' => '2022-09-28T10:09:09.000Z',
+      'UpdatedAt' => '2024-09-13T17:07:39.000Z',
+    ]);
+
+    $metric_type = $this->createMetricType(14, 'Cumulative reach', 'cumulativeReach', 'Cumulative reach');
+    $prototype->replaceMetricTypeField(2, $metric_type, AttachmentPrototype::FIELD_GROUP_MEASUREMENT);
+
+    $this->assertSame([
+      'target',
+      'periodical_reach',
+      'cumulative_reach',
+    ], $prototype->getFieldTypes());
+    $this->assertArrayNotHasKey('covered', $prototype->getFields());
+    $this->assertSame('People covered', $prototype->getFields()['cumulative_reach']);
+    $this->assertSame('People covered', $prototype->getMeasurementFields()['cumulative_reach']);
+    $this->assertSame(2, $prototype->getOriginalIndexByMetricType('cumulative_reach'));
+    $this->assertSame('cumulative_reach', $prototype->getMetricTypeByOriginalIndex(2));
+    $this->assertSame('cumulativeReach', $prototype->getFieldDefinitionByOriginalIndex(2)['raw_type']);
+    $this->assertCount(3, $prototype->getFieldDefinitions());
+  }
+
+  /**
+   * Test missing metric type fields fall back to the metric type label.
+   */
+  public function testAttachmentPrototypeMissingMetricTypeFieldFallsBackToMetricTypeLabel() {
+    $prototype = new AttachmentPrototype((object) [
+      'Id' => 5647,
+      'RefCode' => 'BP',
+      'Type' => 'caseload',
+      'Value' => (object) [
+        'measureFields' => [
+          (object) [
+            'name' => (object) ['en' => 'People covered'],
+            'type' => 'covered',
+          ],
+        ],
+        'metrics' => [
+          (object) [
+            'name' => (object) ['en' => 'People targeted'],
+            'type' => 'target',
+          ],
+        ],
+        'name' => (object) ['en' => 'Caseload'],
+        'entities' => [],
+      ],
+      'PlanId' => 1143,
+      'CreatedAt' => '2022-09-28T10:09:09.000Z',
+      'UpdatedAt' => '2024-09-13T17:07:39.000Z',
+    ]);
+
+    $metric_type = $this->createMetricType(14, 'Reached Core Cumulative', 'cumulativeReach', 'Cumulative reach');
+    $prototype->addMissingMetricTypeField($metric_type, AttachmentPrototype::FIELD_GROUP_MEASUREMENT);
+
+    $this->assertSame('Reached Core Cumulative', $prototype->getFields()['cumulative_reach']);
+    $this->assertSame('Reached Core Cumulative', $prototype->getMeasurementFields()['cumulative_reach']);
   }
 
   /**

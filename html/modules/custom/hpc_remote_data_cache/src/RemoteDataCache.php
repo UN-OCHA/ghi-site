@@ -214,14 +214,15 @@ class RemoteDataCache implements RemoteDataCacheInterface {
     $deleted = 0;
     $expired_retention_ttl = $this->getPositiveInt(NULL, 'expired_retention_ttl');
     $expired_cutoff = $this->time->getRequestTime() - $expired_retention_ttl;
-    $deleted += $this->deleteIndexedItems($this->index->getExpiredCids($expired_cutoff, $limit));
+    $excluded_sources = $this->getPruneExcludedSources();
+    $deleted += $this->deleteIndexedItems($this->index->getExpiredCids($expired_cutoff, $limit, $excluded_sources));
 
     $remaining = $limit - $deleted;
     $max_items = $this->getPositiveInt(NULL, 'max_items');
     if ($remaining > 0 && $max_items > 0) {
-      $overflow = $this->index->count() - $max_items;
+      $overflow = $this->index->count($excluded_sources) - $max_items;
       if ($overflow > 0) {
-        $deleted += $this->deleteIndexedItems($this->index->getOldestCids(min($overflow, $remaining)));
+        $deleted += $this->deleteIndexedItems($this->index->getOldestCids(min($overflow, $remaining), $excluded_sources));
       }
     }
 
@@ -386,6 +387,17 @@ class RemoteDataCache implements RemoteDataCacheInterface {
   private function getPositiveInt(mixed $value, string $config_key): int {
     $value = $value ?? $this->getSettings()->get($config_key);
     return max(0, (int) $value);
+  }
+
+  /**
+   * Get source prefixes that must be protected from pruning.
+   *
+   * @return string[]
+   *   Source prefixes excluded from prune selection and item-cap counts.
+   */
+  private function getPruneExcludedSources(): array {
+    $sources = $this->getSettings()->get('prune_excluded_sources') ?? [];
+    return is_array($sources) ? array_values(array_unique(array_filter(array_map('strval', $sources)))) : [];
   }
 
   /**

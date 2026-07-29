@@ -56,3 +56,9 @@ hpc_remote_data_cache.settings:
       constraints:
         Range:
           min: 0
+    prune_excluded_sources:
+      type: sequence
+      label: 'Remote data cache sources excluded from pruning'
+      sequence:
+        type: string
+        label: 'Source prefix'

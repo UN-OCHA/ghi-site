@@ -4,6 +4,12 @@ ghi_plans.legacy_project_settings:
   route_name: ghi_plans.legacy_project_settings
   parent: system.admin_config_ghi
 
+ghi_plans.attachment_prototype_field_overrides:
+  title: 'Attachment prototype field overrides'
+  description: 'Configure targeted Fabric attachment prototype field fixes.'
+  route_name: ghi_plans.attachment_prototype_field_overrides
+  parent: system.admin_config_ghi
+
 ghi_plans.plan_entity_lookup:
   title: 'Plan entity lookup'
   description: 'Lookup plan entity data.'

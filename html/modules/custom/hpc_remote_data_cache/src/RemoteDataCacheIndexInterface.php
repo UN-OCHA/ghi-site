@@ -32,29 +32,36 @@ interface RemoteDataCacheIndexInterface {
    *   Items whose stale-until timestamp is older than this cutoff are eligible.
    * @param int $limit
    *   The maximum number of cache ids to return.
+   * @param string[] $excluded_sources
+   *   Source prefixes to exclude from pruning.
    *
    * @return string[]
    *   Cache ids.
    */
-  public function getExpiredCids(int $cutoff, int $limit): array;
+  public function getExpiredCids(int $cutoff, int $limit, array $excluded_sources = []): array;
 
   /**
    * Count indexed cache items.
    *
+   * @param string[] $excluded_sources
+   *   Source prefixes to exclude from the count.
+   *
    * @return int
    *   The indexed item count.
    */
-  public function count(): int;
+  public function count(array $excluded_sources = []): int;
 
   /**
    * Get the oldest indexed cache ids.
    *
    * @param int $limit
    *   The maximum number of cache ids to return.
+   * @param string[] $excluded_sources
+   *   Source prefixes to exclude from pruning.
    *
    * @return string[]
    *   Cache ids.
    */
-  public function getOldestCids(int $limit): array;
+  public function getOldestCids(int $limit, array $excluded_sources = []): array;
 
 }

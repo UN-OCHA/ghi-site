@@ -3,6 +3,7 @@
 namespace Drupal\hpc_remote_data_cache;
 
 use Drupal\Core\Database\Connection;
+use Drupal\Core\Database\Query\SelectInterface;
 
 /**
  * Database-backed index for queryable remote data cache metadata.
@@ -60,7 +61,7 @@ class RemoteDataCacheDatabaseIndex implements RemoteDataCacheIndexInterface {
   /**
    * {@inheritdoc}
    */
-  public function getExpiredCids(int $cutoff, int $limit): array {
+  public function getExpiredCids(int $cutoff, int $limit, array $excluded_sources = []): array {
     if (!$this->indexTableExists() || $limit <= 0) {
       return [];
     }
@@ -69,6 +70,7 @@ class RemoteDataCacheDatabaseIndex implements RemoteDataCacheIndexInterface {
     $query->fields('i', ['cid']);
     $query->condition('i.stale_until', 0, '>');
     $query->condition('i.stale_until', $cutoff, '<');
+    $this->excludeSources($query, $excluded_sources);
     $query->orderBy('i.stale_until', 'ASC');
     $query->orderBy('i.changed', 'ASC');
     $query->range(0, $limit);
@@ -78,24 +80,27 @@ class RemoteDataCacheDatabaseIndex implements RemoteDataCacheIndexInterface {
   /**
    * {@inheritdoc}
    */
-  public function count(): int {
+  public function count(array $excluded_sources = []): int {
     if (!$this->indexTableExists()) {
       return 0;
     }
 
-    return (int) $this->database->select(self::INDEX_TABLE, 'i')->countQuery()->execute()->fetchField();
+    $query = $this->database->select(self::INDEX_TABLE, 'i');
+    $this->excludeSources($query, $excluded_sources);
+    return (int) $query->countQuery()->execute()->fetchField();
   }
 
   /**
    * {@inheritdoc}
    */
-  public function getOldestCids(int $limit): array {
+  public function getOldestCids(int $limit, array $excluded_sources = []): array {
     if (!$this->indexTableExists() || $limit <= 0) {
       return [];
     }
 
     $query = $this->database->select(self::INDEX_TABLE, 'i');
     $query->fields('i', ['cid']);
+    $this->excludeSources($query, $excluded_sources);
     $query->orderBy('i.stale_until', 'ASC');
     $query->orderBy('i.changed', 'ASC');
     $query->orderBy('i.cid', 'ASC');
@@ -157,6 +162,21 @@ class RemoteDataCacheDatabaseIndex implements RemoteDataCacheIndexInterface {
    */
   private function normalizeCids(array $cids): array {
     return array_values(array_unique(array_filter(array_map('strval', $cids))));
+  }
+
+  /**
+   * Exclude cache sources from a metadata query.
+   *
+   * @param \Drupal\Core\Database\Query\SelectInterface $query
+   *   The query to alter.
+   * @param string[] $sources
+   *   Source prefixes to exclude.
+   */
+  private function excludeSources(SelectInterface $query, array $sources): void {
+    $sources = array_values(array_unique(array_filter(array_map('strval', $sources))));
+    if ($sources) {
+      $query->condition('i.source', $sources, 'NOT IN');
+    }
   }
 
   /**
