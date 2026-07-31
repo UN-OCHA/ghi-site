@@ -43,7 +43,10 @@ class RemoteDataCacheTest extends UnitTestCase {
         && $data['stale_until'] === 1180
         && $data['cache_tags'] === ['remote:article:1']
         && $data['refresher_id'] === 'fabric_graphql';
-    }), Cache::PERMANENT, Argument::that(fn (array $tags) => in_array('remote:article:1', $tags, TRUE)))->shouldBeCalledOnce();
+    }), Cache::PERMANENT, [
+      'hpc_remote_data_cache',
+      'hpc_remote_data_cache:fabric_graphql',
+    ])->shouldBeCalledOnce();
     $index = $this->prophesize(RemoteDataCacheIndexInterface::class);
     $index->upsert('fabric:test', Argument::that(function (array $data) use ($payload) {
       return $data['payload'] === $payload
@@ -92,7 +95,10 @@ class RemoteDataCacheTest extends UnitTestCase {
     ]);
     $cache_backend->set('fabric:test', Argument::that(function (array $data) {
       return $data['refresh_queued'] === TRUE && $data['changed'] === 1100;
-    }), Cache::PERMANENT, Argument::type('array'))->shouldBeCalledOnce();
+    }), Cache::PERMANENT, [
+      'hpc_remote_data_cache',
+      'hpc_remote_data_cache:fabric_graphql',
+    ])->shouldBeCalledOnce();
     $index = $this->prophesize(RemoteDataCacheIndexInterface::class);
     $index->upsert('fabric:test', Argument::that(function (array $data) {
       return $data['refresh_queued'] === TRUE && $data['changed'] === 1100;
@@ -128,12 +134,18 @@ class RemoteDataCacheTest extends UnitTestCase {
     ]);
     $cache_backend->set('fabric:test', Argument::that(function (array $data) {
       return $data['refresh_queued'] === FALSE && $data['refreshing_until'] === 2300;
-    }), Cache::PERMANENT, Argument::type('array'))->shouldBeCalled();
+    }), Cache::PERMANENT, [
+      'hpc_remote_data_cache',
+      'hpc_remote_data_cache:fabric_graphql',
+    ])->shouldBeCalled();
     $cache_backend->set('fabric:test', Argument::that(function (array $data) use ($new_payload) {
       return $data['payload'] === $new_payload
         && $data['fresh_until'] === 2300
         && $data['stale_until'] === 2900;
-    }), Cache::PERMANENT, Argument::type('array'))->shouldBeCalled();
+    }), Cache::PERMANENT, [
+      'hpc_remote_data_cache',
+      'hpc_remote_data_cache:fabric_graphql',
+    ])->shouldBeCalled();
     $index = $this->prophesize(RemoteDataCacheIndexInterface::class);
     $index->upsert('fabric:test', Argument::that(function (array $data) {
       return $data['refresh_queued'] === FALSE && $data['refreshing_until'] === 2300;

@@ -275,10 +275,13 @@ class RemoteDataCache implements RemoteDataCacheInterface {
    *   The item data.
    */
   private function writeItemData(string $cid, array $data): void {
-    $tags = Cache::mergeTags([
+    // Caller tags stay in the payload metadata for dependent cache
+    // invalidation. Applying them to this row could invalidate unrelated
+    // remote responses that happen to share a broad tag such as a plan ID.
+    $tags = [
       'hpc_remote_data_cache',
       'hpc_remote_data_cache:' . ($data['refresher_id'] ?? 'unknown'),
-    ], (array) ($data['cache_tags'] ?? []));
+    ];
     $this->cacheBackend->set($cid, $data, Cache::PERMANENT, $tags);
     $this->index->upsert($cid, $data);
   }
