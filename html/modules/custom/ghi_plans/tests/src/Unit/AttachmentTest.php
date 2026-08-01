@@ -192,6 +192,56 @@ class AttachmentTest extends ApiObjectTestBase {
   }
 
   /**
+   * Test missing calculated percentage values stay unavailable.
+   */
+  public function testCalculatedPercentageMissingValueFormatting() {
+    /** @var \Drupal\ghi_plans\ApiObjects\Attachments\CaseloadAttachment $attachment */
+    $attachment = $this->getAttachmentFromFixture('caseload');
+    $this->assertInstanceOf(CaseloadAttachment::class, $attachment);
+    $reporting_periods = $this->mockCaseloadReportingPeriods([2386, 2387, 2388, 2389], $attachment->getPlanId());
+    $this->mockPlanWithLatestPublishedReportingPeriod($attachment->getPlanId(), 2389, $reporting_periods);
+
+    $latest_measurement = $attachment->getMeasurement(2389);
+    $latest_values = $latest_measurement->getValues();
+    $latest_values['periodical_reach'] = NULL;
+    $this->setPrivateProperty($latest_measurement, 'values', $latest_values);
+
+    $conf = [
+      'processing' => 'calculated',
+      'calculation' => 'percentage',
+      'data_points' => [
+        0 => [
+          'metric_type' => 'periodical_reach',
+          'monitoring_period' => 'latest',
+        ],
+        1 => ['metric_type' => 'target'],
+      ],
+    ];
+
+    foreach (['auto', 'percent'] as $formatting) {
+      $conf['formatting'] = $formatting;
+      $this->assertNull($attachment->getValue($conf));
+      $build = $attachment->formatValue($conf);
+      $this->assertSame('No data', $build[0]['#markup']);
+    }
+
+    $latest_values['periodical_reach'] = 0.0;
+    $this->setPrivateProperty($latest_measurement, 'values', $latest_values);
+
+    foreach (['auto', 'percent'] as $formatting) {
+      $conf['formatting'] = $formatting;
+      $this->assertSame(0.0, $attachment->getValue($conf));
+      $build = $attachment->formatValue($conf);
+      $this->assertEquals([
+        '#theme' => 'hpc_percent',
+        '#ratio' => 0.0,
+        '#decimals' => 1,
+        '#decimal_format' => NULL,
+      ], $build[0]);
+    }
+  }
+
+  /**
    * Test cache tags on derived attachment values.
    */
   public function testAttachmentGetValueCacheTags() {
