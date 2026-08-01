@@ -1,0 +1,486 @@
+diff --git a/config/schema/page_manager.schema.yml b/config/schema/page_manager.schema.yml
+index ecab14609dfaf7b56c63a656fbfae687bf02a9b2..d6d2a3dcc63c017e310f2e2e4c55a5bf1ae59d60 100644
+--- a/config/schema/page_manager.schema.yml
++++ b/config/schema/page_manager.schema.yml
+@@ -238,6 +238,15 @@ display_variant.plugin.layout_builder:
+   type: display_variant.plugin
+   label: 'Layout Builder'
+   mapping:
++    title_type:
++      type: string
++      label: 'Title type'
++    manual_title:
++      type: string
++      label: 'Manual title'
++    title_from_block:
++      type: string
++      label: 'Title from block'
+     sections:
+       type: sequence
+       sequence:
+diff --git a/src/Plugin/DisplayVariant/LayoutBuilderDisplayVariant.php b/src/Plugin/DisplayVariant/LayoutBuilderDisplayVariant.php
+index becb819765cfbff31b19579ead3dfc403bb9df0f..43928545ffd8540447398139cd368e9ac8bd16d5 100644
+--- a/src/Plugin/DisplayVariant/LayoutBuilderDisplayVariant.php
++++ b/src/Plugin/DisplayVariant/LayoutBuilderDisplayVariant.php
+@@ -2,11 +2,14 @@
+ 
+ namespace Drupal\page_manager\Plugin\DisplayVariant;
+ 
++use Drupal\Component\Render\HtmlEscapedText;
+ use Drupal\Core\Display\ContextAwareVariantInterface;
+ use Drupal\Core\Display\VariantBase;
+ use Drupal\Core\Form\FormStateInterface;
+ use Drupal\Core\Layout\LayoutPluginManagerInterface;
+ use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
++use Drupal\Core\Render\Markup;
++use Drupal\Core\Utility\Token;
+ use Drupal\ctools\Plugin\PluginWizardInterface;
+ use Drupal\layout_builder\LayoutEntityHelperTrait;
+ use Drupal\layout_builder\SectionListTrait;
+@@ -26,6 +29,13 @@ class LayoutBuilderDisplayVariant extends VariantBase implements PluginWizardInt
+   use SectionListTrait;
+   use LayoutEntityHelperTrait;
+ 
++  /**
++   * @var \Drupal\Core\Utility\Token
++   *
++   * The token service.
++   */
++  protected $token;
++
+   /**
+    * An array of collected contexts.
+    *
+@@ -58,12 +68,15 @@ class LayoutBuilderDisplayVariant extends VariantBase implements PluginWizardInt
+    *   The plugin ID for the plugin instance.
+    * @param mixed $plugin_definition
+    *   The plugin implementation definition.
++   * @param \Drupal\Core\Utility\Token $token
++   *   The token service.
+    * @param \Drupal\Core\Layout\LayoutPluginManagerInterface|null $layout_manager
+    *   (optional) The layout plugin manager. Defaults to the manager from the
+    *   service container when not provided.
+    */
+-  public function __construct(array $configuration, $plugin_id, $plugin_definition, ?LayoutPluginManagerInterface $layout_manager = NULL) {
++  public function __construct(array $configuration, $plugin_id, $plugin_definition, Token $token, ?LayoutPluginManagerInterface $layout_manager = NULL) {
+     parent::__construct($configuration, $plugin_id, $plugin_definition);
++    $this->token = $token;
+     $this->layoutManager = $layout_manager;
+   }
+ 
+@@ -75,6 +88,7 @@ class LayoutBuilderDisplayVariant extends VariantBase implements PluginWizardInt
+       $configuration,
+       $plugin_id,
+       $plugin_definition,
++      $container->get('token'),
+       $container->get('plugin.manager.core.layout')
+     );
+   }
+@@ -85,18 +99,107 @@ class LayoutBuilderDisplayVariant extends VariantBase implements PluginWizardInt
+   public function build() {
+     $build = [];
+     $contexts = $this->getContexts();
++    $in_preview = FALSE;
++
++    /** @var \Drupal\layout_builder\Section $section */
+     foreach ($this->getSections() as $delta => $section) {
+-      $build[$delta] = $section->toRenderArray($contexts);
++      $regions = [];
++      $layout_definition = $section->getLayout()->getPluginDefinition();
++      foreach ($layout_definition->getRegionNames() as $region) {
++        foreach ($section->getComponentsByRegion($region) as $uuid => $component) {
++          if ($block = $component->toRenderArray($contexts, $in_preview)) {
++            if ($this->configuration['title_type'] === 'block' && $this->configuration['title_from_block'] === $uuid) {
++              $build['#title'] = $this->getBlockTitle($block);
++              $block['#configuration']['label_display'] = 0;
++            }
++
++            $regions[$component->getRegion()][$component->getUuid()] = $block;
++          }
++        }
++      }
++      $build[$delta] = $section->getLayout()->build($regions);
+     }
++
++    if ($this->configuration['title_type'] === 'manual') {
++      $build['#title'] = $this->renderManualPageTitle($this->configuration['manual_title']);
++    }
++
+     return $build;
+   }
+ 
++  /**
++   * Gets the block title from the block render array.
++   *
++   * @param array $block
++   *   The render array for the block.
++   *
++   * @return string
++   *   The block title.
++   */
++  protected function getBlockTitle(array $block) {
++    if (!empty($block['#configuration']['label_display'])) {
++      if (isset($block['content']['#title'])) {
++        return $block['content']['#title'];
++      }
++
++      return $block['#configuration']['label'];
++    }
++
++    return '';
++  }
++
++  /**
++   * Renders the page title and replaces tokens.
++   *
++   * @param string $page_title
++   *   The page title that should be rendered.
++   *
++   * @return string
++   *   The page title after replacing any tokens.
++   */
++  protected function renderManualPageTitle($page_title) {
++    $data = $this->getContextAsTokenData();
++    // Token replace only escapes replacement values, ensure a consistent
++    // behavior by also escaping the input and then returning it as a Markup
++    // object to avoid double escaping.
++    // @todo: Simplify this when core provides an API for this in
++    //   https://www.drupal.org/node/2580723.
++    $title = (string) $this->token->replace(new HtmlEscapedText($page_title), $data);
++    return Markup::create($title);
++  }
++
++  /**
++   * Returns available context as token data.
++   *
++   * @return array
++   *   An array with token data values keyed by token type.
++   */
++  protected function getContextAsTokenData() {
++    $data = [];
++    foreach ($this->getContexts() as $context) {
++      // @todo Simplify this when token and typed data types are unified in
++      //   https://drupal.org/node/2163027.
++      if (strpos($context->getContextDefinition()->getDataType(), 'entity:') === 0) {
++        $token_type = substr($context->getContextDefinition()->getDataType(), 7);
++        if ($token_type == 'taxonomy_term') {
++          $token_type = 'term';
++        }
++        $data[$token_type] = $context->getContextValue();
++      }
++    }
++    return $data;
++  }
++
+   /**
+    * {@inheritdoc}
+    */
+   public function defaultConfiguration() {
+     return parent::defaultConfiguration() + [
+       'sections' => [],
++      'context_bundles' => [],
++	    'title_type' => 'label',
++      'manual_title' => '',
++      'title_from_block' => '',
+     ];
+   }
+ 
+@@ -104,9 +207,106 @@ class LayoutBuilderDisplayVariant extends VariantBase implements PluginWizardInt
+    * {@inheritdoc}
+    */
+   public function buildConfigurationForm(array $form, FormStateInterface $form_state) {
++    $page_variant = $form_state->getValue('page_variant');
++    $page_contexts = $page_variant->getPage()->getContexts();
++    $entity_bundle_info = \Drupal::service('entity_type.bundle.info');
++    $entity_type_manager = \Drupal::service('entity_type.manager');
++
++    foreach ($page_contexts as $name => $context) {
++      if (!$context->hasContextValue()) {
++        $data_type = $context->getContextDefinition()->getDataType();
++        if (strpos($data_type, 'entity:') === 0) {
++          [, $entity_type_id] = explode(':', $data_type, 2);
++          if ($entity_type_manager->getDefinition($entity_type_id)->hasKey('bundle')) {
++            $bundles = $entity_bundle_info->getBundleInfo($entity_type_id);
++            $bundles = array_combine(array_keys($bundles), array_column($bundles, 'label'));
++            $form['context_bundles'][$name] = array(
++              '#type' => 'select',
++              '#title' => $this->t('Context %context bundle', ['%context' => $context->getContextDefinition()->getLabel()]),
++              '#options' => $bundles,
++              '#default_value' => !empty($this->configuration['context_bundles'][$name]) ?  $this->configuration['context_bundles'][$name] : NULL
++            );
++          }
++        }
++      }
++    }
++    $form['context_bundles']['#tree'] = TRUE;
++	  $form['title_type'] = [
++      '#type' => 'select',
++      '#title' => $this->t('Title type'),
++      '#options' => [
++        'label' => $this->t('Use page label'),
++        'manual' => $this->t('Manually set'),
++        'block' => $this->t('From block'),
++      ],
++      '#default_value' => $this->configuration['title_type'] ?? 'label',
++    ];
++
++    $form['manual_title'] = [
++      '#type' => 'textfield',
++      '#title' => $this->t('Page title'),
++      '#description' => $this->t('Configure the page title that will be used for this display.'),
++      '#default_value' => $this->configuration['manual_title'] ?? '',
++      '#states' => [
++        'visible' => [
++          ':input[name="variant_settings[title_type]"]' => ['value' => 'manual'],
++        ],
++      ],
++    ];
++
++    $block_options = [];
++    $contexts = $this->getContexts();
++    /** @var \Drupal\layout_builder\Section $section */
++    foreach ($this->getSections() as $section) {
++      foreach ($section->getComponents() as $component) {
++        /** @var \Drupal\Core\Block\BlockPluginInterface $block */
++        $block = $component->getPlugin($contexts);
++        $block_options[$component->getUuid()] = $block->label();
++      }
++    }
++
++    $form['title_from_block'] = [
++      '#type' => 'select',
++      '#title' => $this->t('Title from block'),
++      '#description' => $this->t('The block to take the page title from.'),
++      '#default_value' => $this->configuration['title_from_block'] ?? '',
++      '#options' => $block_options,
++      '#states' => [
++        'visible' => [
++          ':input[name="variant_settings[title_type]"]' => ['value' => 'block'],
++        ],
++      ],
++    ];
++
+     return $form;
+   }
+ 
++  /**
++   * {@inheritdoc}
++   */
++  public function submitConfigurationForm(array &$form, FormStateInterface $form_state) {
++    parent::submitConfigurationForm($form, $form_state);
++    $this->configuration['context_bundles'] = $form_state->getValue('context_bundles');
++
++    if ($form_state->hasValue('title_type')) {
++      $this->configuration['title_type'] = $form_state->getValue('title_type');
++    }
++
++    if ($this->configuration['title_type'] === 'manual' && $form_state->hasValue('manual_title')) {
++      $this->configuration['manual_title'] = $form_state->getValue('manual_title');
++    }
++    else {
++      $this->configuration['manual_title'] = '';
++    }
++
++    if ($this->configuration['title_type'] === 'block' && $form_state->hasValue('title_from_block')) {
++      $this->configuration['title_from_block'] = $form_state->getValue('title_from_block');
++    }
++    else {
++      $this->configuration['title_from_block'] = '';
++    }
++  }
++
+   /**
+    * {@inheritdoc}
+    */
+diff --git a/src/Plugin/SectionStorage/PageManagerSectionStorage.php b/src/Plugin/SectionStorage/PageManagerSectionStorage.php
+index 5e9c2e6fee297c05cfc9e038f6f8d7375d9e3144..6d3665c2ef3a7b838a3505784c196d72ef1da0e8 100644
+--- a/src/Plugin/SectionStorage/PageManagerSectionStorage.php
++++ b/src/Plugin/SectionStorage/PageManagerSectionStorage.php
+@@ -247,6 +247,7 @@ class PageManagerSectionStorage extends SectionStorageBase implements ContainerF
+    */
+   public function getContextsDuringPreview() {
+     $contexts = $this->getPageVariant()->getContexts() + $this->getPageVariant()->getStaticContexts();
++    $variant_config = $this->getPageVariant()->getVariantPlugin()->getConfiguration();
+ 
+     foreach ($contexts as $name => $context) {
+       if (!$context->hasContextValue()) {
+@@ -254,9 +255,13 @@ class PageManagerSectionStorage extends SectionStorageBase implements ContainerF
+         if (strpos((string) $data_type, 'entity:') === 0) {
+           [, $entity_type_id] = explode(':', $data_type, 2);
+ 
+-          $bundle = $entity_type_id;
+-          if ($this->entityTypeManager->getDefinition($entity_type_id)->hasKey('bundle')) {
+-            $bundle = key($this->entityTypeBundleInfo->getBundleInfo($entity_type_id));
++          if (!empty($variant_config['context_bundles'][$name])) {
++            $bundle = $variant_config['context_bundles'][$name];
++          } else {
++            $bundle = $entity_type_id;
++            if ($this->entityTypeManager->getDefinition($entity_type_id)->hasKey('bundle')) {
++              $bundle = key($this->entityTypeBundleInfo->getBundleInfo($entity_type_id));
++            }
+           }
+ 
+           $sample = $this->sampleEntityGenerator->get($entity_type_id, $bundle);
+diff --git a/tests/src/FunctionalJavascript/LayoutBuilderDisplayVariantTest.php b/tests/src/FunctionalJavascript/LayoutBuilderDisplayVariantTest.php
+index bd55dff8865c108d0115f1d7b12fe6ebabdd20ac..416ef9829957b425e0a1084d5de089ae2fd6062e 100644
+--- a/tests/src/FunctionalJavascript/LayoutBuilderDisplayVariantTest.php
++++ b/tests/src/FunctionalJavascript/LayoutBuilderDisplayVariantTest.php
+@@ -2,6 +2,7 @@
+ 
+ namespace Drupal\Tests\page_manager\FunctionalJavascript;
+ 
++use Behat\Mink\Exception\ExpectationException;
+ use Drupal\FunctionalJavascriptTests\WebDriverTestBase;
+ use Drupal\Tests\contextual\FunctionalJavascript\ContextualLinkClickTrait;
+ use Drupal\Tests\page_manager\Traits\WebDriverFormSubmitTrait;
+@@ -44,6 +45,30 @@ class LayoutBuilderDisplayVariantTest extends WebDriverTestBase {
+       ->getPermissions())));
+   }
+ 
++  /**
++   * Pass if the page title is the given string.
++   *
++   * This is copied from WebAssert::titleEquals() which doesn't work.
++   *
++   * @param \Drupal\Tests\WebAssert $assert_session
++   *   The assert session.
++   * @param string $expected_title
++   *   The string the page title should be.
++   *
++   * @throws \Behat\Mink\Exception\ExpectationException
++   *   Thrown when element doesn't exist, or the title is a different one.
++   */
++  public function assertTitleEquals($assert_session, $expected_title) {
++    $title_element = $this->getSession()->getPage()->find('css', 'title');
++    if (!$title_element) {
++      throw new ExpectationException('No title element found on the page', $this->getSession()->getDriver());
++    }
++    // The original uses getText(), which doesn't work for some reason.
++    //$actual_title = $title_element->getText();
++    $actual_title = $title_element->getHtml();
++    $assert_session->assert($expected_title === $actual_title, 'Title found');
++  }
++
+   /**
+    * Tests the layout builder variant.
+    */
+@@ -126,6 +151,7 @@ class LayoutBuilderDisplayVariantTest extends WebDriverTestBase {
+ 
+     // Check if block is rendered in the correct region.
+     $this->drupalGet('test-page');
++    $this->assertTitleEquals($assert_session, 'Example | Drupal');
+     $assert_session->waitForElementVisible('css', '.layout__region--first');
+     $assert_session->elementTextContains('css', '.layout__region--first', 'Powered by Drupal');
+     $assert_session->waitForElementVisible('css', '.layout__region--second');
+@@ -137,4 +163,111 @@ class LayoutBuilderDisplayVariantTest extends WebDriverTestBase {
+     $this->assertContains('ctools', $dependencies['module']);
+   }
+ 
++  /**
++   * Tests manual titles on the layout builder variant.
++   */
++  public function testLayoutBuilderVariantManualTitle() {
++    $this->drupalGet('admin/structure/page_manager/add');
++    $page = $this->getSession()->getPage();
++    $assert_session = $this->assertSession();
++
++    $page->fillField('label', 'Example');
++    $assert_session->waitForElementVisible('css', '.machine-name-value');
++    $this->submitForm([
++      'path' => '/test-page',
++      'variant_plugin_id' => 'layout_builder',
++    ], t('Next'));
++
++    $this->submitForm([
++      'page_variant_label' => 'Layout Builder',
++      'variant_settings[title_type]' => 'manual',
++      'variant_settings[manual_title]' => 'Manually set title',
++    ], t('Next'));
++
++    // Add a two column section.
++    $page->find('css', '.layout-builder__link--add')->click();
++    $assert_session->waitForElementVisible('named', ['link', 'One column']);
++    $this->clickLink('Two column');
++    $assert_session->assertWaitOnAjaxRequest();
++    $page->pressButton('Add section');
++    $assert_session->assertWaitOnAjaxRequest();
++
++    // Place a block in the first region.
++    $page->find('css', '.layout__region--first .layout-builder__link--add')
++      ->click();
++    $assert_session->assertWaitOnAjaxRequest();
++    $this->clickLink('Powered by Drupal');
++    $assert_session->assertWaitOnAjaxRequest();
++    $page->find('css', 'form.layout-builder-add-block .form-submit')->click();
++    $assert_session->assertWaitOnAjaxRequest();
++    $assert_session->pageTextContains('Powered by Drupal');
++
++    $page->pressButton('Finish');
++    $assert_session->pageTextContains('The layout has been saved.');
++
++    // Check if block is rendered in the correct region.
++    $this->drupalGet('test-page');
++    $this->assertTitleEquals($assert_session, 'Manually set title | Drupal');
++    $assert_session->waitForElementVisible('css', '.layout__region--first');
++    $assert_session->elementTextContains('css', '.layout__region--first', 'Powered by Drupal');
++  }
++
++  /**
++   * Tests title from block on the layout builder variant.
++   */
++  public function testLayoutBuilderVariantTitleFromBlock() {
++    $this->drupalGet('admin/structure/page_manager/add');
++    $page = $this->getSession()->getPage();
++    $assert_session = $this->assertSession();
++
++    $page->fillField('label', 'Example');
++    $assert_session->waitForElementVisible('css', '.machine-name-value');
++    $this->submitForm([
++      'path' => '/test-page',
++      'variant_plugin_id' => 'layout_builder',
++    ], t('Next'));
++
++    $this->submitForm([
++      'page_variant_label' => 'Layout Builder',
++    ], t('Next'));
++
++    // Add a two column section.
++    $page->find('css', '.layout-builder__link--add')->click();
++    $assert_session->waitForElementVisible('named', ['link', 'One column']);
++    $this->clickLink('Two column');
++    $assert_session->assertWaitOnAjaxRequest();
++    $page->pressButton('Add section');
++    $assert_session->assertWaitOnAjaxRequest();
++
++    // Place a block in the first region.
++    $page->find('css', '.layout__region--first .layout-builder__link--add')
++      ->click();
++    $assert_session->assertWaitOnAjaxRequest();
++    $this->clickLink('Powered by Drupal');
++    $assert_session->assertWaitOnAjaxRequest();
++    $page->find('css', 'form.layout-builder-add-block .form-checkbox')->click();
++    $page->find('css', 'form.layout-builder-add-block .form-submit')->click();
++    $assert_session->assertWaitOnAjaxRequest();
++    $assert_session->pageTextContains('Powered by Drupal');
++
++    $page->pressButton('Finish');
++    $assert_session->pageTextContains('The layout has been saved.');
++
++    // Go the general tab on the layout builder variant.
++    $this->drupalGet('admin/structure/page_manager/manage/example/page_variant__example-layout_builder-0__general');
++
++    $this->submitForm([
++      'page_variant_label' => 'Layout Builder',
++      'variant_settings[title_type]' => 'block',
++      // This will be the default anyway.
++      //'variant_settings[title_from_block]' => 'Powered by Drupal',
++    ], t('Update and save'));
++
++    // Check if block is rendered in the correct region.
++    $this->drupalGet('test-page');
++    $this->assertTitleEquals($assert_session, 'Powered by Drupal | Drupal');
++    $assert_session->waitForElementVisible('css', '.layout__region--first');
++    $assert_session->elementTextContains('css', '.layout__region--first', 'Powered by Drupal');
++  }
++
+ }

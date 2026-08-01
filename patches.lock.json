@@ -1,5 +1,5 @@
 {
-    "_hash": "82867915d19604535c436d47069c43db1b4047d15f3f309920eb620401e0a451",
+    "_hash": "8d4591e2252aafdc52531f2e101b52f9078c061ee81395704c32519814c1c49c",
     "patches": {
         "drupal/core": [
             {
@@ -189,8 +189,8 @@
             {
                 "package": "drupal/page_manager",
                 "description": "Issue #3176661: Allow to edit page title when using Layout Builder variant",
-                "url": "https://www.drupal.org/files/issues/2022-11-15/page_manager-lb-title-3176661-15.patch",
-                "sha256": "e8cf72b4f8a8a5d4f9cfce58fee23c727b4e48e4c4bb16a7e22ae6601b8e909e",
+                "url": "patches/page_manager-lb-title-3176661-mr45.patch",
+                "sha256": "f4feacd3b206a8dcfa1a0228fa7b7e356c349803250241caa27f7286adefbe56",
                 "depth": 1,
                 "extra": {
                     "provenance": "patches-file:composer.patches.json"

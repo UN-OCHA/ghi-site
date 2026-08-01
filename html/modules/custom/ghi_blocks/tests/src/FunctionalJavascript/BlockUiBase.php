@@ -317,7 +317,7 @@ JS);
   /**
    * {@inheritdoc}
    */
-  protected function htmlOutput($message = NULL) {
+  protected function htmlOutput($message = NULL): void {
     if (!$this->htmlOutputEnabled) {
       return;
     }
