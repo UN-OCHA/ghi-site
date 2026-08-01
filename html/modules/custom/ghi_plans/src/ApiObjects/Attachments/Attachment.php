@@ -1356,8 +1356,14 @@ class Attachment extends ApiObjectBase implements AttachmentInterface, Disaggreg
       return NULL;
     }
 
-    $value_1 = (float) $this->getSingleValue($metric_type_1, $reporting_periods, $conf['data_points'][0]);
-    $value_2 = (float) $this->getSingleValue($metric_type_2, $reporting_periods, $conf['data_points'][1]);
+    $value_1 = $this->getSingleValue($metric_type_1, $reporting_periods, $conf['data_points'][0]);
+    $value_2 = $this->getSingleValue($metric_type_2, $reporting_periods, $conf['data_points'][1]);
+    if ($this->isNullValue($value_1) || $this->isNullValue($value_2)) {
+      return NULL;
+    }
+
+    $value_1 = (float) $value_1;
+    $value_2 = (float) $value_2;
 
     switch ($conf['calculation']) {
       case 'addition':
@@ -1624,9 +1630,9 @@ class Attachment extends ApiObjectBase implements AttachmentInterface, Disaggreg
   private function formatAsText(array $conf) {
     $value = $this->getValue($conf);
 
-    // Handle empty data by just "Pending" or "No data" for everything besides
-    // percentage displays.
-    if ($this->isNullValue($value) && $conf['formatting'] != 'percent') {
+    // Handle unavailable data before rendering so missing percentages are not
+    // indistinguishable from real zero values.
+    if ($this->isNullValue($value)) {
       $t_options = ['langcode' => $this->getPlanLanguage()];
       $value = $this->isPendingDataEntry() ? $this->t('Pending', [], $t_options) : $this->t('No data', [], $t_options);
       return [
