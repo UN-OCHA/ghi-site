@@ -27,7 +27,7 @@ class BlockUiTest extends BlockUiBase {
     $assert_session->elementExists('css', '.layout-builder-ipe-actions');
     $assert_session->elementExists('css', '.layout-builder-ipe--link-customize');
     $assert_session->linkExists('Customize');
-    $page->clickLink('Customize');
+    $this->clickCustomize();
     $this->waitForAjaxToFinish();
     $assert_session->waitForElementVisible('css', '#layout-builder-ipe-wrapper.edit-layout');
     $assert_session->elementExists('css', '#layout-builder-ipe-wrapper.edit-layout');
@@ -39,15 +39,15 @@ class BlockUiTest extends BlockUiBase {
 
     // Open the "add new block" dialog.
     $assert_session->linkExists('Add block');
-    $page->clickLink('Add block');
+    $this->clickLinkWithText('Add block');
     $this->waitForAjaxToFinish();
 
     // Confirm that block selection opens in a modal.
     $assert_session->elementTextContains('css', '#layout-builder-modal', 'Choose a block type from the following categories');
     $assert_session->linkExists('Admin restricted');
-    $page->clickLink('Admin restricted');
+    $this->clickLinkWithText('Admin restricted');
     $assert_session->linkExists('Generic HTML');
-    $page->clickLink('Generic HTML');
+    $this->clickLinkWithText('Generic HTML');
     $this->waitForAjaxToFinish();
 
     // Confirm modal and UI details.
@@ -59,8 +59,8 @@ class BlockUiTest extends BlockUiBase {
     $page->findField('Title')->setValue('Hello World');
     $page->findField('Display title')->setValue(1);
     $page->findField('Body')->setValue('Body says hello');
-    $button = $assert_session->elementExists('css', '#layout-builder-add-block .glb-button--primary');
-    $button->press();
+    $assert_session->elementExists('css', '#layout-builder-add-block .glb-button--primary');
+    $this->clickElement('#layout-builder-add-block .glb-button--primary');
 
     // Confirm that it closes the modal and that the submitted data displays.
     $this->waitForAjaxToFinish();
@@ -74,15 +74,15 @@ class BlockUiTest extends BlockUiBase {
     $assert_session->elementExists('css', '.block-inline-blockbasic ul.contextual-links li.layout-builder-block-remove');
     $assert_session->elementExists('css', '.block-inline-blockbasic ul.contextual-links li.layout-builder-block-hide');
     $assert_session->elementExists('css', '.block-inline-blockbasic ul.contextual-links li.layout-builder-block-unhide');
-    $configure_link = $assert_session->elementExists('css', '.block-inline-blockbasic ul.contextual-links li.layout-builder-block-update');
+    $assert_session->elementExists('css', '.block-inline-blockbasic ul.contextual-links li.layout-builder-block-update');
 
     // Confirm opening configuration and closing without changes works.
-    $configure_link->click();
+    $this->clickElement('.block-inline-blockbasic ul.contextual-links li.layout-builder-block-update a');
     $assert_session->waitForElement('css', '#layout-builder-modal');
     $assert_session->elementExists('css', '#layout-builder-modal');
-    $cancel_link = $assert_session->elementExists('css', '#layout-builder-modal a.dialog-cancel');
+    $assert_session->elementExists('css', '#layout-builder-modal a.dialog-cancel');
 
-    $cancel_link->click();
+    $this->clickElement('#layout-builder-modal a.dialog-cancel');
     $this->waitForAjaxToFinish();
     $assert_session->waitForElementRemoved('css', '#layout-builder-modal');
   }

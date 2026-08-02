@@ -36,7 +36,7 @@ trait CustomSubpageTestTrait {
     // Create the content type for the custom subpage.
     $this->createContentType([
       'type' => self::CUSTOM_SUBPAGE_BUNDLE,
-      'name' => ucfirst(self::CUSTOM_SUBPAGE_BUNDLE),
+      'name' => 'Custom subpage',
     ]);
     $this->createEntityReferenceField('node', self::CUSTOM_SUBPAGE_BUNDLE, 'field_entity_reference', 'Section', 'node', 'default', [
       'target_bundles' => [self::SECTION_BUNDLE],

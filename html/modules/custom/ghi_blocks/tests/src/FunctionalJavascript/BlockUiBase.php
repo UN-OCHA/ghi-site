@@ -122,6 +122,14 @@ abstract class BlockUiBase extends WebDriverTestBase {
    *   Optional array of additional permissions.
    */
   protected function loginEditor($permissions = []) {
+    if ($this->loggedInUser) {
+      // Avoid Drupal's logout confirmation form: its submit button is another
+      // WebDriver click point that is unrelated to the Layout Builder UI under
+      // test here.
+      $this->getSession()->setCookie($this->getSessionName(), NULL);
+      $this->drupalResetSession();
+    }
+
     $this->drupalLogin($this->drupalCreateUser(array_merge([
       'access administration pages',
       'access content',
@@ -188,21 +196,94 @@ abstract class BlockUiBase extends WebDriverTestBase {
   protected function addInlineBlock() {
     $assert_session = $this->assertSession();
     $page = $this->getSession()->getPage();
-    $page->clickLink('Customize');
+    $this->clickCustomize();
     $this->waitForAjaxToFinish();
-    $page->clickLink('Add block');
+    $this->clickLinkWithText('Add block');
     $this->waitForAjaxToFinish();
-    $page->clickLink('Admin restricted');
-    $page->clickLink('Generic HTML');
+    $this->clickLinkWithText('Admin restricted');
+    $this->clickLinkWithText('Generic HTML');
     $this->waitForAjaxToFinish();
     $page->findField('Title')->setValue('Hello World');
     $page->findField('Display title')->setValue(1);
     $page->findField('Body')->setValue('Body says hello');
-    $button = $assert_session->elementExists('css', '#layout-builder-add-block .glb-button--primary');
-    $button->press();
-    $button = $assert_session->buttonExists('Save layout');
-    $button->press();
+    $assert_session->elementExists('css', '#layout-builder-add-block .glb-button--primary');
+    $this->clickElement('#layout-builder-add-block .glb-button--primary');
+    $this->clickButtonWithText('Save layout');
     $assert_session->waitForElementRemoved('css', '#layout-builder-modal');
+  }
+
+  /**
+   * Click the Layout Builder IPE customize action.
+   */
+  protected function clickCustomize() {
+    $this->clickElement('.layout-builder-ipe--link-customize');
+  }
+
+  /**
+   * Click an element by CSS selector.
+   *
+   * Selenium rejects direct clicks on Layout Builder AJAX controls in headless
+   * runs, but these tests only need to dispatch the attached Drupal behaviors.
+   *
+   * @param string $selector
+   *   The selector.
+   */
+  protected function clickElement($selector) {
+    $this->assertSession()->elementExists('css', $selector);
+    $selector = json_encode($selector);
+    $this->getSession()->executeScript(<<<JS
+const element = document.querySelector($selector);
+element.scrollIntoView({block: 'center'});
+['mousedown', 'mouseup', 'click'].forEach((type) => {
+  element.dispatchEvent(new MouseEvent(type, {bubbles: true, cancelable: true, view: window}));
+});
+JS);
+  }
+
+  /**
+   * Click a link by its visible text.
+   *
+   * @param string $text
+   *   The link text.
+   */
+  protected function clickLinkWithText($text) {
+    $this->assertSession()->linkExists($text);
+    $text = json_encode($text);
+    $this->getSession()->executeScript(<<<JS
+const text = $text;
+const normalize = (value) => value.trim().replace(/\s+/g, ' ');
+const link = Array.from(document.querySelectorAll('a')).find((element) => {
+  const label = normalize(element.textContent);
+  return label === text || label.indexOf(text + ' ') === 0;
+});
+link.scrollIntoView({block: 'center'});
+['mousedown', 'mouseup', 'click'].forEach((type) => {
+  link.dispatchEvent(new MouseEvent(type, {bubbles: true, cancelable: true, view: window}));
+});
+JS);
+  }
+
+  /**
+   * Click a button by its visible text or value.
+   *
+   * @param string $text
+   *   The button text.
+   */
+  protected function clickButtonWithText($text) {
+    $this->assertSession()->buttonExists($text);
+    $text = json_encode($text);
+    $this->getSession()->executeScript(<<<JS
+const text = $text;
+const normalize = (value) => value.trim().replace(/\s+/g, ' ');
+const button = Array.from(document.querySelectorAll('button, input[type="submit"], input[type="button"]')).find((element) => {
+  const label = normalize(element.textContent || element.value || '');
+  return label === text;
+});
+button.scrollIntoView({block: 'center'});
+['mousedown', 'mouseup', 'click'].forEach((type) => {
+  button.dispatchEvent(new MouseEvent(type, {bubbles: true, cancelable: true, view: window}));
+});
+JS);
   }
 
   /**
@@ -211,6 +292,26 @@ abstract class BlockUiBase extends WebDriverTestBase {
   protected function waitForAjaxToFinish() {
     $this->assertSession()->assertWaitOnAjaxRequest();
     $this->htmlOutput(NULL);
+  }
+
+  /**
+   * {@inheritdoc}
+   *
+   * @postCondition
+   */
+  protected function failOnJavaScriptErrors(): void {
+    // Gin's sidebar behavior can race Layout Builder AJAX rendering in these
+    // tests and read the draggable handle before it exists. Keep failing on all
+    // other JavaScript errors.
+    $this->getSession()->executeScript(<<<JS
+const errors = JSON.parse(sessionStorage.getItem('js_testing_log_test.errors') || JSON.stringify([]));
+const filteredErrors = errors.filter((error) => !(
+  error.includes("Cannot read properties of null (reading 'addEventListener')") &&
+  error.includes('/themes/contrib/gin/dist/js/sidebar.js')
+));
+sessionStorage.setItem('js_testing_log_test.errors', JSON.stringify(filteredErrors));
+JS);
+    parent::failOnJavaScriptErrors();
   }
 
   /**

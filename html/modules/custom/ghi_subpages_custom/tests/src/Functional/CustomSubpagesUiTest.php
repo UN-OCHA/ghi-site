@@ -6,9 +6,9 @@ use Drupal\Tests\BrowserTestBase;
 use Drupal\Tests\ghi_subpages_custom\Traits\CustomSubpageTestTrait;
 
 /**
- * Tests aspects of the subpages UI.
+ * Tests aspects of the custom subpages UI.
  *
- * @group ghi_custom_subpages
+ * @group ghi_subpages_custom
  */
 class CustomSubpagesUiTest extends BrowserTestBase {
 
@@ -45,12 +45,25 @@ class CustomSubpagesUiTest extends BrowserTestBase {
   }
 
   /**
-   * Tests the subpages listing.
+   * Tests the custom subpages listing.
    */
   public function testSubpagesListing() {
-    // Create a section, which should also create the subpages.
     $section = $this->createSection();
+    $custom_subpage = $this->createCustomSubpage($section);
+    $custom_subpage->setTitle('Custom overview');
+    $custom_subpage->setPublished();
+    $custom_subpage->save();
+
     $this->drupalGet('/node/' . $section->id() . '/pages');
+    $assert_session = $this->assertSession();
+    $assert_session->statusCodeEquals(200);
+    $assert_session->pageTextContains('Subpages for Section ' . $section->label());
+    $assert_session->pageTextContains('Custom subpages');
+    $assert_session->elementExists('css', 'a[href="/node/add/custom_subpage?section=' . $section->id() . '"]');
+    $assert_session->elementsCount('css', '#edit-subpages-custom-subpage tbody tr', 1);
+    $assert_session->elementTextContains('css', '#edit-subpages-custom-subpage tbody tr', 'Custom overview');
+    $assert_session->elementExists('css', '#edit-subpages-custom-subpage a[href="/node/' . $custom_subpage->id() . '"]');
+    $assert_session->elementTextEquals('css', '#edit-subpages-custom-subpage a[href="/node/' . $custom_subpage->id() . '"]', 'Custom overview');
   }
 
 }
