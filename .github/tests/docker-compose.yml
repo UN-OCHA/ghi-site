@@ -56,11 +56,11 @@ services:
     environment:
       - TERM=xterm
       - ENVIRONMENT=dev
-      - NGINX_SERVERNAME=ghi-test-site,localhost,127.0.0.1
-      - NGINX_OVERRIDE_PROTOCOL=HTTP,ghi-test-site,localhost,127.0.0.1
+      - NGINX_SERVERNAME=ghi-test-site.test,ghi-test-site,localhost,127.0.0.1
+      - NGINX_OVERRIDE_PROTOCOL=HTTP,ghi-test-site.test,ghi-test-site,localhost,127.0.0.1
       - NGINX_LIMIT_BOTS=2000r/m
       - NGINX_LIMIT_HUMANS=2000r/s
-      - DRUSH_OPTIONS_URI=http://ghi-test-site
+      - DRUSH_OPTIONS_URI=http://ghi-test-site.test
       - DRUPAL_DB_DATABASE=ghi
       - DRUPAL_DB_USERNAME=ghi
       - DRUPAL_DB_PASSWORD=ghi
@@ -70,12 +70,14 @@ services:
       - PHP_XDEBUG=true
       - XDEBUG_MODE=coverage
       - BROWSERTEST_OUTPUT_DIRECTORY=/srv/www/html/sites/default/files/browser_output
-      - DTT_BASE_URL=http://127.0.0.1
+      - DTT_BASE_URL=http://ghi-test-site.test
       - SYMFONY_DEPRECATIONS_HELPER=disabled
     ports:
       - "8081:80"
     networks:
-      - default
+      default:
+        aliases:
+          - ghi-test-site.test
 
   browser:
     hostname: ghi-test-browser

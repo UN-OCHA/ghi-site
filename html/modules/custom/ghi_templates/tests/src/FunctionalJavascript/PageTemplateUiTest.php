@@ -134,15 +134,13 @@ class PageTemplateUiTest extends BlockUiBase {
     $this->expandDropButton('page_template');
     $this->htmlOutput(NULL);
 
-    $store_link = $this->assertTemplateLink('store');
-    $store_link->click();
+    $this->clickTemplateLink('store');
     $assert_session->waitForElement('css', '#layout-builder-modal');
     $assert_session->elementContains('css', '.ui-dialog-title', 'Save as a new page template based on ' . $node_source->label());
     $page->findField('Label')->setValue('Page template');
     $this->htmlOutput(NULL);
 
-    $button = $assert_session->buttonExists('Create new template');
-    $button->press();
+    $this->clickButtonWithText('Create new template');
 
     $assert_session->assertWaitOnAjaxRequest();
     $assert_session->waitForElementRemoved('css', '#layout-builder-modal');
@@ -153,8 +151,7 @@ class PageTemplateUiTest extends BlockUiBase {
       'type' => 'page',
     ]);
     $this->drupalGet($node_target->toUrl()->toString());
-    $apply_link = $this->assertTemplateLink('apply');
-    $apply_link->click();
+    $this->clickTemplateLink('apply');
     $assert_session->waitForElement('css', '#layout-builder-modal');
     $assert_session->elementContains('css', '.ui-dialog-title', 'Apply a page template to ' . $node_target->label());
     $assert_session->elementExists('css', 'table[data-drupal-selector="edit-page-template"] tbody tr td[data-column="0"]');
@@ -164,15 +161,13 @@ class PageTemplateUiTest extends BlockUiBase {
     $assert_session->elementTextContains('css', 'table[data-drupal-selector="edit-page-template"] tbody tr td[data-column="2"]', 'Page: ' . $node_source->label());
     $this->htmlOutput(NULL);
 
-    $button = $assert_session->buttonExists('Validate');
-    $button->press();
+    $this->clickButtonWithText('Validate');
     $assert_session->assertWaitOnAjaxRequest();
     $this->htmlOutput(NULL);
 
     $assert_session->elementTextContains('css', 'form.layout-builder-apply-page-template', 'Select the elements that you want to import.');
     $assert_session->elementExists('css', 'table[data-drupal-selector="edit-table"]');
-    $button = $assert_session->buttonExists('Import');
-    $button->press();
+    $this->clickButtonWithText('Import');
     $assert_session->assertWaitOnAjaxRequest();
     $assert_session->waitForElementRemoved('css', '#layout-builder-modal');
     $assert_session->pageTextContains('You have unsaved changes.');
@@ -203,15 +198,13 @@ class PageTemplateUiTest extends BlockUiBase {
     $this->expandDropButton('page_template');
     $this->htmlOutput(NULL);
 
-    $store_link = $this->assertTemplateLink('store');
-    $store_link->click();
+    $this->clickTemplateLink('store');
     $assert_session->waitForElement('css', '#layout-builder-modal');
     $assert_session->elementContains('css', '.ui-dialog-title', 'Save as a new page template based on ' . $node_source->label());
     $page->findField('Label')->setValue('Page template');
     $this->htmlOutput(NULL);
 
-    $button = $assert_session->buttonExists('Create new template');
-    $button->press();
+    $this->clickButtonWithText('Create new template');
 
     $assert_session->assertWaitOnAjaxRequest();
     $assert_session->waitForElementRemoved('css', '#layout-builder-modal');
@@ -224,15 +217,13 @@ class PageTemplateUiTest extends BlockUiBase {
     $this->expandDropButton('page_template');
     $this->htmlOutput(NULL);
 
-    $store_link = $this->assertTemplateLink('store');
-    $store_link->click();
+    $this->clickTemplateLink('store');
     $assert_session->waitForElement('css', '#layout-builder-modal');
     $assert_session->elementContains('css', '.ui-dialog-title', 'Save as a new page template based on ' . $node_source->label());
     $page->findField('Label')->setValue('Page template');
     $this->htmlOutput(NULL);
 
-    $button = $assert_session->buttonExists('Create new template');
-    $button->press();
+    $this->clickButtonWithText('Create new template');
     $assert_session->assertWaitOnAjaxRequest();
     $assert_session->elementTextContains('css', '.form-item-name', 'Page template is already in use. Please choose a different value.');
     $this->htmlOutput(NULL);
@@ -306,8 +297,7 @@ class PageTemplateUiTest extends BlockUiBase {
     // Go to node view page and create a template from it.
     $this->drupalGet($node_source->toUrl()->toString());
 
-    $export_link = $this->assertTemplateLink('export');
-    $export_link->click();
+    $this->clickTemplateLink('export');
     $assert_session->waitForElement('css', '#layout-builder-modal');
     $assert_session->elementContains('css', '.ui-dialog-title', 'Export page configuration for ' . $node_source->label());
     $export_config = $page->findField('Configuration export')->getValue();
@@ -317,21 +307,18 @@ class PageTemplateUiTest extends BlockUiBase {
       'type' => 'page',
     ]);
     $this->drupalGet($node_target->toUrl()->toString());
-    $import_link = $this->assertTemplateLink('import');
-    $import_link->click();
+    $this->clickTemplateLink('import');
     $assert_session->waitForElement('css', '#layout-builder-modal');
     $assert_session->elementContains('css', '.ui-dialog-title', 'Import page configuration to ' . $node_target->label());
     $page->findField('Import from code')->setValue($export_config);
 
-    $button = $assert_session->buttonExists('Validate');
-    $button->press();
+    $this->clickButtonWithText('Validate');
     $assert_session->assertWaitOnAjaxRequest();
     $this->htmlOutput(NULL);
 
     $assert_session->elementTextContains('css', 'form.layout-builder-import-page-config', 'Select the elements that you want to import.');
     $assert_session->elementExists('css', 'table[data-drupal-selector="edit-table"]');
-    $button = $assert_session->buttonExists('Import');
-    $button->press();
+    $this->clickButtonWithText('Import');
     $assert_session->assertWaitOnAjaxRequest();
     $assert_session->waitForElementRemoved('css', '#layout-builder-modal');
     $assert_session->pageTextContains('You have unsaved changes.');
@@ -345,8 +332,7 @@ class PageTemplateUiTest extends BlockUiBase {
    *   The type of dropdown, e.g. 'template' or 'page_template'.
    */
   protected function expandDropButton($type) {
-    $page = $this->getSession()->getPage();
-    $page->find('css', '.layout-builder-ipe-actions .dropbutton-wrapper.layout-builder-ipe--link-' . $type . ' .dropbutton-toggle button')->click();
+    $this->clickElement('.layout-builder-ipe-actions .dropbutton-wrapper.layout-builder-ipe--link-' . $type . ' .dropbutton-toggle button');
   }
 
   /**
@@ -369,6 +355,17 @@ class PageTemplateUiTest extends BlockUiBase {
     $link = $page->find('css', '.layout-builder-ipe-actions li.dropbutton-action.' . $type . ' > a');
     $this->assertEquals($title_map[$type], $link->getHtml());
     return $link;
+  }
+
+  /**
+   * Click a frontend link for templates.
+   *
+   * @param string $type
+   *   The action type.
+   */
+  protected function clickTemplateLink($type) {
+    $this->assertTemplateLink($type);
+    $this->clickElement('.layout-builder-ipe-actions li.dropbutton-action.' . $type . ' > a');
   }
 
   /**
