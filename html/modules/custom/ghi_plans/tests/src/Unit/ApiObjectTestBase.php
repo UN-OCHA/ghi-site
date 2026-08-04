@@ -34,6 +34,7 @@ abstract class ApiObjectTestBase extends ApiBaseObjectTestBase {
   protected function setUp(): void {
     parent::setUp();
 
+    drupal_static_reset('getQueryInstance');
     $this->setupContainer();
   }
 
