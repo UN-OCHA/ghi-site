@@ -244,9 +244,9 @@ class PlanGoverningEntitiesTableTest extends PlanBlockKernelTestBase {
   }
 
   /**
-   * Tests that missing funding data makes the table build uncacheable.
+   * Tests that missing funding renders as zero without being cached.
    */
-  public function testMissingFundingBubblesUncacheableMetadata() {
+  public function testMissingFundingRendersZeroAndBubblesUncacheableMetadata() {
     $flow_search_query = $this->mockFlowSearchQuery([
       'cluster_funding' => NULL,
       'not_reported_funding' => 0,
@@ -282,9 +282,17 @@ class PlanGoverningEntitiesTableTest extends PlanBlockKernelTestBase {
     $this->injectPlanEntityQueryStub($plugin, [$cluster]);
     $plugin->setQueryHandler('flow_search', $flow_search_query);
 
-    $build = $plugin->buildContent();
+    $table_data = $this->callPrivateMethod($plugin, 'buildTableData');
+    $funding_cell = $table_data['rows'][0]['data'][0];
 
-    $this->assertSame(0, $build['#cache']['max-age']);
+    $this->assertSame(0, $funding_cell['data-value']);
+    $this->assertSame(0, $funding_cell['data-raw-value']);
+    $this->assertSame(0, $funding_cell['export_value']);
+    $this->assertSame(0, $funding_cell['data']['content']['#value']);
+    $this->assertContains('empty', $funding_cell['class']);
+    $this->assertNotContains('not-available', $funding_cell['class']);
+
+    $this->assertSame(0, $table_data['cacheability']->getCacheMaxAge());
   }
 
   /**

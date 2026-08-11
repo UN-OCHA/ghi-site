@@ -133,6 +133,56 @@ class PlanHeadlineFiguresTest extends PlanBlockKernelTestBase {
   }
 
   /**
+   * Tests that missing headline funding renders as zero.
+   */
+  public function testMissingHeadlineFundingRendersZero(): void {
+    $flow_search_query = $this->prophesize(FlowSearchQuery::class);
+    $flow_search_query->setPlaceholder(Argument::cetera())->willReturn(NULL);
+
+    $endpoint_query_manager = $this->prophesize(EndpointQueryManager::class);
+    $endpoint_query_manager->createInstance('flow_search_query')->willReturn($flow_search_query->reveal());
+
+    $fabric_query_manager = $this->prophesize(FabricQueryManager::class);
+    $fabric_query_manager->hasDefinition(Argument::any())->willReturn(FALSE);
+    $fabric_query_manager->createInstance('governing_entity')->willReturn($this->prophesize(GoverningEntityQuery::class)->reveal());
+    $fabric_query_manager->createInstance('attachment')->willReturn($this->prophesize(AttachmentQuery::class)->reveal());
+
+    $container = \Drupal::getContainer();
+    $container->set('plugin.manager.endpoint_query_manager', $endpoint_query_manager->reveal());
+    $container->set('plugin.manager.fabric_query_manager', $fabric_query_manager->reveal());
+    \Drupal::setContainer($container);
+
+    $plugin = $this->getBlockPlugin([
+      'key_figures' => [
+        'items' => [
+          [
+            'id' => 0,
+            'item_type' => 'item_group',
+            'config' => [
+              'label' => 'Funding',
+            ],
+          ],
+          [
+            'id' => 1,
+            'item_type' => 'funding_data',
+            'config' => [
+              'data_type' => 'funding_totals',
+            ],
+            'pid' => 0,
+          ],
+        ],
+      ],
+    ]);
+
+    $build = $plugin->buildContent();
+    $item = $build[0]['#tabs'][0]['items']['#items'][0];
+
+    $this->assertSame(0, $item['#wrapper_attributes']['data-raw-value']);
+    $this->assertNotContains('not-available', $item['#wrapper_attributes']['class']);
+    $this->assertSame(0, $item[0]['content']['#value']);
+  }
+
+  /**
    * Tests the block forms.
    */
   public function testBlockForms() {

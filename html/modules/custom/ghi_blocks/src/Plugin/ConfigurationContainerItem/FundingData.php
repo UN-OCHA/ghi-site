@@ -465,10 +465,10 @@ class FundingData extends ConfigurationContainerItemPluginBase {
     $base_object = $this->getContextValue('base_object');
 
     $value = $this->getValue($data_type_key, $cluster_restrict);
-    $rendered = $value !== NULL ? $this->buildRenderArray($theme_function, $value, [
+    $rendered = $this->buildRenderArray($theme_function, $value ?? 0, [
       'scale' => $scale,
       'decimal_format' => $plan_object->getDecimalFormat(),
-    ] + $theme_options) : ['#markup' => ''];
+    ] + $theme_options);
 
     // See if we need to add a footnote.
     $footnote = NULL;
@@ -505,6 +505,22 @@ class FundingData extends ConfigurationContainerItemPluginBase {
       $build['#cache']['max-age'] = 0;
     }
     return $build;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getTableCell() {
+    $cell = parent::getTableCell();
+    $cell['data-value'] = $this->getSortableValue();
+    return $cell;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getSortableValue() {
+    return $this->getValue() ?? 0;
   }
 
   /**
@@ -553,7 +569,9 @@ class FundingData extends ConfigurationContainerItemPluginBase {
    * {@inheritdoc}
    */
   public function getClasses() {
-    $classes = parent::getClasses();
+    // Missing source data remains NULL for cacheability decisions, but funding
+    // displays consistently present it as zero rather than as unavailable.
+    $classes = array_values(array_diff(parent::getClasses(), ['not-available']));
     $classes[] = Html::getClass($this->getPluginId() . '--' . $this->get('data_type'));
     return $classes;
   }
