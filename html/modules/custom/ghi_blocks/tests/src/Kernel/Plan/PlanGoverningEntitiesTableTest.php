@@ -11,6 +11,7 @@ use Drupal\ghi_blocks\Plugin\ConfigurationContainerItem\FundingData;
 use Drupal\ghi_plans\ApiObjects\Entities\GoverningEntity;
 use Drupal\ghi_plans\ApiObjects\Prototypes\EntityPrototype;
 use Drupal\ghi_plans\ApiObjects\Prototypes\PlanPrototype;
+use Drupal\ghi_plans\Entity\Plan;
 use Drupal\ghi_plans\Plugin\EndpointQuery\FlowSearchQuery;
 use Drupal\ghi_plans\Plugin\FabricQuery\AttachmentQuery;
 use Drupal\ghi_plans\Plugin\FabricQuery\EntityQuery;
@@ -299,6 +300,8 @@ class PlanGoverningEntitiesTableTest extends PlanBlockKernelTestBase {
    * Tests that partially missing cluster-restricted funding is uncacheable.
    */
   public function testPartiallyMissingClusterRestrictedFundingBubblesUncacheableMetadata(): void {
+    drupal_static_reset();
+
     $plan = $this->createPlanBaseObject([
       'field_original_id' => 1207,
     ]);
@@ -315,27 +318,53 @@ class PlanGoverningEntitiesTableTest extends PlanBlockKernelTestBase {
       7913 => TRUE,
     ]);
 
-    $item = new FundingData([], 'funding_data', [
-      'label' => 'Financial data',
-    ]);
-    $item->flowSearchQuery = $flow_search_query->reveal();
-    $item->clusterQuery = $cluster_query->reveal();
-    $item->attachmentQuery = $this->prophesize(AttachmentQuery::class)->reveal();
-    $item->setConfig([
-      'data_type' => 'funding_totals',
-      'cluster_restrict' => [
-        'type' => 'tag_include',
-        'tag' => 'wash',
-      ],
-    ]);
-    $item->setContext([
-      'plan_object' => $plan,
-      'base_object' => $plan,
+    $item = $this->createFundingDataItem($plan, $flow_search_query->reveal(), $cluster_query->reveal(), [
+      'type' => 'tag_include',
+      'tag' => 'wash',
     ]);
 
     $build = $item->getRenderArray();
 
     $this->assertSame(0, $build['#cache']['max-age']);
+  }
+
+  /**
+   * Tests cluster-restricted funding caches by the selected restriction.
+   */
+  public function testClusterRestrictedFundingCachesByRestriction(): void {
+    drupal_static_reset();
+
+    $plan = $this->createPlanBaseObject([
+      'field_original_id' => 1207,
+    ]);
+
+    $flow_search_query = $this->prophesize(FlowSearchQuery::class);
+    $flow_search_query->setPlaceholder(Argument::cetera())->willReturn(NULL);
+    $flow_search_query->getClusterIds()->willReturn([7912, 7913, 7914]);
+    $flow_search_query->getClusterTotalFunding(7912)->willReturn(1250000.0);
+    $flow_search_query->getClusterTotalFunding(7913)->willReturn(2500000.0);
+    $flow_search_query->getClusterTotalFunding(7914)->willReturn(500000.0);
+
+    $cluster_query = $this->prophesize(GoverningEntityQuery::class);
+    $cluster_query->getTaggedClustersForPlan(1207, 'wash')->willReturn([
+      7912 => TRUE,
+    ]);
+    $cluster_query->getTaggedClustersForPlan(1207, 'health')->willReturn([
+      7913 => TRUE,
+      7914 => TRUE,
+    ]);
+
+    $wash_item = $this->createFundingDataItem($plan, $flow_search_query->reveal(), $cluster_query->reveal(), [
+      'type' => 'tag_include',
+      'tag' => 'wash',
+    ]);
+    $health_item = $this->createFundingDataItem($plan, $flow_search_query->reveal(), $cluster_query->reveal(), [
+      'type' => 'tag_include',
+      'tag' => 'health',
+    ]);
+
+    $this->assertSame(1250000.0, $wash_item->getValue());
+    $this->assertSame(3000000.0, $health_item->getValue());
   }
 
   /**
@@ -543,6 +572,39 @@ class PlanGoverningEntitiesTableTest extends PlanBlockKernelTestBase {
       ],
     ]);
     return new PlanPrototype([$governing_entity_prototype]);
+  }
+
+  /**
+   * Create a funding data item with mocked query dependencies.
+   *
+   * @param \Drupal\ghi_plans\Entity\Plan $plan
+   *   The plan base object.
+   * @param \Drupal\ghi_plans\Plugin\EndpointQuery\FlowSearchQuery $flow_search_query
+   *   The flow search query.
+   * @param \Drupal\ghi_plans\Plugin\FabricQuery\GoverningEntityQuery $cluster_query
+   *   The governing entity query.
+   * @param array $cluster_restrict
+   *   The cluster restriction configuration.
+   *
+   * @return \Drupal\ghi_blocks\Plugin\ConfigurationContainerItem\FundingData
+   *   The funding data item.
+   */
+  private function createFundingDataItem(Plan $plan, FlowSearchQuery $flow_search_query, GoverningEntityQuery $cluster_query, array $cluster_restrict): FundingData {
+    $item = new FundingData([], 'funding_data', [
+      'label' => 'Financial data',
+    ]);
+    $item->flowSearchQuery = $flow_search_query;
+    $item->clusterQuery = $cluster_query;
+    $item->attachmentQuery = $this->prophesize(AttachmentQuery::class)->reveal();
+    $item->setConfig([
+      'data_type' => 'funding_totals',
+      'cluster_restrict' => $cluster_restrict,
+    ]);
+    $item->setContext([
+      'plan_object' => $plan,
+      'base_object' => $plan,
+    ]);
+    return $item;
   }
 
   /**

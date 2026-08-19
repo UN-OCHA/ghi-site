@@ -249,6 +249,7 @@ class FundingData extends ConfigurationContainerItemPluginBase {
       return NULL;
     }
     $property = $data_type['property'];
+    $cluster_restrict_cache_key = $this->getClusterRestrictCacheKey($cluster_restrict);
 
     // Allow raw data to be passed in so that callers can take advantage of the
     // formatting options of this plugin in getRenderArray, without the need to
@@ -264,7 +265,12 @@ class FundingData extends ConfigurationContainerItemPluginBase {
       $cache_key = 'cluster::' . $entity->id() . '::' . $data_type_key;
     }
     elseif ($plan_object && !$cluster_context) {
-      $cache_key = 'plan' . $plan_object->id() . '::' . $data_type_key;
+      $cache_key = implode('::', [
+        'plan' . $plan_object->id(),
+        $data_type_key,
+        'cluster_restrict',
+        $cluster_restrict_cache_key,
+      ]);
     }
     elseif ($cluster_context) {
       $cache_key = 'cluster::' . $cluster_context->getSourceId() . '::' . $data_type_key;
@@ -418,31 +424,55 @@ class FundingData extends ConfigurationContainerItemPluginBase {
     $plan_object = $this->getContextValue('plan_object');
     $plan_id = $plan_object->getSourceId();
     $values[$plan_id] = $values[$plan_id] ?? [];
+    $cluster_restrict_cache_key = $this->getClusterRestrictCacheKey($cluster_restrict);
+    $values[$plan_id][$cluster_restrict_cache_key] = $values[$plan_id][$cluster_restrict_cache_key] ?? [];
 
     $property = $data_type['property'];
-    if (array_key_exists($property, $values[$plan_id])) {
-      return $values[$plan_id][$property];
+    if (array_key_exists($property, $values[$plan_id][$cluster_restrict_cache_key])) {
+      return $values[$plan_id][$cluster_restrict_cache_key][$property];
     }
 
     // Extract the actually used cluster from the funding data.
     $cluster_ids = $this->getClusterIdsByClusterRestrict($cluster_restrict, $this->clusterQuery, $this->flowSearchQuery);
     if (empty($cluster_ids)) {
-      return NULL;
+      $values[$plan_id][$cluster_restrict_cache_key][$property] = NULL;
+      return $values[$plan_id][$cluster_restrict_cache_key][$property];
     }
     if ($property == 'current_requirements') {
       $attachments = $this->attachmentQuery->getAttachmentsByObject('governingEntity', $cluster_ids, 'cost');
       /** @var \Drupal\ghi_plans\ApiObjects\Attachments\CostAttachment[] $attachments */
       $attachments = array_filter($attachments, fn (CostAttachment $attachment): bool => $attachment instanceof CostAttachment);
-      return array_sum(array_map(fn (CostAttachment $attachment): float => $attachment->getRequirements(), $attachments));
+      $value = array_sum(array_map(
+        fn (CostAttachment $attachment): float => $attachment->getRequirements(),
+        $attachments
+      ));
     }
-
-    $cluster_values = array_map(function ($cluster_id) use ($property) {
-      return $this->getValueForCluster($cluster_id, $property);
-    }, $cluster_ids);
-    $numeric_values = array_filter($cluster_values, 'is_numeric');
-    $value = count($numeric_values) == count($cluster_values) ? array_sum($numeric_values) : NULL;
-    $values[$plan_id][$property] = $value;
+    else {
+      $cluster_values = array_map(function ($cluster_id) use ($property) {
+        return $this->getValueForCluster($cluster_id, $property);
+      }, $cluster_ids);
+      $numeric_values = array_filter($cluster_values, 'is_numeric');
+      $value = count($numeric_values) == count($cluster_values) ? array_sum($numeric_values) : NULL;
+    }
+    $values[$plan_id][$cluster_restrict_cache_key][$property] = $value;
     return $value;
+  }
+
+  /**
+   * Get a static cache key for a cluster restriction.
+   *
+   * @param array|null $cluster_restrict
+   *   A cluster restriction to apply.
+   *
+   * @return string
+   *   A static cache key part for the restriction.
+   */
+  private function getClusterRestrictCacheKey(?array $cluster_restrict = NULL): string {
+    if (empty($cluster_restrict) || empty($cluster_restrict['type']) || $cluster_restrict['type'] == 'none') {
+      return 'none';
+    }
+    ksort($cluster_restrict);
+    return hash('sha256', serialize($cluster_restrict));
   }
 
   /**
