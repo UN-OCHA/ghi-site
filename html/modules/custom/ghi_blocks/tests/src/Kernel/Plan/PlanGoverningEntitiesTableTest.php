@@ -132,6 +132,8 @@ class PlanGoverningEntitiesTableTest extends PlanBlockKernelTestBase {
    * Tests that missing cost attachments render as zero requirements.
    */
   public function testMissingCostAttachmentRendersZeroRequirements(): void {
+    $this->resetFundingDataStaticCaches();
+
     $flow_search_query = $this->mockFlowSearchQuery([
       'cluster_funding' => 0,
       'not_reported_funding' => 0,
@@ -173,11 +175,73 @@ class PlanGoverningEntitiesTableTest extends PlanBlockKernelTestBase {
     $table_data = $this->callPrivateMethod($plugin, 'buildTableData');
     $requirements_cell = $table_data['rows'][0]['data'][1];
 
-    $this->assertSame(0.0, $requirements_cell['data-value']);
-    $this->assertSame(0.0, $requirements_cell['data-raw-value']);
-    $this->assertSame(0.0, $requirements_cell['export_value']);
+    $this->assertSame(0, $requirements_cell['data-value']);
+    $this->assertSame(0, $requirements_cell['data-raw-value']);
+    $this->assertSame(0, $requirements_cell['export_value']);
     $this->assertContains('empty', $requirements_cell['class']);
     $this->assertNotContains('not-available', $requirements_cell['class']);
+  }
+
+  /**
+   * Tests that missing requirements do not become zero in gap calculations.
+   */
+  public function testMissingCostAttachmentKeepsFundingGapUnavailable(): void {
+    $this->resetFundingDataStaticCaches();
+
+    $flow_search_query = $this->prophesize(FlowSearchQuery::class);
+    $flow_search_query->setPlaceholder(Argument::cetera())->willReturn(NULL);
+    $flow_search_query->getClusterFundingGap(7912, NULL)->willReturn(NULL);
+    $flow_search_query->getClusterFundingCoverage(7912, NULL)->willReturn(NULL);
+
+    $endpoint_query_manager = $this->prophesize(EndpointQueryManager::class);
+    $endpoint_query_manager->hasDefinition(Argument::any())->willReturn(FALSE);
+    $endpoint_query_manager->createInstance('flow_search_query')->willReturn($flow_search_query->reveal());
+    $container = \Drupal::getContainer();
+    $container->set('plugin.manager.endpoint_query_manager', $endpoint_query_manager->reveal());
+    $container->set('plugin.manager.fabric_query_manager', $this->mockFabricQueryManager());
+    \Drupal::setContainer($container);
+
+    $plugin = $this->getBlockPlugin([
+      'table' => [
+        'columns' => [
+          [
+            'id' => 0,
+            'item_type' => 'funding_data',
+            'config' => [
+              'label' => 'Gap',
+              'data_type' => 'funding_gap',
+            ],
+          ],
+          [
+            'id' => 1,
+            'item_type' => 'funding_data',
+            'config' => [
+              'label' => 'Coverage',
+              'data_type' => 'funding_coverage',
+            ],
+          ],
+        ],
+      ],
+    ]);
+    $cluster = $this->createBaseObject([
+      'type' => 'governing_entity',
+      'field_original_id' => 7912,
+    ]);
+    $this->injectPlanEntityQueryStub($plugin, [$cluster]);
+    $plugin->setQueryHandler('flow_search', $flow_search_query->reveal());
+
+    $table_data = $this->callPrivateMethod($plugin, 'buildTableData');
+    [$gap_cell, $coverage_cell] = $table_data['rows'][0]['data'];
+
+    $this->assertSame(0, $gap_cell['data-value']);
+    $this->assertSame(0, $gap_cell['data-raw-value']);
+    $this->assertSame(0, $gap_cell['export_value']);
+    $this->assertSame(0, $gap_cell['data']['content']['#value']);
+    $this->assertSame(0, $coverage_cell['data-value']);
+    $this->assertSame(0, $coverage_cell['data-raw-value']);
+    $this->assertSame(0, $coverage_cell['export_value']);
+    $this->assertSame(0, $coverage_cell['data']['content']['#percent']);
+    $this->assertSame(0, $table_data['cacheability']->getCacheMaxAge());
   }
 
   /**
@@ -300,7 +364,7 @@ class PlanGoverningEntitiesTableTest extends PlanBlockKernelTestBase {
    * Tests that partially missing cluster-restricted funding is uncacheable.
    */
   public function testPartiallyMissingClusterRestrictedFundingBubblesUncacheableMetadata(): void {
-    drupal_static_reset();
+    $this->resetFundingDataStaticCaches();
 
     $plan = $this->createPlanBaseObject([
       'field_original_id' => 1207,
@@ -332,7 +396,7 @@ class PlanGoverningEntitiesTableTest extends PlanBlockKernelTestBase {
    * Tests cluster-restricted funding caches by the selected restriction.
    */
   public function testClusterRestrictedFundingCachesByRestriction(): void {
-    drupal_static_reset();
+    $this->resetFundingDataStaticCaches();
 
     $plan = $this->createPlanBaseObject([
       'field_original_id' => 1207,
@@ -605,6 +669,15 @@ class PlanGoverningEntitiesTableTest extends PlanBlockKernelTestBase {
       'base_object' => $plan,
     ]);
     return $item;
+  }
+
+  /**
+   * Reset static caches maintained by the funding data item.
+   */
+  private function resetFundingDataStaticCaches(): void {
+    foreach (['getValue', 'getValueForPlan', 'getValueForCluster', 'getValueWithClusterRestrict'] as $method) {
+      drupal_static_reset(FundingData::class . '::' . FundingData::class . '::' . $method);
+    }
   }
 
   /**

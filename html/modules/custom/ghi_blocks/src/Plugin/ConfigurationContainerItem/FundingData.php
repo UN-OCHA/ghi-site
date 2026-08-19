@@ -202,7 +202,7 @@ class FundingData extends ConfigurationContainerItemPluginBase {
    *   The requirements.
    */
   private function getRequirements(string $entity_type, int $entity_id): ?float {
-    return $this->getCostAttachment($entity_type, $entity_id)?->getRequirements() ?? 0.0;
+    return $this->getCostAttachment($entity_type, $entity_id)?->getRequirements();
   }
 
   /**
@@ -217,7 +217,7 @@ class FundingData extends ConfigurationContainerItemPluginBase {
    *   The original requirements.
    */
   private function getOriginalRequirements(string $entity_type, int $entity_id): ?float {
-    return $this->getCostAttachment($entity_type, $entity_id)?->getOriginalRequirements() ?? 0.0;
+    return $this->getCostAttachment($entity_type, $entity_id)?->getOriginalRequirements();
   }
 
   /**
