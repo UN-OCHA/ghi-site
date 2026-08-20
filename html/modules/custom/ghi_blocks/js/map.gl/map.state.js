@@ -1027,8 +1027,7 @@
       }
 
       this.loadDataSlice(index).done(() => {
-        // Update the map.
-        this.updateMap(this.animationDuration, true);
+        this.refreshAdminLevelForCurrentData();
 
         if (this.sidebar?.isVisible()) {
           // If we have an open popup, keep it open and update the content, or

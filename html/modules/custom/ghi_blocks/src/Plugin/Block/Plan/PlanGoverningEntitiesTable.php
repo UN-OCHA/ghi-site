@@ -19,6 +19,7 @@ use Drupal\ghi_form_elements\ConfigurationContainerItemPluginInterface;
 use Drupal\ghi_form_elements\Traits\ConfigurationContainerTrait;
 use Drupal\ghi_plans\ApiObjects\Entities\EntityObjectInterface;
 use Drupal\ghi_plans\ApiObjects\Entities\GoverningEntity;
+use Drupal\ghi_plans\ApiObjects\PlanEntityInterface;
 use Drupal\ghi_plans\Entity\Plan;
 use Drupal\hpc_common\Plugin\HPCBlockMetadata;
 use Drupal\hpc_downloads\Interfaces\HPCDownloadExcelInterface;
@@ -159,7 +160,7 @@ class PlanGoverningEntitiesTable extends GHIBlockBase implements ConfigurableTab
     $entity_ids = array_map(fn ($item) => $item->id(), $entities);
     /** @var \Drupal\ghi_plans\Plugin\FabricQuery\AttachmentQuery $attachments_query */
     $attachments_query = $this->getQueryHandler('attachment');
-    $attachments_query->getAttachmentsByObject('governingEntity', $entity_ids, ['cost']);
+    $attachments_query->getAttachmentsByObject(PlanEntityInterface::ENTITY_TYPE_GOVERNING_ENTITY, $entity_ids, ['cost']);
 
     $rows = [];
     $cacheability = new CacheableMetadata();

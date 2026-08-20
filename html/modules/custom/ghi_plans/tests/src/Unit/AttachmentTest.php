@@ -4,15 +4,17 @@ namespace Drupal\Tests\ghi_plans\Unit;
 
 use Drupal\Component\Datetime\TimeInterface;
 use Drupal\Core\Cache\CacheBackendInterface;
-use Drupal\ghi_base_objects\Entity\BaseObjectChildInterface;
-use Drupal\ghi_base_objects\Entity\BaseObjectInterface;
+use Drupal\ghi_plans\ApiObjects\Entities\GoverningEntity as GoverningEntityObject;
+use Drupal\ghi_plans\ApiObjects\Entities\PlanEntity as PlanEntityObject;
 use Drupal\ghi_plans\ApiObjects\Prototypes\AttachmentPrototype;
 use Drupal\ghi_plans\ApiObjects\Attachments\CaseloadAttachment;
 use Drupal\ghi_plans\ApiObjects\Attachments\Attachment;
 use Drupal\ghi_plans\ApiObjects\Attachments\CostAttachment;
 use Drupal\ghi_plans\ApiObjects\Attachments\IndicatorAttachment;
 use Drupal\ghi_plans\ApiObjects\Facts\AttachmentFact;
+use Drupal\ghi_plans\ApiObjects\PlanEntityInterface;
 use Drupal\ghi_plans\ApiObjects\PlanReportingPeriod;
+use Drupal\ghi_plans\Entity\GoverningEntity as GoverningEntityBaseObject;
 use Drupal\ghi_plans\Entity\Plan;
 use Drupal\ghi_plans\Exceptions\InvalidAttachmentTypeException;
 use Drupal\ghi_plans\Helpers\AttachmentHelper;
@@ -692,15 +694,21 @@ class AttachmentTest extends ApiObjectTestBase {
     $this->assertEmpty($attachment->getSourceEntity());
     $this->assertContains(AttachmentPrototype::FIELD_OVERRIDES_CACHE_TAG, $attachment->getValueCacheTags());
 
-    $base_object = $this->prophesize(BaseObjectInterface::class);
-    $base_object->getSourceId()->willReturn(1000);
-    $this->assertFalse($attachment->belongsToBaseObject($base_object->reveal()));
-    $base_object->getSourceId()->willReturn(1112);
-    $this->assertTrue($attachment->belongsToBaseObject($base_object->reveal()));
-    $child_base_object = $this->prophesize(BaseObjectChildInterface::class);
-    $child_base_object->getParentBaseObject()->willReturn($base_object->reveal());
-    $child_base_object->getSourceId()->willReturn(1000);
-    $this->assertTrue($attachment->belongsToBaseObject($child_base_object->reveal()));
+    $other_plan = $this->createMock(Plan::class);
+    $other_plan->method('getSourceId')->willReturn(1000);
+    $this->assertFalse($attachment->belongsToBaseObject($other_plan));
+
+    $plan = $this->createMock(Plan::class);
+    $plan->method('getSourceId')->willReturn(1112);
+    $this->assertTrue($attachment->belongsToBaseObject($plan));
+
+    $governing_base_object = $this->createMock(GoverningEntityBaseObject::class);
+    $governing_base_object->method('getParentBaseObject')->willReturn($plan);
+    $this->assertTrue($attachment->belongsToBaseObject($governing_base_object));
+
+    $other_governing_base_object = $this->createMock(GoverningEntityBaseObject::class);
+    $other_governing_base_object->method('getParentBaseObject')->willReturn($other_plan);
+    $this->assertFalse($attachment->belongsToBaseObject($other_governing_base_object));
 
     $this->assertCount(8, $attachment->getFields());
     $this->assertCount(8, $attachment->getFieldTypes());
@@ -770,6 +778,141 @@ class AttachmentTest extends ApiObjectTestBase {
 
     $this->assertEquals(22100000, $attachment->getValueByMetricType('total_population'));
     $this->assertEquals(22100000, $attachment->getValueByIndex(0));
+  }
+
+  /**
+   * Test attachment base-object matching for plan contexts.
+   */
+  public function testAttachmentBelongsToPlanBaseObject() {
+    $attachment = $this->getMockBuilder(Attachment::class)
+      ->disableOriginalConstructor()
+      ->onlyMethods(['getPlanId'])
+      ->getMock();
+    $attachment->method('getPlanId')->willReturn(1158);
+
+    $plan = $this->createMock(Plan::class);
+    $plan->method('getSourceId')->willReturn(1158);
+    $this->assertTrue($attachment->belongsToBaseObject($plan));
+
+    $other_plan = $this->createMock(Plan::class);
+    $other_plan->method('getSourceId')->willReturn(1159);
+    $this->assertFalse($attachment->belongsToBaseObject($other_plan));
+  }
+
+  /**
+   * Test attachment base-object matching for plan entities in cluster contexts.
+   */
+  public function testAttachmentBelongsToGoverningEntityViaPlanEntityParent() {
+    $attachment = $this->getMockBuilder(Attachment::class)
+      ->disableOriginalConstructor()
+      ->onlyMethods(['getSourceEntityType', 'getSourceEntity'])
+      ->getMock();
+    $attachment->method('getSourceEntityType')->willReturn(PlanEntityInterface::ENTITY_TYPE_PLAN_ENTITY);
+
+    $parent_governing_entity = $this->createMock(GoverningEntityObject::class);
+    $parent_governing_entity->method('id')->willReturn(200);
+    $source_entity = $this->createMock(PlanEntityObject::class);
+    $source_entity->method('getParentGoverningEntity')->with(TRUE)->willReturn($parent_governing_entity);
+    $attachment->method('getSourceEntity')->willReturn($source_entity);
+
+    $governing_base_object = $this->createMock(GoverningEntityBaseObject::class);
+    $governing_base_object->method('getSourceId')->willReturn(200);
+    $this->assertTrue($attachment->belongsToBaseObject($governing_base_object));
+
+    $other_governing_base_object = $this->createMock(GoverningEntityBaseObject::class);
+    $other_governing_base_object->method('getSourceId')->willReturn(201);
+    $this->assertFalse($attachment->belongsToBaseObject($other_governing_base_object));
+  }
+
+  /**
+   * Test attachment base-object matching using the direct governing parent id.
+   */
+  public function testAttachmentBelongsToGoverningEntityViaDirectParentId() {
+    $attachment = $this->getMockBuilder(Attachment::class)
+      ->disableOriginalConstructor()
+      ->onlyMethods(['getSourceEntityType', 'getSourceEntity'])
+      ->getMock();
+    $attachment->method('getSourceEntityType')->willReturn(PlanEntityInterface::ENTITY_TYPE_PLAN_ENTITY);
+
+    $source_entity = $this->createMock(PlanEntityObject::class);
+    $source_entity->method('getGoverningEntityParentId')->willReturn(200);
+    $source_entity->expects($this->never())->method('getParentGoverningEntity');
+    $attachment->method('getSourceEntity')->willReturn($source_entity);
+
+    $governing_base_object = $this->createMock(GoverningEntityBaseObject::class);
+    $governing_base_object->method('getSourceId')->willReturn(200);
+    $this->assertTrue($attachment->belongsToBaseObject($governing_base_object));
+
+    $other_governing_base_object = $this->createMock(GoverningEntityBaseObject::class);
+    $other_governing_base_object->method('getSourceId')->willReturn(201);
+    $this->assertFalse($attachment->belongsToBaseObject($other_governing_base_object));
+  }
+
+  /**
+   * Test attachment base-object matching for direct cluster attachments.
+   */
+  public function testAttachmentBelongsToGoverningEntityBaseObject() {
+    $attachment = $this->getMockBuilder(Attachment::class)
+      ->disableOriginalConstructor()
+      ->onlyMethods(['getSourceEntityType', 'getSourceEntityId', 'getSourceEntity'])
+      ->getMock();
+    $attachment->method('getSourceEntityType')->willReturn(PlanEntityInterface::ENTITY_TYPE_GOVERNING_ENTITY);
+    $attachment->method('getSourceEntityId')->willReturn(200);
+    $attachment->expects($this->never())->method('getSourceEntity');
+
+    $governing_base_object = $this->createMock(GoverningEntityBaseObject::class);
+    $governing_base_object->method('getSourceId')->willReturn(200);
+    $this->assertTrue($attachment->belongsToBaseObject($governing_base_object));
+
+    $other_governing_base_object = $this->createMock(GoverningEntityBaseObject::class);
+    $other_governing_base_object->method('getSourceId')->willReturn(201);
+    $this->assertFalse($attachment->belongsToBaseObject($other_governing_base_object));
+  }
+
+  /**
+   * Test attachment base-object matching for plan attachments on cluster pages.
+   */
+  public function testAttachmentBelongsToGoverningEntityViaParentPlan() {
+    $attachment = $this->getMockBuilder(Attachment::class)
+      ->disableOriginalConstructor()
+      ->onlyMethods(['getSourceEntityType', 'getSourceEntityId'])
+      ->getMock();
+    $attachment->method('getSourceEntityType')->willReturn(PlanEntityInterface::ENTITY_TYPE_PLAN);
+    $attachment->method('getSourceEntityId')->willReturn(1158);
+
+    $plan = $this->createMock(Plan::class);
+    $plan->method('getSourceId')->willReturn(1158);
+    $governing_base_object = $this->createMock(GoverningEntityBaseObject::class);
+    $governing_base_object->method('getParentBaseObject')->willReturn($plan);
+    $this->assertTrue($attachment->belongsToBaseObject($governing_base_object));
+
+    $other_plan = $this->createMock(Plan::class);
+    $other_plan->method('getSourceId')->willReturn(1159);
+    $other_governing_base_object = $this->createMock(GoverningEntityBaseObject::class);
+    $other_governing_base_object->method('getParentBaseObject')->willReturn($other_plan);
+    $this->assertFalse($attachment->belongsToBaseObject($other_governing_base_object));
+  }
+
+  /**
+   * Test composed references for plan entity attachments.
+   */
+  public function testAttachmentComposedReferenceIncludesPlanEntityContext() {
+    $parent_governing_entity = $this->createMock(GoverningEntityObject::class);
+    $parent_governing_entity->method('getComposedReference')->willReturn('CLEDU');
+
+    $source_entity = $this->createMock(PlanEntityObject::class);
+    $source_entity->method('getComposedReference')->willReturn('CA1.01');
+    $source_entity->method('getParentGoverningEntity')->with(TRUE)->willReturn($parent_governing_entity);
+
+    $attachment = $this->getMockBuilder(Attachment::class)
+      ->disableOriginalConstructor()
+      ->onlyMethods(['getSourceEntityType', 'getSourceEntity', 'getCustomIdWithRefCode'])
+      ->getMock();
+    $attachment->method('getSourceEntityType')->willReturn(PlanEntityInterface::ENTITY_TYPE_PLAN_ENTITY);
+    $attachment->method('getSourceEntity')->willReturn($source_entity);
+    $attachment->method('getCustomIdWithRefCode')->willReturn('IN1');
+
+    $this->assertSame('CLEDU/CA1.01/IN1', $attachment->getComposedReference());
   }
 
   /**

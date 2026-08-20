@@ -18,6 +18,7 @@ use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
 use Drupal\ghi_blocks\Traits\AttachmentTableTrait;
 use Drupal\ghi_blocks\Traits\ConfigValidationTrait;
 use Drupal\ghi_form_elements\Traits\ConfigurationContainerTrait;
+use Drupal\ghi_plans\ApiObjects\PlanEntityInterface;
 use Drupal\ghi_sections\Entity\SectionNodeInterface;
 use Drupal\ghi_subpages\Entity\SubpageNodeInterface;
 use Drupal\hpc_common\Plugin\HPCBlockMetadata;
@@ -407,7 +408,7 @@ class PlanGoverningEntitiesCaseloadsTable extends GHIBlockBase implements Config
 
     /** @var \Drupal\ghi_plans\Plugin\FabricQuery\AttachmentQuery $query */
     $query = $this->getQueryHandler('attachment');
-    return $query->getAttachmentsByObject('governingEntity', $entity_ids, 'caseload');
+    return $query->getAttachmentsByObject(PlanEntityInterface::ENTITY_TYPE_GOVERNING_ENTITY, $entity_ids, 'caseload');
   }
 
   /**

@@ -6,6 +6,7 @@ use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\ghi_base_objects\ApiObjects\Country;
 use Drupal\ghi_plans\ApiObjects\Attachments\CostAttachment;
 use Drupal\ghi_plans\ApiObjects\Plan;
+use Drupal\ghi_plans\ApiObjects\PlanEntityInterface;
 use Drupal\ghi_plans\ApiObjects\PlanReportingPeriod;
 use Drupal\ghi_plans\Traits\PlanQueryTrait;
 use Drupal\hpc_api\ApiObjects\Types\PlanCostingType;
@@ -247,7 +248,7 @@ class PlanQuery extends FabricQueryBase {
     $funding_query->getData(['plan_id' => $plan_id]);
 
     $attachments_query = $this->getAttachmentQuery();
-    $attachments = $attachments_query->getAttachmentsByObject('plan', [$plan_id], 'cost');
+    $attachments = $attachments_query->getAttachmentsByObject(PlanEntityInterface::ENTITY_TYPE_PLAN, [$plan_id], 'cost');
     $attachment = count($attachments) == 1 ? reset($attachments) : NULL;
     assert($attachment instanceof CostAttachment || $attachment === NULL);
 

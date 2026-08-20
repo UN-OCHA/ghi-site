@@ -4,15 +4,17 @@ namespace Drupal\ghi_plans\ApiObjects\Attachments;
 
 use Drupal\Core\Cache\Cache;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
-use Drupal\ghi_base_objects\Entity\BaseObjectChildInterface;
 use Drupal\ghi_base_objects\Entity\BaseObjectInterface;
 use Drupal\ghi_base_objects\Helpers\BaseObjectHelper;
+use Drupal\ghi_plans\ApiObjects\Entities\EntityObjectInterface;
+use Drupal\ghi_plans\ApiObjects\Entities\PlanEntity as PlanEntityObject;
 use Drupal\ghi_plans\ApiObjects\Facts\AttachmentFact;
 use Drupal\ghi_plans\ApiObjects\Facts\MeasurementFact;
 use Drupal\ghi_plans\ApiObjects\Measurements\Measurement;
 use Drupal\ghi_plans\ApiObjects\PlanEntityInterface;
 use Drupal\ghi_plans\ApiObjects\PlanReportingPeriod;
 use Drupal\ghi_plans\ApiObjects\Prototypes\AttachmentPrototype;
+use Drupal\ghi_plans\Entity\GoverningEntity;
 use Drupal\ghi_plans\Entity\Plan;
 use Drupal\ghi_plans\Exceptions\InvalidAttachmentTypeException;
 use Drupal\ghi_plans\Helpers\PlanEntityHelper;
@@ -308,6 +310,25 @@ class Attachment extends ApiObjectBase implements AttachmentInterface, Disaggreg
    * {@inheritdoc}
    */
   public function getComposedReference(): string {
+    if (isset($this->composedReference) && $this->composedReference) {
+      return $this->composedReference;
+    }
+
+    // Fabric does not expose the old composed attachment reference. Rebuild it
+    // for plan entity attachments so selector rows keep the full context, e.g.
+    // CLEDU/CA1.01/IN1.
+    if ($this->getSourceEntityType() == PlanEntityInterface::ENTITY_TYPE_PLAN_ENTITY && $source_entity = $this->getSourceEntity()) {
+      $references = [];
+      if ($source_entity instanceof PlanEntityObject && $parent = $source_entity->getParentGoverningEntity(TRUE)) {
+        $references[] = $parent->getComposedReference();
+      }
+      if ($source_entity instanceof EntityObjectInterface) {
+        $references[] = $source_entity->getComposedReference();
+      }
+      $references[] = $this->getCustomIdWithRefCode();
+      return implode('/', array_filter($references, fn($reference) => $reference !== NULL && $reference !== ''));
+    }
+
     return $this->getCustomIdWithRefCode();
   }
 
@@ -374,9 +395,9 @@ class Attachment extends ApiObjectBase implements AttachmentInterface, Disaggreg
    */
   public function getSourceEntityTypeLabel() {
     return match ($this->source->entity_type) {
-      'plan' => $this->t('Plan'),
-      'planEntity' => $this->t('Plan entity'),
-      'governingEntity' => $this->t('Governing entity'),
+      PlanEntityInterface::ENTITY_TYPE_PLAN => $this->t('Plan'),
+      PlanEntityInterface::ENTITY_TYPE_PLAN_ENTITY => $this->t('Plan entity'),
+      PlanEntityInterface::ENTITY_TYPE_GOVERNING_ENTITY => $this->t('Governing entity'),
     };
   }
 
@@ -392,7 +413,7 @@ class Attachment extends ApiObjectBase implements AttachmentInterface, Disaggreg
     if (!$source_type || !$source_id) {
       return NULL;
     }
-    if ($source_type === 'plan') {
+    if ($source_type === PlanEntityInterface::ENTITY_TYPE_PLAN) {
       $this->sourceEntity = $this->getPlanQuery()?->getPlan($source_id);
     }
     else {
@@ -402,23 +423,67 @@ class Attachment extends ApiObjectBase implements AttachmentInterface, Disaggreg
   }
 
   /**
-   * See if the attachment belongs to the given base object.
+   * See if the attachment belongs in the given base-object context.
+   *
+   * Plan contexts are plan-wide. Governing entity contexts are cluster-scoped:
+   * direct governing entity attachments must match that cluster, and plan
+   * entity attachments must resolve to that cluster via their parent governing
+   * entity.
+   * Plan-level attachments are still accepted on cluster pages when the source
+   * plan is the cluster's parent plan.
    *
    * @param \Drupal\ghi_base_objects\Entity\BaseObjectInterface $base_object
-   *   The base object to check.
+   *   The page base object to check against.
    *
    * @return bool
-   *   TRUE if the attachment belongs to the base object, FALSE otherwise.
+   *   TRUE if the attachment belongs in the page context, FALSE otherwise.
    */
   public function belongsToBaseObject(BaseObjectInterface $base_object) {
-    if ($this->getSourceEntityId() == $base_object->getSourceId()) {
-      return TRUE;
+    // Plan pages can use any attachment from the same plan, regardless of
+    // whether the attachment source itself is the plan, a cluster, or a plan
+    // entity below that plan.
+    if ($base_object instanceof Plan) {
+      return $this->getPlanId() == $base_object->getSourceId();
     }
-    $parent_base_object = $base_object instanceof BaseObjectChildInterface ? $base_object->getParentBaseObject() : NULL;
-    if ($parent_base_object && $this->getSourceEntityId() == $parent_base_object->getSourceId()) {
-      return TRUE;
+    if (!$base_object instanceof GoverningEntity) {
+      return FALSE;
     }
-    return FALSE;
+
+    // Cluster-scoped attachments must belong to the current cluster. Indicator
+    // attachments can be sourced from plan entities, so resolve those to their
+    // parent governing entity before comparing.
+    $source_governing_entity_id = $this->getSourceGoverningEntityId();
+    if ($source_governing_entity_id !== NULL) {
+      return $source_governing_entity_id == $base_object->getSourceId();
+    }
+
+    // Plan-level attachments remain available on cluster pages under the same
+    // plan; cluster-scoped attachments must match the cluster itself.
+    return $this->getSourceEntityType() == PlanEntityInterface::ENTITY_TYPE_PLAN && $this->getSourceEntityId() == $base_object->getParentBaseObject()?->getSourceId();
+  }
+
+  /**
+   * Get the governing entity id that owns the attachment source.
+   *
+   * @return int|string|null
+   *   The governing entity id if the attachment source can be mapped to one.
+   */
+  private function getSourceGoverningEntityId() {
+    $source_type = $this->getSourceEntityType();
+    if ($source_type == PlanEntityInterface::ENTITY_TYPE_GOVERNING_ENTITY) {
+      return $this->getSourceEntityId();
+    }
+    if ($source_type != PlanEntityInterface::ENTITY_TYPE_PLAN_ENTITY) {
+      return NULL;
+    }
+
+    $source_entity = $this->getSourceEntity();
+    if (!$source_entity instanceof PlanEntityObject) {
+      return NULL;
+    }
+
+    $governing_entity_id = $source_entity->getGoverningEntityParentId();
+    return $governing_entity_id ?? $source_entity->getParentGoverningEntity(TRUE)?->id();
   }
 
   /**

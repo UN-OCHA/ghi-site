@@ -5,12 +5,14 @@ namespace Drupal\ghi_plans\Plugin\FabricQuery;
 use Drupal\Core\Cache\Cache;
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\ghi_base_objects\Entity\BaseObjectInterface;
 use Drupal\ghi_plans\ApiObjects\Attachments\Attachment;
 use Drupal\ghi_plans\ApiObjects\Attachments\AttachmentInterface;
 use Drupal\ghi_plans\ApiObjects\Facts\AttachmentFact;
 use Drupal\ghi_plans\ApiObjects\Facts\FactBase;
 use Drupal\ghi_plans\ApiObjects\Facts\MeasurementFact;
 use Drupal\ghi_plans\ApiObjects\PlanEntityInterface;
+use Drupal\ghi_plans\Entity\GoverningEntity;
 use Drupal\ghi_plans\Helpers\AttachmentHelper;
 use Drupal\ghi_plans\Traits\AttachmentFilterTrait;
 use Drupal\ghi_plans\Traits\PlanQueryTrait;
@@ -79,8 +81,8 @@ class AttachmentQuery extends FabricQueryBase {
    * Get attachments by object type and id, optionally filtered.
    *
    * @param array|string $entity_type
-   *   The entity type for an attachment, either "governingEntity" or
-   *   "planEntity".
+   *   The source entity type for an attachment. Use the
+   *   PlanEntityInterface::ENTITY_TYPE_* constants.
    * @param array|int $entity_ids
    *   The entity ids that the attachments should belong to.
    * @param array|string $attachment_types
@@ -195,17 +197,31 @@ class AttachmentQuery extends FabricQueryBase {
       $this->objectStore->addObjectCollection($attachments, Attachment::getObjectStorageKey(), 'PlanId');
     }
 
-    $type_filter_value = NULL;
-    $supported_contexts = ['plan_entity', 'governing_entity'];
-    if ($context_object && $entity_type = ($supported_contexts[$context_object->bundle()] ?? NULL)) {
-      $type_filter_value = $this->getEntityTypeFilterValue($entity_type);
-    }
-    $filter = array_filter($filter + [
-      'EntityMainType' => $type_filter_value,
-    ]);
-
+    $filter = array_filter($filter);
     if (!empty($filter)) {
       $this->filterObjects($attachments, $filter);
+    }
+
+    // Plan entity attachments need their hierarchy to determine whether they
+    // belong to a cluster. Load the plan structure in bulk so the per-object
+    // checks below use the shared object store instead of querying Fabric for
+    // every attachment source and parent.
+    if ($context_object instanceof GoverningEntity) {
+      foreach ($attachments as $attachment) {
+        // Plan and governing entity attachments can be matched directly from
+        // their raw ids, so they do not require hierarchy preloading.
+        if ($attachment->getSourceEntityType() !== PlanEntityInterface::ENTITY_TYPE_PLAN_ENTITY) {
+          continue;
+        }
+        // One plan-wide preload covers every remaining plan entity attachment;
+        // stop scanning once the need for it has been established.
+        self::getEntityQuery()?->getEntitiesForPlan($plan_id);
+        break;
+      }
+    }
+
+    if ($context_object instanceof BaseObjectInterface) {
+      $attachments = array_filter($attachments, fn (Attachment $attachment) => $attachment->belongsToBaseObject($context_object));
     }
     return $attachments;
   }
@@ -252,7 +268,7 @@ class AttachmentQuery extends FabricQueryBase {
    *   attachment id.
    */
   public function getAttachmentsByPlan(array $plan_ids, array|string $attachment_types = []) {
-    $attachments = $this->getAttachmentsByObject('plan', $plan_ids, $attachment_types);
+    $attachments = $this->getAttachmentsByObject(PlanEntityInterface::ENTITY_TYPE_PLAN, $plan_ids, $attachment_types);
     $attachments_by_plan = [];
     foreach ($attachments as $attachment) {
       if (!$attachment instanceof Attachment) {
@@ -278,10 +294,10 @@ class AttachmentQuery extends FabricQueryBase {
    *   attachment id.
    */
   public function getAttachmentsByCluster(array $cluster_ids, array|string $attachment_types = []) {
-    $attachments = $this->getAttachmentsByObject('governingEntity', $cluster_ids, $attachment_types);
+    $attachments = $this->getAttachmentsByObject(PlanEntityInterface::ENTITY_TYPE_GOVERNING_ENTITY, $cluster_ids, $attachment_types);
     $attachments_by_cluster = [];
     foreach ($attachments as $attachment) {
-      if (!$attachment instanceof Attachment || $attachment->getSourceEntityType() != 'governingEntity') {
+      if (!$attachment instanceof Attachment || $attachment->getSourceEntityType() != PlanEntityInterface::ENTITY_TYPE_GOVERNING_ENTITY) {
         continue;
       }
       $cluster_id = $attachment->getSourceEntityId();
@@ -1046,10 +1062,10 @@ class AttachmentQuery extends FabricQueryBase {
    */
   private function getEntityTypeFilterValue($entity_type): ?string {
     return match ($entity_type) {
-      'plan' => 'Plan',
-      'planEntity' => 'LogframeEntity',
+      PlanEntityInterface::ENTITY_TYPE_PLAN => 'Plan',
+      PlanEntityInterface::ENTITY_TYPE_PLAN_ENTITY => 'LogframeEntity',
+      PlanEntityInterface::ENTITY_TYPE_GOVERNING_ENTITY => 'CoordinationEntity',
       'plan_entity' => 'LogframeEntity',
-      'governingEntity' => 'CoordinationEntity',
       'governing_entity' => 'CoordinationEntity',
       default => NULL,
     };

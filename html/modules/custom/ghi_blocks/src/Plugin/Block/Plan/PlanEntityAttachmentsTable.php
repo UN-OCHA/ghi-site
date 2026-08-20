@@ -20,6 +20,7 @@ use Drupal\ghi_form_elements\Traits\ConfigurationContainerTrait;
 use Drupal\ghi_plans\ApiObjects\Attachments\Attachment;
 use Drupal\ghi_plans\ApiObjects\Entities\EntityObjectInterface;
 use Drupal\ghi_plans\ApiObjects\Entities\PlanEntity;
+use Drupal\ghi_plans\ApiObjects\PlanEntityInterface;
 use Drupal\hpc_api\Helpers\ArrayHelper;
 use Drupal\hpc_common\Plugin\HPCBlockMetadata;
 use Drupal\hpc_downloads\Interfaces\HPCDownloadExcelInterface;
@@ -141,7 +142,7 @@ class PlanEntityAttachmentsTable extends GHIBlockBase implements ConfigurableTab
     }
     /** @var \Drupal\ghi_plans\Plugin\FabricQuery\EntityQuery $query */
     $query = $this->getQueryHandler('entities');
-    $entity = $query->getEntity('planEntity', $entity_id) ?? $query->getEntity('governingEntity', $entity_id);
+    $entity = $query->getEntity(PlanEntityInterface::ENTITY_TYPE_PLAN_ENTITY, $entity_id) ?? $query->getEntity(PlanEntityInterface::ENTITY_TYPE_GOVERNING_ENTITY, $entity_id);
     return $entity instanceof EntityObjectInterface ? $entity : NULL;
   }
 
@@ -616,7 +617,10 @@ class PlanEntityAttachmentsTable extends GHIBlockBase implements ConfigurableTab
 
     /** @var \Drupal\ghi_plans\Plugin\FabricQuery\AttachmentQuery $query */
     $query = $this->getQueryHandler('attachment');
-    $attachments = $query->getAttachmentsByObject(['governingEntity', 'planEntity'], $entity_ids, $attachment_type);
+    $attachments = $query->getAttachmentsByObject([
+      PlanEntityInterface::ENTITY_TYPE_GOVERNING_ENTITY,
+      PlanEntityInterface::ENTITY_TYPE_PLAN_ENTITY,
+    ], $entity_ids, $attachment_type);
     // Filter out non-data attachments.
     $attachments = array_filter($attachments, function ($attachment) {
       return $attachment instanceof Attachment;

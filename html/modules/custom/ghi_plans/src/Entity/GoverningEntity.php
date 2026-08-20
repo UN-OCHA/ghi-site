@@ -5,6 +5,7 @@ namespace Drupal\ghi_plans\Entity;
 use Drupal\ghi_base_objects\Entity\BaseObject;
 use Drupal\ghi_base_objects\Entity\BaseObjectChildInterface;
 use Drupal\ghi_plans\ApiObjects\Entities\GoverningEntity as EntitiesGoverningEntity;
+use Drupal\ghi_plans\ApiObjects\PlanEntityInterface;
 use Drupal\ghi_plans\Traits\PlanQueryTrait;
 
 /**
@@ -75,7 +76,7 @@ class GoverningEntity extends BaseObject implements BaseObjectChildInterface {
    *   The entity object or NULL.
    */
   public function getSourceObject(): ?EntitiesGoverningEntity {
-    $entity = $this->getEntityQuery()?->getEntity('governingEntity', $this->getSourceId());
+    $entity = $this->getEntityQuery()?->getEntity(PlanEntityInterface::ENTITY_TYPE_GOVERNING_ENTITY, $this->getSourceId());
     assert($entity === NULL || $entity instanceof EntitiesGoverningEntity);
     return $entity;
   }

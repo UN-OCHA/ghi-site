@@ -7,6 +7,7 @@ use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\ghi_plans\ApiObjects\Facts\MeasurementFact;
 use Drupal\ghi_plans\ApiObjects\Measurements\Measurement;
 use Drupal\ghi_plans\ApiObjects\Measurements\MeasurementInterface;
+use Drupal\ghi_plans\ApiObjects\PlanEntityInterface;
 use Drupal\ghi_plans\Traits\AttachmentFilterTrait;
 use Drupal\hpc_api\Attribute\FabricQuery;
 use Drupal\hpc_api\Query\FabricQueryBase;
@@ -99,8 +100,8 @@ class MeasurementQuery extends FabricQueryBase {
    * Get measurement by object type and id, optionally filtered.
    *
    * @param string $entity_type
-   *   The entity type for an measurement, either "governingEntity" or
-   *   "planEntity".
+   *   The source entity type for a measurement. Use the
+   *   PlanEntityInterface::ENTITY_TYPE_* constants.
    * @param array|int $entity_ids
    *   The entity ids that the measurement should belong to.
    * @param array|string $measurement_types
@@ -219,7 +220,7 @@ class MeasurementQuery extends FabricQueryBase {
    *   measurement id.
    */
   public function getMeasurementsByPlan(array $plan_ids, array|string $measurement_types = []): array {
-    $measurements = $this->getMeasurementsByObject('plan', $plan_ids, $measurement_types);
+    $measurements = $this->getMeasurementsByObject(PlanEntityInterface::ENTITY_TYPE_PLAN, $plan_ids, $measurement_types);
     $measurements_by_plan = [];
     foreach ($measurements as $measurement) {
       $plan_id = $measurement->getPlanId();
@@ -242,10 +243,10 @@ class MeasurementQuery extends FabricQueryBase {
    *   measurement id.
    */
   public function getMeasurementsByCluster(array $cluster_ids, array|string $measurement_types = []): array {
-    $measurements = $this->getMeasurementsByObject('governingEntity', $cluster_ids, $measurement_types);
+    $measurements = $this->getMeasurementsByObject(PlanEntityInterface::ENTITY_TYPE_GOVERNING_ENTITY, $cluster_ids, $measurement_types);
     $measurements_by_cluster = [];
     foreach ($measurements as $measurement) {
-      if ($measurement->getSourceEntityType() != 'governingEntity') {
+      if ($measurement->getSourceEntityType() != PlanEntityInterface::ENTITY_TYPE_GOVERNING_ENTITY) {
         continue;
       }
       $cluster_id = $measurement->getSourceEntityId();
@@ -285,10 +286,10 @@ class MeasurementQuery extends FabricQueryBase {
    */
   private function getEntityTypeFilterValue(string $entity_type): ?string {
     return match ($entity_type) {
-      'plan' => 'Plan',
-      'planEntity' => 'LogframeEntity',
+      PlanEntityInterface::ENTITY_TYPE_PLAN => 'Plan',
+      PlanEntityInterface::ENTITY_TYPE_PLAN_ENTITY => 'LogframeEntity',
+      PlanEntityInterface::ENTITY_TYPE_GOVERNING_ENTITY => 'CoordinationEntity',
       'plan_entity' => 'LogframeEntity',
-      'governingEntity' => 'CoordinationEntity',
       'governing_entity' => 'CoordinationEntity',
       default => NULL,
     };

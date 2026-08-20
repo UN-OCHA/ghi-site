@@ -5,6 +5,7 @@ namespace Drupal\ghi_plans\Plugin\Field\FieldWidget;
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Field\WidgetBase;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\ghi_plans\ApiObjects\PlanEntityInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -47,7 +48,7 @@ class PlanCaseloadWidget extends WidgetBase {
     if (!$plan_id) {
       return $element;
     }
-    $attachments = $this->attachmentQuery->getAttachmentsByObject('plan', $plan_id, 'caseload');
+    $attachments = $this->attachmentQuery->getAttachmentsByObject(PlanEntityInterface::ENTITY_TYPE_PLAN, $plan_id, 'caseload');
     $attachment_options = $attachments ? array_map(function ($attachment) {
       /** @var \Drupal\ghi_plans\ApiObjects\Attachments\AttachmentInterface $attachment */
       return ($attachment->getTitle() ?? $attachment->getDescription()) . ' (' . $attachment->id() . ')';

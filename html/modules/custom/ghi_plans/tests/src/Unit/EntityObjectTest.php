@@ -5,6 +5,7 @@ namespace Drupal\Tests\ghi_plans\Unit;
 use Drupal\ghi_plans\ApiObjects\Entities\EntityObjectInterface;
 use Drupal\ghi_plans\ApiObjects\Entities\GoverningEntity;
 use Drupal\ghi_plans\ApiObjects\Entities\PlanEntity;
+use Drupal\ghi_plans\ApiObjects\PlanEntityInterface;
 
 /**
  * Tests the API entity objects.
@@ -32,7 +33,7 @@ class EntityObjectTest extends ApiObjectTestBase {
     $child->id()->willReturn(233);
     $entity->addChild($child->reveal());
     $this->assertEquals([233 => $child->reveal()], $entity->getChildren());
-    $this->assertEquals('governingEntity', $entity->getEntityType());
+    $this->assertEquals(PlanEntityInterface::ENTITY_TYPE_GOVERNING_ENTITY, $entity->getEntityType());
     $this->assertEquals('Governing entity', $entity->getEntityTypeName());
     $this->assertEquals(4267, $entity->getPrototypeId());
     $this->assertEquals('Cluster', $entity->getSingularName());

@@ -7,6 +7,7 @@ use Drupal\ghi_base_objects\Helpers\BaseObjectHelper;
 use Drupal\ghi_plans\ApiObjects\Attachments\CaseloadAttachmentInterface;
 use Drupal\ghi_plans\ApiObjects\Attachments\CostAttachment;
 use Drupal\ghi_plans\ApiObjects\Partials\PlanOverviewPlan;
+use Drupal\ghi_plans\ApiObjects\PlanEntityInterface;
 use Drupal\hpc_api\Attribute\FabricQuery;
 use Drupal\hpc_api\Query\FabricQueryBase;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -108,7 +109,10 @@ class PlanOverviewQuery extends FabricQueryBase {
     $plan_objects = BaseObjectHelper::getBaseObjectsFromOriginalIds($plan_ids, 'plan');
     $this->attachmentPrototypeQuery->getDataPrototypesForPlans($plan_ids, FALSE);
 
-    $attachments = $this->attachmentQuery->getAttachmentsByObject('plan', $plan_ids, ['caseload', 'cost']);
+    $attachments = $this->attachmentQuery->getAttachmentsByObject(PlanEntityInterface::ENTITY_TYPE_PLAN, $plan_ids, [
+      'caseload',
+      'cost',
+    ]);
     $caseloads_by_plan = [];
     $requirements_by_plan = [];
     foreach ($attachments as $attachment) {

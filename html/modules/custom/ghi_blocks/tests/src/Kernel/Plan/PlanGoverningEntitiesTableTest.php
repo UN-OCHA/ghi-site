@@ -9,6 +9,7 @@ use Drupal\ghi_blocks\Interfaces\OverrideDefaultTitleBlockInterface;
 use Drupal\ghi_blocks\Plugin\Block\Plan\PlanGoverningEntitiesTable;
 use Drupal\ghi_blocks\Plugin\ConfigurationContainerItem\FundingData;
 use Drupal\ghi_plans\ApiObjects\Entities\GoverningEntity;
+use Drupal\ghi_plans\ApiObjects\PlanEntityInterface;
 use Drupal\ghi_plans\ApiObjects\Prototypes\EntityPrototype;
 use Drupal\ghi_plans\ApiObjects\Prototypes\PlanPrototype;
 use Drupal\ghi_plans\Entity\Plan;
@@ -546,7 +547,7 @@ class PlanGoverningEntitiesTableTest extends PlanBlockKernelTestBase {
     $plugin = $this->createBlockPlugin('plan_governing_entities_table', $configuration ?: [], $contexts);
 
     $attachment_query = $this->prophesize(AttachmentQuery::class);
-    $attachment_query->getAttachmentsByObject('governingEntity', Argument::any(), ['cost'])->willReturn([]);
+    $attachment_query->getAttachmentsByObject(PlanEntityInterface::ENTITY_TYPE_GOVERNING_ENTITY, Argument::any(), ['cost'])->willReturn([]);
 
     $reflection = new \ReflectionClass($plugin);
     $property = $reflection->getProperty('queryHandlers');

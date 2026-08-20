@@ -8,8 +8,11 @@ use Drupal\Core\Render\Attribute\FormElement;
 use Drupal\Core\Render\Element;
 use Drupal\Core\Render\Element\FormElementBase;
 use Drupal\Core\Render\Markup;
+use Drupal\ghi_base_objects\Entity\BaseObjectInterface;
 use Drupal\ghi_form_elements\Traits\AjaxElementTrait;
 use Drupal\ghi_plans\ApiObjects\Entities\EntityObjectInterface;
+use Drupal\ghi_plans\ApiObjects\PlanEntityInterface;
+use Drupal\ghi_plans\Entity\GoverningEntity;
 use Drupal\ghi_plans\Traits\AttachmentFilterTrait;
 use Drupal\ghi_plans\Traits\PlanQueryTrait;
 use Drupal\hpc_api\Helpers\ArrayHelper;
@@ -149,7 +152,7 @@ class AttachmentSelect extends FormElementBase {
     foreach ($attachments as $attachment) {
       $source_type = $attachment->getSourceEntityType();
       $source_id = $attachment->getSourceEntityId();
-      if (!$source_type || !$source_id || $source_type == 'plan') {
+      if (!$source_type || !$source_id || $source_type == PlanEntityInterface::ENTITY_TYPE_PLAN) {
         continue;
       }
       $source_entity_ids[$source_type] = $source_entity_ids[$source_type] ?? [];
@@ -178,6 +181,15 @@ class AttachmentSelect extends FormElementBase {
     // Sanity check to handle imported code from other plan pages.
     if (empty($attachment_prototype_options) || ($defaults['attachment_prototype'] && !array_key_exists($defaults['attachment_prototype'], $attachment_prototype_options))) {
       $defaults['attachment_prototype'] = NULL;
+    }
+
+    if (!empty($context['plan_object'])) {
+      $entity_type_options = array_merge([PlanEntityInterface::ENTITY_TYPE_PLAN => (string) t('Plan')], $entity_type_options);
+    }
+    if (!empty($element['#available_options']['entity_types']) && empty($defaults['entity_type']) && empty($element['#entity_type']) && !empty($entity_type_options)) {
+      $base_object = $context['base_object'] ?? NULL;
+      $base_object = $base_object instanceof BaseObjectInterface ? $base_object : NULL;
+      $defaults['entity_type'] = self::getDefaultEntityType($entity_type_options, $base_object);
     }
 
     // Setup the filters base form structure.
@@ -235,10 +247,6 @@ class AttachmentSelect extends FormElementBase {
 
     if ($is_hidden) {
       return $element;
-    }
-
-    if (!empty($context['plan_object'])) {
-      $entity_type_options = array_merge(['plan' => (string) t('Plan')], $entity_type_options);
     }
 
     // Build the filter to limit attachments to the ones available using the
@@ -403,7 +411,7 @@ class AttachmentSelect extends FormElementBase {
     $attachments_selected = (array) ($defaults['attachment_id'] ?? []);
     $default_attachments = array_intersect($attachments_selected, array_keys($attachment_options));
     if (!empty($default_attachments) && empty($element['#multiple'])) {
-      $default_attachments = array_key_first($default_attachments);
+      $default_attachments = reset($default_attachments);
     }
     if (empty($default_attachments) && empty($element['#multiple'])) {
       $default_attachments = array_key_first($attachment_options);
@@ -429,6 +437,24 @@ class AttachmentSelect extends FormElementBase {
     ];
 
     return $element;
+  }
+
+  /**
+   * Get the initial entity type for the available attachment options.
+   *
+   * @param array $entity_type_options
+   *   The available entity type options.
+   * @param \Drupal\ghi_base_objects\Entity\BaseObjectInterface|null $base_object
+   *   The current base object, if available.
+   *
+   * @return string|null
+   *   The default entity type, or NULL if no options are available.
+   */
+  private static function getDefaultEntityType(array $entity_type_options, ?BaseObjectInterface $base_object): ?string {
+    if ($base_object instanceof GoverningEntity && array_key_exists(PlanEntityInterface::ENTITY_TYPE_GOVERNING_ENTITY, $entity_type_options)) {
+      return PlanEntityInterface::ENTITY_TYPE_GOVERNING_ENTITY;
+    }
+    return array_key_first($entity_type_options);
   }
 
   /**

@@ -3,6 +3,7 @@
 namespace Drupal\ghi_plans\Form;
 
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\ghi_plans\ApiObjects\PlanEntityInterface;
 
 /**
  * Provides a form to lookup plan entity data.
@@ -31,9 +32,9 @@ class PlanEntityLookupForm extends BaseLookupForm {
       '#type' => 'select',
       '#title' => $this->t('Entity type'),
       '#options' => [
-        'plan' => $this->t('Plan'),
-        'planEntity' => $this->t('Plan entity'),
-        'governingEntity' => $this->t('Governing entity'),
+        PlanEntityInterface::ENTITY_TYPE_PLAN => $this->t('Plan'),
+        PlanEntityInterface::ENTITY_TYPE_PLAN_ENTITY => $this->t('Plan entity'),
+        PlanEntityInterface::ENTITY_TYPE_GOVERNING_ENTITY => $this->t('Governing entity'),
       ],
     ];
     $form['filter']['entity_id'] = [
@@ -51,7 +52,7 @@ class PlanEntityLookupForm extends BaseLookupForm {
       return $form;
     }
 
-    if ($entity_type == 'plan') {
+    if ($entity_type == PlanEntityInterface::ENTITY_TYPE_PLAN) {
       $entity = $this->getPlanQuery()?->disableCache()->getPlan($entity_id) ?? NULL;
     }
     else {

@@ -174,6 +174,15 @@ trait AjaxElementTrait {
       $classes[] = $class_name;
       NestedArray::setValue($element, $class_parents, $classes, TRUE);
     }
+
+    // Form element descriptions are rendered by the wrapper rather than the
+    // input itself, so hide the wrapper to prevent descriptions from leaking.
+    $wrapper_class_parents = ['#wrapper_attributes', 'class'];
+    $wrapper_classes = NestedArray::keyExists($element, $wrapper_class_parents) ? NestedArray::getValue($element, $wrapper_class_parents) : [];
+    if (!in_array($class_name, $wrapper_classes)) {
+      $wrapper_classes[] = $class_name;
+      NestedArray::setValue($element, $wrapper_class_parents, $wrapper_classes, TRUE);
+    }
     foreach (Element::children($element) as $element_key) {
       self::hideAllElements($element[$element_key]);
     }

@@ -177,6 +177,7 @@ class DataPoint extends FormElementBase {
     ];
 
     $data_point_options = self::getDataPointOptions($element);
+    self::sanitizeMetricTypeDefaults($defaults, $data_point_options, $element, $form_state);
 
     $element['data_points'] = [
       '#type' => 'container',
@@ -262,7 +263,7 @@ class DataPoint extends FormElementBase {
       // submitted checkbox and the index of the second data point.
       $input = $form_state->getUserInput();
       $submitted = NestedArray::getValue($input, array_merge($element['#parents'], ['data_points']));
-      if ($submitted && $submitted[0]['use_calculation_method'] === NULL && empty($defaults['data_points'][1]['metric_type']) && self::CALCULATION_METHOD_DEFAULT) {
+      if ($submitted && ($submitted[0]['use_calculation_method'] ?? NULL) === NULL && empty($defaults['data_points'][1]['metric_type']) && self::CALCULATION_METHOD_DEFAULT) {
         // Due to a bug with checkbox elements in ajax contexts, the default
         // value is not correctly set for new instances of a plugin. We catch
         // this situation by manually setting the checked attribute only if the
@@ -338,7 +339,7 @@ class DataPoint extends FormElementBase {
       // submitted checkbox and the index of the second data point.
       $input = $form_state->getUserInput();
       $submitted = NestedArray::getValue($input, array_merge($element['#parents'], ['data_points']));
-      if (is_array($submitted) && $submitted[1]['use_calculation_method'] === NULL && empty($defaults['data_points'][1]['metric_type']) && self::CALCULATION_METHOD_DEFAULT) {
+      if (is_array($submitted) && ($submitted[1]['use_calculation_method'] ?? NULL) === NULL && empty($defaults['data_points'][1]['metric_type']) && self::CALCULATION_METHOD_DEFAULT) {
         // Due to a bug with checkbox elements in ajax contexts, the default
         // value is not correctly set for new instances of a plugin. We catch
         // this situation by manually setting the checked attribute only if the
@@ -437,6 +438,43 @@ class DataPoint extends FormElementBase {
       }
     }
     return $options;
+  }
+
+  /**
+   * Reset submitted metric values that do not exist on the current attachment.
+   *
+   * AJAX rebuilds can switch the attachment or prototype while values from the
+   * previous data-point form are still in user input. If those stale values are
+   * left untouched, Drupal rejects the select elements before the AJAX callback
+   * can return the rebuilt form.
+   *
+   * @param array $defaults
+   *   The data point defaults, by reference.
+   * @param array $data_point_options
+   *   The available data point options for the current attachment.
+   * @param array $element
+   *   The data point element.
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   The current form state.
+   */
+  private static function sanitizeMetricTypeDefaults(array &$defaults, array $data_point_options, array $element, FormStateInterface $form_state): void {
+    $fallback_metric_type = array_key_first($data_point_options);
+    foreach ([0, 1] as $index) {
+      $metric_type = $defaults['data_points'][$index]['metric_type'] ?? NULL;
+      if ($metric_type !== NULL && !array_key_exists($metric_type, $data_point_options)) {
+        $defaults['data_points'][$index]['metric_type'] = $index == 0 || $defaults['processing'] == 'calculated' ? $fallback_metric_type : NULL;
+      }
+    }
+
+    $user_input = $form_state->getUserInput();
+    foreach ([0, 1] as $index) {
+      NestedArray::setValue($user_input, array_merge($element['#parents'], [
+        'data_points',
+        $index,
+        'metric_type',
+      ]), $defaults['data_points'][$index]['metric_type'] ?? NULL);
+    }
+    $form_state->setUserInput($user_input);
   }
 
 }

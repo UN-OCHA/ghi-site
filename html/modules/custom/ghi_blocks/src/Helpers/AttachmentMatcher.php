@@ -35,7 +35,7 @@ class AttachmentMatcher {
         return FALSE;
       }
       if ($original_attachment->getSourceEntityType() != $attachment->getSourceEntityType()) {
-        // Check the source entity type, e.g. "governingEntity" vs "plan".
+        // Check the source entity type, e.g. cluster vs plan.
         return FALSE;
       }
       if ($original_attachment->getPrototype()->getRefCode() != $attachment->getPrototype()->getRefCode()) {

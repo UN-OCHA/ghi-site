@@ -497,6 +497,43 @@ class ArrayHelperTest extends UnitTestCase {
   }
 
   /**
+   * Data provider for filterArray with object methods.
+   */
+  public function filterArrayObjectMethodDataProvider() {
+    $array = [
+      $this->createFilterableObject(1, 'caseload', [101, 102]),
+      $this->createFilterableObject(2, 'indicator', [102, 103]),
+      $this->createFilterableObject(3, 'caseload', [104]),
+    ];
+
+    return [
+      [$array, ['getType' => 'caseload'], [1, 3]],
+      [$array, ['getType' => ['indicator']], [2]],
+      [$array, ['getPrototypeIds' => 102], [1, 2]],
+      [$array, ['getType' => 'caseload', 'getPrototypeIds' => 102], [1]],
+    ];
+  }
+
+  /**
+   * Data provider for filterArray with property paths.
+   */
+  public function filterArrayPropertyPathDataProvider() {
+    $array = [
+      ['id' => 1, 'category' => 'a', 'parent' => (object) ['child' => (object) ['name' => 'alpha']]],
+      ['id' => 2, 'category' => 'b', 'parent' => (object) ['child' => NULL]],
+      ['id' => 3, 'category' => 'a', 'parent' => NULL],
+      ['id' => 4, 'category' => 'c'],
+    ];
+
+    return [
+      [$array, ['category' => ['a']], [1, 3]],
+      [$array, ['missing' => NULL], [1, 2, 3, 4]],
+      [$array, ['parent.child.name' => 'alpha'], [1]],
+      [$array, ['parent.child.name' => NULL], []],
+    ];
+  }
+
+  /**
    * Test filterArray method.
    *
    * @group ArrayHelper
@@ -505,6 +542,28 @@ class ArrayHelperTest extends UnitTestCase {
   public function testFilterArray($array, $filters, $expected_count) {
     $result = ArrayHelper::filterArray($array, $filters);
     $this->assertCount($expected_count, $result);
+  }
+
+  /**
+   * Test filterArray method with object method filters.
+   *
+   * @group ArrayHelper
+   * @dataProvider filterArrayObjectMethodDataProvider
+   */
+  public function testFilterArrayWithObjectMethodFilters($array, $filters, $expected_ids) {
+    $result = ArrayHelper::filterArray($array, $filters);
+    $this->assertSame($expected_ids, array_map(fn($item) => $item->id, $result));
+  }
+
+  /**
+   * Test filterArray method with property path filters.
+   *
+   * @group ArrayHelper
+   * @dataProvider filterArrayPropertyPathDataProvider
+   */
+  public function testFilterArrayWithPropertyPathFilters($array, $filters, $expected_ids) {
+    $result = ArrayHelper::filterArray($array, $filters);
+    $this->assertSame($expected_ids, array_column($result, 'id'));
   }
 
   /**
@@ -527,6 +586,59 @@ class ArrayHelperTest extends UnitTestCase {
   public function testSumArraysByKey($array, $key, $expected) {
     $result = ArrayHelper::sumArraysByKey($array, $key);
     $this->assertSame($expected, $result);
+  }
+
+  /**
+   * Create a filterable test object.
+   */
+  private function createFilterableObject($id, $type, array $prototype_ids) {
+    return new class($id, $type, $prototype_ids) {
+
+      /**
+       * The test object id.
+       *
+       * @var int
+       */
+      public $id;
+
+      /**
+       * The test object type.
+       *
+       * @var string
+       */
+      private $type;
+
+      /**
+       * The test prototype ids.
+       *
+       * @var array
+       */
+      private $prototypeIds;
+
+      /**
+       * Constructs a filterable test object.
+       */
+      public function __construct($id, $type, array $prototype_ids) {
+        $this->id = $id;
+        $this->type = $type;
+        $this->prototypeIds = $prototype_ids;
+      }
+
+      /**
+       * Get the type.
+       */
+      public function getType() {
+        return $this->type;
+      }
+
+      /**
+       * Get the prototype ids.
+       */
+      public function getPrototypeIds() {
+        return $this->prototypeIds;
+      }
+
+    };
   }
 
   /**

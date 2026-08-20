@@ -2,7 +2,13 @@
 
 namespace Drupal\Tests\ghi_plans\Unit\Plugin\FabricQuery;
 
+use Drupal\ghi_base_objects\Entity\BaseObjectInterface;
+use Drupal\ghi_plans\ApiObjects\Attachments\Attachment;
+use Drupal\ghi_plans\ApiObjects\PlanEntityInterface;
+use Drupal\ghi_plans\Entity\GoverningEntity;
 use Drupal\ghi_plans\Plugin\FabricQuery\AttachmentQuery;
+use Drupal\ghi_plans\Plugin\FabricQuery\EntityQuery;
+use Drupal\hpc_api\ObjectStore;
 use Drupal\hpc_api\Query\FabricQuery;
 use Drupal\Tests\hpc_api\Traits\PrivateAccessorTrait;
 use Drupal\Tests\UnitTestCase;
@@ -15,6 +21,84 @@ use Drupal\Tests\UnitTestCase;
 class AttachmentQueryTest extends UnitTestCase {
 
   use PrivateAccessorTrait;
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function setUp(): void {
+    parent::setUp();
+    drupal_static_reset('getQueryInstance');
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function tearDown(): void {
+    drupal_static_reset('getQueryInstance');
+    parent::tearDown();
+  }
+
+  /**
+   * Tests that plan attachments are filtered by the current base object.
+   */
+  public function testGetAttachmentsForPlanFiltersByBaseObjectContext(): void {
+    $context_object = $this->createMock(BaseObjectInterface::class);
+    $allowed_attachment = $this->mockAttachmentForPlan(1001, 1158);
+    $blocked_attachment = $this->mockAttachmentForPlan(1002, 1158, 'Indicator');
+    $allowed_attachment->expects($this->once())
+      ->method('belongsToBaseObject')
+      ->with($context_object)
+      ->willReturn(TRUE);
+    $blocked_attachment->expects($this->never())
+      ->method('belongsToBaseObject');
+
+    $object_store = new ObjectStore();
+    $object_store->addObjectCollection([
+      $allowed_attachment,
+      $blocked_attachment,
+    ], Attachment::getObjectStorageKey(), 'PlanId');
+
+    $attachment_query = new AttachmentQuery([], 'attachment', []);
+    $this->setPrivateProperty($attachment_query, 'objectStore', $object_store);
+
+    $attachments = $attachment_query->getAttachmentsForPlan(1158, $context_object, [
+      'AttachmentType' => 'Caseload',
+    ]);
+
+    $this->assertSame([1001], array_keys($attachments));
+    $this->assertSame($allowed_attachment, reset($attachments));
+  }
+
+  /**
+   * Tests that cluster context filtering preloads plan entity hierarchies.
+   */
+  public function testGetAttachmentsForPlanPreloadsClusterHierarchy(): void {
+    $context_object = $this->createMock(GoverningEntity::class);
+    $attachment = $this->mockAttachmentForPlan(1001, 1158, 'Indicator', PlanEntityInterface::ENTITY_TYPE_PLAN_ENTITY);
+    $attachment->expects($this->once())
+      ->method('belongsToBaseObject')
+      ->with($context_object)
+      ->willReturn(TRUE);
+
+    $entity_query = $this->createMock(EntityQuery::class);
+    $entity_query->expects($this->once())
+      ->method('getEntitiesForPlan')
+      ->with(1158);
+    $queries = &drupal_static('getQueryInstance', []);
+    $queries['entity'] = $entity_query;
+
+    $object_store = new ObjectStore();
+    $object_store->addObjectCollection([
+      $attachment,
+    ], Attachment::getObjectStorageKey(), 'PlanId');
+
+    $attachment_query = new AttachmentQuery([], 'attachment', []);
+    $this->setPrivateProperty($attachment_query, 'objectStore', $object_store);
+
+    $attachments = $attachment_query->getAttachmentsForPlan(1158, $context_object);
+
+    $this->assertSame([1001], array_keys($attachments));
+  }
 
   /**
    * Tests that mappable data availability uses map-specific aggregate filters.
@@ -328,6 +412,40 @@ class AttachmentQueryTest extends UnitTestCase {
       'IsTotal' => TRUE,
       'ValueNum' => 0,
     ]);
+  }
+
+  /**
+   * Mock an attachment belonging to the given plan.
+   *
+   * @param int $attachment_id
+   *   The attachment id.
+   * @param int $plan_id
+   *   The plan id.
+   * @param string $attachment_type
+   *   The attachment type.
+   * @param string $source_entity_type
+   *   The source entity type.
+   *
+   * @return \Drupal\ghi_plans\ApiObjects\Attachments\Attachment
+   *   The mocked attachment.
+   */
+  private function mockAttachmentForPlan(int $attachment_id, int $plan_id, string $attachment_type = 'Caseload', string $source_entity_type = PlanEntityInterface::ENTITY_TYPE_PLAN): Attachment {
+    $attachment = $this->getMockBuilder(Attachment::class)
+      ->disableOriginalConstructor()
+      ->onlyMethods(['id', 'getRawData', 'getSourceEntityType', 'belongsToBaseObject'])
+      ->getMock();
+    $attachment->method('id')->willReturn($attachment_id);
+    $attachment->method('getSourceEntityType')->willReturn($source_entity_type);
+    $attachment->method('getRawData')->willReturn((object) [
+      'Id' => $attachment_id,
+      'Name' => 'Attachment ' . $attachment_id,
+      'PlanId' => $plan_id,
+      'EntityId' => $plan_id,
+      'EntityTypeId' => 1,
+      'EntityMainType' => 'Plan',
+      'AttachmentType' => $attachment_type,
+    ]);
+    return $attachment;
   }
 
 }

@@ -36,60 +36,134 @@ class ArrayHelper {
    * @return array
    *   The filtered array.
    */
-  public static function filterArray(array $array, array $filters) {
-    $filtered_array = [];
-    foreach ($array as $i => $item) {
-      $found = TRUE;
+  public static function filterArray(array $array, array $filters): array {
+    return array_values(array_filter($array, fn ($item) => self::filterItemMatches($item, $filters)));
+  }
 
-      foreach ($filters as $filter => $value) {
-        if (is_object($item) && method_exists($item, $filter)) {
-          $values = $item->$filter();
-          if (is_scalar($values) && $values == $value) {
-            $filtered_array[] = $item;
-          }
-          elseif (is_array($values) && in_array($value, $values)) {
-            $filtered_array[] = $item;
-          }
-          continue;
-        }
-        $properties = explode('.', $filter);
-        $obj = (object) $item;
-
-        foreach ($properties as $i => $p) {
-          if (count($properties) == ($i + 1) && !is_array($value) && ($obj->{$p} ?? NULL) != $value) {
-            $found = FALSE;
-          }
-          elseif (count($properties) == ($i + 1) && is_array($value) && !in_array(($obj->{$p} ?? NULL), $value)) {
-            $found = FALSE;
-          }
-
-          if (count($properties) > ($i + 1)) {
-            if (is_object($obj)) {
-              if (isset($obj->{$p})) {
-                $obj = $obj->{$p};
-              }
-              else {
-                $found = FALSE;
-              }
-            }
-            elseif (is_array($obj)) {
-              if (array_key_exists($p, $obj)) {
-                $obj = $obj[$p];
-              }
-              else {
-                $found = FALSE;
-              }
-            }
-          }
-        }
+  /**
+   * Check if an item matches all filters.
+   *
+   * @param mixed $item
+   *   The item to inspect.
+   * @param array $filters
+   *   An array with the filters to apply.
+   *
+   * @return bool
+   *   TRUE if the item matches all filters, FALSE otherwise.
+   */
+  private static function filterItemMatches($item, array $filters): bool {
+    foreach ($filters as $filter => $value) {
+      if (!self::filterItemValueMatches($item, $filter, $value)) {
+        return FALSE;
       }
-
-      if ($found == TRUE) {
-        $filtered_array[] = $item;
-      }
-      $found = FALSE;
     }
-    return $filtered_array;
+    return TRUE;
+  }
+
+  /**
+   * Check if an item matches a filter.
+   *
+   * @param mixed $item
+   *   The item to inspect.
+   * @param string $filter
+   *   The filter method or property path.
+   * @param mixed $value
+   *   The filter value.
+   *
+   * @return bool
+   *   TRUE if the item matches the filter, FALSE otherwise.
+   */
+  private static function filterItemValueMatches($item, string $filter, $value): bool {
+    if (is_object($item) && method_exists($item, $filter)) {
+      return self::filterValueMatches($item->$filter(), $value);
+    }
+
+    $found = TRUE;
+    $property_value = self::getPropertyPathValue($item, explode('.', $filter), $found);
+    return $found && self::filterPropertyValueMatches($property_value, $value);
+  }
+
+  /**
+   * Get a property-path value from an item.
+   *
+   * @param mixed $item
+   *   The item to inspect.
+   * @param array $properties
+   *   The property path segments.
+   * @param bool $found
+   *   Whether the property path could be traversed.
+   *
+   * @return mixed
+   *   The value at the end of the path, or NULL if not found.
+   */
+  private static function getPropertyPathValue($item, array $properties, bool &$found) {
+    $obj = (object) $item;
+    $last_index = count($properties) - 1;
+
+    foreach ($properties as $i => $property) {
+      if ($i == $last_index) {
+        return $obj->{$property} ?? NULL;
+      }
+
+      if (is_object($obj)) {
+        if (!isset($obj->{$property})) {
+          $found = FALSE;
+          return NULL;
+        }
+        $obj = $obj->{$property};
+      }
+      elseif (is_array($obj)) {
+        if (!array_key_exists($property, $obj)) {
+          $found = FALSE;
+          return NULL;
+        }
+        $obj = $obj[$property];
+      }
+    }
+
+    return NULL;
+  }
+
+  /**
+   * Check if a property-path value matches the filter value.
+   *
+   * Property filters historically treat an array filter as a list of allowed
+   * complete property values, not as a request to overlap nested arrays.
+   *
+   * @param mixed $values
+   *   The property value.
+   * @param mixed $filter_value
+   *   The filter value.
+   *
+   * @return bool
+   *   TRUE if the property value matches the filter value, FALSE otherwise.
+   */
+  private static function filterPropertyValueMatches($values, $filter_value): bool {
+    return is_array($filter_value) ? in_array($values, $filter_value) : $values == $filter_value;
+  }
+
+  /**
+   * Check if a value returned from an item matches the filter value.
+   *
+   * @param mixed $values
+   *   The value returned by the item.
+   * @param mixed $filter_value
+   *   The filter value.
+   *
+   * @return bool
+   *   TRUE if the returned value matches the filter value, FALSE otherwise.
+   */
+  private static function filterValueMatches($values, $filter_value): bool {
+    if (is_array($values) && is_array($filter_value)) {
+      return !empty(array_intersect($values, $filter_value));
+    }
+    if (is_array($values)) {
+      return in_array($filter_value, $values);
+    }
+    if (is_array($filter_value)) {
+      return in_array($values, $filter_value);
+    }
+    return $values == $filter_value;
   }
 
   /**

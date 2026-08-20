@@ -13,6 +13,7 @@ use Drupal\ghi_blocks\Traits\PlanFootnoteTrait;
 use Drupal\ghi_form_elements\Attribute\ConfigurationContainerItem;
 use Drupal\ghi_form_elements\ConfigurationContainerItemPluginBase;
 use Drupal\ghi_plans\ApiObjects\Attachments\CostAttachment;
+use Drupal\ghi_plans\ApiObjects\PlanEntityInterface;
 use Drupal\ghi_plans\Entity\GoverningEntity;
 use Drupal\ghi_plans\Entity\Plan;
 use Drupal\ghi_plans\Traits\FtsLinkTrait;
@@ -377,11 +378,11 @@ class FundingData extends ConfigurationContainerItemPluginBase {
     }
     switch ($property) {
       case 'current_requirements':
-        $value = $this->getRequirements('governingEntity', $cluster_id);
+        $value = $this->getRequirements(PlanEntityInterface::ENTITY_TYPE_GOVERNING_ENTITY, $cluster_id);
         break;
 
       case 'original_requirements':
-        $value = $this->getOriginalRequirements('governingEntity', $cluster_id);
+        $value = $this->getOriginalRequirements(PlanEntityInterface::ENTITY_TYPE_GOVERNING_ENTITY, $cluster_id);
         break;
 
       case 'total_funding':
@@ -389,12 +390,12 @@ class FundingData extends ConfigurationContainerItemPluginBase {
         break;
 
       case 'funding_gap':
-        $requirements = $this->getRequirements('governingEntity', $cluster_id);
+        $requirements = $this->getRequirements(PlanEntityInterface::ENTITY_TYPE_GOVERNING_ENTITY, $cluster_id);
         $value = $this->flowSearchQuery->getClusterFundingGap($cluster_id, $requirements);
         break;
 
       case 'funding_coverage':
-        $requirements = $this->getRequirements('governingEntity', $cluster_id);
+        $requirements = $this->getRequirements(PlanEntityInterface::ENTITY_TYPE_GOVERNING_ENTITY, $cluster_id);
         $value = $this->flowSearchQuery->getClusterFundingCoverage($cluster_id, $requirements);
         break;
 
@@ -439,7 +440,7 @@ class FundingData extends ConfigurationContainerItemPluginBase {
       return $values[$plan_id][$cluster_restrict_cache_key][$property];
     }
     if ($property == 'current_requirements') {
-      $attachments = $this->attachmentQuery->getAttachmentsByObject('governingEntity', $cluster_ids, 'cost');
+      $attachments = $this->attachmentQuery->getAttachmentsByObject(PlanEntityInterface::ENTITY_TYPE_GOVERNING_ENTITY, $cluster_ids, 'cost');
       /** @var \Drupal\ghi_plans\ApiObjects\Attachments\CostAttachment[] $attachments */
       $attachments = array_filter($attachments, fn (CostAttachment $attachment): bool => $attachment instanceof CostAttachment);
       $value = array_sum(array_map(

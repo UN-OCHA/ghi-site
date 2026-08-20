@@ -4,6 +4,7 @@ namespace Drupal\ghi_plans\Helpers;
 
 use Drupal\ghi_plans\ApiObjects\Entities\GoverningEntity;
 use Drupal\ghi_plans\ApiObjects\Entities\PlanEntity;
+use Drupal\ghi_plans\ApiObjects\PlanEntityInterface;
 use Drupal\ghi_plans\ApiObjects\Prototypes\EntityPrototype;
 use Drupal\ghi_plans\Traits\PlanQueryTrait;
 use Drupal\hpc_common\Helpers\ArrayHelper;
@@ -92,7 +93,7 @@ class PlanEntityHelper {
    *   The plan entity object or NULL.
    */
   public static function getPlanEntity($entity_id, $version_argument = 'current'): ?PlanEntity {
-    $entity = self::getEntityQuery()?->getEntity('planEntity', $entity_id) ?? NULL;
+    $entity = self::getEntityQuery()?->getEntity(PlanEntityInterface::ENTITY_TYPE_PLAN_ENTITY, $entity_id) ?? NULL;
     return $entity instanceof PlanEntity ? $entity : NULL;
   }
 
@@ -108,7 +109,7 @@ class PlanEntityHelper {
    *   The governing entity object or NULL.
    */
   public static function getGoverningEntity($entity_id, $version_argument = 'current'): ?GoverningEntity {
-    $entity = self::getEntityQuery()?->getEntity('governingEntity', $entity_id) ?? NULL;
+    $entity = self::getEntityQuery()?->getEntity(PlanEntityInterface::ENTITY_TYPE_GOVERNING_ENTITY, $entity_id) ?? NULL;
     return $entity instanceof GoverningEntity ? $entity : NULL;
   }
 
@@ -139,9 +140,9 @@ class PlanEntityHelper {
    */
   public static function checkObjectType($type) {
     $known_types = [
-      'Plan' => 'plan',
-      'LogframeEntity' => 'planEntity',
-      'CoordinationEntity' => 'governingEntity',
+      'Plan' => PlanEntityInterface::ENTITY_TYPE_PLAN,
+      'LogframeEntity' => PlanEntityInterface::ENTITY_TYPE_PLAN_ENTITY,
+      'CoordinationEntity' => PlanEntityInterface::ENTITY_TYPE_GOVERNING_ENTITY,
     ];
     return $known_types[$type] ?? (in_array($type, $known_types) ? $type : NULL);
   }

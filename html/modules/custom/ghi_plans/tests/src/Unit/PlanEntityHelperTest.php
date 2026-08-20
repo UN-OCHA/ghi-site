@@ -3,6 +3,7 @@
 namespace Drupal\Tests\ghi_plans\Unit;
 
 use Drupal\Tests\UnitTestCase;
+use Drupal\ghi_plans\ApiObjects\PlanEntityInterface;
 use Drupal\ghi_plans\Helpers\PlanEntityHelper;
 
 /**
@@ -15,11 +16,11 @@ class PlanEntityHelperTest extends UnitTestCase {
    */
   public function checkObjectTypeDataProvider() {
     return [
-      ['Plan', 'plan'],
-      ['LogframeEntity', 'planEntity'],
-      ['CoordinationEntity', 'governingEntity'],
+      ['Plan', PlanEntityInterface::ENTITY_TYPE_PLAN],
+      ['LogframeEntity', PlanEntityInterface::ENTITY_TYPE_PLAN_ENTITY],
+      ['CoordinationEntity', PlanEntityInterface::ENTITY_TYPE_GOVERNING_ENTITY],
       ['UnknownType', NULL],
-      ['governingEntity', 'governingEntity'],
+      [PlanEntityInterface::ENTITY_TYPE_GOVERNING_ENTITY, PlanEntityInterface::ENTITY_TYPE_GOVERNING_ENTITY],
     ];
   }
 

@@ -34,10 +34,10 @@ class EntityQuery extends FabricQueryBase {
    */
   public function getEntity(string $entity_type, int $entity_id): ?PlanEntityInterface {
     switch ($entity_type) {
-      case 'governingEntity':
+      case PlanEntityInterface::ENTITY_TYPE_GOVERNING_ENTITY:
         return $this->getGoverningEntityQuery()->getGoverningEntity($entity_id);
 
-      case 'planEntity':
+      case PlanEntityInterface::ENTITY_TYPE_PLAN_ENTITY:
         return $this->getPlanEntityQuery()->getPlanEntity($entity_id);
     }
 
@@ -57,10 +57,10 @@ class EntityQuery extends FabricQueryBase {
    */
   public function getEntities(string $entity_type, array $entity_ids): array {
     switch ($entity_type) {
-      case 'governingEntity':
+      case PlanEntityInterface::ENTITY_TYPE_GOVERNING_ENTITY:
         return $this->getGoverningEntityQuery()->getGoverningEntitiesById($entity_ids);
 
-      case 'planEntity':
+      case PlanEntityInterface::ENTITY_TYPE_PLAN_ENTITY:
         return $this->getPlanEntityQuery()->getPlanEntitiesById($entity_ids);
     }
 
