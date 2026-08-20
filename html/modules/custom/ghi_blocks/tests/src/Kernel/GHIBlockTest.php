@@ -108,6 +108,24 @@ class GHIBlockTest extends BlockKernelTestBase {
   }
 
   /**
+   * Tests the defaults for a block without metadata.
+   */
+  public function testBlockPropertiesWithoutMetadata() {
+    $plugin = $this->createBlockPlugin('ghi_blocks_current_uri_test', []);
+
+    $this->assertNull($plugin->metadata());
+    $this->assertTrue($plugin->shouldDisplayTitle());
+    $this->assertFalse($plugin->hasDefaultTitle());
+    $this->assertNull($plugin->getDefaultTitle());
+
+    drupal_static_reset(GHIBlockBase::class . '::getSubforms');
+    $subforms = $plugin->getSubforms();
+    $this->assertCount(1, $subforms);
+    $this->assertArrayHasKey('basic', $subforms);
+    $this->assertSame('getConfigForm', $subforms['basic']['callback']);
+  }
+
+  /**
    * Tests basic block properties on the example of a  links block.
    */
   public function testBlockPropertiesLinks() {

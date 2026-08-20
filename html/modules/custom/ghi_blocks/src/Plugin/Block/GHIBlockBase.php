@@ -313,7 +313,7 @@ abstract class GHIBlockBase extends HPCBlockBase implements TrustedCallbackInter
    *   TRUE if a title can be shown, FALSE otherwise.
    */
   public function shouldDisplayTitle() {
-    return static::metadata()->usesTitle ?? TRUE;
+    return static::metadata()?->usesTitle ?? TRUE;
   }
 
   /**
@@ -340,7 +340,7 @@ abstract class GHIBlockBase extends HPCBlockBase implements TrustedCallbackInter
    *   The default title if one is set in the plugins metadata.
    */
   public function getDefaultTitle() {
-    return static::metadata()->defaultTitle ?: NULL;
+    return static::metadata()?->defaultTitle ?: NULL;
   }
 
   /**
@@ -999,7 +999,7 @@ abstract class GHIBlockBase extends HPCBlockBase implements TrustedCallbackInter
   public function getSubforms() {
     $subforms = &drupal_static(__FUNCTION__, NULL);
     if ($subforms === NULL) {
-      $plugin_subforms = static::metadata()->configForms ?: [
+      $plugin_subforms = static::metadata()?->configForms ?: [
         self::DEFAULT_FORM_KEY => [
           'title' => $this->t('Configuration'),
           'callback' => 'getConfigForm',
