@@ -403,6 +403,16 @@ class PlanEntityAttachmentsTable extends GHIBlockBase implements ConfigurableTab
   /**
    * {@inheritdoc}
    */
+  public function canShowSubform(array $form, FormStateInterface $form_state, $subform_key) {
+    if (empty($this->getSelectedAttachments())) {
+      return $subform_key == 'attachments';
+    }
+    return TRUE;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function getDefaultSubform($is_new = FALSE) {
     $conf = $this->getBlockConfig();
     if (empty($conf['attachments']['entity_attachments']['attachments']['attachment_id'])) {

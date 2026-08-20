@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\ghi_blocks\Kernel\Plan;
 
+use Drupal\Core\Form\FormState;
 use Drupal\ghi_blocks\Interfaces\AttachmentTableInterface;
 use Drupal\ghi_blocks\Interfaces\ConfigurableTableBlockInterface;
 use Drupal\ghi_blocks\Interfaces\MultiStepFormBlockInterface;
@@ -100,6 +101,38 @@ class PlanEntityAttachmentsTableTest extends PlanBlockKernelTestBase {
     $plugin = $this->getBlockPlugin();
     $default_subform = $plugin->getDefaultSubform();
     $this->assertEquals('attachments', $default_subform);
+  }
+
+  /**
+   * Tests that table configuration requires a selected attachment.
+   */
+  public function testSubformAccessRequiresAttachments() {
+    $form_state = new FormState();
+    $plugin = $this->getBlockPlugin();
+
+    $this->assertTrue($plugin->canShowSubform([], $form_state, 'attachments'));
+    $this->assertFalse($plugin->canShowSubform([], $form_state, 'table'));
+    $this->assertFalse($plugin->canShowSubform([], $form_state, 'display'));
+
+    $source_entity = $this->mockSourceEntity(21388);
+    $attachment = $this->mockAttachmentWithSourceEntity(38544, $source_entity);
+    $attachment_query = $this->prophesize(AttachmentQuery::class);
+    $attachment_query->getAttachmentsById([38544])->willReturn([$attachment]);
+
+    $plugin = $this->getBlockPlugin([
+      'attachments' => [
+        'entity_attachments' => [
+          'attachments' => [
+            'attachment_id' => [38544],
+          ],
+        ],
+      ],
+    ]);
+    $plugin->setQueryHandler('attachment', $attachment_query->reveal());
+
+    $this->assertTrue($plugin->canShowSubform([], $form_state, 'attachments'));
+    $this->assertTrue($plugin->canShowSubform([], $form_state, 'table'));
+    $this->assertTrue($plugin->canShowSubform([], $form_state, 'display'));
   }
 
   /**
