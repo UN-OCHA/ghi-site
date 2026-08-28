@@ -704,21 +704,10 @@ class FabricClient {
       return FALSE;
     }
 
-    // Now handle the JSON response, extract the data.
-    $data = NULL;
+    // Parse the complete GraphQL envelope so partial responses are not
+    // mistaken for successful requests and persisted over known-good data.
     try {
-      $data = Items::fromString($body, ['pointer' => '/data']);
-      if ($data === NULL) {
-        // Malformed JSON or other reason that the decoding has failed.
-        $this->logError("GraphQL returned malformed JSON for query: @query", [
-          '@status_code' => $response->getStatusCode(),
-          '@query' => $query,
-        ], $error);
-        return FALSE;
-      }
-
-      // Cast into an object and store in cache.
-      $data = (object) iterator_to_array($data);
+      $result = (object) iterator_to_array(Items::fromString($body));
     }
     catch (JsonMachineException $e) {
       $error = $body;
@@ -730,8 +719,23 @@ class FabricClient {
       return FALSE;
     }
 
+    if (!empty($result->errors)) {
+      $this->logError("GraphQL returned errors for query @query: @errors", [
+        '@query' => $query,
+        '@errors' => Json::encode($result->errors),
+      ], $error);
+      return FALSE;
+    }
+
+    if (!property_exists($result, 'data') || $result->data === NULL) {
+      $this->logError("GraphQL response does not contain data for query: @query", [
+        '@query' => $query,
+      ], $error);
+      return FALSE;
+    }
+
     // @todo Support sorting?
-    return $data;
+    return $result->data;
   }
 
   /**

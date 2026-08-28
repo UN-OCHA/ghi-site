@@ -2,14 +2,16 @@
 
 namespace Drupal\Tests\hpc_api\Unit;
 
-use Drupal\Core\Logger\LoggerChannelFactoryInterface;
-use Drupal\Core\PageCache\ResponsePolicy\KillSwitch;
+use Drupal\Component\Serialization\Json;
 use Drupal\Core\DependencyInjection\ContainerBuilder;
-use Drupal\Tests\UnitTestCase;
+use Drupal\Core\Logger\LoggerChannelFactoryInterface;
+use Drupal\Core\Logger\LoggerChannelInterface;
+use Drupal\Core\PageCache\ResponsePolicy\KillSwitch;
 use Drupal\hpc_api\Query\FabricClient;
 use Drupal\hpc_api\Query\FabricQuery;
 use Drupal\hpc_remote_data_cache\RemoteDataCacheInterface;
 use Drupal\hpc_remote_data_cache\RemoteDataCacheItem;
+use Drupal\Tests\UnitTestCase;
 use GuzzleHttp\Client;
 use GuzzleHttp\ClientInterface;
 use GuzzleHttp\Psr7\Response;
@@ -156,6 +158,51 @@ class FabricClientTest extends UnitTestCase {
   }
 
   /**
+   * Test that partial GraphQL data does not replace an expired cache item.
+   */
+  public function testGraphQlErrorsFallBackToExpiredRemoteData(): void {
+    $payload = (object) [
+      'plans' => (object) [
+        'items' => [
+          (object) ['Id' => 1],
+        ],
+      ],
+    ];
+    $item = $this->createRemoteDataCacheItem($payload, 1700, 1200, 1600);
+    $remote_cache = $this->mockRemoteDataCache($item);
+    $remote_cache->canServeExpiredOnError()->willReturn(TRUE);
+    $remote_cache->set(Argument::cetera())->shouldNotBeCalled();
+
+    $http_client = new class() extends Client {
+
+      /**
+       * {@inheritdoc}
+       */
+      public function post($uri, array $options = []): ResponseInterface {
+        return new Response(200, [], Json::encode([
+          'data' => [
+            'plans' => NULL,
+          ],
+          'errors' => [
+            [
+              'message' => 'The plans resolver failed.',
+              'path' => ['plans'],
+            ],
+          ],
+        ]));
+      }
+
+    };
+
+    $client = $this->createFabricClientWithAccessToken($http_client, $remote_cache->reveal());
+    $error = NULL;
+
+    $this->assertSame($payload, $client->query('plans { items { Id } }', $error));
+    $this->assertStringContainsString('GraphQL returned errors', $error);
+    $this->assertStringContainsString('The plans resolver failed.', $error);
+  }
+
+  /**
    * Create a Fabric client under test.
    *
    * @param \GuzzleHttp\ClientInterface $http_client
@@ -208,9 +255,13 @@ class FabricClientTest extends UnitTestCase {
       ],
     ]);
 
+    $logger = $this->prophesize(LoggerChannelInterface::class);
+    $logger_factory = $this->prophesize(LoggerChannelFactoryInterface::class);
+    $logger_factory->get(Argument::any())->willReturn($logger->reveal());
+
     return new class(
       $config_factory,
-      $this->prophesize(LoggerChannelFactoryInterface::class)->reveal(),
+      $logger_factory->reveal(),
       $this->prophesize(KillSwitch::class)->reveal(),
       $http_client,
       $remote_cache,
