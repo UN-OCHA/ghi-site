@@ -17,6 +17,7 @@ use Drupal\ghi_plans\Entity\Plan;
 use Drupal\ghi_plans\Traits\FtsLinkTrait;
 use Drupal\ghi_plans\Traits\PlanQueryTrait;
 use Drupal\hpc_common\Helpers\ThemeHelper;
+use enshrined\svgSanitize\Sanitizer as SvgSanitizer;
 use GuzzleHttp\Exception\GuzzleException;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\Response;
@@ -53,6 +54,24 @@ class ProjectModalController extends ControllerBase {
    * Cache lifetime for fetched legacy project fragments and proxied assets.
    */
   private const LEGACY_PROJECT_RENDER_CACHE_MAX_AGE = 600;
+
+  /**
+   * Passive image types that the legacy asset proxy may serve inline.
+   *
+   * The response type is selected from this map after inspecting the response
+   * body; an upstream Content-Type header is never trusted.
+   */
+  private const LEGACY_PROJECT_ASSET_MIME_TYPES = [
+    'avif' => 'image/avif',
+    'bmp' => 'image/bmp',
+    'gif' => 'image/gif',
+    'ico' => 'image/vnd.microsoft.icon',
+    'jpeg' => 'image/jpeg',
+    'jpg' => 'image/jpeg',
+    'png' => 'image/png',
+    'svg' => 'image/svg+xml',
+    'webp' => 'image/webp',
+  ];
 
   /**
    * Legacy project tags that can be rendered safely inside the Drupal page.
@@ -730,8 +749,9 @@ class ProjectModalController extends ControllerBase {
    */
   public function buildLegacyProjectAsset(): Response {
     $asset_path = (string) $this->requestStack->getCurrentRequest()->query->get('path');
-    $asset_path = ltrim($asset_path, '/');
-    if ($asset_path === '') {
+    $asset_path = $this->normalizeLegacyProjectAssetPath('', $asset_path);
+    $expected_content_type = $asset_path !== NULL ? $this->getLegacyProjectAssetContentType($asset_path) : NULL;
+    if ($expected_content_type === NULL) {
       return new Response('', Response::HTTP_NOT_FOUND);
     }
 
@@ -742,6 +762,7 @@ class ProjectModalController extends ControllerBase {
 
     try {
       $asset_response = $this->httpClient->get($legacy_asset_url, [
+        'allow_redirects' => FALSE,
         'http_errors' => FALSE,
         'timeout' => 10,
       ]);
@@ -755,12 +776,86 @@ class ProjectModalController extends ControllerBase {
     }
 
     $content = (string) $asset_response->getBody();
-    $response = new Response($content);
-    if ($content_type = $asset_response->getHeaderLine('Content-Type')) {
-      $response->headers->set('Content-Type', $content_type);
+    if ($expected_content_type === 'image/svg+xml') {
+      $content = $this->sanitizeLegacyProjectSvg($content);
+      if ($content === NULL) {
+        return new Response('', Response::HTTP_NOT_FOUND);
+      }
     }
+    else {
+      $image_info = getimagesizefromstring($content);
+      if (($image_info['mime'] ?? NULL) !== $expected_content_type) {
+        return new Response('', Response::HTTP_NOT_FOUND);
+      }
+    }
+
+    $response = new Response($content);
+    $response->headers->set('Content-Type', $expected_content_type);
     $response->headers->set('Cache-Control', 'public, max-age=' . self::LEGACY_PROJECT_RENDER_CACHE_MAX_AGE);
+    $response->headers->set('Content-Security-Policy', "default-src 'none'; style-src 'unsafe-inline'; sandbox");
+    $response->headers->set('Cross-Origin-Resource-Policy', 'same-origin');
+    $response->headers->set('X-Content-Type-Options', 'nosniff');
     return $response;
+  }
+
+  /**
+   * Get the expected MIME type for an allowed legacy project asset path.
+   *
+   * @param string $asset_path
+   *   The normalized asset path relative to the legacy project base URL.
+   *
+   * @return string|null
+   *   The expected MIME type, or NULL when the path must not be proxied.
+   */
+  private function getLegacyProjectAssetContentType(string $asset_path): ?string {
+    if ($asset_path !== 'favicon.ico' && !str_starts_with($asset_path, '_assets/')) {
+      return NULL;
+    }
+
+    $extension = strtolower(pathinfo($asset_path, PATHINFO_EXTENSION));
+    return self::LEGACY_PROJECT_ASSET_MIME_TYPES[$extension] ?? NULL;
+  }
+
+  /**
+   * Sanitize an SVG while preserving the passive project icon markup.
+   *
+   * @param string $content
+   *   The upstream SVG content.
+   *
+   * @return string|null
+   *   The sanitized SVG, or NULL when the content is invalid.
+   */
+  private function sanitizeLegacyProjectSvg(string $content): ?string {
+    $sanitizer = new SvgSanitizer();
+    $sanitizer->removeRemoteReferences(TRUE);
+    $sanitizer->removeXMLTag(TRUE);
+    $content = $sanitizer->sanitize($content);
+    if (!is_string($content) || $content === '') {
+      return NULL;
+    }
+
+    $document = new \DOMDocument();
+    $previous_errors = libxml_use_internal_errors(TRUE);
+    $loaded = $document->loadXML($content, LIBXML_NONET | LIBXML_NOERROR | LIBXML_NOWARNING);
+    libxml_clear_errors();
+    libxml_use_internal_errors($previous_errors);
+    if (!$loaded || strtolower($document->documentElement?->localName ?? '') !== 'svg') {
+      return NULL;
+    }
+
+    // SVG 2 permits remote resources through both href and xlink:href. The
+    // sanitizer blocks active protocols but allows HTTP URLs, so restrict both
+    // forms to same-document fragment references such as <use href="#icon">.
+    foreach ($document->getElementsByTagName('*') as $element) {
+      foreach (iterator_to_array($element->attributes) as $attribute) {
+        if (strtolower($attribute->localName) === 'href' && !str_starts_with(trim($attribute->value), '#')) {
+          $element->removeAttributeNode($attribute);
+        }
+      }
+    }
+
+    $content = $document->saveXML($document->documentElement);
+    return is_string($content) && $content !== '' ? $content : NULL;
   }
 
   /**

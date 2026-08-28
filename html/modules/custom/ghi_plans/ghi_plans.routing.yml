@@ -81,7 +81,7 @@ ghi_plans.project.legacy_asset:
   defaults:
     _controller: '\Drupal\ghi_plans\Controller\ProjectModalController::buildLegacyProjectAsset'
   requirements:
-    # Assets are proxied from the same public legacy project source.
+    # Only validated passive images are proxied from the legacy project source.
     _access: 'TRUE'
 ghi_plans.legacy_project_settings:
   path: '/admin/config/ghi/projects'
