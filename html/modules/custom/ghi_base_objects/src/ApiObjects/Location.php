@@ -51,9 +51,9 @@ class Location extends BaseObject implements GeoJsonLocationInterface {
   /**
    * The ISO3 code of the country.
    *
-   * @var string
+   * @var string|null
    */
-  protected string $countryIso3;
+  protected ?string $countryIso3;
 
   /**
    * The lat/lng coordinates.

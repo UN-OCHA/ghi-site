@@ -89,6 +89,21 @@ class LocationTest extends ApiBaseObjectTestBase {
   }
 
   /**
+   * Test a location with missing country ISO3 data.
+   */
+  public function testLocationWithoutCountryIso3(): void {
+    $raw_data = $this->createMockRawData([
+      'AdminLevel' => 0,
+      'ISO3' => NULL,
+      'CountryISO3' => NULL,
+    ]);
+
+    $location = new Location($raw_data);
+
+    $this->assertNull($location->getIso3());
+  }
+
+  /**
    * Test location UUID generation.
    */
   public function testLocationUuidGeneration(): void {
