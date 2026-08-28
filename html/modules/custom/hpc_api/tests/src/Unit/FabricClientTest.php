@@ -7,6 +7,7 @@ use Drupal\Core\PageCache\ResponsePolicy\KillSwitch;
 use Drupal\Core\DependencyInjection\ContainerBuilder;
 use Drupal\Tests\UnitTestCase;
 use Drupal\hpc_api\Query\FabricClient;
+use Drupal\hpc_api\Query\FabricQuery;
 use Drupal\hpc_remote_data_cache\RemoteDataCacheInterface;
 use Drupal\hpc_remote_data_cache\RemoteDataCacheItem;
 use GuzzleHttp\Client;
@@ -99,6 +100,28 @@ class FabricClientTest extends UnitTestCase {
 
     $this->assertSame(2, $http_client->requests[0]['options']['connect_timeout']);
     $this->assertSame(8, $http_client->requests[0]['options']['timeout']);
+  }
+
+  /**
+   * Test that failure on a later page fails the complete query.
+   */
+  public function testPaginatedQueryFailureReturnsFalse(): void {
+    $client = $this->mockFabricClientWithQueryResponses([
+      (object) [
+        'plans' => (object) [
+          'items' => [
+            (object) ['Id' => 1],
+          ],
+          'hasNextPage' => TRUE,
+          'endCursor' => 'next-page',
+        ],
+      ],
+      FALSE,
+    ]);
+
+    $query = $client->createQuery('plans', ['Id']);
+
+    $this->assertFalse($client->execute($query));
   }
 
   /**
@@ -198,6 +221,50 @@ class FabricClientTest extends UnitTestCase {
        */
       public function getAccessToken(): ?string {
         return 'token';
+      }
+
+    };
+  }
+
+  /**
+   * Mock a Fabric client with predefined query responses.
+   *
+   * @param array $responses
+   *   The responses to return in sequence.
+   *
+   * @return \Drupal\hpc_api\Query\FabricClient
+   *   The Fabric client test double.
+   */
+  private function mockFabricClientWithQueryResponses(array $responses): FabricClient {
+    $config_factory = $this->getConfigFactoryStub([
+      'fabric_graphql.settings' => [],
+    ]);
+    $logger_factory = $this->prophesize(LoggerChannelFactoryInterface::class)->reveal();
+    $kill_switch = $this->prophesize(KillSwitch::class)->reveal();
+    $http_client = $this->prophesize(ClientInterface::class)->reveal();
+
+    return new class($config_factory, $logger_factory, $kill_switch, $http_client, NULL, $responses) extends FabricClient {
+
+      /**
+       * The responses to return in sequence.
+       *
+       * @var array
+       */
+      private array $responses;
+
+      /**
+       * Constructs the test double.
+       */
+      public function __construct($config_factory, $logger_factory, $kill_switch, $http_client, $remote_data_cache, array $responses) {
+        parent::__construct($config_factory, $logger_factory, $kill_switch, $http_client, $remote_data_cache);
+        $this->responses = $responses;
+      }
+
+      /**
+       * {@inheritdoc}
+       */
+      public function query(string|FabricQuery $query, ?string &$error = NULL, array $cache_tags = []) {
+        return array_shift($this->responses);
       }
 
     };

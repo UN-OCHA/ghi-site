@@ -269,7 +269,11 @@ class FabricClient {
     $items = $this->getItems($data, $query_name, $key_property);
     if ($data->$query_name?->hasNextPage ?? FALSE && !empty($data->$query_name?->endCursor)) {
       $query->setAfter($data->$query_name?->endCursor);
-      $items += $this->execute($query, $key_property);
+      $next_items = $this->execute($query, $key_property);
+      if (!is_array($next_items)) {
+        return FALSE;
+      }
+      $items += $next_items;
       $this->paginated = TRUE;
     }
     return $items;
