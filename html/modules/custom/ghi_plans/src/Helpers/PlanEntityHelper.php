@@ -4,7 +4,9 @@ namespace Drupal\ghi_plans\Helpers;
 
 use Drupal\ghi_plans\ApiObjects\Entities\GoverningEntity;
 use Drupal\ghi_plans\ApiObjects\Entities\PlanEntity;
-use Drupal\hpc_api\Query\EndpointQuery;
+use Drupal\ghi_plans\ApiObjects\PlanEntityInterface;
+use Drupal\ghi_plans\ApiObjects\Prototypes\EntityPrototype;
+use Drupal\ghi_plans\Traits\PlanQueryTrait;
 use Drupal\hpc_common\Helpers\ArrayHelper;
 
 /**
@@ -13,6 +15,8 @@ use Drupal\hpc_common\Helpers\ArrayHelper;
  * @phpcs:disable DrupalPractice.FunctionCalls.InsecureUnserialize
  */
 class PlanEntityHelper {
+
+  use PlanQueryTrait;
 
   /**
    * Instantiate a plan entity object.
@@ -24,10 +28,10 @@ class PlanEntityHelper {
    *   An intantiated API entity object.
    */
   public static function getObject($entity) {
-    if (property_exists($entity, 'planEntityVersion')) {
+    if (property_exists($entity, 'CoordinationEntityId')) {
       return new PlanEntity($entity);
     }
-    if (property_exists($entity, 'governingEntityVersion')) {
+    if (!property_exists($entity, 'CoordinationEntityId')) {
       return new GoverningEntity($entity);
     }
     return NULL;
@@ -51,7 +55,7 @@ class PlanEntityHelper {
     foreach ($entites as $entity) {
       $objects[$entity->id] = self::getObject($entity);
     }
-    ArrayHelper::sortObjectsByStringProperty($objects, 'sort_key', EndpointQuery::SORT_ASC);
+    ArrayHelper::sortObjectsByStringProperty($objects, 'sort_key', SORT_ASC);
     return $objects;
   }
 
@@ -73,7 +77,7 @@ class PlanEntityHelper {
     foreach ($entites as $entity) {
       $objects[$entity->id] = self::getObject($entity);
     }
-    ArrayHelper::sortObjectsByStringProperty($objects, 'sort_key', EndpointQuery::SORT_ASC);
+    ArrayHelper::sortObjectsByStringProperty($objects, 'sort_key', SORT_ASC);
     return $objects;
   }
 
@@ -85,24 +89,12 @@ class PlanEntityHelper {
    * @param string $version_argument
    *   The plan version argument.
    *
-   * @return \Drupal\ghi_plans\ApiObjects\Entities\PlanEntity
-   *   The plan entity object.
+   * @return \Drupal\ghi_plans\ApiObjects\Entities\PlanEntity|null
+   *   The plan entity object or NULL.
    */
-  public static function getPlanEntity($entity_id, $version_argument = 'current') {
-    /** @var \Drupal\hpc_api\Query\EndpointQuery $query */
-    $query = clone \Drupal::service('hpc_api.endpoint_query');
-    $query->setArguments([
-      'endpoint' => 'planEntity/' . $entity_id,
-      'api_version' => 'v2',
-      'auth_method' => EndpointQuery::AUTH_METHOD_API_KEY,
-      'query_args' => [
-        'addPercentageOfTotalTarget' => 'true',
-        'disaggregation' => 'false',
-        'version' => $version_argument,
-      ],
-    ]);
-    $data = $query->getData();
-    return $data ? new PlanEntity($data) : NULL;
+  public static function getPlanEntity($entity_id, $version_argument = 'current'): ?PlanEntity {
+    $entity = self::getEntityQuery()?->getEntity(PlanEntityInterface::ENTITY_TYPE_PLAN_ENTITY, $entity_id) ?? NULL;
+    return $entity instanceof PlanEntity ? $entity : NULL;
   }
 
   /**
@@ -113,24 +105,12 @@ class PlanEntityHelper {
    * @param string $version_argument
    *   The plan version argument.
    *
-   * @return \Drupal\ghi_plans\ApiObjects\Entities\GoverningEntity
-   *   The governing entity object.
+   * @return \Drupal\ghi_plans\ApiObjects\Entities\GoverningEntity|null
+   *   The governing entity object or NULL.
    */
-  public static function getGoverningEntity($entity_id, $version_argument = 'current') {
-    /** @var \Drupal\hpc_api\Query\EndpointQuery $query */
-    $query = \Drupal::service('hpc_api.endpoint_query');
-    $query->setArguments([
-      'endpoint' => 'governingEntity/' . $entity_id,
-      'api_version' => 'v2',
-      'auth_method' => EndpointQuery::AUTH_METHOD_API_KEY,
-      'query_args' => [
-        'addPercentageOfTotalTarget' => 'true',
-        'disaggregation' => 'false',
-        'version' => $version_argument,
-      ],
-    ]);
-    $data = $query->getData();
-    return $data ? new GoverningEntity($data) : NULL;
+  public static function getGoverningEntity($entity_id, $version_argument = 'current'): ?GoverningEntity {
+    $entity = self::getEntityQuery()?->getEntity(PlanEntityInterface::ENTITY_TYPE_GOVERNING_ENTITY, $entity_id) ?? NULL;
+    return $entity instanceof GoverningEntity ? $entity : NULL;
   }
 
   /**
@@ -139,18 +119,11 @@ class PlanEntityHelper {
    * @param int $id
    *   The prototype id to retrieve.
    *
-   * @return object
-   *   The prototype object.
+   * @return \Drupal\ghi_plans\ApiObjects\Prototypes\EntityPrototype|null
+   *   The entity prototype object or NULL if not found.
    */
-  public static function getEntityPrototype($id) {
-    /** @var \Drupal\hpc_api\Query\EndpointQuery $query */
-    $query = \Drupal::service('hpc_api.endpoint_query');
-    $query->setArguments([
-      'endpoint' => 'plan/entity-prototype/' . $id,
-      'api_version' => 'v2',
-      'auth_method' => EndpointQuery::AUTH_METHOD_API_KEY,
-    ]);
-    return $query->getData();
+  public static function getEntityPrototype(int $id): ?EntityPrototype {
+    return self::getEntityPrototypeQuery()?->getPrototype($id) ?? NULL;
   }
 
   /**
@@ -167,9 +140,9 @@ class PlanEntityHelper {
    */
   public static function checkObjectType($type) {
     $known_types = [
-      'plans' => 'plan',
-      'planEntities' => 'planEntity',
-      'governingEntities' => 'governingEntity',
+      'Plan' => PlanEntityInterface::ENTITY_TYPE_PLAN,
+      'LogframeEntity' => PlanEntityInterface::ENTITY_TYPE_PLAN_ENTITY,
+      'CoordinationEntity' => PlanEntityInterface::ENTITY_TYPE_GOVERNING_ENTITY,
     ];
     return $known_types[$type] ?? (in_array($type, $known_types) ? $type : NULL);
   }

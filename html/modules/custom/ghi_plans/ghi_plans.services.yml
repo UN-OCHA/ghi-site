@@ -4,12 +4,15 @@ services:
     arguments: ['@entity_type.manager', '@entity_field.manager', '@module_handler', '@current_user']
   attachment_converter:
     class: Drupal\ghi_plans\ParamConverter\AttachmentConverter
-    arguments: ['@plugin.manager.endpoint_query_manager']
+    arguments: ['@plugin.manager.fabric_query_manager']
     tags:
       - { name: paramconverter }
     lazy: true
-  ghi_plans.endpoint_data_subscriber:
-    class: Drupal\ghi_plans\EventSubscriber\EndpointDataSubscriber
-    arguments: ['@plugin.manager.endpoint_query_manager']
+  metric_type_converter:
+    class: Drupal\ghi_plans\ParamConverter\MetricTypeConverter
+    arguments: ['@plugin.manager.fabric_query_manager']
     tags:
-      - { name: event_subscriber }
+      - { name: paramconverter }
+    lazy: true
+  ghi_plans.element.prepare_layout:
+    class: Drupal\ghi_plans\EventSubscriber\PrepareLayout

@@ -3,7 +3,7 @@
 namespace Drupal\ghi_plans\ParamConverter;
 
 use Drupal\Core\ParamConverter\ParamConverterInterface;
-use Drupal\hpc_api\Query\EndpointQueryManager;
+use Drupal\hpc_api\Query\FabricQueryManager;
 use Symfony\Component\Routing\Route;
 
 /**
@@ -14,18 +14,19 @@ class AttachmentConverter implements ParamConverterInterface {
   /**
    * The manager class for endpoint query plugins.
    *
-   * @var \Drupal\ghi_plans\Plugin\EndpointQuery\AttachmentQuery
+   * @var \Drupal\ghi_plans\Plugin\FabricQuery\AttachmentQuery
    */
   protected $attachmentQuery;
 
   /**
-   * Constructs a new LanguageConverter.
+   * Constructs a new AttachmentConverter.
    *
-   * @param \Drupal\hpc_api\Query\EndpointQueryManager $endpoint_query_manager
-   *   The language manager.
+   * @param \Drupal\hpc_api\Query\FabricQueryManager $fabric_query_manager
+   *   The query manager.
    */
-  public function __construct(EndpointQueryManager $endpoint_query_manager) {
-    $this->attachmentQuery = $endpoint_query_manager->createInstance('attachment_query');
+  public function __construct(FabricQueryManager $fabric_query_manager) {
+
+    $this->attachmentQuery = $fabric_query_manager->hasDefinition('attachment') ? $fabric_query_manager->createInstance('attachment') : NULL;
   }
 
   /**
@@ -33,7 +34,7 @@ class AttachmentConverter implements ParamConverterInterface {
    */
   public function convert($value, $definition, $name, array $defaults) {
     if (!empty($value)) {
-      return $this->attachmentQuery->getAttachment($value);
+      return $this->attachmentQuery?->getAttachment($value);
     }
     return NULL;
   }

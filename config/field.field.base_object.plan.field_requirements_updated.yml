@@ -1,0 +1,19 @@
+uuid: 03e9391f-68e7-4ad2-a054-9c9d1dd0393c
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.base_object.field_requirements_updated
+    - ghi_base_objects.base_object_type.plan
+id: base_object.plan.field_requirements_updated
+field_name: field_requirements_updated
+entity_type: base_object
+bundle: plan
+label: 'Requirements updated'
+description: 'The last time the requirements have been updated.'
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: timestamp

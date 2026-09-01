@@ -10,8 +10,11 @@ dependencies:
     - field.field.base_object.plan.field_focus_country
     - field.field.base_object.plan.field_focus_country_override
     - field.field.base_object.plan.field_footnotes
+    - field.field.base_object.plan.field_funding_overall
+    - field.field.base_object.plan.field_funding_total
     - field.field.base_object.plan.field_is_part_of_gho
     - field.field.base_object.plan.field_language
+    - field.field.base_object.plan.field_latest_published_period_id
     - field.field.base_object.plan.field_link_to_fts
     - field.field.base_object.plan.field_max_admin_level
     - field.field.base_object.plan.field_operations_category
@@ -23,9 +26,10 @@ dependencies:
     - field.field.base_object.plan.field_plan_date_range
     - field.field.base_object.plan.field_plan_document_link
     - field.field.base_object.plan.field_plan_type
-    - field.field.base_object.plan.field_plan_version_argument
-    - field.field.base_object.plan.field_plan_version_tag
     - field.field.base_object.plan.field_released
+    - field.field.base_object.plan.field_requirements
+    - field.field.base_object.plan.field_requirements_original
+    - field.field.base_object.plan.field_requirements_updated
     - field.field.base_object.plan.field_restricted
     - field.field.base_object.plan.field_short_name
     - field.field.base_object.plan.field_subtitle
@@ -38,8 +42,12 @@ dependencies:
     - geofield
     - ghi_base_objects
     - ghi_plans
+    - layout_builder_ipe
     - link
     - options
+third_party_settings:
+  layout_builder_ipe:
+    enabled: false
 id: base_object.plan.default
 targetEntityType: base_object
 bundle: plan
@@ -51,21 +59,21 @@ content:
     settings:
       link: true
     third_party_settings: {  }
-    weight: -1
+    weight: 3
     region: content
   field_decimal_format:
     type: list_default
     label: above
     settings: {  }
     third_party_settings: {  }
-    weight: 5
+    weight: 8
     region: content
   field_description:
     type: basic_string
     label: above
     settings: {  }
     third_party_settings: {  }
-    weight: 0
+    weight: 4
     region: content
   field_document_published_on:
     type: datetime_default
@@ -74,7 +82,7 @@ content:
       timezone_override: ''
       format_type: medium
     third_party_settings: {  }
-    weight: 22
+    weight: 21
     region: content
   field_focus_country:
     type: entity_reference_label
@@ -82,7 +90,7 @@ content:
     settings:
       link: true
     third_party_settings: {  }
-    weight: 25
+    weight: 24
     region: content
   field_focus_country_override:
     type: geofield_default
@@ -91,14 +99,36 @@ content:
       output_format: wkt
       output_escape: true
     third_party_settings: {  }
-    weight: 26
+    weight: 25
     region: content
   field_footnotes:
     type: ghi_footnotes
     label: above
     settings: {  }
     third_party_settings: {  }
-    weight: 10
+    weight: 12
+    region: content
+  field_funding_overall:
+    type: number_decimal
+    label: above
+    settings:
+      thousand_separator: ''
+      decimal_separator: .
+      scale: 2
+      prefix_suffix: true
+    third_party_settings: {  }
+    weight: 30
+    region: content
+  field_funding_total:
+    type: number_decimal
+    label: above
+    settings:
+      thousand_separator: ''
+      decimal_separator: .
+      scale: 2
+      prefix_suffix: true
+    third_party_settings: {  }
+    weight: 31
     region: content
   field_is_part_of_gho:
     type: boolean
@@ -108,14 +138,23 @@ content:
       format_custom_false: ''
       format_custom_true: ''
     third_party_settings: {  }
-    weight: 27
+    weight: 26
     region: content
   field_language:
     type: list_default
     label: above
     settings: {  }
     third_party_settings: {  }
-    weight: 19
+    weight: 18
+    region: content
+  field_latest_published_period_id:
+    type: number_integer
+    label: above
+    settings:
+      thousand_separator: ''
+      prefix_suffix: true
+    third_party_settings: {  }
+    weight: 27
     region: content
   field_link_to_fts:
     type: boolean
@@ -125,7 +164,7 @@ content:
       format_custom_false: ''
       format_custom_true: ''
     third_party_settings: {  }
-    weight: 14
+    weight: 15
     region: content
   field_max_admin_level:
     type: number_integer
@@ -134,7 +173,7 @@ content:
       thousand_separator: ''
       prefix_suffix: true
     third_party_settings: {  }
-    weight: 11
+    weight: 13
     region: content
   field_operations_category:
     type: entity_reference_label
@@ -142,7 +181,7 @@ content:
     settings:
       link: true
     third_party_settings: {  }
-    weight: 12
+    weight: 14
     region: content
   field_original_id:
     type: number_integer
@@ -151,21 +190,21 @@ content:
       thousand_separator: ''
       prefix_suffix: true
     third_party_settings: {  }
-    weight: -2
+    weight: 2
     region: content
   field_plan_caseload:
     type: ghi_plans_plan_caseload
     label: above
     settings: {  }
     third_party_settings: {  }
-    weight: 9
+    weight: 11
     region: content
   field_plan_cluster_type:
     type: list_default
     label: above
     settings: {  }
     third_party_settings: {  }
-    weight: 20
+    weight: 19
     region: content
   field_plan_coordinator:
     type: string
@@ -173,7 +212,7 @@ content:
     settings:
       link_to_entity: false
     third_party_settings: {  }
-    weight: 23
+    weight: 22
     region: content
   field_plan_costing:
     type: entity_reference_label
@@ -181,7 +220,7 @@ content:
     settings:
       link: true
     third_party_settings: {  }
-    weight: 2
+    weight: 5
     region: content
   field_plan_date_range:
     type: daterange_default
@@ -192,7 +231,7 @@ content:
       from_to: both
       separator: '-'
     third_party_settings: {  }
-    weight: 21
+    weight: 20
     region: content
   field_plan_document_link:
     type: link
@@ -204,28 +243,13 @@ content:
       rel: '0'
       target: _blank
     third_party_settings: {  }
-    weight: 8
+    weight: 10
     region: content
   field_plan_type:
     type: entity_reference_label
     label: above
     settings:
       link: true
-    third_party_settings: {  }
-    weight: -3
-    region: content
-  field_plan_version_argument:
-    type: list_default
-    label: above
-    settings: {  }
-    third_party_settings: {  }
-    weight: 16
-    region: content
-  field_plan_version_tag:
-    type: string
-    label: above
-    settings:
-      link_to_entity: false
     third_party_settings: {  }
     weight: 1
     region: content
@@ -237,7 +261,48 @@ content:
       format_custom_false: ''
       format_custom_true: ''
     third_party_settings: {  }
-    weight: 24
+    weight: 23
+    region: content
+  field_requirements:
+    type: number_decimal
+    label: above
+    settings:
+      thousand_separator: ''
+      decimal_separator: .
+      scale: 2
+      prefix_suffix: true
+    third_party_settings: {  }
+    weight: 28
+    region: content
+  field_requirements_original:
+    type: number_decimal
+    label: above
+    settings:
+      thousand_separator: ''
+      decimal_separator: .
+      scale: 2
+      prefix_suffix: true
+    third_party_settings: {  }
+    weight: 29
+    region: content
+  field_requirements_updated:
+    type: timestamp
+    label: above
+    settings:
+      date_format: medium
+      custom_date_format: ''
+      timezone: ''
+      tooltip:
+        date_format: long
+        custom_date_format: ''
+      time_diff:
+        enabled: false
+        future_format: '@interval hence'
+        past_format: '@interval ago'
+        granularity: 2
+        refresh: 60
+    third_party_settings: {  }
+    weight: 32
     region: content
   field_restricted:
     type: boolean
@@ -247,7 +312,7 @@ content:
       format_custom_false: ''
       format_custom_true: ''
     third_party_settings: {  }
-    weight: 4
+    weight: 7
     region: content
   field_short_name:
     type: string
@@ -255,7 +320,7 @@ content:
     settings:
       link_to_entity: false
     third_party_settings: {  }
-    weight: 6
+    weight: 9
     region: content
   field_subtitle:
     type: string
@@ -263,7 +328,7 @@ content:
     settings:
       link_to_entity: false
     third_party_settings: {  }
-    weight: 18
+    weight: 17
     region: content
   field_visible_on_global_pages:
     type: boolean
@@ -273,7 +338,7 @@ content:
       format_custom_false: ''
       format_custom_true: ''
     third_party_settings: {  }
-    weight: 15
+    weight: 16
     region: content
   field_year:
     type: number_integer
@@ -282,7 +347,7 @@ content:
       thousand_separator: ''
       prefix_suffix: true
     third_party_settings: {  }
-    weight: 3
+    weight: 6
     region: content
   name:
     type: string
@@ -290,7 +355,7 @@ content:
     settings:
       link_to_entity: false
     third_party_settings: {  }
-    weight: -4
+    weight: 0
     region: content
 hidden:
   langcode: true

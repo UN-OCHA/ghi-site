@@ -9,6 +9,7 @@ use Drupal\Core\Render\Element;
 use Drupal\Core\Render\Element\FormElementBase;
 use Drupal\ghi_form_elements\Traits\AjaxElementTrait;
 use Drupal\ghi_plans\Entity\GoverningEntity;
+use Drupal\ghi_plans\Traits\PlanQueryTrait;
 
 /**
  * Provides an attachment select element.
@@ -17,6 +18,7 @@ use Drupal\ghi_plans\Entity\GoverningEntity;
 class EntityAttachmentSelect extends FormElementBase {
 
   use AjaxElementTrait;
+  use PlanQueryTrait;
 
   /**
    * {@inheritdoc}
@@ -112,7 +114,7 @@ class EntityAttachmentSelect extends FormElementBase {
     // Remove invalid ids from the entity_ids passed in via #default_value.
     $context = $element['#element_context'];
     $plan_id = $context['plan_object']->get('field_original_id')->value;
-    $plan_entities = self::getPlanEntitiesQuery($plan_id)->getPlanEntities($context['base_object']) ?? [];
+    $plan_entities = self::getEntityQuery()->getEntitiesForPlan($plan_id, $context['base_object']) ?? [];
     $valid_entity_ids = array_merge([$plan_id], array_keys($plan_entities));
     $defaults['entities']['entity_ids'] = array_filter($defaults['entities']['entity_ids'] ?? [], function ($_entity_id) use ($valid_entity_ids) {
       return in_array($_entity_id, $valid_entity_ids);
@@ -251,31 +253,6 @@ class EntityAttachmentSelect extends FormElementBase {
     // occurred.
     static::setAttributes($element, ['form-entity-attachment-select']);
     return $element;
-  }
-
-  /**
-   * Get the endpoint query manager service.
-   *
-   * @return \Drupal\hpc_api\Query\EndpointQueryManager
-   *   The endpoint query manager service.
-   */
-  private static function getEndpointQueryManager() {
-    return \Drupal::service('plugin.manager.endpoint_query_manager');
-  }
-
-  /**
-   * Get the plan entities query service.
-   *
-   * @param int $plan_id
-   *   The plan id for which a query should be build.
-   *
-   * @return \Drupal\ghi_plans\Plugin\EndpointQuery\PlanEntitiesQuery
-   *   The plan entities query plugin.
-   */
-  public static function getPlanEntitiesQuery($plan_id) {
-    $query_handler = self::getEndpointQueryManager()->createInstance('plan_entities_query');
-    $query_handler->setPlaceholder('plan_id', $plan_id);
-    return $query_handler;
   }
 
 }

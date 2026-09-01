@@ -33,9 +33,8 @@ class DocumentLinksBlockTest extends BlockKernelTestBase {
     $this->assertArrayHasKey('item_group', $allowed_item_types);
     $this->assertArrayHasKey('document_link', $allowed_item_types);
 
-    $definition = $plugin->getPluginDefinition();
-    $this->assertArrayHasKey($plugin->getDefaultSubform(), $definition['config_forms']);
-    $this->assertArrayHasKey($plugin->getTitleSubform(), $definition['config_forms']);
+    $this->assertArrayHasKey($plugin->getDefaultSubform(), $plugin->metadata()->configForms);
+    $this->assertArrayHasKey($plugin->getTitleSubform(), $plugin->metadata()->configForms);
   }
 
   /**

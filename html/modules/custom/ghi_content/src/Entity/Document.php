@@ -11,6 +11,8 @@ use Drupal\ghi_content\RemoteContent\RemoteDocumentInterface;
  */
 class Document extends ContentBase {
 
+  public const BUNDLE = 'document';
+
   /**
    * {@inheritdoc}
    */

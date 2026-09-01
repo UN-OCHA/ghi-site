@@ -2,6 +2,7 @@
 
 namespace Drupal\hpc_common\EventSubscriber;
 
+use Drupal\hpc_common\Plugin\HPCBlockBase;
 use Drupal\layout_builder\Event\SectionComponentBuildRenderArrayEvent;
 use Drupal\layout_builder\LayoutBuilderEvents;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
@@ -41,9 +42,11 @@ class BlockComponentRenderArray implements EventSubscriberInterface {
     $block = $event->getPlugin();
 
     // Get the configuration and add the uuid of the component.
-    $block_config = $block->getConfiguration();
-    $block_config['uuid'] = $event->getComponent()->getUuid();
-    $block->setConfiguration($block_config);
+    if ($block instanceof HPCBlockBase) {
+      $block_config = $block->getConfiguration();
+      $block_config['uuid'] = $event->getComponent()->getUuid();
+      $block->setConfiguration($block_config);
+    }
   }
 
 }

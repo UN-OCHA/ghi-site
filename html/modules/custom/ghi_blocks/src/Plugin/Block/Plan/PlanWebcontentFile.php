@@ -2,50 +2,62 @@
 
 namespace Drupal\ghi_blocks\Plugin\Block\Plan;
 
+use Drupal\Core\Block\Attribute\Block;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Link;
-use Drupal\Core\Url;
+use Drupal\Core\Plugin\Context\EntityContextDefinition;
 use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\hpc_common\Plugin\HPCBlockMetadata;
 
 /**
  * Provides a 'PlanWebcontentFile' block.
- *
- * @Block(
- *  id = "plan_webcontent_file",
- *  admin_label = @Translation("Web Content File"),
- *  category = @Translation("Plan elements"),
- *  data_sources = {
- *    "entities" = "plan_entities_query",
- *    "attachment" = "attachment_query",
- *  },
- *  title = FALSE,
- *  context_definitions = {
- *    "node" = @ContextDefinition("entity:node", label = @Translation("Node")),
- *    "plan" = @ContextDefinition("entity:base_object", label = @Translation("Plan"), constraints = { "Bundle": "plan" }),
- *    "plan_cluster" = @ContextDefinition("entity:base_object", label = @Translation("Cluster"), constraints = { "Bundle": "governing_entity" }, required =  FALSE)
- *   }
- * )
  */
+#[Block(
+  id: 'plan_webcontent_file',
+  admin_label: new TranslatableMarkup('Web Content File'),
+  category: new TranslatableMarkup('Plan elements'),
+  context_definitions: [
+    'node' => new EntityContextDefinition('entity:node', new TranslatableMarkup('Node')),
+    'plan' => new EntityContextDefinition('entity:base_object', new TranslatableMarkup('Plan'), constraints: ['Bundle' => 'plan']),
+    'plan_cluster' => new EntityContextDefinition('entity:base_object', new TranslatableMarkup('Cluster'), required: FALSE, constraints: ['Bundle' => 'governing_entity']),
+  ]
+)]
 class PlanWebcontentFile extends GHIBlockBase {
 
   /**
    * {@inheritdoc}
    */
+  public static function metadata(): ?HPCBlockMetadata {
+    return new HPCBlockMetadata(
+      usesTitle: FALSE,
+      dataSources: [
+        'file_asset' => 'fabric_query:file_asset',
+      ]
+    );
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function buildContent() {
-    // Retrieve the attachments.
+    // Retrieve the file asset.
     $conf = $this->getBlockConfig();
-    if (empty($conf['attachment_id'])) {
+    $conf['file_asset_id'] = $conf['file_asset_id'] ?? ($conf['attachment_id'] ?? NULL);
+    if (empty($conf['file_asset_id'])) {
       return;
     }
 
-    /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\AttachmentQuery $query */
-    $query = $this->getQueryHandler('attachment');
-    /** @var \Drupal\ghi_plans\ApiObjects\Attachments\FileAttachment $attachment */
-    $attachment = $query->getAttachment($conf['attachment_id']);
+    /** @var \Drupal\hpc_api\Plugin\FabricQuery\FileAssetQuery $query */
+    $query = $this->getQueryHandler('file_asset');
+    $file_asset = $query?->getFileAsset($conf['file_asset_id']) ?? NULL;
+    if (!$file_asset) {
+      return NULL;
+    }
     return [
       '#theme' => 'ghi_image',
-      '#url' => $attachment->getUrl(),
-      '#credit' => $attachment->getCredit(),
+      '#url' => $file_asset->getUrl()->toString(),
+      '#credit' => $file_asset->getCredit(),
       '#style' => 'wide',
     ];
   }
@@ -58,7 +70,7 @@ class PlanWebcontentFile extends GHIBlockBase {
    */
   protected function getConfigurationDefaults() {
     return [
-      'attachment_id' => NULL,
+      'file_asset_id' => NULL,
     ];
   }
 
@@ -68,28 +80,31 @@ class PlanWebcontentFile extends GHIBlockBase {
   public function getConfigForm(array $form, FormStateInterface $form_state) {
     $options = [];
 
-    // Retrieve the attachments.
-    /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\PlanEntitiesQuery $query */
-    $query = $this->getQueryHandler('entities');
-    $attachments = $this->getCurrentPlanObject() ? $query->getWebContentFileAttachments($this->getCurrentPlanObject()) : NULL;
+    // Retrieve the file assets.
+    $plan = $this->getCurrentPlanObject();
+    /** @var \Drupal\hpc_api\Plugin\FabricQuery\FileAssetQuery $query */
+    $query = $this->getQueryHandler('file_asset');
+    $file_assets = $plan ? $query->getFileAssetsByObject($plan->bundle(), $plan->getSourceId()) : [];
 
-    if (!empty($attachments)) {
-      foreach ($attachments as $attachment) {
-        $options[$attachment->id] = [
-          'id' => $attachment->id,
-          'title' => $attachment->title,
-          'file_name' => $attachment->file_name,
-          'file_url' => Link::fromTextAndUrl($attachment->url, Url::fromUri($attachment->url, [
-            'external' => TRUE,
-            'attributes' => [
-              'target' => '_blank',
-            ],
-          ])),
+    if (!empty($file_assets)) {
+      foreach ($file_assets as $file_asset) {
+        $url = $file_asset->getUrl();
+        $url->setOptions([
+          'external' => TRUE,
+          'attributes' => [
+            'target' => '_blank',
+          ],
+        ]);
+        $options[$file_asset->id()] = [
+          'id' => $file_asset->id(),
+          'title' => $file_asset->getName(),
+          'file_name' => $file_asset->getName(),
+          'file_url' => Link::fromTextAndUrl($url->toString(), $url),
           'preview' => [
             'data' => [
               '#theme' => 'imagecache_external',
               '#style_name' => 'thumbnail',
-              '#uri' => $attachment->url,
+              '#uri' => $url->toString(),
             ],
           ],
         ];
@@ -97,22 +112,22 @@ class PlanWebcontentFile extends GHIBlockBase {
     }
 
     $table_header = [
-      'id' => $this->t('Attachment ID'),
+      'id' => $this->t('File asset ID'),
       'title' => $this->t('Title'),
       'file_name' => $this->t('File name'),
       'file_url' => $this->t('File URL'),
       'preview' => $this->t('Preview'),
     ];
 
-    $form['attachment_id'] = [
+    $form['file_asset_id'] = [
       '#type' => 'tableselect',
       '#tree' => TRUE,
       '#header' => $table_header,
       '#validated' => TRUE,
       '#options' => $options,
-      '#default_value' => $this->getDefaultFormValueFromFormState($form_state, 'attachment_id') ?? array_key_first($options),
+      '#default_value' => $this->getDefaultFormValueFromFormState($form_state, 'file_asset_id') ?? array_key_first($options),
       '#multiple' => FALSE,
-      '#empty' => $this->t('There are no file attachments yet.'),
+      '#empty' => $this->t('There are no file assets available in the current plan context.'),
       '#required' => TRUE,
     ];
     return $form;

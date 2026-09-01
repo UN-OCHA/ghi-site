@@ -131,6 +131,7 @@ class AjaxElementTraitTest extends UnitTestCase {
     $expected_element = [
       '#title_display' => 'invisible',
       '#attributes' => ['class' => ['visually-hidden']],
+      '#wrapper_attributes' => ['class' => ['visually-hidden']],
     ];
     $method->invokeArgs($class, [&$element]);
     $this->assertEquals($expected_element, $element);
@@ -140,12 +141,15 @@ class AjaxElementTraitTest extends UnitTestCase {
     ];
     $method->invokeArgs($class, [&$element]);
     $this->assertEquals(['visually-hidden'], $element['#attributes']['class']);
+    $this->assertEquals(['visually-hidden'], $element['#wrapper_attributes']['class']);
 
     $element = [
       '#attributes' => ['class' => ['test-class']],
+      '#wrapper_attributes' => ['class' => ['test-wrapper-class']],
     ];
     $method->invokeArgs($class, [&$element]);
     $this->assertEquals(['test-class', 'visually-hidden'], $element['#attributes']['class']);
+    $this->assertEquals(['test-wrapper-class', 'visually-hidden'], $element['#wrapper_attributes']['class']);
 
     $element = [
       '#type' => 'container',
@@ -155,6 +159,7 @@ class AjaxElementTraitTest extends UnitTestCase {
     ];
     $method->invokeArgs($class, [&$element]);
     $this->assertEquals(['visually-hidden'], $element['child']['#attributes']['class']);
+    $this->assertEquals(['visually-hidden'], $element['child']['#wrapper_attributes']['class']);
   }
 
   /**

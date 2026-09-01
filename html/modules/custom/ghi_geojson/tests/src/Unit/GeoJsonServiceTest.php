@@ -266,7 +266,6 @@ class GeoJsonServiceTest extends UnitTestCase {
     // Use reflection to test the private method
     $reflection = new \ReflectionClass($this->geoJsonService);
     $method = $reflection->getMethod('buildGeoJsonSourceFilePath');
-    $method->setAccessible(TRUE);
 
     // Test minified version
     $result = $method->invoke($this->geoJsonService, $location->reveal(), '2022', TRUE);
@@ -293,7 +292,6 @@ class GeoJsonServiceTest extends UnitTestCase {
     // Use reflection to test the private method
     $reflection = new \ReflectionClass($this->geoJsonService);
     $method = $reflection->getMethod('buildGeoJsonSourceFilePath');
-    $method->setAccessible(TRUE);
 
     // Test minified version
     $result = $method->invoke($this->geoJsonService, $location->reveal(), '2023', TRUE);
@@ -320,7 +318,6 @@ class GeoJsonServiceTest extends UnitTestCase {
     // Use reflection to test the private method
     $reflection = new \ReflectionClass($this->geoJsonService);
     $method = $reflection->getMethod('buildGeoJsonSourceFilePath');
-    $method->setAccessible(TRUE);
 
     // Test with version parameter
     $result = $method->invoke($this->geoJsonService, $location->reveal(), '2021', TRUE);
@@ -340,7 +337,6 @@ class GeoJsonServiceTest extends UnitTestCase {
 
     $reflection = new \ReflectionClass($this->geoJsonService);
     $method = $reflection->getMethod('buildGeoJsonSourceFilePath');
-    $method->setAccessible(TRUE);
 
     $result = $method->invoke($this->geoJsonService, $location->reveal(), '2022', TRUE);
     $this->assertNull($result);
@@ -372,7 +368,6 @@ class GeoJsonServiceTest extends UnitTestCase {
     // Use reflection to test the private method
     $reflection = new \ReflectionClass($this->geoJsonService);
     $method = $reflection->getMethod('buildGeoJsonSourceFilePath');
-    $method->setAccessible(TRUE);
 
     // Test with NULL version (should use location's default version)
     $result = $method->invoke($this->geoJsonService, $location->reveal(), NULL, TRUE);

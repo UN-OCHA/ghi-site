@@ -5,65 +5,42 @@ namespace Drupal\ghi_blocks\Plugin\ConfigurationContainerItem;
 use Drupal\Component\Serialization\Json;
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Link;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\Url;
+use Drupal\ghi_base_objects\Entity\BaseObjectChildInterface;
 use Drupal\ghi_blocks\Traits\ConfigurationItemValuePreviewTrait;
+use Drupal\ghi_form_elements\Attribute\ConfigurationContainerItem;
 use Drupal\ghi_form_elements\ConfigurationContainerItemPluginBase;
 use Drupal\ghi_plans\Entity\Plan;
-use Drupal\ghi_plans\Helpers\PlanStructureHelper;
 use Drupal\hpc_common\Helpers\TaxonomyHelper;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Provides an organization projects counter item for configuration containers.
- *
- * @ConfigurationContainerItem(
- *   id = "organization_project_counter",
- *   label = @Translation("Project counter"),
- *   description = @Translation("This item displays a project counter per organization."),
- * )
  */
+#[ConfigurationContainerItem(
+  id: 'organization_project_counter',
+  label: new TranslatableMarkup('Project counter'),
+  description: new TranslatableMarkup('This item displays a project counter per organization.'),
+)]
 class OrganizationProjectCounter extends ConfigurationContainerItemPluginBase {
 
   use ConfigurationItemValuePreviewTrait;
 
   /**
-   * The plan entities query.
-   *
-   * @var \Drupal\ghi_plans\Plugin\EndpointQuery\PlanEntitiesQuery
-   */
-  public $planEntitiesQuery;
-
-  /**
    * The project search query.
    *
-   * @var \Drupal\ghi_plans\Plugin\EndpointQuery\PlanProjectSearchQuery
+   * @var \Drupal\ghi_plans\Plugin\FabricQuery\ProjectQuery
    */
-  public $projectSearchQuery;
-
-  /**
-   * The funding query.
-   *
-   * @var \Drupal\ghi_plans\Plugin\EndpointQuery\FlowSearchQuery
-   */
-  public $flowSearchQuery;
-
-  /**
-   * The funding query.
-   *
-   * @var \Drupal\ghi_plans\Plugin\EndpointQuery\ClusterQuery
-   */
-  public $clusterQuery;
+  public $projectQuery;
 
   /**
    * {@inheritdoc}
    */
-  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
-    /** @var \Drupal\ghi_blocks\Plugin\ConfigurationContainerItem\OrganizationProjectCounter $instance */
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition): OrganizationProjectCounter {
+    /** @var self $instance */
     $instance = parent::create($container, $configuration, $plugin_id, $plugin_definition);
-    $instance->planEntitiesQuery = $instance->endpointQueryManager->createInstance('plan_entities_query');
-    $instance->projectSearchQuery = $instance->endpointQueryManager->createInstance('plan_project_search_query');
-    $instance->flowSearchQuery = $instance->endpointQueryManager->createInstance('flow_search_query');
-    $instance->clusterQuery = $instance->endpointQueryManager->createInstance('cluster_query');
+    $instance->projectQuery = $instance->fabricQueryManager->createInstance('project');
     return $instance;
   }
 
@@ -92,9 +69,56 @@ class OrganizationProjectCounter extends ConfigurationContainerItemPluginBase {
    *   An array of project objects.
    */
   private function getProjects() {
+    $plan_object = $this->getContextValue('plan_object');
     $base_object = $this->getContextValue('base_object');
     $organization = $this->getContextValue('organization');
-    return $this->projectSearchQuery->getOrganizationProjects($organization, $base_object);
+    $projects = $this->getContextValue('projects');
+    if (is_array($projects)) {
+      $projects_by_organization = $this->getProjectsByOrganization($projects);
+      return $projects_by_organization[$organization->id()] ?? [];
+    }
+    return $this->projectQuery->getProjectsForPlanId($plan_object->getSourceId(), $base_object instanceof BaseObjectChildInterface ? $base_object : NULL, $organization->id());
+  }
+
+  /**
+   * Group the given project list by organization.
+   *
+   * @param \Drupal\ghi_plans\ApiObjects\Project[] $projects
+   *   The projects to group.
+   *
+   * @return array[]
+   *   The projects keyed by organization id and project id.
+   */
+  private function getProjectsByOrganization(array $projects): array {
+    $projects_by_organization = &drupal_static(static::class . '::' . __FUNCTION__, []);
+    $cache_key = $this->getProjectsCacheKey();
+    if (!array_key_exists($cache_key, $projects_by_organization)) {
+      $projects_by_organization[$cache_key] = [];
+      foreach ($projects as $project) {
+        foreach ($project->getOrganizations() as $organization) {
+          $projects_by_organization[$cache_key][$organization->id()][$project->id()] = $project;
+        }
+      }
+    }
+    return $projects_by_organization[$cache_key];
+  }
+
+  /**
+   * Get a static cache key for the current plan and optional cluster context.
+   *
+   * @return string
+   *   The cache key.
+   */
+  private function getProjectsCacheKey(): string {
+    $plan_object = $this->getContextValue('plan_object');
+    $base_object = $this->getContextValue('base_object');
+    $parts = [
+      $plan_object instanceof Plan ? $plan_object->id() : NULL,
+      $plan_object instanceof Plan ? $plan_object->getSourceId() : NULL,
+      $base_object instanceof BaseObjectChildInterface ? $base_object->id() : NULL,
+      $base_object instanceof BaseObjectChildInterface ? $base_object->getSourceId() : NULL,
+    ];
+    return implode(':', array_map(fn ($part) => $part ?? 'none', $parts));
   }
 
   /**
@@ -180,20 +204,6 @@ class OrganizationProjectCounter extends ConfigurationContainerItemPluginBase {
       ],
     ];
     return $modal_link;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function setContext($context) {
-    parent::setContext($context);
-
-    // Also set cluster context if the current page is a plan entity.
-    $base_object = $context['base_object'] ?? NULL;
-    if ($base_object && $base_object->bundle() == 'plan_entity' && $this->projectSearchQuery) {
-      $cluster_ids = PlanStructureHelper::getPlanEntityStructure($this->planEntitiesQuery->getData());
-      $this->projectSearchQuery->setFilterByClusterIds($cluster_ids);
-    }
   }
 
   /**

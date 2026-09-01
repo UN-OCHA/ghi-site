@@ -14,6 +14,5 @@ ghi_base_objects.base_object_update:
   appears_on:
     - view.base_objects.plan
     - view.base_objects.country
-    - view.base_objects.organization
     - view.base_objects.governing_entity
   class: '\Drupal\ghi_base_objects\Plugin\Menu\LocalAction\BaseObjectsUpdateLocalAction'

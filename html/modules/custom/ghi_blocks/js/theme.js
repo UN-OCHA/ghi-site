@@ -1,5 +1,12 @@
 (function ($) {
 
+  const iconPlaceholder = function(icon) {
+    return $('<span></span>')
+      .addClass('material-icon')
+      .attr('data-hpc-icon', icon)
+      .attr('aria-hidden', 'true')[0].outerHTML;
+  };
+
   // Add regex support to the states API, see
   // https://evolvingweb.ca/blog/extending-form-api-states-regular-expressions
   Drupal.hpc_content_panes_states_extension = function(reference, value) {
@@ -70,11 +77,11 @@
         let previous_link = $('<span tabindex="0"></span>')
           .addClass('link')
           .addClass('previous')
-          .html('<i class="material-icons">keyboard_arrow_left</i>');
+          .html(iconPlaceholder('keyboard-arrow-left'));
         if (vars.previous) {
           previous_link
             .attr('data-object-id', vars.previous.object_id)
-            .attr('title', vars.previous.location_name);
+            .attr('title', vars.previous.name);
         }
         else {
           previous_link.addClass('disabled');
@@ -83,11 +90,11 @@
         let next_link = $('<span tabindex="0"></span>')
           .addClass('link')
           .addClass('next')
-          .html('<i class="material-icons">keyboard_arrow_right</i>');
+          .html(iconPlaceholder('keyboard-arrow-right'));
         if (vars.next) {
           next_link
             .attr('data-object-id', vars.next.object_id)
-            .attr('title', vars.next.location_name);
+            .attr('title', vars.next.name);
         }
         else {
           next_link.addClass('disabled');

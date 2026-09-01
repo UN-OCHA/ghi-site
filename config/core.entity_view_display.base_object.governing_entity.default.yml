@@ -3,6 +3,7 @@ langcode: en
 status: true
 dependencies:
   config:
+    - field.field.base_object.governing_entity.field_icon
     - field.field.base_object.governing_entity.field_original_id
     - field.field.base_object.governing_entity.field_plan
     - field.field.base_object.governing_entity.field_prototype_id
@@ -12,6 +13,14 @@ targetEntityType: base_object
 bundle: governing_entity
 mode: default
 content:
+  field_icon:
+    type: string
+    label: above
+    settings:
+      link_to_entity: false
+    third_party_settings: {  }
+    weight: 0
+    region: content
   field_original_id:
     type: number_integer
     label: above

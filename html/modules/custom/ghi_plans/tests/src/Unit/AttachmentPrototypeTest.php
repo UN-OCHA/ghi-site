@@ -2,7 +2,9 @@
 
 namespace Drupal\Tests\ghi_plans\Unit;
 
-use Drupal\ghi_plans\ApiObjects\AttachmentPrototype\AttachmentPrototype;
+use Drupal\ghi_plans\ApiObjects\Prototypes\AttachmentPrototype;
+use Drupal\hpc_api\ApiObjects\Types\MetricType;
+use Drupal\hpc_api\Plugin\FabricQuery\EntityTypeQuery;
 
 /**
  * Tests for API attachment prototype objects.
@@ -13,114 +15,374 @@ class AttachmentPrototypeTest extends ApiObjectTestBase {
    * Test attachment prototype parsing of indicator prototypes.
    */
   public function testAttachmentPrototypeIndicator() {
-    $attachment_prototype = $this->getAttachmentPrototypeFromFixture('indicator');
-    $this->assertInstanceOf(AttachmentPrototype::class, $attachment_prototype);
-    $this->assertEquals('Indicator', $attachment_prototype->getName());
-    $this->assertEquals('indicator', $attachment_prototype->getType());
-    $this->assertEquals('Indicator', $attachment_prototype->getTypeLabel());
-    $this->assertCount(5, $attachment_prototype->getFields());
-    $this->assertNotEmpty($attachment_prototype->getFieldTypes());
-    $this->assertCount(3, $attachment_prototype->getGoalMetricFields());
-    $this->assertCount(2, $attachment_prototype->getMeasurementMetricFields());
-    $this->assertTrue($attachment_prototype->isIndicator());
-    $this->assertEmpty($attachment_prototype->getCalculationMethods());
-    $this->assertEquals(['SO', 'CL', 'OC', 'OP', 'CA'], $attachment_prototype->getEntityRefCodes());
-    $this->assertTrue(AttachmentPrototype::isDataType($attachment_prototype->getRawData()));
+    $prototype = $this->getAttachmentPrototypeFromFixture('indicator');
+    $this->assertInstanceOf(AttachmentPrototype::class, $prototype);
+    $this->assertEquals('Indicator', $prototype->getName());
+    $this->assertEquals('indicator', $prototype->getType());
+    $this->assertEquals('Indicator', $prototype->getTypeLabel());
+    $this->assertEquals('IN', $prototype->getRefCode());
+    $this->assertCount(3, $prototype->getFields());
+    $this->assertNotEmpty($prototype->getFieldTypes());
+    $this->assertCount(1, $prototype->getPlanningFields());
+    $this->assertCount(2, $prototype->getMeasurementFields());
+    $this->assertEmpty($prototype->getCalculatedFields());
+    $this->assertTrue($prototype->isIndicator());
+    $this->assertCount(5, $prototype->getCalculationMethods());
+    $this->assertEquals(['SO', 'CO', 'CA'], $prototype->getEntityRefCodes());
+    $this->assertTrue(AttachmentPrototype::isDataType($prototype->getRawData()));
+  }
+
+  /**
+   * Test attachment prototype parsing of configured labels.
+   */
+  public function testAttachmentPrototypeConfiguredLabel() {
+    $prototype = $this->getAttachmentPrototypeFromFixture('5399');
+    $this->assertEquals('Indicateur', $prototype->getName());
+    $this->assertEquals('Indicator', $prototype->getTypeLabel());
+  }
+
+  /**
+   * Test metric type matching for duplicate prototype field types.
+   */
+  public function testAttachmentPrototypeDuplicateMeasureFields() {
+    $this->setMetricTypes([
+      $this->createMetricType(21, 'Measure', 'measure', 'Measure|Mesure|Medida'),
+      $this->createMetricType(22, 'Measure Cumulative', 'cumulativeMeasure', 'Measure (cumulative)|Cumulative measure'),
+      $this->createMetricType(31, 'Reached', 'measure|reached', 'measure|Reached|Alcanzado'),
+    ]);
+
+    $prototype = new AttachmentPrototype((object) [
+      'Id' => 5440,
+      'RefCode' => 'IN',
+      'Type' => 'indicator',
+      'Value' => (object) [
+        'measureFields' => [
+          (object) [
+            'name' => (object) ['en' => 'Measure'],
+            'type' => 'measure',
+          ],
+          (object) [
+            'name' => (object) ['en' => 'Cumulative measure'],
+            'type' => 'measure',
+          ],
+        ],
+        'metrics' => [
+          (object) [
+            'name' => (object) ['en' => 'Target'],
+            'type' => 'target',
+          ],
+        ],
+        'name' => (object) ['en' => 'Indicator'],
+        'entities' => [],
+      ],
+      'PlanId' => 1117,
+      'CreatedAt' => '2022-09-28T10:09:09.000Z',
+      'UpdatedAt' => '2024-09-13T17:07:39.000Z',
+    ]);
+
+    $this->assertSame([
+      'target',
+      'measure',
+      'cumulative_measure',
+    ], $prototype->getFieldTypes());
+  }
+
+  /**
+   * Test duplicate raw field types are resolved consistently across groups.
+   */
+  public function testAttachmentPrototypeDuplicateMeasureFieldsAcrossGroups() {
+    $this->setMetricTypes([
+      $this->createMetricType(3, 'People In Need', 'inNeed', 'Value|People in need'),
+      $this->createMetricType(5, 'People Targeted', 'target', 'Target|People targeted'),
+      $this->createMetricType(21, 'Measure', 'measure', 'Measure|Mesure|Medida'),
+    ]);
+
+    $prototype = new AttachmentPrototype((object) [
+      'Id' => 4171,
+      'RefCode' => 'IN',
+      'Type' => 'indicator',
+      'Value' => (object) [
+        'measureFields' => [
+          (object) [
+            'name' => (object) ['en' => 'Measure'],
+            'type' => 'measure',
+          ],
+        ],
+        'metrics' => [
+          (object) [
+            'name' => (object) ['en' => 'Value'],
+            'type' => 'measure',
+          ],
+          (object) [
+            'name' => (object) ['en' => 'Target'],
+            'type' => 'target',
+          ],
+        ],
+        'name' => (object) ['en' => 'Indicator'],
+        'entities' => [],
+      ],
+      'PlanId' => 934,
+      'CreatedAt' => '2020-01-01T00:00:00.000Z',
+      'UpdatedAt' => '2020-01-01T00:00:00.000Z',
+    ]);
+
+    $this->assertSame([
+      'in_need' => 'Value',
+      'target' => 'Target',
+      'measure' => 'Measure',
+    ], $prototype->getFields());
+    $this->assertSame([
+      'in_need' => 'Value',
+      'target' => 'Target',
+    ], $prototype->getPlanningFields());
+    $this->assertSame([
+      'measure' => 'Measure',
+    ], $prototype->getMeasurementFields());
+    $this->assertSame('in_need', $prototype->getMetricTypeByOriginalIndex(0));
+    $this->assertSame('target', $prototype->getMetricTypeByOriginalIndex(1));
+    $this->assertSame('measure', $prototype->getMetricTypeByOriginalIndex(2));
+  }
+
+  /**
+   * Test duplicate raw fields keep their original index definitions.
+   */
+  public function testAttachmentPrototypeOriginalFieldDefinitions() {
+    $this->setMetricTypes([
+      $this->createMetricType(14, 'Cumulative reach', 'cumulativeReach', 'Cumulative reach|Personas atendidas (acumulativo)'),
+      $this->createMetricType(30, 'Latest reached', 'latestReach', 'Latest Reached|People reached'),
+    ]);
+
+    $prototype = new AttachmentPrototype((object) [
+      'Id' => 5440,
+      'RefCode' => 'BP',
+      'Type' => 'caseload',
+      'Value' => (object) [
+        'measureFields' => [
+          (object) [
+            'name' => (object) ['en' => 'Personas atendidas (acumulativo)'],
+            'type' => 'cumulativeReach',
+          ],
+          (object) [
+            'name' => (object) ['en' => 'Personas atendidas (acumulativo)'],
+            'type' => 'cumulativeReach',
+          ],
+          (object) [
+            'name' => (object) ['en' => 'Latest Reached'],
+            'type' => 'latestReach',
+          ],
+        ],
+        'metrics' => [
+          (object) [
+            'name' => (object) ['en' => 'Target'],
+            'type' => 'target',
+          ],
+        ],
+        'name' => (object) ['en' => 'Caseload'],
+        'entities' => [],
+      ],
+      'PlanId' => 1090,
+      'CreatedAt' => '2022-09-28T10:09:09.000Z',
+      'UpdatedAt' => '2024-09-13T17:07:39.000Z',
+    ]);
+
+    $this->assertSame([
+      'target',
+      'cumulative_reach',
+      'latest_reach',
+    ], $prototype->getFieldTypes());
+    $this->assertCount(4, $prototype->getFieldDefinitions());
+    $this->assertSame('cumulative_reach', $prototype->getMetricTypeByOriginalIndex(1));
+    $this->assertSame('cumulative_reach', $prototype->getMetricTypeByOriginalIndex(2));
+    $this->assertSame('latest_reach', $prototype->getMetricTypeByOriginalIndex(3));
+    $this->assertSame(3, $prototype->getOriginalIndexByMetricType('latest_reach'));
+  }
+
+  /**
+   * Test missing metric type fields can be added from fact data.
+   */
+  public function testAttachmentPrototypeAddsMissingMetricTypeField() {
+    $prototype = new AttachmentPrototype((object) [
+      'Id' => 5647,
+      'RefCode' => 'BP',
+      'Type' => 'caseload',
+      'Value' => (object) [
+        'measureFields' => [
+          (object) [
+            'name' => (object) ['en' => 'People reached (periodical)'],
+            'type' => 'periodicalReach',
+          ],
+          (object) [
+            'name' => (object) ['en' => 'People covered'],
+            'type' => 'covered',
+          ],
+        ],
+        'metrics' => [
+          (object) [
+            'name' => (object) ['en' => 'People targeted'],
+            'type' => 'target',
+          ],
+        ],
+        'name' => (object) ['en' => 'Caseload'],
+        'entities' => [],
+      ],
+      'PlanId' => 1143,
+      'CreatedAt' => '2022-09-28T10:09:09.000Z',
+      'UpdatedAt' => '2024-09-13T17:07:39.000Z',
+    ]);
+
+    $metric_type = $this->createMetricType(14, 'Cumulative reach', 'cumulativeReach', 'Cumulative reach');
+    $prototype->addMissingMetricTypeField($metric_type, AttachmentPrototype::FIELD_GROUP_MEASUREMENT);
+    $prototype->addMissingMetricTypeField($metric_type, AttachmentPrototype::FIELD_GROUP_MEASUREMENT);
+
+    $this->assertSame([
+      'target',
+      'periodical_reach',
+      'covered',
+      'cumulative_reach',
+    ], $prototype->getFieldTypes());
+    $this->assertSame('People reached (cumulative)', $prototype->getFields()['cumulative_reach']);
+    $this->assertSame('People reached (cumulative)', $prototype->getMeasurementFields()['cumulative_reach']);
+    $this->assertSame(3, $prototype->getOriginalIndexByMetricType('cumulative_reach'));
+    $this->assertSame('cumulative_reach', $prototype->getMetricTypeByOriginalIndex(3));
+    $this->assertCount(4, $prototype->getFieldDefinitions());
+  }
+
+  /**
+   * Test original metric type fields can be replaced.
+   */
+  public function testAttachmentPrototypeReplacesMetricTypeField() {
+    $prototype = new AttachmentPrototype((object) [
+      'Id' => 5647,
+      'RefCode' => 'BP',
+      'Type' => 'caseload',
+      'Value' => (object) [
+        'measureFields' => [
+          (object) [
+            'name' => (object) ['en' => 'People reached (periodical)'],
+            'type' => 'periodicalReach',
+          ],
+          (object) [
+            'name' => (object) ['en' => 'People covered'],
+            'type' => 'covered',
+          ],
+        ],
+        'metrics' => [
+          (object) [
+            'name' => (object) ['en' => 'People targeted'],
+            'type' => 'target',
+          ],
+        ],
+        'name' => (object) ['en' => 'Caseload'],
+        'entities' => [],
+      ],
+      'PlanId' => 1143,
+      'CreatedAt' => '2022-09-28T10:09:09.000Z',
+      'UpdatedAt' => '2024-09-13T17:07:39.000Z',
+    ]);
+
+    $metric_type = $this->createMetricType(14, 'Cumulative reach', 'cumulativeReach', 'Cumulative reach');
+    $prototype->replaceMetricTypeField(2, $metric_type, AttachmentPrototype::FIELD_GROUP_MEASUREMENT);
+
+    $this->assertSame([
+      'target',
+      'periodical_reach',
+      'cumulative_reach',
+    ], $prototype->getFieldTypes());
+    $this->assertArrayNotHasKey('covered', $prototype->getFields());
+    $this->assertSame('People covered', $prototype->getFields()['cumulative_reach']);
+    $this->assertSame('People covered', $prototype->getMeasurementFields()['cumulative_reach']);
+    $this->assertSame(2, $prototype->getOriginalIndexByMetricType('cumulative_reach'));
+    $this->assertSame('cumulative_reach', $prototype->getMetricTypeByOriginalIndex(2));
+    $this->assertSame('cumulativeReach', $prototype->getFieldDefinitionByOriginalIndex(2)['raw_type']);
+    $this->assertCount(3, $prototype->getFieldDefinitions());
+  }
+
+  /**
+   * Test missing metric type fields fall back to the metric type label.
+   */
+  public function testAttachmentPrototypeMissingMetricTypeFieldFallsBackToMetricTypeLabel() {
+    $prototype = new AttachmentPrototype((object) [
+      'Id' => 5647,
+      'RefCode' => 'BP',
+      'Type' => 'caseload',
+      'Value' => (object) [
+        'measureFields' => [
+          (object) [
+            'name' => (object) ['en' => 'People covered'],
+            'type' => 'covered',
+          ],
+        ],
+        'metrics' => [
+          (object) [
+            'name' => (object) ['en' => 'People targeted'],
+            'type' => 'target',
+          ],
+        ],
+        'name' => (object) ['en' => 'Caseload'],
+        'entities' => [],
+      ],
+      'PlanId' => 1143,
+      'CreatedAt' => '2022-09-28T10:09:09.000Z',
+      'UpdatedAt' => '2024-09-13T17:07:39.000Z',
+    ]);
+
+    $metric_type = $this->createMetricType(14, 'Reached Core Cumulative', 'cumulativeReach', 'Cumulative reach');
+    $prototype->addMissingMetricTypeField($metric_type, AttachmentPrototype::FIELD_GROUP_MEASUREMENT);
+
+    $this->assertSame('Reached Core Cumulative', $prototype->getFields()['cumulative_reach']);
+    $this->assertSame('Reached Core Cumulative', $prototype->getMeasurementFields()['cumulative_reach']);
   }
 
   /**
    * Test attachment prototype parsing of caseload prototypes.
    */
   public function testAttachmentPrototypeCaseload() {
-    $attachment_prototype = $this->getAttachmentPrototypeFromFixture('caseload');
-    $this->assertInstanceOf(AttachmentPrototype::class, $attachment_prototype);
-    $this->assertEquals('Caseload', $attachment_prototype->getName());
-    $this->assertEquals('caseload', $attachment_prototype->getType());
-    $this->assertEquals('Caseload', $attachment_prototype->getTypeLabel());
-    $this->assertCount(5, $attachment_prototype->getFields());
-    $this->assertNotEmpty($attachment_prototype->getFieldTypes());
-    $this->assertCount(3, $attachment_prototype->getGoalMetricFields());
-    $this->assertCount(2, $attachment_prototype->getMeasurementMetricFields());
-    $this->assertFalse($attachment_prototype->isIndicator());
-    $this->assertEmpty($attachment_prototype->getCalculationMethods());
-    $this->assertEquals(['CL'], $attachment_prototype->getEntityRefCodes());
-    $this->assertTrue(AttachmentPrototype::isDataType($attachment_prototype->getRawData()));
-  }
+    $this->setMetricTypes([
+      $this->createMetricType(31, 'Reached', 'measure|reached', 'Reached|Atteints|Personas Atendidas'),
+      $this->createMetricType(20, 'Covered', 'covered', 'Covered|Couverts|Personas con Necesidades Cubiertas'),
+    ]);
 
-  /**
-   * Test attachment prototype parsing of fileWebContent prototypes.
-   */
-  public function testAttachmentPrototypeFileWebContent() {
-    $attachment_prototype = $this->getAttachmentPrototypeFromFixture('filewebcontent');
-    $this->assertInstanceOf(AttachmentPrototype::class, $attachment_prototype);
-    $this->assertEquals('File Web Content', $attachment_prototype->getName());
-    $this->assertEquals('filewebcontent', $attachment_prototype->getType());
-    $this->assertEquals('File (web content)', $attachment_prototype->getTypeLabel());
-    $this->assertEmpty($attachment_prototype->getFields());
-    $this->assertEmpty($attachment_prototype->getFieldTypes());
-    $this->assertEmpty($attachment_prototype->getGoalMetricFields());
-    $this->assertEmpty($attachment_prototype->getMeasurementMetricFields());
-    $this->assertFalse($attachment_prototype->isIndicator());
-    $this->assertEmpty($attachment_prototype->getCalculationMethods());
-    $this->assertEquals(['PL', 'CL'], $attachment_prototype->getEntityRefCodes());
-    $this->assertFalse(AttachmentPrototype::isDataType($attachment_prototype->getRawData()));
-  }
-
-  /**
-   * Test attachment prototype parsing of textWebContent prototypes.
-   */
-  public function testAttachmentPrototypeTextWebContent() {
-    $attachment_prototype = $this->getAttachmentPrototypeFromFixture('textwebcontent');
-    $this->assertInstanceOf(AttachmentPrototype::class, $attachment_prototype);
-    $this->assertEquals('Text Web Content', $attachment_prototype->getName());
-    $this->assertEquals('textwebcontent', $attachment_prototype->getType());
-    $this->assertEquals('Text (web content)', $attachment_prototype->getTypeLabel());
-    $this->assertEmpty($attachment_prototype->getFields());
-    $this->assertEmpty($attachment_prototype->getFieldTypes());
-    $this->assertEmpty($attachment_prototype->getGoalMetricFields());
-    $this->assertEmpty($attachment_prototype->getMeasurementMetricFields());
-    $this->assertFalse($attachment_prototype->isIndicator());
-    $this->assertEmpty($attachment_prototype->getCalculationMethods());
-    $this->assertEquals(['PL', 'CL'], $attachment_prototype->getEntityRefCodes());
-    $this->assertFalse(AttachmentPrototype::isDataType($attachment_prototype->getRawData()));
-  }
-
-  /**
-   * Test attachment prototype parsing of contact prototypes.
-   */
-  public function testAttachmentPrototypeContact() {
-    $attachment_prototype = $this->getAttachmentPrototypeFromFixture('contact');
-    $this->assertInstanceOf(AttachmentPrototype::class, $attachment_prototype);
-    $this->assertEquals('Contact', $attachment_prototype->getName());
-    $this->assertEquals('contact', $attachment_prototype->getType());
-    $this->assertEquals('Contact', $attachment_prototype->getTypeLabel());
-    $this->assertEmpty($attachment_prototype->getFields());
-    $this->assertEmpty($attachment_prototype->getFieldTypes());
-    $this->assertEmpty($attachment_prototype->getGoalMetricFields());
-    $this->assertEmpty($attachment_prototype->getMeasurementMetricFields());
-    $this->assertFalse($attachment_prototype->isIndicator());
-    $this->assertEmpty($attachment_prototype->getCalculationMethods());
-    $this->assertEquals(['CL'], $attachment_prototype->getEntityRefCodes());
-    $this->assertFalse(AttachmentPrototype::isDataType($attachment_prototype->getRawData()));
+    $prototype = $this->getAttachmentPrototypeFromFixture('caseload');
+    $this->assertInstanceOf(AttachmentPrototype::class, $prototype);
+    $this->assertEquals('Caseload', $prototype->getName());
+    $this->assertEquals('caseload', $prototype->getType());
+    $this->assertEquals('Caseload', $prototype->getTypeLabel());
+    $this->assertEquals('BF', $prototype->getRefCode());
+    $this->assertCount(5, $prototype->getFields());
+    $this->assertNotEmpty($prototype->getFieldTypes());
+    $this->assertCount(5, $prototype->getOriginalFields());
+    $this->assertCount(3, $prototype->getPlanningFields());
+    $this->assertCount(2, $prototype->getMeasurementFields());
+    $this->assertEmpty($prototype->getCalculatedFields());
+    $this->assertFalse($prototype->isIndicator());
+    $this->assertEmpty($prototype->getCalculationMethods());
+    $this->assertEquals(['CL'], $prototype->getEntityRefCodes());
+    $this->assertEquals('People reached', (string) $prototype->getDefaultFieldLabel('cumulative_reach'));
+    $this->assertEquals('Measure', (string) $prototype->getDefaultFieldLabel('periodical_measure'));
+    $this->assertEquals('Measure', (string) $prototype->getDefaultFieldLabel('cumulative_measure'));
+    $this->assertEquals(NULL, (string) $prototype->getDefaultFieldLabel('invalid_metric_type'));
+    $this->assertTrue(AttachmentPrototype::isDataType($prototype->getRawData()));
   }
 
   /**
    * Test attachment prototype parsing of cost prototypes.
    */
   public function testAttachmentPrototypeCost() {
-    $attachment_prototype = $this->getAttachmentPrototypeFromFixture('cost');
-    $this->assertInstanceOf(AttachmentPrototype::class, $attachment_prototype);
-    $this->assertEquals('Cost', $attachment_prototype->getName());
-    $this->assertEquals('cost', $attachment_prototype->getType());
-    $this->assertEquals('Cost', $attachment_prototype->getTypeLabel());
-    $this->assertEmpty($attachment_prototype->getFields());
-    $this->assertEmpty($attachment_prototype->getFieldTypes());
-    $this->assertEmpty($attachment_prototype->getGoalMetricFields());
-    $this->assertEmpty($attachment_prototype->getMeasurementMetricFields());
-    $this->assertFalse($attachment_prototype->isIndicator());
-    $this->assertEmpty($attachment_prototype->getCalculationMethods());
-    $this->assertEquals(['PL', 'CL'], $attachment_prototype->getEntityRefCodes());
-    $this->assertFalse(AttachmentPrototype::isDataType($attachment_prototype->getRawData()));
+    $prototype = $this->getAttachmentPrototypeFromFixture('cost');
+    $this->assertInstanceOf(AttachmentPrototype::class, $prototype);
+    $this->assertEquals('Cost', $prototype->getName());
+    $this->assertEquals('cost', $prototype->getType());
+    $this->assertEquals('Cost', $prototype->getTypeLabel());
+    $this->assertEquals('CS', $prototype->getRefCode());
+    $this->assertEmpty($prototype->getFields());
+    $this->assertEmpty($prototype->getFieldTypes());
+    $this->assertEmpty($prototype->getPlanningFields());
+    $this->assertEmpty($prototype->getMeasurementFields());
+    $this->assertEmpty($prototype->getCalculatedFields());
+    $this->assertFalse($prototype->isIndicator());
+    $this->assertEmpty($prototype->getCalculationMethods());
+    $this->assertEquals(['PL', 'CL'], $prototype->getEntityRefCodes());
+    $this->assertFalse(AttachmentPrototype::isDataType($prototype->getRawData()));
   }
 
   /**
@@ -129,13 +391,57 @@ class AttachmentPrototypeTest extends ApiObjectTestBase {
    * @param string $type
    *   The type of the attachment prototype.
    *
-   * @return \Drupal\ghi_plans\ApiObjects\AttachmentPrototype\AttachmentPrototype
+   * @return \Drupal\ghi_plans\ApiObjects\Prototypes\AttachmentPrototype
    *   The attachment prototype object.
    */
   private function getAttachmentPrototypeFromFixture($type) {
-    $attachment_data = $this->getApiObjectFixture('AttachmentPrototype', $type);
-    $this->assertNotEmpty($attachment_data);
-    return new AttachmentPrototype($attachment_data);
+    $data = $this->getApiObjectFixture('AttachmentPrototype', $type);
+    $this->assertNotEmpty($data);
+    return new AttachmentPrototype($data);
+  }
+
+  /**
+   * Create a metric type object.
+   *
+   * @param int $id
+   *   The metric type id.
+   * @param string $name
+   *   The metric type name.
+   * @param string $hpc_type
+   *   The HPC type.
+   * @param string $label_lookup
+   *   The label lookup string.
+   *
+   * @return \Drupal\hpc_api\ApiObjects\Types\MetricType
+   *   The metric type object.
+   */
+  private function createMetricType(int $id, string $name, string $hpc_type, string $label_lookup): MetricType {
+    return new MetricType((object) [
+      'Id' => $id,
+      'Name' => $name,
+      'HPCType' => $hpc_type,
+      'LabelLookup' => $label_lookup,
+    ]);
+  }
+
+  /**
+   * Set the metric types returned by the mocked entity type query.
+   *
+   * @param \Drupal\hpc_api\ApiObjects\Types\MetricType[] $metric_types
+   *   The metric type objects.
+   */
+  private function setMetricTypes(array $metric_types): void {
+    $entity_type_query = $this->prophesize(EntityTypeQuery::class);
+    $entity_type_query->getMetricTypes()->willReturn($metric_types);
+
+    $fabric_query_manager = $this->prophesize('Drupal\hpc_api\Query\FabricQueryManager');
+    $fabric_query_manager->hasDefinition('entity_type')->willReturn(TRUE);
+    $fabric_query_manager->createInstance('entity_type')->willReturn($entity_type_query->reveal());
+
+    $container = \Drupal::getContainer();
+    $container->set('plugin.manager.fabric_query_manager', $fabric_query_manager->reveal());
+    \Drupal::setContainer($container);
+    drupal_static_reset();
   }
 
 }

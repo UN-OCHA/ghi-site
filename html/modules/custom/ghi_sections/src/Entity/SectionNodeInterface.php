@@ -2,12 +2,13 @@
 
 namespace Drupal\ghi_sections\Entity;
 
+use Drupal\ghi_base_objects\Entity\BaseObjectAwareEntityInterface;
 use Drupal\node\NodeInterface;
 
 /**
  * Interface for section nodes.
  */
-interface SectionNodeInterface extends NodeInterface {
+interface SectionNodeInterface extends NodeInterface, BaseObjectAwareEntityInterface {
 
   const BUNDLE = 'section';
   const BASE_OBJECT_FIELD_NAME = 'field_base_object';

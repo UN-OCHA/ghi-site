@@ -9,3 +9,29 @@ hpc_file_report.icons:
   route_name: hpc_api.reports.files.icons
   base_route: hpc_api.reports.files.data_source
   title: 'Icon files'
+
+hpc_api.fabric_report.query:
+  route_name: hpc_api.reports.fabric.query
+  base_route: hpc_api.fabric_report
+  title: 'Execute query'
+  weight: 1
+hpc_api.fabric_report.base_types:
+  route_name: hpc_api.reports.fabric.base_types
+  base_route: hpc_api.fabric_report
+  title: 'Base types'
+  weight: 1
+hpc_api.fabric_report.categories:
+  route_name: hpc_api.reports.fabric.categories
+  base_route: hpc_api.fabric_report
+  title: 'Categories'
+  weight: 1
+hpc_api.fabric_report.relationships:
+  route_name: hpc_api.reports.fabric.relationships
+  base_route: hpc_api.fabric_report
+  title: 'Relationships'
+  weight: 2
+hpc_api.fabric_report.entity_lookup:
+  route_name: hpc_api.reports.fabric.entity_lookup
+  base_route: hpc_api.fabric_report
+  title: 'Entity lookup'
+  weight: 3

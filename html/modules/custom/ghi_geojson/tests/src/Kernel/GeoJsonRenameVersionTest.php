@@ -151,7 +151,8 @@ class GeoJsonRenameVersionTest extends KernelTestBase {
   public function testRenameVersionToExistingDirectoryFails(): void {
     $iso3 = 'AFG';
     $old_version = '2022';
-    $existing_version = '2023'; // This already exists from our setup.
+    // This already exists in our setup.
+    $existing_version = '2023';
 
     // Verify both directories exist.
     $original_path = GeoJson::GEOJSON_SOURCE_DIR . '/' . $iso3 . '/' . $old_version;

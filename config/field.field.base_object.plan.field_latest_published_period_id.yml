@@ -1,0 +1,23 @@
+uuid: 389e45c4-a558-4270-b61f-1d0c49e57e64
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.base_object.field_latest_published_period_id
+    - ghi_base_objects.base_object_type.plan
+id: base_object.plan.field_latest_published_period_id
+field_name: field_latest_published_period_id
+entity_type: base_object
+bundle: plan
+label: 'Latest published reporting period'
+description: 'The id of the latest published reporting period.'
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  min: null
+  max: null
+  prefix: ''
+  suffix: ''
+field_type: integer

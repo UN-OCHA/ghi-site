@@ -115,7 +115,7 @@ class BaseObjectHelper extends EntityHelper {
    */
   public static function getBaseObjectFromOriginalId($original_id, $bundle) {
     $result = self::getBaseObjectsFromOriginalIds([$original_id], $bundle);
-    return count($result) ? reset($result) : NULL;
+    return $result && count($result) ? reset($result) : NULL;
   }
 
   /**
@@ -149,7 +149,7 @@ class BaseObjectHelper extends EntityHelper {
           'field_original_id' => $original_ids,
         ]);
       if (empty($result)) {
-        return $result;
+        return [];
       }
       /** @var \Drupal\ghi_base_objects\Entity\BaseObjectInterface[] $result */
       foreach ($result as $entity) {

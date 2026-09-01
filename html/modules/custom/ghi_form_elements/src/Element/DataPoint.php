@@ -9,8 +9,10 @@ use Drupal\Core\Render\Element;
 use Drupal\Core\Render\Element\FormElementBase;
 use Drupal\ghi_form_elements\Helpers\FormElementHelper;
 use Drupal\ghi_form_elements\Traits\AjaxElementTrait;
-use Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment;
+use Drupal\ghi_plans\ApiObjects\Attachments\Attachment;
 use Drupal\ghi_plans\ApiObjects\Attachments\IndicatorAttachment;
+use Drupal\ghi_plans\Traits\DataPointConfigBackwardsCompatibilityTrait;
+use Drupal\hpc_api\Helpers\StringHelper;
 use Drupal\hpc_common\Helpers\ThemeHelper;
 
 /**
@@ -20,6 +22,7 @@ use Drupal\hpc_common\Helpers\ThemeHelper;
 class DataPoint extends FormElementBase {
 
   use AjaxElementTrait;
+  use DataPointConfigBackwardsCompatibilityTrait;
 
   /**
    * Global switch for widget support in data points.
@@ -102,11 +105,12 @@ class DataPoint extends FormElementBase {
    * any arbitrary data inside the form_state object.
    */
   public static function processDataPoint(array &$element, FormStateInterface $form_state) {
-    $attachment = $element['#attachment'];
+    $attachment = $element['#attachment'] ?: NULL;
+    assert($attachment === NULL || $attachment instanceof Attachment);
     /** @var \Drupal\ghi_plans\Entity\Plan $plan_object */
     $plan_object = $element['#plan_object'] ?? NULL;
-    /** @var \Drupal\ghi_plans\ApiObjects\AttachmentPrototype\AttachmentPrototype $attachment_prototype */
-    $attachment_prototype = $attachment ? $attachment->prototype : $element['#attachment_prototype'];
+    /** @var \Drupal\ghi_plans\ApiObjects\Prototypes\AttachmentPrototype $attachment_prototype */
+    $attachment_prototype = $attachment?->getPrototype() ?? $element['#attachment_prototype'];
     if (empty($attachment) && empty($attachment_prototype)) {
       return $element;
     }
@@ -118,19 +122,20 @@ class DataPoint extends FormElementBase {
     // Set the defaults.
     $values = (array) $form_state->getValue($element['#parents']) + (array) $element['#default_value'];
     $defaults = [
-      'processing' => !empty($values['processing']) ? $values['processing'] : array_key_first(DataAttachment::getProcessingOptions()),
+      'processing' => !empty($values['processing']) ? $values['processing'] : array_key_first(Attachment::getProcessingOptions()),
       'calculation' => !empty($values['calculation']) ? $values['calculation'] : NULL,
       'data_points' => [
         0 => $values['data_points'][0] ?? [
-          'index' => array_key_first($attachment_prototype->getFields()),
+          'metric_type' => array_key_first($attachment_prototype->getFields()),
           'use_calculation_method' => NULL,
         ],
         1 => array_key_exists('data_points', $values) && array_key_exists(1, $values['data_points']) ? $values['data_points'][1] : NULL,
       ],
       'label' => !empty($values['label']) ? $values['label'] : '',
-      'formatting' => !empty($values['formatting']) ? $values['formatting'] : array_key_first(DataAttachment::getFormattingOptions()),
+      'formatting' => !empty($values['formatting']) ? $values['formatting'] : array_key_first(Attachment::getFormattingOptions()),
       'widget' => !empty($values['widget']) ? $values['widget'] : 'none',
     ];
+    self::updateDataPointConfiguration($defaults, $attachment_prototype);
 
     $element['processing_wrapper'] = [
       '#type' => 'container',
@@ -142,7 +147,7 @@ class DataPoint extends FormElementBase {
     $element['processing_wrapper']['processing'] = [
       '#type' => 'select',
       '#title' => t('Type'),
-      '#options' => DataAttachment::getProcessingOptions(),
+      '#options' => Attachment::getProcessingOptions(),
       '#default_value' => $defaults['processing'],
       '#parents' => array_merge($element['#parents'], ['processing']),
       '#ajax' => [
@@ -156,7 +161,7 @@ class DataPoint extends FormElementBase {
     $element['processing_wrapper']['calculation'] = [
       '#type' => 'select',
       '#title' => t('Calculation'),
-      '#options' => DataAttachment::getCalculationOptions(),
+      '#options' => Attachment::getCalculationOptions(),
       '#default_value' => $defaults['calculation'],
       '#parents' => array_merge($element['#parents'], ['calculation']),
       '#states' => [
@@ -172,6 +177,7 @@ class DataPoint extends FormElementBase {
     ];
 
     $data_point_options = self::getDataPointOptions($element);
+    self::sanitizeMetricTypeDefaults($defaults, $data_point_options, $element, $form_state);
 
     $element['data_points'] = [
       '#type' => 'container',
@@ -190,11 +196,11 @@ class DataPoint extends FormElementBase {
         ],
       ],
     ];
-    $element['data_points'][0]['index'] = [
+    $element['data_points'][0]['metric_type'] = [
       '#type' => 'select',
       '#title' => $defaults['processing'] == 'single' ? t('Data point') : t('Data point #1'),
       '#options' => $data_point_options,
-      '#default_value' => $defaults['data_points'][0]['index'] ?? NULL,
+      '#default_value' => $defaults['data_points'][0]['metric_type'] ?? NULL,
       '#ajax' => [
         'event' => 'change',
         'callback' => [static::class, 'updateAjax'],
@@ -205,9 +211,9 @@ class DataPoint extends FormElementBase {
     $data_point_selector = FormElementHelper::getStateSelector($element, [
       'data_points',
       0,
-      'index',
+      'metric_type',
     ]);
-    $measurement_fields = $attachment_prototype->getMeasurementMetricFields();
+    $measurement_fields = $attachment_prototype->getMeasurementFields();
     if (!empty($element['#select_monitoring_period'])) {
       $element['data_points'][0]['monitoring_period'] = [
         '#type' => 'monitoring_period',
@@ -257,7 +263,7 @@ class DataPoint extends FormElementBase {
       // submitted checkbox and the index of the second data point.
       $input = $form_state->getUserInput();
       $submitted = NestedArray::getValue($input, array_merge($element['#parents'], ['data_points']));
-      if ($submitted && $submitted[0]['use_calculation_method'] === NULL && $defaults['data_points'][1]['index'] == '' && self::CALCULATION_METHOD_DEFAULT) {
+      if ($submitted && ($submitted[0]['use_calculation_method'] ?? NULL) === NULL && empty($defaults['data_points'][1]['metric_type']) && self::CALCULATION_METHOD_DEFAULT) {
         // Due to a bug with checkbox elements in ajax contexts, the default
         // value is not correctly set for new instances of a plugin. We catch
         // this situation by manually setting the checked attribute only if the
@@ -266,11 +272,11 @@ class DataPoint extends FormElementBase {
         $element['data_points'][0]['use_calculation_method']['#attributes']['checked'] = 'checked';
       }
     }
-    $element['data_points'][1]['index'] = [
+    $element['data_points'][1]['metric_type'] = [
       '#type' => 'select',
       '#title' => t('Data point #2'),
       '#options' => $data_point_options,
-      '#default_value' => $defaults['data_points'][1]['index'] ?? NULL,
+      '#default_value' => $defaults['data_points'][1]['metric_type'] ?? NULL,
       '#ajax' => [
         'event' => 'change',
         'callback' => [static::class, 'updateAjax'],
@@ -280,7 +286,7 @@ class DataPoint extends FormElementBase {
     $data_point_selector_1 = FormElementHelper::getStateSelector($element, [
       'data_points',
       1,
-      'index',
+      'metric_type',
     ]);
     if (!empty($element['#select_monitoring_period'])) {
       $element['data_points'][1]['monitoring_period'] = [
@@ -333,7 +339,7 @@ class DataPoint extends FormElementBase {
       // submitted checkbox and the index of the second data point.
       $input = $form_state->getUserInput();
       $submitted = NestedArray::getValue($input, array_merge($element['#parents'], ['data_points']));
-      if (is_array($submitted) && $submitted[1]['use_calculation_method'] === NULL && $defaults['data_points'][1]['index'] == '' && self::CALCULATION_METHOD_DEFAULT) {
+      if (is_array($submitted) && ($submitted[1]['use_calculation_method'] ?? NULL) === NULL && empty($defaults['data_points'][1]['metric_type']) && self::CALCULATION_METHOD_DEFAULT) {
         // Due to a bug with checkbox elements in ajax contexts, the default
         // value is not correctly set for new instances of a plugin. We catch
         // this situation by manually setting the checked attribute only if the
@@ -343,8 +349,8 @@ class DataPoint extends FormElementBase {
       }
     }
 
-    $data_point_index = $defaults['data_points'][0]['index'] ?? NULL;
-    $default_label = $data_point_index !== NULL ? $attachment_prototype->getDefaultFieldLabel($data_point_index, $plan_object->getPlanLanguage()) : NULL;
+    $metric_type = $defaults['data_points'][0]['metric_type'] ?? NULL;
+    $default_label = $metric_type !== NULL ? $attachment_prototype->getDefaultFieldLabel($metric_type, $plan_object->getPlanLanguage()) : NULL;
     $element['label'] = [
       '#type' => 'textfield',
       '#title' => t('Label'),
@@ -358,7 +364,7 @@ class DataPoint extends FormElementBase {
     $element['formatting'] = [
       '#type' => 'select',
       '#title' => t('Formatting'),
-      '#options' => DataAttachment::getFormattingOptions(),
+      '#options' => Attachment::getFormattingOptions(),
       '#default_value' => $defaults['formatting'],
       '#ajax' => [
         'event' => 'change',
@@ -370,7 +376,7 @@ class DataPoint extends FormElementBase {
     $element['widget'] = [
       '#type' => 'select',
       '#title' => t('Mini widget'),
-      '#options' => DataAttachment::getWidgetOptions(),
+      '#options' => Attachment::getWidgetOptions(),
       '#default_value' => $defaults['widget'],
       '#ajax' => [
         'event' => 'change',
@@ -381,7 +387,7 @@ class DataPoint extends FormElementBase {
     ];
 
     // Add a preview if we have an attachment.
-    if ($attachment instanceof DataAttachment) {
+    if ($attachment instanceof Attachment) {
       $build = $attachment->formatValue($defaults);
       $element['value_preview'] = [
         '#type' => 'item',
@@ -415,14 +421,16 @@ class DataPoint extends FormElementBase {
    * Assemble the options array for a datapoint.
    */
   public static function getDataPointOptions($element) {
-    $attachment = $element['#attachment'];
-    $attachment_prototype = $attachment ? $attachment->prototype : $element['#attachment_prototype'];
+    $attachment = $element['#attachment'] ?: NULL;
+    assert($attachment === NULL || $attachment instanceof Attachment);
+    /** @var \Drupal\ghi_plans\ApiObjects\Prototypes\AttachmentPrototype $attachment_prototype */
+    $attachment_prototype = $attachment?->getPrototype() ?? $element['#attachment_prototype'];
+    $options = $attachment_prototype->getFields();
     if (empty($element['#disable_empty_fields']) || empty($attachment)) {
-      return $attachment_prototype->fields;
+      return $options;
     }
-    $options = [];
-    foreach ($attachment_prototype->fields as $key => $field) {
-      if ($attachment->values[$key] === NULL) {
+    foreach ($options as $key => $field) {
+      if ($attachment->values[StringHelper::makeCamelCase($key, TRUE)] === NULL) {
         $options[$field] = [];
       }
       else {
@@ -430,6 +438,43 @@ class DataPoint extends FormElementBase {
       }
     }
     return $options;
+  }
+
+  /**
+   * Reset submitted metric values that do not exist on the current attachment.
+   *
+   * AJAX rebuilds can switch the attachment or prototype while values from the
+   * previous data-point form are still in user input. If those stale values are
+   * left untouched, Drupal rejects the select elements before the AJAX callback
+   * can return the rebuilt form.
+   *
+   * @param array $defaults
+   *   The data point defaults, by reference.
+   * @param array $data_point_options
+   *   The available data point options for the current attachment.
+   * @param array $element
+   *   The data point element.
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   The current form state.
+   */
+  private static function sanitizeMetricTypeDefaults(array &$defaults, array $data_point_options, array $element, FormStateInterface $form_state): void {
+    $fallback_metric_type = array_key_first($data_point_options);
+    foreach ([0, 1] as $index) {
+      $metric_type = $defaults['data_points'][$index]['metric_type'] ?? NULL;
+      if ($metric_type !== NULL && !array_key_exists($metric_type, $data_point_options)) {
+        $defaults['data_points'][$index]['metric_type'] = $index == 0 || $defaults['processing'] == 'calculated' ? $fallback_metric_type : NULL;
+      }
+    }
+
+    $user_input = $form_state->getUserInput();
+    foreach ([0, 1] as $index) {
+      NestedArray::setValue($user_input, array_merge($element['#parents'], [
+        'data_points',
+        $index,
+        'metric_type',
+      ]), $defaults['data_points'][$index]['metric_type'] ?? NULL);
+    }
+    $form_state->setUserInput($user_input);
   }
 
 }

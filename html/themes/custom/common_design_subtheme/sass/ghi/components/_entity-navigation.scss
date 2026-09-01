@@ -65,6 +65,9 @@ ul.links--entity-navigation {
     }
 
     &.expandable {
+      .cd-dropdown__btn-preview {
+        margin-right: 13px;
+      }
       &.dropdown {
         position: relative;
       }

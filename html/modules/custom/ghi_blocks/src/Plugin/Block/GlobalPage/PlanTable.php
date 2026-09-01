@@ -3,9 +3,14 @@
 namespace Drupal\ghi_blocks\Plugin\Block\GlobalPage;
 
 use Drupal\Component\Render\FormattableMarkup;
+use Drupal\Core\Block\Attribute\Block;
 use Drupal\Core\Cache\Cache;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Plugin\Context\ContextDefinition;
+use Drupal\Core\Plugin\Context\EntityContextDefinition;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\Url;
+use Drupal\ghi_blocks\Plugin\Block\BlockCommentInterface;
 use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
 use Drupal\ghi_blocks\Traits\BlockCommentTrait;
 use Drupal\ghi_blocks\Traits\GlobalPlanOverviewBlockTrait;
@@ -15,6 +20,7 @@ use Drupal\ghi_blocks\Traits\TableSoftLimitTrait;
 use Drupal\ghi_blocks\Traits\TableTrait;
 use Drupal\ghi_plans\ApiObjects\Mocks\PlanOverviewPlanMock;
 use Drupal\ghi_plans\Traits\FtsLinkTrait;
+use Drupal\hpc_common\Plugin\HPCBlockMetadata;
 use Drupal\hpc_common\Helpers\ArrayHelper;
 use Drupal\hpc_common\Helpers\CommonHelper;
 use Drupal\hpc_common\Helpers\FieldHelper;
@@ -26,21 +32,17 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Provides a 'PlanTable' block.
- *
- * @Block(
- *  id = "global_plan_table",
- *  admin_label = @Translation("Plan table"),
- *  category = @Translation("Global"),
- *  data_sources = {
- *    "plans" = "plan_overview_query",
- *  },
- *  context_definitions = {
- *    "node" = @ContextDefinition("entity:node", label = @Translation("Node"), required = FALSE),
- *    "year" = @ContextDefinition("integer", label = @Translation("Year"))
- *  }
- * )
  */
-class PlanTable extends GHIBlockBase implements HPCDownloadExcelInterface, HPCDownloadPNGInterface {
+#[Block(
+  id: 'global_plan_table',
+  admin_label: new TranslatableMarkup('Plan table'),
+  category: new TranslatableMarkup('Global'),
+  context_definitions: [
+    'node' => new EntityContextDefinition('entity:node', new TranslatableMarkup('Node'), required: FALSE),
+    'year' => new ContextDefinition(data_type: 'integer', label: new TranslatableMarkup("Year")),
+  ]
+)]
+class PlanTable extends GHIBlockBase implements HPCDownloadExcelInterface, HPCDownloadPNGInterface, BlockCommentInterface {
 
   use GlobalPlanOverviewBlockTrait;
   use GlobalSettingsTrait;
@@ -60,6 +62,17 @@ class PlanTable extends GHIBlockBase implements HPCDownloadExcelInterface, HPCDo
   /**
    * {@inheritdoc}
    */
+  public static function metadata(): ?HPCBlockMetadata {
+    return new HPCBlockMetadata(
+      dataSources: [
+        'plans_overview' => 'fabric_query:plan_overview',
+      ],
+    );
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
     /** @var \Drupal\ghi_blocks\Plugin\Block\GHIBlockBase $instance */
     $instance = parent::create($container, $configuration, $plugin_id, $plugin_definition);
@@ -67,6 +80,14 @@ class PlanTable extends GHIBlockBase implements HPCDownloadExcelInterface, HPCDo
     // Set our own properties.
     $instance->sectionManager = $container->get('ghi_sections.manager');
     return $instance;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getBlockComment(): ?string {
+    $conf = $this->getBlockConfig();
+    return $conf['table']['comment'] ?? NULL;
   }
 
   /**
@@ -111,18 +132,12 @@ class PlanTable extends GHIBlockBase implements HPCDownloadExcelInterface, HPCDo
       '#progress_groups' => TRUE,
       '#soft_limit' => $this->getBlockConfig()['table']['soft_limit'] ?? 0,
       '#cache' => [
-        'context' => $this->getCacheContexts(),
+        'contexts' => $this->getCacheContexts(),
         'tags' => $this->getCacheTags(),
-        'max' => $this->getCacheMaxAge(),
+        'max-age' => $this->getCacheMaxAge(),
       ],
       '#block_id' => $this->getBlockId(),
     ];
-
-    $comment = $this->buildBlockCommentRenderArray($conf['table']['comment'] ?? NULL);
-    if ($comment) {
-      $comment['#attributes']['class'][] = 'content-width';
-      $build['comment'] = $comment;
-    }
     return $build;
   }
 
@@ -140,7 +155,6 @@ class PlanTable extends GHIBlockBase implements HPCDownloadExcelInterface, HPCDo
     if (empty($plans)) {
       return NULL;
     }
-    $year = $this->getContextValue('year');
 
     $header = [];
     if ($export) {
@@ -178,21 +192,21 @@ class PlanTable extends GHIBlockBase implements HPCDownloadExcelInterface, HPCDo
       }
 
       // Setup the PiN values.
-      $in_need = $plan->getCaseloadValue('inNeed');
+      $in_need = $plan->getCaseloadValue('in_need');
       $target = $plan->getCaseloadValue('target');
-      $latest_reached = $plan->getCaseloadValue('latestReach');
+      $latest_reached = $plan->getCaseloadValue('latest_reach');
 
       $reached_percent = !empty($latest_reached) && !empty($target) ? 100 / $target * $latest_reached : NULL;
       if ($plan instanceof PlanOverviewPlanMock) {
         $reached_percent = ((float) $plan->getCaseloadValue('reached_percent')) * 100;
       }
-      $expected_reach = $plan->getCaseloadValue('expectedReach', 'Expected Reach');
+      $expected_reach = $plan->getCaseloadValue('expected_reach', 'Expected Reach');
       $expected_reached = CommonHelper::calculateRatio($expected_reach, $target) * 100;
 
       // Setup the financial values.
-      $requirements = $plan->getRequirements($plan);
-      $funding = $plan->getFunding($plan);
-      $coverage = $plan->getCoverage($plan);
+      $requirements = $plan->getRequirements();
+      $funding = $plan->getFunding();
+      $coverage = $plan->getCoverage(2);
 
       // Setup number formatting.
       $decimals = 1;
@@ -388,7 +402,7 @@ class PlanTable extends GHIBlockBase implements HPCDownloadExcelInterface, HPCDo
     }
 
     $this->applyTableConfiguration($header, $rows, $plans);
-    $this->applyGlobalConfigurationTable($header, $rows, $cache_tags, $year, $plans);
+    $this->applyGlobalConfigurationTable($header, $rows, $cache_tags, $this->getContextValue('year'), $plans);
 
     if (empty($rows)) {
       return NULL;
@@ -404,7 +418,7 @@ class PlanTable extends GHIBlockBase implements HPCDownloadExcelInterface, HPCDo
   /**
    * Get the custom plan rows if configured.
    *
-   * @return \Drupal\ghi_plans\ApiObjects\Mocks\PlanOverviewPlanMock
+   * @return \Drupal\ghi_plans\ApiObjects\Mocks\PlanOverviewPlanMock[]
    *   An array of mocked plan overview response objects.
    */
   private function getCustomPlanRows() {
@@ -415,7 +429,7 @@ class PlanTable extends GHIBlockBase implements HPCDownloadExcelInterface, HPCDo
     });
     if (!empty($custom_rows)) {
       foreach ($custom_rows as $key => $custom_row) {
-        $custom_rows[$key] = new PlanOverviewPlanMock((object) $custom_row);
+        $custom_rows[$key] = new PlanOverviewPlanMock((object) $custom_row, -($key + 1));
       }
     }
     return $custom_rows;
@@ -664,7 +678,7 @@ class PlanTable extends GHIBlockBase implements HPCDownloadExcelInterface, HPCDo
     $custom_rows_config = $config['custom_rows'] ?? $defaults['custom_rows'];
     $plans_config = $config['plans'] ?? $defaults['plans'];
 
-    $plans = $this->getPlanQuery()->getPlans();
+    $plans = $this->getPlanOverviewQuery()->getPlans();
     $custom_rows = $this->getCustomPlanRows();
     if (!empty($custom_rows)) {
       if ($custom_rows_config['replace']) {

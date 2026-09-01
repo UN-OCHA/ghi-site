@@ -8,9 +8,11 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\Element\RenderElementBase;
 use Drupal\Core\Render\Element\VerticalTabs;
 use Drupal\Core\Render\Markup;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\file\Entity\File;
 use Drupal\file\FileInterface;
 use Drupal\ghi_blocks\Traits\VerticalTabsTrait;
+use Drupal\ghi_form_elements\Attribute\ConfigurationContainerItem;
 use Drupal\ghi_form_elements\ConfigurationContainerItemPluginBase;
 use Drupal\ghi_form_elements\Helpers\FormElementHelper;
 use Drupal\ghi_form_elements\Traits\CustomLinkTrait;
@@ -18,13 +20,12 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Provides a link item for configuration containers.
- *
- * @ConfigurationContainerItem(
- *   id = "link",
- *   label = @Translation("Link"),
- *   description = @Translation("This item displays a link with a title, a description and an optional image."),
- * )
  */
+#[ConfigurationContainerItem(
+  id: 'link',
+  label: new TranslatableMarkup('Link'),
+  description: new TranslatableMarkup('This item displays a link with a title, a description and an optional image.'),
+)]
 class Link extends ConfigurationContainerItemPluginBase {
 
   use CustomLinkTrait;
@@ -63,7 +64,8 @@ class Link extends ConfigurationContainerItemPluginBase {
   /**
    * {@inheritdoc}
    */
-  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition): Link {
+    /** @var self $instance */
     $instance = parent::create($container, $configuration, $plugin_id, $plugin_definition);
     $instance->dateFormatter = $container->get('date.formatter');
     $instance->cropManager = $container->get('ghi_image.crop_manager');
@@ -172,7 +174,7 @@ class Link extends ConfigurationContainerItemPluginBase {
 
     // Also allows to define the crop type but this has been deactivated for
     // the moment, see https://humanitarian.atlassian.net/browse/HPC-9391.
-    // @codingStandardsIgnoreStart
+    // phpcs:disable
     // $crop_type_options = [];
     // foreach (self::CROP_TYPES as $crop_type) {
     //   $crop_type_options[$crop_type] = $this->entityTypeManager->getStorage('crop_type')->load($crop_type)->label();
@@ -192,7 +194,7 @@ class Link extends ConfigurationContainerItemPluginBase {
     //     ],
     //   ],
     // ];
-    // @codingStandardsIgnoreEnd
+    // phpcs:enable
     $element['image']['image']['crop_type'] = [
       '#type' => 'hidden',
       '#value' => self::CROP_TYPES[0],

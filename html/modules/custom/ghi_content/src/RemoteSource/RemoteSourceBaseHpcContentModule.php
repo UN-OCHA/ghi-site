@@ -12,6 +12,8 @@ use Drupal\ghi_content\RemoteContent\HpcContentModule\RemoteTag;
 use Drupal\ghi_content\RemoteContent\RemoteParagraphInterface;
 use Drupal\ghi_content\RemoteResponse\RemoteResponse;
 use Drupal\hpc_api\Traits\SimpleCacheTrait;
+use Drupal\hpc_remote_data_cache\RemoteDataCacheInterface;
+use Drupal\hpc_remote_data_cache\RemoteDataCacheItem;
 use GuzzleHttp\Cookie\CookieJar;
 use GuzzleHttp\Exception\ClientException;
 use GuzzleHttp\Exception\GuzzleException;
@@ -49,11 +51,21 @@ abstract class RemoteSourceBaseHpcContentModule extends RemoteSourceBase impleme
   protected $loggerFactory;
 
   /**
+   * The persistent remote data cache service.
+   *
+   * @var \Drupal\hpc_remote_data_cache\RemoteDataCacheInterface|null
+   */
+  protected ?RemoteDataCacheInterface $remoteDataCache = NULL;
+
+  /**
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
     $instance = parent::create($container, $configuration, $plugin_id, $plugin_definition);
     $instance->loggerFactory = $container->get('logger.factory');
+    if ($container->has('hpc_remote_data_cache.cache')) {
+      $instance->remoteDataCache = $container->get('hpc_remote_data_cache.cache');
+    }
     return $instance;
   }
 
@@ -247,37 +259,70 @@ abstract class RemoteSourceBaseHpcContentModule extends RemoteSourceBase impleme
    * {@inheritdoc}
    */
   public function query($payload, array $cache_tags = []) {
-    $query = 'query ' . str_replace("\n", " ", addslashes(trim($payload)));
-    $body = '{"query": "' . $query . '"}';
+    $body = $this->buildRequestBody($payload);
+    $use_remote_cache = $this->canUseRemoteDataCache($payload);
+    $remote_cache_cid = $use_remote_cache ? $this->getRemoteDataCacheCid($body) : NULL;
+    $remote_cache_item = NULL;
 
-    $headers = [
-      'Content-type' => 'application/json',
-      'Apollo-Require-Preflight' => 'true',
-    ];
-    if ($basic_auth = $this->getRemoteBasicAuth()) {
-      $headers['Authorization'] = 'Basic ' . base64_encode($basic_auth['user'] . ':' . $basic_auth['pass']);
+    if ($use_remote_cache) {
+      if (!$this->disableCache) {
+        $remote_cache_item = $this->remoteDataCache->get($remote_cache_cid);
+        if ($this->canUseRemoteCacheItem($remote_cache_item)) {
+          if ($remote_cache_item->isStale()) {
+            $this->remoteDataCache->queueRefresh($remote_cache_item);
+          }
+          return $remote_cache_item->getPayload();
+        }
+      }
+    }
+    else {
+      // Dynamic title searches stay on the regular cache bin to avoid
+      // permanently storing high-cardinality editor/autocomplete queries.
+      $cache_key = $this->getCacheKey(['url' => $this->getRemoteEndpointUrl()] + ['body' => $body]);
+      if (!$this->disableCache && $response = $this->cache($cache_key, NULL, FALSE, $this->cacheBaseTime ?? NULL)) {
+        return $response;
+      }
     }
 
-    $cookies = ['access_key' => $this->getRemoteAccessKey()];
-    $jar = CookieJar::fromArray($cookies, parse_url($this->getRemoteBaseUrl(), PHP_URL_HOST));
-    $post_args = [
-      'body' => $body,
-      'headers' => $headers,
-      'cookies' => $jar,
-    ];
-
-    // See if we have a cached version already for this request.
-    $cache_key = $this->getCacheKey(['url' => $this->getRemoteEndpointUrl()] + ['body' => $post_args['body']]);
-    if (!$this->disableCache && $response = $this->cache($cache_key, NULL, FALSE, $this->cacheBaseTime ?? NULL)) {
-      // If we have a cached version, use that.
+    $response = $this->fetchRemoteGraphQlRequest($body);
+    if (!$response->getStatus()) {
+      if ($use_remote_cache && $this->remoteDataCache->canServeExpiredOnError() && $this->canUseExpiredRemoteCacheItem($remote_cache_item)) {
+        return $remote_cache_item->getPayload();
+      }
       return $response;
     }
 
-    // Otherwise send the query.
+    if ($use_remote_cache) {
+      $this->remoteDataCache->set($remote_cache_cid, $response, [
+        'refresher_id' => 'hpc_content_module_graphql',
+        'endpoint_url' => $this->getRemoteEndpointUrl(),
+        'request_body' => $body,
+        'context' => [
+          'remote_source_id' => $this->getPluginId(),
+        ],
+        'cache_tags' => $cache_tags,
+      ]);
+      return $response;
+    }
+
+    $this->cache($cache_key, $response, FALSE, NULL, $cache_tags);
+    return $response;
+  }
+
+  /**
+   * Fetch an encoded GraphQL request from the remote content source.
+   *
+   * @param string $body
+   *   The encoded GraphQL request body.
+   *
+   * @return \Drupal\ghi_content\RemoteResponse\RemoteResponse
+   *   The remote response object.
+   */
+  public function fetchRemoteGraphQlRequest(string $body): RemoteResponse {
     $response = new RemoteResponse();
     $result = NULL;
     try {
-      $result = $this->httpClient->post($this->getRemoteEndpointUrl(), $post_args);
+      $result = $this->httpClient->post($this->getRemoteEndpointUrl(), $this->buildPostArgs($body));
     }
     catch (ClientException $e) {
       $this->logError($e->getMessage());
@@ -327,9 +372,122 @@ abstract class RemoteSourceBaseHpcContentModule extends RemoteSourceBase impleme
       // Just catch it for the moment and log errors.
       $this->logError($e->getMessage());
     }
-    // Store the response in the cache.
-    $this->cache($cache_key, $response, FALSE, NULL, $cache_tags);
     return $response;
+  }
+
+  /**
+   * Build the encoded GraphQL request body.
+   *
+   * @param string $payload
+   *   The GraphQL payload.
+   *
+   * @return string
+   *   The encoded request body.
+   */
+  private function buildRequestBody(string $payload): string {
+    $query = 'query ' . str_replace("\n", " ", addslashes(trim($payload)));
+    return '{"query": "' . $query . '"}';
+  }
+
+  /**
+   * Build remote request arguments.
+   *
+   * @param string $body
+   *   The encoded GraphQL request body.
+   *
+   * @return array
+   *   The request arguments.
+   */
+  private function buildPostArgs(string $body): array {
+    $headers = [
+      'Content-type' => 'application/json',
+      'Apollo-Require-Preflight' => 'true',
+    ];
+    if ($basic_auth = $this->getRemoteBasicAuth()) {
+      $headers['Authorization'] = 'Basic ' . base64_encode($basic_auth['user'] . ':' . $basic_auth['pass']);
+    }
+
+    $cookies = ['access_key' => $this->getRemoteAccessKey()];
+    $jar = CookieJar::fromArray($cookies, parse_url($this->getRemoteBaseUrl(), PHP_URL_HOST));
+    return [
+      'body' => $body,
+      'headers' => $headers,
+      'cookies' => $jar,
+    ];
+  }
+
+  /**
+   * Check if the persistent remote data cache can be used for a payload.
+   *
+   * @param string $payload
+   *   The GraphQL payload.
+   *
+   * @return bool
+   *   TRUE if the remote data cache can be used, FALSE otherwise.
+   */
+  private function canUseRemoteDataCache(string $payload): bool {
+    return $this->remoteDataCache?->isEnabled() && !$this->isHighCardinalitySearchQuery($payload);
+  }
+
+  /**
+   * Check if a remote cache item can satisfy this request.
+   *
+   * @param \Drupal\hpc_remote_data_cache\RemoteDataCacheItem|null $item
+   *   The remote cache item.
+   *
+   * @return bool
+   *   TRUE if the item can be used, FALSE otherwise.
+   */
+  private function canUseRemoteCacheItem(?RemoteDataCacheItem $item): bool {
+    if (!$item) {
+      return FALSE;
+    }
+    $cache_base_time = $this->getCacheBaseTime();
+    if ($cache_base_time && $item->getFetched() < $cache_base_time) {
+      return FALSE;
+    }
+    // Import flows use cacheBaseTime to force data fetched after the import
+    // starts, so do not serve stale entries in that mode.
+    return $cache_base_time ? $item->isFresh() : ($item->isFresh() || $item->isStale());
+  }
+
+  /**
+   * Check if an expired remote cache item can be used after a fetch error.
+   *
+   * @param \Drupal\hpc_remote_data_cache\RemoteDataCacheItem|null $item
+   *   The remote cache item.
+   *
+   * @return bool
+   *   TRUE if the expired item can be used after an error, FALSE otherwise.
+   */
+  private function canUseExpiredRemoteCacheItem(?RemoteDataCacheItem $item): bool {
+    return $item instanceof RemoteDataCacheItem && $item->isExpired() && !$this->getCacheBaseTime();
+  }
+
+  /**
+   * Build a persistent remote data cache id for a content source request.
+   *
+   * @param string $body
+   *   The encoded GraphQL request body.
+   *
+   * @return string
+   *   The cache id.
+   */
+  private function getRemoteDataCacheCid(string $body): string {
+    return $this->remoteDataCache->buildCid('hpc_content_module_graphql', $this->getPluginId() . "\n" . $this->getRemoteEndpointUrl() . "\n" . $body);
+  }
+
+  /**
+   * Check if a payload is a high-cardinality editor search query.
+   *
+   * @param string $payload
+   *   The GraphQL payload.
+   *
+   * @return bool
+   *   TRUE if the payload should stay on the normal cache path.
+   */
+  private function isHighCardinalitySearchQuery(string $payload): bool {
+    return str_contains($payload, 'articleSearch(title:') || str_contains($payload, 'documentSearch(title:');
   }
 
   /**

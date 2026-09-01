@@ -32,6 +32,13 @@
     }
 
     /**
+     * Remove throbber markup.
+     */
+    destroy = function () {
+      $(this.containerWrapper).remove();
+    }
+
+    /**
      * Show the throbber.
      */
     show = function () {

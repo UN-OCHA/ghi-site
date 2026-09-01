@@ -1,15 +1,25 @@
-entity.base_object.hpc:
-  route_name: ghi_plans.base_object.plan_structure
-  base_route: entity.base_object.canonical
-  title: HPC
-  weight: 100
-entity.base_object.hpc.plan_structure:
-  route_name: ghi_plans.base_object.plan_structure
-  base_route: entity.base_object.canonical
-  parent_id: entity.base_object.hpc
-  title: Plan structure
-# entity.node.hpc.plan_settings:
-#   route_name: ghi_plans.node.plan_settings
-#   base_route: entity.node.canonical
-#   parent_id: entity.node.hpc
-#   title: Plan settings
+hpc_api.fabric_report.plan_entity_lookup:
+  route_name: ghi_plans.plan_entity_lookup
+  base_route: hpc_api.fabric_report
+  title: 'Plan entity lookup'
+  weight: 5
+hpc_api.fabric_report.entity_prototype_lookup:
+  route_name: ghi_plans.entity_prototype_lookup
+  base_route: hpc_api.fabric_report
+  title: 'Entity prototype lookup'
+  weight: 6
+hpc_api.fabric_report.attachment_lookup:
+  route_name: ghi_plans.attachment_lookup
+  base_route: hpc_api.fabric_report
+  title: 'Attachment lookup'
+  weight: 7
+hpc_api.fabric_report.attachment_prototype_lookup:
+  route_name: ghi_plans.attachment_prototype_lookup
+  base_route: hpc_api.fabric_report
+  title: 'Attachment prototype lookup'
+  weight: 8
+hpc_api.fabric_report.measurement_lookup:
+  route_name: ghi_plans.measurement_lookup
+  base_route: hpc_api.fabric_report
+  title: 'Measurement lookup'
+  weight: 9

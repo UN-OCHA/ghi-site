@@ -2,26 +2,43 @@
 
 namespace Drupal\hpc_api\Traits;
 
+use Symfony\Component\HttpFoundation\Request;
+
 /**
  * Provide a simple in-memory cache.
  */
 trait SimpleCacheTrait {
+
+  use DateTimeTrait;
 
   /**
    * Build a cache key from an associative array.
    *
    * @param array $array
    *   The input array.
+   * @param string $called_class
+   *   Optional: The called class.
+   * @param string $called_method
+   *   Optional: The called method.
    *
    * @return string
    *   A cache key string.
    */
-  public static function getCacheKey(array $array) {
-    // First sort the incoming arguments.
+  public static function getCacheKey(array $array, ?string $called_class = NULL, ?string $called_method = NULL) {
+    // Support ajax switchers when caching.
+    $query_args = self::getCurrentRequest()?->request->all() ?? [];
+    $query_args = array_filter($query_args, fn ($key) => !in_array($key, [
+      'ajax_page_state',
+      '_drupal_ajax',
+      '_triggering_element_name',
+      'form_build_id',
+    ]), ARRAY_FILTER_USE_KEY);
+    $array += $query_args;
+    // Sort the arguments by key.
     ksort($array);
     // Then get information about the caller.
-    $called_class = array_key_last(array_flip(explode('\\', get_called_class())));
-    $called_method = debug_backtrace(!DEBUG_BACKTRACE_PROVIDE_OBJECT | DEBUG_BACKTRACE_IGNORE_ARGS, 2)[1]['function'];
+    $called_class = $called_class ?? array_key_last(array_flip(explode('\\', get_called_class())));
+    $called_method = $called_method ?? debug_backtrace(!DEBUG_BACKTRACE_PROVIDE_OBJECT | DEBUG_BACKTRACE_IGNORE_ARGS, 2)[1]['function'];
     $caller = $called_class . ':' . $called_method;
     // And finally, turn the array into a string, clean that up and encode to
     // limit character size.
@@ -49,11 +66,13 @@ trait SimpleCacheTrait {
    * @param array $cache_tags
    *   The cache tags to associate with this cache entry. Optional and only
    *   relevant when storing data.
+   * @param array $lifetime
+   *   Override the default site-wide cache lifetime..
    *
    * @return mixed|void
    *   Either the stored data or nothing.
    */
-  public function cache($cache_key, $data = NULL, $reset = FALSE, $cache_base_time = NULL, $cache_tags = []) {
+  public function cache($cache_key, $data = NULL, $reset = FALSE, $cache_base_time = NULL, $cache_tags = [], $lifetime = NULL): mixed {
     $cache_store = &drupal_static(get_called_class() . '::' . __FUNCTION__, []);
 
     if ($data === NULL && $reset === TRUE) {
@@ -78,7 +97,7 @@ trait SimpleCacheTrait {
 
     // Store data in the cache.
     $cache_store[$cache_key] = $data;
-    $expiration_time = self::getRequestTime() + self::getCacheLifetime();
+    $expiration_time = self::getRequestTime() + ($lifetime ?? self::getCacheLifetime());
     self::cacheBackend()->set($cache_key, $data, $expiration_time, $cache_tags);
     return $cache_store[$cache_key];
   }
@@ -94,6 +113,16 @@ trait SimpleCacheTrait {
   }
 
   /**
+   * Get the current request.
+   *
+   * @return \Symfony\Component\HttpFoundation\Request|null
+   *   A request object.
+   */
+  private static function getCurrentRequest(): ?Request {
+    return \Drupal::getContainer()->has('request_stack') ? \Drupal::requestStack()->getCurrentRequest() : NULL;
+  }
+
+  /**
    * Get the cache lifetime.
    *
    * @return int
@@ -101,16 +130,6 @@ trait SimpleCacheTrait {
    */
   private static function getCacheLifetime() {
     return \Drupal::config('hpc_api.settings')->get('cache_lifetime');
-  }
-
-  /**
-   * Get the time of the request.
-   *
-   * @return int
-   *   The unix timestamp of the request.
-   */
-  private static function getRequestTime() {
-    return \Drupal::time()->getRequestTime();
   }
 
 }

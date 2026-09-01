@@ -174,16 +174,20 @@
                   &::after {
                     position: relative;
                     top: .2rem;
-                    content: "keyboard_arrow_down";
+                    display: inline-block;
+                    width: 1rem;
+                    height: 1rem;
+                    content: "";
                     color: var(--ghi-primary-button-color);
-                    font-family: 'Material Icons';
+                    background-color: currentColor;
+                    mask: url("../img/icons/material-symbol-keyboard-arrow-down.svg") no-repeat center / contain;
                   }
                 }
 
                 &[open] {
                   margin-bottom: 1rem;
                   & > summary::after {
-                    content: "keyboard_arrow_up";
+                    mask-image: url("../img/icons/material-symbol-keyboard-arrow-up.svg");
                   }
                 }
 
@@ -286,6 +290,7 @@
               }
 
               &[role="navigation"] {
+                margin-bottom: 2rem;
                 padding: 2rem 0.25rem;
               }
 

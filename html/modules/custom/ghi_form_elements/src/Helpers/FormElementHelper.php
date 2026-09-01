@@ -19,7 +19,7 @@ class FormElementHelper {
    *   The final state selector string.
    */
   public static function getStateSelector(array $element, array $subkeys) {
-    return self::getStateSelectorFromParents($element['#parents'], $subkeys);
+    return self::getStateSelectorFromParents($element['#parents'] ?? [], $subkeys);
   }
 
   /**
@@ -34,6 +34,9 @@ class FormElementHelper {
    *   The final state selector string.
    */
   public static function getStateSelectorFromParents(array $parents, array $subkeys) {
+    if (empty($parents)) {
+      reset($subkeys) . '[' . implode('][', array_slice($subkeys, 1)) . ']';
+    }
     return reset($parents) . '[' . implode('][', array_merge(array_slice($parents, 1), $subkeys)) . ']';
   }
 

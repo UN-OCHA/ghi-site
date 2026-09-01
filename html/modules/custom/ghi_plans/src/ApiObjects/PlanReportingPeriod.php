@@ -3,38 +3,85 @@
 namespace Drupal\ghi_plans\ApiObjects;
 
 use Drupal\Component\Render\FormattableMarkup;
-use Drupal\ghi_base_objects\ApiObjects\BaseObject;
 use Drupal\ghi_base_objects\Helpers\BaseObjectHelper;
 use Drupal\ghi_plans\Entity\Plan;
 use Drupal\ghi_plans\Traits\PlanReportingPeriodTrait;
+use Drupal\hpc_api\ApiObjects\ApiObjectBase;
 
 /**
  * Abstraction class for API plan reporting period objects.
  */
-class PlanReportingPeriod extends BaseObject {
+class PlanReportingPeriod extends ApiObjectBase {
 
   use PlanReportingPeriodTrait;
+
+  /**
+   * The plan id.
+   *
+   * @var int
+   */
+  protected int $planId;
+
+  /**
+   * The period number.
+   *
+   * @var int
+   */
+  protected int $periodNumber;
+
+  /**
+   * Whether measurements have been generated.
+   *
+   * @var bool
+   */
+  protected bool $measurementsGenerated;
+
+  /**
+   * The start date.
+   *
+   * @var string|null
+   */
+  protected ?string $startDate;
+
+  /**
+   * The end date.
+   *
+   * @var string|null
+   */
+  protected ?string $endDate;
 
   const FORMAT_DATE = 'j M Y';
   const FORMAT_DATE_SHORT = 'j M';
 
   /**
-   * Map the raw data.
-   *
-   * @return object
-   *   An object with the mapped data.
+   * Define the dimension items used in queries.
    */
-  protected function map(): object {
-    $data = $this->getRawData();
-    return (object) [
-      'id' => $data->id,
-      'plan_id' => $data->planId,
-      'period_number' => $data->periodNumber,
-      'measurements_generated' => $data->measurementsGenerated,
-      'start_date' => $data->startDate,
-      'end_date' => $data->endDate,
-    ];
+  const GRAPHQL_ITEMS = [
+    'Id',
+    'StartDate',
+    'EndDate',
+    'PeriodNumber',
+    'PlanId',
+    'MeasurementsGenerated',
+  ];
 
+  /**
+   * Define the properties used for storage lookups.
+   */
+  const LOOKUP_PROPERTIES = [
+    'PlanId',
+  ];
+
+  /**
+   * {@inheritdoc}
+   */
+  public function __construct(object $data) {
+    parent::__construct($data);
+    $this->planId = (int) $data->PlanId;
+    $this->periodNumber = (int) $data->PeriodNumber;
+    $this->measurementsGenerated = (bool) $data->MeasurementsGenerated;
+    $this->startDate = $data->StartDate ?? NULL;
+    $this->endDate = $data->EndDate ?? NULL;
   }
 
   /**
@@ -44,27 +91,27 @@ class PlanReportingPeriod extends BaseObject {
    *   The plan ID if any can be found.
    */
   public function getPlanId(): int {
-    return $this->plan_id;
+    return $this->planId;
   }
 
   /**
    * Get the start date.
    *
-   * @return string
+   * @return string|null
    *   The start date as a date string in the format "2024-07-01".
    */
-  public function getStartDate(): string {
-    return $this->start_date;
+  public function getStartDate(): ?string {
+    return $this->startDate;
   }
 
   /**
    * Get the end date.
    *
-   * @return string
+   * @return string|null
    *   The end date as a date string in the format "2024-07-01".
    */
-  public function getEndDate(): string {
-    return $this->end_date;
+  public function getEndDate(): ?string {
+    return $this->endDate;
   }
 
   /**
@@ -74,7 +121,7 @@ class PlanReportingPeriod extends BaseObject {
    *   The period number of the reporting period.
    */
   public function getPeriodNumber(): int {
-    return $this->period_number;
+    return $this->periodNumber;
   }
 
   /**
@@ -84,7 +131,7 @@ class PlanReportingPeriod extends BaseObject {
    *   TRUE if the it's open, FALSE otherwise.
    */
   public function isOpen(): bool {
-    return $this->measurements_generated;
+    return $this->measurementsGenerated;
   }
 
   /**
@@ -118,6 +165,9 @@ class PlanReportingPeriod extends BaseObject {
    *   The start date as a formatted string.
    */
   public function formatStartDate(?string $format = NULL): string {
+    if (!$this->getStartDate()) {
+      return $this->t('n/a');
+    }
     $date = $this->getDateTimeObject($this->getStartDate());
     return $date->format($format ?? self::FORMAT_DATE);
   }
@@ -132,6 +182,9 @@ class PlanReportingPeriod extends BaseObject {
    *   The end date as a formatted string.
    */
   public function formatEndDate(?string $format = NULL): string {
+    if (!$this->getEndDate()) {
+      return $this->t('n/a');
+    }
     $date = $this->getDateTimeObject($this->getEndDate());
     return $date->format($format ?? self::FORMAT_DATE);
   }
@@ -143,8 +196,21 @@ class PlanReportingPeriod extends BaseObject {
    *   The date range as a formatted string.
    */
   public function formatDateRange(): string {
-    $start_date = $this->formatStartDate();
-    $end_date = $this->formatEndDate();
+    $start_date = $this->getStartDate() ? $this->formatStartDate() : NULL;
+    $end_date = $this->getEndDate() ? $this->formatEndDate() : NULL;
+    if (!$start_date && $end_date) {
+      return $this->t('until @date', [
+        '@date' => $end_date,
+      ]);
+    }
+    elseif ($start_date && !$end_date) {
+      return $this->t('From @date', [
+        '@date' => $start_date,
+      ]);
+    }
+    elseif (!$start_date && !$end_date) {
+      return $this->t('n/a');
+    }
     if ($this->formatStartDate('Y') == $this->formatEndDate('Y')) {
       $start_date = $this->formatStartDate(self::FORMAT_DATE_SHORT);
     }
@@ -160,9 +226,22 @@ class PlanReportingPeriod extends BaseObject {
    *   The cumulative date range as a formatted string.
    */
   public function formatCumulativeDateRange(): string {
-    $start = $this->getDateTimeObject($this->getPlanStartDate() ?? $this->getStartDate());
-    $start_date = $start->format($format ?? self::FORMAT_DATE);
-    $end_date = $this->formatEndDate();
+    $start = ($this->getPlanStartDate() ?? $this->getStartDate()) ? $this->getDateTimeObject($this->getPlanStartDate() ?? $this->getStartDate()) : NULL;
+    $start_date = $start?->format($format ?? self::FORMAT_DATE) ?? NULL;
+    $end_date = $this->getEndDate() ? $this->formatEndDate() : NULL;
+    if (!$start_date && $end_date) {
+      return $this->t('until @date', [
+        '@date' => $end_date,
+      ]);
+    }
+    elseif ($start_date && !$end_date) {
+      return $this->t('From @date', [
+        '@date' => $start_date,
+      ]);
+    }
+    elseif (!$start_date && !$end_date) {
+      return $this->t('n/a');
+    }
     if ($start->format('Y') == $this->formatEndDate('Y')) {
       $start_date = $start->format(self::FORMAT_DATE_SHORT);
     }

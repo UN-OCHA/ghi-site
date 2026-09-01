@@ -6,6 +6,10 @@ administer ghi map config:
   title: 'Administer GHI map config'
   description: 'Allow to access the GHI map administration pages.'
   restrict access: true
+administer ghi block config:
+  title: 'Administer GHI block config'
+  description: 'Allow to access the GHI block administration pages.'
+  restrict access: true
 administer ghi logframe config:
   title: 'Administer GHI logframe config'
   description: 'Allow to access the GHI logframe administration pages.'

@@ -10,21 +10,11 @@ use Drupal\Tests\UnitTestCase;
 use Drupal\hpc_common\Helpers\TaxonomyHelper;
 use Drupal\taxonomy\Entity\Term;
 use Drupal\taxonomy\TermStorageInterface;
-use Prophecy\PhpUnit\ProphecyTrait;
 
 /**
  * @covers Drupal\hpc_common\Helpers\TaxonomyHelper
  */
 class TaxonomyHelperTest extends UnitTestCase {
-
-  use ProphecyTrait;
-
-  /**
-   * The taxonomy helper class.
-   *
-   * @var \Drupal\hpc_common\Helpers\TaxonomyHelper
-   */
-  protected $taxonomyHelper;
 
   /**
    * The entity storage.
@@ -80,8 +70,6 @@ class TaxonomyHelperTest extends UnitTestCase {
     // Set container.
     $container = new ContainerBuilder();
     \Drupal::setContainer($container);
-
-    $this->taxonomyHelper = new TaxonomyHelper();
   }
 
   /**
@@ -146,7 +134,7 @@ class TaxonomyHelperTest extends UnitTestCase {
       '@vid' => $vid,
     ]);
 
-    $this->assertEquals($result, $this->taxonomyHelper->getParentTermFromChildTermName($child_term_name, $vid), $message);
+    $this->assertEquals($result, TaxonomyHelper::getParentTermFromChildTermName($child_term_name, $vid), $message);
   }
 
   /**
@@ -189,7 +177,7 @@ class TaxonomyHelperTest extends UnitTestCase {
       '@vid' => $vid,
     ]);
 
-    $this->assertEquals($result, $this->taxonomyHelper->loadMultipleTermsByName($names, $vid), $message);
+    $this->assertEquals($result, TaxonomyHelper::loadMultipleTermsByName($names, $vid), $message);
   }
 
   /**
@@ -231,7 +219,7 @@ class TaxonomyHelperTest extends UnitTestCase {
       '@vid' => $vid,
     ]);
 
-    $this->assertEquals($result, $this->taxonomyHelper->loadMultipleTermsByVocabulary($vid), $message);
+    $this->assertEquals($result, TaxonomyHelper::loadMultipleTermsByVocabulary($vid), $message);
   }
 
   /**
@@ -283,7 +271,7 @@ class TaxonomyHelperTest extends UnitTestCase {
       '@vid' => $vid,
     ]);
 
-    $this->assertEquals($result, $this->taxonomyHelper->getTermIdFromOriginalId($original_id, $vid), $message);
+    $this->assertEquals($result, TaxonomyHelper::getTermIdFromOriginalId($original_id, $vid), $message);
   }
 
   /**
@@ -330,7 +318,7 @@ class TaxonomyHelperTest extends UnitTestCase {
       '@vid' => $vid,
     ]);
 
-    $this->assertEquals($result, $this->taxonomyHelper->getTermIdsByFieldValue($field_name, $value, $vid), $message);
+    $this->assertEquals($result, TaxonomyHelper::getTermIdsByFieldValue($field_name, $value, $vid), $message);
   }
 
   /**

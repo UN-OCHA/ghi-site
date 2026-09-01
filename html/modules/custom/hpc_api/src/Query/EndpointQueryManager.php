@@ -7,7 +7,7 @@ use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Plugin\DefaultPluginManager;
 
 /**
- * Plugin manager class for configuration container item plugins.
+ * Plugin manager class for endpoint query plugins.
  */
 class EndpointQueryManager extends DefaultPluginManager {
 
@@ -17,13 +17,13 @@ class EndpointQueryManager extends DefaultPluginManager {
   public function __construct(\Traversable $namespaces, CacheBackendInterface $cache_backend, ModuleHandlerInterface $module_handler) {
     parent::__construct('Plugin/EndpointQuery', $namespaces, $module_handler, 'Drupal\hpc_api\Query\EndpointQueryPluginInterface', 'Drupal\hpc_api\Annotation\EndpointQuery');
     $this->alterInfo('hpc_api_endpoint_query_info');
-    $this->setCacheBackend($cache_backend, 'hpc_api');
+    $this->setCacheBackend($cache_backend, 'hpc_api_endpoint_query_plugins');
   }
 
   /**
    * {@inheritdoc}
    */
-  public function createInstance($plugin_id, array $configuration = []) {
+  public function createInstance($plugin_id, array $configuration = []): EndpointQueryBase {
     /** @var \Drupal\hpc_api\Query\EndpointQueryBase $instance */
     $instance = parent::createInstance($plugin_id, $configuration);
     return $instance;

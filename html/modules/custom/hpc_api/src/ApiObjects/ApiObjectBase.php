@@ -7,6 +7,7 @@ use Drupal\Core\Cache\CacheableDependencyInterface;
 use Drupal\Core\Cache\CacheableDependencyTrait;
 use Drupal\Core\DependencyInjection\DependencySerializationTrait;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
+use Drupal\hpc_api\Helpers\ArrayHelper;
 
 /**
  * Base class for API objects.
@@ -18,101 +19,129 @@ abstract class ApiObjectBase implements ApiObjectInterface, CacheableDependencyI
   use CacheableDependencyTrait;
 
   /**
-   * The original data for an object from the HPC API.
+   * The id.
    *
-   * @var object
+   * @var int
    */
-  private $data;
+  protected int $id;
 
   /**
-   * The mapped data for an object from the HPC API.
+   * The raw data.
    *
-   * @var object
+   * @var mixed
    */
-  private $map;
+  protected mixed $rawData;
 
   /**
    * {@inheritdoc}
    */
   public function __construct($data) {
-    $this->setRawData($data);
-    $this->updateMap();
+    $this->id = (int) $data->Id;
+    $this->rawData = $data;
   }
 
   /**
    * {@inheritdoc}
    */
-  public function id() {
-    return (int) ($this->map?->id ?? $this->data->id);
+  public function id(): int {
+    return $this->id;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function getGraphQlItems() {
+    try {
+      $items = (new \ReflectionClassConstant(get_called_class(), 'GRAPHQL_ITEMS'))->getValue();
+      assert(is_array($items));
+      return $items;
+    }
+    catch (\Exception $e) {
+      return [];
+    }
   }
 
   /**
    * {@inheritdoc}
    */
   public function getRawData() {
-    return $this->data ?: NULL;
+    return $this->rawData ?: NULL;
   }
 
   /**
-   * Set the raw data for the attachment, as returned by the API.
-   *
-   * @param object $data
-   *   The raw data object.
+   * {@inheritdoc}
    */
-  protected function setRawData($data) {
-    $this->data = $data;
+  public static function getObjectLookupProperties(): array {
+    try {
+      $items = (new \ReflectionClassConstant(get_called_class(), 'LOOKUP_PROPERTIES'))->getValue();
+      assert(is_array($items));
+      return $items;
+    }
+    catch (\Exception $e) {
+      return [];
+    }
   }
 
   /**
-   * Update the internal map.
+   * {@inheritdoc}
    */
-  protected function updateMap() {
-    $this->map = $this->map($this->data);
+  public static function getObjectStorageKey(): string {
+    try {
+      $object_storage_key = (new \ReflectionClassConstant(get_called_class(), 'OBJECT_STORAGE_KEY'))->getValue();
+      if ($object_storage_key) {
+        return $object_storage_key;
+      }
+    }
+    catch (\Exception $e) {
+      // Fail silently.
+    }
+    $parts = explode('\\', static::class);
+    $class_name = end($parts);
+    return ucfirst(strtolower($class_name) . 'ObjectStorage');
   }
 
   /**
-   * Access mapped properties.
-   *
-   * @param string $property
-   *   The property to retrieve.
-   *
-   * @return mixed|null
-   *   The property value if it's available.
-   */
-  public function __get($property) {
-    return $this->map->$property ?? NULL;
-  }
-
-  /**
-   * Allow for empty or isset checks using magical accessors.
-   *
-   * @param string $property
-   *   The property to check.
-   *
-   * @return bool
-   *   TRUE if the value is present and not empty, FALSE otherwise.
-   */
-  public function __isset($property) {
-    return property_exists($this->map, $property) && !empty($this->map->$property);
-  }
-
-  /**
-   * Represent this as an array.
-   *
-   * @return array
-   *   The mapped data as an array.
+   * {@inheritdoc}
    */
   public function toArray() {
-    return (array) $this->map ?? [];
-  }
+    $reflect = new \ReflectionClass($this);
+    $array = [];
+    $exclude_properties = [
+      'stringTranslation',
+      'cacheMaxAge',
+      'rawData',
+    ];
+    foreach ($reflect->getProperties() as $property) {
+      $key = $property->getName();
+      if ($property->isPrivate() || in_array($key, $exclude_properties)) {
+        continue;
+      }
+      $item = $this->$key;
+      if (is_object($item) && method_exists($item, 'toArray')) {
+        $array[$key] = $item->toArray();
+      }
+      elseif (is_array($item)) {
+        foreach ($item as $_key => $_item) {
+          if (is_object($_item) && method_exists($_item, 'toArray')) {
+            $array[$key][$_key] = $_item->toArray();
+          }
+          elseif (is_array($_item) || is_scalar($_item)) {
+            $array[$key][$_key] = $_item;
+          }
+        }
+      }
+      else {
+        $array[$key] = $item;
+      }
+    }
 
-  /**
-   * Map the raw data.
-   *
-   * @return object
-   *   An object with the mapped data.
-   */
-  abstract protected function map();
+    // Classes can define a constant to exclude specific array keys from being
+    // transformed.
+    $exclude_keys = $reflect->getConstant('MAINTAIN_ARRAY_KEYS') ?: [];
+    ArrayHelper::transformKeysToUnderscore($array, $exclude_keys);
+
+    return $array;
+  }
 
   /**
    * Set the cache tags for this object.
@@ -122,32 +151,6 @@ abstract class ApiObjectBase implements ApiObjectInterface, CacheableDependencyI
    */
   public function setCacheTags($cache_tags) {
     $this->cacheTags = Cache::mergeTags($this->cacheTags, $cache_tags);
-  }
-
-  /**
-   * Serialize the data for this object.
-   *
-   * @return array
-   *   An array with serialized data for this object.
-   */
-  public function __serialize() {
-    return ['data' => serialize($this->data)];
-  }
-
-  /**
-   * Unserialize this object based on the given data.
-   *
-   * @param array $data
-   *   The serialized data.
-   */
-  public function __unserialize(array $data) {
-    if (empty($data['data'])) {
-      return;
-    }
-    $this->setRawData(unserialize($data['data']));
-    if ($this->data) {
-      $this->updateMap();
-    }
   }
 
 }

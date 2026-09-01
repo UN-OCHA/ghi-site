@@ -61,6 +61,33 @@
     }
   }
 
+  .ghi-block-bigpipe-preview {
+    display: flex;
+    align-items: center;
+    min-height: 5rem;
+    margin-bottom: 1rem;
+    padding: 2rem 2rem 2rem 4rem;
+    border-radius: 2px;
+    background-color: var(--ghi-default-background-color);
+
+    .ajax-progress__throbber {
+      position: relative;
+      left: -2rem;
+    }
+    .preview-message {
+      font-size: var(--cd-font-size--default);
+    }
+
+    &.ghi-block-bigpipe-preview--delayed {
+      animation: ghi-block-bigpipe-preview-fade-in 0.2s ease 0.7s both;
+
+      .ajax-progress__throbber,
+      .preview-message {
+        animation: ghi-block-bigpipe-preview-fade-in 0.2s ease 0.7s both;
+      }
+    }
+  }
+
   body.page-node-type-article .layout__region--content > &.block:first-child {
     margin-top: 2.5rem;
   }
@@ -119,7 +146,7 @@
               https://codepen.io/sosuke/pen/Pjoqqp to create a filter that makes the
               icon appear in that color. */
             filter: invert(22%) sepia(21%) saturate(0%) hue-rotate(165deg) brightness(112%) contrast(83%);
-            background: url("https://fonts.gstatic.com/s/i/short-term/release/materialsymbolsoutlined/download/default/20px.svg")
+            background: url("../img/icons/material-symbol-download.svg")
               no-repeat;
           }
         }
@@ -129,48 +156,6 @@
           color: var(--ghi-default-text-color);
         }
       }
-
-      .block-admin-links {
-        display: flex;
-        align-items: baseline;
-        gap: 0.5rem;
-
-        a {
-          position: relative;
-          top: 2px;
-          font-size: var(--cd-font-size--base);
-        }
-
-        button[data-toggle="popover"] {
-          position: relative;
-          top: -1px;
-          padding: 0;
-          transition: none;
-          color: inherit;
-          border: 0;
-          background-color: inherit;
-
-          &:hover,
-          &:focus {
-            color: var(--cd-primary-color--dark);
-            border: 0;
-            outline: 0;
-          }
-        }
-
-        .tippy-box {
-          .title {
-            padding-bottom: 0;
-          }
-          .block-configuration.content {
-            padding-top: 0;
-          }
-        }
-      }
-    }
-
-    &.block-links--admin-icons:not(.block-links--download-links) .block-links--inner {
-      justify-content: end;
     }
   }
 
@@ -179,5 +164,23 @@
       margin-top: 1rem;
       border-top: 0;
     }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ghi-block .ghi-block-bigpipe-preview--delayed,
+  .ghi-block .ghi-block-bigpipe-preview--delayed .ajax-progress__throbber,
+  .ghi-block .ghi-block-bigpipe-preview--delayed .preview-message {
+    animation: none;
+  }
+}
+
+@keyframes ghi-block-bigpipe-preview-fade-in {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
   }
 }

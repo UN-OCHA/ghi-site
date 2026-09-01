@@ -1,0 +1,43 @@
+{
+  "Id": 5399,
+  "RefCode": "IN",
+  "Type": "indicator",
+  "Value": {
+    "calculationMethod": [
+      "Sum",
+      "Average",
+      "Maximum value",
+      "Latest value"
+    ],
+    "hasMeasures": 1,
+    "measureFields": [
+      {
+        "name": {
+          "en": "Mesure"
+        },
+        "type": "measure"
+      }
+    ],
+    "name": {
+      "en": "Indicateur"
+    },
+    "min": 0,
+    "max": 15,
+    "entities": [
+      "SP",
+      "CO",
+      "CA"
+    ],
+    "metrics": [
+      {
+        "type": "target",
+        "name": {
+          "en": "Ciblés"
+        }
+      }
+    ]
+  },
+  "PlanId": 1112,
+  "CreatedAt": "2022-09-27T09:22:19.000Z",
+  "UpdatedAt": "2023-05-11T09:17:27.000Z"
+}

@@ -69,6 +69,7 @@ function hpc_common_theme($existing, $type, $theme, $path) {
         'export' => FALSE,
         'precision' => NULL,
         'decimal_format' => NULL,
+        'compact_precision' => FALSE,
       ],
     ] + $common,
     'hpc_progress_bar' => [
@@ -162,6 +163,13 @@ function hpc_common_theme($existing, $type, $theme, $path) {
         'tag' => NULL,
       ],
       'template' => 'hpc-icon',
+    ] + $common,
+    'hpc_icon_symbol' => [
+      'variables' => [
+        'icon' => NULL,
+        'symbol_id' => NULL,
+      ],
+      'template' => 'hpc-icon-symbol',
     ] + $common,
     'hpc_toggle' => [
       'variables' => [

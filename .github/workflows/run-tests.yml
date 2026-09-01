@@ -145,17 +145,23 @@ jobs:
             shard: 0
             shards: 0
             test_path: ''
-          - label: Kernel 1/2
+          - label: Kernel 1/3
             testsuite: kernel
             coverage: kernel-1
             shard: 1
-            shards: 2
+            shards: 3
             test_path: '*/tests/src/Kernel/*Test.php'
-          - label: Kernel 2/2
+          - label: Kernel 2/3
             testsuite: kernel
             coverage: kernel-2
             shard: 2
-            shards: 2
+            shards: 3
+            test_path: '*/tests/src/Kernel/*Test.php'
+          - label: Kernel 3/3
+            testsuite: kernel
+            coverage: kernel-3
+            shard: 3
+            shards: 3
             test_path: '*/tests/src/Kernel/*Test.php'
           - label: Functional 1/4
             testsuite: functional

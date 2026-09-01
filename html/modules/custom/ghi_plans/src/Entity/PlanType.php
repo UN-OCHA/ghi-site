@@ -2,13 +2,15 @@
 
 namespace Drupal\ghi_plans\Entity;
 
-use Drupal\hpc_common\Helpers\StringHelper;
+use Drupal\hpc_api\Helpers\StringHelper;
 use Drupal\taxonomy\Entity\Term;
 
 /**
  * Bundle class for plan type taxonomy terms.
  */
 class PlanType extends Term {
+
+  public const BUNDLE = 'plan_type';
 
   /**
    * Get the abbreaviation for the plan type.

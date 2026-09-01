@@ -2,10 +2,12 @@
 
 namespace Drupal\ghi_plans\ApiObjects\Attachments;
 
+use Drupal\ghi_plans\ApiObjects\PlanEntityInterface;
+use Drupal\ghi_plans\ApiObjects\Prototypes\AttachmentPrototype;
 use Drupal\hpc_api\ApiObjects\ApiObjectInterface;
 
 /**
- * Interface for API attachment objects.
+ * Interface for API data attachment objects.
  */
 interface AttachmentInterface extends ApiObjectInterface {
 
@@ -24,5 +26,93 @@ interface AttachmentInterface extends ApiObjectInterface {
    *   The attachment description.
    */
   public function getDescription();
+
+  /**
+   * Get the fields used in an attachment.
+   *
+   * @return string[]
+   *   An array of field labels as provided by the API.
+   */
+  public function getFields();
+
+  /**
+   * Get the field types used in an attachment.
+   *
+   * @return string[]
+   *   An array of field types as strings.
+   */
+  public function getFieldTypes();
+
+  /**
+   * Get the custom id of the attachment.
+   *
+   * @return string
+   *   The custom id of the attachment.
+   */
+  public function getCustomId();
+
+  /**
+   * Get the custom id prefixed with the ref code.
+   *
+   * @return string
+   *   The custom id prefixed with the ref code.
+   */
+  public function getCustomIdWithRefCode(): string;
+
+  /**
+   * Get the composed reference.
+   *
+   * @return string
+   *   The composed reference.
+   */
+  public function getComposedReference(): string;
+
+  /**
+   * Extract the plan id from an attachment object.
+   *
+   * @return int|null
+   *   The plan ID if any can be found.
+   */
+  public function getPlanId();
+
+  /**
+   * Get the source entity type.
+   *
+   * @return string|null
+   *   The source entity type.
+   */
+  public function getSourceEntityType();
+
+  /**
+   * Get the source entity id.
+   *
+   * @return string|null
+   *   The source entity id.
+   */
+  public function getSourceEntityId();
+
+  /**
+   * Get the source entity.
+   *
+   * @return \Drupal\ghi_plans\ApiObjects\PlanEntityInterface|null
+   *   The entity object.
+   */
+  public function getSourceEntity(): ?PlanEntityInterface;
+
+  /**
+   * Get the prototype for an attachment.
+   *
+   * @return \Drupal\ghi_plans\ApiObjects\Prototypes\AttachmentPrototype|null
+   *   The attachment prototype object.
+   */
+  public function getPrototype(): ?AttachmentPrototype;
+
+  /**
+   * See if the API says this attachment can have disaggregated data.
+   *
+   * @return bool
+   *   TRUE if disaggregated data can be fetched, FALSE otherwise.
+   */
+  public function canHaveDisaggregatedData(): bool;
 
 }

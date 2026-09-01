@@ -2,7 +2,9 @@
 
 namespace Drupal\ghi_content\Plugin\Block;
 
+use Drupal\Core\Block\Attribute\Block;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Plugin\Context\EntityContextDefinition;
 use Drupal\Core\Render\Markup;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\ghi_blocks\Interfaces\MultiStepFormBlockInterface;
@@ -10,35 +12,43 @@ use Drupal\ghi_blocks\Interfaces\OverrideDefaultTitleBlockInterface;
 use Drupal\ghi_content\Entity\Document as DocumentNode;
 use Drupal\ghi_content\RemoteContent\RemoteChapterInterface;
 use Drupal\ghi_content\RemoteContent\RemoteDocumentInterface;
+use Drupal\hpc_common\Plugin\HPCBlockMetadata;
 
 /**
  * Provides a 'DocumentChapter' block.
- *
- * @Block(
- *  id = "document_chapter",
- *  admin_label = @Translation("Document chapter"),
- *  category = @Translation("Narrative Content"),
- *  context_definitions = {
- *    "node" = @ContextDefinition("entity:node", label = @Translation("Node"), required = FALSE),
- *  },
- *  config_forms = {
- *    "document_select" = {
- *      "title" = @Translation("Document selection"),
- *      "callback" = "documentSelectForm",
- *      "base_form" = TRUE
- *    },
- *    "chapter" = {
- *      "title" = @Translation("Chapter"),
- *      "callback" = "chapterForm"
- *    },
- *    "display" = {
- *      "title" = @Translation("Display"),
- *      "callback" = "displayForm"
- *    }
- *  }
- * )
  */
+#[Block(
+  id: 'document_chapter',
+  admin_label: new TranslatableMarkup('Document chapter'),
+  category: new TranslatableMarkup('Narrative Content'),
+  context_definitions: [
+    'node' => new EntityContextDefinition('entity:node', new TranslatableMarkup('Node'), required: FALSE),
+  ]
+)]
 class DocumentChapter extends ContentBlockBase implements MultiStepFormBlockInterface, OverrideDefaultTitleBlockInterface {
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function metadata(): ?HPCBlockMetadata {
+    return new HPCBlockMetadata(
+      configForms: [
+        'document_select' => [
+          'title' => 'Document selection',
+          'callback' => 'documentSelectForm',
+          'base_form' => TRUE,
+        ],
+        'chapter' => [
+          'title' => 'Chapter',
+          'callback' => 'chapterForm',
+        ],
+        'display' => [
+          'title' => 'Display',
+          'callback' => 'displayForm',
+        ],
+      ]
+    );
+  }
 
   /**
    * {@inheritdoc}

@@ -1,0 +1,14 @@
+{
+  "Id": 7935,
+  "Name": "Education",
+  "Description": null,
+  "PlanId": 1266,
+  "EntityTypeId": 10,
+  "HpcEntityPrototypeId": 4267,
+  "CustomReference": "EDU",
+  "ComposedReference": "CLEDU",
+  "HPCTags": null,
+  "coordinationEntityContact": {
+    "items": []
+  }
+}

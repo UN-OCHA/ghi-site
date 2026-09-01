@@ -19,7 +19,7 @@ use Drupal\ghi_subpages\Entity\LogframeSubpage;
 use Drupal\ghi_subpages\Entity\SubpageNodeInterface;
 use Drupal\ghi_subpages\Helpers\SubpageHelper;
 use Drupal\ghi_subpages\SubpageManager;
-use Drupal\hpc_common\Helpers\StringHelper;
+use Drupal\hpc_api\Helpers\StringHelper;
 use Drupal\layout_builder\SectionStorageInterface;
 use Drupal\node\Form\NodeDeleteForm;
 use Drupal\node\NodeInterface;
@@ -208,7 +208,7 @@ function ghi_subpages_form_alter(array &$form, FormStateInterface $form_state, $
         '@entity_type_label' => strtolower($entity->type->entity->label()),
       ]);
     }
-    $form['promote']['#access'] = \Drupal::currentUser()->hasPermission('administer site');
+    $form['promote']['#access'] = \Drupal::currentUser()->hasPermission('administer site configuration');
   }
 }
 

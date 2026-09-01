@@ -2,10 +2,12 @@
 
 namespace Drupal\ghi_blocks\Plugin\Block\Generic;
 
+use Drupal\Core\Block\Attribute\Block;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\Markup;
 use Drupal\file\Entity\File;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\ghi_blocks\Interfaces\ConfigurableTableBlockInterface;
 use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
 use Drupal\ghi_blocks\Plugin\Block\ImageProviderBlockInterface;
@@ -13,24 +15,29 @@ use Drupal\ghi_blocks\Plugin\ConfigurationContainerItem\CarouselItem;
 use Drupal\ghi_blocks\Traits\ManagedFileBlockTrait;
 use Drupal\ghi_form_elements\Traits\ConfigurationContainerTrait;
 use Drupal\ghi_form_elements\Traits\CustomLinkTrait;
-use Drupal\hpc_api\Query\EndpointQuery;
+use Drupal\hpc_common\Plugin\HPCBlockMetadata;
 use Drupal\hpc_common\Helpers\ArrayHelper;
 
 /**
  * Provides a 'LinkCarousel' block.
- *
- * @Block(
- *  id = "generic_link_carousel",
- *  admin_label = @Translation("Link Carousel"),
- *  category = @Translation("Generic elements"),
- *  title = FALSE
- * )
  */
+#[Block(
+  id: 'generic_link_carousel',
+  admin_label: new TranslatableMarkup('Link Carousel'),
+  category: new TranslatableMarkup('Generic elements'),
+)]
 class LinkCarousel extends GHIBlockBase implements ConfigurableTableBlockInterface, ImageProviderBlockInterface {
 
   use ConfigurationContainerTrait;
   use ManagedFileBlockTrait;
   use CustomLinkTrait;
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function metadata(): ?HPCBlockMetadata {
+    return new HPCBlockMetadata(usesTitle: FALSE);
+  }
 
   /**
    * {@inheritdoc}
@@ -59,7 +66,7 @@ class LinkCarousel extends GHIBlockBase implements ConfigurableTableBlockInterfa
 
     $context = $this->getBlockContext();
     $carousel_items = [];
-    ArrayHelper::sortArrayByNumericKey($conf['items'], 'weight', EndpointQuery::SORT_ASC);
+    ArrayHelper::sortArrayByNumericKey($conf['items'], 'weight', SORT_ASC);
     foreach ($conf['items'] as $item) {
 
       /** @var \Drupal\ghi_blocks\Plugin\ConfigurationContainerItem\CarouselItem $item_type */

@@ -9,6 +9,7 @@ use Drupal\Core\Plugin\Context\Context;
 use Drupal\Core\Plugin\Context\ContextDefinition;
 use Drupal\ghi_subpages\Entity\SubpageNodeInterface;
 use Drupal\hpc_api\Query\EndpointQueryPluginInterface;
+use Drupal\hpc_api\Query\FabricQueryPluginInterface;
 use Drupal\hpc_common\Helpers\ContextHelper;
 use Drupal\hpc_common\Helpers\RequestHelper;
 use Drupal\layout_builder\Plugin\SectionStorage\OverridesSectionStorage;
@@ -101,6 +102,13 @@ abstract class HPCBlockBase extends BlockBase implements HPCPluginInterface, Con
   protected $endpointQueryManager;
 
   /**
+   * The manager class for fabric query plugins.
+   *
+   * @var \Drupal\hpc_api\Query\FabricQueryManager
+   */
+  protected $fabricQueryManager;
+
+  /**
    * The entity type manager.
    *
    * @var \Drupal\Core\Entity\EntityTypeManagerInterface
@@ -129,6 +137,13 @@ abstract class HPCBlockBase extends BlockBase implements HPCPluginInterface, Con
   protected $queryHandlers = [];
 
   /**
+   * Block-level metadata.
+   */
+  public static function metadata(): ?HpcBlockMetadata {
+    return NULL;
+  }
+
+  /**
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
@@ -139,6 +154,7 @@ abstract class HPCBlockBase extends BlockBase implements HPCPluginInterface, Con
     $instance->requestStack = $container->get('request_stack');
     $instance->router = $container->get('router.no_access_checks');
     $instance->endpointQueryManager = $container->get('plugin.manager.endpoint_query_manager');
+    $instance->fabricQueryManager = $container->get('plugin.manager.fabric_query_manager');
     $instance->entityTypeManager = $container->get('entity_type.manager');
     $instance->entityFieldManager = $container->get('entity_field.manager');
     $instance->fileSystem = $container->get('file_system');
@@ -218,8 +234,7 @@ abstract class HPCBlockBase extends BlockBase implements HPCPluginInterface, Con
    */
   public function getConfiguration() {
     // Make sure we always use up to data data source information.
-    $plugin_definition = $this->getPluginDefinition();
-    $this->configuration['data_sources'] = $plugin_definition['data_sources'] ?? NULL;
+    $this->configuration['data_sources'] = static::metadata()->dataSources ?? NULL;
     return $this->configuration;
   }
 
@@ -284,15 +299,21 @@ abstract class HPCBlockBase extends BlockBase implements HPCPluginInterface, Con
   public function setCurrentUri($current_uri = NULL) {
     if ($current_uri === NULL) {
       $request = $this->requestStack->getCurrentRequest();
-      // This might come from an IPE or form state context ($_POST).
-      $current_path = $request->request->get('currentPath');
-      // Or from a query argument, i.e. in download contexts.
+      // This might come from IPE/form POST data or preview endpoint query args.
+      $current_path = $request->request->get('currentPath') ?? $request->query->get('current_path');
+      // Other callers, such as downloads, pass an explicit URI query argument.
       $uri = $request->query->get('uri') ?? $request->query->get('current_uri');
+      // Layout Builder IPE keeps the edited page path in the destination when
+      // opening contextual forms that do not preserve current_path.
+      $destination = $request->query->get('destination');
       if (!empty($current_path)) {
         $current_uri = $current_path;
       }
       elseif (!empty($uri)) {
         $current_uri = $uri;
+      }
+      elseif (!empty($destination)) {
+        $current_uri = $destination;
       }
       else {
         $current_uri = $request->getRequestUri();
@@ -611,8 +632,9 @@ abstract class HPCBlockBase extends BlockBase implements HPCPluginInterface, Con
    */
   protected function baseConfigurationDefaults() {
     $defaults = parent::baseConfigurationDefaults();
-    if (!empty($this->pluginDefinition['data_sources'])) {
-      $defaults['data_sources'] = $this->pluginDefinition['data_sources'];
+    $metadata = static::metadata();
+    if (!empty($metadata->dataSources)) {
+      $defaults['data_sources'] = $metadata->dataSources;
     }
     $defaults['uuid'] = $this->getUuid();
     return $defaults;
@@ -629,49 +651,69 @@ abstract class HPCBlockBase extends BlockBase implements HPCPluginInterface, Con
    * @param string $source_key
    *   The source key that should be used to retrieve data for a block.
    *
-   * @return \Drupal\hpc_api\Query\EndpointQueryPluginInterface
+   * @return \Drupal\hpc_api\Query\EndpointQueryPluginInterface|\Drupal\hpc_api\Query\FabricQueryPluginInterface
    *   The query handler class.
    */
   protected function getQueryHandler($source_key = 'data') {
     if (!empty($this->queryHandlers[$source_key])) {
       return $this->queryHandlers[$source_key];
     }
-    $configuration = $this->getPluginDefinition();
-    if (empty($configuration['data_sources'])) {
+    $sources = static::metadata()->dataSources ?? NULL;
+    if (!$sources || empty($sources[$source_key]) || !is_scalar($sources[$source_key])) {
       return NULL;
     }
 
-    $sources = $configuration['data_sources'];
-    $definition = !empty($sources[$source_key]) ? $sources[$source_key] : NULL;
-    if (!$definition || !is_scalar($definition) || !$this->endpointQueryManager->hasDefinition($definition)) {
-      return NULL;
-    }
+    [$source_api, $plugin_id] = explode(':', $sources[$source_key]);
 
-    /** @var \Drupal\hpc_api\Query\EndpointQueryPluginInterface $query_handler */
-    $query_handler = $this->endpointQueryManager->createInstance($definition);
-
-    // Get the available context values and use them as placeholder values for
-    // the query.
-    foreach ($this->getContexts() as $context_key => $context) {
-      /** @var \Drupal\Core\Plugin\Context\Context $context */
-      if ($context_key == 'node' || strpos($context_key, '--') || !$context->hasContextValue()) {
-        continue;
-      }
-      $context_value = $context->getContextValue();
-      if (is_scalar($context_value)) {
-        // Arguments like "year".
-        $query_handler->setPlaceholder($context_key, $context->getContextValue());
-      }
-      elseif ($context_value instanceof ContentEntityInterface && $context_value->hasField('field_original_id')) {
-        // Arguments like "plan_id".
-        $original_id = $context_value->get('field_original_id')->value;
-        if ($original_id && is_scalar($original_id)) {
-          $query_handler->setPlaceholder($context_key . '_id', $original_id);
+    $query_handler = NULL;
+    if ($source_api == 'fabric_query' && $this->fabricQueryManager->hasDefinition($plugin_id)) {
+      $query_handler = $this->fabricQueryManager->createInstance($plugin_id);
+      // Get the available context values and add them to the query class if
+      // that is supported.
+      foreach ($this->getContexts() as $context_key => $context) {
+        /** @var \Drupal\Core\Plugin\Context\Context $context */
+        if ($context_key == 'node' || strpos($context_key, '--') || !$context->hasContextValue()) {
+          continue;
         }
-        if ($context_value->hasField('field_plan')) {
-          $plan_id = $context_value->get('field_plan')->entity->get('field_original_id')->value ?? NULL;
-          if ($plan_id) {
-            $query_handler->setPlaceholder('plan_id', $plan_id);
+        $setter_method = 'set' . ucfirst($context_key);
+        if (!method_exists($query_handler, $setter_method)) {
+          continue;
+        }
+        $context_value = $context->getContextValue();
+        if (!is_scalar($context_value)) {
+          continue;
+        }
+        $query_handler->$setter_method($context_value);
+      }
+    }
+    elseif ($source_api == 'hpc_api' && $this->endpointQueryManager->hasDefinition($plugin_id)) {
+      // Otherwise check the deprecated endpoint query plugins.
+      /** @var \Drupal\hpc_api\Query\EndpointQueryPluginInterface $query_handler */
+      $query_handler = $this->endpointQueryManager->createInstance($plugin_id);
+
+      // Get the available context values and use them as placeholder values for
+      // the query.
+      foreach ($this->getContexts() as $context_key => $context) {
+        /** @var \Drupal\Core\Plugin\Context\Context $context */
+        if ($context_key == 'node' || strpos($context_key, '--') || !$context->hasContextValue()) {
+          continue;
+        }
+        $context_value = $context->getContextValue();
+        if (is_scalar($context_value)) {
+          // Arguments like "year".
+          $query_handler->setPlaceholder($context_key, $context_value);
+        }
+        elseif ($context_value instanceof ContentEntityInterface && $context_value->hasField('field_original_id')) {
+          // Arguments like "plan_id".
+          $original_id = $context_value->get('field_original_id')->value;
+          if ($original_id && is_scalar($original_id)) {
+            $query_handler->setPlaceholder($context_key . '_id', $original_id);
+          }
+          if ($context_value->hasField('field_plan')) {
+            $plan_id = $context_value->get('field_plan')->entity->get('field_original_id')->value ?? NULL;
+            if ($plan_id) {
+              $query_handler->setPlaceholder('plan_id', $plan_id);
+            }
           }
         }
       }
@@ -685,10 +727,10 @@ abstract class HPCBlockBase extends BlockBase implements HPCPluginInterface, Con
    *
    * @param string $source_key
    *   The source key for which the given query plugin should be used.
-   * @param \Drupal\hpc_api\Query\EndpointQueryPluginInterface $query_handler
+   * @param \Drupal\hpc_api\Query\EndpointQueryPluginInterface|\Drupal\hpc_api\Query\FabricQueryPluginInterface $query_handler
    *   The query plugin.
    */
-  public function setQueryHandler($source_key, EndpointQueryPluginInterface $query_handler) {
+  public function setQueryHandler($source_key, EndpointQueryPluginInterface|FabricQueryPluginInterface $query_handler) {
     $this->queryHandlers[$source_key] = $query_handler;
   }
 
@@ -739,7 +781,7 @@ abstract class HPCBlockBase extends BlockBase implements HPCPluginInterface, Con
     if (!empty($source_keys)) {
       foreach ($source_keys as $source_key) {
         $query_handler = $this->getQueryHandler($source_key);
-        if (!$query_handler) {
+        if (!$query_handler instanceof EndpointQueryPluginInterface) {
           continue;
         }
         if (method_exists($this, 'alterEndpointQuery')) {

@@ -280,7 +280,7 @@
         'properties': {
           // General properties.
           'object_id': object.object_id,
-          'object_name': object.location_name,
+          'object_name': object.name,
           'admin_level': object.admin_level,
           'legend_type': object.plan_type ?? null,
           // Paint properties.
@@ -718,15 +718,11 @@
      */
     showSidebarForObject = function (object) {
       let state = this.state;
-      let data = state.getData();
-
       let object_id = parseInt(object.object_id);
-      let location_data = data.modal_contents[object_id];
-
-      // Check for variant data.
-      let variant_id = state.getVariantId();
-      if (variant_id && state.hasVariant(state.getCurrentIndex(), variant_id)) {
-        location_data = data.variants[variant_id].modal_contents[object_id];
+      let location_data = state.getModalContent(object);
+      if (!location_data && state.hasLazyModalData()) {
+        state.showSidebarForObject(object);
+        return;
       }
       if (!location_data) {
         // The new tab has no data for the currently active location.
@@ -778,18 +774,7 @@
      */
     buildSidebarContent = function(object) {
       let state = this.state;
-      var data = state.getData();
-      var object_id = parseInt(object.object_id);
-
-      var base_data = null;
-      let variant_id = state.getVariantId();
-      if (variant_id != null && state.hasVariant(state.getCurrentIndex(), variant_id)) {
-        base_data = data.variants[variant_id];
-      }
-      else if (typeof data.modal_contents != 'undefined' && typeof data.modal_contents[object_id] != 'undefined') {
-        base_data = data;
-      }
-      let modal_content = base_data ? base_data.modal_contents[object_id] : (object.modal_content ?? null);
+      let modal_content = state.getModalContent(object);
       if (!modal_content) {
         return false;
       }
@@ -912,7 +897,7 @@
       if (!object) {
         return;
       }
-      self.showSidebarForObject(object);
+      self.state.showSidebarForObject(object);
     }
 
     /**
@@ -1117,7 +1102,7 @@
       let state = this.state;
       let tooltip = object.hasOwnProperty('tooltip') ? object.tooltip : null;
       if (tooltip === null) {
-        tooltip = '<b>Location:</b> ' + object.location_name;
+        tooltip = '<b>Location:</b> ' + object.name;
         if (typeof state.getData().hasOwnProperty('metric')) {
           tooltip += '<br /><b>Total ' + state.getData().metric.name.en.toLowerCase() + ':</b> ' + Drupal.theme('number', object.total);
         }

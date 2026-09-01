@@ -3,24 +3,33 @@
 namespace Drupal\ghi_content\Plugin\Block;
 
 use Drupal\Component\Utility\Html;
+use Drupal\Core\Block\Attribute\Block;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Plugin\Context\EntityContextDefinition;
 use Drupal\Core\Render\Markup;
 use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\hpc_common\Plugin\HPCBlockMetadata;
 
 /**
  * Provides a 'DocumentSubHeading' block.
- *
- * @Block(
- *  id = "document_subheading",
- *  admin_label = @Translation("Subheading"),
- *  category = @Translation("Narrative Content"),
- *  title = FALSE,
- *  context_definitions = {
- *    "node" = @ContextDefinition("entity:node", label = @Translation("Node"))
- *  }
- * )
  */
+#[Block(
+  id: 'document_subheading',
+  admin_label: new TranslatableMarkup('Subheading'),
+  category: new TranslatableMarkup('Narrative Content'),
+  context_definitions: [
+    'node' => new EntityContextDefinition('entity:node', new TranslatableMarkup('Node')),
+  ]
+)]
 class DocumentSubHeading extends GHIBlockBase {
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function metadata(): ?HPCBlockMetadata {
+    return new HPCBlockMetadata(usesTitle: FALSE);
+  }
 
   /**
    * {@inheritdoc}

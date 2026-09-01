@@ -2,78 +2,96 @@
 
 namespace Drupal\ghi_plans\ApiObjects\Entities;
 
-use Drupal\ghi_plans\Helpers\PlanEntityHelper;
+use Drupal\ghi_plans\ApiObjects\Contact;
+use Drupal\hpc_api\ApiObjects\FileAsset;
 
 /**
  * Abstraction class for API governing entity objects.
  */
 class GoverningEntity extends EntityObjectBase {
 
+  /**
+   * The icon name.
+   *
+   * @var string|null
+   */
+  protected ?string $icon;
+
+  /**
+   * The contacts.
+   *
+   * @var \Drupal\ghi_plans\ApiObjects\Contact[]
+   */
+  protected array $contacts;
+
+  /**
+   * The tags.
+   *
+   * @var string[]
+   */
+  protected array $tags;
+
   const ENTITY_REF_CODE = 'CL';
 
   /**
+   * Define the dimension items used in queries.
+   */
+  const GRAPHQL_ITEMS = [
+    'Id',
+    'Name',
+    'Description',
+    'PlanId',
+    'EntityTypeId',
+    'HpcEntityPrototypeId',
+    'CustomReference',
+    'ComposedReference',
+    'HPCTags',
+    // phpcs:disable Squiz.Arrays.ArrayDeclaration.KeySpecified
+    'contact' => ['items' => Contact::GRAPHQL_ITEMS],
+    'fileAsset' => ['items' => FileAsset::GRAPHQL_ITEMS],
+    'icon' => ['Name'],
+    // phpcs:enable Squiz.Arrays.ArrayDeclaration.KeySpecified
+  ];
+
+  /**
    * {@inheritdoc}
    */
-  protected function map() {
-    $entity = $this->getRawData();
-    $entity_version = $this->getEntityVersion($entity);
-    if (!property_exists($entity, 'entityPrototype') && !empty($entity->entityPrototypeId)) {
-      $entity->entityPrototype = PlanEntityHelper::getEntityPrototype($entity->entityPrototypeId);
-    }
-    $prototype = $entity->entityPrototype;
-
-    return (object) [
-      'id' => $entity->id,
-      'name' => $entity->composedReference . ': ' . $entity_version->name,
-      'group_name' => $entity->composedReference . ': ' . $entity_version->name,
-      'display_name' => $entity->composedReference . ': ' . $entity_version->name,
-      'singular_name' => $prototype->value->name->en->singular,
-      'plural_name' => $prototype->value->name->en->plural,
-      'description' => property_exists($entity_version->value, 'description') ? $entity_version->value->description : NULL,
-      'entity_name' => $entity_version->name,
-      'ref_code' => $prototype->refCode,
-      'ref_codes_children' => array_map(function ($child) {
-        return $child->refCode;
-      }, $prototype->value->possibleChildren ?: []),
-      'entity_type' => $prototype->type,
-      'entity_prototype_name' => $prototype->value->name->en->singular,
-      'entity_prototype_id' => $prototype->id,
-      'order_number' => $entity_version->value->orderNumber ?? 0,
-      'custom_reference' => $entity_version->customReference,
-      'composed_reference' => $entity->composedReference,
-      'sort_key' => property_exists($entity_version->value, 'orderNumber') ? $entity_version->value->orderNumber : ($prototype->orderNumber . ($entity->customReference ?? NULL)),
-      'icon' => !empty($entity_version->value->icon) ? $entity_version->value->icon : NULL,
-      'tags' => property_exists($entity_version, 'tags') ? $entity_version->tags : [],
-      'parent_id' => $entity->parentId ?? NULL,
-
-      // Legacy support.
-      'custom_id' => $entity_version->customReference,
-    ];
+  public function __construct(object $data) {
+    parent::__construct($data);
+    $contacts = array_filter($data->coordinationEntityContact?->items ?? [], fn ($item) => !empty($item->contact));
+    $this->icon = $data->icon?->Name ?? NULL;
+    $this->contacts = array_map(fn ($item): Contact => new Contact($item->contact), $contacts);
+    $this->tags = !empty($data->HPCTags) ? explode('|', $data->HPCTags) : [];
   }
 
   /**
    * {@inheritdoc}
    */
-  public function getEntityVersion() {
-    return $this->getRawData()->governingEntityVersion;
+  public function getDisplayName(): ?string {
+    return $this->entityName;
   }
 
   /**
    * {@inheritdoc}
    */
-  public function getEntityName() {
-    return $this->entity_name;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function getFullName() {
-    return $this->t('@type @name (@custom_reference)', [
-      '@type' => $this->entity_prototype_name,
-      '@name' => $this->name,
-      '@custom_reference' => $this->custom_reference,
+  public function getFullName(): string {
+    return (string) $this->t('@type @name (@custom_reference)', [
+      '@type' => $this->getPrototypeName(),
+      '@name' => $this->getName(),
+      '@custom_reference' => $this->getCustomReference(),
     ]);
+  }
+
+  /**
+   * Get the ref codes of all supported children.
+   *
+   * @return string[]
+   *   An array of ref code strings.
+   */
+  protected function getChildrenRefCodes() {
+    return array_map(function ($child) {
+      return $child->refCode;
+    }, $this->getPrototype()?->getChildren() ?: []);
   }
 
   /**
@@ -86,14 +104,54 @@ class GoverningEntity extends EntityObjectBase {
    *   An array of ref codes.
    */
   public function getValidRefCodes($include_children = TRUE) {
-    return array_merge([$this->ref_code], $this->ref_codes_children);
+    return array_merge([$this->getEntityTypeRefCode()], $this->getChildrenRefCodes());
   }
 
   /**
    * {@inheritdoc}
    */
-  public function getDescription() {
-    return $this->getEntityName();
+  public function getDescription(): ?string {
+    return $this->getDisplayName();
+  }
+
+  /**
+   * Get the icon for this entity.
+   *
+   * @return string|null
+   *   The name of the icon.
+   */
+  public function getIcon(): ?string {
+    return $this->icon;
+  }
+
+  /**
+   * Check if the entity has an icon.
+   *
+   * @return bool
+   *   TRUE if the entity has an icon, FALSE otherwise..
+   */
+  public function hasIcon(): bool {
+    return $this->getIcon() !== NULL;
+  }
+
+  /**
+   * Get the contacts for this entity.
+   *
+   * @return \Drupal\ghi_plans\ApiObjects\Contact[]
+   *   An array of contact objects.
+   */
+  public function getContacts(): array {
+    return $this->contacts;
+  }
+
+  /**
+   * Get the tags.
+   *
+   * @return string[]
+   *   An array of tag names.
+   */
+  public function getTags(): array {
+    return $this->tags ?: [];
   }
 
 }

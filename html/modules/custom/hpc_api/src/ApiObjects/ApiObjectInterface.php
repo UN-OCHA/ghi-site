@@ -23,4 +23,36 @@ interface ApiObjectInterface {
    */
   public function getRawData();
 
+  /**
+   * Get the items used for GraphQL queries.
+   *
+   * @return array
+   *   An array with items used for GraphQL queries.
+   */
+  public static function getGraphQlItems();
+
+  /**
+   * Get the properties on the raw data object that should be used for lookups.
+   *
+   * @return string[]
+   *   An array of property names.
+   */
+  public static function getObjectLookupProperties(): array;
+
+  /**
+   * Get a storage key for all objects of the same type.
+   *
+   * @return string
+   *   A string representing the storage key for the type of object.
+   */
+  public static function getObjectStorageKey(): string;
+
+  /**
+   * Represent this as an array.
+   *
+   * @return array
+   *   The mapped data as an array.
+   */
+  public function toArray();
+
 }

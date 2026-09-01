@@ -164,3 +164,27 @@ function ghi_blocks_post_update_9003(&$sandbox) {
     ]);
   }
 }
+
+/**
+ * Remove the unused latest-plan-data global setting.
+ */
+function ghi_blocks_post_update_9004(): string {
+  $config = \Drupal::configFactory()->getEditable('ghi_blocks.global_settings');
+  $settings = $config->getRawData();
+  $changed = FALSE;
+
+  foreach ($settings as $year => $year_config) {
+    if (!is_array($year_config) || !array_key_exists('use_latest_plan_data', $year_config)) {
+      continue;
+    }
+    unset($year_config['use_latest_plan_data']);
+    $config->set($year, $year_config);
+    $changed = TRUE;
+  }
+
+  if ($changed) {
+    $config->save();
+  }
+
+  return (string) t('Removed the unused latest plan data global setting.');
+}

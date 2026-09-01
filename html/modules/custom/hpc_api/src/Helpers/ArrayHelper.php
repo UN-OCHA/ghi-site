@@ -2,12 +2,26 @@
 
 namespace Drupal\hpc_api\Helpers;
 
-use Drupal\hpc_api\Query\EndpointQuery;
-
 /**
  * Helper class for array handling.
  */
 class ArrayHelper {
+
+  /**
+   * Key an array by one of its properties.
+   *
+   * @param array $array
+   *   The input array.
+   * @param string $property
+   *   The property to use as a key.
+   *
+   * @return array
+   *   The resulting array.
+   */
+  public static function keyByProperty($array, $property): array {
+    $ids = array_map(fn($item) => $item->$property, $array);
+    return array_combine($ids, $array);
+  }
 
   /**
    * Deep filter the given array.
@@ -22,50 +36,134 @@ class ArrayHelper {
    * @return array
    *   The filtered array.
    */
-  public static function filterArray(array $array, array $filters) {
-    $filtered_array = [];
-    foreach ($array as $i => $item) {
-      $found = TRUE;
+  public static function filterArray(array $array, array $filters): array {
+    return array_values(array_filter($array, fn ($item) => self::filterItemMatches($item, $filters)));
+  }
 
-      foreach ($filters as $filter => $value) {
-        $properties = explode('.', $filter);
-        $obj = (object) $item;
-
-        foreach ($properties as $i => $p) {
-          if (count($properties) == ($i + 1) && !is_array($value) && ($obj->{$p} ?? NULL) != $value) {
-            $found = FALSE;
-          }
-          elseif (count($properties) == ($i + 1) && is_array($value) && !in_array(($obj->{$p} ?? NULL), $value)) {
-            $found = FALSE;
-          }
-
-          if (count($properties) > ($i + 1)) {
-            if (is_object($obj)) {
-              if (isset($obj->{$p})) {
-                $obj = $obj->{$p};
-              }
-              else {
-                $found = FALSE;
-              }
-            }
-            elseif (is_array($obj)) {
-              if (array_key_exists($p, $obj)) {
-                $obj = $obj[$p];
-              }
-              else {
-                $found = FALSE;
-              }
-            }
-          }
-        }
+  /**
+   * Check if an item matches all filters.
+   *
+   * @param mixed $item
+   *   The item to inspect.
+   * @param array $filters
+   *   An array with the filters to apply.
+   *
+   * @return bool
+   *   TRUE if the item matches all filters, FALSE otherwise.
+   */
+  private static function filterItemMatches($item, array $filters): bool {
+    foreach ($filters as $filter => $value) {
+      if (!self::filterItemValueMatches($item, $filter, $value)) {
+        return FALSE;
       }
-
-      if ($found == TRUE) {
-        $filtered_array[] = $item;
-      }
-      $found = FALSE;
     }
-    return $filtered_array;
+    return TRUE;
+  }
+
+  /**
+   * Check if an item matches a filter.
+   *
+   * @param mixed $item
+   *   The item to inspect.
+   * @param string $filter
+   *   The filter method or property path.
+   * @param mixed $value
+   *   The filter value.
+   *
+   * @return bool
+   *   TRUE if the item matches the filter, FALSE otherwise.
+   */
+  private static function filterItemValueMatches($item, string $filter, $value): bool {
+    if (is_object($item) && method_exists($item, $filter)) {
+      return self::filterValueMatches($item->$filter(), $value);
+    }
+
+    $found = TRUE;
+    $property_value = self::getPropertyPathValue($item, explode('.', $filter), $found);
+    return $found && self::filterPropertyValueMatches($property_value, $value);
+  }
+
+  /**
+   * Get a property-path value from an item.
+   *
+   * @param mixed $item
+   *   The item to inspect.
+   * @param array $properties
+   *   The property path segments.
+   * @param bool $found
+   *   Whether the property path could be traversed.
+   *
+   * @return mixed
+   *   The value at the end of the path, or NULL if not found.
+   */
+  private static function getPropertyPathValue($item, array $properties, bool &$found) {
+    $obj = (object) $item;
+    $last_index = count($properties) - 1;
+
+    foreach ($properties as $i => $property) {
+      if ($i == $last_index) {
+        return $obj->{$property} ?? NULL;
+      }
+
+      if (is_object($obj)) {
+        if (!isset($obj->{$property})) {
+          $found = FALSE;
+          return NULL;
+        }
+        $obj = $obj->{$property};
+      }
+      elseif (is_array($obj)) {
+        if (!array_key_exists($property, $obj)) {
+          $found = FALSE;
+          return NULL;
+        }
+        $obj = $obj[$property];
+      }
+    }
+
+    return NULL;
+  }
+
+  /**
+   * Check if a property-path value matches the filter value.
+   *
+   * Property filters historically treat an array filter as a list of allowed
+   * complete property values, not as a request to overlap nested arrays.
+   *
+   * @param mixed $values
+   *   The property value.
+   * @param mixed $filter_value
+   *   The filter value.
+   *
+   * @return bool
+   *   TRUE if the property value matches the filter value, FALSE otherwise.
+   */
+  private static function filterPropertyValueMatches($values, $filter_value): bool {
+    return is_array($filter_value) ? in_array($values, $filter_value) : $values == $filter_value;
+  }
+
+  /**
+   * Check if a value returned from an item matches the filter value.
+   *
+   * @param mixed $values
+   *   The value returned by the item.
+   * @param mixed $filter_value
+   *   The filter value.
+   *
+   * @return bool
+   *   TRUE if the returned value matches the filter value, FALSE otherwise.
+   */
+  private static function filterValueMatches($values, $filter_value): bool {
+    if (is_array($values) && is_array($filter_value)) {
+      return !empty(array_intersect($values, $filter_value));
+    }
+    if (is_array($values)) {
+      return in_array($filter_value, $values);
+    }
+    if (is_array($filter_value)) {
+      return in_array($values, $filter_value);
+    }
+    return $values == $filter_value;
   }
 
   /**
@@ -141,7 +239,7 @@ class ArrayHelper {
         break;
 
       default:
-        throw new InvalidArgumentException('Invalid argument ' . $sort_type . ' for sort type. sortArray function only accepts sort types SORT_NUMERIC and SORT_STRING.');
+        throw new \InvalidArgumentException('Invalid argument ' . $sort_type . ' for sort type. sortArray function only accepts sort types SORT_NUMERIC and SORT_STRING.');
     }
   }
 
@@ -156,7 +254,7 @@ class ArrayHelper {
    *   The sort direction.
    */
   public static function sortArrayByNumericKey(array &$data, $order, $sort) {
-    $sort_factor = $sort == EndpointQuery::SORT_DESC ? -1 : 1;
+    $sort_factor = $sort == SORT_DESC ? -1 : 1;
     uasort($data, function ($a, $b) use ($order, $sort_factor) {
       $a_value = $a[$order] ?? 0;
       $b_value = $b[$order] ?? 0;
@@ -174,8 +272,8 @@ class ArrayHelper {
    * @param string $sort
    *   The sort direction.
    */
-  public static function sortArrayByStringKey(array &$data, $order, $sort = EndpointQuery::SORT_ASC) {
-    $sort_factor = $sort == EndpointQuery::SORT_DESC ? -1 : 1;
+  public static function sortArrayByStringKey(array &$data, $order, $sort = SORT_ASC) {
+    $sort_factor = $sort == SORT_DESC ? -1 : 1;
     uasort($data, function ($a, $b) use ($order, $sort_factor) {
       $a_value = $a[$order] ?? '';
       $b_value = $b[$order] ?? '';
@@ -196,7 +294,7 @@ class ArrayHelper {
    *   The total value for the progress calculation.
    */
   public static function sortArrayByProgress(array &$data, $order, $sort, $total) {
-    $sort_factor = $sort == EndpointQuery::SORT_DESC ? -1 : 1;
+    $sort_factor = $sort == SORT_DESC ? -1 : 1;
     uasort($data, function ($a, $b) use ($sort_factor, $order, $total) {
       $a_funding = !empty($a[$order]) ? $a[$order] : 0;
       $b_funding = !empty($b[$order]) ? $b[$order] : 0;
@@ -229,7 +327,7 @@ class ArrayHelper {
    *   The sort direction.
    */
   public static function sortArrayByCompositeArrayKey(array &$data, $order, $sort) {
-    $sort_factor = $sort == EndpointQuery::SORT_DESC ? -1 : 1;
+    $sort_factor = $sort == SORT_DESC ? -1 : 1;
     uasort($data, function ($a, $b) use ($order, $sort_factor) {
       // Now prepare the data. The sort key can potentially contain multiple
       // entries. What we do is this:
@@ -273,7 +371,7 @@ class ArrayHelper {
    *   The property to use for sorting.
    */
   public static function sortArrayByObjectListProperty(array &$data, $order, $sort, $object_list = 'fields', $search_property = 'name', $value_property = 'value') {
-    $sort_factor = $sort == EndpointQuery::SORT_DESC ? -1 : 1;
+    $sort_factor = $sort == SORT_DESC ? -1 : 1;
     uasort($data, function ($a, $b) use ($order, $sort_factor, $object_list, $search_property, $value_property) {
       if (!empty($a[$object_list]) && !empty($b[$object_list])) {
         $x = '';
@@ -317,6 +415,27 @@ class ArrayHelper {
       $sum += $item[$key];
     }
     return $sum;
+  }
+
+  /**
+   * Transform the keys of the given array to underscore case.
+   *
+   * @param array $array
+   *   The array.
+   * @param array $exclude
+   *   An array of keys to exclude.
+   */
+  public static function transformKeysToUnderscore(&$array, array $exclude = []): void {
+    foreach (array_keys($array) as $key) {
+      if (in_array($key, $exclude)) {
+        continue;
+      }
+      $underscore_case = StringHelper::camelCaseToUnderscoreCase($key);
+      if ($underscore_case != $key) {
+        $array[$underscore_case] = $array[$key];
+        unset($array[$key]);
+      }
+    }
   }
 
   /**
@@ -430,8 +549,8 @@ class ArrayHelper {
    * @param int $sort_type
    *   The sort direction, either SORT_NUMERIC or SORT_STRING.
    */
-  public static function sortObjectsByMethod(array &$array, string $method, $sort = EndpointQuery::SORT_ASC, $sort_type = SORT_NUMERIC) {
-    $sort_factor = $sort == EndpointQuery::SORT_DESC ? -1 : 1;
+  public static function sortObjectsByMethod(array &$array, string $method, $sort = SORT_ASC, $sort_type = SORT_NUMERIC) {
+    $sort_factor = $sort == SORT_DESC ? -1 : 1;
     uasort($array, function ($a, $b) use ($method, $sort_factor, $sort_type) {
       $default = $sort_type == SORT_NUMERIC ? 0 : '';
       $a_value = method_exists($a, $method) ? (call_user_func([$a, $method]) ?? $default) : $default;
@@ -452,8 +571,8 @@ class ArrayHelper {
    * @param int $sort_type
    *   The sort direction, either SORT_NUMERIC or SORT_STRING.
    */
-  public static function sortObjectsByCallback(array &$array, callable $callback, $sort = EndpointQuery::SORT_ASC, $sort_type = SORT_NUMERIC) {
-    $sort_factor = $sort == EndpointQuery::SORT_DESC ? -1 : 1;
+  public static function sortObjectsByCallback(array &$array, callable $callback, $sort = SORT_ASC, $sort_type = SORT_NUMERIC) {
+    $sort_factor = $sort == SORT_DESC ? -1 : 1;
     uasort($array, function ($a, $b) use ($callback, $sort_factor, $sort_type) {
       $default = $sort_type == SORT_NUMERIC ? 0 : '';
       $a_value = $callback($a) ?? $default;
@@ -474,7 +593,7 @@ class ArrayHelper {
    * @param int $sort_type
    *   The sort direction, either SORT_NUMERIC or SORT_STRING.
    */
-  public static function sortObjectsByProperty(array &$array, $property, $sort = EndpointQuery::SORT_ASC, $sort_type = SORT_NUMERIC) {
+  public static function sortObjectsByProperty(array &$array, $property, $sort = SORT_ASC, $sort_type = SORT_NUMERIC) {
     switch ($sort_type) {
       case SORT_NUMERIC:
         self::sortObjectsByNumericProperty($array, $property, $sort);
@@ -485,7 +604,7 @@ class ArrayHelper {
         break;
 
       default:
-        throw new InvalidArgumentException('Invalid argument ' . $sort_type . ' for sort type. sortObjectsByProperty function only accepts sort types SORT_NUMERIC and SORT_STRING.');
+        throw new \InvalidArgumentException('Invalid argument ' . $sort_type . ' for sort type. sortObjectsByProperty function only accepts sort types SORT_NUMERIC and SORT_STRING.');
     }
   }
 
@@ -499,8 +618,8 @@ class ArrayHelper {
    * @param string $sort
    *   The sort direction.
    */
-  public static function sortObjectsByNumericProperty(array &$array, $property, $sort = EndpointQuery::SORT_ASC) {
-    $sort_factor = $sort == EndpointQuery::SORT_DESC ? -1 : 1;
+  public static function sortObjectsByNumericProperty(array &$array, $property, $sort = SORT_ASC) {
+    $sort_factor = $sort == SORT_DESC ? -1 : 1;
     uasort($array, function ($a, $b) use ($property, $sort_factor) {
       $a_value = method_exists($a, $property) ? ($a->$property() ?? 0) : (!empty($a->$property) ? $a->$property : 0);
       $b_value = method_exists($b, $property) ? ($b->$property() ?? 0) : (!empty($b->$property) ? $b->$property : 0);
@@ -518,14 +637,14 @@ class ArrayHelper {
    * @param string $sort
    *   The sort direction.
    */
-  public static function sortObjectsByStringProperty(array &$array, $property, $sort = EndpointQuery::SORT_ASC) {
+  public static function sortObjectsByStringProperty(array &$array, $property, $sort = SORT_ASC) {
     uasort($array, function ($a, $b) use ($property, $sort) {
       $a_value = method_exists($a, $property) ? ($a->$property() ?? '') : (!empty($a->$property) ? $a->$property : '');
       $b_value = method_exists($b, $property) ? ($b->$property() ?? '') : (!empty($b->$property) ? $b->$property : '');
-      if ($sort == EndpointQuery::SORT_ASC) {
+      if ($sort == SORT_ASC) {
         return strcasecmp($a_value, $b_value);
       }
-      if ($sort == EndpointQuery::SORT_DESC) {
+      if ($sort == SORT_DESC) {
         return strcasecmp($b_value, $a_value);
       }
     });

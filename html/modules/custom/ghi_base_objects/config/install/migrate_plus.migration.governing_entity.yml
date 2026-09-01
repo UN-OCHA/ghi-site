@@ -1,35 +1,35 @@
+langcode: en
+status: true
+dependencies:
+  enforced:
+    module:
+      - hpc_api
 id: governing_entity
-label: Governing entities from the HPC API
-migration_group: hpc_api_data
+class: null
+field_plugin_method: null
+cck_plugin_method: null
 migration_tags:
-  - 'HPC API'
+  - 'HPC Fabric'
+migration_group: hpc_api_data
+label: 'Governing entities from the HPC Fabric API'
 source:
-  process_entities: governing
   include_raw_data: true
   track_changes: true
-  endpoints:
-    -
-      endpoint: 'plan?scopes=tags,locations&activities=false&filterBy=havingGoverningEntities'
-      api_version: 'v2'
-      auth_method: 'api_key'
-  item_selector: data
+  fabric_query:
+    plugin: governing_entity_import
   fields:
     -
       name: original_id
-      label: 'Unique plan ID'
-      selector: id
+      label: 'Unique entity ID'
+      selector: Id
     -
       name: name
       label: 'Name of the governing entity'
-      selector: name
-    -
-      name: plan_id
-      label: 'The plan id that an entity belongs to'
-      selector: plan_id
+      selector: Name
     -
       name: prototype_id
       label: 'The prototype id of this entity'
-      selector: entity_prototype_id
+      selector: HpcEntityPrototypeId
   ids:
     original_id:
       type: integer
@@ -39,22 +39,15 @@ process:
     default_value: governing_entity
   name: name
   field_original_id: original_id
-  field_plan:
-    plugin: migration_lookup
-    migration: plan
-    source: plan_id
-    no_stub: true
+  field_plan: plan_entity_id
   field_prototype_id: prototype_id
 destination:
   plugin: 'entity:base_object'
   overwrite_properties:
     - name
-    - field_plan
     - field_prototype_id
+idMap: {  }
 migration_dependencies:
   required:
     - plan
-dependencies:
-  enforced:
-    module:
-      - hpc_api
+include: null

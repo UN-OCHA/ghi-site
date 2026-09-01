@@ -13,6 +13,8 @@ use Drupal\ghi_subpages_custom\Plugin\SectionMenuItem\CustomSubpage as SectionMe
  */
 class CustomSubpage extends SubpageNode implements SubpageManualInterface {
 
+  public const BUNDLE = 'custom_subpage';
+
   /**
    * {@inheritdoc}
    */

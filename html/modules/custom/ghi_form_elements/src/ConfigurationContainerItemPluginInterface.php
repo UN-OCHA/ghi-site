@@ -109,6 +109,14 @@ interface ConfigurationContainerItemPluginInterface extends PluginInspectionInte
   public function getTableCell();
 
   /**
+   * Get data attributes for rendered item wrappers.
+   *
+   * @return array
+   *   Attributes keyed by data attribute name.
+   */
+  public function getDataAttributes();
+
+  /**
    * Get a representation of the value that can be used for sorting.
    */
   public function getSortableValue();

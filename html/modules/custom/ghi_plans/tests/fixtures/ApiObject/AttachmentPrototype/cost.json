@@ -1,8 +1,8 @@
 {
-  "id": 4128,
-  "refCode": "CS",
-  "type": "cost",
-  "value": {
+  "Id": 4128,
+  "RefCode": "CS",
+  "Type": "cost",
+  "Value": {
     "hasMeasures": 0,
     "min": 0,
     "max": 1,
@@ -14,7 +14,7 @@
       "CL"
     ]
   },
-  "planId": 929,
-  "createdAt": "2019-11-27T14:30:30.331Z",
-  "updatedAt": "2019-11-27T14:30:30.331Z"
+  "PlanId": 929,
+  "CreatedAt": "2019-11-27 14:30:30",
+  "UpdatedAt": "2019-11-27 14:30:30"
 }

@@ -10,12 +10,16 @@ use Drupal\Core\PageCache\ResponsePolicy\KillSwitch;
 use Drupal\Core\Session\AccountProxyInterface;
 use Drupal\Tests\UnitTestCase;
 use Drupal\hpc_api\ConfigService;
-use Drupal\hpc_api\Event\EndpointDataEvent;
 use Drupal\hpc_api\Query\EndpointQuery;
+use Drupal\hpc_remote_data_cache\RemoteDataCacheInterface;
+use Drupal\hpc_remote_data_cache\RemoteDataCacheItem;
+use GuzzleHttp\Client;
+use GuzzleHttp\ClientInterface;
 use GuzzleHttp\Psr7\Response;
+use PHPUnit\Framework\Assert;
 use Prophecy\Argument;
 use Prophecy\PhpUnit\ProphecyTrait;
-use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
+use Psr\Http\Message\ResponseInterface;
 
 /**
  * @covers Drupal\hpc_api\Query\EndpointQuery
@@ -62,7 +66,9 @@ class EndpointQueryTest extends UnitTestCase {
         'auth_password' => 'authpass',
         'api_key' => 'apikey123',
         'public_base_path' => 'public/fts',
-        'timeout' => 30,
+        'connect_timeout' => 3,
+        'timeout' => 25,
+        'flow_custom_search_timeout' => 6,
         'cache_lifetime' => 3600,
         'use_gzip_compression' => FALSE,
       ],
@@ -99,10 +105,6 @@ class EndpointQueryTest extends UnitTestCase {
     // Mock kill switch.
     $kill_switch = $this->prophesize(KillSwitch::class)->reveal();
 
-    $event = $this->prophesize(EndpointDataEvent::class);
-    $event_dispatcher = $this->prophesize(EventDispatcherInterface::class);
-    $event_dispatcher->dispatch(Argument::any(), EndpointDataEvent::class)->willReturn($event->reveal());
-
     $config_service = new ConfigService($config_factory);
 
     // Set container.
@@ -113,7 +115,7 @@ class EndpointQueryTest extends UnitTestCase {
     $current_user = $this->prophesize(AccountProxyInterface::class)->reveal();
     $time = $this->prophesize(TimeInterface::class)->reveal();
 
-    $this->query = new OverrideEndpointQuery($config_service, $event_dispatcher->reveal(), $logger, $kill_switch, $http_client, $current_user, $time);
+    $this->query = new OverrideEndpointQuery($config_service, $logger, $kill_switch, $http_client, $current_user, $time);
   }
 
   /**
@@ -348,6 +350,222 @@ class EndpointQueryTest extends UnitTestCase {
   }
 
   /**
+   * Test request timeout options for regular legacy endpoint requests.
+   */
+  public function testEndpointRequestUsesConfiguredTimeouts(): void {
+    $payload = file_get_contents(__DIR__ . '/Mocks/plan-projects-id-642-year-2018-groupBy-plan.json');
+    $client = $this->mockCapturingHttpClient($payload);
+    $query = $this->createEndpointQueryWithClient($client);
+    $query->setArguments([
+      'endpoint' => 'fts/project/plan',
+      'query_args' => [
+        'planid' => 642,
+        'groupBy' => 'plan',
+        'year' => 2018,
+      ],
+    ]);
+
+    $query->getData();
+
+    $this->assertSame(3, $client->requests[0]['options']['connect_timeout']);
+    $this->assertSame(25, $client->requests[0]['options']['timeout']);
+  }
+
+  /**
+   * Test request timeout options for legacy custom search requests.
+   */
+  public function testFlowCustomSearchRequestUsesConfiguredTimeout(): void {
+    $payload = file_get_contents(__DIR__ . '/Mocks/usage-year-location-id-1.json');
+    $client = $this->mockCapturingHttpClient($payload);
+    $query = $this->createEndpointQueryWithClient($client);
+    $query->setArguments([
+      'endpoint' => 'fts/flow/custom-search',
+      'query_args' => [
+        'groupBy' => 'cluster',
+      ],
+    ]);
+
+    $query->getData();
+
+    $this->assertSame(3, $client->requests[0]['options']['connect_timeout']);
+    $this->assertSame(6, $client->requests[0]['options']['timeout']);
+  }
+
+  /**
+   * Test that a fresh remote data cache hit avoids HTTP.
+   */
+  public function testFreshRemoteDataCacheHitAvoidsHttpRequest(): void {
+    $payload = file_get_contents(__DIR__ . '/Mocks/usage-year-location-id-1.json');
+    $item = $this->createRemoteDataCacheItem($payload, 1000, 1200, 1600);
+    $remote_cache = $this->mockRemoteDataCache($item);
+
+    $query = $this->createRemoteDataEndpointQuery($this->mockHttpClientThatFailsOnGet(), $remote_cache->reveal());
+    $query->setArguments([
+      'endpoint' => 'fts/flow/usage-years/location/1',
+    ]);
+
+    $this->assertEquals($this->getUsageYearApiMockResponse(), $query->getData());
+  }
+
+  /**
+   * Test that stale remote data is returned and refresh is queued.
+   */
+  public function testStaleRemoteDataCacheHitQueuesRefresh(): void {
+    $payload = file_get_contents(__DIR__ . '/Mocks/usage-year-location-id-1.json');
+    $item = $this->createRemoteDataCacheItem($payload, 1000, 900, 1600);
+    $remote_cache = $this->mockRemoteDataCache($item);
+    $remote_cache->queueRefresh($item)->shouldBeCalledOnce();
+
+    $query = $this->createRemoteDataEndpointQuery($this->mockHttpClientThatFailsOnGet(), $remote_cache->reveal());
+    $query->setArguments([
+      'endpoint' => 'fts/flow/usage-years/location/1',
+    ]);
+
+    $this->assertEquals($this->getUsageYearApiMockResponse(), $query->getData());
+  }
+
+  /**
+   * Test that a failed live refresh falls back to cached remote data.
+   */
+  public function testFailedLiveRefreshFallsBackToRemoteDataCacheItem(): void {
+    $payload = file_get_contents(__DIR__ . '/Mocks/usage-year-location-id-1.json');
+    $item = $this->createRemoteDataCacheItem($payload, 1000, 900, 1600, 800);
+
+    $remote_cache = $this->mockRemoteDataCache($item);
+    $remote_cache->canServeExpiredOnError()->willReturn(TRUE);
+
+    $client = $this->prophesize('GuzzleHttp\Client');
+    $client->get('https://api.hpc.tools/v1/fts/flow/usage-years/location/1', Argument::any())
+      ->willReturn(new Response(504, [], 'Gateway Timeout'))
+      ->shouldBeCalledOnce();
+
+    $query = $this->createRemoteDataEndpointQuery($client->reveal(), $remote_cache->reveal());
+    $query->setArguments([
+      'endpoint' => 'fts/flow/usage-years/location/1',
+      'cache_base_time' => 500,
+    ]);
+
+    $this->assertEquals($this->getUsageYearApiMockResponse(), $query->getData());
+  }
+
+  /**
+   * Test that a remote cache miss stores a successful endpoint response.
+   */
+  public function testRemoteDataCacheMissStoresResponseBody(): void {
+    $payload = file_get_contents(__DIR__ . '/Mocks/usage-year-location-id-1.json');
+    $remote_cache = $this->prophesize(RemoteDataCacheInterface::class);
+    $remote_cache->isEnabled()->willReturn(TRUE);
+    $remote_cache->buildCid('hpc_api_endpoint', Argument::type('string'))->willReturn('hpc_api_endpoint:test');
+    $remote_cache->get('hpc_api_endpoint:test')->willReturn(NULL);
+    $remote_cache->set('hpc_api_endpoint:test', $payload, Argument::that(function (array $metadata) {
+      return $metadata['refresher_id'] === 'hpc_api_endpoint'
+        && $metadata['endpoint_url'] === 'https://api.hpc.tools/v1/fts/flow/usage-years/location/1'
+        && $metadata['context']['auth_method'] === EndpointQuery::AUTH_METHOD_BASIC
+        && $metadata['fresh_ttl'] === 3600;
+    }))->shouldBeCalledOnce();
+
+    $client = $this->prophesize('GuzzleHttp\Client');
+    $client->get('https://api.hpc.tools/v1/fts/flow/usage-years/location/1', Argument::any())
+      ->willReturn(new Response(200, [], $payload));
+
+    $query = $this->createRemoteDataEndpointQuery($client->reveal(), $remote_cache->reveal());
+    $query->setArguments([
+      'endpoint' => 'fts/flow/usage-years/location/1',
+    ]);
+
+    $this->assertEquals($this->getUsageYearApiMockResponse(), $query->getData());
+  }
+
+  /**
+   * Test that an invalid remote data cache hit falls back to HTTP.
+   */
+  public function testInvalidRemoteDataCacheHitFallsBackToHttpRequest(): void {
+    $invalid_payload = '{"status":"error","code":"TemporaryError","message":"No data"}';
+    $payload = file_get_contents(__DIR__ . '/Mocks/usage-year-location-id-1.json');
+    $item = $this->createRemoteDataCacheItem($invalid_payload, 1000, 1200, 1600);
+    $remote_cache = $this->mockRemoteDataCache($item);
+    $remote_cache->set('hpc_api_endpoint:test', $payload, Argument::type('array'))->shouldBeCalledOnce();
+
+    $client = $this->prophesize('GuzzleHttp\Client');
+    $client->get('https://api.hpc.tools/v1/fts/flow/usage-years/location/1', Argument::any())
+      ->willReturn(new Response(200, [], $payload))
+      ->shouldBeCalledOnce();
+
+    $query = $this->createRemoteDataEndpointQuery($client->reveal(), $remote_cache->reveal());
+    $query->setArguments([
+      'endpoint' => 'fts/flow/usage-years/location/1',
+    ]);
+
+    $this->assertEquals($this->getUsageYearApiMockResponse(), $query->getData());
+  }
+
+  /**
+   * Test that invalid HTTP 200 responses are not stored permanently.
+   */
+  public function testRemoteDataCacheMissDoesNotStoreInvalidResponseBody(): void {
+    $invalid_payload = '{"status":"error","code":"TemporaryError","message":"No data"}';
+    $remote_cache = $this->prophesize(RemoteDataCacheInterface::class);
+    $remote_cache->isEnabled()->willReturn(TRUE);
+    $remote_cache->buildCid('hpc_api_endpoint', Argument::type('string'))->willReturn('hpc_api_endpoint:test');
+    $remote_cache->get('hpc_api_endpoint:test')->willReturn(NULL);
+    $remote_cache->set('hpc_api_endpoint:test', $invalid_payload, Argument::type('array'))->shouldNotBeCalled();
+
+    $client = $this->prophesize('GuzzleHttp\Client');
+    $client->get('https://api.hpc.tools/v1/fts/flow/usage-years/location/1', Argument::any())
+      ->willReturn(new Response(200, [], $invalid_payload));
+
+    $query = $this->createRemoteDataEndpointQuery($client->reveal(), $remote_cache->reveal());
+    $query->setArguments([
+      'endpoint' => 'fts/flow/usage-years/location/1',
+    ]);
+
+    $this->assertFalse($query->getData());
+  }
+
+  /**
+   * Test that persistent endpoint cache ids vary by resolved auth headers.
+   */
+  public function testRemoteDataCacheCidIncludesAuthHeaderFingerprint(): void {
+    $payload = file_get_contents(__DIR__ . '/Mocks/usage-year-location-id-1.json');
+    $fingerprints = [];
+
+    $remote_cache = $this->prophesize(RemoteDataCacheInterface::class);
+    $remote_cache->isEnabled()->willReturn(TRUE);
+    $remote_cache->buildCid('hpc_api_endpoint', Argument::type('string'))->will(function ($args) use (&$fingerprints) {
+      $fingerprints[] = $args[1];
+      return 'hpc_api_endpoint:' . count($fingerprints);
+    });
+    $remote_cache->get(Argument::type('string'))->willReturn(NULL);
+    $remote_cache->set(Argument::type('string'), $payload, Argument::type('array'))->shouldBeCalledTimes(2);
+
+    $client = $this->prophesize('GuzzleHttp\Client');
+    $client->get('https://api.hpc.tools/v1/fts/flow/usage-years/location/1', Argument::any())->will(function () use ($payload) {
+      return new Response(200, [], $payload);
+    });
+
+    foreach (['authpass-one', 'authpass-two'] as $password) {
+      $query = $this->createRemoteDataEndpointQuery($client->reveal(), $remote_cache->reveal(), [
+        'auth_password' => $password,
+      ]);
+      $query->setArguments([
+        'endpoint' => 'fts/flow/usage-years/location/1',
+      ]);
+      $this->assertEquals($this->getUsageYearApiMockResponse(), $query->getData());
+    }
+
+    $this->assertCount(2, $fingerprints);
+    $this->assertNotSame($fingerprints[0], $fingerprints[1]);
+    $this->assertStringContainsString(hash('sha256', serialize([
+      'Authorization' => 'Basic ' . base64_encode('authname:authpass-one'),
+    ])), $fingerprints[0]);
+    $this->assertStringContainsString(hash('sha256', serialize([
+      'Authorization' => 'Basic ' . base64_encode('authname:authpass-two'),
+    ])), $fingerprints[1]);
+    $this->assertStringNotContainsString('authpass-one', $fingerprints[0]);
+    $this->assertStringNotContainsString(base64_encode('authname:authpass-one'), $fingerprints[0]);
+  }
+
+  /**
    * Test usage year api.
    */
   protected function assertUsageYearApi() {
@@ -401,6 +619,209 @@ class EndpointQueryTest extends UnitTestCase {
 
     // Asserting the response.
     $this->assertEquals(FALSE, $this->query->getData());
+  }
+
+  /**
+   * Create an endpoint query wired to the remote data cache under test.
+   *
+   * @param \GuzzleHttp\ClientInterface $http_client
+   *   The HTTP client.
+   * @param \Drupal\hpc_remote_data_cache\RemoteDataCacheInterface $remote_cache
+   *   The remote data cache service.
+   * @param array $settings
+   *   The hpc_api.settings overrides.
+   *
+   * @return \Drupal\hpc_api\Query\EndpointQuery
+   *   The endpoint query.
+   */
+  private function createRemoteDataEndpointQuery(ClientInterface $http_client, RemoteDataCacheInterface $remote_cache, array $settings = []): EndpointQuery {
+    $settings += [
+      'url' => 'https://api.hpc.tools',
+      'default_api_version' => 'v1',
+      'auth_username' => 'authname',
+      'auth_password' => 'authpass',
+      'api_key' => 'apikey123',
+      'public_base_path' => 'public/fts',
+      'connect_timeout' => 3,
+      'timeout' => 25,
+      'flow_custom_search_timeout' => 6,
+      'cache_lifetime' => 3600,
+      'use_gzip_compression' => FALSE,
+    ];
+    $config_factory = $this->getConfigFactoryStub([
+      'hpc_api.settings' => $settings,
+    ]);
+    $config_service = new ConfigService($config_factory);
+
+    $current_user = $this->prophesize(AccountProxyInterface::class);
+    $current_user->isAuthenticated()->willReturn(FALSE);
+    $time = $this->prophesize(TimeInterface::class);
+
+    return new OverrideEndpointQuery(
+      $config_service,
+      $this->prophesize(LoggerChannelFactoryInterface::class)->reveal(),
+      $this->prophesize(KillSwitch::class)->reveal(),
+      $http_client,
+      $current_user->reveal(),
+      $time->reveal(),
+      $remote_cache,
+    );
+  }
+
+  /**
+   * Create an endpoint query wired to a specific HTTP client.
+   *
+   * @param \GuzzleHttp\ClientInterface $http_client
+   *   The HTTP client.
+   *
+   * @return \Drupal\hpc_api\Query\EndpointQuery
+   *   The endpoint query.
+   */
+  private function createEndpointQueryWithClient(ClientInterface $http_client): EndpointQuery {
+    $config_factory = $this->getConfigFactoryStub([
+      'hpc_api.settings' => [
+        'url' => 'https://api.hpc.tools',
+        'default_api_version' => 'v1',
+        'auth_username' => 'authname',
+        'auth_password' => 'authpass',
+        'api_key' => 'apikey123',
+        'public_base_path' => 'public/fts',
+        'connect_timeout' => 3,
+        'timeout' => 25,
+        'flow_custom_search_timeout' => 6,
+        'cache_lifetime' => 3600,
+        'use_gzip_compression' => FALSE,
+      ],
+    ]);
+    $config_service = new ConfigService($config_factory);
+    $current_user = $this->prophesize(AccountProxyInterface::class);
+    $current_user->isAuthenticated()->willReturn(FALSE);
+    $time = $this->prophesize(TimeInterface::class);
+
+    return new OverrideEndpointQuery(
+      $config_service,
+      $this->prophesize(LoggerChannelFactoryInterface::class)->reveal(),
+      $this->prophesize(KillSwitch::class)->reveal(),
+      $http_client,
+      $current_user->reveal(),
+      $time->reveal(),
+    );
+  }
+
+  /**
+   * Mock a HTTP client that records GET request options.
+   *
+   * @param string $payload
+   *   The response body.
+   *
+   * @return \GuzzleHttp\ClientInterface
+   *   The HTTP client.
+   */
+  private function mockCapturingHttpClient(string $payload): ClientInterface {
+    return new class($payload) extends Client {
+
+      /**
+       * Captured requests.
+       *
+       * @var array
+       */
+      public array $requests = [];
+
+      /**
+       * Constructs the test client.
+       */
+      public function __construct(private readonly string $payload) {}
+
+      /**
+       * {@inheritdoc}
+       */
+      public function get($uri, array $options = []): ResponseInterface {
+        $this->requests[] = [
+          'uri' => $uri,
+          'options' => $options,
+        ];
+        return new Response(200, [], $this->payload);
+      }
+
+    };
+  }
+
+  /**
+   * Mock an HTTP client that fails the test if an endpoint is called.
+   *
+   * @return \GuzzleHttp\ClientInterface
+   *   The HTTP client test double.
+   */
+  private function mockHttpClientThatFailsOnGet(): ClientInterface {
+    return new class extends Client {
+
+      /**
+       * {@inheritdoc}
+       */
+      public function get($uri, array $options = []): ResponseInterface {
+        Assert::fail('Endpoint HTTP get must not be called on a remote data cache hit.');
+        throw new \LogicException('Unreachable.');
+      }
+
+    };
+  }
+
+  /**
+   * Mock a remote data cache service.
+   *
+   * @param \Drupal\hpc_remote_data_cache\RemoteDataCacheItem $item
+   *   The remote data cache item.
+   *
+   * @return \Prophecy\Prophecy\ObjectProphecy
+   *   The remote data cache prophecy.
+   */
+  private function mockRemoteDataCache(RemoteDataCacheItem $item) {
+    $remote_cache = $this->prophesize(RemoteDataCacheInterface::class);
+    $remote_cache->isEnabled()->willReturn(TRUE);
+    $remote_cache->buildCid('hpc_api_endpoint', Argument::type('string'))->willReturn('hpc_api_endpoint:test');
+    $remote_cache->get('hpc_api_endpoint:test')->willReturn($item);
+    return $remote_cache;
+  }
+
+  /**
+   * Create a remote data cache item.
+   *
+   * @param string $payload
+   *   The raw endpoint response body.
+   * @param int $request_time
+   *   The request time.
+   * @param int $fresh_until
+   *   The fresh-until timestamp.
+   * @param int $stale_until
+   *   The stale-until timestamp.
+   * @param int $fetched
+   *   The fetched timestamp.
+   *
+   * @return \Drupal\hpc_remote_data_cache\RemoteDataCacheItem
+   *   The remote data cache item.
+   */
+  private function createRemoteDataCacheItem(string $payload, int $request_time, int $fresh_until, int $stale_until, int $fetched = 100): RemoteDataCacheItem {
+    return new RemoteDataCacheItem(
+      'hpc_api_endpoint:test',
+      'hpc_api_endpoint',
+      'https://api.hpc.tools/v1/fts/flow/usage-years/location/1',
+      '',
+      ['auth_method' => EndpointQuery::AUTH_METHOD_BASIC],
+      $payload,
+      100,
+      100,
+      $fetched,
+      $fresh_until,
+      $stale_until,
+      FALSE,
+      0,
+      0,
+      100,
+      0,
+      NULL,
+      strlen(serialize($payload)),
+      $request_time,
+    );
   }
 
   /**

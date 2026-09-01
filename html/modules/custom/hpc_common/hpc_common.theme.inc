@@ -91,6 +91,14 @@ function hpc_common_preprocess_hpc_currency(array &$vars) {
 }
 
 /**
+ * Preprocess a local icon symbol.
+ */
+function hpc_common_preprocess_hpc_icon_symbol(array &$vars) {
+  $icon = str_replace('_', '-', $vars['icon'] ?? '');
+  $vars['symbol_id'] = preg_match('/^[a-z0-9-]+$/', $icon) ? 'material-symbol-' . $icon : NULL;
+}
+
+/**
  * Preprocess an amount, e.g. for people in need.
  *
  * For billions, the amounts will display as "x.x bn".
@@ -183,6 +191,7 @@ function hpc_common_preprocess_hpc_percent(array &$vars) {
   $export = $vars['export'];
   $decimal_format = !empty($vars['decimal_format']) ? $vars['decimal_format'] : ThemeHelper::DECIMALS_POINT;
   $precision = $vars['precision'];
+  $compact_precision = !empty($vars['compact_precision']);
   $percent = $vars['percent'] ?? ((float) ($vars['ratio'] ?? 0)) * 100;
 
   if ($percent !== NULL && !is_numeric($percent)) {
@@ -190,15 +199,21 @@ function hpc_common_preprocess_hpc_percent(array &$vars) {
     return;
   }
 
-  $precision = !empty($precision) ? $precision : ($percent == intval($percent) ? 0 : 1);
+  $display_percent = round((float) $percent, 10);
+  if (empty($precision)) {
+    // Compact precision keeps the default one-decimal behavior unless that
+    // displayed one-decimal value would be a whole number, e.g. 29.97 -> 30%.
+    $precision_percent = $compact_precision ? round($display_percent, 1) : $display_percent;
+    $precision = $precision_percent == intval($precision_percent) ? 0 : 1;
+  }
   // Percentages higher than 100 don't need precision. Numbers like 151.2% also
   // produce visual problems sometimes, e.g. in tables.
-  if ($percent > 100) {
+  if ($display_percent > 100) {
     $precision = 0;
   }
   $dec_point = $decimal_format == ThemeHelper::DECIMALS_POINT ? '.' : ',';
   $thousands_sep = $decimal_format == ThemeHelper::DECIMALS_POINT ? ',' : '.';
-  $formatted = number_format($percent, $precision, $dec_point, $thousands_sep);
+  $formatted = number_format($display_percent, $precision, $dec_point, $thousands_sep);
   $suffix = $export ? '%' : '<span class="suffix">%</span>';
 
   $vars['output'] = Markup::create(trim($formatted . $suffix));
@@ -339,13 +354,15 @@ function hpc_common_preprocess_hpc_popover(array &$vars) {
     $trigger_attributes->addClass('popover-custom-tag');
   }
   if (!empty($vars['material_icon'])) {
-    // Material icons.
     $vars['#attached']['library'][] = 'hpc_common/icon';
     $trigger_attributes->addClass('material-icon');
     $trigger_attributes->addClass('cd-button');
     $trigger_attributes->addClass('cd-button--icon');
     $vars['tag'] = 'button';
-    $vars['tag_content'] = $vars['material_icon'];
+    $vars['tag_content'] = [
+      '#theme' => 'hpc_icon_symbol',
+      '#icon' => $vars['material_icon'],
+    ];
   }
 
   $vars['trigger_attributes'] = $trigger_attributes;
@@ -355,14 +372,17 @@ function hpc_common_preprocess_hpc_popover(array &$vars) {
 /**
  * Preprocess an icon.
  *
- * This is implicitely using material icons.
+ * This preserves the historic Material icon names as a local SVG subset.
  */
 function hpc_common_preprocess_hpc_icon(array &$vars) {
   $vars['#attached']['library'][] = 'hpc_common/icon';
   if (empty($vars['tag'])) {
     $vars['tag'] = 'button';
   }
-  $vars['tag_content'] = $vars['icon'];
+  $vars['tag_content'] = [
+    '#theme' => 'hpc_icon_symbol',
+    '#icon' => $vars['icon'],
+  ];
 
   $attributes = new Attribute();
   $attributes->addClass('material-icon');

@@ -5,9 +5,9 @@ namespace Drupal\ghi_blocks\Plugin\Block;
 use Drupal\Component\Plugin\Exception\ContextException;
 use Drupal\Component\Plugin\Exception\PluginException;
 use Drupal\Component\Render\FormattableMarkup;
-use Drupal\Component\Serialization\Yaml;
 use Drupal\Component\Utility\Html;
 use Drupal\Component\Utility\NestedArray;
+use Drupal\Component\Uuid\UuidInterface;
 use Drupal\Core\Ajax\AjaxResponse;
 use Drupal\Core\Ajax\ReplaceCommand;
 use Drupal\Core\Cache\Cache;
@@ -17,8 +17,9 @@ use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Form\SubformState;
 use Drupal\Core\Form\SubformStateInterface;
+use Drupal\Core\KeyValueStore\KeyValueExpirableFactoryInterface;
 use Drupal\Core\Render\Element;
-use Drupal\Core\Render\Markup;
+use Drupal\Core\Security\TrustedCallbackInterface;
 use Drupal\Core\Url;
 use Drupal\ghi_base_objects\Entity\BaseObjectAwareEntityInterface;
 use Drupal\ghi_base_objects\Entity\BaseObjectChildInterface;
@@ -29,16 +30,15 @@ use Drupal\ghi_blocks\Interfaces\AutomaticTitleBlockInterface;
 use Drupal\ghi_blocks\Interfaces\MultiStepFormBlockInterface;
 use Drupal\ghi_blocks\Interfaces\OptionalTitleBlockInterface;
 use Drupal\ghi_blocks\Interfaces\OverrideDefaultTitleBlockInterface;
+use Drupal\ghi_blocks\Traits\BlockCommentTrait;
 use Drupal\ghi_blocks\Traits\VerticalTabsTrait;
-use Drupal\ghi_homepage\Entity\Homepage;
 use Drupal\ghi_plan_clusters\Entity\PlanCluster;
 use Drupal\ghi_plans\Entity\Plan;
 use Drupal\ghi_sections\Entity\SectionNodeInterface;
 use Drupal\ghi_subpages\Entity\SubpageNodeInterface;
 use Drupal\hpc_api\Helpers\ProfileHelper;
-use Drupal\hpc_common\Helpers\ArrayHelper;
+use Drupal\hpc_api\Traits\SimpleCacheTrait;
 use Drupal\hpc_common\Helpers\BlockHelper;
-use Drupal\hpc_common\Helpers\UserHelper;
 use Drupal\hpc_common\Plugin\HPCBlockBase;
 use Drupal\hpc_downloads\DownloadSource\BlockSource;
 use Drupal\hpc_downloads\Interfaces\HPCDownloadExcelInterface;
@@ -58,9 +58,11 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  * By inheriting from HPCBlockBase, we get most of the necessary data retrieval
  * logic for block panes and also most of the context gathering logic.
  */
-abstract class GHIBlockBase extends HPCBlockBase {
+abstract class GHIBlockBase extends HPCBlockBase implements TrustedCallbackInterface {
 
   use VerticalTabsTrait;
+  use SimpleCacheTrait;
+  use BlockCommentTrait;
 
   /**
    * The default form key for the configuration form.
@@ -71,6 +73,16 @@ abstract class GHIBlockBase extends HPCBlockBase {
    * The form key for the base object form.
    */
   const CONTEXTS_FORM_KEY = 'contexts';
+
+  /**
+   * The expirable key/value collection for block configuration previews.
+   */
+  public const CONFIGURATION_PREVIEW_COLLECTION = 'ghi_blocks.block_configuration_preview';
+
+  /**
+   * The lifetime of stored block configuration preview state.
+   */
+  private const CONFIGURATION_PREVIEW_TTL = 3600;
 
   /**
    * Current form state object if in a configuration context.
@@ -136,11 +148,18 @@ abstract class GHIBlockBase extends HPCBlockBase {
   protected $controllerResolver;
 
   /**
-   * The route matcher.
+   * The route matcher service.
    *
    * @var \Drupal\Core\Routing\RouteMatchInterface
    */
   protected $routeMatch;
+
+  /**
+   * The patch matcher service.
+   *
+   * @var \Drupal\Core\Path\PathMatcherInterface
+   */
+  protected $pathMatcher;
 
   /**
    * The form submitter service.
@@ -157,17 +176,18 @@ abstract class GHIBlockBase extends HPCBlockBase {
   protected $currentUser;
 
   /**
-   * Retrieves a configuration object.
+   * The expirable key/value store factory.
    *
-   * @param string $name
-   *   The name of the configuration object to retrieve.
-   *
-   * @return \Drupal\Core\Config\Config
-   *   A configuration object.
+   * @var \Drupal\Core\KeyValueStore\KeyValueExpirableFactoryInterface
    */
-  protected function config($name) {
-    return $this->configFactory->get($name);
-  }
+  protected KeyValueExpirableFactoryInterface $keyValueExpirableFactory;
+
+  /**
+   * The UUID generator.
+   *
+   * @var \Drupal\Component\Uuid\UuidInterface
+   */
+  protected UuidInterface $uuid;
 
   /**
    * {@inheritdoc}
@@ -186,12 +206,28 @@ abstract class GHIBlockBase extends HPCBlockBase {
     $instance->moduleHandler = $container->get('module_handler');
     $instance->controllerResolver = $container->get('controller_resolver');
     $instance->routeMatch = $container->get('current_route_match');
+    $instance->pathMatcher = $container->get('path.matcher');
     $instance->formSubmitter = $container->get('form_submitter');
     $instance->currentUser = $container->get('current_user');
+    $instance->keyValueExpirableFactory = $container->get('keyvalue.expirable');
+    $instance->uuid = $container->get('uuid');
 
     $instance->getContexts();
 
     return $instance;
+  }
+
+  /**
+   * Retrieves a configuration object.
+   *
+   * @param string $name
+   *   The name of the configuration object to retrieve.
+   *
+   * @return \Drupal\Core\Config\Config
+   *   A configuration object.
+   */
+  protected function config($name) {
+    return $this->configFactory->get($name);
   }
 
   /**
@@ -277,8 +313,7 @@ abstract class GHIBlockBase extends HPCBlockBase {
    *   TRUE if a title can be shown, FALSE otherwise.
    */
   public function shouldDisplayTitle() {
-    $plugin_definition = $this->getPluginDefinition();
-    return !array_key_exists('title', $plugin_definition) || $plugin_definition['title'] !== FALSE;
+    return static::metadata()?->usesTitle ?? TRUE;
   }
 
   /**
@@ -302,14 +337,10 @@ abstract class GHIBlockBase extends HPCBlockBase {
    * Get the default title.
    *
    * @return \Drupal\Core\StringTranslation\TranslatableMarkup|string
-   *   The default title if one is set in the plugin definition.
+   *   The default title if one is set in the plugins metadata.
    */
   public function getDefaultTitle() {
-    $plugin_definition = $this->getPluginDefinition();
-    if (empty($plugin_definition['default_title'])) {
-      return NULL;
-    }
-    return $plugin_definition['default_title'];
+    return static::metadata()?->defaultTitle ?: NULL;
   }
 
   /**
@@ -358,8 +389,44 @@ abstract class GHIBlockBase extends HPCBlockBase {
   /**
    * {@inheritdoc}
    */
+  public static function trustedCallbacks() {
+    return [
+      'lazyBuildContent',
+    ];
+  }
+
+  /**
+   * Whether the block supports block-level lazy loading.
+   *
+   * @return bool
+   *   TRUE if the block supports lazy loading, FALSE otherwise.
+   */
+  protected function supportsLazyLoading() {
+    return TRUE;
+  }
+
+  /**
+   * Whether the block can show its title before lazy content is built.
+   *
+   * This must only be enabled for blocks whose isEmpty() result is known to
+   * match buildContent() returning content. Otherwise a lazy block could render
+   * a title and placeholder, then replace the placeholder with empty content.
+   *
+   * @return bool
+   *   TRUE if the block can safely show its title eagerly, FALSE otherwise.
+   */
+  protected function hasReliableIsEmpty(): bool {
+    return FALSE;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function build() {
-    $plugin_configuration = $this->getConfiguration();
+    if ($this->isHidden() && !$this->isPreview()) {
+      // If the block is hidden and not in preview bail out.
+      return [];
+    }
 
     $build = [
       '#theme_wrappers' => [
@@ -367,52 +434,8 @@ abstract class GHIBlockBase extends HPCBlockBase {
           '#attributes' => ['class' => ['block-content']],
         ],
       ],
+      '#attributes' => [],
     ];
-
-    if ($this->isHidden() && !$this->isPreview()) {
-      // If the block is hidden and not in preview bail out.
-      return [];
-    }
-
-    // Otherwise build the full block. First get the actual block content.
-    $profile_key = ProfileHelper::profileStart(static::class . ':buildContent');
-    $build_content = $this->buildContent();
-    ProfileHelper::profileEnd($profile_key);
-    if (!$build_content) {
-      return $build_content ?? [];
-    }
-
-    // Handle the title display.
-    // @todo This is confusing and needs cleanup.
-    if ($this->shouldDisplayTitle() && empty($build_content['#title_processed'])) {
-      $build['#title'] = $this->label();
-      $display_label = $this->configuration['label_display'] ?? FALSE;
-      if ($this instanceof AutomaticTitleBlockInterface || $this instanceof OverrideDefaultTitleBlockInterface) {
-        $display_label = TRUE;
-      }
-      elseif (!empty($build_content['#title'])) {
-        $build['#title'] = $build_content['#title'];
-        unset($build_content['#title']);
-      }
-
-      if (!$display_label) {
-        unset($build['#title']);
-      }
-      $this->configuration['label_display'] = $display_label;
-    }
-
-    if (!empty($build_content['#theme']) && $build_content['#theme'] == 'item_list') {
-      $build_content['#context']['plugin_id'] = $this->getPluginId();
-    }
-
-    // Add the build content as a child. We make sure that the final $build
-    // always has proper element children instead of direct render arrays.
-    if (!count(Element::children($build_content))) {
-      $build[] = $build_content;
-    }
-    else {
-      $build += $build_content;
-    }
 
     // Add some classes for styling.
     $build['#attributes']['id'] = $this->getBlockId();
@@ -432,22 +455,13 @@ abstract class GHIBlockBase extends HPCBlockBase {
       }
     }
 
-    // Allow the plugin to define additional attributes for the block itself.
-    if (array_key_exists('#block_attributes', $build_content)) {
-      $build['#attributes'] = NestedArray::mergeDeep($build['#attributes'], $build_content['#block_attributes']);
-    }
-
-    // Allow the plugin to define attributes for it's wrapper.
-    if (array_key_exists('#wrapper_attributes', $build_content)) {
-      $build['#theme_wrappers']['container']['#attributes'] = NestedArray::mergeDeep($build['#theme_wrappers']['container']['#attributes'], $build_content['#wrapper_attributes']);
-    }
-
     $build['#title_attributes']['class'][] = 'block-title';
     if (empty($build['#region'])) {
       $build['#region'] = $this->getRegion();
     }
 
     // Prepare action links.
+    $plugin_configuration = $this->getConfiguration();
     $download_links = !empty($build['#download_links']) ? $build['#download_links'] : [];
     if ($this instanceof HPCDownloadPluginInterface && !empty($plugin_configuration['uuid'])) {
       $download_types = $this->getAvailableDownloadTypes();
@@ -468,14 +482,228 @@ abstract class GHIBlockBase extends HPCBlockBase {
     // in hooks.
     $build['#block_instance'] = $this;
 
+    if ($this instanceof BlockCommentInterface && $comment = $this->getBlockComment()) {
+      $build['comment'] = $this->buildBlockCommentRenderArray($comment);
+    }
+
+    // See if we should use lazy loading for the tables.
+    $lazy_load = $this->config('ghi_blocks.block_settings')->get('lazy_load') && $this->supportsLazyLoading();
+    $is_front_page_block = str_starts_with($this->getPluginId(), 'global_');
+    if ($lazy_load && !$this->isPreview() && !$is_front_page_block && !$this->isEmpty()) {
+      $preview_classes = ['ghi-block-bigpipe-preview'];
+      if ($this->currentUser->isAuthenticated()) {
+        $preview_classes[] = 'ghi-block-bigpipe-preview--delayed';
+      }
+      $build['content'] = [
+        '#lazy_builder' => [
+          static::class . '::lazyBuildContent',
+          [
+            $this->getPluginId(),
+            $this->getUuid(),
+            $this->getPageNode()?->toUrl()?->toString() ?? $this->getCurrentUri(),
+          ],
+        ],
+        '#create_placeholder' => TRUE,
+        '#cache' => [
+          'contexts' => $this->getCacheContexts(),
+        ],
+        '#lazy_builder_preview' => [
+          '#type' => 'container',
+          '#attributes' => [
+            'class' => $preview_classes,
+          ],
+          'content' => [
+            [
+              '#type' => 'html_tag',
+              '#tag' => 'span',
+              '#attributes' => ['class' => ['ajax-progress__throbber']],
+            ],
+            [
+              '#type' => 'html_tag',
+              '#tag' => 'span',
+              '#attributes' => ['class' => ['preview-message']],
+              '#value' => $this->t('Loading content ...'),
+            ],
+          ],
+        ],
+      ];
+      if ($this->hasReliableIsEmpty()) {
+        $this->applyTitleDisplay($build);
+      }
+      return $build;
+    }
+
+    return $this->doBuildContent($build);
+  }
+
+  /**
+   * Lazy build callback for the block rendering.
+   *
+   * @param string $plugin_id
+   *   The plugin id of this block plugin.
+   * @param string $block_uuid
+   *   The uuid of this block plugins instance.
+   * @param string $uri
+   *   The current page uri.
+   *
+   * @return array
+   *   A render array representing the block content.
+   */
+  public static function lazyBuildContent($plugin_id, $block_uuid, $uri): array {
+    $block_instance = BlockHelper::getBlockInstance($uri, $plugin_id, $block_uuid);
+    if (!$block_instance instanceof self) {
+      return [];
+    }
+    return $block_instance->doBuildContent();
+  }
+
+  /**
+   * Do the actual block building.
+   *
+   * This is called either directly from ::build() or from the lazy builder
+   * callback.
+   *
+   * @param array $build
+   *   An initial render array.
+   *
+   * @return array
+   *   The full render array with the block content.
+   */
+  public function doBuildContent(?array $build = NULL): array {
+    $cache_key = $this->getCacheKey($this->getContentCacheKeyParts());
+
+    $build = $build ?? [
+      '#attributes' => [],
+    ];
+
+    // See if there is a cached version available.
+    $build_content = $this->cache($cache_key);
+    if (!$build_content) {
+      // Build the full block. First get the actual block content.
+      $profile_key = ProfileHelper::profileStart(static::class . ':buildContent');
+      $build_content = $this->buildContent();
+      ProfileHelper::profileEnd($profile_key);
+      $cache_tags = is_array($build_content) ? Cache::mergeTags($this->getCacheTags(), $this->collectRenderArrayCacheTags($build_content)) : $this->getCacheTags();
+      $cache_max_age = is_array($build_content) ? Cache::mergeMaxAges($this->getCacheMaxAge(), $build_content['#cache']['max-age'] ?? Cache::PERMANENT) : $this->getCacheMaxAge();
+      if ($cache_max_age !== 0) {
+        $this->cache($cache_key, $build_content, FALSE, NULL, $cache_tags);
+      }
+    }
+    if (!$build_content) {
+      return [];
+    }
+
+    $this->applyTitleDisplay($build, $build_content);
+
+    if (!empty($build_content['#theme']) && $build_content['#theme'] == 'item_list') {
+      $build_content['#context']['plugin_id'] = $this->getPluginId();
+    }
+
+    // Add the build content as a child. We make sure that the final $build
+    // always has proper element children instead of direct render arrays.
+    if (!count(Element::children($build_content))) {
+      $build[] = $build_content;
+    }
+    else {
+      $build += $build_content;
+    }
+
+    // Allow the plugin to define additional attributes for the block itself.
+    if (array_key_exists('#block_attributes', $build_content)) {
+      $build['#attributes'] = $build['#attributes'] ?? [];
+      $build['#attributes'] = NestedArray::mergeDeep($build['#attributes'], $build_content['#block_attributes']);
+    }
+
+    // Allow the plugin to define attributes for it's wrapper.
+    if (array_key_exists('#wrapper_attributes', $build_content)) {
+      $build['#theme_wrappers']['container']['#attributes'] = NestedArray::mergeDeep($build['#theme_wrappers']['container']['#attributes'], $build_content['#wrapper_attributes']);
+    }
+
     // Set the cache properties, merge in anything that the builder might have
     // set.
     $build['#cache'] = [
       'contexts' => Cache::mergeContexts($this->getCacheContexts(), $build_content['#cache']['contexts'] ?? []),
-      'tags' => Cache::mergeTags($this->getCacheTags(), $build_content['#cache']['tags'] ?? []),
+      'tags' => Cache::mergeTags($this->getCacheTags(), $this->collectRenderArrayCacheTags($build_content)),
       'max-age' => Cache::mergeMaxAges($this->getCacheMaxAge(), $build_content['#cache']['max-age'] ?? Cache::PERMANENT),
     ];
     return $build;
+  }
+
+  /**
+   * Collect cache tags from a render array and nested render-array structures.
+   *
+   * @param array $build
+   *   A render array or nested render-array value.
+   *
+   * @return string[]
+   *   Cache tags found in the structure.
+   */
+  private function collectRenderArrayCacheTags(array $build): array {
+    $cache_tags = $build['#cache']['tags'] ?? [];
+    foreach (Element::children($build) as $child) {
+      $cache_tags = Cache::mergeTags($cache_tags, $this->collectRenderArrayCacheTags($build[$child]));
+    }
+    return $cache_tags;
+  }
+
+  /**
+   * Build the context parts for the block content cache key.
+   *
+   * @return array
+   *   Cache key context keyed by stable context names.
+   */
+  protected function getContentCacheKeyParts(): array {
+    $page_node = $this->getPageNode();
+    $base_object = $this->getCurrentBaseObject();
+
+    return [
+      'plugin_id' => $this->getPluginId(),
+      'block_uuid' => $this->getUuid(),
+      'block_config' => md5(json_encode($this->getBlockConfig())),
+      'current_user_roles' => json_encode($this->currentUser->getRoles()),
+      'current_uri' => $this->getCurrentUri(),
+      'page_node' => $page_node?->id(),
+      'base_object' => $base_object?->getUniqueIdentifier(),
+    ] + $this->getPageArguments();
+  }
+
+  /**
+   * Apply title display rules to a block render array.
+   *
+   * @param array $build
+   *   The block render array.
+   * @param array|null $build_content
+   *   The built block content, if available.
+   */
+  protected function applyTitleDisplay(array &$build, ?array &$build_content = NULL): void {
+    if (!$this->shouldDisplayTitle() || !empty($build_content['#title_processed'])) {
+      return;
+    }
+
+    $build['#title'] = $this->label();
+    $display_label = $this->configuration['label_display'] ?? FALSE;
+    if ($this instanceof AutomaticTitleBlockInterface || $this instanceof OverrideDefaultTitleBlockInterface) {
+      $display_label = TRUE;
+    }
+    elseif (!empty($build_content['#title'])) {
+      $build['#title'] = $build_content['#title'];
+      unset($build_content['#title']);
+    }
+
+    if (!$display_label) {
+      unset($build['#title']);
+    }
+    $this->configuration['label_display'] = $display_label;
+  }
+
+  /**
+   * Get a new instance of the fabric client.
+   *
+   * @return \Drupal\hpc_api\Query\FabricClient
+   *   The fabric client.
+   */
+  private static function getFabricClientInstance() {
+    return \Drupal::service('hpc_api.fabric_client');
   }
 
   /**
@@ -495,14 +723,6 @@ abstract class GHIBlockBase extends HPCBlockBase {
     if (!empty($variables['content']['#download_links'])) {
       $variables['download_links'] = $variables['content']['#download_links'];
       unset($variables['content']['#download_links']);
-    }
-
-    if (UserHelper::isAdministrator()) {
-      $icons = $this->getAdminIcons();
-      $variables['icons'] = array_values($icons);
-      if (array_key_exists('api_url', $icons)) {
-        $variables['attributes']['class'][] = 'has-api-url-tooltip';
-      }
     }
 
     // Add the block settings library, so that block actions get stored in the
@@ -779,8 +999,7 @@ abstract class GHIBlockBase extends HPCBlockBase {
   public function getSubforms() {
     $subforms = &drupal_static(__FUNCTION__, NULL);
     if ($subforms === NULL) {
-      $definition = $this->getPluginDefinition();
-      $plugin_subforms = $definition['config_forms'] ?? [
+      $plugin_subforms = static::metadata()?->configForms ?: [
         self::DEFAULT_FORM_KEY => [
           'title' => $this->t('Configuration'),
           'callback' => 'getConfigForm',
@@ -1025,36 +1244,102 @@ abstract class GHIBlockBase extends HPCBlockBase {
     else {
       // Show a preview area.
       $temporary_settings = $this->getTemporarySettings($form_state);
-      $label_subkey = $this instanceof MultiStepFormBlockInterface ? $this->getTitleSubform() : NULL;
-      $this->configuration['hpc'] = $temporary_settings;
-      $this->configuration['label'] = NestedArray::getValue($temporary_settings, array_filter([
-        $label_subkey,
-        'label',
-      ])) ?? $this->label();
-      $this->configuration['label_display'] = NestedArray::getValue($temporary_settings, array_filter([
-        $label_subkey,
-        'label_display',
-      ]));
+      $this->applyConfigurationPreviewSettings($temporary_settings);
       $this->configuration['is_preview'] = TRUE;
-      $build = $this->build();
-      $form['container']['preview'] = $build ? [
-        '#theme' => 'block',
+      $preview_token = $this->storeConfigurationPreviewState();
+      $form['container']['preview'] = [
+        '#type' => 'container',
         '#attributes' => [
           'data-block-preview' => $this->getPluginId(),
-        ] + ($build['#attributes'] ?? []),
-        '#configuration' => $this->configuration,
-        '#base_plugin_id' => $this->getBaseId(),
-        '#plugin_id' => $this->getPluginId(),
-        '#derivative_plugin_id' => $this->getDerivativeId(),
-        '#id' => $this->getPluginId(),
+          'data-block-preview-token' => $preview_token,
+          'data-block-preview-url' => Url::fromRoute('ghi_blocks.block_preview', [
+            'token' => $preview_token,
+          ])->toString(),
+        ],
         '#attached' => [
           'library' => ['ghi_blocks/block.preview'],
         ],
-        'content' => $build,
-      ] : NULL;
+      ];
     }
 
     return $form;
+  }
+
+  /**
+   * Apply the submitted preview settings to this block instance.
+   *
+   * @param array $temporary_settings
+   *   The settings built from the submitted form values.
+   */
+  private function applyConfigurationPreviewSettings(array $temporary_settings): void {
+    $label_subkey = $this instanceof MultiStepFormBlockInterface ? $this->getTitleSubform() : NULL;
+    $this->configuration['hpc'] = $temporary_settings;
+    $this->configuration['label'] = NestedArray::getValue($temporary_settings, array_filter([
+      $label_subkey,
+      'label',
+    ])) ?? $this->label();
+    $this->configuration['label_display'] = NestedArray::getValue($temporary_settings, array_filter([
+      $label_subkey,
+      'label_display',
+    ]));
+  }
+
+  /**
+   * Store the preview input state outside the rendered form.
+   *
+   * The rendered preview can be large, so the form only carries a token. The
+   * preview endpoint uses the stored plugin state to render the output later,
+   * keeping that output out of the serialized form state.
+   *
+   * @return string
+   *   The token referencing the stored preview input state.
+   */
+  private function storeConfigurationPreviewState(): string {
+    $token = $this->uuid->generate();
+    $store = $this->keyValueExpirableFactory->get(self::CONFIGURATION_PREVIEW_COLLECTION);
+    $store->setWithExpire($token, [
+      'uid' => (int) $this->currentUser->id(),
+      'plugin_id' => $this->getPluginId(),
+      'configuration' => $this->getConfiguration(),
+      'contexts' => $this->getConfigurationPreviewContextData(),
+      'current_uri' => $this->getCurrentUri(),
+    ], self::CONFIGURATION_PREVIEW_TTL);
+    return $token;
+  }
+
+  /**
+   * Get context values in a compact serializable form.
+   *
+   * @return array
+   *   The context data keyed by context name.
+   */
+  private function getConfigurationPreviewContextData(): array {
+    $contexts = [];
+    foreach ($this->getContexts() as $context_name => $context) {
+      if (!$context->hasContextValue()) {
+        continue;
+      }
+      $value = $context->getContextValue();
+      if ($value instanceof EntityInterface) {
+        // Only persisted entities can be restored from compact preview state.
+        if ($value->id() === NULL) {
+          continue;
+        }
+        $contexts[$context_name] = [
+          'type' => 'entity',
+          'entity_type_id' => $value->getEntityTypeId(),
+          'id' => $value->id(),
+        ];
+        continue;
+      }
+      if (is_scalar($value) || $value === NULL) {
+        $contexts[$context_name] = [
+          'type' => 'scalar',
+          'value' => $value,
+        ];
+      }
+    }
+    return $contexts;
   }
 
   /**
@@ -1205,6 +1490,16 @@ abstract class GHIBlockBase extends HPCBlockBase {
 
     // Make sure that we have a UUID.
     $this->configuration['uuid'] = $this->getUuid();
+  }
+
+  /**
+   * Check if a block can be considered empty.
+   *
+   * @return bool
+   *   TRUE if the block can be considered empty, FALSE otherwise.
+   */
+  public function isEmpty(): bool {
+    return FALSE;
   }
 
   /**
@@ -2079,6 +2374,14 @@ abstract class GHIBlockBase extends HPCBlockBase {
   /**
    * {@inheritdoc}
    */
+  public function getDownloadPngSelector(): ?string {
+    $block_uuid = $this->getUuid();
+    return $block_uuid ? '.block-' . $block_uuid : NULL;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function getDownloadCaption() {
     $page_title = $this->getPageTitle();
     if ($page_title) {
@@ -2137,75 +2440,6 @@ abstract class GHIBlockBase extends HPCBlockBase {
       ]),
     ];
     return $meta_data;
-  }
-
-  /**
-   * Get the available admin icons for the block.
-   *
-   * @return array
-   *   An array of render arrays for the icons.
-   */
-  public function getAdminIcons() {
-    $icons = [];
-    if ($this->isPreview()) {
-      return $icons;
-    }
-    if (!$this->getPageNode() || $this->getPageNode() instanceof Homepage) {
-      // Don't show the icons on the homepage.
-      return $icons;
-    }
-    $endpoint_urls = $this->getFullEndpointUrls();
-    if (!empty($endpoint_urls)) {
-      $icons['api_url'] = [
-        '#theme' => 'hpc_tooltip',
-        '#tooltip' => implode('<br />', $endpoint_urls),
-        '#class' => 'api-url',
-        '#tag_content' => [
-          '#theme' => 'hpc_icon',
-          '#icon' => 'help',
-          '#tag' => 'span',
-        ],
-      ];
-    }
-    $icons['configuration'] = [
-      '#theme' => 'hpc_popover',
-      '#title' => $this->t('Block configuration'),
-      '#content' => Markup::create('<pre>' . Yaml::encode(ArrayHelper::mapObjectsToString($this->getConfiguration())) . '</pre>'),
-      '#material_icon' => 'content_copy',
-      '#class' => 'block-configuration',
-    ];
-    $block_uuid = $this->getUuid();
-    // See if we can get a block instance based on the available information.
-    // If not then we don't want to add the reload link as it wouldn't function
-    // properly anyway. This situation happens when embedding a full node view,
-    // e.g. a homepage node, into a different page.
-    $block_instance = BlockHelper::getBlockInstance($this->getCurrentUri(), $this->getPluginId(), $block_uuid);
-    if (!empty($block_uuid) && $block_instance) {
-      $url = Url::fromRoute('ghi_blocks.load_block', [
-        'plugin_id' => $this->getPluginId(),
-        'block_uuid' => $block_uuid,
-      ]);
-      $icons['reload'] = [
-        '#type' => 'link',
-        '#title' => [
-          '#theme' => 'hpc_icon',
-          '#icon' => 'refresh',
-          '#tag' => 'span',
-        ],
-        '#url' => $url,
-        '#options' => [
-          'query' => [
-            'current_uri' => $this->getCurrentUri(),
-          ] + $this->requestStack->getCurrentRequest()->query->all(),
-        ],
-        '#attributes' => [
-          'class' => [
-            'use-ajax',
-          ],
-        ],
-      ];
-    }
-    return $icons;
   }
 
 }

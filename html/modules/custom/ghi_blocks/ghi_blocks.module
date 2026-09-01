@@ -11,7 +11,6 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\Markup;
 use Drupal\ghi_blocks\Controller\BaseObjectReferenceController;
 use Drupal\ghi_blocks\Controller\LayoutBuilderBlockController;
-use Drupal\ghi_blocks\Helpers\GlobalSettingsHelper;
 use Drupal\ghi_blocks\Interfaces\DeprecatedBlockInterface;
 use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
 use Drupal\layout_builder\OverridesSectionStorageInterface;
@@ -82,12 +81,14 @@ function ghi_blocks_theme($existing, $type, $theme, $path) {
     ],
     'plan_attachment_map' => [
       'variables' => [
+        'attachment' => NULL,
         'chart_id' => NULL,
         'sidebar' => NULL,
         'map_type' => NULL,
         'map_tabs' => NULL,
         'attachment_switcher' => NULL,
         'legend' => FALSE,
+        'map_attributes' => NULL,
       ],
       'file' => 'ghi_blocks.theme.inc',
       'template' => 'plan-attachment-map',
@@ -115,6 +116,22 @@ function ghi_blocks_theme($existing, $type, $theme, $path) {
       'file' => 'ghi_blocks.theme.inc',
       'template' => 'plan-entity-logframe',
     ],
+    'plan_entity_logframe_item' => [
+      'variables' => [
+        'label' => NULL,
+        'description' => NULL,
+        'state' => NULL,
+        'contributes_heading' => NULL,
+        'attachment_tables' => NULL,
+        'wrapper_attributes' => [],
+        'attachment_wrapper_attributes' => [],
+        'tooltip_show_data' => t('Show data'),
+        'tooltip_hide_data' => t('Hide data'),
+        'tooltip_no_data' => t('No data'),
+      ],
+      'file' => 'ghi_blocks.theme.inc',
+      'template' => 'plan-entity-logframe-item',
+    ],
     'ajax_switcher' => [
       'variables' => [
         'options' => NULL,
@@ -125,6 +142,7 @@ function ghi_blocks_theme($existing, $type, $theme, $path) {
         'block_uuid' => NULL,
         'uri' => NULL,
         'query' => [],
+        'ajax' => TRUE,
       ],
       'file' => 'ghi_blocks.theme.inc',
       'template' => 'ajax-switcher',
@@ -617,19 +635,6 @@ function ghi_blocks_is_layout_builder_route() {
 function ghi_blocks_gin_lb_is_layout_builder_route_alter(&$gin_lb_is_layout_builder_route, $context) {
   if (ghi_blocks_is_layout_builder_route()) {
     $gin_lb_is_layout_builder_route = ghi_blocks_is_layout_builder_route();
-  }
-}
-
-/**
- * Implements hook_plan_overview_query_arguments_alter().
- */
-function ghi_blocks_plan_overview_query_arguments_alter(array &$query_args, $year) {
-  if (!\Drupal::currentUser()->isAuthenticated()) {
-    return;
-  }
-  $config = GlobalSettingsHelper::getConfig($year);
-  if (!empty($config['use_latest_plan_data'])) {
-    $query_args['version'] = 'latest';
   }
 }
 

@@ -7,15 +7,12 @@ use Drupal\Core\Extension\ExtensionPathResolver;
 use Drupal\Core\Render\RendererInterface;
 use Drupal\Tests\UnitTestCase;
 use Drupal\hpc_common\Helpers\ThemeHelper;
-use Prophecy\PhpUnit\ProphecyTrait;
 use Twig\Environment;
 
 /**
  * @covers Drupal\hpc_common\Helpers\ThemeHelper
  */
 class ThemeHelperTest extends UnitTestCase {
-
-  use ProphecyTrait;
 
   /**
    * {@inheritdoc}
@@ -107,7 +104,7 @@ class ThemeHelperTest extends UnitTestCase {
    * Data provider for testGetThemeOptions.
    */
   public function getThemeOptionsDataProvider() {
-    // @codingStandardsIgnoreStart
+    // phpcs:disable
     $items = [
       // Amount.
       ['hpc_amount', 100, [], [
@@ -178,6 +175,12 @@ class ThemeHelperTest extends UnitTestCase {
         '#percent' => 100,
         '#decimal_format' => 'comma',
       ]],
+      ['hpc_percent', 100, ['compact_precision' => TRUE], [
+        '#theme' => 'hpc_percent',
+        '#percent' => 100,
+        '#decimal_format' => 'point',
+        '#compact_precision' => TRUE,
+      ]],
       // Progress bar.
       ['hpc_progress_bar', 100, [], [
         '#theme' => 'hpc_progress_bar',
@@ -192,7 +195,7 @@ class ThemeHelperTest extends UnitTestCase {
       // Invalid theme argument.
       ['unknown_theme_function', 100, [], new \InvalidArgumentException('Unknown theme function "unknown_theme_function"')],
     ];
-    // @codingStandardsIgnoreEnd
+    // phpcs:enable
     return $items;
   }
 

@@ -5,13 +5,20 @@
  * Contains hook implementations for the GHI Plans module.
  */
 
-use Drupal\Core\Cache\CacheableMetadata;
+use Drupal\Component\Utility\Unicode;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\Core\Render\Element;
+use Drupal\ghi_base_objects\ApiObjects\Country;
 use Drupal\ghi_base_objects\Helpers\BaseObjectHelper;
+use Drupal\ghi_plans\ApiObjects\Organization;
 use Drupal\ghi_plans\Entity\GoverningEntity;
 use Drupal\ghi_plans\Entity\Plan;
+use Drupal\ghi_plans\Entity\PlanCostingType;
 use Drupal\ghi_plans\Entity\PlanType;
+use Drupal\ghi_plans\Form\PlanFormAlter;
+use Drupal\migrate\MigrateSkipRowException;
+use Drupal\migrate\Plugin\MigrateSourceInterface;
+use Drupal\migrate\Plugin\MigrationInterface;
+use Drupal\migrate\Row;
 
 /**
  * Implements hook_entity_bundle_info_alter().
@@ -23,21 +30,32 @@ function ghi_plans_entity_bundle_info_alter(array &$bundles) {
   $bundles['base_object']['governing_entity']['label'] = t('Governing Entity');
   $bundles['taxonomy_term']['plan_type']['class'] = PlanType::class;
   $bundles['taxonomy_term']['plan_type']['label'] = t('Plan type');
+  $bundles['taxonomy_term']['plan_costing']['class'] = PlanCostingType::class;
+  $bundles['taxonomy_term']['plan_costing']['label'] = t('Plan costing');
 }
 
 /**
- * Implements hook_page_attachments().
+ * Implements hook_cron().
+ *
+ * Update the requirements for the plan.
  */
-function ghi_plans_page_attachments(array &$page) {
-  $cache = CacheableMetadata::createFromRenderArray($page);
-  $page['#attached']['html_head_link'][] = [
-    [
-      'href' => 'https://fonts.googleapis.com/icon?family=Material+Icons',
-      'rel' => 'stylesheet',
-    ],
-  ];
-  // Apply updated caching information.
-  $cache->applyTo($page);
+function ghi_plans_cron() {
+  $storage = \Drupal::entityTypeManager()->getStorage('base_object');
+  $query = $storage->getQuery();
+  $query->accessCheck(FALSE);
+  $query->condition('type', 'plan');
+  $query->sort('field_requirements_updated');
+  $query->pager(100);
+  $results = $query->execute();
+  $plans = $storage->loadMultiple($results);
+  foreach ($plans as $plan) {
+    if (!$plan instanceof Plan) {
+      continue;
+    }
+    $plan->updateFinancialData();
+    $plan->setSyncing(TRUE);
+    $plan->save();
+  }
 }
 
 /**
@@ -62,104 +80,81 @@ function ghi_plans_preprocess_page(array &$variables) {
  * Selectively allow specific fields on edit pages of plan base objects.
  */
 function ghi_plans_form_base_object_plan_edit_form_alter(&$form, FormStateInterface &$form_state) {
-  /** @var \Drupal\ghi_plans\Entity\Plan $plan */
-  $plan = $form['#entity'];
+  PlanFormAlter::formAlter($form, $form_state);
+}
 
-  $form['#attached']['library'][] = 'ghi_plans/ghi_plans.admin.plan_edit_form';
+/**
+ * Implements hook_migrate_MIGRATE_ID_prepare_row().
+ */
+function ghi_plans_migrate_plan_prepare_row(Row $row, MigrateSourceInterface $source, MigrationInterface $migration) {
+  $raw_data = (object) $row->getSource()['raw'];
+  $plan_id = $raw_data->Id;
 
-  $allow_fields = [
-    'field_decimal_format',
-    'field_footnotes',
-    'field_link_to_fts',
-    'field_max_admin_level',
-    'field_operations_category',
-    'field_plan_caseload',
-    'field_plan_document_link',
-    'field_plan_type_label_override',
-    'field_plan_version_argument',
-    'field_visible_on_global_pages',
-    'field_focus_country_override',
-  ];
-  foreach (Element::children($form) as $element_key) {
-    if (!in_array($element_key, $allow_fields) && $form[$element_key]['#type'] != 'actions') {
-      continue;
-    }
-    unset($form[$element_key]['#disabled']);
+  /** @var \Drupal\hpc_api\Query\FabricQueryManager $query_manager */
+  $query_manager = \Drupal::service('plugin.manager.fabric_query_manager');
+  /** @var \Drupal\ghi_plans\Plugin\FabricQuery\PlanQuery $plan_query */
+  $plan_query = $query_manager->createInstance('plan');
+  $plan_query->getAllPlans();
+
+  $plan = $plan_query->getPlan($plan_id);
+  if (!$plan) {
+    throw new MigrateSkipRowException();
   }
 
-  // Check for required fields with unset values, extract the default value
-  // from the field config and set that instead. This is a UX addition,
-  // applying only to existing items.
-  // Currently supported widget types are textfields and select dropdowns.
-  foreach (Element::children($form) as $element_key) {
-    if (strpos($element_key, 'field_') !== 0 || !empty($form[$element_key]['#disabled'])) {
-      continue;
-    }
-    $widget = &$form[$element_key]['widget'];
-    if (empty($widget['#required'])) {
-      continue;
-    }
-    /** @var \Drupal\field\FieldConfigInterface $field */
-    $field = \Drupal::entityTypeManager()->getStorage('field_config')->load('base_object.plan.' . $widget['#field_name']);
-    // Get the default value for the field. This is used to extract the path to
-    // the widget value and to set the #default_value in case it is NULL.
-    $default_widget_value = $field->get('default_value');
-    if (array_key_exists('#theme', $widget) && $widget['#theme'] == 'field_multiple_value_form') {
-      // Textfields.
-      $ref = &$widget;
-      while (is_array($default_widget_value) && array_key_exists(array_key_first($default_widget_value), $ref)) {
-        $key = array_key_first($default_widget_value);
-        $ref = &$ref[$key];
-        $default_widget_value = $default_widget_value[$key];
-      }
-      if (!array_key_exists('#default_value', $ref) || $ref['#default_value'] === NULL) {
-        $ref['#default_value'] = $default_widget_value;
-      }
-    }
-    elseif (array_key_exists('#type', $widget) && $widget['#type'] == 'select' && empty($widget['#default_value'])) {
-      // Select fields.
-      $widget['#default_value'] = $default_widget_value[0]['value'];
-    }
+  $countries = array_map(fn(Country $country): array => $country->toArray(), $plan->getCountries());
+  $plan_organizations = array_map(fn(Organization $organization): string => $organization->getAbbreviation(), $plan->getPlanOrganizations());
+
+  $row->setSourceProperty('released', $plan->isReleased());
+  $row->setSourceProperty('is_part_of_gho', $plan->isPartOfGho());
+  $row->setSourceProperty('name', $plan->getName());
+  $row->setSourceProperty('short_name', $plan->getShortName());
+  $row->setSourceProperty('subtitle', $plan->getSubtitle());
+  $row->setSourceProperty('comments', $plan->getComments());
+  $row->setSourceProperty('language', $plan->getLanguageCode());
+  $row->setSourceProperty('plan_cluster_type', $plan->getPlanClusterType());
+  $row->setSourceProperty('plan_date_start', $plan->getStartDate());
+  $row->setSourceProperty('plan_date_end', $plan->getEndDate());
+  $row->setSourceProperty('plan_created_date', $plan->getCreatedDate());
+  $row->setSourceProperty('plan_updated_date', $plan->getUpdatedDate());
+  $row->setSourceProperty('document_published_on', $plan->getDocumentPublishedDate());
+  $row->setSourceProperty('plan_type_id', $plan->getPlanType()?->id());
+  $row->setSourceProperty('plan_costing_id', $plan->getPlanCostingType()?->id());
+  $row->setSourceProperty('plan_year', $plan->getYear());
+  $row->setSourceProperty('plan_coordinator', $plan_organizations);
+  $row->setSourceProperty('countries', $countries);
+  $row->setSourceProperty('focus_country_id', $plan->getFocusCountry()?->id());
+  $row->setSourceProperty('latest_published_period_id', $plan->getLastPublishedReportingPeriodId());
+
+  $financial_data = $plan_query->fetchFinancialData($plan_id);
+  $row->setSourceProperty('total_funding', $financial_data['total_funding']);
+  $row->setSourceProperty('overall_funding', $financial_data['overall_funding']);
+  $row->setSourceProperty('current_requirements', $financial_data['current_requirements']);
+  $row->setSourceProperty('original_requirements', $financial_data['original_requirements']);
+
+  unset($plan);
+}
+
+/**
+ * Implements hook_migrate_MIGRATE_ID_prepare_row().
+ */
+function ghi_plans_migrate_governing_entity_prepare_row(Row $row, MigrateSourceInterface $source, MigrationInterface $migration) {
+  $raw_data = (object) $row->getSource()['raw'];
+  $plan_id = $raw_data->PlanId;
+  $plan_object = $plan_id ? BaseObjectHelper::getBaseObjectFromOriginalId($plan_id, 'plan') : NULL;
+  if (!$plan_object) {
+    // No associated plan node found.
+    throw new MigrateSkipRowException();
+  }
+  // This is the internal id of the plan base object, not the source or
+  // original id.
+  $row->setSourceProperty('plan_entity_id', $plan_object->id());
+
+  // Set the icon name.
+  $row->setSourceProperty('icon_name', $raw_data->icon?->Name ?? NULL);
+
+  // Use the truncated description as the name if the name is empty.
+  if (empty($raw_data->Name) && !empty($raw_data->Description)) {
+    $row->setSourceProperty('name', Unicode::truncate($raw_data->Description, 255, TRUE, TRUE));
   }
 
-  // Better display of the plan coordinator in the form.
-  if (!empty($form['field_plan_coordinator']) && $form['field_plan_coordinator']['#disabled']) {
-    $form['field_plan_coordinator']['summary'] = [
-      '#type' => 'textfield',
-      '#title' => $form['field_plan_coordinator']['widget']['#title'],
-      '#default_value' => implode(', ', $plan->getPlanCoordinator()),
-      '#disabled' => TRUE,
-      '#required' => $form['field_plan_coordinator']['widget']['#required'],
-    ];
-    $form['field_plan_coordinator']['widget']['#access'] = FALSE;
-  }
-
-  if (!empty($form['field_focus_country_override'])) {
-    // Display the field description above the map instead of below.
-    $form['field_focus_country_override']['widget'][0]['value']['message'] = [
-      '#type' => 'html_tag',
-      '#tag' => 'div',
-      '#attributes' => [
-        'class' => ['fieldset__description'],
-      ],
-      '#value' => $form['field_focus_country_override']['widget'][0]['value']['#description'],
-      '#weight' => -1,
-    ];
-    $form['field_focus_country_override']['widget'][0]['value']['#description'] = NULL;
-  }
-
-  // Display disabled select dropdowns as simple textfields.
-  foreach (Element::children($form) as $element_key) {
-    if (empty($form[$element_key]['#disabled']) || ($form[$element_key]['widget']['#type'] ?? NULL) != 'select') {
-      continue;
-    }
-    $default = $form[$element_key]['widget']['#default_value'];
-    $form[$element_key]['widget']['#access'] = FALSE;
-    $form[$element_key]['summary'] = [
-      '#type' => 'textfield',
-      '#title' => $form[$element_key]['widget']['#title'],
-      '#default_value' => !empty($default) ? $form[$element_key]['widget']['#options'][array_shift($default)] : NULL,
-      '#required' => $form[$element_key]['widget']['#required'],
-    ];
-  }
 }

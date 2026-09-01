@@ -4,32 +4,31 @@ namespace Drupal\ghi_blocks\Plugin\Block\Plan;
 
 use Drupal\Component\Utility\Html;
 use Drupal\Component\Utility\Unicode;
+use Drupal\Core\Block\Attribute\Block;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Plugin\Context\EntityContextDefinition;
 use Drupal\Core\Render\Markup;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\ghi_blocks\Interfaces\AutomaticTitleBlockInterface;
 use Drupal\ghi_blocks\Interfaces\DeprecatedBlockInterface;
 use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
 use Drupal\ghi_plans\ApiObjects\Entities\PlanEntity;
 use Drupal\ghi_plans\Helpers\AttachmentHelper;
-use Drupal\hpc_api\Query\EndpointQuery;
+use Drupal\hpc_common\Plugin\HPCBlockMetadata;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Provides a 'PlanEntityTypes' block.
- *
- * @Block(
- *  id = "plan_entity_types",
- *  admin_label = @Translation("Entity Types"),
- *  category = @Translation("Plan elements"),
- *  data_sources = {
- *    "entities" = "plan_entities_query"
- *  },
- *  context_definitions = {
- *    "node" = @ContextDefinition("entity:node", label = @Translation("Node")),
- *    "plan" = @ContextDefinition("entity:base_object", label = @Translation("Plan"), constraints = { "Bundle": "plan" })
- *  }
- * )
  */
+#[Block(
+  id: 'plan_entity_types',
+  admin_label: new TranslatableMarkup('Entity Types'),
+  category: new TranslatableMarkup('Plan elements'),
+  context_definitions: [
+    'node' => new EntityContextDefinition('entity:node', new TranslatableMarkup('Node')),
+    'plan' => new EntityContextDefinition('entity:base_object', new TranslatableMarkup('Plan'), constraints: ['Bundle' => 'plan']),
+  ]
+)]
 class PlanEntityTypes extends GHIBlockBase implements AutomaticTitleBlockInterface, DeprecatedBlockInterface {
 
   /**
@@ -38,6 +37,17 @@ class PlanEntityTypes extends GHIBlockBase implements AutomaticTitleBlockInterfa
    * @var \Drupal\Core\Block\BlockManagerInterface
    */
   protected $blockPluginManager;
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function metadata(): ?HPCBlockMetadata {
+    return new HPCBlockMetadata(
+      dataSources: [
+        'entities' => 'fabric_query:entity',
+      ]
+    );
+  }
 
   /**
    * {@inheritdoc}
@@ -78,7 +88,7 @@ class PlanEntityTypes extends GHIBlockBase implements AutomaticTitleBlockInterfa
     // Get the entities to render.
     $entities = $this->getRenderableEntities();
     $first_entity = !empty($entities) ? reset($entities) : NULL;
-    return $first_entity ? $first_entity->plural_name : NULL;
+    return $first_entity ? $first_entity->getPrototype()->getNamePlural() : NULL;
   }
 
   /**
@@ -243,10 +253,10 @@ class PlanEntityTypes extends GHIBlockBase implements AutomaticTitleBlockInterfa
         '#type' => 'select',
         '#title' => $this->t('Sort column'),
         '#options' => [
-          'id_' . EndpointQuery::SORT_ASC => $this->t('ID (asc)'),
-          'id_' . EndpointQuery::SORT_DESC => $this->t('ID (desc)'),
-          'description_' . EndpointQuery::SORT_ASC => $this->t('Description (asc)'),
-          'description_' . EndpointQuery::SORT_DESC => $this->t('Description (desc)'),
+          'id_' . SORT_ASC => $this->t('ID (asc)'),
+          'id_' . SORT_DESC => $this->t('ID (desc)'),
+          'description_' . SORT_ASC => $this->t('Description (asc)'),
+          'description_' . SORT_DESC => $this->t('Description (desc)'),
         ],
         '#default_value' => $defaults['sort_column'],
         '#states' => [
@@ -289,7 +299,7 @@ class PlanEntityTypes extends GHIBlockBase implements AutomaticTitleBlockInterfa
           if ($this->validatePlanEntity($entity, $validation_options)) {
             continue;
           }
-          $form['entity_ids'][$entity->id]['#disabled'] = TRUE;
+          $form['entity_ids'][$entity->id()]['#disabled'] = TRUE;
         }
       }
     }
@@ -327,11 +337,10 @@ class PlanEntityTypes extends GHIBlockBase implements AutomaticTitleBlockInterfa
     }
     $weight = [];
     foreach ($matching_entities as $entity) {
-      $ref_code = $entity->ref_code;
+      $ref_code = $entity->getEntityTypeRefCode();
       if (empty($options[$ref_code])) {
-        $name = $entity->plural_name;
-        $options[$ref_code] = $name;
-        $weight[$ref_code] = $entity->order_number;
+        $options[$ref_code] = $entity->getPluralName();
+        $weight[$ref_code] = $entity->getOrderNumber();
       }
     }
     uksort($options, function ($ref_code_a, $ref_code_b) use ($weight) {
@@ -351,14 +360,14 @@ class PlanEntityTypes extends GHIBlockBase implements AutomaticTitleBlockInterfa
    */
   private function getPlanEntities($entity_ref_code = NULL) {
     $context_object = $this->getCurrentBaseObject();
-
+    $plan_id = $this->getCurrentPlanId();
     $filter = NULL;
     if ($entity_ref_code) {
       $filter = ['ref_code' => $entity_ref_code];
     }
-    /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\PlanEntitiesQuery $query */
+    /** @var \Drupal\ghi_plans\Plugin\FabricQuery\EntityQuery $query */
     $query = $this->getQueryHandler('entities');
-    $entities = $query->getPlanEntities($context_object, 'plan', $filter);
+    $entities = $query->getEntitiesForPlan($plan_id, $context_object, 'plan', $filter);
     // This should give us only PlanEntity objects, but let's make sure.
     $entities = is_array($entities) ? array_filter($entities, function ($entity) {
       return $entity instanceof PlanEntity;
@@ -384,7 +393,7 @@ class PlanEntityTypes extends GHIBlockBase implements AutomaticTitleBlockInterfa
     $items = [];
     $id_type = !empty($conf['id_type']) ? $conf['id_type'] : 'custom_id';
     foreach ($entities as $entity) {
-      $description = $entity->description;
+      $description = $entity->getDescription();
       $items[$entity->id()] = [
         'id' => $entity->getCustomName($id_type),
         'description' => $truncate_description ? Unicode::truncate($description, 120, TRUE, TRUE) : $description,
@@ -395,10 +404,10 @@ class PlanEntityTypes extends GHIBlockBase implements AutomaticTitleBlockInterfa
       uasort($items, function ($a, $b) use ($key, $sort) {
         $a_value = !empty($a[$key]) ? $a[$key] : 0;
         $b_value = !empty($b[$key]) ? $b[$key] : 0;
-        if ($sort == EndpointQuery::SORT_ASC) {
+        if ($sort == SORT_ASC) {
           return strnatcmp($a_value, $b_value);
         }
-        if ($sort == EndpointQuery::SORT_DESC) {
+        if ($sort == SORT_DESC) {
           return strnatcmp($b_value, $a_value);
         }
       });
@@ -447,7 +456,7 @@ class PlanEntityTypes extends GHIBlockBase implements AutomaticTitleBlockInterfa
     if (!empty($entity_ids) && !in_array($entity->id(), $entity_ids)) {
       return FALSE;
     }
-    if (empty($entity->description)) {
+    if (empty($entity->getDescription())) {
       return FALSE;
     }
 

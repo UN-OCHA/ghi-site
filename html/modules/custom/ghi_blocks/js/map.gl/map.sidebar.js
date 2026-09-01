@@ -34,6 +34,14 @@
     }
 
     /**
+     * Remove sidebar markup and attached handlers.
+     */
+    destroy = function () {
+      $(this.container).find('.navigation .link').off();
+      $(this.containerWrapper).remove();
+    }
+
+    /**
      * Show the sidebar.
      *
      * @param {Object} object
@@ -89,14 +97,7 @@
      */
     buildSidebar = function(object, build) {
       let state = this.state;
-      let data = state.getData();
-      let object_id = parseInt(object.object_id);
-
-      var location_data = object.modal_content ?? data.modal_contents[object_id];
-      let variant_id = state.getVariantId();
-      if (variant_id && state.hasVariant(state.getCurrentIndex(), variant_id)) {
-        location_data = data.variants[variant_id].modal_contents[object_id];
-      }
+      var location_data = state.getModalContent(object);
       if (!location_data) {
         // The new tab has no data for the currently active location.
         return;
@@ -134,10 +135,11 @@
       let state = this.state;
       event.stopPropagation();
 
-      let object_id = $(element).data('object-id') ?? $(element).parent('[data-object-id]').data('object-id');
+      element = element.closest('.navigation .link');
+      let object_id = $(element).data('object-id');
       var new_active_location = state.getLocationById(object_id);
       if (new_active_location) {
-        state.style.showSidebarForObject(new_active_location);
+        state.showSidebarForObject(new_active_location);
         if ($(element).hasClass('previous')) {
           $(this.container).find('.link.previous').focus();
         }
@@ -156,8 +158,8 @@
       let self = this;
       // Add navigation behavior.
       $(this.container).find(once('map-navigation-links', '.navigation .link'))
-        .on('click', (e) => self.handleNavigationLink(e.target, e))
-        .on('keyup', (e) => self.handleEnter(e, () => self.handleNavigationLink(e.target, e)))
+        .on('click', (e) => self.handleNavigationLink(e.currentTarget, e))
+        .on('keyup', (e) => self.handleEnter(e, () => self.handleNavigationLink(e.currentTarget, e)))
         .on('keyup', (e) => self.handleEsc(e, () => self.hide()));
     }
 

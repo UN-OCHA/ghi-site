@@ -3,18 +3,19 @@
 namespace Drupal\ghi_blocks\Plugin\ConfigurationContainerItem;
 
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\ghi_form_elements\Attribute\ConfigurationContainerItem;
 use Drupal\ghi_form_elements\ConfigurationContainerItemPluginBase;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Provides a document link item for configuration containers.
- *
- * @ConfigurationContainerItem(
- *   id = "document_link",
- *   label = @Translation("Document link"),
- *   description = @Translation("This item displays a document link, supporting multiple languages."),
- * )
  */
+#[ConfigurationContainerItem(
+  id: 'document_link',
+  label: new TranslatableMarkup('Document link'),
+  description: new TranslatableMarkup('This item displays a document link, supporting multiple languages.'),
+)]
 class DocumentLink extends ConfigurationContainerItemPluginBase {
 
   const TITLE_MAX_LENGTH = 50;
@@ -29,7 +30,8 @@ class DocumentLink extends ConfigurationContainerItemPluginBase {
   /**
    * {@inheritdoc}
    */
-  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition): DocumentLink {
+    /** @var self $instance */
     $instance = parent::create($container, $configuration, $plugin_id, $plugin_definition);
     $instance->dateFormatter = $container->get('date.formatter');
     return $instance;

@@ -95,23 +95,26 @@ function ghi_blocks_preprocess_document_link_button(&$variables) {
 }
 
 /**
- * Preprocess a plan attachment map.
+ * Preprocess a generic map.
  */
-function ghi_blocks_preprocess_map(&$variables) {
+function ghi_blocks_preprocess_map(&$variables, bool $attach_map_settings = TRUE) {
   $outer_classes = [
     'map-wrapper-outer',
     'map-wrapper-' . $variables['chart_id'],
   ];
   $variables['attributes'] = new Attribute(['class' => $outer_classes]);
+  if (!$attach_map_settings) {
+    return;
+  }
   $variables['#attached']['drupalSettings']['map_config'] = GlobalMapHelper::getGlobalMapSettings();
   $variables['#attached']['drupalSettings']['mapbox'] = GlobalMapHelper::getMapboxConfig();
 }
 
 /**
- * Preprocess a plan attachment map.
+ * Preprocess a plan overview map.
  */
 function ghi_blocks_preprocess_plan_overview_map(&$variables) {
-  ghi_blocks_preprocess_map($variables);
+  ghi_blocks_preprocess_map($variables, FALSE);
 }
 
 /**
@@ -133,19 +136,27 @@ function ghi_blocks_preprocess_plan_overview_map_modal(&$variables) {
  * Preprocess a plan attachment map.
  */
 function ghi_blocks_preprocess_plan_attachment_map(&$variables) {
-  ghi_blocks_preprocess_map($variables);
+  ghi_blocks_preprocess_map($variables, FALSE);
 
   if (!empty($variables['attachment_switcher'])) {
     $variables['attributes']['class'][] = Html::getClass('has-attachment-switcher');
   }
   $variables['attachment_select'] = $variables['attachment_switcher'] ?? '';
+  $variables['map_attributes'] = new Attribute([
+    'class' => [
+      'plan-attachment-map-wrapper',
+      'pane-' . $variables['chart_id'],
+      $variables['map_type'],
+    ],
+    'data-attachment-id' => $variables['attachment']?->id(),
+  ]);
 }
 
 /**
- * Preprocess a plan attachment map.
+ * Preprocess an operational presence map.
  */
 function ghi_blocks_preprocess_plan_operational_presence_map(&$variables) {
-  ghi_blocks_preprocess_map($variables);
+  ghi_blocks_preprocess_map($variables, FALSE);
   if (!empty($variables['view_switcher'])) {
     $variables['attributes']['class'][] = Html::getClass('has-view-switcher');
   }
@@ -161,7 +172,7 @@ function ghi_blocks_preprocess_plan_operational_presence_map(&$variables) {
  */
 function ghi_blocks_preprocess_plan_cluster_contacts(&$variables) {
   foreach ($variables['contacts'] as $key => $contact) {
-    /** @var \Drupal\ghi_plans\ApiObjects\Attachments\ContactAttachment $contact */
+    /** @var \Drupal\ghi_plans\ApiObjects\Contact $contact */
     $variables['contacts'][$key] = $contact->toArray();
   }
 }
@@ -215,8 +226,9 @@ function ghi_blocks_preprocess_ajax_switcher(&$variables) {
   $block_uuid = $variables['block_uuid'];
   $uri = $variables['uri'];
   $query = $variables['query'];
+  $ajax = $variables['ajax'];
   $default_value = $variables['default_value'];
-  $variables['ajax_switcher'] = \Drupal::formBuilder()->getForm('\Drupal\ghi_blocks\Form\AjaxSwitcherForm', $element_key, $plugin_id, $block_uuid, $options, $default_value, $uri, $query);
+  $variables['ajax_switcher'] = \Drupal::formBuilder()->getForm('\Drupal\ghi_blocks\Form\AjaxSwitcherForm', $element_key, $plugin_id, $block_uuid, $options, $default_value, $uri, $query, $ajax);
 }
 
 /**

@@ -2,14 +2,17 @@
 
 namespace Drupal\ghi_blocks\Helpers;
 
-use Drupal\ghi_plans\ApiObjects\AttachmentPrototype\AttachmentPrototype;
+use Drupal\ghi_plans\ApiObjects\Prototypes\AttachmentPrototype;
 use Drupal\ghi_plans\ApiObjects\Attachments\AttachmentInterface;
-use Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment;
+use Drupal\ghi_plans\ApiObjects\Attachments\Attachment;
+use Drupal\ghi_plans\Traits\PlanQueryTrait;
 
 /**
  * Helper function for attachment matching.
  */
 class AttachmentMatcher {
+
+  use PlanQueryTrait;
 
   /**
    * Match an array of data attachments against an original attachment.
@@ -17,22 +20,22 @@ class AttachmentMatcher {
    * This checks the attachment type and the attachment source to find
    * attachments that correspond in their function.
    *
-   * @param \Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment $original_attachment
+   * @param \Drupal\ghi_plans\ApiObjects\Attachments\Attachment $original_attachment
    *   The original attachment to match against.
-   * @param \Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment[] $available_attachments
+   * @param \Drupal\ghi_plans\ApiObjects\Attachments\Attachment[] $available_attachments
    *   The attachments to match.
    *
-   * @return \Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment[]
+   * @return \Drupal\ghi_plans\ApiObjects\Attachments\Attachment[]
    *   The result set of matched attachments.
    */
-  public static function matchDataAttachments(AttachmentInterface $original_attachment, array $available_attachments) {
-    return array_filter($available_attachments, function (DataAttachment $attachment) use ($original_attachment) {
-      if ($original_attachment->getType() != $attachment->getType()) {
+  public static function matchAttachments(AttachmentInterface $original_attachment, array $available_attachments) {
+    return array_filter($available_attachments, function (Attachment $attachment) use ($original_attachment) {
+      if ($original_attachment->getAttachmentType() != $attachment->getAttachmentType()) {
         // Check the attachment type, e.g. "caseload" vs "indicator".
         return FALSE;
       }
-      if ($original_attachment->source->entity_type != $attachment->source->entity_type) {
-        // Check the source entity type, e.g. "governingEntity" vs "plan".
+      if ($original_attachment->getSourceEntityType() != $attachment->getSourceEntityType()) {
+        // Check the source entity type, e.g. cluster vs plan.
         return FALSE;
       }
       if ($original_attachment->getPrototype()->getRefCode() != $attachment->getPrototype()->getRefCode()) {
@@ -51,15 +54,15 @@ class AttachmentMatcher {
    *
    * @param int $data_point_index
    *   The data point index to match.
-   * @param \Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment $attachment_1
+   * @param \Drupal\ghi_plans\ApiObjects\Attachments\Attachment $attachment_1
    *   The first or original attachment.
-   * @param \Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment $attachment_2
+   * @param \Drupal\ghi_plans\ApiObjects\Attachments\Attachment $attachment_2
    *   The second or new attachment.
    *
    * @return int
    *   Either the original index if no match can be found or a new index.
    */
-  public static function matchDataPointOnAttachments($data_point_index, DataAttachment $attachment_1, DataAttachment $attachment_2) {
+  public static function matchDataPointOnAttachments($data_point_index, Attachment $attachment_1, Attachment $attachment_2) {
     // Reload the prototypes, because depending on how the attachments have
     // been loaded, they might not have the full attachment prototype set up,
     // some are missing the calculated fields.
@@ -77,36 +80,34 @@ class AttachmentMatcher {
    *
    * @param int $data_point_index
    *   The data point index to match.
-   * @param \Drupal\ghi_plans\ApiObjects\AttachmentPrototype\AttachmentPrototype $prototype_1
+   * @param \Drupal\ghi_plans\ApiObjects\Prototypes\AttachmentPrototype $prototype_1
    *   The first or original attachment prototype.
-   * @param \Drupal\ghi_plans\ApiObjects\AttachmentPrototype\AttachmentPrototype $prototype_2
+   * @param \Drupal\ghi_plans\ApiObjects\Prototypes\AttachmentPrototype $prototype_2
    *   The second or new attachment prototype.
    *
    * @return int
    *   Either the original index if no match can be found or a new index.
    */
   public static function matchDataPointOnAttachmentPrototypes($data_point_index, AttachmentPrototype $prototype_1, AttachmentPrototype $prototype_2) {
-    // First get the original and the new fields. These are the types keyed by
-    // the field index.
-    $original_fields = $prototype_1->getFieldTypes();
-    $new_fields = $prototype_2->getFieldTypes();
-    if (!array_key_exists($data_point_index, $original_fields)) {
+    // First get the original and the new metric types for the same legacy
+    // field index.
+    $original_type = $prototype_1->getMetricTypeByOriginalIndex($data_point_index);
+    if (!$original_type) {
       // This is fishy.
       return $data_point_index;
     }
 
-    // Compare the types.
-    if ($original_fields[$data_point_index] == ($new_fields[$data_point_index] ?? NULL)) {
+    if ($original_type == $prototype_2->getMetricTypeByOriginalIndex($data_point_index)) {
       // If they are the same, there is no need to go further.
       return $data_point_index;
     }
     // It's referring to a different type now, let's see if we can find the
     // same as the original type in the set of new fields.
-    $new_index = array_search($original_fields[$data_point_index], $new_fields);
+    $new_index = $prototype_2->getOriginalIndexByMetricType($original_type);
 
     // We either found a new index and can return it, or we didn't and we
     // return the original.
-    return $new_index !== FALSE ? $new_index : $data_point_index;
+    return $new_index ?? $data_point_index;
   }
 
   /**
@@ -115,16 +116,11 @@ class AttachmentMatcher {
    * @param int $prototype_id
    *   The id of the attachment prototype to load.
    *
-   * @return \Drupal\ghi_plans\ApiObjects\AttachmentPrototype\AttachmentPrototype|null
+   * @return \Drupal\ghi_plans\ApiObjects\Prototypes\AttachmentPrototype|null
    *   An attachment prototype object.
    */
   private static function getPrototype($prototype_id) {
-    /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\AttachmentPrototypeQuery $query_handler */
-    $query_handler = \Drupal::service('plugin.manager.endpoint_query_manager')->createInstance('attachment_prototype_query');
-    if (!$query_handler) {
-      return NULL;
-    }
-    return $query_handler->getPrototypeById($prototype_id);
+    return self::getAttachmentPrototypeQuery()?->getPrototype($prototype_id) ?? NULL;
   }
 
 }

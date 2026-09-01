@@ -7,7 +7,7 @@ dependencies:
 id: presence
 label: Presence
 type: 'canonical_entities:node'
-pattern: '[node:field_entity_reference:entity:url:path]/presence'
+pattern: '/[node:field_entity_reference:entity:url:path]/presence'
 selection_criteria:
   89db37f1-3e05-4fea-b050-6ce6fff43321:
     id: 'entity_bundle:node'

@@ -6,8 +6,9 @@ use Drupal\Core\Form\FormState;
 use Drupal\ghi_blocks\Interfaces\OverrideDefaultTitleBlockInterface;
 use Drupal\ghi_blocks\Plugin\Block\Plan\PlanCaseloadTrendsTable;
 use Drupal\ghi_plans\ApiObjects\Attachments\CaseloadAttachment;
-use Drupal\ghi_plans\Plugin\EndpointQuery\AttachmentSearchQuery;
-use Drupal\ghi_plans\Plugin\EndpointQuery\PlanFundingSummaryQuery;
+use Drupal\ghi_plans\ApiObjects\Attachments\CostAttachment;
+use Drupal\ghi_plans\Plugin\FabricQuery\AttachmentQuery;
+use Drupal\ghi_plans\Plugin\FabricQuery\PlanQuery;
 use Drupal\hpc_downloads\Interfaces\HPCDownloadExcelInterface;
 use Drupal\hpc_downloads\Interfaces\HPCDownloadPNGInterface;
 use Drupal\Tests\ghi_blocks\Kernel\PlanBlockKernelTestBase;
@@ -19,6 +20,8 @@ use Prophecy\Argument;
  * @group ghi_blocks
  */
 class PlanCaseloadTrendsTableTest extends PlanBlockKernelTestBase {
+
+  const PLAN_ID = 10;
 
   /**
    * Tests the block properties.
@@ -83,20 +86,26 @@ class PlanCaseloadTrendsTableTest extends PlanBlockKernelTestBase {
     $this->assertCount(1, $table_data['rows']);
     $this->assertCount(7, $table_data['rows'][0]);
 
+    // Requirements are allowed to be 0, because they come from the plan object
+    // that is not entirely mocked.
     $requirements_cell = $table_data['rows'][0]['requirements'];
-    $this->assertEquals(3000, $requirements_cell['data-raw-value']);
+    $this->assertEquals(0, $requirements_cell['data-raw-value']);
     $this->assertEquals('currency', $requirements_cell['data-column-type']);
     $this->assertEquals('financial', $requirements_cell['data-progress-group']);
 
+    // Funding is allowed to be 0, because they come from the plan object that
+    // is not entirely mocked.
     $funding_cell = $table_data['rows'][0]['funding'];
-    $this->assertEquals(1000, $funding_cell['data-raw-value']);
+    $this->assertEquals(0, $funding_cell['data-raw-value']);
     $this->assertEquals('currency', $funding_cell['data-column-type']);
     $this->assertEquals('financial', $funding_cell['data-progress-group']);
 
+    // Coverage is allowed to be 0, because they come from the plan object that
+    // is not entirely mocked.
     $coverage_cell = $table_data['rows'][0]['coverage'];
     $this->assertEquals('hpc_percent', $coverage_cell['data']['#theme']);
-    $this->assertEquals(0.333, $coverage_cell['data']['#percent']);
-    $this->assertEquals(0.333, $coverage_cell['data-raw-value']);
+    $this->assertEquals(0.0, $coverage_cell['data']['#percent']);
+    $this->assertEquals(0.0, $coverage_cell['data-raw-value']);
     $this->assertEquals('percentage', $coverage_cell['data-column-type']);
     $this->assertEquals('coverage', $coverage_cell['data-progress-group']);
   }
@@ -106,6 +115,7 @@ class PlanCaseloadTrendsTableTest extends PlanBlockKernelTestBase {
    */
   public function testBuildDownloadData() {
     $plugin = $this->getBlockPlugin();
+    $this->injectApiQueryStubs($plugin);
     $table_data = $this->callPrivateMethod($plugin, 'buildTableData');
     $this->assertEquals($table_data, $plugin->buildDownloadData());
   }
@@ -128,9 +138,15 @@ class PlanCaseloadTrendsTableTest extends PlanBlockKernelTestBase {
     $this->assertEquals(round(100 / 3, 1), round($source_data[0]['target_percent'], 1));
     $this->assertEquals(80, $source_data[0]['reached']);
     $this->assertEquals(80.0, $source_data[0]['reached_percent']);
-    $this->assertEquals(3000, $source_data[0]['requirements']);
-    $this->assertEquals(1000, $source_data[0]['funding']);
-    $this->assertEquals(0.333, $source_data[0]['coverage']);
+    // Requirements are allowed to be 0, because they come from the plan object
+    // that is not entirely mocked.
+    $this->assertEquals(0, $source_data[0]['requirements']);
+    // Funding is allowed to be 0, because they come from the plan object that
+    // is not entirely mocked.
+    $this->assertEquals(0, $source_data[0]['funding']);
+    // Coverage is allowed to be 0, because they come from the plan object that
+    // is not entirely mocked.
+    $this->assertEquals(0.0, $source_data[0]['coverage']);
     $this->assertNull($source_data[0]['footnotes']);
   }
 
@@ -199,6 +215,7 @@ class PlanCaseloadTrendsTableTest extends PlanBlockKernelTestBase {
    */
   public function testBlockBuild() {
     $plugin = $this->getBlockPlugin();
+    $this->injectApiQueryStubs($plugin);
     $build = $plugin->buildContent();
     $this->assertNotEmpty($build);
     $this->assertIsArray($build['#lazy_builder']);
@@ -231,8 +248,26 @@ class PlanCaseloadTrendsTableTest extends PlanBlockKernelTestBase {
       ],
       'soft_limit' => 10,
     ];
-    $contexts = $this->getPlanSectionContexts(['field_year' => 2025]);
-    return $this->createBlockPlugin('plan_caseload_trends_table', $configuration, $contexts);
+    $contexts = $this->getPlanSectionContexts([
+      'field_original_id' => self::PLAN_ID,
+      'field_year' => 2025,
+    ]);
+
+    $plugin = $this->createBlockPlugin('plan_caseload_trends_table', $configuration, $contexts);
+
+    $attachment_query = $this->prophesize(AttachmentQuery::class);
+
+    $plan_query = $this->prophesize(PlanQuery::class);
+    $plan_query->getPlansById(Argument::any())->willReturn([]);
+
+    $reflection = new \ReflectionClass($plugin);
+    $property = $reflection->getProperty('queryHandlers');
+    $property->setValue($plugin, [
+      'attachment' => $attachment_query->reveal(),
+      'plan' => $plan_query->reveal(),
+    ]);
+
+    return $plugin;
   }
 
   /**
@@ -242,21 +277,18 @@ class PlanCaseloadTrendsTableTest extends PlanBlockKernelTestBase {
    *   The plugin.
    */
   private function injectApiQueryStubs($plugin) {
-    $plan_funding_query = $this->prophesize(PlanFundingSummaryQuery::class);
-    $plan_funding_query->getData(Argument::cetera())->willReturn([
-      'total_funding' => 1000,
-      'current_requirements' => 3000,
-      'funding_coverage' => 0.333,
-    ]);
-    $plugin->setQueryHandler('plan_funding', $plan_funding_query->reveal());
-
     $caseload = $this->prophesize(CaseloadAttachment::class);
-    $caseload->getFieldByType('inNeed')->willReturn((object) ['value' => 300]);
-    $caseload->getFieldByType('target')->willReturn((object) ['value' => 100]);
-    $caseload->getCaseloadValue('latestReach')->willReturn(80);
-    $attachment_search_query = $this->prophesize(AttachmentSearchQuery::class);
-    $attachment_search_query->getAttachmentsByObject(Argument::cetera())->willReturn([$caseload->reveal()]);
-    $plugin->setQueryHandler('attachment_search', $attachment_search_query->reveal());
+    $caseload->getCaseloadValue('in_need')->willReturn(300);
+    $caseload->getCaseloadValue('target')->willReturn(100);
+    $caseload->getCaseloadValue('latest_reach')->willReturn(80);
+
+    $financial = $this->prophesize(CostAttachment::class);
+    $financial->getRequirements()->willReturn(3000);
+    $financial->getCoverage(1000)->willReturn(0.333);
+
+    $attachment_query = $this->prophesize(AttachmentQuery::class);
+    $attachment_query->getAttachmentsByPlan(Argument::any(), 'caseload')->willReturn([self::PLAN_ID => [$caseload->reveal()]]);
+    $plugin->setQueryHandler('attachment', $attachment_query->reveal());
   }
 
 }

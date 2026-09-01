@@ -7,6 +7,12 @@ hpc_api.config:
     _permission: 'administer site configuration'
   options:
     _admin_route: TRUE
+hpc_api.fabric_health:
+  path: '/_health/fabric'
+  defaults:
+    _controller: '\Drupal\hpc_api\Controller\FabricHealthController::check'
+  requirements:
+    _access: 'TRUE'
 hpc_api.reports.endpoints:
   path: '/admin/reports/hpc-api-endpoints'
   defaults:
@@ -15,6 +21,77 @@ hpc_api.reports.endpoints:
   requirements:
     _permission: 'access site reports'
   options:
+    _admin_route: TRUE
+hpc_api.reports.fabric:
+  path: '/admin/reports/fabric'
+  defaults:
+    _controller: '\Drupal\system\Controller\SystemController::systemAdminMenuBlockPage'
+    _title: 'Fabric'
+  requirements:
+    _permission: 'access site reports'
+hpc_api.reports.fabric.query:
+  path: '/admin/reports/fabric/query'
+  defaults:
+    _form: '\Drupal\hpc_api\Form\FabricQueryForm'
+    _title: 'Execute query'
+  requirements:
+    _permission: 'administer site configuration'
+hpc_api.reports.fabric.query_inspector:
+  path: '/admin/reports/fabric/query-inspector'
+  defaults:
+    _form: '\Drupal\hpc_api\Form\FabricQueryInspectorForm'
+    _title: 'Inspect fabric queries'
+  requirements:
+    _permission: 'administer site configuration'
+hpc_api.reports.fabric.base_types:
+  path: '/admin/reports/fabric/base-types'
+  defaults:
+    _controller: '\Drupal\hpc_api\Controller\FabricReportController::buildBaseTypeReport'
+    _title: 'Base types'
+  requirements:
+    _permission: 'access site reports'
+  options:
+    _admin_route: TRUE
+hpc_api.reports.fabric.categories:
+  path: '/admin/reports/fabric/categories'
+  defaults:
+    _controller: '\Drupal\hpc_api\Controller\FabricReportController::buildCategoryReport'
+    _title: 'Categories'
+  requirements:
+    _permission: 'access site reports'
+  options:
+    _admin_route: TRUE
+hpc_api.reports.fabric.relationships:
+  path: '/admin/reports/fabric/relationships'
+  defaults:
+    _form: '\Drupal\hpc_api\Form\RelationshipLookupForm'
+    _title: 'Relationships'
+  requirements:
+    _permission: 'access site reports'
+  options:
+    _admin_route: TRUE
+hpc_api.reports.fabric.entity_lookup:
+  path: '/admin/reports/fabric/entity-lookup'
+  defaults:
+    _form: '\Drupal\hpc_api\Form\EntityLookupForm'
+    _title: 'Entity lookup'
+  requirements:
+    _permission: 'access site reports'
+  options:
+    _admin_route: TRUE
+hpc_api.reports.fabric.entity_lookup_page:
+  path: '/admin/reports/fabric/entity-lookup/{entity_type_id}/{entity_id}'
+  defaults:
+    _controller: '\Drupal\hpc_api\Controller\FabricReportController::entityLookupPage'
+    _title_callback: '\Drupal\hpc_api\Controller\FabricReportController::entityTitle'
+  requirements:
+    _permission: 'access site reports'
+  options:
+    parameters:
+      entity_type_id:
+        type: integer
+      entity_id:
+        type: integer
     _admin_route: TRUE
 hpc_api.reports.files.data_source:
   path: '/admin/reports/hpc-api-files/data-source'

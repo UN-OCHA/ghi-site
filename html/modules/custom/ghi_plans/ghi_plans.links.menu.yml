@@ -1,0 +1,42 @@
+ghi_plans.legacy_project_settings:
+  title: 'Project settings'
+  description: 'Configure legacy project detail embeds.'
+  route_name: ghi_plans.legacy_project_settings
+  parent: system.admin_config_ghi
+
+ghi_plans.attachment_prototype_field_overrides:
+  title: 'Attachment prototype field overrides'
+  description: 'Configure targeted Fabric attachment prototype field fixes.'
+  route_name: ghi_plans.attachment_prototype_field_overrides
+  parent: system.admin_config_ghi
+
+ghi_plans.plan_entity_lookup:
+  title: 'Plan entity lookup'
+  description: 'Lookup plan entity data.'
+  route_name: ghi_plans.plan_entity_lookup
+  parent: hpc_api.fabric_report
+  weight: 5
+ghi_plans.entity_prototype_lookup:
+  title: 'Entity prototype lookup'
+  description: 'Lookup entity prototype data.'
+  route_name: ghi_plans.entity_prototype_lookup
+  parent: hpc_api.fabric_report
+  weight: 6
+ghi_plans.attachment_lookup:
+  title: 'Attachment lookup'
+  description: 'Lookup attachment data.'
+  route_name: ghi_plans.attachment_lookup
+  parent: hpc_api.fabric_report
+  weight: 7
+ghi_plans.attachment_prototype_lookup:
+  title: 'Attachment prototype lookup'
+  description: 'Lookup attachment prototype data.'
+  route_name: ghi_plans.attachment_prototype_lookup
+  parent: hpc_api.fabric_report
+  weight: 8
+ghi_plans.measurement_lookup:
+  title: 'Measurement lookup'
+  description: 'Lookup measurement data.'
+  route_name: ghi_plans.measurement_lookup
+  parent: hpc_api.fabric_report
+  weight: 9

@@ -3,31 +3,44 @@
 namespace Drupal\ghi_blocks\Plugin\Block\GlobalPage;
 
 use Drupal\Component\Plugin\Exception\ContextException;
+use Drupal\Core\Block\Attribute\Block;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Plugin\Context\ContextDefinition;
+use Drupal\Core\Plugin\Context\EntityContextDefinition;
 use Drupal\Core\Render\Markup;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\ghi_blocks\Interfaces\OverrideDefaultTitleBlockInterface;
 use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
 use Drupal\ghi_blocks\Traits\HomepageBlockTrait;
+use Drupal\hpc_common\Plugin\HPCBlockMetadata;
 use Drupal\hpc_common\Helpers\BlockHelper;
 use Drupal\hpc_downloads\Interfaces\HPCDownloadContainerInterface;
 
 /**
  * Provides a 'Homepages' block.
- *
- * @Block(
- *  id = "global_homepages",
- *  admin_label = @Translation("Homepages (year switchable)"),
- *  category = @Translation("Global"),
- *  default_title = @Translation("Operations"),
- *  context_definitions = {
- *    "node" = @ContextDefinition("entity:node", label = @Translation("Node"), required = FALSE),
- *    "year" = @ContextDefinition("integer", label = @Translation("Year"), required = FALSE)
- *  },
- * )
  */
+#[Block(
+  id: 'global_homepages',
+  admin_label: new TranslatableMarkup('Homepages (year switchable)'),
+  category: new TranslatableMarkup('Global'),
+  context_definitions: [
+    'node' => new EntityContextDefinition('entity:node', new TranslatableMarkup('Node'), required: FALSE),
+    'year' => new ContextDefinition(data_type: 'integer', label: new TranslatableMarkup("Year"), required: FALSE),
+  ]
+)]
 class Homepages extends GHIBlockBase implements OverrideDefaultTitleBlockInterface, HPCDownloadContainerInterface {
 
   use HomepageBlockTrait;
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function metadata(): ?HPCBlockMetadata {
+    return new HPCBlockMetadata(
+      defaultTitle: 'Operations',
+      usesTitle: FALSE,
+    );
+  }
 
   /**
    * {@inheritdoc}
@@ -62,9 +75,6 @@ class Homepages extends GHIBlockBase implements OverrideDefaultTitleBlockInterfa
     ];
     // Add a year switcher if available.
     if ($year_switcher = $this->buildHomepageYearSwitcher()) {
-      $build['#block_attributes'] = [
-        'class' => ['has-year-switcher'],
-      ];
       $build['title_wrapper']['title'][] = $year_switcher;
     }
     $build[] = $this->entityTypeManager->getViewBuilder('node')->view($homepage, 'embed');

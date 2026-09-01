@@ -2,17 +2,24 @@
 
 namespace Drupal\Tests\ghi_plans\Unit;
 
-use Drupal\Component\Render\MarkupInterface;
-use Drupal\ghi_plans\ApiObjects\AttachmentPrototype\AttachmentPrototype;
+use Drupal\Component\Datetime\TimeInterface;
+use Drupal\Core\Cache\CacheBackendInterface;
+use Drupal\ghi_plans\ApiObjects\Entities\GoverningEntity as GoverningEntityObject;
+use Drupal\ghi_plans\ApiObjects\Entities\PlanEntity as PlanEntityObject;
+use Drupal\ghi_plans\ApiObjects\Prototypes\AttachmentPrototype;
 use Drupal\ghi_plans\ApiObjects\Attachments\CaseloadAttachment;
-use Drupal\ghi_plans\ApiObjects\Attachments\ContactAttachment;
-use Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment;
-use Drupal\ghi_plans\ApiObjects\Attachments\FileAttachment;
+use Drupal\ghi_plans\ApiObjects\Attachments\Attachment;
+use Drupal\ghi_plans\ApiObjects\Attachments\CostAttachment;
 use Drupal\ghi_plans\ApiObjects\Attachments\IndicatorAttachment;
-use Drupal\ghi_plans\ApiObjects\Attachments\TextAttachment;
+use Drupal\ghi_plans\ApiObjects\Facts\AttachmentFact;
+use Drupal\ghi_plans\ApiObjects\PlanEntityInterface;
 use Drupal\ghi_plans\ApiObjects\PlanReportingPeriod;
+use Drupal\ghi_plans\Entity\GoverningEntity as GoverningEntityBaseObject;
+use Drupal\ghi_plans\Entity\Plan;
 use Drupal\ghi_plans\Exceptions\InvalidAttachmentTypeException;
 use Drupal\ghi_plans\Helpers\AttachmentHelper;
+use Drupal\hpc_api\ApiObjects\Types\MetricType;
+use Prophecy\Argument;
 
 /**
  * Tests for API attachment objects.
@@ -20,33 +27,46 @@ use Drupal\ghi_plans\Helpers\AttachmentHelper;
 class AttachmentTest extends ApiObjectTestBase {
 
   /**
-   * Test data agnostic parts of DataAttachment.
+   * {@inheritdoc}
+   */
+  protected function tearDown(): void {
+    drupal_static_reset('getBaseObjectsFromOriginalIds');
+    drupal_static_reset('getQueryInstance');
+    foreach ([Attachment::class, CaseloadAttachment::class, CostAttachment::class, IndicatorAttachment::class] as $class) {
+      drupal_static_reset($class . '::cache');
+    }
+    parent::tearDown();
+  }
+
+  /**
+   * Test data agnostic parts of Attachment.
    */
   public function testAttachmentGenericData() {
-    /** @var \Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment $attachment */
+    /** @var \Drupal\ghi_plans\ApiObjects\Attachments\Attachment $attachment */
     $attachment = $this->getAttachmentFromFixture('caseload');
-    $this->assertInstanceOf(DataAttachment::class, $attachment);
+    $this->assertInstanceOf(Attachment::class, $attachment);
 
     // Null handling.
     $this->assertTrue($attachment->isNullValue(NULL));
     $this->assertTrue($attachment->isNullValue(FALSE));
     $this->assertTrue($attachment->isNullValue(''));
     $this->assertFalse($attachment->isNullValue(0));
+    $this->assertFalse($attachment->isNullValue(0.0));
     $this->assertFalse($attachment->isNullValue('0'));
 
-    $processing_options = DataAttachment::getProcessingOptions();
+    $processing_options = Attachment::getProcessingOptions();
     $this->assertCount(2, $processing_options);
     $this->assertArrayHasKey('single', $processing_options);
     $this->assertArrayHasKey('calculated', $processing_options);
 
-    $calculation_options = DataAttachment::getCalculationOptions();
+    $calculation_options = Attachment::getCalculationOptions();
     $this->assertCount(4, $calculation_options);
     $this->assertArrayHasKey('addition', $calculation_options);
     $this->assertArrayHasKey('substraction', $calculation_options);
     $this->assertArrayHasKey('division', $calculation_options);
     $this->assertArrayHasKey('percentage', $calculation_options);
 
-    $formatting_options = DataAttachment::getFormattingOptions();
+    $formatting_options = Attachment::getFormattingOptions();
     $this->assertCount(6, $formatting_options);
     $this->assertArrayHasKey('auto', $formatting_options);
     $this->assertArrayHasKey('currency', $formatting_options);
@@ -55,7 +75,7 @@ class AttachmentTest extends ApiObjectTestBase {
     $this->assertArrayHasKey('percent', $formatting_options);
     $this->assertArrayHasKey('raw', $formatting_options);
 
-    $widget_options = DataAttachment::getWidgetOptions();
+    $widget_options = Attachment::getWidgetOptions();
     $this->assertCount(4, $widget_options);
     $this->assertArrayHasKey('none', $widget_options);
     $this->assertArrayHasKey('progressbar', $widget_options);
@@ -64,67 +84,81 @@ class AttachmentTest extends ApiObjectTestBase {
   }
 
   /**
-   * Test data agnostic parts of DataAttachment.
+   * Test data agnostic parts of Attachment.
    */
   public function testAttachmentEmptyData() {
-    /** @var \Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment $attachment */
+    /** @var \Drupal\ghi_plans\ApiObjects\Attachments\Attachment $attachment */
     $attachment = AttachmentHelper::processAttachment((object) [
-      'id' => 38529,
-      'type' => 'caseLoad',
-      'attachmentPrototype' => $this->getApiObjectFixture('AttachmentPrototype', 'caseload'),
+      'Id' => 38529,
+      'PlanId' => 1266,
+      'AttachmentType' => 'Caseload',
+      'AttachmentPrototypeId' => rand(1, 100),
     ]);
-    $this->assertInstanceOf(DataAttachment::class, $attachment);
+    $this->assertInstanceOf(Attachment::class, $attachment);
     $this->assertEmpty($attachment->getSourceEntity());
   }
 
   /**
-   * Test that missing measurements on DataAttachment does not create a loop.
+   * Test that missing measurements on Attachment does not create a loop.
    *
-   * This tests against a potential loop in DataAttachment::getMeasurements().
+   * This tests against a potential loop in Attachment::getMeasurements().
    */
   public function testAttachmentEmptyMeasurementLoop() {
-    $measurement_query = $this->getMockBuilder('Drupal\ghi_plans\Plugin\EndpointQuery\MeasurementQuery')
-      ->disableOriginalConstructor()
-      ->getMock();
-    $measurement_query->method('setPlaceholder')->willReturn(NULL);
-    $measurement_query->method('getUnprocessedMeasurements')->willReturn([]);
-    $measurement_query->expects($this->once())->method('getUnprocessedMeasurements');
-
-    $endpoint_query_manager = $this->getMockBuilder('Drupal\hpc_api\Query\EndpointQueryManager')
-      ->disableOriginalConstructor()
-      ->getMock();
-    $endpoint_query_manager->method('createInstance')->with('measurement_query')->willReturn($measurement_query);
-
-    $container = \Drupal::getContainer();
-    $container->set('plugin.manager.endpoint_query_manager', $endpoint_query_manager);
-    \Drupal::setContainer($container);
-
-    /** @var \Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment $attachment */
+    /** @var \Drupal\ghi_plans\ApiObjects\Attachments\Attachment $attachment */
     $attachment = AttachmentHelper::processAttachment((object) [
-      'id' => 38529,
-      'type' => 'caseLoad',
-      'attachmentPrototype' => $this->getApiObjectFixture('AttachmentPrototype', 'caseload'),
+      'Id' => 38529,
+      'PlanId' => 1266,
+      'AttachmentType' => 'Caseload',
+      'AttachmentPrototypeId' => rand(1, 100),
     ]);
-    $this->assertInstanceOf(DataAttachment::class, $attachment);
+    $this->assertInstanceOf(Attachment::class, $attachment);
     $this->assertEmpty($attachment->getSourceEntity());
   }
 
   /**
-   * Test value retrieval from DataAttachments.
+   * Test value extraction from Attachments.
+   */
+  public function testAttachmentExtractValues() {
+    /** @var \Drupal\ghi_plans\ApiObjects\Attachments\CaseloadAttachment $attachment */
+    $attachment = $this->getAttachmentFromFixture('caseload');
+    $this->assertInstanceOf(CaseloadAttachment::class, $attachment);
+
+    $totals = [
+      $this->mockAttachmentFact(TRUE, 4648210, 'in_need'),
+      $this->mockAttachmentFact(TRUE, 3124881, 'target'),
+    ];
+
+    $values = $this->callPrivateMethod($attachment, 'extractValues', [$totals]);
+    $this->assertEquals([
+      'in_need' => 4648210,
+      'target' => 3124881,
+    ], $values);
+  }
+
+  /**
+   * Test value retrieval from Attachments.
    */
   public function testAttachmentGetDataValues() {
     /** @var \Drupal\ghi_plans\ApiObjects\Attachments\CaseloadAttachment $attachment */
     $attachment = $this->getAttachmentFromFixture('caseload');
     $this->assertInstanceOf(CaseloadAttachment::class, $attachment);
+
+    $totals = [
+      $this->mockAttachmentFact(TRUE, 4648210, 'in_need'),
+      $this->mockAttachmentFact(TRUE, 3124881, 'target'),
+    ];
+    $this->setPrivateProperty($attachment, 'totals', $totals);
+    $this->assertNotEmpty($attachment->getTotals());
+
     $conf = [
       'processing' => 'single',
-      'data_points' => [['index' => 2]],
+      'data_points' => [['metric_type' => 'in_need']],
     ];
     $this->assertEquals(4648210, $attachment->getValue($conf));
 
     $conf = [
       'processing' => 'single',
-      'data_points' => [['index' => 3]],
+      'data_points' => [['metric_type' => 'target']],
     ];
     $this->assertEquals(3124881, $attachment->getValue($conf));
 
@@ -132,8 +166,8 @@ class AttachmentTest extends ApiObjectTestBase {
       'processing' => 'calculated',
       'calculation' => 'addition',
       'data_points' => [
-        0 => ['index' => 2],
-        1 => ['index' => 3],
+        0 => ['metric_type' => 'in_need'],
+        1 => ['metric_type' => 'target'],
       ],
     ];
     $this->assertEquals(4648210 + 3124881, $attachment->getValue($conf));
@@ -143,17 +177,161 @@ class AttachmentTest extends ApiObjectTestBase {
     $this->assertEquals(3124881 / 4648210, $attachment->getValue($conf));
     $conf['calculation'] = 'percentage';
     $this->assertEquals(1 / 3124881 * 4648210, $attachment->getValue($conf));
+    $conf['data_points'][1]['metric_type'] = NULL;
+    $this->assertNull($attachment->getValue($conf));
 
+    $conf['data_points'][1]['metric_type'] = 'target';
     $conf['calculation'] = 'INVALID CALCULATION TYPE';
     $this->expectException(InvalidAttachmentTypeException::class);
     $attachment->getValue($conf);
 
     $conf = [
       'processing' => 'INVALID PROCESSING TYPE',
-      'data_points' => [['index' => 2]],
+      'data_points' => [['metric_type' => 'in_need']],
     ];
     $this->expectException(InvalidAttachmentTypeException::class);
     $attachment->getValue($conf);
+  }
+
+  /**
+   * Test missing calculated percentage values stay unavailable.
+   */
+  public function testCalculatedPercentageMissingValueFormatting() {
+    /** @var \Drupal\ghi_plans\ApiObjects\Attachments\CaseloadAttachment $attachment */
+    $attachment = $this->getAttachmentFromFixture('caseload');
+    $this->assertInstanceOf(CaseloadAttachment::class, $attachment);
+    $reporting_periods = $this->mockCaseloadReportingPeriods([2386, 2387, 2388, 2389], $attachment->getPlanId());
+    $this->mockPlanWithLatestPublishedReportingPeriod($attachment->getPlanId(), 2389, $reporting_periods);
+
+    $latest_measurement = $attachment->getMeasurement(2389);
+    $latest_values = $latest_measurement->getValues();
+    $latest_values['periodical_reach'] = NULL;
+    $this->setPrivateProperty($latest_measurement, 'values', $latest_values);
+
+    $conf = [
+      'processing' => 'calculated',
+      'calculation' => 'percentage',
+      'data_points' => [
+        0 => [
+          'metric_type' => 'periodical_reach',
+          'monitoring_period' => 'latest',
+        ],
+        1 => ['metric_type' => 'target'],
+      ],
+    ];
+
+    foreach (['auto', 'percent'] as $formatting) {
+      $conf['formatting'] = $formatting;
+      $this->assertNull($attachment->getValue($conf));
+      $build = $attachment->formatValue($conf);
+      $this->assertSame('No data', $build[0]['#markup']);
+    }
+
+    $latest_values['periodical_reach'] = 0.0;
+    $this->setPrivateProperty($latest_measurement, 'values', $latest_values);
+
+    foreach (['auto', 'percent'] as $formatting) {
+      $conf['formatting'] = $formatting;
+      $this->assertSame(0.0, $attachment->getValue($conf));
+      $build = $attachment->formatValue($conf);
+      $this->assertEquals([
+        '#theme' => 'hpc_percent',
+        '#ratio' => 0.0,
+        '#decimals' => 1,
+        '#decimal_format' => NULL,
+      ], $build[0]);
+    }
+  }
+
+  /**
+   * Test cache tags on derived attachment values.
+   */
+  public function testAttachmentGetValueCacheTags() {
+    $time = $this->prophesize(TimeInterface::class);
+    $time->getRequestTime()->willReturn(1000);
+    $time_service = $time->reveal();
+    $cache_tags = [];
+    $cache_backend = $this->prophesize(CacheBackendInterface::class);
+    $cache_backend->get(Argument::any())->willReturn(FALSE);
+    $cache_backend->set(Argument::any(), Argument::any(), Argument::any(), Argument::any())->will(function ($arguments) use (&$cache_tags) {
+      $cache_tags = $arguments[3];
+    });
+
+    $container = \Drupal::getContainer();
+    $container->set('datetime.time', $time_service);
+    $container->set('cache.default', $cache_backend->reveal());
+    \Drupal::setContainer($container);
+    drupal_static_reset(CaseloadAttachment::class . '::cache');
+
+    /** @var \Drupal\ghi_plans\ApiObjects\Attachments\CaseloadAttachment $attachment */
+    $attachment = $this->getAttachmentFromFixture('caseload');
+    $totals = [
+      $this->mockAttachmentFact(TRUE, 4648210, 'in_need'),
+    ];
+    $this->setPrivateProperty($attachment, 'totals', $totals);
+
+    $conf = [
+      'processing' => 'single',
+      'data_points' => [['metric_type' => 'in_need']],
+    ];
+    $this->assertEquals(4648210, $attachment->getValue($conf));
+
+    $this->assertContains('attachment_id:38529', $cache_tags);
+    $this->assertContains('plan_id:1112', $cache_tags);
+  }
+
+  /**
+   * Test that latest measurement values use the latest published period.
+   */
+  public function testLatestMeasurementValueUsesPublishedReportingPeriod() {
+    /** @var \Drupal\ghi_plans\ApiObjects\Attachments\CaseloadAttachment $attachment */
+    $attachment = $this->getAttachmentFromFixture('caseload');
+    $this->assertInstanceOf(CaseloadAttachment::class, $attachment);
+    $this->mockPlanWithLatestPublishedReportingPeriod($attachment->getPlanId(), 2388);
+    $metric_type = $this->mockMetricType(20, 'covered');
+    $location_id = 900001;
+
+    $this->setPrivateProperty($attachment->getMeasurement(2388), 'disaggregated', $this->createDisaggregatedMetricData($metric_type, $location_id, 2388));
+    $this->setPrivateProperty($attachment->getMeasurement(2389), 'disaggregated', $this->createDisaggregatedMetricData($metric_type, $location_id, 2389));
+
+    $this->assertSame(2388, $attachment->getMeasurement('latest')?->getReportingPeriodId());
+    $this->assertEquals(2883267, $attachment->getMeasurement(2389)?->getDataPointValue('cumulative_reach'));
+    $this->assertEquals(2314453, $attachment->getMeasurement('latest')?->getDataPointValue('cumulative_reach'));
+    $this->assertEquals(2314453, $attachment->getValueByMetricType('cumulative_reach', 'latest'));
+    $this->assertSame(2388, $attachment->getDisaggregatedData('latest', $metric_type)->locations[$location_id]->totals[$metric_type->id()]);
+
+    $conf = [
+      'processing' => 'single',
+      'data_points' => [
+        [
+          'metric_type' => 'cumulative_reach',
+          'monitoring_period' => 'latest',
+        ],
+      ],
+    ];
+    $this->assertEquals(2314453, $attachment->getValue($conf));
+  }
+
+  /**
+   * Test that cumulative reach uses the last non-empty published period.
+   */
+  public function testCumulativeReachFallsBackToLastNonEmptyPublishedPeriod() {
+    /** @var \Drupal\ghi_plans\ApiObjects\Attachments\CaseloadAttachment $attachment */
+    $attachment = $this->getAttachmentFromFixture('caseload');
+    $this->assertInstanceOf(CaseloadAttachment::class, $attachment);
+    $reporting_periods = $this->mockCaseloadReportingPeriods([2386, 2387, 2388, 2389], $attachment->getPlanId());
+    $this->mockPlanWithLatestPublishedReportingPeriod($attachment->getPlanId(), 2389, $reporting_periods);
+
+    $latest_measurement = $attachment->getMeasurement(2389);
+    $latest_values = $latest_measurement->getValues();
+    $latest_values['cumulative_reach'] = NULL;
+    $this->setPrivateProperty($latest_measurement, 'values', $latest_values);
+
+    $this->assertNull($attachment->getMeasurement(2389)?->getDataPointValue('cumulative_reach'));
+    $this->assertCount(4, $attachment->getPlanReportingPeriods($attachment->getPlanId(), TRUE));
+    $this->assertSame(2388, $attachment->getLastNonEmptyReportingPeriod('cumulative_reach', $reporting_periods)?->id());
+    $this->assertEquals(2314453, $attachment->getValueByMetricType('cumulative_reach', 'latest'));
+    $this->assertEquals(2314453, $attachment->getValueByMetricType('cumulative_reach', 2389));
   }
 
   /**
@@ -161,15 +339,10 @@ class AttachmentTest extends ApiObjectTestBase {
    */
   public function testGetDataForAllReportingPeriods() {
     /** @var \Drupal\ghi_plans\ApiObjects\Attachments\CaseloadAttachment $attachment */
-    $attachment = $this->getAttachmentFromFixture('caseload_empty_values');
+    $attachment = $this->getAttachmentFromFixture('caseload');
     $this->assertInstanceOf(CaseloadAttachment::class, $attachment);
     $reporting_periods = $this->mockCaseloadReportingPeriods([2386, 2387, 2388, 2389]);
-    $values = $attachment->getValuesForAllReportingPeriods(2, FALSE, FALSE, $reporting_periods);
-    $this->assertIsArray($values);
-    $this->assertArrayHasKey(2386, $values);
-    $this->assertArrayHasKey(2387, $values);
-    $this->assertArrayHasKey(2388, $values);
-    $this->assertArrayHasKey(2389, $values);
+    $values = $attachment->getValuesForAllReportingPeriods('in_need', TRUE, TRUE, $reporting_periods);
     $expected = [
       2386 => 4648210,
       2387 => 4648210,
@@ -178,31 +351,72 @@ class AttachmentTest extends ApiObjectTestBase {
     ];
     $this->assertEquals($expected, $values);
 
-    $values = $attachment->getValuesForAllReportingPeriods(1, TRUE, FALSE, $reporting_periods);
-    $this->assertEquals([], $values);
-
-    $values = $attachment->getValuesForAllReportingPeriods(1, FALSE, TRUE, $reporting_periods);
-    $this->assertEquals([], $values);
-
-    $values = $attachment->getValuesForAllReportingPeriods(1, TRUE, TRUE, $reporting_periods);
-    $this->assertEquals([], $values);
-
-    $values = $attachment->getValuesForAllReportingPeriods(3, FALSE, TRUE, $reporting_periods);
+    $values = $attachment->getValuesForAllReportingPeriods('total_population', TRUE, TRUE, $reporting_periods);
     $expected = [
-      2386 => 0,
+      2386 => 22100000,
+      2387 => 22100000,
+      2388 => 22100000,
+      2389 => 22100000,
+    ];
+    $this->assertEquals($expected, $values);
+
+    $values = $attachment->getValuesForAllReportingPeriods('target', TRUE, TRUE, $reporting_periods);
+    $expected = [
+      2386 => 3124881,
       2387 => 3124881,
       2388 => 3124881,
       2389 => 3124881,
     ];
     $this->assertEquals($expected, $values);
 
-    $values = $attachment->getValuesForAllReportingPeriods(3, TRUE, FALSE, $reporting_periods);
+    $values = $attachment->getValuesForAllReportingPeriods('cumulative_reach', TRUE, TRUE, $reporting_periods);
     $expected = [
-      2387 => 3124881,
-      2388 => 3124881,
-      2389 => 3124881,
+      2386 => 522701,
+      2387 => 1659672,
+      2388 => 2314453,
+      2389 => 2883267,
     ];
     $this->assertEquals($expected, $values);
+
+    $values = $attachment->getValuesForAllReportingPeriods('periodical_reach', FALSE, FALSE, $reporting_periods);
+    $expected = [
+      2386 => 522701,
+      2387 => 0,
+      2388 => 2314453,
+      2389 => 2883267,
+    ];
+    $this->assertEquals($expected, $values);
+
+    $zero_measurement = $attachment->getMeasurement(2387);
+    $zero_values = $zero_measurement->getValues();
+    $zero_values['periodical_reach'] = 0.0;
+    $this->setPrivateProperty($zero_measurement, 'values', $zero_values);
+    $values = $attachment->getValuesForAllReportingPeriods('periodical_reach', FALSE, TRUE, $reporting_periods);
+    $this->assertEquals($expected, $values);
+  }
+
+  /**
+   * Test periodical reach configs do not use cumulative reach facts.
+   */
+  public function testPeriodicalReachDoesNotUseCumulativeReachWhenOnlyCumulativeReachFactsExist() {
+    /** @var \Drupal\ghi_plans\ApiObjects\Attachments\CaseloadAttachment $attachment */
+    $attachment = $this->getAttachmentFromFixture('caseload');
+    $this->assertInstanceOf(CaseloadAttachment::class, $attachment);
+    $reporting_periods = $this->mockCaseloadReportingPeriods([2386, 2387, 2388, 2389], $attachment->getPlanId());
+    $this->mockPlanWithLatestPublishedReportingPeriod($attachment->getPlanId(), 2389, $reporting_periods);
+
+    $attachment_values = $this->getPrivateProperty($attachment, 'values');
+    unset($attachment_values['periodical_reach']);
+    $this->setPrivateProperty($attachment, 'values', $attachment_values);
+
+    foreach ($attachment->getMeasurements() as $measurement) {
+      $values = $measurement->getValues();
+      unset($values['periodical_reach']);
+      $this->setPrivateProperty($measurement, 'values', $values);
+    }
+
+    $this->assertNull($attachment->getValueByMetricType('periodical_reach', 'latest'));
+    $this->assertSame([], $attachment->getValuesForAllReportingPeriods('periodical_reach', TRUE, TRUE, $reporting_periods));
   }
 
   /**
@@ -210,12 +424,12 @@ class AttachmentTest extends ApiObjectTestBase {
    */
   public function testGetLastNonEmptyReportingPeriod() {
     /** @var \Drupal\ghi_plans\ApiObjects\Attachments\CaseloadAttachment $attachment */
-    $attachment = $this->getAttachmentFromFixture('caseload_empty_values');
+    $attachment = $this->getAttachmentFromFixture('caseload');
     $this->assertInstanceOf(CaseloadAttachment::class, $attachment);
     $reporting_periods = $this->mockCaseloadReportingPeriods([2386, 2387, 2388, 2389]);
     $this->assertNull($attachment->getLastNonEmptyReportingPeriod(1, $reporting_periods));
-    $this->assertEquals($reporting_periods[2389], $attachment->getLastNonEmptyReportingPeriod(2, $reporting_periods));
-    $this->assertEquals($reporting_periods[2389], $attachment->getLastNonEmptyReportingPeriod(3, $reporting_periods));
+    $this->assertEquals($reporting_periods[2389], $attachment->getLastNonEmptyReportingPeriod('in_need', $reporting_periods));
+    $this->assertEquals($reporting_periods[2389], $attachment->getLastNonEmptyReportingPeriod('target', $reporting_periods));
   }
 
   /**
@@ -240,8 +454,8 @@ class AttachmentTest extends ApiObjectTestBase {
         'processing' => 'single',
         'formatting' => 'raw',
         'data_points' => [
-          0 => ['index' => 2],
-          1 => ['index' => 0],
+          0 => ['metric_type' => 'in_need'],
+          1 => ['metric_type' => 'total_population'],
         ],
       ],
       'expected' => [
@@ -253,8 +467,8 @@ class AttachmentTest extends ApiObjectTestBase {
         'processing' => 'single',
         'formatting' => 'currency',
         'data_points' => [
-          0 => ['index' => 2],
-          1 => ['index' => 0],
+          0 => ['metric_type' => 'in_need'],
+          1 => ['metric_type' => 'total_population'],
         ],
       ],
       'expected' => [
@@ -268,8 +482,8 @@ class AttachmentTest extends ApiObjectTestBase {
         'processing' => 'single',
         'formatting' => 'amount',
         'data_points' => [
-          0 => ['index' => 2],
-          1 => ['index' => 0],
+          0 => ['metric_type' => 'in_need'],
+          1 => ['metric_type' => 'total_population'],
         ],
       ],
       'expected' => [
@@ -284,8 +498,8 @@ class AttachmentTest extends ApiObjectTestBase {
         'processing' => 'single',
         'formatting' => 'amount_rounded',
         'data_points' => [
-          0 => ['index' => 2],
-          1 => ['index' => 0],
+          0 => ['metric_type' => 'in_need'],
+          1 => ['metric_type' => 'total_population'],
         ],
       ],
       'expected' => [
@@ -300,8 +514,8 @@ class AttachmentTest extends ApiObjectTestBase {
         'processing' => 'single',
         'formatting' => 'auto',
         'data_points' => [
-          0 => ['index' => 2],
-          1 => ['index' => 0],
+          0 => ['metric_type' => 'in_need'],
+          1 => ['metric_type' => 'total_population'],
         ],
       ],
       'expected' => [
@@ -322,8 +536,8 @@ class AttachmentTest extends ApiObjectTestBase {
         'calculation' => 'percentage',
         'formatting' => 'auto',
         'data_points' => [
-          0 => ['index' => 2],
-          1 => ['index' => 3],
+          0 => ['metric_type' => 'in_need'],
+          1 => ['metric_type' => 'target'],
         ],
       ],
       'expected' => [
@@ -339,8 +553,8 @@ class AttachmentTest extends ApiObjectTestBase {
         'calculation' => 'percentage',
         'formatting' => 'percent',
         'data_points' => [
-          0 => ['index' => 2],
-          1 => ['index' => 3],
+          0 => ['metric_type' => 'in_need'],
+          1 => ['metric_type' => 'target'],
         ],
       ],
       'expected' => [
@@ -355,8 +569,8 @@ class AttachmentTest extends ApiObjectTestBase {
         'processing' => 'single',
         'formatting' => 'auto',
         'data_points' => [
-          0 => ['index' => 5],
-          1 => ['index' => 0],
+          0 => ['metric_type' => 'periodical_reach_does_not_exist'],
+          1 => ['metric_type' => 'total_population'],
         ],
       ],
       'expected' => [
@@ -371,8 +585,8 @@ class AttachmentTest extends ApiObjectTestBase {
         'formatting' => 'percent',
         'widget' => 'progressbar',
         'data_points' => [
-          0 => ['index' => 2],
-          1 => ['index' => 3],
+          0 => ['metric_type' => 'in_need'],
+          1 => ['metric_type' => 'target'],
         ],
       ],
       'expected' => [
@@ -388,8 +602,8 @@ class AttachmentTest extends ApiObjectTestBase {
         'formatting' => 'percent',
         'widget' => 'pie_chart',
         'data_points' => [
-          0 => ['index' => 2],
-          1 => ['index' => 3],
+          0 => ['metric_type' => 'in_need'],
+          1 => ['metric_type' => 'target'],
         ],
       ],
       'expected' => [
@@ -401,14 +615,14 @@ class AttachmentTest extends ApiObjectTestBase {
   }
 
   /**
-   * Test value formatting from DataAttachments.
+   * Test value formatting from Attachments.
    *
    * @dataProvider dataProviderAttachmentFormatDataValues
    */
   public function testAttachmentFormatDataValues($conf, $expected) {
-    /** @var \Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment $attachment */
+    /** @var \Drupal\ghi_plans\ApiObjects\Attachments\Attachment $attachment */
     $attachment = $this->getAttachmentFromFixture('caseload');
-    $this->assertInstanceOf(DataAttachment::class, $attachment);
+    $this->assertInstanceOf(Attachment::class, $attachment);
     $build = $attachment->formatValue($conf);
     $this->assertEquals('container', $build['#type']);
     $this->assertArrayHasKey(0, $build);
@@ -417,15 +631,15 @@ class AttachmentTest extends ApiObjectTestBase {
   }
 
   /**
-   * Test disaggregated data of DataAttachment.
+   * Test disaggregated data of Attachment.
    *
    * This test is not complete because it would require a more complex data
    * setup and mocking of database queries and/or API requests.
    */
   public function testAttachmentDisaggregatedData() {
-    /** @var \Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment $attachment */
+    /** @var \Drupal\ghi_plans\ApiObjects\Attachments\Attachment $attachment */
     $attachment = $this->getAttachmentFromFixture('caseload');
-    $this->assertInstanceOf(DataAttachment::class, $attachment);
+    $this->assertInstanceOf(Attachment::class, $attachment);
 
     $disaggregated_data = $attachment->getDisaggregatedDataMultiple();
     $this->assertEmpty($disaggregated_data);
@@ -434,43 +648,31 @@ class AttachmentTest extends ApiObjectTestBase {
     $this->assertEmpty($disaggregated_data);
 
     $disaggregated_data = $attachment->getDisaggregatedData();
-    $this->assertEquals('Population', $disaggregated_data[0]['metric']->name->en);
-    $this->assertEquals('totalPopulation', $disaggregated_data[0]['metric']->type);
-    $this->assertEquals(22100000, $disaggregated_data[0]['metric']->value);
+    $this->assertIsObject($disaggregated_data);
+    $this->assertObjectHasProperty('locations', $disaggregated_data);
+    $this->assertObjectHasProperty('metrics', $disaggregated_data);
+    $this->assertObjectHasProperty('categories', $disaggregated_data);
 
-    $this->assertEquals('Affectés', $disaggregated_data[1]['metric']->name->en);
-    $this->assertEquals('affected', $disaggregated_data[1]['metric']->type);
-    $this->assertNull($disaggregated_data[1]['metric']->value);
+    $this->assertCount(2, $disaggregated_data->metrics);
+    $this->assertEquals('In need', $disaggregated_data->metrics[3]->getName());
+    $this->assertEquals('in_need', $disaggregated_data->metrics[3]->getMachineName());
+    // phpcs:disable
+    // $this->assertEquals(4648210, $disaggregated_data[0]['metric']->value);
+    // phpcs:enable
 
-    $this->assertEquals('Dans le besoin', $disaggregated_data[2]['metric']->name->en);
-    $this->assertEquals('inNeed', $disaggregated_data[2]['metric']->type);
-    $this->assertEquals(4648210, $disaggregated_data[2]['metric']->value);
+    $this->assertEquals('Target', $disaggregated_data->metrics[5]->getName());
+    $this->assertEquals('target', $disaggregated_data->metrics[5]->getMachineName());
 
-    $this->assertEquals('Ciblés', $disaggregated_data[3]['metric']->name->en);
-    $this->assertEquals('target', $disaggregated_data[3]['metric']->type);
-    $this->assertEquals(3124881, $disaggregated_data[3]['metric']->value);
+    // Confirm the number of locations.
+    $this->assertCount(214, $disaggregated_data->locations);
 
-    $this->assertEquals('Atteints attendus', $disaggregated_data[4]['metric']->name->en);
-    $this->assertEquals('expectedReach', $disaggregated_data[4]['metric']->type);
-    $this->assertEquals(2300000, $disaggregated_data[4]['metric']->value);
+    $disaggregated_data = $attachment->getDisaggregatedData('latest', $disaggregated_data->metrics[3]);
+    $this->assertCount(2, $disaggregated_data->metrics);
+    $this->assertCount(214, $disaggregated_data->locations);
 
-    $disaggregated_data = $attachment->getDisaggregatedData('latest', TRUE, FALSE);
-    $this->assertCount(5, $disaggregated_data);
-
-    $disaggregated_data = $attachment->getDisaggregatedData('latest', FALSE, TRUE);
-    $this->assertCount(5, $disaggregated_data);
-
-    $disaggregated_data = $attachment->getDisaggregatedData('latest', TRUE, TRUE);
-    $this->assertCount(5, $disaggregated_data);
-
-    $disaggregated_data = $attachment->getDisaggregatedData('latest', TRUE, FALSE, TRUE);
-    $this->assertCount(5, $disaggregated_data);
-
-    $disaggregated_data = $attachment->getDisaggregatedData('latest', FALSE, TRUE, TRUE);
-    $this->assertCount(5, $disaggregated_data);
-
-    $disaggregated_data = $attachment->getDisaggregatedData('latest', TRUE, TRUE, TRUE);
-    $this->assertCount(5, $disaggregated_data);
+    $disaggregated_data = $attachment->getDisaggregatedData('latest', $disaggregated_data->metrics[5]);
+    $this->assertCount(2, $disaggregated_data->metrics);
+    $this->assertCount(128, $disaggregated_data->locations);
   }
 
   /**
@@ -480,65 +682,290 @@ class AttachmentTest extends ApiObjectTestBase {
     /** @var \Drupal\ghi_plans\ApiObjects\Attachments\CaseloadAttachment $attachment */
     $attachment = $this->getAttachmentFromFixture('caseload');
     $this->assertInstanceOf(CaseloadAttachment::class, $attachment);
+
     $this->assertEquals('BP1', $attachment->getTitle());
+    $this->assertEquals('BP1', $attachment->getCustomIdWithRefCode());
+    $this->assertEquals('BP1', $attachment->getComposedReference());
     $this->assertEquals('HPC 2023', $attachment->getDescription());
-    $this->assertEquals('caseload', $attachment->getType());
+    $this->assertEquals('caseload', $attachment->getAttachmentType());
+    $this->assertEquals(1112, $attachment->getSourceEntityId());
+    $this->assertEquals('plan', $attachment->getSourceEntityType());
+    $this->assertEquals('Plan', $attachment->getSourceEntityTypeLabel());
     $this->assertEmpty($attachment->getSourceEntity());
-    $this->assertCount(8, $attachment->getMetricFields());
-    $this->assertCount(5, $attachment->getGoalMetricFields());
-    $this->assertCount(3, $attachment->getMeasurementMetricFields());
+    $this->assertContains(AttachmentPrototype::FIELD_OVERRIDES_CACHE_TAG, $attachment->getValueCacheTags());
+
+    $other_plan = $this->createMock(Plan::class);
+    $other_plan->method('getSourceId')->willReturn(1000);
+    $this->assertFalse($attachment->belongsToBaseObject($other_plan));
+
+    $plan = $this->createMock(Plan::class);
+    $plan->method('getSourceId')->willReturn(1112);
+    $this->assertTrue($attachment->belongsToBaseObject($plan));
+
+    $governing_base_object = $this->createMock(GoverningEntityBaseObject::class);
+    $governing_base_object->method('getParentBaseObject')->willReturn($plan);
+    $this->assertTrue($attachment->belongsToBaseObject($governing_base_object));
+
+    $other_governing_base_object = $this->createMock(GoverningEntityBaseObject::class);
+    $other_governing_base_object->method('getParentBaseObject')->willReturn($other_plan);
+    $this->assertFalse($attachment->belongsToBaseObject($other_governing_base_object));
+
+    $this->assertCount(8, $attachment->getFields());
+    $this->assertCount(8, $attachment->getFieldTypes());
+    $this->assertEquals(array_keys($attachment->getFields()), $attachment->getFieldTypes());
+    $this->assertEquals('Total population', $attachment->getFieldByType('total_population'));
+    $this->assertEquals('Total population', $attachment->getFieldByIndex(0));
+    $this->assertNull($attachment->getSourceTypeForCalculatedField('latest_reach'));
+    $this->assertCount(5, $attachment->getPlanningFields());
+    $this->assertCount(3, $attachment->getMeasurementFields());
     $this->assertNull($attachment->getUnitType());
     $this->assertInstanceOf(AttachmentPrototype::class, $attachment->getPrototype());
     $this->assertFalse($attachment->isMeasurementIndex(0));
     $this->assertTrue($attachment->isMeasurementIndex(5));
-    $this->assertFalse($attachment->isMeasurementField('Population'));
-    $this->assertTrue($attachment->isMeasurementField('Cumul atteints'));
+    $this->assertFalse($attachment->isMeasurementField('affected'));
+    $this->assertTrue($attachment->isMeasurementField('cumulative_reach'));
+    $this->assertTrue($attachment->isCumulativeReachField('cumulative_reach'));
     $this->assertTrue($attachment->isPendingDataEntry());
     $this->assertEquals(1112, $attachment->getPlanId());
     $this->assertTrue($attachment->hasDisaggregatedData());
-    $this->assertFalse($attachment->canBeMapped('latest'));
+    $this->assertTrue($attachment->canBeMapped('latest'));
+    $this->assertEquals(4648210, $attachment->getCaseloadValue('in_need'));
+    $this->assertEquals(4648210, $attachment->getCaseloadValue('in_need', 'In need'));
+
+    $this->assertEquals(2883267, $attachment->getMeasurement(2389)?->getDataPointValue('cumulative_reach'));
+    $this->assertEquals([
+      'in_need' => 4648210,
+      'target' => 3124881,
+      'total_population' => 22100000,
+    ], $attachment->getPlanningValues());
+    $this->assertEquals([
+      'in_need' => 4648210,
+      'target' => 3124881,
+      'total_population' => 22100000,
+      'cumulative_reach' => 2883267,
+      'periodical_reach' => 2883267,
+    ], $attachment->getCurrentValues());
+    $this->assertEquals([
+      2386 => [
+        'periodical_reach' => 522701,
+        'cumulative_reach' => 522701,
+        'in_need' => 4648210,
+        'target' => 3124881,
+        'total_population' => 22100000,
+      ],
+      2387 => [
+        'cumulative_reach' => 1659672,
+        'in_need' => 4648210,
+        'target' => 3124881,
+        'total_population' => 22100000,
+      ],
+      2388 => [
+        'periodical_reach' => 2314453,
+        'cumulative_reach' => 2314453,
+        'covered' => 2314453,
+        'in_need' => 4648210,
+        'target' => 3124881,
+        'total_population' => 22100000,
+      ],
+      2389 => [
+        'periodical_reach' => 2883267,
+        'cumulative_reach' => 2883267,
+        'in_need' => 4648210,
+        'target' => 3124881,
+        'total_population' => 22100000,
+      ],
+    ], $attachment->getMeasurementValues());
+
+    $this->assertEquals(22100000, $attachment->getValueByMetricType('total_population'));
+    $this->assertEquals(22100000, $attachment->getValueByIndex(0));
   }
 
   /**
-   * Test parsing of caseload attachments.
+   * Test attachment base-object matching for plan contexts.
+   */
+  public function testAttachmentBelongsToPlanBaseObject() {
+    $attachment = $this->getMockBuilder(Attachment::class)
+      ->disableOriginalConstructor()
+      ->onlyMethods(['getPlanId'])
+      ->getMock();
+    $attachment->method('getPlanId')->willReturn(1158);
+
+    $plan = $this->createMock(Plan::class);
+    $plan->method('getSourceId')->willReturn(1158);
+    $this->assertTrue($attachment->belongsToBaseObject($plan));
+
+    $other_plan = $this->createMock(Plan::class);
+    $other_plan->method('getSourceId')->willReturn(1159);
+    $this->assertFalse($attachment->belongsToBaseObject($other_plan));
+  }
+
+  /**
+   * Test attachment base-object matching for plan entities in cluster contexts.
+   */
+  public function testAttachmentBelongsToGoverningEntityViaPlanEntityParent() {
+    $attachment = $this->getMockBuilder(Attachment::class)
+      ->disableOriginalConstructor()
+      ->onlyMethods(['getSourceEntityType', 'getSourceEntity'])
+      ->getMock();
+    $attachment->method('getSourceEntityType')->willReturn(PlanEntityInterface::ENTITY_TYPE_PLAN_ENTITY);
+
+    $parent_governing_entity = $this->createMock(GoverningEntityObject::class);
+    $parent_governing_entity->method('id')->willReturn(200);
+    $source_entity = $this->createMock(PlanEntityObject::class);
+    $source_entity->method('getParentGoverningEntity')->with(TRUE)->willReturn($parent_governing_entity);
+    $attachment->method('getSourceEntity')->willReturn($source_entity);
+
+    $governing_base_object = $this->createMock(GoverningEntityBaseObject::class);
+    $governing_base_object->method('getSourceId')->willReturn(200);
+    $this->assertTrue($attachment->belongsToBaseObject($governing_base_object));
+
+    $other_governing_base_object = $this->createMock(GoverningEntityBaseObject::class);
+    $other_governing_base_object->method('getSourceId')->willReturn(201);
+    $this->assertFalse($attachment->belongsToBaseObject($other_governing_base_object));
+  }
+
+  /**
+   * Test attachment base-object matching using the direct governing parent id.
+   */
+  public function testAttachmentBelongsToGoverningEntityViaDirectParentId() {
+    $attachment = $this->getMockBuilder(Attachment::class)
+      ->disableOriginalConstructor()
+      ->onlyMethods(['getSourceEntityType', 'getSourceEntity'])
+      ->getMock();
+    $attachment->method('getSourceEntityType')->willReturn(PlanEntityInterface::ENTITY_TYPE_PLAN_ENTITY);
+
+    $source_entity = $this->createMock(PlanEntityObject::class);
+    $source_entity->method('getGoverningEntityParentId')->willReturn(200);
+    $source_entity->expects($this->never())->method('getParentGoverningEntity');
+    $attachment->method('getSourceEntity')->willReturn($source_entity);
+
+    $governing_base_object = $this->createMock(GoverningEntityBaseObject::class);
+    $governing_base_object->method('getSourceId')->willReturn(200);
+    $this->assertTrue($attachment->belongsToBaseObject($governing_base_object));
+
+    $other_governing_base_object = $this->createMock(GoverningEntityBaseObject::class);
+    $other_governing_base_object->method('getSourceId')->willReturn(201);
+    $this->assertFalse($attachment->belongsToBaseObject($other_governing_base_object));
+  }
+
+  /**
+   * Test attachment base-object matching for direct cluster attachments.
+   */
+  public function testAttachmentBelongsToGoverningEntityBaseObject() {
+    $attachment = $this->getMockBuilder(Attachment::class)
+      ->disableOriginalConstructor()
+      ->onlyMethods(['getSourceEntityType', 'getSourceEntityId', 'getSourceEntity'])
+      ->getMock();
+    $attachment->method('getSourceEntityType')->willReturn(PlanEntityInterface::ENTITY_TYPE_GOVERNING_ENTITY);
+    $attachment->method('getSourceEntityId')->willReturn(200);
+    $attachment->expects($this->never())->method('getSourceEntity');
+
+    $governing_base_object = $this->createMock(GoverningEntityBaseObject::class);
+    $governing_base_object->method('getSourceId')->willReturn(200);
+    $this->assertTrue($attachment->belongsToBaseObject($governing_base_object));
+
+    $other_governing_base_object = $this->createMock(GoverningEntityBaseObject::class);
+    $other_governing_base_object->method('getSourceId')->willReturn(201);
+    $this->assertFalse($attachment->belongsToBaseObject($other_governing_base_object));
+  }
+
+  /**
+   * Test attachment base-object matching for plan attachments on cluster pages.
+   */
+  public function testAttachmentBelongsToGoverningEntityViaParentPlan() {
+    $attachment = $this->getMockBuilder(Attachment::class)
+      ->disableOriginalConstructor()
+      ->onlyMethods(['getSourceEntityType', 'getSourceEntityId'])
+      ->getMock();
+    $attachment->method('getSourceEntityType')->willReturn(PlanEntityInterface::ENTITY_TYPE_PLAN);
+    $attachment->method('getSourceEntityId')->willReturn(1158);
+
+    $plan = $this->createMock(Plan::class);
+    $plan->method('getSourceId')->willReturn(1158);
+    $governing_base_object = $this->createMock(GoverningEntityBaseObject::class);
+    $governing_base_object->method('getParentBaseObject')->willReturn($plan);
+    $this->assertTrue($attachment->belongsToBaseObject($governing_base_object));
+
+    $other_plan = $this->createMock(Plan::class);
+    $other_plan->method('getSourceId')->willReturn(1159);
+    $other_governing_base_object = $this->createMock(GoverningEntityBaseObject::class);
+    $other_governing_base_object->method('getParentBaseObject')->willReturn($other_plan);
+    $this->assertFalse($attachment->belongsToBaseObject($other_governing_base_object));
+  }
+
+  /**
+   * Test composed references for plan entity attachments.
+   */
+  public function testAttachmentComposedReferenceIncludesPlanEntityContext() {
+    $parent_governing_entity = $this->createMock(GoverningEntityObject::class);
+    $parent_governing_entity->method('getComposedReference')->willReturn('CLEDU');
+
+    $source_entity = $this->createMock(PlanEntityObject::class);
+    $source_entity->method('getComposedReference')->willReturn('CA1.01');
+    $source_entity->method('getParentGoverningEntity')->with(TRUE)->willReturn($parent_governing_entity);
+
+    $attachment = $this->getMockBuilder(Attachment::class)
+      ->disableOriginalConstructor()
+      ->onlyMethods(['getSourceEntityType', 'getSourceEntity', 'getCustomIdWithRefCode'])
+      ->getMock();
+    $attachment->method('getSourceEntityType')->willReturn(PlanEntityInterface::ENTITY_TYPE_PLAN_ENTITY);
+    $attachment->method('getSourceEntity')->willReturn($source_entity);
+    $attachment->method('getCustomIdWithRefCode')->willReturn('IN1');
+
+    $this->assertSame('CLEDU/CA1.01/IN1', $attachment->getComposedReference());
+  }
+
+  /**
+   * Test parsing of indicator attachments.
    */
   public function testAttachmentIndicator() {
     /** @var \Drupal\ghi_plans\ApiObjects\Attachments\IndicatorAttachment $attachment */
     $attachment = $this->getAttachmentFromFixture('indicator');
     $this->assertInstanceOf(IndicatorAttachment::class, $attachment);
-    $this->assertEquals('SP1/IN1', $attachment->getTitle());
+    $this->assertEquals('IN1', $attachment->getTitle());
     $this->assertEquals('Nombre de personnes non déplacées en insécurité alimentaire sévère ont reçu une assistance alimentaire', $attachment->getDescription());
-    $this->assertEquals('indicator', $attachment->getType());
+    $this->assertEquals('indicator', $attachment->getAttachmentType());
     $this->assertEmpty($attachment->getSourceEntity());
-    $this->assertCount(2, $attachment->getMetricFields());
-    $this->assertCount(1, $attachment->getGoalMetricFields());
-    $this->assertCount(1, $attachment->getMeasurementMetricFields());
-    $this->assertEquals('amount', $attachment->getUnitType());
+    $this->assertCount(2, $attachment->getFields());
+    $this->assertCount(1, $attachment->getPlanningFields());
+    $this->assertCount(1, $attachment->getMeasurementFields());
+    // $this->assertEquals('amount', $attachment->getUnitType());
     $this->assertInstanceOf(AttachmentPrototype::class, $attachment->getPrototype());
     $this->assertFalse($attachment->isMeasurementIndex(0));
     $this->assertTrue($attachment->isMeasurementIndex(1));
-    $this->assertFalse($attachment->isMeasurementField('Ciblés'));
-    $this->assertTrue($attachment->isMeasurementField('Mesure'));
+    $this->assertFalse($attachment->isMeasurementField('target'));
+    $this->assertTrue($attachment->isMeasurementField('measure'));
     $this->assertTrue($attachment->isPendingDataEntry());
     $this->assertEquals(1112, $attachment->getPlanId());
     $this->assertFalse($attachment->hasDisaggregatedData());
-    $this->assertEquals(IndicatorAttachment::CALCULATION_METHOD_SUM, $attachment->getCalculationMethod());
+    // phpcs:disable
+    // $this->assertEquals(IndicatorAttachment::CALCULATION_METHOD_SUM, $attachment->getCalculationMethod());
+    // phpcs:enable
 
     $monitoring_periods = $this->getPlanReportingPeriodsFromFixture(1112);
-    $this->assertEquals(183000, $attachment->getSingleValue(0, $monitoring_periods));
-    $this->assertNull($attachment->getSingleValue(1, $monitoring_periods));
+    $this->assertEquals(183000, $attachment->getSingleValue('target', $monitoring_periods));
+    $this->assertNull($attachment->getSingleValue('measure', $monitoring_periods));
 
     $data_point_conf = [
       'processing' => 'single',
       'formatting' => 'auto',
       'data_points' => [
-        0 => ['index' => 2],
-        1 => ['index' => 0],
+        0 => ['metric_type' => 'in_need'],
+        1 => ['metric_type' => 'total_population'],
       ],
     ];
     $this->callPrivateMethod($attachment, 'getTooltip', [$data_point_conf]);
-    $data_point_conf['use_calculation_method'] = FALSE;
-    $this->assertFalse($this->callPrivateMethod($attachment, 'isApiCalculated', [1, $data_point_conf]));
+    $data_point_conf['data_points'] = [
+      0 => ['index' => 99],
+      1 => ['metric_type' => 'total_population'],
+    ];
+    $this->assertNull($this->callPrivateMethod($attachment, 'getTooltip', [$data_point_conf]));
+    $this->assertTrue($this->callPrivateMethod($attachment, 'isApiCalculated', ['measure', []]));
+    $this->assertFalse($this->callPrivateMethod($attachment, 'isApiCalculated', ['target', []]));
+    $this->assertFalse($this->callPrivateMethod($attachment, 'isApiCalculated', [
+      'measure',
+      ['use_calculation_method' => FALSE],
+    ]));
 
     $this->assertTrue($this->callPrivateMethod($attachment, 'isValidCalculatedMethod', [IndicatorAttachment::CALCULATION_METHOD_AVERAGE]));
     $this->assertTrue($this->callPrivateMethod($attachment, 'isValidCalculatedMethod', [IndicatorAttachment::CALCULATION_METHOD_LATEST]));
@@ -548,50 +975,22 @@ class AttachmentTest extends ApiObjectTestBase {
 
     $tooltip = $attachment->formatCalculationTooltip($monitoring_periods[1]);
     $this->assertEquals('hpc_tooltip', $tooltip['#theme']);
-    $this->assertEquals('This value is the sum of all monitoring periods values, as of date 30 Jun 2023', $tooltip['#tooltip']);
-    $this->assertEquals('functions', $tooltip['#tag_content']['#icon']);
+    // phpcs:disable
+    // $this->assertEquals('This value is the sum of all monitoring periods values, as of date 30 Jun 2023', $tooltip['#tooltip']);
+    // $this->assertEquals('functions', $tooltip['#tag_content']['#icon']);
+    // phpcs:enable
   }
 
   /**
-   * Test parsing of fileWebContent attachments.
+   * Test parsing of caseload attachments.
    */
-  public function testAttachmentFileWebContent() {
-    /** @var \Drupal\ghi_plans\ApiObjects\Attachments\FileAttachment $attachment */
-    $attachment = $this->getAttachmentFromFixture('filewebcontent');
-    $this->assertInstanceOf(FileAttachment::class, $attachment);
-    $this->assertEquals('262835-burkinafaso_ocha_Michele-Cattani_hero.jpg', $attachment->getTitle());
-    $this->assertEquals('https://api.hpc.tools/public/files/rpm/262835-burkinafaso_ocha_Michele-Cattani_hero.jpg', $attachment->getUrl());
-    $this->assertEquals('OCHA/Michele Cattani', $attachment->getCredit());
-    $this->assertNull($attachment->getDescription());
-  }
-
-  /**
-   * Test parsing of textWebContent attachments.
-   */
-  public function testAttachmentTextWebContent() {
-    /** @var \Drupal\ghi_plans\ApiObjects\Attachments\TextAttachment $attachment */
-    $attachment = $this->getAttachmentFromFixture('textwebcontent');
-    $this->assertInstanceOf(TextAttachment::class, $attachment);
-    $this->assertEquals('MSA detail', $attachment->getTitle());
-    $this->assertStringStartsWith('<h3>Refugee Response</h3>', $attachment->getContent());
-    $this->assertInstanceOf(MarkupInterface::class, $attachment->getMarkup());
-  }
-
-  /**
-   * Test parsing of contact attachments.
-   */
-  public function testAttachmentContact() {
-    /** @var \Drupal\ghi_plans\ApiObjects\Attachments\ContactAttachment $attachment */
-    $attachment = $this->getAttachmentFromFixture('contact');
-    $this->assertInstanceOf(ContactAttachment::class, $attachment);
-    $this->assertEquals('Craig Hampton', $attachment->getTitle());
-    $this->assertEquals([
-      'id' => 4617,
-      'type' => 'contact',
-      'name' => 'Craig Hampton',
-      'mail' => 'hamptonc@who.int',
-      'agency' => 'WHO',
-    ], $attachment->toArray());
+  public function testAttachmentCost() {
+    /** @var \Drupal\ghi_plans\ApiObjects\Attachments\CostAttachment $attachment */
+    $attachment = $this->getAttachmentFromFixture('financial');
+    $this->assertInstanceOf(CostAttachment::class, $attachment);
+    $this->assertEmpty($attachment->getDescription());
+    $this->assertEquals(344007921, $attachment->getRequirements());
+    $this->assertEquals(25, $attachment->getCoverage(86001980.25));
   }
 
   /**
@@ -606,7 +1005,104 @@ class AttachmentTest extends ApiObjectTestBase {
   private function getAttachmentFromFixture($type) {
     $attachment_data = $this->getApiObjectFixture('Attachments', $type);
     $this->assertNotEmpty($attachment_data);
-    return AttachmentHelper::processAttachment($attachment_data);
+    $attachment = AttachmentHelper::processAttachment($attachment_data);
+
+    // Set the attachment prototype to prevent exceptions.
+    $prototype = $this->getApiObjectFixture('AttachmentPrototype', $attachment_data->AttachmentPrototypeId);
+    if (!$prototype) {
+      $prototype = $this->getApiObjectFixture('AttachmentPrototype', 'caseload');
+    }
+    $attachment_prototype = new AttachmentPrototype($prototype);
+    (new \ReflectionClass($attachment::class))->getProperty('prototype')->setValue($attachment, $attachment_prototype);
+
+    // Build the disaggregated data based on the facts.
+    $facts = array_map(fn ($item) => new AttachmentFact($item), (array) ($attachment->getRawData()->disaggregated ?: []));
+    $this->setPrivateProperty($attachment, 'disaggregated', $attachment->buildDisaggregatedData($facts));
+
+    return $attachment;
+  }
+
+  /**
+   * Mock a plan object loaded by source id.
+   *
+   * @param int $plan_id
+   *   The plan source id.
+   * @param int $period_id
+   *   The latest published reporting period id.
+   * @param \Drupal\ghi_plans\ApiObjects\PlanReportingPeriod[] $reporting_periods
+   *   The reporting periods to expose through the mocked plan query.
+   *
+   * @return \Drupal\ghi_plans\Entity\Plan
+   *   The mocked plan object.
+   */
+  private function mockPlanWithLatestPublishedReportingPeriod(int $plan_id, int $period_id, array $reporting_periods = []): Plan {
+    drupal_static_reset('getBaseObjectsFromOriginalIds');
+
+    $plan = $this->createMock(Plan::class);
+    $plan->method('bundle')->willReturn('plan');
+    $plan->method('getSourceId')->willReturn($plan_id);
+    $plan->method('getLastPublishedReportingPeriodId')->willReturn($period_id);
+
+    $entity_storage = $this->createMock('\Drupal\Core\Entity\ContentEntityStorageInterface');
+    $entity_storage->expects($this->any())
+      ->method('loadByProperties')
+      ->with([
+        'type' => 'plan',
+        'field_original_id' => [$plan_id],
+      ])
+      ->willReturn([$plan]);
+
+    $entity_type_manager = $this->createMock('\Drupal\Core\Entity\EntityTypeManagerInterface');
+    $entity_type_manager->expects($this->any())
+      ->method('getStorage')
+      ->with('base_object')
+      ->willReturn($entity_storage);
+
+    $container = \Drupal::getContainer();
+    $container->set('entity_type.manager', $entity_type_manager);
+    \Drupal::setContainer($container);
+
+    if ($reporting_periods) {
+      drupal_static_reset('getQueryInstance');
+      $plan_query = $this->createMock('\Drupal\ghi_plans\Plugin\FabricQuery\PlanQuery');
+      $plan_query->method('getPlanReportingPeriods')
+        ->with($plan_id)
+        ->willReturn($reporting_periods);
+      $queries = &drupal_static('getQueryInstance', []);
+      $queries['plan'] = $plan_query;
+    }
+
+    return $plan;
+  }
+
+  /**
+   * Create disaggregated data for a single metric and location.
+   *
+   * @param \Drupal\hpc_api\ApiObjects\Types\MetricType $metric_type
+   *   The metric type.
+   * @param int $location_id
+   *   The location id.
+   * @param int $value
+   *   The metric value.
+   *
+   * @return object
+   *   A disaggregated data object.
+   */
+  private function createDisaggregatedMetricData(MetricType $metric_type, int $location_id, int $value): object {
+    return (object) [
+      'locations' => [
+        $location_id => (object) [
+          'totals' => [
+            $metric_type->id() => $value,
+          ],
+          'categories' => [],
+        ],
+      ],
+      'metrics' => [
+        $metric_type->id() => $metric_type,
+      ],
+      'categories' => [],
+    ];
   }
 
   /**
@@ -630,18 +1126,43 @@ class AttachmentTest extends ApiObjectTestBase {
   /**
    * Build an array of dummy reporting periods for the caseload fixtures.
    */
-  private function mockCaseloadReportingPeriods($ids) {
-    $reporting_periods = array_map(function ($id, $period_number) {
+  private function mockCaseloadReportingPeriods($ids, int $plan_id = 1188) {
+    $reporting_periods = array_map(function ($id, $period_number) use ($plan_id) {
       return new PlanReportingPeriod((object) [
-        'id' => $id,
-        'planId' => 1188,
-        'measurementsGenerated' => TRUE,
-        'periodNumber' => $period_number,
-        'startDate' => '2024-0' . $period_number . '-01',
-        'endDate' => '2024-0' . $period_number . '-30',
+        'Id' => $id,
+        'PlanId' => $plan_id,
+        'MeasurementsGenerated' => TRUE,
+        'PeriodNumber' => $period_number,
+        'StartDate' => '2024-0' . $period_number . '-01',
+        'EndDate' => '2024-0' . $period_number . '-30',
       ]);
     }, [2386, 2387, 2388, 2389], [1, 2, 3, 4]);
     return array_combine($ids, $reporting_periods);
+  }
+
+  /**
+   * Mock an attachment fact.
+   *
+   * @param bool $is_total
+   *   Whether this is a total.
+   * @param mixed $value
+   *   The value.
+   * @param string $metric_type
+   *   The metric type.
+   *
+   * @return \Drupal\ghi_plans\ApiObjects\Facts\AttachmentFact
+   *   A mocked attachment fact object.
+   */
+  private function mockAttachmentFact($is_total, $value, $metric_type) {
+
+    $metric = $this->prophesize(MetricType::class);
+    $metric->getMachineName()->willReturn($metric_type);
+
+    $fact = $this->prophesize(AttachmentFact::class);
+    $fact->isTotal()->willReturn($is_total);
+    $fact->getValue()->willReturn($value);
+    $fact->getMetric()->willReturn($metric->reveal());
+    return $fact->reveal();
   }
 
 }

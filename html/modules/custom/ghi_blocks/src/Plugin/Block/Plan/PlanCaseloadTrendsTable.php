@@ -2,8 +2,11 @@
 
 namespace Drupal\ghi_blocks\Plugin\Block\Plan;
 
+use Drupal\Core\Block\Attribute\Block;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Plugin\Context\EntityContextDefinition;
 use Drupal\Core\Security\TrustedCallbackInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\ghi_blocks\Interfaces\OverrideDefaultTitleBlockInterface;
 use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
 use Drupal\ghi_blocks\Traits\PlanFootnoteTrait;
@@ -12,6 +15,7 @@ use Drupal\ghi_blocks\Traits\TableTrait;
 use Drupal\ghi_plans\Entity\Plan;
 use Drupal\hpc_common\Helpers\BlockHelper;
 use Drupal\hpc_common\Helpers\CommonHelper;
+use Drupal\hpc_common\Plugin\HPCBlockMetadata;
 use Drupal\hpc_common\Traits\RenderArrayTrait;
 use Drupal\hpc_downloads\Interfaces\HPCDownloadExcelInterface;
 use Drupal\hpc_downloads\Interfaces\HPCDownloadPNGInterface;
@@ -19,22 +23,16 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Provides a 'PlanCaseloadTrendsTable' block.
- *
- * @Block(
- *  id = "plan_caseload_trends_table",
- *  admin_label = @Translation("Caseload Trends Table"),
- *  category = @Translation("Plan elements"),
- *  default_title = @Translation("Evolution of the humanitarian response"),
- *  data_sources = {
- *    "attachment_search" = "attachment_search_query",
- *    "plan_funding" = "plan_funding_summary_query",
- *  },
- *  context_definitions = {
- *    "node" = @ContextDefinition("entity:node", label = @Translation("Node")),
- *    "plan" = @ContextDefinition("entity:base_object", label = @Translation("Plan"), constraints = { "Bundle": "plan" })
- *  }
- * )
  */
+#[Block(
+  id: 'plan_caseload_trends_table',
+  admin_label: new TranslatableMarkup('Caseload Trends Table'),
+  category: new TranslatableMarkup('Plan elements'),
+  context_definitions: [
+    'node' => new EntityContextDefinition('entity:node', new TranslatableMarkup('Node')),
+    'plan' => new EntityContextDefinition('entity:base_object', new TranslatableMarkup('Plan'), constraints: ['Bundle' => 'plan']),
+  ]
+)]
 class PlanCaseloadTrendsTable extends GHIBlockBase implements OverrideDefaultTitleBlockInterface, HPCDownloadExcelInterface, HPCDownloadPNGInterface, TrustedCallbackInterface {
 
   use PlanFootnoteTrait;
@@ -61,17 +59,25 @@ class PlanCaseloadTrendsTable extends GHIBlockBase implements OverrideDefaultTit
   /**
    * {@inheritdoc}
    */
+  public static function metadata(): ?HPCBlockMetadata {
+    return new HPCBlockMetadata(
+      defaultTitle: 'Evolution of the humanitarian response',
+      dataSources: [
+        'attachment' => 'fabric_query:attachment',
+        'entity' => 'fabric_query:entity',
+        'plan' => 'fabric_query:plan',
+      ]
+    );
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
     /** @var \Drupal\ghi_blocks\Plugin\Block\Plan\PlanCaseloadTrendsTable $instance */
     $instance = parent::create($container, $configuration, $plugin_id, $plugin_definition);
     $instance->planManager = $container->get('ghi_plans.manager');
     $instance->sectionManager = $container->get('ghi_sections.manager');
-
-    // Write something to the session to make big pipe work also for anonymous
-    // users on the first request for this block which will not have any cached
-    // data.
-    $request = $container->get('request_stack')->getCurrentRequest();
-    $request->cookies->set($request->getSession()->getName(), 'big_pipe work around');
 
     return $instance;
   }
@@ -82,9 +88,9 @@ class PlanCaseloadTrendsTable extends GHIBlockBase implements OverrideDefaultTit
   public function getDefaultTitle() {
     $title = parent::getDefaultTitle();
     $langcode = $this->getCurrentPlanObject()?->getPlanLanguage() ?? 'en';
-    // @codingStandardsIgnoreStart
+    // phpcs:disable
     return $title ? $this->t((string) $title, [], ['langcode' => $langcode]) : $title;
-    // @codingStandardsIgnoreEnd
+    // phpcs:enable
   }
 
   /**
@@ -120,9 +126,9 @@ class PlanCaseloadTrendsTable extends GHIBlockBase implements OverrideDefaultTit
       '#create_placeholder' => TRUE,
       '#cache' => [
         // Cache this per url and query to also capture the block settings.
-        'context' => $this->getCacheContexts(),
+        'contexts' => $this->getCacheContexts(),
         'tags' => $this->getCacheTags(),
-        'max' => $this->getCacheMaxAge(),
+        'max-age' => $this->getCacheMaxAge(),
         // Adding these cache keys here will trigger autoplaceholdering.
         'keys' => [
           $this->getPageNode()?->toUrl()?->toString() ?? $this->getCurrentUri(),
@@ -420,11 +426,11 @@ class PlanCaseloadTrendsTable extends GHIBlockBase implements OverrideDefaultTit
       $related_plans = array_slice($related_plans, 0, $limit, TRUE);
     }
 
-    /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\AttachmentSearchQuery $attachments_query */
-    $attachments_query = $this->getQueryHandler('attachment_search');
+    /** @var \Drupal\ghi_plans\Plugin\FabricQuery\AttachmentQuery $attachments_query */
+    $attachments_query = $this->getQueryHandler('attachment');
 
-    /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\PlanFundingSummaryQuery $funding_query */
-    $funding_query = $this->getQueryHandler('plan_funding');
+    /** @var \Drupal\ghi_plans\Plugin\FabricQuery\PlanQuery $plan_query */
+    $plan_query = $this->getQueryHandler('plan');
 
     // Collect the plan types per year to see if we need to add information to
     // distinguish different plans in the same year.
@@ -436,23 +442,33 @@ class PlanCaseloadTrendsTable extends GHIBlockBase implements OverrideDefaultTit
       $plan_types[$plan_year][$plan_type] = !empty($plan_types[$plan_year][$plan_type]) ? $plan_types[$plan_year][$plan_type] + 1 : 1;
     }
 
+    // Extract plan ids and preload the caseload data.
+    $plan_ids = array_filter(array_map(fn (Plan $plan): ?int => $plan->getSourceId(), $related_plans));
+    $caseloads_by_plan = $attachments_query?->getAttachmentsByPlan($plan_ids, 'caseload') ?? [];
+
+    // Prefetch all plan objects from the API, because the
+    // PlanReportingPeriodTrait::getLatestPublishedReportingPeriod() will load
+    // these to fetch the last published reporting period.
+    // @todo See if it makes sense to import the last published reporting
+    // period and store it in the plan base objects.
+    $plan_query->getPlansById($plan_ids);
+
     foreach ($related_plans as $plan) {
+      $plan_id = $plan->getSourceId();
       $plan_year = $plan->getYear();
       $plan_type = $plan->getPlanType()->getAbbreviation();
 
-      /** @var \Drupal\ghi_plans\ApiObjects\Attachments\CaseloadAttachment[] $caseloads */
-      $caseloads = $attachments_query->getAttachmentsByObject('plan', $plan->getSourceId(), ['type' => 'caseload']);
+      $caseloads = $caseloads_by_plan[$plan_id] ?? [];
       /** @var \Drupal\ghi_plans\ApiObjects\Attachments\CaseloadAttachment $caseload */
       $caseload = count($caseloads) > 1 ? $plan->getPlanCaseload($caseloads) : (!empty($caseloads) ? reset($caseloads) : NULL);
-      $funding_data = $funding_query->getData(['plan_id' => $plan->getSourceId()]);
 
       // Setup the plan type label to distinguish years with multiple plans of
       // the same type.
       $plan_type_label = $plan_types[$plan_year][$plan_type] > 1 ? $plan_type . ' - ' . $plan->getShortName() : $plan_type;
 
-      $in_need = $caseload?->getFieldByType('inNeed')?->value;
-      $target = $caseload?->getFieldByType('target')?->value;
-      $reached = $caseload?->getCaseloadValue('latestReach');
+      $in_need = $caseload?->getCaseloadValue('in_need');
+      $target = $caseload?->getCaseloadValue('target');
+      $reached = $caseload?->getCaseloadValue('latest_reach') ?? $caseload?->getCaseloadValue('cumulative_reach');
 
       // See if there is a section for this plan.
       $section = $this->sectionManager->loadSectionForBaseObject($plan);
@@ -467,9 +483,9 @@ class PlanCaseloadTrendsTable extends GHIBlockBase implements OverrideDefaultTit
         'target_percent' => $target ? CommonHelper::calculateRatio($target, $in_need) * 100 : NULL,
         'reached' => $reached,
         'reached_percent' => $reached ? CommonHelper::calculateRatio($reached, $target) * 100 : NULL,
-        'requirements' => $funding_data['current_requirements'],
-        'funding' => $funding_data['total_funding'],
-        'coverage' => $funding_data['funding_coverage'],
+        'requirements' => (int) $plan->getRequirements(),
+        'funding' => $plan->getTotalFunding(),
+        'coverage' => $plan->getCoverage(),
         'footnotes' => $plan ? $this->getFootnotesForPlanBaseobject($plan) : NULL,
       ];
     }
@@ -560,9 +576,9 @@ class PlanCaseloadTrendsTable extends GHIBlockBase implements OverrideDefaultTit
    * {@inheritdoc}
    */
   public static function trustedCallbacks() {
-    return [
+    return array_merge(parent::trustedCallbacks(), [
       'lazyBuildTable',
-    ];
+    ]);
   }
 
 }

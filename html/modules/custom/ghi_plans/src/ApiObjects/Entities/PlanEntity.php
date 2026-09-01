@@ -3,49 +3,73 @@
 namespace Drupal\ghi_plans\ApiObjects\Entities;
 
 use Drupal\ghi_plans\Helpers\PlanEntityHelper;
-use Drupal\ghi_plans\Traits\PlanVersionArgument;
-use Drupal\hpc_api\Helpers\ApiEntityHelper;
 
 /**
  * Abstraction class for API plan entity objects.
  */
 class PlanEntity extends EntityObjectBase {
 
-  use PlanVersionArgument;
+  /**
+   * The parent entity ids.
+   *
+   * @var int[]
+   */
+  protected array $parentIds;
+
+  /**
+   * The governing entity parent id.
+   *
+   * @var int|null
+   */
+  protected ?int $governingEntityParentId;
+
+  /**
+   * The sort order.
+   *
+   * @var string|null
+   */
+  protected ?string $sortOrder;
+
+  /**
+   * Define the dimension items used in queries.
+   */
+  const GRAPHQL_ITEMS = [
+    'Id',
+    'Name',
+    'Description',
+    'PlanId',
+    'EntityTypeId',
+    'CoordinationEntityId',
+    'HpcEntityPrototypeId',
+    'CustomReference',
+    'ComposedReference',
+    'SortOrder',
+    'logframeEntitySupportRel { items { SupportsLogframeEntityId } }',
+  ];
 
   /**
    * {@inheritdoc}
    */
-  protected function map() {
-    $entity = $this->getRawData();
-    $entity_version = $this->getEntityVersion();
-    $prototype = $entity?->entityPrototype;
+  public function __construct(object $data) {
+    parent::__construct($data);
+    // phpcs:disable
+    // @todo Retrieve and store the support information.
+    // 'support' => !empty($_entity_version->value->support) ? (array) $_entity_version->value->support : NULL,
+    // phpcs:enable
+    $this->name = $data->Name != 'N/A in HPC pgsql' ? $data->Name : '';
+    $this->parentIds = array_map(fn ($item) => $item->SupportsLogframeEntityId, $data->logframeEntitySupportRel->items ?? []);
+    $this->governingEntityParentId = $data->CoordinationEntityId ?? NULL;
+    $this->sortOrder = $data->SortOrder ?? NULL;
+  }
 
-    return (object) [
-      'id' => $entity?->id,
-      'name' => $prototype ? $prototype->value->name->en->singular : NULL,
-      'singular_name' => $prototype ? $prototype->value->name->en->singular : NULL,
-      'plural_name' => $prototype ? $prototype->value->name->en->plural : NULL,
-      'group_name' => $prototype ? $prototype->value->name->en->plural : NULL,
-      'display_name' => $prototype ? ($prototype->value->name->en->singular . ' ' . $entity_version?->customReference) : NULL,
-      'description' => $entity_version?->value?->description,
-      // Need to cast to array until HPC-6440 is fixed.
-      'support' => !empty($entity_version->value->support) ? (array) $entity_version->value->support : NULL,
-      'ref_code' => $prototype ? $prototype->refCode : NULL,
-      'entity_type' => $prototype ? $prototype->type : NULL,
-      'entity_prototype_id' => $prototype ? $prototype->id : NULL,
-      'order_number' => $prototype ? $prototype->orderNumber : NULL,
-      'parent_id' => $this->getParentId(),
-      'governing_entity_parent_id' => $entity->parentId ?? NULL,
-      'root_parent_id' => $this->getMainLevelParentId(),
-      'custom_reference' => $entity_version?->customReference,
-      'composed_reference' => $this->getComposedReference(),
-      'sort_key' => $prototype ? ($prototype->orderNumber . $entity_version?->customReference) : NULL,
-      'tags' => $entity_version?->tags ?? [],
-
-      // Legacy support.
-      'custom_id' => $entity_version?->customReference,
-    ];
+  /**
+   * Get the governing entity parent of an entity.
+   *
+   * @return int|null
+   *   The id of the governing entity parent.
+   */
+  public function getGoverningEntityParentId(): ?int {
+    return $this->governingEntityParentId;
   }
 
   /**
@@ -54,23 +78,8 @@ class PlanEntity extends EntityObjectBase {
    * @return int
    *   The id of the direct parent.
    */
-  public function getParentId() {
-    $entity = $this->getRawData();
-    if (!$entity) {
-      return NULL;
-    }
-    if (property_exists($entity, 'parentId')) {
-      return $entity->parentId;
-    }
-    $entity_version = $this->getEntityVersion($entity);
-    if (empty($entity_version->value->support)) {
-      return NULL;
-    }
-    $first_ref = reset($entity_version->value->support);
-    if (!property_exists($first_ref, 'planEntityIds') || empty($first_ref->planEntityIds)) {
-      return NULL;
-    }
-    return reset($first_ref->planEntityIds);
+  public function getParentId(): ?int {
+    return !empty($this->parentIds) ? reset($this->parentIds) : NULL;
   }
 
   /**
@@ -79,25 +88,8 @@ class PlanEntity extends EntityObjectBase {
    * @return int[]
    *   The ids of the parents.
    */
-  public function getParentIds() {
-    $entity = $this->getRawData();
-    if (!$entity) {
-      return [];
-    }
-    $entity_version = $this->getEntityVersion($entity);
-    if (empty($entity_version->value->support)) {
-      return [];
-    }
-    if (!is_array($entity_version->value->support)) {
-      return [];
-    }
-    $first_ref = reset($entity_version->value->support);
-    if (property_exists($first_ref, 'planEntityIds') && !empty($first_ref->planEntityIds)) {
-      return $first_ref->planEntityIds;
-    }
-    if (property_exists($entity, 'parentId')) {
-      return [$entity->parentId];
-    }
+  public function getParentIds(): array {
+    return $this->parentIds;
   }
 
   /**
@@ -106,24 +98,33 @@ class PlanEntity extends EntityObjectBase {
    * @return \Drupal\ghi_plans\ApiObjects\Entities\PlanEntity[]
    *   The plan entity parents keyed by their entity ids.
    */
-  public function getPlanEntityParents() {
-    $entity = $this->getRawData();
-    if (!$entity) {
-      return [];
-    }
-    $entity_version = $this->getEntityVersion($entity);
-    if (empty($entity_version->value->support)) {
-      return [];
-    }
-    $first_ref = reset($entity_version->value->support);
-    if (!property_exists($first_ref, 'planEntityIds') || empty($first_ref->planEntityIds)) {
-      return [];
-    }
+  public function getPlanEntityParents(): array {
     $parents = [];
-    foreach ($first_ref->planEntityIds as $entity_id) {
-      $parents[$entity_id] = PlanEntityHelper::getPlanEntity($entity_id, $this->getPlanVersionArgument());
+    foreach ($this->getParentIds() as $entity_id) {
+      $parents[$entity_id] = PlanEntityHelper::getPlanEntity($entity_id);
     }
     return array_filter($parents);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getName(): ?string {
+    return $this->getPrototype()?->getNameSingular() ?? $this->getDescription();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getDescription(): ?string {
+    return $this->name;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getDisplayName(): ?string {
+    return $this->getPrototype()?->getNameSingular() ?? NULL;
   }
 
   /**
@@ -132,79 +133,50 @@ class PlanEntity extends EntityObjectBase {
    * @return string
    *   The group name, e.g. "Strategic Objectives".
    */
-  public function getGroupName() {
-    return $this->group_name;
-  }
-
-  /**
-   * Get the main level parent id.
-   *
-   * @return int
-   *   The id of the main parent.
-   */
-  public function getMainLevelParentId() {
-    $entity = $this->getRawData();
-    if (!$entity) {
-      return NULL;
-    }
-    $entity_version = $this->getEntityVersion($entity);
-    if (in_array($entity->entityPrototype->refCode, ApiEntityHelper::MAIN_LEVEL_PLE_REF_CODES) || empty($entity_version->value->support)) {
-      return NULL;
-    }
-    $support = $entity_version?->value?->support;
-    $support = is_array($support) ? reset($support) : $support;
-    $plan_entity_ids = $support?->planEntityIds ?? [];
-    return reset($plan_entity_ids);
+  public function getGroupName(): ?string {
+    return $this->getPrototype()?->getNamePlural();
   }
 
   /**
    * {@inheritdoc}
    */
-  public function getEntityVersion() {
-    return $this->getRawData()?->planEntityVersion;
-  }
-
-  /**
-   * Get the composed reference for a plan entity object.
-   *
-   * @return string
-   *   The composed reference string.
-   */
-  protected function getComposedReference() {
-    $entity = $this->getRawData();
-    if (!$entity) {
-      return '';
-    }
-    if (property_exists($entity, 'composedReference')) {
-      return $entity->composedReference;
-    }
-    $prototype = $entity->entityPrototype;
-    return $prototype->refCode . $this->getEntityVersion()->customReference;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function getEntityName() {
-    return $this->display_name;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function getFullName() {
+  public function getFullName(): string {
     $parent_entity = $this->getParentGoverningEntity();
     if (!$parent_entity) {
-      return $this->t('@type @custom_reference', [
-        '@type' => $this->name,
-        '@custom_reference' => $this->custom_reference,
+      return (string) $this->t('@type @custom_reference', [
+        '@type' => $this->getName(),
+        '@custom_reference' => $this->getCustomReference(),
       ]);
     }
-    return $this->t('@parent: @type @custom_reference', [
-      '@parent' => $parent_entity->custom_reference . ' ' . $parent_entity->entity_prototype_name,
-      '@type' => $this->name,
-      '@custom_reference' => $this->custom_reference,
+    return (string) $this->t('@parent: @type @custom_reference', [
+      '@parent' => $parent_entity->getCustomReference() . ' ' . $parent_entity->getPrototypeName(),
+      '@type' => $this->getName(),
+      '@custom_reference' => $this->getCustomReference(),
     ]);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getComposedReference(): ?string {
+    return $this->composedReference ?: ($this->getEntityTypeRefCode() . $this->getCustomReference());
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getOrderNumber(): ?int {
+    return $this->sortOrder ?? parent::getOrderNumber();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getSortKey(): ?string {
+    if ($this->sortOrder !== NULL) {
+      return (string) $this->sortOrder . $this->getCustomReference();
+    }
+    return parent::getSortKey();
   }
 
   /**
@@ -213,9 +185,9 @@ class PlanEntity extends EntityObjectBase {
    * @return \Drupal\ghi_plans\ApiObjects\Entities\GoverningEntity|null
    *   The parent governing entity if found or NULL otherwise.
    */
-  public function getParentGoverningEntity($recursion = FALSE) {
-    if ($entity_id = $this->governing_entity_parent_id ?? NULL) {
-      $entity = PlanEntityHelper::getGoverningEntity($entity_id, $this->getPlanVersionArgument());
+  public function getParentGoverningEntity($recursion = FALSE): ?GoverningEntity {
+    if ($entity_id = $this->governingEntityParentId ?? NULL) {
+      $entity = PlanEntityHelper::getGoverningEntity($entity_id);
       return $entity instanceof GoverningEntity ? $entity : NULL;
     }
     if (!$recursion) {
@@ -228,16 +200,7 @@ class PlanEntity extends EntityObjectBase {
         return $entity;
       }
     }
-  }
-
-  /**
-   * Get the version argument to use for this entity.
-   *
-   * @return string
-   *   The version argument as a string.
-   */
-  private function getPlanVersionArgument() {
-    return $this->getPlanVersionArgumentForPlanId($this->getPlanId());
+    return NULL;
   }
 
 }

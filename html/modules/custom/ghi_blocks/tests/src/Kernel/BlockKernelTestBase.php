@@ -4,7 +4,7 @@ namespace Drupal\Tests\ghi_blocks\Kernel;
 
 use Drupal\KernelTests\KernelTestBase;
 use Drupal\layout_builder\SectionComponent;
-use Drupal\Tests\ghi_blocks\Traits\PrivateMethodTrait;
+use Drupal\Tests\hpc_api\Traits\PrivateAccessorTrait;
 
 /**
  * Base class for block kernel tests.
@@ -13,7 +13,7 @@ use Drupal\Tests\ghi_blocks\Traits\PrivateMethodTrait;
  */
 abstract class BlockKernelTestBase extends KernelTestBase {
 
-  use PrivateMethodTrait;
+  use PrivateAccessorTrait;
 
   /**
    * Modules to enable.

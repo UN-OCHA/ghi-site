@@ -2,12 +2,14 @@
 
 namespace Drupal\ghi_content\Plugin\QueueWorker;
 
+use Drupal\Core\Cache\CacheTagsInvalidatorInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Queue\Attribute\QueueWorker;
 use Drupal\Core\Queue\DelayedRequeueException;
 use Drupal\Core\Queue\QueueWorkerBase;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\ghi_content\ContentManager\BaseContentManager;
+use Drupal\ghi_content\Entity\Article;
 use Drupal\ghi_content\Entity\ContentBase;
 use Drupal\migrate\Plugin\MigrationInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -68,6 +70,13 @@ final class RemoteRefreshQueue extends QueueWorkerBase implements ContainerFacto
   protected $lock;
 
   /**
+   * The cache tags invalidator.
+   *
+   * @var \Drupal\Core\Cache\CacheTagsInvalidatorInterface
+   */
+  protected CacheTagsInvalidatorInterface $cacheTagsInvalidator;
+
+  /**
    * Logger channel.
    *
    * @var \Psr\Log\LoggerInterface
@@ -84,6 +93,7 @@ final class RemoteRefreshQueue extends QueueWorkerBase implements ContainerFacto
     $instance->time = $container->get('datetime.time');
     $instance->targetedMigrationImporter = $container->get('ghi_content.targeted_migration_importer');
     $instance->lock = $container->get('lock');
+    $instance->cacheTagsInvalidator = $container->get('cache_tags.invalidator');
     $instance->logger = $container->get('logger.channel.ghi_content');
     return $instance;
   }
@@ -115,6 +125,12 @@ final class RemoteRefreshQueue extends QueueWorkerBase implements ContainerFacto
 
     try {
       $remote_item_is_published = !in_array($event, ['deleted', 'trashed'], TRUE);
+      // Invalidate before loading remote data so saved events clear both the
+      // rendered and non-rendered persistent GraphQL variants for this item.
+      $this->cacheTagsInvalidator->invalidateTags([
+        $source . ':' . $type . ':' . $remote_id,
+      ]);
+
       $node = $this->getOrImportLocalNode($source, $type, $remote_id, $event, $remote_item_is_published, $received);
       if (!$node instanceof ContentBase) {
         return;
@@ -239,6 +255,11 @@ final class RemoteRefreshQueue extends QueueWorkerBase implements ContainerFacto
     // Let the scheduled migration reconcile the id map; doing it here would
     // fetch the full remote export for every single webhook item.
     $content_manager->saveContentNode($node, FALSE);
+    if ($remote_item_is_published && $node instanceof Article) {
+      // Paragraph blocks render individual paragraphs from the rendered
+      // article payload, so warm that variant while handling the webhook.
+      $content_manager->loadRemoteContentForNode($node, TRUE);
+    }
     return TRUE;
   }
 

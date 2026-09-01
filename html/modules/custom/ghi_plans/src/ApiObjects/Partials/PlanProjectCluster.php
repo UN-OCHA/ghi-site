@@ -2,7 +2,7 @@
 
 namespace Drupal\ghi_plans\ApiObjects\Partials;
 
-use Drupal\ghi_base_objects\ApiObjects\BaseObject;
+use Drupal\hpc_api\ApiObjects\ApiObjectBase;
 
 /**
  * Abstraction class for a project cluster partial object.
@@ -11,21 +11,50 @@ use Drupal\ghi_base_objects\ApiObjects\BaseObject;
  * appears in some specific endpoints. We map this here to provide type hinting
  * and abstracted data access.
  */
-class PlanProjectCluster extends BaseObject {
+class PlanProjectCluster extends ApiObjectBase {
 
   /**
-   * Map the raw data.
+   * The name.
    *
-   * @return object
-   *   An object with the mapped data.
+   * @var string
    */
-  protected function map() {
-    $data = $this->getRawData();
-    return (object) [
-      'id' => $data->id,
-      'name' => $data->name,
-      'icon' => $data->value->icon,
-    ];
+  protected string $name;
+
+  /**
+   * The icon.
+   *
+   * @var string|null
+   */
+  protected ?string $icon;
+
+  /**
+   * Define the dimension items used in queries.
+   */
+  const GRAPHQL_ITEMS = [
+    'Id',
+    'Name',
+    // phpcs:disable Squiz.Arrays.ArrayDeclaration.KeySpecified
+    'icon' => ['Name'],
+    // phpcs:enable Squiz.Arrays.ArrayDeclaration.KeySpecified
+  ];
+
+  /**
+   * {@inheritdoc}
+   */
+  public function __construct(object $data) {
+    parent::__construct($data);
+    $this->name = $data->Name;
+    $this->icon = $data->icon?->Name ?? NULL;
+  }
+
+  /**
+   * Get the name of the cluster.
+   *
+   * @return string
+   *   The name.
+   */
+  public function getName(): string {
+    return $this->name;
   }
 
   /**
@@ -34,8 +63,18 @@ class PlanProjectCluster extends BaseObject {
    * @return string
    *   The icon string.
    */
-  public function getIcon() {
+  public function getIcon(): ?string {
     return $this->icon;
+  }
+
+  /**
+   * Check if the entity has an icon.
+   *
+   * @return bool
+   *   TRUE if the entity has an icon, FALSE otherwise..
+   */
+  public function hasIcon(): bool {
+    return $this->getIcon() !== NULL;
   }
 
 }

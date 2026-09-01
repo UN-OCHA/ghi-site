@@ -41,12 +41,24 @@ hpc_api.settings:
       label: 'The base path for public AI requests'
       constraints:
         NotNull: []
-    timeout:
+    connect_timeout:
       type: integer
-      label: 'The timeout for API requests'
+      label: 'The connect timeout for API requests'
       constraints:
         Range:
-          min: 0
+          min: 1
+    timeout:
+      type: integer
+      label: 'The total timeout for API requests'
+      constraints:
+        Range:
+          min: 1
+    flow_custom_search_timeout:
+      type: integer
+      label: 'The total timeout for legacy custom search API requests'
+      constraints:
+        Range:
+          min: 1
     cache_lifetime:
       type: integer
       label: 'The cache lifetime'

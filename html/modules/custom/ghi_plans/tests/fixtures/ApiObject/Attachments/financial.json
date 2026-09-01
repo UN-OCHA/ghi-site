@@ -1,0 +1,40 @@
+{
+  "Id": 35754,
+  "Name": null,
+  "PlanId": 1140,
+  "EntityId": 1140,
+  "EntityTypeId": 19,
+  "EntityMainType": "Plan",
+  "AttachmentType": "Cost",
+  "CustomReference": null,
+  "HasDisaggregatedData": false,
+  "UnitId": null,
+  "CalculationMethodId": null,
+  "Description": null,
+  "AttachmentPrototypeId": 5621,
+  "UpdatedAt": "2022-10-05T09:03:31.000Z",
+  "attachmentFact": {
+    "items": [
+      {
+        "Id": 17094,
+        "AttachmentId": 35754,
+        "MetricTypeId": 41,
+        "RevisionStateId": 1,
+        "LocationId": null,
+        "GenderId": null,
+        "AgeGroupId": null,
+        "PopulationStatusId": null,
+        "SettlementTypeId": null,
+        "DisabilityStatusId": null,
+        "HealthInterventionCategoryId": null,
+        "MaternalStatusId": null,
+        "DisaggregationCategoryOtherId": null,
+        "DeliveryModalityId": null,
+        "CustomMetricName": null,
+        "IsTotal": true,
+        "ValueNum": 344007921
+      }
+    ]
+  },
+  "disaggregated": []
+}

@@ -1,5 +1,5 @@
 {
-    "_hash": "8d4591e2252aafdc52531f2e101b52f9078c061ee81395704c32519814c1c49c",
+    "_hash": "77c68fd4c5422f2679eeb400ff60f0f9fd51d21f2b1d3ff3758aff31896ab3c0",
     "patches": {
         "drupal/core": [
             {
@@ -95,8 +95,18 @@
             {
                 "package": "drupal/core",
                 "description": "Issue #2190333: Make #group FAPI / render feature work on all form/render #types out of the box",
-                "url": "patches/core-form-api-groups-2190333.patch",
+                "url": "./patches/core-form-api-groups-2190333.patch",
                 "sha256": "cadb63dc10950c244159e8e1445d214f67fb60dae761cb68cfe061a7895f2959",
+                "depth": 2,
+                "extra": {
+                    "provenance": "patches-file:composer.patches.json"
+                }
+            },
+            {
+                "package": "drupal/core",
+                "description": "Issue #2230909: Simple decimals fail to pass validation",
+                "url": "./patches/8282-10.6.x.patch",
+                "sha256": "7278cffd2694d08bea3fd7e152ec5c3e4c3ae125650f722741862855dc85cff6",
                 "depth": 2,
                 "extra": {
                     "provenance": "patches-file:composer.patches.json"

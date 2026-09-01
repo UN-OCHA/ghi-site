@@ -2,23 +2,30 @@
 
 namespace Drupal\ghi_plans\Traits;
 
+use Drupal\ghi_base_objects\Helpers\BaseObjectHelper;
+use Drupal\ghi_plans\ApiObjects\PlanReportingPeriod;
+use Drupal\ghi_plans\Entity\Plan;
+use Drupal\hpc_common\Helpers\ArrayHelper;
+
 /**
  * Trait to help with retrieving reporting periods for a plan.
  */
 trait PlanReportingPeriodTrait {
+
+  use PlanQueryTrait;
 
   /**
    * Get a single specified reporting period object for the given plan.
    *
    * @param int $plan_id
    *   The plan id.
-   * @param int $period_id
-   *   The reporting period id.
+   * @param int|string $period_id
+   *   The reporting period id or the string 'latest'.
    *
-   * @return \Drupal\ghi_plans\ApiObjects\PlanReportingPeriod
-   *   A reporting period object.
+   * @return \Drupal\ghi_plans\ApiObjects\PlanReportingPeriod|null
+   *   A reporting period object or NULL.
    */
-  public static function getPlanReportingPeriod($plan_id, $period_id) {
+  public static function getPlanReportingPeriod($plan_id, $period_id): ?PlanReportingPeriod {
     if ($period_id == 'latest') {
       $period_id = self::getLatestPublishedReportingPeriod($plan_id);
     }
@@ -40,19 +47,12 @@ trait PlanReportingPeriodTrait {
    * @return \Drupal\ghi_plans\ApiObjects\PlanReportingPeriod[]
    *   An array of monitoring period objects.
    */
-  public static function getPlanReportingPeriods($plan_id, $limit_to_published = FALSE) {
-    /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\PlanReportingPeriodsQuery $query */
-    $query = self::getEndpointQueryManager()->createInstance('plan_reporting_periods_query');
-    if (!$query) {
-      return [];
-    }
-    $query->setPlaceholder('plan_id', $plan_id);
-    $periods = $query->getReportingPeriods();
-    if ($limit_to_published) {
-      $periods = array_filter($periods, function ($period) {
-        return $period->isPublished();
-      });
-    }
+  public static function getPlanReportingPeriods($plan_id, $limit_to_published = FALSE): array {
+    $periods = self::getPlanQuery()?->getPlanReportingPeriods($plan_id) ?? [];
+    $periods = $limit_to_published ? array_filter($periods, function ($period) {
+      return $period->isPublished();
+    }) : $periods;
+    ArrayHelper::sortObjectsByMethod($periods, 'getPeriodNumber');
     return $periods;
   }
 
@@ -62,27 +62,12 @@ trait PlanReportingPeriodTrait {
    * @param int $plan_id
    *   The plan id.
    *
-   * @return int
-   *   The id of the latest published reporting period.
+   * @return int|null
+   *   The id of the latest published reporting period or NULL.
    */
-  public static function getLatestPublishedReportingPeriod($plan_id) {
-    /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\PlanBasicQuery $query */
-    $query = self::getEndpointQueryManager()->createInstance('plan_basic_query');
-    if (!$query) {
-      return NULL;
-    }
-    $plan_data = $query->getBaseData($plan_id);
-    return $plan_data ? $plan_data->last_published_period : NULL;
-  }
-
-  /**
-   * Get the endpoint query manager service.
-   *
-   * @return \Drupal\hpc_api\Query\EndpointQueryManager
-   *   The endpoint query manager service.
-   */
-  private static function getEndpointQueryManager() {
-    return \Drupal::service('plugin.manager.endpoint_query_manager');
+  public static function getLatestPublishedReportingPeriod(int $plan_id): ?int {
+    $plan = BaseObjectHelper::getBaseObjectFromOriginalId($plan_id, 'plan');
+    return $plan instanceof Plan ? $plan->getLastPublishedReportingPeriodId() : NULL;
   }
 
 }

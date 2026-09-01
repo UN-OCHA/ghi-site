@@ -10,8 +10,11 @@ dependencies:
     - field.field.base_object.plan.field_focus_country
     - field.field.base_object.plan.field_focus_country_override
     - field.field.base_object.plan.field_footnotes
+    - field.field.base_object.plan.field_funding_overall
+    - field.field.base_object.plan.field_funding_total
     - field.field.base_object.plan.field_is_part_of_gho
     - field.field.base_object.plan.field_language
+    - field.field.base_object.plan.field_latest_published_period_id
     - field.field.base_object.plan.field_link_to_fts
     - field.field.base_object.plan.field_max_admin_level
     - field.field.base_object.plan.field_operations_category
@@ -23,9 +26,10 @@ dependencies:
     - field.field.base_object.plan.field_plan_date_range
     - field.field.base_object.plan.field_plan_document_link
     - field.field.base_object.plan.field_plan_type
-    - field.field.base_object.plan.field_plan_version_argument
-    - field.field.base_object.plan.field_plan_version_tag
     - field.field.base_object.plan.field_released
+    - field.field.base_object.plan.field_requirements
+    - field.field.base_object.plan.field_requirements_original
+    - field.field.base_object.plan.field_requirements_updated
     - field.field.base_object.plan.field_restricted
     - field.field.base_object.plan.field_short_name
     - field.field.base_object.plan.field_subtitle
@@ -49,7 +53,6 @@ third_party_settings:
         - field_subtitle
         - field_plan_coordinator
         - field_plan_type
-        - field_plan_version_tag
         - field_plan_costing
         - field_year
         - field_plan_date_range
@@ -60,6 +63,7 @@ third_party_settings:
         - field_language
         - field_plan_cluster_type
         - field_description
+        - field_latest_published_period_id
       label: 'Plan Properties'
       region: content
       parent_name: group_tabs
@@ -82,7 +86,7 @@ third_party_settings:
       label: Locations
       region: content
       parent_name: group_tabs
-      weight: 4
+      weight: 5
       format_type: tab
       format_settings:
         classes: ''
@@ -96,7 +100,6 @@ third_party_settings:
     group_settings:
       children:
         - field_operations_category
-        - field_plan_version_argument
         - field_plan_caseload
         - field_plan_document_link
         - field_decimal_format
@@ -121,6 +124,7 @@ third_party_settings:
       children:
         - group_settings
         - group_plan_properties
+        - group_financial_data
         - group_locations
         - group_footnotes
       label: Tabs
@@ -143,7 +147,7 @@ third_party_settings:
       label: Footnotes
       region: content
       parent_name: group_tabs
-      weight: 5
+      weight: 6
       format_type: tab
       format_settings:
         classes: ''
@@ -154,6 +158,25 @@ third_party_settings:
         required_fields: true
         direction: vertical
         width_breakpoint: 640
+    group_financial_data:
+      children:
+        - field_requirements
+        - field_requirements_original
+        - field_funding_total
+        - field_funding_overall
+      label: 'Financial data'
+      region: content
+      parent_name: group_tabs
+      weight: 4
+      format_type: tab
+      format_settings:
+        classes: ''
+        show_empty_fields: false
+        id: ''
+        label_as_html: false
+        formatter: closed
+        description: ''
+        required_fields: true
 id: base_object.plan.default
 targetEntityType: base_object
 bundle: plan
@@ -248,6 +271,20 @@ content:
     region: content
     settings: {  }
     third_party_settings: {  }
+  field_funding_overall:
+    type: number
+    weight: 13
+    region: content
+    settings:
+      placeholder: ''
+    third_party_settings: {  }
+  field_funding_total:
+    type: number
+    weight: 12
+    region: content
+    settings:
+      placeholder: ''
+    third_party_settings: {  }
   field_is_part_of_gho:
     type: boolean_checkbox
     weight: 15
@@ -260,6 +297,13 @@ content:
     weight: 17
     region: content
     settings: {  }
+    third_party_settings: {  }
+  field_latest_published_period_id:
+    type: number
+    weight: 20
+    region: content
+    settings:
+      placeholder: ''
     third_party_settings: {  }
   field_link_to_fts:
     type: boolean_checkbox
@@ -310,7 +354,7 @@ content:
     third_party_settings: {  }
   field_plan_costing:
     type: entity_reference_autocomplete
-    weight: 10
+    weight: 9
     region: content
     settings:
       match_operator: CONTAINS
@@ -342,26 +386,26 @@ content:
       size: 60
       placeholder: ''
     third_party_settings: {  }
-  field_plan_version_argument:
-    type: options_select
-    weight: 8
-    region: content
-    settings: {  }
-    third_party_settings: {  }
-  field_plan_version_tag:
-    type: string_textfield
-    weight: 9
-    region: content
-    settings:
-      size: 60
-      placeholder: ''
-    third_party_settings: {  }
   field_released:
     type: boolean_checkbox
     weight: 13
     region: content
     settings:
       display_label: true
+    third_party_settings: {  }
+  field_requirements:
+    type: number
+    weight: 10
+    region: content
+    settings:
+      placeholder: ''
+    third_party_settings: {  }
+  field_requirements_original:
+    type: number
+    weight: 11
+    region: content
+    settings:
+      placeholder: ''
     third_party_settings: {  }
   field_restricted:
     type: boolean_checkbox
@@ -409,4 +453,5 @@ content:
       placeholder: ''
     third_party_settings: {  }
 hidden:
+  field_requirements_updated: true
   langcode: true

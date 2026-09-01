@@ -124,3 +124,21 @@ msgstr "Datos de población"
 
 msgid "Downloads"
 msgstr "Descargas"
+
+msgid "Project @project_id"
+msgstr "Proyecto @project_id"
+
+msgid "Project @project_id details"
+msgstr "Detalles del proyecto @project_id"
+
+msgid "Project navigation"
+msgstr "Navegación del proyecto"
+
+msgid "Previous project"
+msgstr "Proyecto anterior"
+
+msgid "Next project"
+msgstr "Proyecto siguiente"
+
+msgid "@project_code: @project_name"
+msgstr "@project_code: @project_name"

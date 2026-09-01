@@ -3,42 +3,45 @@
 namespace Drupal\ghi_blocks\Plugin\Block\GlobalPage;
 
 use Drupal\Component\Utility\Html;
+use Drupal\Core\Block\Attribute\Block;
 use Drupal\Core\Cache\Cache;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Plugin\Context\ContextDefinition;
+use Drupal\Core\Plugin\Context\EntityContextDefinition;
+use Drupal\Core\Render\BubbleableMetadata;
 use Drupal\Core\Render\Markup;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\Url;
+use Drupal\ghi_blocks\Interfaces\LazyMapBlockInterface;
+use Drupal\ghi_blocks\Map\MapPayload;
 use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
+use Drupal\ghi_blocks\Traits\ConfigurationPreviewMapTrait;
 use Drupal\ghi_blocks\Traits\GlobalMapTrait;
 use Drupal\ghi_blocks\Traits\GlobalPlanOverviewBlockTrait;
 use Drupal\ghi_blocks\Traits\GlobalSettingsTrait;
 use Drupal\ghi_blocks\Traits\PlanFootnoteTrait;
 use Drupal\ghi_plans\ApiObjects\Partials\PlanOverviewPlan;
 use Drupal\ghi_plans\Entity\PlanType;
+use Drupal\hpc_common\Plugin\HPCBlockMetadata;
 use Drupal\hpc_common\Helpers\CommonHelper;
 use Drupal\hpc_common\Helpers\ThemeHelper;
 use Drupal\hpc_downloads\Helpers\DownloadHelper;
 
 /**
  * Provides a 'PlanOverviewMap' block.
- *
- * @Block(
- *  id = "global_plan_overview_map",
- *  admin_label = @Translation("Plan overview map"),
- *  category = @Translation("Global"),
- *  data_sources = {
- *    "plans" = "plan_overview_query",
- *    "locations" = "locations_query",
- *    "countries" = "country_query",
- *  },
- *  context_definitions = {
- *    "node" = @ContextDefinition("entity:node", label = @Translation("Node"), required = FALSE),
- *    "year" = @ContextDefinition("integer", label = @Translation("Year"))
- *  }
- * )
  */
-class PlanOverviewMap extends GHIBlockBase {
+#[Block(
+  id: 'global_plan_overview_map',
+  admin_label: new TranslatableMarkup('Plan overview map'),
+  category: new TranslatableMarkup('Global'),
+  context_definitions: [
+    'node' => new EntityContextDefinition('entity:node', new TranslatableMarkup('Node'), required: FALSE),
+    'year' => new ContextDefinition(data_type: 'integer', label: new TranslatableMarkup("Year")),
+  ]
+)]
+class PlanOverviewMap extends GHIBlockBase implements LazyMapBlockInterface {
 
+  use ConfigurationPreviewMapTrait;
   use GlobalMapTrait;
   use GlobalPlanOverviewBlockTrait;
   use GlobalSettingsTrait;
@@ -47,47 +50,93 @@ class PlanOverviewMap extends GHIBlockBase {
   /**
    * {@inheritdoc}
    */
-  public function buildContent() {
-    $map = $this->buildCircleMap();
-
-    $chart_id = $map['chart_id'];
-    return [
-      '#theme' => 'plan_overview_map',
-      '#chart_id' => $chart_id,
-      '#map_type' => $map['settings']['style'],
-      '#map_tabs' => $map['tabs'] ? [
-        '#theme' => 'item_list',
-        '#items' => $map['tabs'],
-        '#gin_lb_theme_suggestions' => FALSE,
-      ] : NULL,
-      '#attached' => [
-        'library' => ['ghi_blocks/map.gl.plan_overview'],
-        'drupalSettings' => [
-          'plan_overview_map' => [
-            $chart_id => $map['settings'],
-          ],
-        ],
+  public static function metadata(): ?HPCBlockMetadata {
+    return new HPCBlockMetadata(
+      dataSources: [
+        'plans_overview' => 'fabric_query:plan_overview',
+        'plan' => 'fabric_query:plan',
+        'country' => 'fabric_query:country',
       ],
-      '#cache' => [
-        'tags' => Cache::mergeTags($map['cache_tags'], $this->getMapConfigCacheTags()),
-      ],
-    ];
+    );
   }
 
   /**
    * {@inheritdoc}
    */
-  public function getCacheTags() {
-    $cache_tags = parent::getCacheTags();
-    $plans = $this->getPlans();
-    foreach ($plans as $plan) {
-      $plan_entity = $plan->getEntity();
-      if (!$plan_entity) {
-        continue;
+  public function buildContent() {
+    $chart_id = Html::getUniqueId('plan-overview-map');
+    $block_uuid = $this->getUuid();
+    $map_settings = [
+      'id' => $chart_id,
+      'data_url' => $block_uuid ? Url::fromRoute('ghi_blocks.map_data', [
+        'plugin_id' => $this->getPluginId(),
+        'block_uuid' => $block_uuid,
+      ], [
+        'query' => [
+          'current_uri' => $this->getCurrentUri(),
+          'map_id' => $chart_id,
+        ],
+      ])->toString() : NULL,
+    ];
+    $attachments = [
+      'library' => ['ghi_blocks/map.gl.plan_overview'],
+      'drupalSettings' => [
+        'plan_overview_map' => [
+          $chart_id => $map_settings,
+        ],
+      ],
+    ];
+
+    if ($this->isConfigurationPreview()) {
+      // Configuration preview must use the submitted block settings instead of
+      // rebuilding the saved block through the lazy map data route.
+      $payload = $this->buildLazyMapPayload($chart_id);
+      if (!$payload->isEmpty()) {
+        $attachments = BubbleableMetadata::mergeAttachments($attachments, $payload->getAttachments());
+        $attachments['drupalSettings']['plan_overview_map'][$chart_id] = $this->getConfigurationPreviewMap($payload->getMap());
       }
-      $cache_tags = Cache::mergeTags($cache_tags, $plan_entity->getCacheTags());
     }
-    return $cache_tags;
+
+    return [
+      '#theme' => 'plan_overview_map',
+      '#chart_id' => $chart_id,
+      '#map_type' => 'circle',
+      '#map_tabs' => [
+        '#theme' => 'item_list',
+        '#items' => $this->buildTabLinks(),
+        '#gin_lb_theme_suggestions' => FALSE,
+      ],
+      '#attached' => $attachments,
+      '#cache' => [
+        'tags' => $this->getMapConfigCacheTags(),
+      ],
+    ];
+  }
+
+  /**
+   * Build the JavaScript settings for the lazy-loaded map payload.
+   *
+   * @param string|null $chart_id
+   *   The map container ID from the initial page render.
+   *
+   * @return array
+   *   The settings and data needed to initialize the map client side.
+   */
+  public function buildMapDataSettings(?string $chart_id = NULL): array {
+    return $this->buildLazyMapPayload($chart_id ?? Html::getUniqueId('plan-overview-map'))->toArray();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function buildLazyMapPayload(string $map_id): MapPayload {
+    $map = $this->buildCircleMap($map_id);
+    return MapPayload::forMap(
+      $map['settings'],
+      self::getGlobalMapSettings(),
+      self::getMapboxConfig(),
+      MapPayload::cacheabilityFromTags(Cache::mergeTags($map['cache_tags'], $this->getMapConfigCacheTags())),
+    );
   }
 
   /**
@@ -97,39 +146,13 @@ class PlanOverviewMap extends GHIBlockBase {
    *   An array containing the map data, map javascript settings, the chart id
    *   and the available tabs.
    */
-  private function buildCircleMap() {
+  private function buildCircleMap(?string $chart_id = NULL) {
     $conf = $this->getBlockConfig();
-    $chart_id = Html::getUniqueId('plan-overview-map');
+    $chart_id = $chart_id ?? Html::getUniqueId('plan-overview-map');
     $plans = $this->getPlans();
 
     // All tabs we have, including the legend we want to show.
-    $tabs = [
-      'in_need' => [
-        'group' => 'caseload',
-        'label' => $this->t('In Need'),
-        'icon' => 'users',
-      ],
-      'target' => [
-        'group' => 'caseload',
-        'label' => $this->t('Targeted'),
-        'icon' => 'users',
-      ],
-      'requirements' => [
-        'group' => 'funding',
-        'label' => $this->t('Requirements'),
-        'icon' => 'attach-money',
-      ],
-      'funding' => [
-        'group' => 'funding',
-        'label' => $this->t('Funding'),
-        'icon' => 'attach-money',
-      ],
-      'coverage' => [
-        'group' => 'coverage',
-        'label' => $this->t('% Funded'),
-        'icon' => 'attach-money',
-      ],
-    ];
+    $tabs = $this->getMapTabs();
 
     $map = [
       'chart_id' => $chart_id,
@@ -144,8 +167,8 @@ class PlanOverviewMap extends GHIBlockBase {
       'use_abbreviation' => FALSE,
     ];
 
-    /** @var \Drupal\ghi_base_objects\Plugin\EndpointQuery\CountryQuery $country_query */
-    $country_query = $this->getQueryHandler('countries');
+    /** @var \Drupal\ghi_base_objects\Plugin\FabricQuery\CountryQuery $country_query */
+    $country_query = $this->getQueryHandler('country');
 
     // Assemble the locations and modal_contents arrays.
     $locations = [];
@@ -156,13 +179,14 @@ class PlanOverviewMap extends GHIBlockBase {
     $this->sortPlansByPlanType($plans, $config['plan_short_names'] ?? FALSE);
 
     foreach ($plans as $plan) {
-      $funding = $plan->getFunding();
+      $funding = $plan->getFunding() ?: 0;
       $requirements = $plan->getRequirements();
+      $coverage = $plan->getCoverage();
 
-      $in_need = $plan->getCaseloadValue('inNeed');
+      $in_need = $plan->getCaseloadValue('in_need');
       $target = $plan->getCaseloadValue('target');
-      $reached = $plan->getCaseloadValue('latestReach');
-      $expected_reach = $plan->getCaseloadValue('expectedReach');
+      $reached = $plan->getCaseloadValue('latest_reach');
+      $expected_reach = $plan->getCaseloadValue('expected_reach');
 
       if (empty($funding) && empty($requirements) && empty($in_need) && empty($target)) {
         continue;
@@ -175,6 +199,7 @@ class PlanOverviewMap extends GHIBlockBase {
 
       $plan_entity = $plan->getEntity();
       if ($plan_entity) {
+        $map['cache_tags'] = Cache::mergeTags($map['cache_tags'], $plan_entity->getCacheTags());
         $footnotes[$plan->id()] = $this->getFootnotesForPlanBaseobject($plan_entity);
       }
       $section = $plan_entity ? $this->sectionManager->loadSectionForBaseObject($plan_entity) : NULL;
@@ -183,7 +208,7 @@ class PlanOverviewMap extends GHIBlockBase {
       }
 
       $caseload = (object) [
-        'total_population' => $plan->getCaseloadValue('totalPopulation'),
+        'total_population' => $plan->getCaseloadValue('total_population', 'Population'),
         'target' => $target,
         'in_need' => $in_need,
         'expected_reach' => $expected_reach,
@@ -194,7 +219,7 @@ class PlanOverviewMap extends GHIBlockBase {
       $funding = (object) [
         'total_funding' => $funding,
         'total_requirements' => $requirements,
-        'funding_progress' => $plan->getCoverage(),
+        'funding_progress' => $coverage,
       ];
 
       $plan_id = $plan->id();
@@ -216,11 +241,11 @@ class PlanOverviewMap extends GHIBlockBase {
 
       // Build the location object and add it to the location list.
       $locations[$object_id] = [
+        'id' => $location->id(),
+        'name' => $location->getName(),
         'object_id' => $object_id,
         'object_title' => $plan_entity->getShortName(),
         'sort_key' => Html::getUniqueId($location->getName() . '-' . $plan->getTypeOrder()),
-        'location_id' => $location->id(),
-        'location_name' => $location->getName(),
         'highlight_countries' => array_values($highlight_countries),
         'latLng' => $location->getLatLng(),
         'in_need' => $caseload->in_need,
@@ -270,7 +295,7 @@ class PlanOverviewMap extends GHIBlockBase {
     // plans on the same location together.
     $location_plans_sorted = [];
     foreach ($locations as $location) {
-      $location_plans_sorted[$location['location_id']][$location['object_id']] = $location['object_id'];
+      $location_plans_sorted[$location['id']][$location['object_id']] = $location['object_id'];
     }
     $offset_chain = [];
     foreach ($location_plans_sorted as $location_id => $object_ids) {
@@ -281,8 +306,8 @@ class PlanOverviewMap extends GHIBlockBase {
     }
 
     foreach ($locations as &$location) {
-      $location['offset_chain'] = $offset_chain[$location['location_id']];
-      if (count($offset_chain[$location['location_id']]) == 1) {
+      $location['offset_chain'] = $offset_chain[$location['id']];
+      if (count($offset_chain[$location['id']]) == 1) {
         $location['offset_chain'] = [];
       }
       foreach ($location['offset_chain'] as $key => $object_id) {
@@ -316,7 +341,7 @@ class PlanOverviewMap extends GHIBlockBase {
       }
       $country_location = $country_query->getCountry($location_id);
       if ($country_location) {
-        $geojson[$location_id] = $country_location->toArray();
+        $geojson[$location_id] = $country_location->getGeoJsonLocationData();
       }
     }
 
@@ -337,6 +362,7 @@ class PlanOverviewMap extends GHIBlockBase {
     $map['settings'] = [
       'json' => !empty($map['data']) ? $map['data'] : NULL,
       'id' => $chart_id,
+      'settings_key' => 'plan_overview_map',
       'style' => 'circle',
       'legend' => $this->buildLegendItems(),
       'search_enabled' => $conf['search_enabled'],
@@ -344,6 +370,56 @@ class PlanOverviewMap extends GHIBlockBase {
     ];
 
     return $map;
+  }
+
+  /**
+   * Build tab links for the initial lightweight map render.
+   *
+   * @return \Drupal\Core\Render\Markup[]
+   *   The tab links.
+   */
+  private function buildTabLinks(): array {
+    $links = [];
+    foreach ($this->getMapTabs() as $key => $tab) {
+      $links[] = Markup::create('<a href="#" class="map-tab" data-map-index="' . $key . '">' . $tab['label'] . '</a>');
+    }
+    return $links;
+  }
+
+  /**
+   * Get the supported map tabs.
+   *
+   * @return array
+   *   The tab definitions.
+   */
+  private function getMapTabs(): array {
+    return [
+      'in_need' => [
+        'group' => 'caseload',
+        'label' => $this->t('In Need'),
+        'icon' => 'users',
+      ],
+      'target' => [
+        'group' => 'caseload',
+        'label' => $this->t('Targeted'),
+        'icon' => 'users',
+      ],
+      'requirements' => [
+        'group' => 'funding',
+        'label' => $this->t('Requirements'),
+        'icon' => 'attach-money',
+      ],
+      'funding' => [
+        'group' => 'funding',
+        'label' => $this->t('Funding'),
+        'icon' => 'attach-money',
+      ],
+      'coverage' => [
+        'group' => 'coverage',
+        'label' => $this->t('% Funded'),
+        'icon' => 'attach-money',
+      ],
+    ];
   }
 
   /**
@@ -560,7 +636,7 @@ class PlanOverviewMap extends GHIBlockBase {
    *   Array of plan objects.
    */
   private function getPlans() {
-    $plans = $this->getPlanQuery()->getPlans();
+    $plans = $this->getPlanOverviewQuery()->getPlans();
     if (empty($plans)) {
       return $plans;
     }

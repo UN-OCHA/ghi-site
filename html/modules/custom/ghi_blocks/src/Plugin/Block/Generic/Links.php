@@ -2,8 +2,10 @@
 
 namespace Drupal\ghi_blocks\Plugin\Block\Generic;
 
+use Drupal\Core\Block\Attribute\Block;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\ghi_blocks\Interfaces\ConfigurableTableBlockInterface;
 use Drupal\ghi_blocks\Interfaces\MultiStepFormBlockInterface;
 use Drupal\ghi_blocks\Interfaces\OptionalTitleBlockInterface;
@@ -13,32 +15,40 @@ use Drupal\ghi_blocks\Traits\ManagedFileBlockTrait;
 use Drupal\ghi_form_elements\Traits\ConfigurationContainerGroup;
 use Drupal\ghi_form_elements\Traits\ConfigurationContainerTrait;
 use Drupal\ghi_sections\Entity\SectionNodeInterface;
+use Drupal\hpc_common\Plugin\HPCBlockMetadata;
 
 /**
  * Provides a 'Links' block.
- *
- * @Block(
- *  id = "links",
- *  admin_label = @Translation("Links"),
- *  category = @Translation("Generic elements"),
- *  config_forms = {
- *    "links" = {
- *      "title" = @Translation("Links"),
- *      "callback" = "linksForm",
- *      "base_form" = TRUE
- *    },
- *    "display" = {
- *      "title" = @Translation("Display"),
- *      "callback" = "displayForm"
- *    }
- *  }
- * )
  */
+#[Block(
+  id: 'links',
+  admin_label: new TranslatableMarkup('Links'),
+  category: new TranslatableMarkup('Generic elements'),
+)]
 class Links extends GHIBlockBase implements MultiStepFormBlockInterface, OptionalTitleBlockInterface, ConfigurableTableBlockInterface {
 
   use ConfigurationContainerTrait;
   use ConfigurationContainerGroup;
   use ManagedFileBlockTrait;
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function metadata(): ?HPCBlockMetadata {
+    return new HPCBlockMetadata(
+      configForms: [
+        'links' => [
+          'title' => 'Links',
+          'callback' => 'linksForm',
+          'base_form' => TRUE,
+        ],
+        'display' => [
+          'title' => 'Display',
+          'callback' => 'displayForm',
+        ],
+      ]
+    );
+  }
 
   /**
    * {@inheritdoc}

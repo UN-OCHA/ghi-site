@@ -1,0 +1,71 @@
+{
+  "Id": 5403,
+  "RefCode": "BP",
+  "Type": "caseLoad",
+  "Value": {
+    "hasMeasures": 1,
+    "measureFields": [
+      {
+        "name": {
+          "en": "Personnes atteintes (par période)"
+        },
+        "type": "periodicalReach"
+      },
+      {
+        "name": {
+          "en": "Personnes atteintes (cumul)"
+        },
+        "type": "cumulativeReach"
+      },
+      {
+        "name": {
+          "en": "Personnes couvertes"
+        },
+        "type": "covered"
+      }
+    ],
+    "min": 0,
+    "max": 1,
+    "name": {
+      "en": "Personnes dans le plan"
+    },
+    "metrics": [
+      {
+        "name": {
+          "en": "Total population"
+        },
+        "type": "totalPopulation"
+      },
+      {
+        "name": {
+          "en": "Personnes affectées"
+        },
+        "type": "affected"
+      },
+      {
+        "name": {
+          "en": "Personnes dans le besoin"
+        },
+        "type": "inNeed"
+      },
+      {
+        "name": {
+          "en": "Personnes ciblées"
+        },
+        "type": "target"
+      },
+      {
+        "name": {
+          "en": "Personnes atteintes (estimation)"
+        },
+        "type": "expectedReach"
+      }
+    ],
+    "entities": [
+      "PL"
+    ]
+  },
+  "PlanId": 1112,
+  "CreatedAt": "2022-09-27T09:22:20.000Z",
+  "UpdatedAt": "2024-06-18T12:38:23.000Z"
+}

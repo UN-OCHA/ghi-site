@@ -1,0 +1,19 @@
+uuid: 22cf0d97-6b16-4788-b28f-8fc3a85242dc
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.base_object.field_icon
+    - ghi_base_objects.base_object_type.governing_entity
+id: base_object.governing_entity.field_icon
+field_name: field_icon
+entity_type: base_object
+bundle: governing_entity
+label: Icon
+description: 'The icon name'
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: string

@@ -2,28 +2,30 @@
 
 namespace Drupal\ghi_content\Plugin\Block;
 
+use Drupal\Core\Block\Attribute\Block;
 use Drupal\Core\Block\BlockBase;
 use Drupal\Core\Cache\Cache;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
+use Drupal\Core\Plugin\Context\EntityContextDefinition;
 use Drupal\Core\Render\BubbleableMetadata;
 use Drupal\ghi_content\Entity\Article;
 use Drupal\ghi_content\Entity\ContentBase;
 use Drupal\ghi_content\Entity\Document;
 use Drupal\ghi_content\Traits\ContentPathTrait;
 use Symfony\Component\DependencyInjection\ContainerInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 
 /**
  * Provides a 'DocumentNavigation' block.
- *
- * @Block(
- *  id = "document_navigation",
- *  admin_label = @Translation("Document navigation"),
- *  category = @Translation("Menus"),
- *  context_definitions = {
- *    "node" = @ContextDefinition("entity:node", label = @Translation("Node"))
- *  }
- * )
  */
+#[Block(
+  id: 'document_navigation',
+  admin_label: new TranslatableMarkup('Document navigation'),
+  category: new TranslatableMarkup('Menus'),
+  context_definitions: [
+    'node' => new EntityContextDefinition('entity:node', new TranslatableMarkup('Node')),
+  ]
+)]
 class DocumentNavigation extends BlockBase implements ContainerFactoryPluginInterface {
 
   use ContentPathTrait;
