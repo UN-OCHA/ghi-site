@@ -1,5 +1,5 @@
 {
-    "_hash": "128a2cf8c4c07f79de9736b5199e49dd2c46434798ae9819b36a1e04c1c95312",
+    "_hash": "c0030d63c2e217e860607e6e805a5cea1f39fe5acccb19688bf2b1f75bebc854",
     "patches": {
         "drupal/core": [
             {
@@ -189,6 +189,18 @@
                 "description": "Issue #3401986: The containers summary text should not be overwritten",
                 "url": "https://www.drupal.org/files/issues/2023-11-15/3401986-2.patch",
                 "sha256": "dac66defbddda3923b37ff5a55eea1d259655cd6807338471a51d1ba509361da",
+                "depth": 1,
+                "extra": {
+                    "provenance": "patches-file:composer.patches.json"
+                }
+            }
+        ],
+        "drupal/layout_builder_ipe": [
+            {
+                "package": "drupal/layout_builder_ipe",
+                "description": "Issue #3620545: Preserve block content structure when adding enhanced UI controls",
+                "url": "patches/layout_builder_ipe-3620545-mr-11.patch",
+                "sha256": "887aced77cf94a9489aff016274eff821d310c53dc8681c9a238cae5739c87ca",
                 "depth": 1,
                 "extra": {
                     "provenance": "patches-file:composer.patches.json"
