@@ -32,10 +32,12 @@ class BlockUiTest extends BlockUiBase {
     $assert_session->waitForElementVisible('css', '#layout-builder-ipe-wrapper.edit-layout');
     $assert_session->elementExists('css', '#layout-builder-ipe-wrapper.edit-layout');
 
-    // Check that the form and the two main buttons are there.
+    // Check that the form and the main editor actions are there.
     $assert_session->elementExists('css', 'form.layout-builder-form');
     $assert_session->buttonExists('Discard changes');
     $assert_session->buttonExists('Save layout');
+    $assert_session->linkExists('Close editor');
+    $assert_session->elementExists('css', '.gin-secondary-toolbar .glb-button-close-editor');
 
     // Open the "add new block" dialog.
     $assert_session->linkExists('Add block');
@@ -85,6 +87,14 @@ class BlockUiTest extends BlockUiBase {
     $this->clickElement('#layout-builder-modal a.dialog-cancel');
     $this->waitForAjaxToFinish();
     $assert_session->waitForElementRemoved('css', '#layout-builder-modal');
+
+    // Close the editor without discarding the temporary layout.
+    $this->clickButtonWithText('Close editor');
+    $assert_session->waitForElementVisible('css', '#layout-builder-ipe-wrapper:not(.edit-layout)');
+    $assert_session->elementExists('css', '#layout-builder-ipe-wrapper:not(.edit-layout)');
+    $assert_session->elementExists('css', '.layout-builder-ipe-actions .layout-builder-ipe--link-customize.dropbutton-wrapper');
+    $assert_session->linkExists('Customize');
+    $assert_session->linkExists('Discard changes');
   }
 
 }

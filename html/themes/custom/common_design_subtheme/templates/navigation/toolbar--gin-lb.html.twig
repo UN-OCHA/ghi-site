@@ -11,6 +11,8 @@
     {{ preview_content }}
     <div class="{{ glb_classes(create_attribute().addClass('region region-sticky')) }}">
       <div class="gin-sticky form-wrapper glb-region-sticky__items__inner gin-sticky form-wrapper">
+        <input data-drupal-selector="edit-close-editor" type="button"
+               value="{{ 'Close editor'|t }}" class="glb-button-close-editor glb-button">
         <input data-drupal-selector="edit-discard" type="submit" name="op"
                value="{{ 'Discard changes'|t }}" class="glb-button-discard glb-button form-submit">
         <input data-drupal-selector="edit-submit" type="submit" name="op"

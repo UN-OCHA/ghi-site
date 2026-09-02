@@ -55,7 +55,8 @@ class LogframeRebuildLinkBuilder {
         'width' => $this->modalConfig->get('modal_width'),
         'height' => $this->modalConfig->get('modal_height'),
         'target' => 'layout-builder-modal',
-        'autoResize' => $this->modalConfig->get('modal_autoresize'),
+        // Canvas replacement can race core's debounced dialog resize handler.
+        'autoResize' => FALSE,
         'modal' => TRUE,
       ]),
     ];

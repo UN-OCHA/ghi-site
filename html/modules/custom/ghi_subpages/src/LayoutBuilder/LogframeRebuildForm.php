@@ -197,7 +197,7 @@ class LogframeRebuildForm extends FormBase {
     else {
       $callable = $this->controllerResolver->getControllerFromDefinition(EntityEditController::class . '::edit');
       $response = $callable($form_state->get('section_storage'));
-      $response->addCommand(new CloseDialogCommand('#layout-builder-modal'));
+      $response->addCommand(new CloseDialogCommand('#layout-builder-modal'), TRUE);
     }
     return $response;
   }

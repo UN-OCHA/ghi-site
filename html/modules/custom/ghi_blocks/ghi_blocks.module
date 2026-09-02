@@ -8,12 +8,12 @@
 use Drupal\Component\Serialization\Json;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Link;
 use Drupal\Core\Render\Markup;
 use Drupal\ghi_blocks\Controller\BaseObjectReferenceController;
 use Drupal\ghi_blocks\Controller\LayoutBuilderBlockController;
 use Drupal\ghi_blocks\Interfaces\DeprecatedBlockInterface;
 use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
-use Drupal\layout_builder\OverridesSectionStorageInterface;
 use Drupal\layout_builder\Plugin\Block\InlineBlock;
 use Drupal\layout_builder\Plugin\SectionStorage\OverridesSectionStorage;
 use Drupal\layout_builder\SectionStorageInterface;
@@ -224,8 +224,10 @@ function ghi_blocks_theme($existing, $type, $theme, $path) {
  */
 function ghi_blocks_module_implements_alter(&$implementations, $hook) {
   switch ($hook) {
-    // Move our hook_entity_type_alter() implementation to the end of the list.
+    // Keep project-specific link and block filtering overrides from being
+    // replaced by later contrib implementations.
     case 'plugin_filter_block_alter':
+    case 'link_alter':
       if ($group = $implementations['ghi_blocks'] ?? NULL) {
         unset($implementations['ghi_blocks']);
         $implementations['ghi_blocks'] = $group;
@@ -397,8 +399,17 @@ function ghi_blocks_link_alter(&$variables) {
 
   if (in_array('use-ajax', ($variables['options']['attributes']['class'] ?? []))) {
     $config = \Drupal::config('layout_builder_modal.settings');
+    $confirmation_routes = [
+      'layout_builder.remove_block',
+      'ghi_blocks.hide_block',
+      'ghi_blocks.unhide_block',
+      'ghi_blocks.hide_entity_block',
+      'ghi_blocks.unhide_entity_block',
+      'ghi_blocks.remove_entity_block',
+    ];
     $data_dialog_options = Json::encode([
-      'width' => $config->get('modal_width'),
+      // Match the compact IPE discard dialog for destructive confirmations.
+      'width' => in_array($route_name, $confirmation_routes, TRUE) ? 650 : $config->get('modal_width'),
       'height' => $config->get('modal_height'),
       'target' => 'layout-builder-modal',
       'autoResize' => $config->get('modal_autoresize'),
@@ -558,47 +569,31 @@ function ghi_blocks_page_attachments(array &$attachments) {
 /**
  * Implements hook_layout_builder_ipe_links_alter().
  *
- * This a discard changes link if there are layout changes that can be
- * discarded. This might be necessary if a page is broken and can't be opened
- * for editing anymore.
+ * Groups the temporary-layout actions on entity pages.
  */
 function ghi_blocks_layout_builder_ipe_links_alter(array &$links, SectionStorageInterface $section_storage, EntityInterface $entity) {
-  if (!$section_storage instanceof OverridesSectionStorageInterface) {
-    // Don't do this for page manager pages for now, as there are some issues
-    // with that.
+  if ($section_storage->getPluginId() === 'page_manager' || !isset($links['customize'], $links['discard'])) {
     return;
   }
-  /** @var \Drupal\layout_builder\LayoutTempstoreRepositoryInterface $layout_tempstore_repository */
-  $layout_tempstore_repository = \Drupal::service('layout_builder.tempstore_repository');
-  if (!$layout_tempstore_repository->has($section_storage)) {
+  if (!$links['customize'] instanceof Link || !$links['discard'] instanceof Link) {
     return;
   }
-  /** @var \Drupal\Core\Link $customize_link */
-  $customize_link = $links['customize'];
-  /** @var \Drupal\Core\Link $discard_link */
-  $discard_link = $links['discard'] ?? NULL;
 
-  // Remove the glb-button classes from the link attributes.
-  $customize_attributes = $customize_link->getUrl()->getOption('attributes');
-  $customize_attributes['class'] = array_filter($customize_attributes['class'], fn($class_name) => $class_name != 'glb-button');
-  $customize_link->getUrl()->setOption('attributes', $customize_attributes);
-
-  $discard_attributes = $discard_link->getUrl()->getOption('attributes');
-  $discard_attributes['class'] = array_filter($discard_attributes['class'], fn($class_name) => $class_name != 'glb-button');
-  $discard_link->getUrl()->setOption('attributes', $discard_attributes);
+  $grouped_links = [];
+  foreach (['customize', 'discard'] as $key) {
+    $link = $links[$key];
+    $attributes = $link->getUrl()->getOption('attributes');
+    $attributes['class'] = array_values(array_diff($attributes['class'] ?? [], ['glb-button']));
+    $link->getUrl()->setOption('attributes', $attributes);
+    $grouped_links[$key] = [
+      'title' => $link->getText(),
+      'url' => $link->getUrl(),
+    ];
+  }
 
   $links['customize'] = [
     '#type' => 'dropbutton',
-    '#links' => array_filter([
-      'customize' => [
-        'title' => $customize_link->getText(),
-        'url' => $customize_link->getUrl(),
-      ],
-      'discard' => $discard_link ? [
-        'title' => $discard_link->getText(),
-        'url' => $discard_link->getUrl(),
-      ] : NULL,
-    ]),
+    '#links' => $grouped_links,
     '#attached' => [
       'library' => ['ghi_blocks/ipe.links'],
     ],

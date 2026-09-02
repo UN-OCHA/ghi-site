@@ -3,7 +3,6 @@
 namespace Drupal\ghi_templates\LayoutBuilder;
 
 use Drupal\Core\Ajax\AjaxResponse;
-use Drupal\Core\Ajax\CloseDialogCommand;
 use Drupal\Core\Ajax\RedirectCommand;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Form\FormStateInterface;
@@ -127,7 +126,6 @@ class StorePageTemplateForm extends TemplateFormBase {
     $entity = $form_state->get('entity');
     $response = new AjaxResponse();
     $response->addCommand(new RedirectCommand($entity->toUrl()->toString()));
-    $response->addCommand(new CloseDialogCommand('#layout-builder-modal'));
     return $response;
   }
 
