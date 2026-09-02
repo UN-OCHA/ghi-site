@@ -11,6 +11,18 @@ use Drupal\Core\Form\FormStateInterface;
 class ConfigForm extends ConfigFormBase {
 
   /**
+   * Default values for settings that remain editable on this form.
+   */
+  private const DEFAULT_VALUES = [
+    'connect_timeout' => 3,
+    'timeout' => 25,
+    'flow_custom_search_timeout' => 6,
+    'cache_lifetime' => 3600,
+    'use_gzip_compression' => FALSE,
+    'log_api_errors' => TRUE,
+  ];
+
+  /**
    * {@inheritdoc}
    */
   public function getFormId() {
@@ -25,79 +37,54 @@ class ConfigForm extends ConfigFormBase {
     $form = parent::buildForm($form, $form_state);
     $config = $this->config('hpc_api.settings');
 
-    $form['url'] = [
-      '#type' => 'textfield',
-      '#title' => $this->t('URL'),
-      '#description' => $this->t('The URL to the HPC API.'),
-      '#default_value' => $config->get('url'),
-      '#required' => TRUE,
-    ];
-
-    $form['default_api_version'] = [
-      '#type' => 'textfield',
-      '#title' => $this->t('Default API version'),
-      '#description' => $this->t('The API version to use by default.'),
-      '#default_value' => $config->get('default_api_version'),
-      '#required' => TRUE,
-    ];
-
-    $form['auth_username'] = [
-      '#type' => 'textfield',
-      '#title' => $this->t('User name'),
-      '#description' => $this->t('The username to authenticate public requests to the HPC API.'),
-      '#default_value' => $config->get('auth_username'),
-      '#required' => TRUE,
-    ];
-
-    $form['auth_password'] = [
-      '#type' => 'password',
-      '#title' => $this->t('Password'),
-      '#description' => $this->t('The password to authenticate public requests to the HPC API.'),
-      '#default_value' => $config->get('auth_password'),
-      '#required' => TRUE,
-    ];
-
-    $form['api_key'] = [
-      '#type' => 'password',
-      '#title' => $this->t('API Key'),
-      '#description' => $this->t('An API key for backend requests to the HPC API.'),
-      '#default_value' => $config->get('api_key'),
-      '#required' => TRUE,
-    ];
-
-    $form['public_base_path'] = [
-      '#type' => 'textfield',
-      '#title' => $this->t('Public base path'),
-      '#description' => $this->t('The base path for public endpoints of the HPC API.'),
-      '#default_value' => $config->get('public_base_path'),
-      '#required' => TRUE,
+    $form['connect_timeout'] = [
+      '#type' => 'number',
+      '#title' => $this->t('Connect timeout'),
+      '#description' => $this->t('The maximum time in seconds for opening connections to the HPC API.'),
+      '#default_value' => $this->getConfigValue($config->get('connect_timeout'), 'connect_timeout'),
+      '#min' => 1,
+      '#step' => 1,
+      '#required' => FALSE,
     ];
 
     $form['timeout'] = [
       '#type' => 'number',
-      '#title' => $this->t('Timeout'),
-      '#description' => $this->t('The global timeout in seconds for requests to the HPC API.'),
-      '#default_value' => $config->get('timeout'),
+      '#title' => $this->t('Total timeout'),
+      '#description' => $this->t('The maximum total time in seconds for requests to the HPC API.'),
+      '#default_value' => $this->getConfigValue($config->get('timeout'), 'timeout'),
       '#min' => 1,
       '#step' => 1,
-      '#required' => TRUE,
+      '#required' => FALSE,
+    ];
+
+    $form['flow_custom_search_timeout'] = [
+      '#type' => 'number',
+      '#title' => $this->t('Custom search timeout'),
+      '#description' => $this->t('The maximum total time in seconds for legacy custom search requests to the HPC API.'),
+      '#default_value' => $this->getConfigValue(
+        $config->get('flow_custom_search_timeout'),
+        'flow_custom_search_timeout'
+      ),
+      '#min' => 1,
+      '#step' => 1,
+      '#required' => FALSE,
     ];
 
     $form['cache_lifetime'] = [
       '#type' => 'number',
       '#title' => $this->t('Cache lifetime'),
       '#description' => $this->t('The maximum time in seconds that data from the HPC API should be kept in local cache.'),
-      '#default_value' => $config->get('cache_lifetime'),
+      '#default_value' => $this->getConfigValue($config->get('cache_lifetime'), 'cache_lifetime'),
       '#min' => 1,
       '#step' => 1,
-      '#required' => TRUE,
+      '#required' => FALSE,
     ];
 
     $form['use_gzip_compression'] = [
       '#type' => 'checkbox',
       '#title' => $this->t('Use gzip compression'),
       '#description' => $this->t('Check this if you want that all API requests use GZIP compression if available.'),
-      '#default_value' => $config->get('use_gzip_compression'),
+      '#default_value' => $this->getConfigValue($config->get('use_gzip_compression'), 'use_gzip_compression'),
       '#required' => FALSE,
     ];
 
@@ -105,7 +92,7 @@ class ConfigForm extends ConfigFormBase {
       '#type' => 'checkbox',
       '#title' => $this->t('Log API errors'),
       '#description' => $this->t('Check this if you want that errors returned from the API are logged.'),
-      '#default_value' => $config->get('log_api_errors'),
+      '#default_value' => $this->getConfigValue($config->get('log_api_errors'), 'log_api_errors'),
       '#required' => FALSE,
     ];
 
@@ -117,18 +104,29 @@ class ConfigForm extends ConfigFormBase {
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
     $config = $this->config('hpc_api.settings');
-    $config->set('url', $form_state->getValue('url'));
-    $config->set('default_api_version', $form_state->getValue('default_api_version'));
-    $config->set('auth_username', $form_state->getValue('auth_username'));
-    $config->set('auth_password', $form_state->getValue('auth_password'));
-    $config->set('api_key', $form_state->getValue('api_key'));
-    $config->set('public_base_path', $form_state->getValue('public_base_path'));
-    $config->set('timeout', $form_state->getValue('timeout'));
-    $config->set('cache_lifetime', $form_state->getValue('cache_lifetime'));
-    $config->set('use_gzip_compression', $form_state->getValue('use_gzip_compression'));
-    $config->set('log_api_errors', $form_state->getValue('log_api_errors'));
+    foreach (['connect_timeout', 'timeout', 'flow_custom_search_timeout', 'cache_lifetime'] as $key) {
+      $config->set($key, (int) $this->getConfigValue($form_state->getValue($key), $key));
+    }
+    foreach (['use_gzip_compression', 'log_api_errors'] as $key) {
+      $config->set($key, (bool) $this->getConfigValue($form_state->getValue($key), $key));
+    }
     $config->save();
     return parent::submitForm($form, $form_state);
+  }
+
+  /**
+   * Get a submitted or stored setting, falling back to the module default.
+   *
+   * @param mixed $value
+   *   The submitted or stored value.
+   * @param string $key
+   *   The config key.
+   *
+   * @return mixed
+   *   The normalized value.
+   */
+  private function getConfigValue($value, string $key) {
+    return $value === NULL || $value === '' ? self::DEFAULT_VALUES[$key] : $value;
   }
 
   /**

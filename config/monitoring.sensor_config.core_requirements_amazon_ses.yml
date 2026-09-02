@@ -1,0 +1,20 @@
+uuid: fde60237-fa1d-4a22-a7e3-bc462dc720b4
+langcode: en
+status: false
+dependencies:
+  module:
+    - amazon_ses
+id: core_requirements_amazon_ses
+label: 'Module amazon_ses'
+description: 'Requirements of the amazon_ses module'
+category: Requirements
+plugin_id: core_requirements
+result_class: null
+value_label: null
+value_type: no_value
+caching_time: 3600
+settings:
+  module: amazon_ses
+  exclude_keys: {  }
+thresholds:
+  type: none

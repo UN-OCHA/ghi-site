@@ -19,6 +19,82 @@ ghi_blocks.load_block:
         block_uuid:
           type: string
 
+ghi_blocks.load_logframe_item:
+  path: '/load-logframe-item/{plugin_id}/{block_uuid}/{entity_id}'
+  defaults:
+    _controller: 'Drupal\ghi_blocks\Controller\AjaxBlockController::loadLogframeItem'
+  requirements:
+    _permission: 'access content'
+  options:
+    parameters:
+        plugin_id:
+          type: string
+        block_uuid:
+          type: string
+        entity_id:
+          type: string
+
+ghi_blocks.map_data:
+  path: '/map-data/{plugin_id}/{block_uuid}'
+  defaults:
+    _controller: '\Drupal\ghi_blocks\Controller\MapDataController::data'
+  requirements:
+    _permission: 'access content'
+  options:
+    parameters:
+        plugin_id:
+          type: string
+        block_uuid:
+          type: string
+
+ghi_blocks.map_data_fragment:
+  path: '/map-data/{plugin_id}/{block_uuid}/fragment'
+  defaults:
+    _controller: '\Drupal\ghi_blocks\Controller\MapDataController::dataFragment'
+  requirements:
+    _permission: 'access content'
+  options:
+    parameters:
+        plugin_id:
+          type: string
+        block_uuid:
+          type: string
+
+ghi_blocks.map_modal_data:
+  path: '/map-data/{plugin_id}/{block_uuid}/modal'
+  defaults:
+    _controller: '\Drupal\ghi_blocks\Controller\MapDataController::modalData'
+  requirements:
+    _permission: 'access content'
+  options:
+    parameters:
+        plugin_id:
+          type: string
+        block_uuid:
+          type: string
+
+ghi_blocks.map_preview_modal_data:
+  path: '/map-preview-modal-data/{token}'
+  defaults:
+    _controller: '\Drupal\ghi_blocks\Controller\PreviewMapModalDataController::data'
+  requirements:
+    _permission: 'access content'
+  options:
+    parameters:
+      token:
+        type: string
+
+ghi_blocks.block_preview:
+  path: '/block-preview/{token}'
+  defaults:
+    _controller: '\Drupal\ghi_blocks\Controller\BlockPreviewController::preview'
+  requirements:
+    _permission: 'access content'
+  options:
+    parameters:
+      token:
+        type: string
+
 ghi_blocks.global_config:
   path: '/admin/config/ghi/global-settings'
   defaults:
@@ -37,6 +113,15 @@ ghi_blocks.map_config:
     _admin_route: TRUE
   requirements:
     _permission: 'administer ghi map config'
+ghi_blocks.block_config:
+  path: '/admin/config/ghi/blocks'
+  defaults:
+    _form: '\Drupal\ghi_blocks\Form\BlockSettingsForm'
+    _title: 'Block settings'
+  options:
+    _admin_route: TRUE
+  requirements:
+    _permission: 'administer ghi block config'
 ghi_blocks.logframe_config:
   path: '/admin/config/ghi/logframes'
   defaults:

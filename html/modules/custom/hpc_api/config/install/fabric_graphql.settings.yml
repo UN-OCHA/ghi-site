@@ -1,0 +1,8 @@
+workspace_id:
+endpoint_id:
+host:
+tenant_id:
+client_id:
+client_secret:
+connect_timeout: 2
+timeout: 8

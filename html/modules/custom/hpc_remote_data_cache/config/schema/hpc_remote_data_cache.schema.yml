@@ -1,0 +1,64 @@
+hpc_remote_data_cache.settings:
+  type: config_object
+  label: 'HPC Remote Data Cache settings'
+  mapping:
+    enabled:
+      type: boolean
+      label: 'Whether remote data caching with background refresh is enabled'
+    default_fresh_ttl:
+      type: integer
+      label: 'Default fresh lifetime in seconds'
+      constraints:
+        Range:
+          min: 0
+    default_stale_ttl:
+      type: integer
+      label: 'Default stale lifetime in seconds'
+      constraints:
+        Range:
+          min: 0
+    refresh_lock_ttl:
+      type: integer
+      label: 'Refresh lock lifetime in seconds'
+      constraints:
+        Range:
+          min: 1
+    refresh_retry_base:
+      type: integer
+      label: 'Base retry backoff in seconds'
+      constraints:
+        Range:
+          min: 0
+    serve_expired_on_error:
+      type: boolean
+      label: 'Whether expired cached data can be served after remote refresh failures'
+    max_payload_size:
+      type: integer
+      label: 'Maximum serialized payload size in bytes; 0 disables the limit'
+      constraints:
+        Range:
+          min: 0
+    expired_retention_ttl:
+      type: integer
+      label: 'Seconds to retain expired cache items for error fallback'
+      constraints:
+        Range:
+          min: 0
+    max_items:
+      type: integer
+      label: 'Maximum number of indexed cache items; 0 disables the item cap'
+      constraints:
+        Range:
+          min: 0
+    prune_batch_size:
+      type: integer
+      label: 'Maximum number of cache items to prune per cron run'
+      constraints:
+        Range:
+          min: 0
+    prune_excluded_sources:
+      type: sequence
+      label: 'Remote data cache sources excluded from pruning'
+      sequence:
+        type: string
+        label: 'Source prefix'

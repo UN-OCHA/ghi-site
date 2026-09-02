@@ -21,7 +21,7 @@
      https://codepen.io/sosuke/pen/Pjoqqp to create a filter that makes the
      icon appear in that color. */
   filter: invert(22%) sepia(21%) saturate(0%) hue-rotate(165deg) brightness(112%) contrast(83%);
-  background: url("https://fonts.gstatic.com/s/i/short-term/release/materialsymbolsoutlined/download/default/20px.svg")
+  background: url("../../img/icons/material-symbol-download.svg")
     no-repeat;
 }
 .item-list--entity-logframe > .item-wrapper > .entity-wrapper {
@@ -75,7 +75,8 @@
 }
 
 .item-list--entity-logframe > .item-wrapper .entity-wrapper span.table-toggle,
-.item-list--entity-logframe > .item-wrapper .entity-wrapper span.table-no-data {
+.item-list--entity-logframe > .item-wrapper .entity-wrapper span.table-no-data,
+.item-list--entity-logframe > .item-wrapper .entity-wrapper span.table-loading {
   flex-grow: 0;
   align-self: center;
   width: fit-content;
@@ -89,6 +90,15 @@
   border-radius: 50%;
   background-color: var(--brand-grey);
   will-change: transform;
+}
+.item-list--entity-logframe > .item-wrapper .entity-wrapper span.table-loading {
+  cursor: default;
+  transition: none;
+  animation: ghi-logframe-loading 0.8s linear infinite;
+}
+.item-list--entity-logframe > .item-wrapper .entity-wrapper span.table-loading svg {
+  transform-box: fill-box;
+  transform-origin: center center;
 }
 
 .item-list--entity-logframe > .item-wrapper .entity-wrapper span.table-toggle.open {
@@ -105,6 +115,16 @@
 .item-list--entity-logframe > .item-wrapper .entity-wrapper.no-tables.no-alignment span.table-no-data {
   display: block;
   visibility: visible;
+}
+
+@keyframes ghi-logframe-loading {
+  0% {
+    transform: rotate(0deg);
+  }
+
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 .item-list--entity-logframe > .item-wrapper > .attachment-tables-wrapper {

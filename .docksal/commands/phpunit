@@ -21,7 +21,6 @@ if [[ ! -f "$phpunit_xml_path" ]]; then
 fi
 
 phpunit_path="vendor/bin/phpunit"
-paraunit_path="vendor/bin/paraunit"
 
 if [[ ! -f "$phpunit_path" ]]; then
   echo "Could not find $phpunit_path"
@@ -30,7 +29,6 @@ fi
 
 COVERAGE=false
 CLEAR_LOGS=false
-PARALLEL=true
 OPEN_VNC=false
 args=""
 while [ "$1" != "" ]; do
@@ -44,22 +42,12 @@ while [ "$1" != "" ]; do
     -v|---open-vnc)
       OPEN_VNC=true
       ;;
-    -s | --force-sequential)
-      PARALLEL=false
-      ;;
     *)
       args="$args $1"
       ;;
   esac
   shift
 done
-
-if $PARALLEL; then
-  if [[ ! -f "$paraunit_path" ]]; then
-    echo "Could not find $paraunit_path"
-    exit 1
-  fi
-fi
 
 timestamp=`date +%s`
 COVERAGE_FILE="$path/$DOCROOT/sites/simpletest/coverage/coverage-${timestamp}.cov"
@@ -79,12 +67,8 @@ if $OPEN_VNC; then
 fi
 
 # Always create a dedicated coverage file for each test run. They get later
-# merged together into an HTML report
-if $PARALLEL; then
-  fin exec "XDEBUG_MODE=coverage $path/${paraunit_path} coverage -c $path ${args} --php $COVERAGE_FILE"
-else
-  fin exec "XDEBUG_MODE=coverage $path/${phpunit_path} -c $path ${args} --coverage-php $COVERAGE_FILE"
-fi
+# merged together into an HTML report.
+fin exec "XDEBUG_MODE=coverage $path/${phpunit_path} -c $path ${args} --coverage-php $COVERAGE_FILE"
 
 # Create the HTML report.
 fin exec "phpcov merge --html $path/$DOCROOT/sites/simpletest/coverage-html $path/$DOCROOT/sites/simpletest/coverage"

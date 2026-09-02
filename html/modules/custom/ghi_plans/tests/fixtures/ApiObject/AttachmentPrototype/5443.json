@@ -1,0 +1,59 @@
+{
+  "Id": 5443,
+  "RefCode": "BF",
+  "Type": "caseLoad",
+  "Value": {
+    "hasMeasures": 1,
+    "measureFields": [
+      {
+        "name": {
+          "en": "Core Reached (periodical)"
+        },
+        "type": "periodicalReach"
+      },
+      {
+        "name": {
+          "en": "Core Reached (cumulative)"
+        },
+        "type": "cumulativeReach"
+      },
+      {
+        "name": {
+          "en": "Overall reached (periodical)"
+        },
+        "type": "optionOverallPeriodicalReach"
+      },
+      {
+        "name": {
+          "en": "Overall reached (cumulative)"
+        },
+        "type": "optionOverallCumulReach"
+      }
+    ],
+    "min": 0,
+    "max": 6,
+    "name": {
+      "en": "Caseload"
+    },
+    "metrics": [
+      {
+        "name": {
+          "en": "People in need"
+        },
+        "type": "inNeed"
+      },
+      {
+        "name": {
+          "en": "People targeted"
+        },
+        "type": "target"
+      }
+    ],
+    "entities": [
+      "CL"
+    ]
+  },
+  "PlanId": 1117,
+  "CreatedAt": "2022-09-28T10:09:09.000Z",
+  "UpdatedAt": "2024-09-13T17:07:39.000Z"
+}

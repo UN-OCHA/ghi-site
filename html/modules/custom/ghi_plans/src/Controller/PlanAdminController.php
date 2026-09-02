@@ -20,8 +20,8 @@ class PlanAdminController extends ControllerBase {
    * @return \Drupal\Core\Access\AccessResultInterface
    *   The access result.
    */
-  public function access(BaseObjectInterface $base_object) {
-    return AccessResult::allowedIf($base_object->bundle() == 'plan');
+  public function accessPlanStructure(BaseObjectInterface $base_object) {
+    return AccessResult::allowedIf($base_object->bundle() == 'plan')->andIf($base_object->access('update', NULL, TRUE));
   }
 
   /**

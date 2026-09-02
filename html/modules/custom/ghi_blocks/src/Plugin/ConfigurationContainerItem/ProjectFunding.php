@@ -4,21 +4,23 @@ namespace Drupal\ghi_blocks\Plugin\ConfigurationContainerItem;
 
 use Drupal\Component\Utility\Html;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\ghi_blocks\Traits\ConfigurationItemClusterRestrictTrait;
 use Drupal\ghi_blocks\Traits\ConfigurationItemValuePreviewTrait;
+use Drupal\ghi_form_elements\Attribute\ConfigurationContainerItem;
 use Drupal\ghi_form_elements\ConfigurationContainerItemPluginBase;
+use Drupal\ghi_plans\ApiObjects\Organization;
 use Drupal\hpc_common\Traits\RenderArrayTrait;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Provides project funding items for configuration containers.
- *
- * @ConfigurationContainerItem(
- *   id = "project_funding",
- *   label = @Translation("Project funding"),
- *   description = @Translation("This item displays project funding information."),
- * )
  */
+#[ConfigurationContainerItem(
+  id: 'project_funding',
+  label: new TranslatableMarkup('Project funding'),
+  description: new TranslatableMarkup('This item displays project funding information.'),
+)]
 class ProjectFunding extends ConfigurationContainerItemPluginBase {
 
   use ConfigurationItemClusterRestrictTrait;
@@ -35,7 +37,8 @@ class ProjectFunding extends ConfigurationContainerItemPluginBase {
   /**
    * {@inheritdoc}
    */
-  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition): ProjectFunding {
+    /** @var self $instance */
     $instance = parent::create($container, $configuration, $plugin_id, $plugin_definition);
     $instance->projectFundingQuery = $instance->endpointQueryManager->createInstance('plan_project_funding_query');
     return $instance;
@@ -108,9 +111,12 @@ class ProjectFunding extends ConfigurationContainerItemPluginBase {
     $value = NULL;
     switch ($data_type) {
       case 'original_requirements':
-      case 'current_requirements':
       case 'total_funding':
         $value = $this->projectFundingQuery->getSumForOrganization($data_type, $organization, $projects);
+        break;
+
+      case 'current_requirements':
+        $value = $this->getCurrentRequirementsForOrganization($organization, $projects);
         break;
 
       case 'coverage':
@@ -122,6 +128,27 @@ class ProjectFunding extends ConfigurationContainerItemPluginBase {
         break;
     }
     return $value;
+  }
+
+  /**
+   * Get the current requirements for an organization from loaded projects.
+   *
+   * @param \Drupal\ghi_plans\ApiObjects\Organization $organization
+   *   The organization to retrieve requirements for.
+   * @param \Drupal\ghi_plans\ApiObjects\Project[] $projects
+   *   The projects available in the current table context.
+   *
+   * @return float
+   *   The sum of the organization's current project requirements.
+   */
+  private function getCurrentRequirementsForOrganization(Organization $organization, array $projects): float {
+    $requirements = 0.0;
+    foreach ($projects as $project) {
+      if ($project->hasOrganization($organization)) {
+        $requirements += $project->getRequirements();
+      }
+    }
+    return $requirements;
   }
 
   /**

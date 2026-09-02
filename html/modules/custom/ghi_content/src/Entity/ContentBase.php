@@ -8,7 +8,6 @@ use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\Core\Field\EntityReferenceFieldItemListInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
-use Drupal\Core\Url;
 use Drupal\ghi_content\Controller\OrphanedContentController;
 use Drupal\ghi_content\Traits\ContentPathTrait;
 use Drupal\ghi_sections\Entity\ImageNodeInterface;
@@ -26,11 +25,22 @@ abstract class ContentBase extends Node implements NodeInterface, ImageNodeInter
   use ContentPathTrait;
 
   /**
-   * A context node. If set, this will change links created using toLink().
+   * A valid context node. If set, this will change links created using toUrl().
    *
-   * @var \Drupal\node\NodeInterface
+   * @var \Drupal\node\NodeInterface|null
    */
   protected $contextNode = NULL;
+
+  /**
+   * Whether a context node has already been resolved or explicitly rejected.
+   *
+   * This is intentionally separate from $contextNode. Invalid explicit context
+   * candidates are not stored as context nodes, but they still need to stop
+   * getContextNode() from falling back to the ambient route context.
+   *
+   * @var bool
+   */
+  protected $contextNodeResolved = FALSE;
 
   /**
    * {@inheritdoc}
@@ -124,20 +134,11 @@ abstract class ContentBase extends Node implements NodeInterface, ImageNodeInter
   }
 
   /**
-   * Set the given node as the current context.
+   * Set the given node as the current context if it is valid.
    *
-   * @param \Drupal\node\NodeInterface $node
-   *   The node to set as the current context.
-   */
-  public function setContextNode(NodeInterface $node) {
-    $this->contextNode = $node;
-  }
-
-  /**
-   * Set the given node as explicit context and report whether it is valid.
-   *
-   * Invalid explicit contexts are still stored as candidates so later
-   * getContextNode() calls do not fall back to ambient route context.
+   * Invalid explicit contexts are rejected instead of being stored, but the
+   * context is still marked as resolved so later getContextNode() calls do not
+   * silently replace that rejected context with the current route context.
    *
    * @param \Drupal\node\NodeInterface $node
    *   The node to set as the current context.
@@ -145,9 +146,25 @@ abstract class ContentBase extends Node implements NodeInterface, ImageNodeInter
    * @return bool
    *   TRUE if the node was accepted as context, FALSE otherwise.
    */
-  public function setContextNodeIfValid(NodeInterface $node): bool {
-    $this->setContextNode($node);
-    return $this->isValidContextNode($node);
+  public function setContextNode(NodeInterface $node): bool {
+    $this->contextNodeResolved = TRUE;
+    $this->contextNode = $this->getContentContextManager()->isValidContextNode($this, $node) ? $node : NULL;
+    return $this->contextNode !== NULL;
+  }
+
+  /**
+   * Set a context node whose relationship has already been proven by caller.
+   *
+   * Use this only when validating through isValidContextNode() would repeat
+   * the same relationship lookup, or recurse into the method currently
+   * materializing that relationship.
+   *
+   * @param \Drupal\node\NodeInterface $node
+   *   The known-valid context node.
+   */
+  public function setKnownValidContextNode(NodeInterface $node): void {
+    $this->contextNodeResolved = TRUE;
+    $this->contextNode = $node;
   }
 
   /**
@@ -157,16 +174,17 @@ abstract class ContentBase extends Node implements NodeInterface, ImageNodeInter
    *   The context node if set.
    */
   public function getContextNode() {
-    // Only derive section context when no explicit context candidate has been
-    // set. An invalid explicit candidate should return NULL instead of being
-    // replaced by ambient route context.
-    if (!$this->contextNode) {
-      $section = $this->getCurrentSectionNode();
-      if ($section && $this->isValidContextNode($section)) {
-        $this->setContextNode($section);
-      }
+    // Only derive section context when no explicit or ambient context has
+    // already been resolved. A rejected explicit context returns NULL instead
+    // of being replaced by the current route context.
+    if (!$this->contextNodeResolved) {
+      $this->contextNode = $this->getContentContextManager()->resolveAmbientContext($this);
+      $this->contextNodeResolved = TRUE;
     }
-    return $this->contextNode && $this->isValidContextNode($this->contextNode) ? $this->contextNode : NULL;
+    if ($this->contextNode && !$this->getContentContextManager()->isValidContextNode($this, $this->contextNode)) {
+      $this->contextNode = NULL;
+    }
+    return $this->contextNode;
   }
 
   /**
@@ -176,12 +194,7 @@ abstract class ContentBase extends Node implements NodeInterface, ImageNodeInter
    *   The page title.
    */
   public function getPageTitle() {
-    if ($context_node = $this->getContextNode()) {
-      return $context_node->label();
-    }
-    else {
-      return $this->label();
-    }
+    return $this->getContentContextManager()->getPageTitle($this);
   }
 
   /**
@@ -209,10 +222,7 @@ abstract class ContentBase extends Node implements NodeInterface, ImageNodeInter
    *   TRUE if the given node is a valid context, FALSE otherwise.
    */
   public function isValidContextNode($node) {
-    if ($node instanceof SectionNodeInterface) {
-      return $this->isPartOfSection($node);
-    }
-    return FALSE;
+    return $node instanceof NodeInterface ? $this->getContentContextManager()->isValidContextNode($this, $node) : FALSE;
   }
 
   /**
@@ -279,14 +289,8 @@ abstract class ContentBase extends Node implements NodeInterface, ImageNodeInter
   public function toUrl($rel = 'canonical', array $options = []) {
     // Views apparently uses 'revision' as a $rel when rendering linked titles.
     if (in_array($rel, ['canonical', 'revision']) && $context_node = $this->getContextNode()) {
-      $context_url = $context_node->toUrl()->toString();
-      $content_url = parent::toUrl($rel, ['absolute' => FALSE] + $options)->toString();
-      $url = Url::fromUserInput($context_url . $content_url);
-      // Prevent this being processed by the path alias manager.
-      $url->setOption('alias', TRUE);
-      // Set the custom path.
-      $url->setOption('custom_path', $context_url . $content_url);
-      return $url;
+      $content_url = parent::toUrl($rel, ['absolute' => FALSE] + $options);
+      return $this->getContentUrlBuilder()->build($content_url, $context_node);
     }
     return parent::toUrl($rel, $options);
   }
@@ -564,6 +568,26 @@ abstract class ContentBase extends Node implements NodeInterface, ImageNodeInter
    */
   protected static function getContentManagerFactory() {
     return \Drupal::service('ghi_content.manager.factory');
+  }
+
+  /**
+   * Get the content context manager.
+   *
+   * @return \Drupal\ghi_content\Context\ContentContextManager
+   *   The content context manager.
+   */
+  protected static function getContentContextManager() {
+    return \Drupal::service('ghi_content.content_context');
+  }
+
+  /**
+   * Get the contextual URL builder.
+   *
+   * @return \Drupal\ghi_content\Context\ContentUrlBuilder
+   *   The contextual URL builder.
+   */
+  protected static function getContentUrlBuilder() {
+    return \Drupal::service('ghi_content.content_url_builder');
   }
 
   /**

@@ -5,6 +5,7 @@ namespace Drupal\ghi_form_elements;
 use Drupal\Component\Plugin\PluginBase;
 use Drupal\Component\Utility\Html;
 use Drupal\Component\Utility\NestedArray;
+use Drupal\Core\Cache\Cache;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Form\SubformStateInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
@@ -54,6 +55,14 @@ abstract class ConfigurationContainerItemPluginBase extends PluginBase implement
   protected $entityTypeManager;
 
   /**
+   * The fabric query manager.
+   *
+   * @var \Drupal\hpc_api\Query\FabricQueryManager
+   *   The fabric query manager service.
+   */
+  protected $fabricQueryManager;
+
+  /**
    * The manager class for endpoint query plugins.
    *
    * @var \Drupal\hpc_api\Query\EndpointQueryManager
@@ -63,13 +72,10 @@ abstract class ConfigurationContainerItemPluginBase extends PluginBase implement
   /**
    * {@inheritdoc}
    */
-  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
-    $instance = new static(
-      $configuration,
-      $plugin_id,
-      $plugin_definition,
-    );
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition): ConfigurationContainerItemPluginBase {
+    $instance = new static($configuration, $plugin_id, $plugin_definition);
     $instance->entityTypeManager = $container->get('entity_type.manager');
+    $instance->fabricQueryManager = $container->get('plugin.manager.fabric_query_manager');
     $instance->endpointQueryManager = $container->get('plugin.manager.endpoint_query_manager');
     return $instance;
   }
@@ -180,9 +186,29 @@ abstract class ConfigurationContainerItemPluginBase extends PluginBase implement
    * {@inheritdoc}
    */
   public function getRenderArray() {
-    return [
+    $build = [
       '#markup' => $this->getValue(),
     ];
+    if ($cache_tags = $this->getCacheTags()) {
+      $build['#cache']['tags'] = Cache::mergeTags($build['#cache']['tags'] ?? [], $cache_tags);
+    }
+    return $build;
+  }
+
+  /**
+   * Apply this item's cache tags to a render array.
+   *
+   * @param array $build
+   *   The render array.
+   *
+   * @return array
+   *   The render array with cache tags applied.
+   */
+  protected function applyCacheTags(array $build): array {
+    if ($cache_tags = $this->getCacheTags()) {
+      $build['#cache']['tags'] = Cache::mergeTags($build['#cache']['tags'] ?? [], $cache_tags);
+    }
+    return $build;
   }
 
   /**
@@ -199,6 +225,16 @@ abstract class ConfigurationContainerItemPluginBase extends PluginBase implement
       'data-content' => $this->getLabel(),
       'class' => $this->getClasses(),
       'export_value' => $this->getSortableValue(),
+    ] + $this->getDataAttributes();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getDataAttributes() {
+    return [
+      'data-item-type' => $this->getPluginId(),
+      'data-raw-value' => $this->getSortableValue(),
     ];
   }
 

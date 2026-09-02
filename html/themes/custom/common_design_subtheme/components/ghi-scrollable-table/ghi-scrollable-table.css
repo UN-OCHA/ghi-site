@@ -86,8 +86,8 @@
 }
 
 .project-count-modal--projects.ghi-modal-dialog .table-wrapper {
-  max-height: min(70vh, 42rem);
   overflow: auto;
+  max-height: min(70vh, 42rem);
 }
 
 .project-count-modal--projects.ghi-modal-dialog .scrollable-table--wrapper > .shadow-left,

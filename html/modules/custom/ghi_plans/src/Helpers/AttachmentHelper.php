@@ -4,16 +4,17 @@ namespace Drupal\ghi_plans\Helpers;
 
 use Drupal\ghi_plans\ApiObjects\Attachments\AttachmentInterface;
 use Drupal\ghi_plans\ApiObjects\Attachments\CaseloadAttachment;
-use Drupal\ghi_plans\ApiObjects\Attachments\ContactAttachment;
-use Drupal\ghi_plans\ApiObjects\Attachments\FileAttachment;
+use Drupal\ghi_plans\ApiObjects\Attachments\CostAttachment;
 use Drupal\ghi_plans\ApiObjects\Attachments\IndicatorAttachment;
-use Drupal\ghi_plans\ApiObjects\Attachments\TextAttachment;
 use Drupal\ghi_plans\Exceptions\InvalidAttachmentTypeException;
+use Drupal\ghi_plans\Traits\PlanQueryTrait;
 
 /**
  * Helper class for mapping attachment objects.
  */
 class AttachmentHelper {
+
+  use PlanQueryTrait;
 
   /**
    * Process an array of attachments.
@@ -28,7 +29,11 @@ class AttachmentHelper {
     $processed = [];
     foreach ($attachments as $attachment) {
       try {
-        $processed[$attachment->id] = self::processAttachment($attachment);
+        $attachment_object = self::processAttachment($attachment);
+        if (!$attachment_object) {
+          continue;
+        }
+        $processed[$attachment_object->id()] = $attachment_object;
       }
       catch (InvalidAttachmentTypeException $e) {
         // Ignore this for the moment.
@@ -50,24 +55,20 @@ class AttachmentHelper {
    *   For unsupported attachment types, an Exception is thrown.
    */
   public static function processAttachment(object $attachment) {
-    switch (strtolower($attachment->type)) {
+    $attachment_type = $attachment->AttachmentType;
+    switch (strtolower($attachment_type)) {
       case 'caseload':
         return new CaseloadAttachment($attachment);
 
       case 'indicator':
         return new IndicatorAttachment($attachment);
 
-      case 'filewebcontent':
-        return new FileAttachment($attachment);
-
-      case 'textwebcontent':
-        return new TextAttachment($attachment);
-
-      case 'contact':
-        return new ContactAttachment($attachment);
+      case 'cost':
+      case 'financial':
+        return new CostAttachment($attachment);
 
       default:
-        throw new InvalidAttachmentTypeException(sprintf('Unknown attachment type: %s', $attachment->type));
+        throw new InvalidAttachmentTypeException(sprintf('Unknown attachment type: %s', $attachment_type));
     }
   }
 
@@ -99,13 +100,13 @@ class AttachmentHelper {
   public static function getCustomAttachmentId(AttachmentInterface $attachment, $id_type) {
     switch ($id_type) {
       case 'custom_id':
-        return $attachment->custom_id;
+        return $attachment->getCustomId();
 
       case 'custom_id_prefixed_refcode':
-        return $attachment->custom_id_prefixed_refcode;
+        return $attachment->getCustomIdWithRefCode();
 
       case 'composed_reference':
-        return $attachment->composed_reference;
+        return $attachment->getComposedReference();
     }
   }
 

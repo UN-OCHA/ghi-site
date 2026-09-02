@@ -4,6 +4,7 @@ namespace Drupal\ghi_menu\Plugin\Block;
 
 use Drupal\Component\Plugin\Exception\PluginException;
 use Drupal\Component\Utility\Html;
+use Drupal\Core\Block\Attribute\Block;
 use Drupal\Core\Block\BlockBase;
 use Drupal\Core\Cache\Cache;
 use Drupal\Core\Form\FormState;
@@ -16,16 +17,16 @@ use Drupal\Core\Render\Element\VerticalTabs;
 use Drupal\ghi_blocks\Traits\VerticalTabsTrait;
 use Drupal\menu_link_content\Plugin\Menu\MenuLinkContent;
 use Symfony\Component\DependencyInjection\ContainerInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 
 /**
  * Provides a 'MegaMenuBlock' block.
- *
- * @Block(
- *  id = "mega_menu_block",
- *  admin_label = @Translation("Show a menu as a single mega menu"),
- *  category = @Translation("Menus"),
- * )
  */
+#[Block(
+  id: 'mega_menu_block',
+  admin_label: new TranslatableMarkup('Show a menu as a single mega menu'),
+  category: new TranslatableMarkup('Menus')
+)]
 class MegaMenuBlock extends BlockBase implements ContainerFactoryPluginInterface {
 
   use VerticalTabsTrait;

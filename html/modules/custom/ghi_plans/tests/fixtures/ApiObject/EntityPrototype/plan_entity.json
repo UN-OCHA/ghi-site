@@ -1,0 +1,20 @@
+{
+  "Id": 4254,
+  "RefCode": "SO",
+  "Type": "PE",
+  "Value": {
+    "name": {
+      "en": {
+        "singular": "Strategic Objective",
+        "plural": "Strategic Objectives"
+      }
+    },
+    "description": {
+      "en": "Add the Strategic Objectives below, including which Humanitarian Condition(s) each one will address. Use the Add Caseload button to add People in Need \\/ People Targeted for each Objective. Use the Add indicators button to add one or more Indicators to each Objective."
+    }
+  },
+  "PlanId": 1263,
+  "OrderNumber": 0,
+  "CreatedAt": "2024-10-07T11:40:07.000Z",
+  "UpdatedAt": "2024-10-07T11:40:07.000Z"
+}

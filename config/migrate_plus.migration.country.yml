@@ -10,42 +10,39 @@ class: null
 field_plugin_method: null
 cck_plugin_method: null
 migration_tags:
-  - 'HPC API'
+  - 'HPC Fabric'
 migration_group: hpc_api_data
-label: 'Countries from the HPC API'
+label: 'Countries from the HPC Fabric API'
 source:
   include_raw_data: true
   track_changes: true
-  endpoints:
-    -
-      endpoint: 'fts/location/autocomplete/%25%25%25?adminLevel=0'
-      api_version: v2
-  item_selector: data
+  fabric_query:
+    plugin: country_import
   fields:
     -
       name: original_id
       label: 'Unique plan ID'
-      selector: id
+      selector: Id
     -
       name: name
       label: 'Name of the country'
-      selector: name
+      selector: Name
     -
       name: latitude
       label: 'The latitude of the country'
-      selector: latitude
+      selector: Latitude
     -
       name: longitude
       label: 'The longitude of the country'
-      selector: longitude
+      selector: Longitude
     -
       name: pcode
       label: 'The pcode of the country'
-      selector: pcode
+      selector: Pcode
     -
       name: iso3
       label: 'The iso3 code of the country'
-      selector: iso3
+      selector: ISO3
   ids:
     original_id:
       type: integer

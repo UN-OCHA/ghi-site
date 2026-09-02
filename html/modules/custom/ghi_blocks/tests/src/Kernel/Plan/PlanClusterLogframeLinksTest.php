@@ -57,10 +57,6 @@ class PlanClusterLogframeLinksTest extends PlanBlockKernelTestBase {
     $this->assertInstanceOf(PlanClusterLogframeLinks::class, $plugin);
     $this->assertInstanceOf(OverrideDefaultTitleBlockInterface::class, $plugin);
     $this->assertEquals('Cluster Frameworks', $plugin->label());
-
-    $admin_icons = $plugin->getAdminIcons();
-    $this->assertCount(1, $admin_icons);
-    $this->assertArrayHasKey('configuration', $admin_icons);
   }
 
   /**
@@ -93,7 +89,6 @@ class PlanClusterLogframeLinksTest extends PlanBlockKernelTestBase {
     $this->createContentType(['type' => 'page']);
     $node = Node::create(['type' => 'page', 'title' => 'Page']);
     $node->save();
-    // $plan_cluster = $this->createPlanCluster($section_node);
     $plugin->setContextValue('node', $node);
     $this->assertNull($this->callPrivateMethod($plugin, 'getRenderableEntities'));
   }

@@ -2,45 +2,180 @@
 
 namespace Drupal\ghi_plans\ApiObjects;
 
-use Drupal\ghi_base_objects\ApiObjects\BaseObject;
 use Drupal\ghi_plans\ApiObjects\Partials\PlanProjectCluster;
+use Drupal\hpc_api\ApiObjects\ApiObjectBase;
 use Drupal\hpc_api\Traits\SimpleCacheTrait;
 
 /**
  * Abstraction class for API project objects.
  */
-class Project extends BaseObject {
+class Project extends ApiObjectBase {
 
   use SimpleCacheTrait;
 
   /**
-   * Map the raw data.
+   * The name.
    *
-   * @return object
-   *   An object with the mapped data.
+   * @var string
    */
-  protected function map() {
-    $data = $this->getRawData();
+  protected string $name;
 
-    // Extract the clusters.
-    $clusters = [];
-    foreach ($data->governingEntities ?? [] as $governing_entity) {
-      $project_cluster = new PlanProjectCluster($governing_entity);
-      $clusters[$project_cluster->id()] = $project_cluster;
-    }
+  /**
+   * The code.
+   *
+   * @var string
+   */
+  protected string $code;
 
-    return (object) [
-      'id' => $data->id,
-      'name' => $data->name,
-      'version_code' => $data->versionCode,
-      'clusters' => $clusters,
-      'published' => !empty($data->currentPublishedVersionId),
-      'requirements' => $data->currentRequestedFunds,
-      'location_ids' => $data->locationIds->ids ?? [],
-      'target' => !empty($data->targets) ? array_sum(array_map(function ($item) {
-        return $item->total;
-      }, $data->targets)) : 0,
-    ];
+  /**
+   * The plan id.
+   *
+   * @var int|null
+   */
+  protected ?int $planId;
+
+  /**
+   * The clusters.
+   *
+   * @var \Drupal\ghi_plans\ApiObjects\Partials\PlanProjectCluster[]|null
+   */
+  protected array $clusters;
+
+  /**
+   * Whether the project is published.
+   *
+   * @var bool
+   */
+  protected bool $published;
+
+  /**
+   * The requirements.
+   *
+   * @var float
+   */
+  protected float $requirements;
+
+  /**
+   * The target.
+   *
+   * @var float
+   */
+  protected float $target;
+
+  /**
+   * The location ids.
+   *
+   * @var array
+   */
+  protected array $locationIds;
+
+  /**
+   * The organizations.
+   *
+   * @var array
+   */
+  protected array $organizations;
+
+  /**
+   * Define the dimension items used in queries.
+   */
+  const GRAPHQL_ITEMS = [
+    'Id',
+    'Name',
+    'ProjectCode',
+    'Description',
+    'StartDate',
+    'EndDate',
+    'IsPublished',
+    'Objective',
+    'ImplementingPartners',
+    'ImplementationStatus',
+    'TotalProjectTarget',
+    'CurrentRequestedFunds',
+    'PlanId',
+    'CreatedAt',
+    'UpdatedAt',
+    // phpcs:disable Squiz.Arrays.ArrayDeclaration.KeySpecified
+    'coordinationEntity' => ['items' => PlanProjectCluster::GRAPHQL_ITEMS],
+    'organization' => ['items' => Organization::GRAPHQL_ITEMS],
+    'location' => ['items' => ['Id']],
+    // phpcs:enable Squiz.Arrays.ArrayDeclaration.KeySpecified
+  ];
+
+  /**
+   * {@inheritdoc}
+   */
+  public function __construct($data) {
+    parent::__construct($data);
+    $this->name = $data->Name;
+    $this->code = (string) $data->ProjectCode;
+    $this->planId = $data->PlanId !== NULL ? (int) $data->PlanId : NULL;
+    $this->clusters = $data->clusters ?? [];
+    $this->published = !empty($data->IsPublished);
+    $this->target = (float) $data->TotalProjectTarget ?? 0;
+    $this->requirements = (float) $data->CurrentRequestedFunds ?? 0;
+    $this->locationIds = $data->locationIds ?? [];
+    $this->organizations = $data->organizations ?? [];
+  }
+
+  /**
+   * Get the name.
+   *
+   * @return string
+   *   The name.
+   */
+  public function getName(): string {
+    return $this->name;
+  }
+
+  /**
+   * Get the plan id.
+   *
+   * @return int|null
+   *   The plan id.
+   */
+  public function getPlanId(): ?int {
+    return $this->planId;
+  }
+
+  /**
+   * Get the project code.
+   *
+   * @return string
+   *   The project code.
+   */
+  public function getProjectCode(): string {
+    return $this->code;
+  }
+
+  /**
+   * Whether the project is published or not.
+   *
+   * @return bool
+   *   TRUE if the project is published, FALSE otherwise.
+   */
+  public function isPublished(): bool {
+    return $this->published;
+  }
+
+  /**
+   * Get the target.
+   *
+   * @return float
+   *   The project target.
+   */
+  public function getTarget(): float {
+    return $this->target;
+  }
+
+  /**
+   * Get the requirements.
+   *
+   * @return float
+   *   The project requirements.
+   */
+  public function getRequirements(): float {
+    return $this->requirements;
   }
 
   /**
@@ -49,33 +184,8 @@ class Project extends BaseObject {
    * @return \Drupal\ghi_plans\ApiObjects\Organization[]
    *   An array of processed organization objects.
    */
-  public function getOrganizations() {
-    $cache_key = $this->getCacheKey(['project_id' => $this->id()]);
-    $processed_organizations = $this->cache($cache_key);
-    if ($processed_organizations) {
-      return $processed_organizations;
-    }
-
-    $data = $this->getRawData();
-    $processed_organizations = [];
-    // First find the organizations. There are 2 ways.
-    $project_organizations = !empty($data->organizations) ? $data->organizations : [];
-    if (property_exists($data, 'projectVersions')) {
-      $project_version = array_filter($data->projectVersions, function ($item) use ($data) {
-        return $item->id == $data->currentPublishedVersionId && !empty($item->organizations);
-      });
-      $project_organizations = $project_version->organizations;
-    }
-
-    // Now process the organizations.
-    foreach ($project_organizations as $organization) {
-      if (!empty($processed_organizations[$organization->id])) {
-        continue;
-      }
-      $processed_organizations[$organization->id] = new Organization($organization);
-    }
-    $this->cache($cache_key, $processed_organizations, FALSE, NULL, $this->getCacheTags());
-    return $processed_organizations;
+  public function getOrganizations(): array {
+    return array_filter($this->organizations ?? [], fn ($item) => is_object($item) && $item instanceof Organization);
   }
 
   /**
@@ -84,8 +194,8 @@ class Project extends BaseObject {
    * @return \Drupal\ghi_plans\ApiObjects\Partials\PlanProjectCluster[]
    *   An array of clusters for this project.
    */
-  public function getClusters() {
-    return $this->clusters ?? [];
+  public function getClusters(): array {
+    return array_filter($this->clusters ?? [], fn ($item) => is_object($item) && $item instanceof PlanProjectCluster);
   }
 
   /**
@@ -94,7 +204,7 @@ class Project extends BaseObject {
    * @return int[]
    *   An array of cluster ids for this project.
    */
-  public function getClusterIds() {
+  public function getClusterIds(): array {
     return array_keys($this->getClusters() ?? []);
   }
 
@@ -104,8 +214,8 @@ class Project extends BaseObject {
    * @return int[]
    *   An array of location ids for this project.
    */
-  public function getLocationIds() {
-    return $this->location_ids;
+  public function getLocationIds(): array {
+    return $this->locationIds ?? [];
   }
 
   /**
@@ -118,9 +228,9 @@ class Project extends BaseObject {
    *   TRUE if the current project lists the given organization, FALSE
    *   otherwise.
    */
-  public function hasOrganization(Organization $organization) {
+  public function hasOrganization(Organization $organization): bool {
     $organizations = $this->getOrganizations();
-    return array_key_exists($organization->id, $organizations);
+    return array_key_exists($organization->id(), $organizations);
   }
 
 }

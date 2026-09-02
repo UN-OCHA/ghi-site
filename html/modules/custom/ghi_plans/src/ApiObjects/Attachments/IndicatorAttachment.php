@@ -5,7 +5,7 @@ namespace Drupal\ghi_plans\ApiObjects\Attachments;
 /**
  * Abstraction for API data attachment objects.
  */
-class IndicatorAttachment extends DataAttachment {
+class IndicatorAttachment extends Attachment {
 
   /**
    * Define calculation methods.
@@ -21,15 +21,15 @@ class IndicatorAttachment extends DataAttachment {
   /**
    * {@inheritdoc}
    */
-  public function getSingleValue($index, ?array $reporting_periods = NULL, $data_point_conf = []) {
+  public function getSingleValue(string $metric_type, ?array $reporting_periods = NULL, $data_point_conf = []) {
     $monitoring_period = $data_point_conf['monitoring_period'] ?? 'latest';
     $reporting_periods = $this->getReportingPeriods($reporting_periods, $monitoring_period);
-    if (!$this->isApiCalculated($index, $data_point_conf)) {
+    if (!$this->isApiCalculated($metric_type, $data_point_conf)) {
       $monitoring_period = !empty($reporting_periods) ? array_key_last($reporting_periods) : $monitoring_period;
-      return $this->getValueForDataPoint($index, $monitoring_period);
+      return $this->getValueByMetricType($metric_type, $monitoring_period);
     }
     $value = NULL;
-    $values = $this->getValuesForAllReportingPeriods($index, FALSE, TRUE, $reporting_periods);
+    $values = $this->getValuesForAllReportingPeriods($metric_type, FALSE, TRUE, $reporting_periods);
     if (empty($values)) {
       return $value;
     }
@@ -61,8 +61,8 @@ class IndicatorAttachment extends DataAttachment {
    *   The calculation method as a string.
    */
   public function getCalculationMethod() {
-    $calculation_method = $this->calculation_method;
-    $prototype = $this->getPrototypeData();
+    $calculation_method = $this->calculationMethod;
+    $prototype = $this->getPrototype();
     $available_methods = $prototype->getCalculationMethods();
     return in_array($calculation_method, $available_methods) ? $calculation_method : self::CALCULATION_METHOD_LATEST;
   }
@@ -73,6 +73,13 @@ class IndicatorAttachment extends DataAttachment {
   public function getTooltip($conf) {
     $tooltip = parent::getTooltip($conf);
 
+    $this->handleKnownConfigIssues($conf);
+
+    $metric_type = $conf['data_points'][0]['metric_type'] ?? NULL;
+    if (empty($metric_type)) {
+      return $tooltip;
+    }
+
     // Get the last published monitoring period based on the selected periods
     // if any.
     $monitoring_period = $conf['data_points'][0]['monitoring_period'] ?? 'latest';
@@ -82,8 +89,7 @@ class IndicatorAttachment extends DataAttachment {
       return $tooltip;
     }
 
-    $index = $conf['data_points'][0]['index'];
-    $value = $this->getSingleValue($index, NULL, $conf['data_points'][0]);
+    $value = $this->getSingleValue($metric_type, NULL, $conf['data_points'][0]);
 
     if ($this->isNullValue($value)) {
       return $tooltip;
@@ -95,7 +101,7 @@ class IndicatorAttachment extends DataAttachment {
       $tooltip['monitoring_period'] = $this->formatMonitoringPeriod('icon', $last_reporting_period->id(), 'as of date @end_date', ['langcode' => $this->getPlanLanguage()]);
     }
 
-    if ($this->isApiCalculated($index, $conf['data_points'][0]) && $conf['processing'] != 'calculated') {
+    if ($this->isApiCalculated($metric_type, $conf['data_points'][0]) && $conf['processing'] != 'calculated') {
       $tooltip = [
         'monitoring_period' => $this->formatCalculationTooltip($last_reporting_period),
       ] + $tooltip;
@@ -159,20 +165,24 @@ class IndicatorAttachment extends DataAttachment {
   /**
    * See if the attachment value uses a calculation method from the API.
    *
-   * @param int $index
-   *   The data point index.
+   * @param string $metric_type
+   *   The data point metric type.
    * @param array $data_point_conf
    *   Array with configuration for the specific data point to show.
    *
    * @return bool
    *   TRUE if a calculation method from the API is used, FALSE otherwise.
    */
-  private function isApiCalculated($index, $data_point_conf) {
-    if (array_key_exists('use_calculation_method', $data_point_conf) && $data_point_conf['use_calculation_method'] == FALSE) {
+  private function isApiCalculated(string $metric_type, $data_point_conf) {
+    $use_calculation_method = TRUE;
+    if (array_key_exists('use_calculation_method', $data_point_conf)) {
+      $use_calculation_method = $data_point_conf['use_calculation_method'] != FALSE;
+    }
+    if (!$use_calculation_method) {
       return FALSE;
     }
     $calculation_method = $this->getCalculationMethod();
-    return $this->isMeasurementIndex($index) && $calculation_method && $this->isValidCalculatedMethod($calculation_method);
+    return $this->isMeasurementField($metric_type) && $calculation_method && $this->isValidCalculatedMethod($calculation_method);
   }
 
   /**

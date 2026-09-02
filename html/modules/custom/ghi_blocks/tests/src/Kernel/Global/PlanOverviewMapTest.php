@@ -6,6 +6,8 @@ use Drupal\Core\Form\FormState;
 use Drupal\Core\Plugin\Context\Context;
 use Drupal\Core\Plugin\Context\ContextDefinition;
 use Drupal\Core\Render\Markup;
+use Drupal\ghi_blocks\Interfaces\LazyMapBlockInterface;
+use Drupal\ghi_blocks\Map\MapPayload;
 use Drupal\ghi_blocks\Plugin\Block\GlobalPage\PlanOverviewMap;
 use Drupal\ghi_plans\ApiObjects\Partials\PlanOverviewPlan;
 use Drupal\ghi_plans\Entity\PlanType;
@@ -27,6 +29,7 @@ class PlanOverviewMapTest extends PlanBlockKernelTestBase {
   public function testBlockPluginInstantiation() {
     $plugin = $this->getBlockPlugin();
     $this->assertInstanceOf(PlanOverviewMap::class, $plugin);
+    $this->assertInstanceOf(LazyMapBlockInterface::class, $plugin);
   }
 
   /**
@@ -39,10 +42,14 @@ class PlanOverviewMapTest extends PlanBlockKernelTestBase {
     $this->assertEquals('global_plan_overview_map', $definition['id']);
     $this->assertEquals('Plan overview map', (string) $definition['admin_label']);
     $this->assertEquals('Global', (string) $definition['category']);
-    $this->assertArrayHasKey('data_sources', $definition);
-    $this->assertArrayHasKey('plans', $definition['data_sources']);
-    $this->assertArrayHasKey('locations', $definition['data_sources']);
-    $this->assertArrayHasKey('countries', $definition['data_sources']);
+
+    $metadata = $plugin->metadata();
+    $this->assertIsArray($metadata->dataSources);
+
+    $data_sources = $metadata->dataSources;
+    $this->assertArrayHasKey('plans_overview', $data_sources);
+    $this->assertArrayHasKey('plan', $data_sources);
+    $this->assertArrayHasKey('country', $data_sources);
   }
 
   /**
@@ -70,7 +77,7 @@ class PlanOverviewMapTest extends PlanBlockKernelTestBase {
       $this->mockPlan()->reveal(),
       $this->mockPlan()->reveal(),
     ];
-    $this->mockPlanOverviewQuery($plugin, $plans, 2024);
+    $this->mockPlanOverviewQuery($plugin, $plans);
 
     $build = $plugin->buildContent();
 
@@ -81,8 +88,13 @@ class PlanOverviewMapTest extends PlanBlockKernelTestBase {
     $this->assertArrayHasKey('#map_type', $build);
     $this->assertArrayHasKey('#map_tabs', $build);
     $this->assertArrayHasKey('#cache', $build);
-    $this->assertNotEmpty($build['#attached']['drupalSettings']['plan_overview_map'][$build['#chart_id']]['json']);
-    $data = $build['#attached']['drupalSettings']['plan_overview_map'][$build['#chart_id']]['json'];
+    $settings = $build['#attached']['drupalSettings']['plan_overview_map'][$build['#chart_id']];
+    $this->assertArrayNotHasKey('json', $settings);
+    $this->assertNotEmpty($settings['data_url']);
+
+    $data_settings = $plugin->buildMapDataSettings($build['#chart_id']);
+    $this->assertNotEmpty($data_settings['map']['json']);
+    $data = $data_settings['map']['json'];
     $tabs = array_keys($data);
     $this->assertCount(count($tabs), $build['#map_tabs']['#items']);
     foreach ($data as $tab_data) {
@@ -100,15 +112,16 @@ class PlanOverviewMapTest extends PlanBlockKernelTestBase {
     $plugin = $this->getBlockPlugin();
 
     // Mock the getPlans method to return empty array.
-    $plans_query = $this->prophesize('\Drupal\ghi_plans\Plugin\EndpointQuery\PlanOverviewQuery');
+    $plans_query = $this->prophesize('\Drupal\ghi_plans\Plugin\FabricQuery\PlanOverviewQuery');
+    $plans_query->setYear(2024);
     $plans_query->getPlans()->willReturn([]);
-    $plans_query->setPlaceholder('year', '2024')->shouldBeCalled();
 
     // Set the mocked query handler.
     $reflection = new \ReflectionClass($plugin);
     $property = $reflection->getProperty('queryHandlers');
-    $property->setAccessible(TRUE);
-    $property->setValue($plugin, ['plans' => $plans_query->reveal()]);
+    $property->setValue($plugin, [
+      'plans_overview' => $plans_query->reveal(),
+    ]);
 
     $build = $plugin->buildContent();
 
@@ -119,8 +132,13 @@ class PlanOverviewMapTest extends PlanBlockKernelTestBase {
     $this->assertArrayHasKey('#map_type', $build);
     $this->assertArrayHasKey('#map_tabs', $build);
     $this->assertArrayHasKey('#cache', $build);
-    $this->assertNotEmpty($build['#attached']['drupalSettings']['plan_overview_map'][$build['#chart_id']]['json']);
-    $data = $build['#attached']['drupalSettings']['plan_overview_map'][$build['#chart_id']]['json'];
+    $settings = $build['#attached']['drupalSettings']['plan_overview_map'][$build['#chart_id']];
+    $this->assertArrayNotHasKey('json', $settings);
+    $this->assertNotEmpty($settings['data_url']);
+
+    $data_settings = $plugin->buildMapDataSettings($build['#chart_id']);
+    $this->assertNotEmpty($data_settings['map']['json']);
+    $data = $data_settings['map']['json'];
     $tabs = array_keys($data);
     $this->assertCount(count($tabs), $build['#map_tabs']['#items']);
     foreach ($data as $tab_data) {
@@ -135,6 +153,13 @@ class PlanOverviewMapTest extends PlanBlockKernelTestBase {
    */
   public function testBlockBuildWithValidConfiguration() {
     $plugin = $this->getBlockPlugin();
+
+    $plans = [
+      $this->mockPlan()->reveal(),
+      $this->mockPlan()->reveal(),
+    ];
+    $this->mockPlanOverviewQuery($plugin, $plans);
+
     $build = $plugin->buildContent();
 
     $this->assertIsArray($build);
@@ -145,6 +170,15 @@ class PlanOverviewMapTest extends PlanBlockKernelTestBase {
     $this->assertArrayHasKey('library', $build['#attached']);
     $this->assertArrayHasKey('drupalSettings', $build['#attached']);
     $this->assertContains('ghi_blocks/map.gl.plan_overview', $build['#attached']['library']);
+    $settings = $build['#attached']['drupalSettings']['plan_overview_map'][$build['#chart_id']];
+    $this->assertArrayHasKey('data_url', $settings);
+    $this->assertStringContainsString('/map-data/global_plan_overview_map/block_uuid', $settings['data_url']);
+    $this->assertArrayNotHasKey('mapbox', $build['#attached']['drupalSettings']);
+    $this->assertArrayNotHasKey('map_config', $build['#attached']['drupalSettings']);
+
+    $payload = $plugin->buildLazyMapPayload($build['#chart_id']);
+    $this->assertInstanceOf(MapPayload::class, $payload);
+    $this->assertEquals('plan_overview_map', $payload->getMap()['settings_key']);
   }
 
   /**
@@ -160,7 +194,7 @@ class PlanOverviewMapTest extends PlanBlockKernelTestBase {
       $this->mockPlan()->reveal(),
       $this->mockPlan()->reveal(),
     ];
-    $this->mockPlanOverviewQuery($plugin, $plans, 2024);
+    $this->mockPlanOverviewQuery($plugin, $plans);
 
     // Test default cache tags.
     $cache_tags = $plugin->getCacheTags();
@@ -169,12 +203,14 @@ class PlanOverviewMapTest extends PlanBlockKernelTestBase {
     // The cache tags should include the block plugin's cache tags.
     $expected_tags = [
       'global_plan_overview_map:block_uuid',
-      'plan:1',
-      'plan:2',
     ];
     foreach ($expected_tags as $tag) {
       $this->assertContains($tag, $cache_tags);
     }
+
+    $data_settings = $plugin->buildMapDataSettings('plan-overview-map-test');
+    $this->assertContains('plan:1', $data_settings['cache_tags']);
+    $this->assertContains('plan:2', $data_settings['cache_tags']);
   }
 
   /**
@@ -230,6 +266,11 @@ class PlanOverviewMapTest extends PlanBlockKernelTestBase {
    */
   public function testBuildLegendItems() {
     $plugin = $this->getBlockPlugin();
+    $plans = [
+      $this->mockPlan()->reveal(),
+      $this->mockPlan()->reveal(),
+    ];
+    $this->mockPlanOverviewQuery($plugin, $plans);
 
     $legend = $this->callPrivateMethod($plugin, 'buildLegendItems');
 
@@ -272,7 +313,11 @@ class PlanOverviewMapTest extends PlanBlockKernelTestBase {
       'year' => new Context(new ContextDefinition('string'), '2024'),
     ];
 
-    return $this->createBlockPlugin('global_plan_overview_map', $configuration, $contexts);
+    $plugin = $this->createBlockPlugin('global_plan_overview_map', $configuration, $contexts);
+    $plugin_configuration = $plugin->getConfiguration();
+    $plugin_configuration['uuid'] = 'block_uuid';
+    $plugin->setConfiguration($plugin_configuration);
+    return $plugin;
   }
 
   /**
@@ -315,14 +360,14 @@ class PlanOverviewMapTest extends PlanBlockKernelTestBase {
     $plan->id()->willReturn($id);
     $plan->getName()->willReturn($plan_name);
     $plan->getEntity()->willReturn($plan_entity->reveal());
-    $plan->getFunding()->willReturn(1000000);
     $plan->getRequirements()->willReturn(2000000);
-    $plan->getCaseloadValue('inNeed')->willReturn(100000);
-    $plan->getCaseloadValue('target')->willReturn(80000);
-    $plan->getCaseloadValue('latestReach')->willReturn(60000);
-    $plan->getCaseloadValue('expectedReach')->willReturn(70000);
-    $plan->getCaseloadValue('totalPopulation')->willReturn(150000);
+    $plan->getFunding()->willReturn(1000000);
     $plan->getCoverage()->willReturn(0.5);
+    $plan->getCaseloadValue('in_need')->willReturn(100000);
+    $plan->getCaseloadValue('target')->willReturn(80000);
+    $plan->getCaseloadValue('latest_reach')->willReturn(60000);
+    $plan->getCaseloadValue('expected_reach')->willReturn(70000);
+    $plan->getCaseloadValue('total_population', 'Population')->willReturn(150000);
     $plan->getPlanType()->willReturn($plan_type->reveal());
     $plan->getTypeName()->willReturn('Humanitarian Response Plan');
     $plan->getTypeShortName()->willReturn('HRP');
@@ -344,24 +389,22 @@ class PlanOverviewMapTest extends PlanBlockKernelTestBase {
    *   The PlanOverviewMap plugin instance.
    * @param array $plans
    *   An array of mocked plans.
-   * @param int $year
-   *   The year used in the query placeholder.
    */
-  private function mockPlanOverviewQuery(PlanOverviewMap $plugin, array $plans, int $year) {
+  private function mockPlanOverviewQuery(PlanOverviewMap $plugin, array $plans) {
     $plan_ids = array_map(function ($plan) {
       return $plan->id();
     }, $plans);
 
     // Mock the getPlans method to return empty array.
-    $plans_query = $this->prophesize('\Drupal\ghi_plans\Plugin\EndpointQuery\PlanOverviewQuery');
+    $plans_query = $this->prophesize('\Drupal\ghi_plans\Plugin\FabricQuery\PlanOverviewQuery');
     $plans_query->getPlans()->willReturn(array_combine($plan_ids, $plans));
-    $plans_query->setPlaceholder('year', $year)->shouldBeCalled();
 
     // Set the mocked query handler.
     $reflection = new \ReflectionClass($plugin);
     $property = $reflection->getProperty('queryHandlers');
-    $property->setAccessible(TRUE);
-    $property->setValue($plugin, ['plans' => $plans_query->reveal()]);
+    $property->setValue($plugin, [
+      'plans_overview' => $plans_query->reveal(),
+    ]);
   }
 
 }

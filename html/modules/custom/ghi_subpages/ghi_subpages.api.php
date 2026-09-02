@@ -40,7 +40,7 @@ function hook_custom_subpages_alter(array &$subpages, NodeInterface $node, NodeT
  * Allow to alter the node that is used as a base type node for the given node.
  *
  * @param \Drupal\node\NodeInterface|null $base_type_node
- *   A base type node or null if non has been determined yet.
+ *   A base type node or NULL if non has been determined yet.
  * @param \Drupal\node\NodeInterface $node
  *   The node object for which to find the base node.
  */

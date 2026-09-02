@@ -8,7 +8,7 @@
   display: block;
   width: 20px;
   height: 20px;
-  background-image: url("https://fonts.gstatic.com/s/i/short-term/release/materialsymbolsoutlined/download/default/20px.svg");
+  background-image: url("../img/icons/material-symbol-download.svg");
   background-repeat: no-repeat;
 }
 
@@ -28,12 +28,17 @@ tbody td {
     width: 2rem;
     height: 1rem;
 
-    svg {
+    svg,
+    .cluster-icon__image {
       position: relative;
       top: 10%;
       left: 0;
       width: 1.2rem;
       height: 1.2rem;
+    }
+
+    .cluster-icon__image {
+      object-fit: contain;
     }
   }
 }

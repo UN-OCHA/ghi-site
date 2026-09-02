@@ -124,10 +124,10 @@ class GeoJsonSourcesController extends ControllerBase {
    * @param string $version
    *   The version to be viewed.
    *
-   * @return array
+   * @return \Symfony\Component\HttpFoundation\Response|\Symfony\Component\HttpFoundation\BinaryFileResponse
    *   A render array with the page content.
    */
-  public function directoryDownload(string $iso3, string $version) {
+  public function directoryDownload(string $iso3, string $version): Response|BinaryFileResponse {
     $archive_file = $this->geojson->createArchiveFile($iso3, $version);
     if (!$archive_file) {
       return new Response('There was an error', 400);

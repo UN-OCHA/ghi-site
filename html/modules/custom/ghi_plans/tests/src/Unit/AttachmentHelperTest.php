@@ -2,7 +2,7 @@
 
 namespace Drupal\Tests\ghi_plans\Unit;
 
-use Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment;
+use Drupal\ghi_plans\ApiObjects\Attachments\Attachment;
 use Drupal\ghi_plans\Exceptions\InvalidAttachmentTypeException;
 use Drupal\ghi_plans\Helpers\AttachmentHelper;
 
@@ -23,14 +23,16 @@ class AttachmentHelperTest extends ApiObjectTestBase {
     // Test with 2 valid attachments.
     $attachments = [
       (object) [
-        'id' => 38529,
-        'type' => 'caseLoad',
-        'attachmentPrototype' => $this->getApiObjectFixture('AttachmentPrototype', 'caseload'),
+        'Id' => 38529,
+        'PlanId' => 1266,
+        'AttachmentType' => 'Caseload',
+        'AttachmentPrototypeId' => 1,
       ],
       (object) [
-        'id' => 38544,
-        'type' => 'indicator',
-        'attachmentPrototype' => $this->getApiObjectFixture('AttachmentPrototype', 'indicator'),
+        'Id' => 38544,
+        'PlanId' => 1266,
+        'AttachmentType' => 'Indicator',
+        'AttachmentPrototypeId' => 2,
       ],
     ];
     $processed_attachments = AttachmentHelper::processAttachments($attachments);
@@ -39,8 +41,8 @@ class AttachmentHelperTest extends ApiObjectTestBase {
 
     // Test with an invalid attachment.
     $attachments[] = (object) [
-      'id' => 38999,
-      'type' => 'INVALID_ATTACHMENT_TYPE',
+      'Id' => 38999,
+      'AttachmentType' => 'INVALID_ATTACHMENT_TYPE',
     ];
     $processed_attachments = AttachmentHelper::processAttachments($attachments);
     $this->assertIsArray($processed_attachments);
@@ -53,8 +55,8 @@ class AttachmentHelperTest extends ApiObjectTestBase {
   public function testInvalidAttachmentType() {
     $this->expectException(InvalidAttachmentTypeException::class);
     AttachmentHelper::processAttachment((object) [
-      'id' => 38529,
-      'type' => 'INVALID_ATTACHMENT_TYPE',
+      'Id' => 38529,
+      'AttachmentType' => 'INVALID_ATTACHMENT_TYPE',
     ]);
   }
 
@@ -72,18 +74,18 @@ class AttachmentHelperTest extends ApiObjectTestBase {
    * Test the getCustomAttachmentId method.
    */
   public function testGetCustomAttachmentId() {
-    $attachment = $this->getMockBuilder(DataAttachment::class)->disableOriginalConstructor()->getMock();
-    $attachment->method('__get')->with('custom_id')->willReturn('custom_id_VALUE');
+    $attachment = $this->getMockBuilder(Attachment::class)->disableOriginalConstructor()->getMock();
+    $attachment->method('getCustomId')->willReturn('custom_id_VALUE');
     /** @var \Drupal\ghi_plans\ApiObjects\Attachments\AttachmentInterface $attachment */
     $this->assertEquals('custom_id_VALUE', AttachmentHelper::getCustomAttachmentId($attachment, 'custom_id'));
 
-    $attachment = $this->getMockBuilder(DataAttachment::class)->disableOriginalConstructor()->getMock();
-    $attachment->method('__get')->with('custom_id_prefixed_refcode')->willReturn('custom_id_prefixed_refcode_VALUE');
+    $attachment = $this->getMockBuilder(Attachment::class)->disableOriginalConstructor()->getMock();
+    $attachment->method('getCustomIdWithRefCode')->willReturn('custom_id_prefixed_refcode_VALUE');
     /** @var \Drupal\ghi_plans\ApiObjects\Attachments\AttachmentInterface $attachment */
     $this->assertEquals('custom_id_prefixed_refcode_VALUE', AttachmentHelper::getCustomAttachmentId($attachment, 'custom_id_prefixed_refcode'));
 
-    $attachment = $this->getMockBuilder(DataAttachment::class)->disableOriginalConstructor()->getMock();
-    $attachment->method('__get')->with('composed_reference')->willReturn('composed_reference_VALUE');
+    $attachment = $this->getMockBuilder(Attachment::class)->disableOriginalConstructor()->getMock();
+    $attachment->method('getComposedReference')->willReturn('composed_reference_VALUE');
     /** @var \Drupal\ghi_plans\ApiObjects\Attachments\AttachmentInterface $attachment */
     $this->assertEquals('composed_reference_VALUE', AttachmentHelper::getCustomAttachmentId($attachment, 'composed_reference'));
 

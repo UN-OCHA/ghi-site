@@ -5,12 +5,13 @@ namespace Drupal\ghi_content\Entity;
 use Drupal\Core\Cache\Cache;
 use Drupal\ghi_content\RemoteContent\RemoteChapterInterface;
 use Drupal\ghi_content\RemoteContent\RemoteDocumentInterface;
-use Drupal\node\NodeInterface;
 
 /**
  * Base class for subpage nodes.
  */
 class Document extends ContentBase {
+
+  public const BUNDLE = 'document';
 
   /**
    * {@inheritdoc}
@@ -25,16 +26,7 @@ class Document extends ContentBase {
    * Check if the given article is part of this document.
    */
   public function hasArticle(Article $article) {
-    foreach ($this->getChapters() as $chapter) {
-      $articles = $this->getChapterArticles($chapter);
-      $article_ids = array_map(function (NodeInterface $node) {
-        return $node->id();
-      }, $articles);
-      if (in_array($article->id(), $article_ids)) {
-        return TRUE;
-      }
-    }
-    return FALSE;
+    return self::getDocumentArticleContext()->documentHasArticle($this, $article);
   }
 
   /**
@@ -75,21 +67,7 @@ class Document extends ContentBase {
    *   The articles for the given chapter.
    */
   public function getChapterArticles(RemoteChapterInterface $chapter) {
-    $article_ids = $chapter->getArticleIds();
-    $articles = $this->getArticleManager()->loadNodesForRemoteIds($chapter->getSource()->getPluginId(), $article_ids);
-    $articles = array_filter(array_map(function ($article) {
-      if (!$article || !$article->isPublished()) {
-        return NULL;
-      }
-      // Cloning is important here, to prevent wrong links when the same
-      // article is part of multiple documents.
-      $clone = clone $article;
-      if ($clone instanceof ContentBase) {
-        $clone->setContextNode($this);
-      }
-      return $clone;
-    }, $articles));
-    return $articles;
+    return self::getDocumentArticleContext()->getChapterArticles($this, $chapter);
   }
 
   /**
@@ -126,22 +104,7 @@ class Document extends ContentBase {
     $cache_tags = &drupal_static(__FUNCTION__ . '_' . $this->id(), NULL);
     if ($cache_tags === NULL) {
       $cache_tags = parent::getCacheTags();
-      $article_ids = [];
-      $remote_source = NULL;
-      foreach ($this->getChapters() as $chapter) {
-        $article_ids = array_merge($article_ids, $chapter->getArticleIds());
-        $remote_source = $remote_source ?? $chapter->getSource()->getPluginId();
-      }
-      $article_ids = array_unique(array_filter($article_ids));
-      if ($remote_source && $article_ids) {
-        $articles = $this->getArticleManager()->loadNodesForRemoteIds($remote_source, $article_ids);
-        foreach ($articles as $article) {
-          if (!$article instanceof Article) {
-            continue;
-          }
-          $cache_tags = Cache::mergeTags($cache_tags, $article->getCacheTagsToInvalidate());
-        }
-      }
+      $cache_tags = Cache::mergeTags($cache_tags, self::getDocumentArticleContext()->getDocumentArticleCacheTags($this));
     }
     return $cache_tags;
   }
@@ -157,13 +120,13 @@ class Document extends ContentBase {
   }
 
   /**
-   * Get the article manager service.
+   * Get the document article context service.
    *
-   * @return \Drupal\ghi_content\ContentManager\ArticleManager
-   *   The article manager service.
+   * @return \Drupal\ghi_content\Context\DocumentArticleContext
+   *   The document article context service.
    */
-  private static function getArticleManager() {
-    return \Drupal::service('ghi_content.manager.article');
+  private static function getDocumentArticleContext() {
+    return \Drupal::service('ghi_content.document_article_context');
   }
 
 }

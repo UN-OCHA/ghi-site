@@ -68,7 +68,7 @@
   > div.collapsible:not(.expanded).fade-out {
   display: block;
   overflow: hidden;
-  height: 26rem;
+  max-height: 26rem;
 }
 [data-article-collapsible="true"]
   .gho-sub-article__content

@@ -177,6 +177,7 @@ class GeoJsonSourcesControllerTest extends KernelTestBase {
     $this->assertEquals('table', $result['#type']);
 
     $this->assertArrayHasKey('#header', $result);
+
     $expected_headers = [
       'Country code',
       'Version',
@@ -186,6 +187,7 @@ class GeoJsonSourcesControllerTest extends KernelTestBase {
       'Operations',
     ];
     $this->assertCount(6, $result['#header']);
+    $this->assertEquals($expected_headers, array_map(fn ($item) => (string) $item, $result['#header']));
 
     $this->assertArrayHasKey('#rows', $result);
     $this->assertNotEmpty($result['#rows']);
@@ -370,9 +372,9 @@ class GeoJsonSourcesControllerTest extends KernelTestBase {
     $this->assertEquals($this->testVersion, $test_row[1]['data']['#title']);
 
     // Test file counts (should be greater than 0 because we created files).
-    $this->assertGreaterThan(0, $test_row[2]); // adm1
-    $this->assertGreaterThan(0, $test_row[3]); // adm2
-    $this->assertGreaterThan(0, $test_row[4]); // adm3
+    $this->assertGreaterThan(0, $test_row[2]);
+    $this->assertGreaterThan(0, $test_row[3]);
+    $this->assertGreaterThan(0, $test_row[4]);
 
     // Test operations dropbutton.
     $this->assertIsArray($test_row[5]);

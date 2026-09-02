@@ -1,0 +1,167 @@
+<?php
+
+/**
+ * @file
+ * Install, update and uninstall functions for hpc_remote_data_cache.
+ */
+
+/**
+ * Implements hook_schema().
+ */
+function hpc_remote_data_cache_schema() {
+  return [
+    'hpc_remote_data_cache_index' => hpc_remote_data_cache_index_table_schema(),
+  ];
+}
+
+/**
+ * Create the remote data cache metadata index table.
+ */
+function hpc_remote_data_cache_update_10001() {
+  $schema = \Drupal::database()->schema();
+  if (!$schema->tableExists('hpc_remote_data_cache_index')) {
+    $schema->createTable('hpc_remote_data_cache_index', hpc_remote_data_cache_index_table_schema());
+  }
+
+  $config = \Drupal::configFactory()->getEditable('hpc_remote_data_cache.settings');
+  $defaults = [
+    'expired_retention_ttl' => 604800,
+    'max_items' => 10000,
+    'prune_batch_size' => 500,
+  ];
+  foreach ($defaults as $key => $value) {
+    if ($config->get($key) === NULL) {
+      $config->set($key, $value);
+    }
+  }
+  $config->save(TRUE);
+}
+
+/**
+ * Exclude legacy HPC API endpoint entries from remote cache pruning.
+ */
+function hpc_remote_data_cache_update_10002() {
+  $config = \Drupal::configFactory()->getEditable('hpc_remote_data_cache.settings');
+  if ($config->get('prune_excluded_sources') === NULL) {
+    $config->set('prune_excluded_sources', ['hpc_api_endpoint'])->save(TRUE);
+  }
+}
+
+/**
+ * Build the remote data cache metadata index schema.
+ *
+ * @return array
+ *   The table schema.
+ */
+function hpc_remote_data_cache_index_table_schema(): array {
+  return [
+    'description' => 'Queryable metadata for the permanent remote data cache bin.',
+    'fields' => [
+      'cid' => [
+        'description' => 'Primary Key: Unique cache ID.',
+        'type' => 'varchar_ascii',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => '',
+        'binary' => TRUE,
+      ],
+      'source' => [
+        'description' => 'Remote data source prefix from the cache ID.',
+        'type' => 'varchar_ascii',
+        'length' => 128,
+        'not null' => TRUE,
+        'default' => '',
+      ],
+      'refresher_id' => [
+        'description' => 'Remote data cache refresher plugin ID.',
+        'type' => 'varchar_ascii',
+        'length' => 128,
+        'not null' => TRUE,
+        'default' => '',
+      ],
+      'payload_size' => [
+        'description' => 'Serialized payload size in bytes.',
+        'type' => 'int',
+        'size' => 'big',
+        'not null' => TRUE,
+        'default' => 0,
+      ],
+      'created' => [
+        'description' => 'Unix timestamp when the item was first created.',
+        'type' => 'int',
+        'size' => 'big',
+        'not null' => TRUE,
+        'default' => 0,
+      ],
+      'changed' => [
+        'description' => 'Unix timestamp when item metadata last changed.',
+        'type' => 'int',
+        'size' => 'big',
+        'not null' => TRUE,
+        'default' => 0,
+      ],
+      'fetched' => [
+        'description' => 'Unix timestamp when the payload was last fetched successfully.',
+        'type' => 'int',
+        'size' => 'big',
+        'not null' => TRUE,
+        'default' => 0,
+      ],
+      'fresh_until' => [
+        'description' => 'Unix timestamp until which the item is fresh.',
+        'type' => 'int',
+        'size' => 'big',
+        'not null' => TRUE,
+        'default' => 0,
+      ],
+      'stale_until' => [
+        'description' => 'Unix timestamp until which stale data may be served normally.',
+        'type' => 'int',
+        'size' => 'big',
+        'not null' => TRUE,
+        'default' => 0,
+      ],
+      'refresh_queued' => [
+        'description' => 'Whether a background refresh has been queued.',
+        'type' => 'int',
+        'size' => 'tiny',
+        'not null' => TRUE,
+        'default' => 0,
+      ],
+      'refreshing_until' => [
+        'description' => 'Unix timestamp until which a refresh is considered in progress.',
+        'type' => 'int',
+        'size' => 'big',
+        'not null' => TRUE,
+        'default' => 0,
+      ],
+      'retry_after' => [
+        'description' => 'Unix timestamp before which refresh should not be retried.',
+        'type' => 'int',
+        'size' => 'big',
+        'not null' => TRUE,
+        'default' => 0,
+      ],
+      'fail_count' => [
+        'description' => 'Consecutive refresh failure count.',
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ],
+      'last_access' => [
+        'description' => 'Unix timestamp of the last recorded access.',
+        'type' => 'int',
+        'size' => 'big',
+        'not null' => TRUE,
+        'default' => 0,
+      ],
+    ],
+    'primary key' => ['cid'],
+    'indexes' => [
+      'source_stale_until' => ['source', 'stale_until'],
+      'stale_until' => ['stale_until'],
+      'changed' => ['changed'],
+      'payload_size' => ['payload_size'],
+    ],
+  ];
+}

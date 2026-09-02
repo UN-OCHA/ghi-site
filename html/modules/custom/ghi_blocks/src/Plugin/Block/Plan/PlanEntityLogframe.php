@@ -4,8 +4,13 @@ namespace Drupal\ghi_blocks\Plugin\Block\Plan;
 
 use Drupal\Component\Utility\Html;
 use Drupal\Component\Utility\Unicode;
+use Drupal\Core\Block\Attribute\Block;
+use Drupal\Core\Cache\Cache;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Plugin\Context\EntityContextDefinition;
 use Drupal\Core\Security\TrustedCallbackInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\Core\Url;
 use Drupal\ghi_blocks\Interfaces\ConfigValidationInterface;
 use Drupal\ghi_blocks\Interfaces\ConfigurableTableBlockInterface;
 use Drupal\ghi_blocks\Interfaces\ConfigurationUpdateInterface;
@@ -19,7 +24,7 @@ use Drupal\ghi_blocks\Traits\ConfigValidationTrait;
 use Drupal\ghi_form_elements\Helpers\FormElementHelper;
 use Drupal\ghi_form_elements\Traits\ConfigurationContainerTrait;
 use Drupal\ghi_form_elements\Traits\CustomLinkTrait;
-use Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment;
+use Drupal\ghi_plans\ApiObjects\Attachments\Attachment;
 use Drupal\ghi_plans\ApiObjects\Entities\EntityObjectInterface;
 use Drupal\ghi_plans\ApiObjects\Entities\PlanEntity;
 use Drupal\ghi_plans\ApiObjects\Plan as ApiObjectsPlan;
@@ -29,48 +34,24 @@ use Drupal\ghi_plans\Helpers\AttachmentHelper;
 use Drupal\ghi_sections\Entity\SectionNodeInterface;
 use Drupal\ghi_subpages\Entity\LogframeSubpage;
 use Drupal\ghi_subpages\Entity\SubpageNodeInterface;
-use Drupal\hpc_api\Query\EndpointQuery;
 use Drupal\hpc_common\Helpers\ArrayHelper;
-use Drupal\hpc_common\Helpers\BlockHelper;
+use Drupal\hpc_common\Plugin\HPCBlockMetadata;
 use Drupal\hpc_downloads\Interfaces\HPCDownloadExcelMultipleInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Provides a 'PlanEntityLogframe' block.
- *
- * @Block(
- *  id = "plan_entity_logframe",
- *  admin_label = @Translation("Entity Logframe"),
- *  category = @Translation("Plan elements"),
- *  data_sources = {
- *    "entities" = "plan_entities_query",
- *    "entity" = "entity_query",
- *    "attachment" = "attachment_query",
- *    "attachment_search" = "attachment_search_query",
- *    "attachment_prototype" = "plan_attachment_prototype_query",
- *  },
- *  context_definitions = {
- *    "node" = @ContextDefinition("entity:node", label = @Translation("Node")),
- *    "plan" = @ContextDefinition("entity:base_object", label = @Translation("Plan"), constraints = { "Bundle": "plan" }),
- *    "plan_cluster" = @ContextDefinition("entity:base_object", label = @Translation("Cluster"), constraints = { "Bundle": "governing_entity" }, required =  FALSE)
- *  },
- *  config_forms = {
- *    "entities" = {
- *      "title" = @Translation("Entities"),
- *      "callback" = "entitiesForm"
- *    },
- *    "tables" = {
- *      "title" = @Translation("Tables"),
- *      "callback" = "tablesForm",
- *      "base_form" = TRUE
- *    },
- *    "display" = {
- *      "title" = @Translation("Display"),
- *      "callback" = "displayForm"
- *    }
- *  }
- * )
  */
+#[Block(
+  id: 'plan_entity_logframe',
+  admin_label: new TranslatableMarkup('Entity Logframe'),
+  category: new TranslatableMarkup('Plan elements'),
+  context_definitions: [
+    'node' => new EntityContextDefinition('entity:node', new TranslatableMarkup('Node')),
+    'plan' => new EntityContextDefinition('entity:base_object', new TranslatableMarkup('Plan'), constraints: ['Bundle' => 'plan']),
+    'plan_cluster' => new EntityContextDefinition('entity:base_object', new TranslatableMarkup('Cluster'), required: FALSE, constraints: ['Bundle' => 'governing_entity']),
+  ],
+)]
 class PlanEntityLogframe extends GHIBlockBase implements MultiStepFormBlockInterface, ConfigurableTableBlockInterface, OverrideDefaultTitleBlockInterface, CustomLinkBlockInterface, TrustedCallbackInterface, ConfigValidationInterface, ConfigurationUpdateInterface, HPCDownloadExcelMultipleInterface {
 
   use ConfigurationContainerTrait;
@@ -79,11 +60,56 @@ class PlanEntityLogframe extends GHIBlockBase implements MultiStepFormBlockInter
   use ConfigValidationTrait;
 
   /**
+   * Logframe item state for unresolved ajax-loaded rows.
+   */
+  private const LOGFRAME_ITEM_STATE_PENDING = 'pending';
+
+  /**
+   * Logframe item state for rows with expandable content.
+   */
+  private const LOGFRAME_ITEM_STATE_CONTENT = 'content';
+
+  /**
+   * Logframe item state for rows confirmed to have no expandable content.
+   */
+  private const LOGFRAME_ITEM_STATE_EMPTY = 'empty';
+
+  /**
    * The logframe manager.
    *
    * @var \Drupal\ghi_subpages\LogframeManager
    */
   public $logframeManager;
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function metadata(): ?HPCBlockMetadata {
+    return new HPCBlockMetadata(
+      dataSources: [
+        'entities' => 'fabric_query:entity',
+        'plan' => 'fabric_query:plan',
+        'attachment' => 'fabric_query:attachment',
+        'attachment_prototype' => 'fabric_query:attachment_prototype',
+        'entity_prototype' => 'fabric_query:entity_prototype',
+      ],
+      configForms: [
+        'entities' => [
+          'title' => 'Entities',
+          'callback' => 'entitiesForm',
+        ],
+        'tables' => [
+          'title' => 'Tables',
+          'callback' => 'tablesForm',
+          'base_form' => TRUE,
+        ],
+        'display' => [
+          'title' => 'Display',
+          'callback' => 'displayForm',
+        ],
+      ],
+    );
+  }
 
   /**
    * {@inheritdoc}
@@ -104,13 +130,13 @@ class PlanEntityLogframe extends GHIBlockBase implements MultiStepFormBlockInter
     // Get the entities to render.
     $entities = $this->getRenderableEntities();
     $first_entity = !empty($entities) ? reset($entities) : NULL;
-    if (!$first_entity) {
-      return NULL;
-    }
     if ($first_entity instanceof ApiObjectsPlan) {
       return $this->t('Response plan', [], ['langcode' => $this->getCurrentPlanObject()?->getPlanLanguage()]);
     }
-    return count($entities) > 1 ? $first_entity->plural_name : $first_entity->singular_name;
+    if (!$first_entity instanceof EntityObjectInterface) {
+      return NULL;
+    }
+    return count($entities) > 1 ? $first_entity->getPluralName() : $first_entity->getSingularName();
   }
 
   /**
@@ -159,8 +185,50 @@ class PlanEntityLogframe extends GHIBlockBase implements MultiStepFormBlockInter
   /**
    * {@inheritdoc}
    */
-  public function buildContent() {
+  public function isEmpty(): bool {
+    return empty($this->getRenderableEntities());
+  }
 
+  /**
+   * {@inheritdoc}
+   */
+  protected function hasReliableIsEmpty(): bool {
+    return TRUE;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function build() {
+    $build = parent::build();
+    if (empty($build)) {
+      return $build;
+    }
+
+    // Add the links here already so that the custum link appears alongside
+    // the download link added in GHIBlockBase.
+    $build['links'] = [
+      '#type' => 'container',
+      '#attributes' => [
+        'class' => ['link-wrapper'],
+      ],
+    ];
+
+    $display_conf = $this->getBlockConfig()['display'];
+    $link = $this->getLinkFromConfiguration($display_conf['link'] ?? [], [
+      'section_node' => $this->getCurrentSectionNode(),
+      'page_node' => $this->getPageNode(),
+    ]);
+    if ($link) {
+      $build['links'][] = $link->toRenderable();
+    }
+    return $build;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function buildContent() {
     // Get the entities to render.
     $entities = $this->getRenderableEntities();
     if (empty($entities)) {
@@ -176,38 +244,24 @@ class PlanEntityLogframe extends GHIBlockBase implements MultiStepFormBlockInter
     // See if we should use lazy loading for the tables.
     $lazy_load = $this->config('ghi_blocks.logframe_settings')->get('lazy_load');
 
+    $inline_tables = $this->isConfigurationPreview() || !$lazy_load;
+    if ($inline_tables) {
+      // Preload the attachments to reduce the number of queries.
+      $this->getAttachmentsForEntities($entities);
+    }
+
     // Assemble the list.
     $rendered_items = [];
     foreach ($entities as $entity) {
-      if ($this->isConfigurationPreview() || !$lazy_load) {
-        $tables = $this->buildTablesContainer($entity, $conf['tables']);
+      if ($inline_tables) {
+        $fragment = $this->buildLogframeItemFragment($entity);
       }
-      else {
-        $tables = [
-          '#lazy_builder' => [
-            static::class . '::lazyBuildTables',
-            [
-              $this->getPluginId(),
-              $this->getUuid(),
-              $this->getPageNode()?->toUrl()?->toString() ?? $this->getCurrentUri(),
-              $entity->id(),
-            ],
-          ],
-          '#create_placeholder' => TRUE,
-          '#cache' => [
-            'context' => $this->getCacheContexts(),
-          ],
+      elseif (!$fragment = $this->getCachedLogframeItemFragment($entity)) {
+        $fragment = [
+          'state' => self::LOGFRAME_ITEM_STATE_PENDING,
         ];
       }
-      $contributes_heading = $entity instanceof PlanEntity ? $this->buildContributesToHeading($entity) : NULL;
-      $entity_id = $this->getPlanEntityId($entity, $conf['entities']);
-      $entity_description = $this->getPlanEntityDescription($entity, $conf['entities']);
-      $rendered_items[] = [
-        'label' => $entity_id,
-        'description' => $entity_description,
-        'contributes_heading' => $contributes_heading,
-        'attachment_tables' => $tables ?: NULL,
-      ];
+      $rendered_items[] = $this->buildLogframeItemRenderArray($entity, $fragment);
     }
     $count = count($rendered_items);
 
@@ -229,21 +283,6 @@ class PlanEntityLogframe extends GHIBlockBase implements MultiStepFormBlockInter
       ],
       '#gin_lb_theme_suggestions' => FALSE,
     ];
-    $build['links'] = [
-      '#type' => 'container',
-      '#attributes' => [
-        'class' => ['link-wrapper'],
-      ],
-    ];
-
-    $display_conf = $this->getBlockConfig()['display'];
-    $link = $this->getLinkFromConfiguration($display_conf['link'] ?? [], [
-      'section_node' => $this->getCurrentSectionNode(),
-      'page_node' => $this->getPageNode(),
-    ]);
-    if ($link) {
-      $build['links'][] = $link->toRenderable();
-    }
     return $build;
   }
 
@@ -300,14 +339,18 @@ class PlanEntityLogframe extends GHIBlockBase implements MultiStepFormBlockInter
 
     // Collect the table names for deduplication.
     $table_names = [];
+    $attachment_prototypes = $this->getAttachmentPrototypes();
 
     // Build the actual data tables if applicable, one for each configured
     // table.
     foreach ($entities as $entity) {
       $tables = $this->buildTables($entity, $conf['tables']);
       foreach ($tables as $key => $table) {
-        /** @var \Drupal\ghi_plans\ApiObjects\AttachmentPrototype\AttachmentPrototype $prototype */
-        $prototype = $table['#prototype'];
+        /** @var \Drupal\ghi_plans\ApiObjects\Prototypes\AttachmentPrototype $prototype */
+        $prototype = $attachment_prototypes[$table['#prototype_id'] ?? NULL] ?? NULL;
+        if (!$prototype) {
+          continue;
+        }
         $table_names[$prototype->id()] = $table['#download_label'];
 
         if (!array_key_exists($key, $data)) {
@@ -340,7 +383,7 @@ class PlanEntityLogframe extends GHIBlockBase implements MultiStepFormBlockInter
             $entity->getDescription(),
           ];
           if (!empty($entity_cluster_alignments[$entity->id()])) {
-            $additional_columns[] = $entity_cluster_alignments[$entity->id()]->getEntityName();
+            $additional_columns[] = $entity_cluster_alignments[$entity->id()]->getDisplayName();
           }
 
           $additional_columns[] = $row['data-attachment-custom-id'];
@@ -394,6 +437,9 @@ class PlanEntityLogframe extends GHIBlockBase implements MultiStepFormBlockInter
     if ($this->buildLogicalFrameworkExcelsheet($entities)) {
       return TRUE;
     }
+
+    // Preload the attachments to reduce the number of queries.
+    $this->getAttachmentsForEntities($entities);
 
     foreach ($entities as $entity) {
       $tables = $this->buildTables($entity, $conf['tables']);
@@ -469,10 +515,10 @@ class PlanEntityLogframe extends GHIBlockBase implements MultiStepFormBlockInter
       // Load a single attachment, just so we can use it to format the
       // monitoring periods.
       $attachment_id = $rows[0]['data-attachment-id'];
-      /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\AttachmentQuery $query */
+      /** @var \Drupal\ghi_plans\Plugin\FabricQuery\AttachmentQuery $query */
       $query = $this->getQueryHandler('attachment');
       $attachment = $query->getAttachment($attachment_id);
-      if (!$attachment instanceof DataAttachment) {
+      if (!$attachment instanceof Attachment) {
         continue;
       }
 
@@ -574,17 +620,15 @@ class PlanEntityLogframe extends GHIBlockBase implements MultiStepFormBlockInter
    *
    * @param \Drupal\ghi_plans\ApiObjects\PlanEntityInterface $entity
    *   The plan entity.
-   * @param array $conf
-   *   The entity configuration.
    * @param bool $truncate_description
    *   Whether to truncate the description or not.
    *
-   * @return string
+   * @return string|null
    *   The formatted plan entity description.
    */
-  private function getPlanEntityDescription(PlanEntityInterface $entity, array $conf, $truncate_description = FALSE) {
+  private function getPlanEntityDescription(PlanEntityInterface $entity, $truncate_description = FALSE): ?string {
     $description = $entity->getDescription();
-    return $truncate_description ? Unicode::truncate($description, 120, TRUE, TRUE) : $description;
+    return ($truncate_description && $description !== NULL) ? Unicode::truncate($description, 120, TRUE, TRUE) : $description;
   }
 
   /**
@@ -624,7 +668,7 @@ class PlanEntityLogframe extends GHIBlockBase implements MultiStepFormBlockInter
       if (empty($logical_framework['header'])) {
         $header = [];
         foreach ($parents as $parent) {
-          $parent_ref_code = $parent->ref_code;
+          $parent_ref_code = $parent->getEntityTypeRefCode();
           if (array_key_exists($parent_ref_code, $header)) {
             continue;
           }
@@ -633,10 +677,10 @@ class PlanEntityLogframe extends GHIBlockBase implements MultiStepFormBlockInter
             $header[] = (string) $this->t('@cluster_label name', $cluster_args, $t_options);
           }
           $header[$parent_ref_code] = (string) $this->t('@ref_code code', [
-            '@ref_code' => $parent->ref_code,
+            '@ref_code' => $parent->getEntityTypeRefCode(),
           ], $t_options);
           $header[$parent_ref_code . '_description'] = (string) $this->t('@ref_code description', [
-            '@ref_code' => $parent->ref_code,
+            '@ref_code' => $parent->getEntityTypeRefCode(),
           ], $t_options);
         }
 
@@ -753,49 +797,203 @@ class PlanEntityLogframe extends GHIBlockBase implements MultiStepFormBlockInter
   }
 
   /**
-   * Lazy builder callback for attachment tables.
+   * Build the fragment for one resolved logframe item.
    *
-   * @param string $plugin_id
-   *   The plugin id of this block plugin.
-   * @param string $block_uuid
-   *   The uuid of this block plugins instance.
-   * @param string $uri
-   *   The current page uri.
-   * @param int $entity_id
-   *   The id of the entity for which the tables should be rendered.
+   * @param \Drupal\ghi_plans\ApiObjects\PlanEntityInterface $entity
+   *   The plan entity.
    *
    * @return array
-   *   A render array representing the tables.
+   *   The resolved logframe item fragment.
    */
-  public static function lazyBuildTables($plugin_id, $block_uuid, $uri, $entity_id) {
-    /** @var \Drupal\ghi_blocks\Plugin\Block\Plan\PlanEntityLogframe $block_instance */
-    $block_instance = BlockHelper::getBlockInstance($uri, $plugin_id, $block_uuid);
-    if (!$block_instance) {
-      return [];
+  private function buildLogframeItemFragment(PlanEntityInterface $entity): array {
+    $tables = $this->buildTablesContainer($entity, $this->getBlockConfig()['tables']);
+    $contributes_heading = $entity instanceof PlanEntity ? $this->buildContributesToHeading($entity) : NULL;
+    $has_content = !empty($tables) || !empty($contributes_heading);
+
+    return [
+      'state' => $has_content ? self::LOGFRAME_ITEM_STATE_CONTENT : self::LOGFRAME_ITEM_STATE_EMPTY,
+      'contributes_heading' => $contributes_heading,
+      'attachment_tables' => $tables ?: NULL,
+      'attachment_wrapper_attributes' => $has_content ? $this->buildTablesWrapperAttributes($entity) : [],
+    ];
+  }
+
+  /**
+   * Build a render array for one logframe item.
+   *
+   * @param \Drupal\ghi_plans\ApiObjects\PlanEntityInterface $entity
+   *   The plan entity.
+   * @param array $fragment
+   *   The logframe item fragment.
+   *
+   * @return array
+   *   The logframe item render array.
+   */
+  private function buildLogframeItemRenderArray(PlanEntityInterface $entity, array $fragment): array {
+    $conf = $this->getBlockConfig();
+    $langcode = $this->getCurrentPlanObject()?->getPlanLanguage() ?? 'en';
+    $state = $fragment['state'] ?? self::LOGFRAME_ITEM_STATE_PENDING;
+
+    return [
+      '#theme' => 'plan_entity_logframe_item',
+      '#label' => $this->getPlanEntityId($entity, $conf['entities']),
+      '#description' => $this->getPlanEntityDescription($entity),
+      '#state' => $state,
+      '#contributes_heading' => $fragment['contributes_heading'] ?? NULL,
+      '#attachment_tables' => $fragment['attachment_tables'] ?? NULL,
+      '#wrapper_attributes' => $this->buildItemWrapperAttributes($entity, $state),
+      '#attachment_wrapper_attributes' => $fragment['attachment_wrapper_attributes'] ?? [],
+      '#tooltip_show_data' => $this->t('Show data', [], ['langcode' => $langcode]),
+      '#tooltip_hide_data' => $this->t('Hide data', [], ['langcode' => $langcode]),
+      '#tooltip_no_data' => $this->t('No data', [], ['langcode' => $langcode]),
+    ];
+  }
+
+  /**
+   * Build attributes for a logframe item wrapper.
+   *
+   * @param \Drupal\ghi_plans\ApiObjects\PlanEntityInterface $entity
+   *   The plan entity.
+   * @param string $state
+   *   The logframe item state.
+   *
+   * @return array
+   *   Wrapper attributes.
+   */
+  private function buildItemWrapperAttributes(PlanEntityInterface $entity, string $state): array {
+    $attributes = [
+      'data-logframe-block' => $this->getUuid(),
+      'data-logframe-entity' => $entity->id(),
+      'data-logframe-state' => $state,
+    ];
+    if ($state == self::LOGFRAME_ITEM_STATE_PENDING) {
+      $attributes['data-logframe-item-url'] = Url::fromRoute('ghi_blocks.load_logframe_item', [
+        'plugin_id' => $this->getPluginId(),
+        'block_uuid' => $this->getUuid(),
+        'entity_id' => $entity->id(),
+      ], [
+        'query' => [
+          'current_uri' => $this->getPageNode()?->toUrl()?->toString() ?? $this->getCurrentUri(),
+        ],
+      ])->toString();
     }
-    $entities = $block_instance->getRenderableEntities();
+    return $attributes;
+  }
+
+  /**
+   * Build attributes for an attachment tables wrapper.
+   *
+   * @param \Drupal\ghi_plans\ApiObjects\PlanEntityInterface $entity
+   *   The plan entity.
+   *
+   * @return array
+   *   Wrapper attributes.
+   */
+  private function buildTablesWrapperAttributes(PlanEntityInterface $entity): array {
+    return [
+      'data-logframe-block' => $this->getUuid(),
+      'data-logframe-entity' => $entity->id(),
+      'data-logframe-loaded' => 'true',
+    ];
+  }
+
+  /**
+   * Get a cached resolved item fragment.
+   *
+   * @param \Drupal\ghi_plans\ApiObjects\PlanEntityInterface $entity
+   *   The plan entity.
+   *
+   * @return array|null
+   *   The cached fragment or NULL.
+   */
+  private function getCachedLogframeItemFragment(PlanEntityInterface $entity): ?array {
+    $fragment = $this->cache($this->getLogframeItemFragmentCacheKey($entity));
+    return is_array($fragment) && !empty($fragment['state']) ? $fragment : NULL;
+  }
+
+  /**
+   * Store a resolved item fragment.
+   *
+   * @param \Drupal\ghi_plans\ApiObjects\PlanEntityInterface $entity
+   *   The plan entity.
+   * @param array $fragment
+   *   The resolved fragment.
+   */
+  private function setCachedLogframeItemFragment(PlanEntityInterface $entity, array $fragment): void {
+    $this->cache($this->getLogframeItemFragmentCacheKey($entity), $fragment, FALSE, NULL, $this->getLogframeItemFragmentCacheTags());
+  }
+
+  /**
+   * Build a cache key for one resolved item fragment.
+   *
+   * @param \Drupal\ghi_plans\ApiObjects\PlanEntityInterface $entity
+   *   The plan entity.
+   *
+   * @return string
+   *   The cache key.
+   */
+  private function getLogframeItemFragmentCacheKey(PlanEntityInterface $entity): string {
+    $page_node = $this->getPageNode();
+    $parts = [
+      'plugin_id' => $this->getPluginId(),
+      'block_uuid' => $this->getUuid(),
+      'block_config' => md5(json_encode($this->getBlockConfig())),
+      'current_user_roles' => json_encode($this->currentUser->getRoles()),
+      'current_uri' => $this->getCurrentUri(),
+      'page_node' => $page_node?->id(),
+      'plan' => $this->getCurrentPlanId(),
+      'entity' => $entity->id(),
+      'langcode' => $this->getCurrentPlanObject()?->getPlanLanguage() ?? 'en',
+    ] + $this->getPageArguments();
+    ksort($parts);
+    return 'ghi_blocks:plan_entity_logframe:item:' . hash('sha256', serialize($parts));
+  }
+
+  /**
+   * Get cache tags for resolved item fragments.
+   *
+   * @return string[]
+   *   The cache tags.
+   */
+  private function getLogframeItemFragmentCacheTags(): array {
+    return array_values(array_diff($this->getCacheTags(), [
+      $this->getLogframeBlockCacheTag(),
+    ]));
+  }
+
+  /**
+   * Get the block tag used by the full block-content cache.
+   *
+   * @return string
+   *   The block cache tag.
+   */
+  private function getLogframeBlockCacheTag(): string {
+    return $this->getPluginId() . ':' . $this->getUuid();
+  }
+
+  /**
+   * Build the ajax replacement item for one entity.
+   *
+   * @param int $entity_id
+   *   The logframe entity id.
+   *
+   * @return array
+   *   A logframe item render array.
+   */
+  public function buildAjaxLogframeItem(int $entity_id): array {
+    $entities = $this->getRenderableEntities();
     if (!array_key_exists($entity_id, $entities)) {
       return [];
     }
-    $tables = $block_instance->buildTablesContainer($entities[$entity_id], $block_instance->getBlockConfig()['tables']);
 
-    // Reset the static caches to prevent memory issues. Lazy load callbacks
-    // are part of the same main thread that renders the page. Given that there
-    // can be an arbitrarily high number of these calls, especially on logframe
-    // pages, we need to account for that by keeping memory under control. So
-    // better to loose a bit of performance when it comes to lazy loading the
-    // tables, than running into a memory issue and not showing some of the
-    // tables at all.
-    drupal_static_reset();
-
-    return $tables ?: [
-      '#type' => 'html_tag',
-      '#tag' => 'span',
-      '#value' => t('There is no caseload or indicator available', [], ['langcode' => $block_instance->getCurrentPlanObject()?->getPlanLanguage() ?? 'en']),
-      '#attributes' => [
-        'class' => ['empty-message'],
-      ],
-    ];
+    $entity = $entities[$entity_id];
+    $fragment = $this->getCachedLogframeItemFragment($entity);
+    if (!$fragment) {
+      $fragment = $this->buildLogframeItemFragment($entity);
+      $this->setCachedLogframeItemFragment($entity, $fragment);
+      Cache::invalidateTags([$this->getLogframeBlockCacheTag()]);
+    }
+    return $this->buildLogframeItemRenderArray($entity, $fragment);
   }
 
   /**
@@ -837,7 +1035,7 @@ class PlanEntityLogframe extends GHIBlockBase implements MultiStepFormBlockInter
   public function entitiesForm(array $form, FormStateInterface $form_state) {
     $entity_ref_code_options = $this->getEntityRefCodeOptions();
     $wrapper_id = Html::getId('form-wrapper-ghi-block-config');
-    $ajax_parents = array_merge($form['#array_parents']);
+    $ajax_parents = array_merge($form['#array_parents'] ?? []);
     array_pop($ajax_parents);
 
     $page_node = $this->getPageNode();
@@ -920,7 +1118,7 @@ class PlanEntityLogframe extends GHIBlockBase implements MultiStepFormBlockInter
         foreach ($matching_entities as $entity) {
           $entity_options[$entity->id()] = [
             'id' => $this->getPlanEntityId($entity, $defaults),
-            'description' => $this->getPlanEntityDescription($entity, $defaults, TRUE),
+            'description' => $this->getPlanEntityDescription($entity, TRUE),
           ];
         }
       }
@@ -950,10 +1148,10 @@ class PlanEntityLogframe extends GHIBlockBase implements MultiStepFormBlockInter
         '#title' => $this->t('Sort column'),
         '#title_display' => 'invisible',
         '#options' => [
-          'id_' . EndpointQuery::SORT_ASC => $this->t('ID (asc)'),
-          'id_' . EndpointQuery::SORT_DESC => $this->t('ID (desc)'),
-          'description_' . EndpointQuery::SORT_ASC => $this->t('Description (asc)'),
-          'description_' . EndpointQuery::SORT_DESC => $this->t('Description (desc)'),
+          'id_' . SORT_ASC => $this->t('ID (asc)'),
+          'id_' . SORT_DESC => $this->t('ID (desc)'),
+          'description_' . SORT_ASC => $this->t('Description (asc)'),
+          'description_' . SORT_DESC => $this->t('Description (desc)'),
         ],
         '#default_value' => $defaults['sort_column'],
         '#states' => [
@@ -997,7 +1195,7 @@ class PlanEntityLogframe extends GHIBlockBase implements MultiStepFormBlockInter
           if ($this->validatePlanEntity($entity, $validation_options)) {
             continue;
           }
-          $form['entity_ids'][$entity->id]['#disabled'] = TRUE;
+          $form['entity_ids'][$entity->id()]['#disabled'] = TRUE;
         }
       }
     }
@@ -1082,7 +1280,7 @@ class PlanEntityLogframe extends GHIBlockBase implements MultiStepFormBlockInter
     if (!$this->getCurrentPlanObject()) {
       return [];
     }
-    return $this->logframeManager->getEntityTypesFromPlanObject($this->getCurrentPlanObject());
+    return $this->logframeManager?->getEntityTypesFromPlanObject($this->getCurrentPlanObject()) ?: [];
   }
 
   /**
@@ -1098,11 +1296,11 @@ class PlanEntityLogframe extends GHIBlockBase implements MultiStepFormBlockInter
     $context_object = $this->getCurrentBaseObject();
 
     if ($entity_ref_code == ApiObjectsPlan::ENTITY_REF_CODE && $context_object instanceof Plan) {
-      /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\EntityQuery $query */
-      $query = $this->getQueryHandler('entity');
-      $plan_data = $query->getEntity('plan', $context_object->getSourceId());
-      return $plan_data ? [
-        $plan_data->id() => $plan_data,
+      /** @var \Drupal\ghi_plans\Plugin\FabricQuery\PlanQuery $query */
+      $query = $this->getQueryHandler('plan');
+      $plan = $query?->getPlan($context_object->getSourceId()) ?? NULL;
+      return $plan ? [
+        $plan->id() => $plan,
       ] : [];
     }
 
@@ -1110,9 +1308,17 @@ class PlanEntityLogframe extends GHIBlockBase implements MultiStepFormBlockInter
     if ($entity_ref_code) {
       $filter = ['ref_code' => $entity_ref_code];
     }
-    /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\PlanEntitiesQuery $query */
+
+    $plan_id = $this->getCurrentPlanId();
+
+    // Preload the entity prototypes.
+    $entity_prototype_query = $this->getQueryHandler('entity_prototype');
+    /** @var \Drupal\ghi_plans\Plugin\FabricQuery\EntityPrototypeQuery $entity_prototype_query */
+    $entity_prototype_query?->getPlanPrototype($plan_id);
+
+    /** @var \Drupal\ghi_plans\Plugin\FabricQuery\EntityQuery $query */
     $query = $this->getQueryHandler('entities');
-    $entities = $query->getPlanEntities($context_object, NULL, $filter);
+    $entities = $query?->getEntitiesForPlan($plan_id, $context_object, NULL, $filter) ?? [];
     // This should give us plan and governing entity objects only, but let's
     // make sure.
     $entities = is_array($entities) ? array_filter($entities, function ($entity) {
@@ -1157,15 +1363,20 @@ class PlanEntityLogframe extends GHIBlockBase implements MultiStepFormBlockInter
   private function sortPlanEntities(array &$entities, $conf) {
     if (!empty($conf['sort'])) {
       [$key, $sort] = explode('_', $conf['sort_column']);
-      uasort($entities, function ($a, $b) use ($key, $sort, $conf) {
-        $a_value = $key == 'id' ? $this->getPlanEntityId($a, $conf) : (!empty(($a)->{$key}) ? ($a)->{$key} : 0);
-        $b_value = $key == 'id' ? $this->getPlanEntityId($b, $conf) : (!empty(($b)->{$key}) ? ($b)->{$key} : 0);
-        if ($sort == EndpointQuery::SORT_ASC) {
-          return strnatcmp($a_value, $b_value);
-        }
-        if ($sort == EndpointQuery::SORT_DESC) {
-          return strnatcmp($b_value, $a_value);
-        }
+      // BC code to handle outdated configuration where the sort direction is
+      // still given as a string.
+      $sort = match ($sort) {
+        'ASC' => SORT_ASC,
+        'DESC' => SORT_DESC,
+        default => $sort,
+      };
+      // Properties are protected and can't be accessed directly, so we need to
+      // use a getter if it exists.
+      $callback = 'get' . ucfirst(strtolower($key));
+      uasort($entities, function ($a, $b) use ($key, $callback, $sort, $conf) {
+        $a_value = $key == 'id' ? $this->getPlanEntityId($a, $conf) : (method_exists($a, $callback) ? ($a->$callback() ?? 0) : 0);
+        $b_value = $key == 'id' ? $this->getPlanEntityId($b, $conf) : (method_exists($b, $callback) ? ($b->$callback() ?? 0) : 0);
+        return $sort == SORT_DESC ? strnatcmp($b_value, $a_value) : strnatcmp($a_value, $b_value);
       });
     }
   }
@@ -1189,7 +1400,6 @@ class PlanEntityLogframe extends GHIBlockBase implements MultiStepFormBlockInter
     if (empty($entity->getDescription())) {
       return FALSE;
     }
-
     if (empty($this->getPlanEntityId($entity, $conf))) {
       return FALSE;
     }
@@ -1261,7 +1471,7 @@ class PlanEntityLogframe extends GHIBlockBase implements MultiStepFormBlockInter
    * @param int $prototype_id
    *   An optional prototype id to filter for.
    *
-   * @return \Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment[]
+   * @return \Drupal\ghi_plans\ApiObjects\Attachments\Attachment[]
    *   An array of data attachments.
    */
   public function getAttachmentsForEntities(array $entities, $prototype_id = NULL) {
@@ -1269,16 +1479,16 @@ class PlanEntityLogframe extends GHIBlockBase implements MultiStepFormBlockInter
       return NULL;
     }
 
-    /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\AttachmentSearchQuery $query */
-    $query = $this->endpointQueryManager->createInstance('attachment_search_query');
+    /** @var \Drupal\ghi_plans\Plugin\FabricQuery\AttachmentQuery $query */
+    $query = $this->getQueryHandler('attachment');
     $attachments = $query->getAttachmentsForEntities($entities);
 
     // Filter out non-data attachments.
     $attachments = array_filter($attachments, function ($attachment) use ($prototype_id) {
-      if (!$attachment instanceof DataAttachment) {
+      if (!$attachment instanceof Attachment) {
         return FALSE;
       }
-      if ($prototype_id && $prototype_id == $attachment->getPrototype()->id()) {
+      if ($prototype_id && $prototype_id != $attachment->getPrototype()->id()) {
         return FALSE;
       }
       return TRUE;
@@ -1289,7 +1499,7 @@ class PlanEntityLogframe extends GHIBlockBase implements MultiStepFormBlockInter
   /**
    * Get the available attachment prototypes for the current plan context.
    *
-   * @return \Drupal\ghi_plans\ApiObjects\AttachmentPrototype\AttachmentPrototype[]
+   * @return \Drupal\ghi_plans\ApiObjects\Prototypes\AttachmentPrototype[]
    *   An array of attachment prototypes.
    */
   private function getAttachmentPrototypes() {
@@ -1297,8 +1507,11 @@ class PlanEntityLogframe extends GHIBlockBase implements MultiStepFormBlockInter
     if (!$plan_object) {
       return [];
     }
-    /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\PlanAttachmentPrototypeQuery $query */
-    $query = $this->endpointQueryManager->createInstance('plan_attachment_prototype_query');
+    /** @var \Drupal\ghi_plans\Plugin\FabricQuery\AttachmentPrototypeQuery $query */
+    $query = $this->getQueryHandler('attachment_prototype');
+    if (!$query) {
+      return [];
+    }
     $attachment_prototypes = $query->getDataPrototypesForPlan($plan_object->getSourceId());
 
     $entity_ref_code = $this->getBlockConfig()['entities']['entity_ref_code'] ?? NULL;
@@ -1307,15 +1520,6 @@ class PlanEntityLogframe extends GHIBlockBase implements MultiStepFormBlockInter
       $entity_ref_codes = array_keys($this->logframeManager->getEntityTypesFromPlanObject($plan_object));
     }
     return $this->filterAttachmentPrototypesByEntityRefCodes($attachment_prototypes, $entity_ref_codes);
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public static function trustedCallbacks() {
-    return [
-      'lazyBuildTables',
-    ];
   }
 
   /**

@@ -33,7 +33,7 @@
   {%- if items -%}
     <{{ list_type }}{{ attributes }}>
       {%- for item in items -%}
-        <li{{ item.attributes }}>{{ item.value }}</li>
+        <li{{ item.attributes }}>{{ item.preview }}{{ item.value }}</li>
       {%- endfor -%}
         <li class="overflow-item expandable second-level">
           <div data-cd-component="cd-dropdown" data-cd-icon="arrow-down" class="cd-dropdown" aria-labelledby="dropdown-title" data-cd-toggable="{{ 'More'|t }}">

@@ -9,13 +9,14 @@ use Drupal\Core\PageCache\ResponsePolicy\KillSwitch;
 use Drupal\Core\Session\AccountProxyInterface;
 use Drupal\Core\Url;
 use Drupal\hpc_api\ConfigService;
-use Drupal\hpc_api\Event\EndpointDataEvent;
 use Drupal\hpc_api\Helpers\QueryHelper;
 use Drupal\hpc_api\Traits\SimpleCacheTrait;
+use Drupal\hpc_remote_data_cache\RemoteDataCacheInterface;
+use Drupal\hpc_remote_data_cache\RemoteDataCacheItem;
 use GuzzleHttp\ClientInterface;
+use GuzzleHttp\Promise\Utils;
 use JsonMachine\Items;
 use Psr\Http\Message\ResponseInterface;
-use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
 /**
  * Class representing an endpoint query.
@@ -27,17 +28,15 @@ class EndpointQuery {
   use DependencySerializationTrait;
   use SimpleCacheTrait;
 
-  const SORT_ASC = 'ASC';
-  const SORT_DESC = 'DESC';
-
-  const SORT_METHOD_NUMERIC = 'numeric';
-  const SORT_METHOD_STRING = 'string';
-
   const AUTH_METHOD_NONE = 'none';
   const AUTH_METHOD_BASIC = 'basic_auth';
   const AUTH_METHOD_API_KEY = 'api_key';
 
   const LOG_ID = 'HPC API';
+
+  private const DEFAULT_CONNECT_TIMEOUT = 3;
+  private const DEFAULT_TIMEOUT = 25;
+  private const DEFAULT_FLOW_CUSTOM_SEARCH_TIMEOUT = 6;
 
   /**
    * The config service.
@@ -45,13 +44,6 @@ class EndpointQuery {
    * @var \Drupal\hpc_api\ConfigService
    */
   protected $configService;
-
-  /**
-   * The event dispatcher service.
-   *
-   * @var \Symfony\Contracts\EventDispatcher\EventDispatcherInterface
-   */
-  protected $eventDispatcher;
 
   /**
    * The logger factory service.
@@ -90,6 +82,13 @@ class EndpointQuery {
    * @var \GuzzleHttp\Client
    */
   protected $httpClient;
+
+  /**
+   * The persistent remote data cache service.
+   *
+   * @var \Drupal\hpc_remote_data_cache\RemoteDataCacheInterface|null
+   */
+  protected ?RemoteDataCacheInterface $remoteDataCache;
 
   /**
    * The version of the endpoint to be used.
@@ -171,14 +170,14 @@ class EndpointQuery {
   /**
    * Constructs a new EndpointQuery object.
    */
-  public function __construct(ConfigService $config_service, EventDispatcherInterface $event_dispatcher, LoggerChannelFactoryInterface $logger_factory, KillSwitch $kill_switch, ClientInterface $http_client, AccountProxyInterface $user, TimeInterface $time) {
+  public function __construct(ConfigService $config_service, LoggerChannelFactoryInterface $logger_factory, KillSwitch $kill_switch, ClientInterface $http_client, AccountProxyInterface $user, TimeInterface $time, ?RemoteDataCacheInterface $remote_data_cache = NULL) {
     $this->configService = $config_service;
-    $this->eventDispatcher = $event_dispatcher;
     $this->loggerFactory = $logger_factory;
     $this->killSwitch = $kill_switch;
     $this->httpClient = $http_client;
     $this->user = $user;
     $this->time = $time;
+    $this->remoteDataCache = $remote_data_cache;
 
     $this->endpointVersion = $this->configService->getDefaultApiVersion();
     $this->endpointUrl = NULL;
@@ -186,8 +185,8 @@ class EndpointQuery {
     $this->useCache = TRUE;
     $this->cacheBaseTime = NULL;
     $this->orderBy = NULL;
-    $this->sort = self::SORT_ASC;
-    $this->sortMethod = self::SORT_METHOD_NUMERIC;
+    $this->sort = SORT_ASC;
+    $this->sortMethod = SORT_NUMERIC;
     $this->authMethod = self::AUTH_METHOD_BASIC;
   }
 
@@ -205,8 +204,8 @@ class EndpointQuery {
     }
     $this->endpointArgs = !empty($arguments['query_args']) ? $arguments['query_args'] : [];
     $this->orderBy = !empty($arguments['order_by']) ? $arguments['order_by'] : NULL;
-    $this->sort = !empty($arguments['sort']) ? $arguments['sort'] : self::SORT_ASC;
-    $this->sortMethod = !empty($arguments['sort_method']) ? $arguments['sort_method'] : self::SORT_METHOD_NUMERIC;
+    $this->sort = !empty($arguments['sort']) ? $arguments['sort'] : SORT_ASC;
+    $this->sortMethod = !empty($arguments['sort_method']) ? $arguments['sort_method'] : SORT_NUMERIC;
     $this->setAuthMethod(!empty($arguments['auth_method']) ? $arguments['auth_method'] : self::AUTH_METHOD_BASIC);
     $this->setUseCache(array_key_exists('cache', $arguments) ? (bool) $arguments['cache'] : $this->useCache());
     $this->setCacheBaseTime(array_key_exists('cache_base_time', $arguments) ? (int) $arguments['cache_base_time'] : 0);
@@ -270,6 +269,9 @@ class EndpointQuery {
    * Replace placeholders with values in an endpoint.
    */
   public function substitutePlaceholders($string) {
+    if (empty($string)) {
+      return $string;
+    }
     $placeholders = $this->getPlaceholders();
     if (!empty($placeholders)) {
       // Replace placeholders with actual values.
@@ -341,43 +343,113 @@ class EndpointQuery {
   }
 
   /**
+   * Get the headers for a request.
+   *
+   * @return array
+   *   An array of headers.
+   */
+  public function getHeaders() {
+    $headers = $this->getAuthHeaders();
+    if ($this->configService->get('use_gzip_compression', FALSE)) {
+      $headers['Accept-Encoding'] = 'deflate,gzip';
+    }
+    return $headers;
+  }
+
+  /**
    * Execute the current query and preprocess the results.
    *
-   * @return object|array
-   *   The result from the endpoint query.
+   * @return object|array|false
+   *   The result from the endpoint query or FALSE.
    */
-  public function query() {
+  public function query(): object|array|false {
     $endpoint_url = $this->getFullEndpointUrl();
-
-    $cache_key = $this->getCacheKey([
-      'endpoint' => $endpoint_url,
-      'auth_method' => $this->getAuthMethod(),
-      'headers' => $this->getAuthHeaders(),
-    ]);
+    $cache_key = $this->getEndpointResponseCacheKey($endpoint_url, 'query');
+    $use_remote_cache = $this->canUseRemoteDataCache();
+    $remote_cache_cid = $use_remote_cache ? $this->getRemoteDataCacheCid($endpoint_url) : NULL;
+    $remote_cache_item = NULL;
+    $response_data = NULL;
 
     // First check if statically cached data is available. Might come from
     // previous requests.
-    if (!$this->useCache() || !($response = $this->cache($cache_key, NULL, FALSE, $this->getCacheBaseTime()))) {
-      // No cached data available, so we run the API request.
-      $result = $this->sendQuery();
-      if (empty($result) || !$result instanceof ResponseInterface) {
-        return FALSE;
+    if ($this->useCache()) {
+      if ($use_remote_cache) {
+        $remote_cache_item = $this->remoteDataCache->get($remote_cache_cid);
+        if ($this->canUseRemoteCacheItem($remote_cache_item)) {
+          if ($remote_cache_item->isStale()) {
+            $this->remoteDataCache->queueRefresh($remote_cache_item);
+          }
+          $response_data = $remote_cache_item->getPayload();
+        }
       }
-      if ($result->getStatusCode() != 200) {
-        $this->handleError($result, $endpoint_url);
-        return FALSE;
-      }
-
-      // Store the result in the static cache variable.
-      if ($result->getStatusCode() == 200) {
-        // Only cache the response, if the call returned successfully.
-        $response = (string) $result->getBody();
-        $this->cache($cache_key, $response, FALSE, NULL, $this->getCacheTags());
+      else {
+        $response_data = $this->cache($cache_key, NULL, FALSE, $this->getCacheBaseTime()) ?: NULL;
       }
     }
 
-    if (empty($response)) {
-      return [];
+    if ($response_data !== NULL) {
+      $processed_data = $this->processResponseData($response_data, $cache_key);
+      if ($processed_data !== FALSE) {
+        return $processed_data;
+      }
+      $this->cache($cache_key, NULL, TRUE);
+      $response_data = NULL;
+    }
+
+    // No valid cached data available, so we run the API request.
+    $response = $this->sendQuery();
+    if (empty($response) || !$response instanceof ResponseInterface) {
+      if ($use_remote_cache && $this->canUseRemoteCacheItemAfterFetchError($remote_cache_item)) {
+        return $this->processResponseData($remote_cache_item->getPayload(), $cache_key);
+      }
+      return FALSE;
+    }
+    if ($response->getStatusCode() != 200) {
+      $this->handleError($response, $endpoint_url);
+      if ($use_remote_cache && $this->canUseRemoteCacheItemAfterFetchError($remote_cache_item)) {
+        return $this->processResponseData($remote_cache_item->getPayload(), $cache_key);
+      }
+      return FALSE;
+    }
+
+    $response_data = (string) $response->getBody();
+    $processed_data = $this->processResponseData($response_data, $cache_key);
+    if ($processed_data === FALSE) {
+      return FALSE;
+    }
+
+    if ($use_remote_cache) {
+      $this->remoteDataCache->set($remote_cache_cid, $response_data, [
+        'refresher_id' => 'hpc_api_endpoint',
+        'endpoint_url' => $endpoint_url,
+        'context' => [
+          'auth_method' => $this->getAuthMethod(),
+        ],
+        'cache_tags' => $this->getCacheTags(),
+        'fresh_ttl' => (int) $this->configService->get('cache_lifetime'),
+      ]);
+    }
+    else {
+      $this->cache($cache_key, $response_data, FALSE, NULL, $this->getCacheTags());
+    }
+    return $processed_data;
+  }
+
+  /**
+   * Process the response data.
+   *
+   * @param string $response
+   *   The response data as a string.
+   * @param string $cache_key
+   *   The cache key.
+   *
+   * @return array|object|false
+   *   The processed data or FALSE.
+   */
+  private function processResponseData(string $response, string $cache_key) {
+    if ($response === '') {
+      $this->cache($cache_key, NULL, TRUE);
+      return FALSE;
     }
 
     // Now handle the JSON response, extract the data.
@@ -392,9 +464,7 @@ class EndpointQuery {
     foreach ($json as $key => $item) {
       switch ($key) {
         case 'data':
-          $event = new EndpointDataEvent($this, $item);
-          $this->eventDispatcher->dispatch($event, EndpointDataEvent::class);
-          $data = $event->getData();
+          $data = $item;
           break;
 
         case 'meta':
@@ -403,7 +473,12 @@ class EndpointQuery {
       }
     }
 
-    if (!is_array($data) && !is_object($data) && !count($data)) {
+    if ($data === NULL) {
+      $this->cache($cache_key, NULL, TRUE);
+      return FALSE;
+    }
+
+    if (is_countable($data) && !count($data)) {
       return [];
     }
 
@@ -430,18 +505,18 @@ class EndpointQuery {
 
     if ($order_by !== NULL && $object_list && !empty($object_list[0]->$order_by)) {
       uasort($object_list, function ($a, $b) use ($order_by, $sort, $sort_method) {
-        if ($sort_method == self::SORT_METHOD_NUMERIC) {
+        if ($sort_method == SORT_NUMERIC) {
           // Sort numeric values.
-          if ($sort == self::SORT_ASC) {
+          if ($sort == SORT_ASC) {
             return $a->$order_by > $b->$order_by;
           }
-          if ($sort == self::SORT_DESC) {
+          if ($sort == SORT_DESC) {
             return $a->$order_by < $b->$order_by;
           }
         }
         else {
           // Sort string values, case insensitive.
-          return $sort == self::SORT_ASC ? strcasecmp($a->$order_by, $b->$order_by) : strcasecmp($b->$order_by, $a->$order_by);
+          return $sort == SORT_ASC ? strcasecmp($a->$order_by, $b->$order_by) : strcasecmp($b->$order_by, $a->$order_by);
         }
       });
       if ($original_key) {
@@ -456,14 +531,11 @@ class EndpointQuery {
     if (!empty($meta) && empty($data->meta)) {
       $data->meta = $meta;
     }
-    return $data;
+    return $data ?? FALSE;
   }
 
   /**
    * Send an API query to the the given URL.
-   *
-   * @param array $headers
-   *   An array of headers to send with the request.
    *
    * @return \Psr\Http\Message\ResponseInterface
    *   A http response object on successful request or FALSE in case of a
@@ -471,36 +543,14 @@ class EndpointQuery {
    *
    * @see Guzzle
    */
-  public function sendQuery(?array $headers = NULL) {
-    if ($headers == NULL) {
-      $headers = $this->getAuthHeaders();
-    }
-
-    if ($this->configService->get('use_gzip_compression', FALSE)) {
-      $headers['Accept-Encoding'] = 'deflate,gzip';
-    }
-
-    // Mark this as a backend call so it's not being cached as a public query.
-    if ($this->authMethod == self::AUTH_METHOD_API_KEY) {
-      $this->endpointArgs['hpc_backend'] = 1;
-    }
-
+  public function sendQuery() {
+    $endpoint_url = $this->getFullEndpointUrl();
     $start = microtime(TRUE);
     try {
-      $response = $this->httpClient->get($this->getFullEndpointUrl(), [
-        'headers' => $headers,
-        'timeout' => $this->configService->get('timeout', 30),
-          // @todo Check if we are the only ones who need this.
-        'chunk_size_read' => 32768,
-      ]);
+      $response = $this->httpClient->get($endpoint_url, $this->getRequestOptions($endpoint_url));
     }
     catch (\Exception $e) {
-      if (method_exists($e, 'getResponse')) {
-        $response = $e->getResponse();
-      }
-      else {
-        $response = FALSE;
-      }
+      $response = method_exists($e, 'getResponse') ? $e->getResponse() : FALSE;
     }
 
     if (empty($response) || !$response instanceof ResponseInterface || $response->getStatusCode() != 200) {
@@ -512,18 +562,138 @@ class EndpointQuery {
     }
 
     // Keep stats.
-    QueryHelper::endpointCallTimeStorage($this->getFullEndpointUrl(), microtime(TRUE) - $start);
-
+    QueryHelper::endpointCallTimeStorage($endpoint_url, microtime(TRUE) - $start);
     return $response;
+  }
+
+  /**
+   * Fetch a remote endpoint response body without using response cache.
+   *
+   * @param string $endpoint_url
+   *   The fully qualified endpoint URL.
+   * @param string|null $auth_method
+   *   Optional authentication method override.
+   * @param string|null $error
+   *   Error storage.
+   *
+   * @return string|false
+   *   The raw response body, or FALSE on failure.
+   */
+  public function fetchRemoteEndpointResponse(string $endpoint_url, ?string $auth_method = NULL, ?string &$error = NULL): string|false {
+    $original_auth_method = $this->getAuthMethod();
+    if ($auth_method !== NULL) {
+      $this->setAuthMethod($auth_method);
+    }
+
+    $start = microtime(TRUE);
+    try {
+      $response = $this->httpClient->get($endpoint_url, $this->getRequestOptions($endpoint_url));
+    }
+    catch (\Exception $e) {
+      $response = method_exists($e, 'getResponse') ? $e->getResponse() : FALSE;
+      $error = $e->getMessage();
+    }
+    finally {
+      $this->setAuthMethod($original_auth_method);
+    }
+
+    QueryHelper::endpointCallTimeStorage($endpoint_url, microtime(TRUE) - $start);
+    if (empty($response) || !$response instanceof ResponseInterface) {
+      return FALSE;
+    }
+    if ($response->getStatusCode() != 200) {
+      $error = trim($response->getReasonPhrase()) ?: 'Endpoint refresh failed with status ' . $response->getStatusCode() . '.';
+      $this->handleError($response, $endpoint_url);
+      return FALSE;
+    }
+    return (string) $response->getBody();
+  }
+
+  /**
+   * Query a pool of endpoints.
+   *
+   * @param string[] $endpoint_urls
+   *   An array of fully qualified endpoint urls.
+   */
+  public function queryPool($endpoint_urls) {
+    $promises = [];
+    foreach ($endpoint_urls as $endpoint_url) {
+      $cache_key = $this->getEndpointResponseCacheKey($endpoint_url, 'query');
+      $use_remote_cache = $this->canUseRemoteDataCache();
+      $remote_cache_cid = $use_remote_cache ? $this->getRemoteDataCacheCid($endpoint_url) : NULL;
+
+      // First check if statically cached data is available. Might come from
+      // previous requests.
+      if ($this->useCache()) {
+        if ($use_remote_cache) {
+          $remote_cache_item = $this->remoteDataCache->get($remote_cache_cid);
+          if ($this->canUseRemoteCacheItem($remote_cache_item)) {
+            if ($this->processResponseData($remote_cache_item->getPayload(), $cache_key) !== FALSE) {
+              if ($remote_cache_item->isStale()) {
+                $this->remoteDataCache->queueRefresh($remote_cache_item);
+              }
+              continue;
+            }
+          }
+        }
+        else {
+          $response_data = $this->cache($cache_key, NULL, FALSE, $this->getCacheBaseTime());
+          if ($response_data !== NULL && $this->processResponseData($response_data, $cache_key) !== FALSE) {
+            continue;
+          }
+        }
+      }
+      // No cached data available, so we run the API request.
+      $start = microtime(TRUE);
+      $query_options = $this->getRequestOptions($endpoint_url);
+      $promise = $this->httpClient->getAsync($endpoint_url, $query_options);
+      $promise->then(
+        function ($response) use ($cache_key, $endpoint_url, $remote_cache_cid, $use_remote_cache, $start) {
+          QueryHelper::endpointCallTimeStorage($endpoint_url . ' (pooled query)', microtime(TRUE) - $start);
+
+          if (empty($response) || !$response instanceof ResponseInterface) {
+            return FALSE;
+          }
+          if ($response->getStatusCode() != 200) {
+            $this->handleError($response, $endpoint_url);
+            return FALSE;
+          }
+
+          $response_data = (string) $response->getBody();
+          $processed_data = $this->processResponseData($response_data, $cache_key);
+          if ($processed_data === FALSE) {
+            return FALSE;
+          }
+
+          if ($use_remote_cache) {
+            $this->remoteDataCache->set($remote_cache_cid, $response_data, [
+              'refresher_id' => 'hpc_api_endpoint',
+              'endpoint_url' => $endpoint_url,
+              'context' => [
+                'auth_method' => $this->getAuthMethod(),
+              ],
+              'cache_tags' => $this->getCacheTags(),
+              'fresh_ttl' => (int) $this->configService->get('cache_lifetime'),
+            ]);
+          }
+          else {
+            $this->cache($cache_key, $response_data, FALSE, NULL, $this->getCacheTags());
+          }
+        },
+      );
+      $promises[] = $promise;
+    }
+
+    Utils::settle($promises)->wait();
   }
 
   /**
    * Retrieve data from the API.
    *
-   * @return object|array
-   *   The result from the endpoint query.
+   * @return object|array|false
+   *   The result from the endpoint query or FALSE.
    */
-  public function getData() {
+  public function getData(): object|array|false {
     return $this->query();
   }
 
@@ -626,6 +796,150 @@ class EndpointQuery {
    */
   public function getAuthMethod() {
     return $this->authMethod;
+  }
+
+  /**
+   * Build the normal response cache key for an endpoint URL.
+   *
+   * @param string $endpoint_url
+   *   The full endpoint URL.
+   * @param string|null $called_method
+   *   Optional caller method for compatibility with pooled query keys.
+   *
+   * @return string
+   *   The cache key.
+   */
+  private function getEndpointResponseCacheKey(string $endpoint_url, ?string $called_method = NULL): string {
+    return $this->getCacheKey([
+      'endpoint' => $endpoint_url,
+      'auth_method' => $this->getAuthMethod(),
+      'headers' => $this->getAuthHeaders(),
+    ], NULL, $called_method);
+  }
+
+  /**
+   * Build HTTP request options for an endpoint URL.
+   *
+   * @param string $endpoint_url
+   *   The full endpoint URL.
+   *
+   * @return array
+   *   The request options.
+   */
+  private function getRequestOptions(string $endpoint_url): array {
+    return [
+      'headers' => $this->getHeaders(),
+      'connect_timeout' => $this->getPositiveConfigValue('connect_timeout', self::DEFAULT_CONNECT_TIMEOUT),
+      'timeout' => $this->getEndpointTimeout($endpoint_url),
+      // @todo Check if we are the only ones who need this.
+      'chunk_size_read' => 32768,
+    ];
+  }
+
+  /**
+   * Get the total timeout for an endpoint URL.
+   *
+   * @param string $endpoint_url
+   *   The full endpoint URL.
+   *
+   * @return int|float
+   *   The timeout in seconds.
+   */
+  private function getEndpointTimeout(string $endpoint_url): int|float {
+    $path = parse_url($endpoint_url, PHP_URL_PATH) ?: '';
+    if (str_ends_with($path, '/fts/flow/custom-search')) {
+      return $this->getPositiveConfigValue('flow_custom_search_timeout', self::DEFAULT_FLOW_CUSTOM_SEARCH_TIMEOUT);
+    }
+    return $this->getPositiveConfigValue('timeout', self::DEFAULT_TIMEOUT);
+  }
+
+  /**
+   * Get a positive numeric config value.
+   *
+   * @param string $key
+   *   The config key.
+   * @param int|float $default
+   *   The default value.
+   *
+   * @return int|float
+   *   The config value or default.
+   */
+  private function getPositiveConfigValue(string $key, int|float $default): int|float {
+    $value = $this->configService->get($key, $default);
+    return is_numeric($value) && $value > 0 ? $value + 0 : $default;
+  }
+
+  /**
+   * Check if the persistent remote data cache can be used.
+   *
+   * @return bool
+   *   TRUE if the remote data cache can be used, FALSE otherwise.
+   */
+  private function canUseRemoteDataCache(): bool {
+    return !$this->authHeader && ($this->remoteDataCache?->isEnabled() ?? FALSE);
+  }
+
+  /**
+   * Check if a remote cache item can satisfy this request.
+   *
+   * @param \Drupal\hpc_remote_data_cache\RemoteDataCacheItem|null $item
+   *   The remote cache item.
+   *
+   * @return bool
+   *   TRUE if the item can be used, FALSE otherwise.
+   */
+  private function canUseRemoteCacheItem(?RemoteDataCacheItem $item): bool {
+    if (!$item) {
+      return FALSE;
+    }
+    $cache_base_time = $this->getCacheBaseTime();
+    if ($cache_base_time && $item->getFetched() < $cache_base_time) {
+      return FALSE;
+    }
+    return $cache_base_time ? $item->isFresh() : ($item->isFresh() || $item->isStale());
+  }
+
+  /**
+   * Check if a remote cache item can be used after a fetch error.
+   *
+   * @param \Drupal\hpc_remote_data_cache\RemoteDataCacheItem|null $item
+   *   The remote cache item.
+   *
+   * @return bool
+   *   TRUE if the item can be used after an error, FALSE otherwise.
+   */
+  private function canUseRemoteCacheItemAfterFetchError(?RemoteDataCacheItem $item): bool {
+    if (!$item instanceof RemoteDataCacheItem || !$this->remoteDataCache->canServeExpiredOnError()) {
+      return FALSE;
+    }
+    $cache_base_time = $this->getCacheBaseTime();
+    if ($cache_base_time && $item->getFetched() < $cache_base_time) {
+      return FALSE;
+    }
+    return TRUE;
+  }
+
+  /**
+   * Build a persistent remote data cache id for an endpoint URL.
+   *
+   * @param string $endpoint_url
+   *   The full endpoint URL.
+   *
+   * @return string
+   *   The cache id.
+   */
+  private function getRemoteDataCacheCid(string $endpoint_url): string {
+    return $this->remoteDataCache->buildCid('hpc_api_endpoint', $this->getAuthMethod() . "\n" . $this->getAuthHeaderFingerprint() . "\n" . $endpoint_url);
+  }
+
+  /**
+   * Build a non-secret fingerprint for the resolved authentication headers.
+   *
+   * @return string
+   *   The auth header fingerprint.
+   */
+  private function getAuthHeaderFingerprint(): string {
+    return hash('sha256', serialize($this->getAuthHeaders()));
   }
 
   /**

@@ -6,50 +6,55 @@ use Drupal\Component\Utility\Html;
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\Markup;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\ghi_blocks\Traits\ConfigurationItemValuePreviewTrait;
+use Drupal\ghi_form_elements\Attribute\ConfigurationContainerItem;
 use Drupal\ghi_form_elements\ConfigurationContainerItemPluginBase;
+use Drupal\ghi_plans\ApiObjects\Entities\EntityObjectInterface;
+use Drupal\ghi_plans\ApiObjects\Entities\GoverningEntity;
+use Drupal\ghi_plans\Entity\Plan;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Provides an entity counter item for configuration containers.
  *
- * This item type allows the following options when using as part of a
+ * This item type allows the following options when used as part of a
  * configuration container:
  * - entity_type: Sets a preselected entity type and hides the entity type
  *   select element.
  * - value_preview: If set and set to FALSE, will hide the value preview.
- *
- * @ConfigurationContainerItem(
- *   id = "entity_counter",
- *   label = @Translation("Entity counter"),
- *   description = @Translation("This item displays the number of entities of a specific type."),
- * )
  */
+#[ConfigurationContainerItem(
+  id: 'entity_counter',
+  label: new TranslatableMarkup('Entity counter'),
+  description: new TranslatableMarkup('This item displays the number of entities of a specific type.'),
+)]
 class EntityCounter extends ConfigurationContainerItemPluginBase {
 
   use ConfigurationItemValuePreviewTrait;
 
   /**
-   * The plan entities query.
+   * The entities query.
    *
-   * @var \Drupal\ghi_plans\Plugin\EndpointQuery\PlanEntitiesQuery
+   * @var \Drupal\ghi_plans\Plugin\FabricQuery\EntityQuery
    */
-  public $planEntitiesQuery;
+  public $entityQuery;
 
   /**
    * The icon query.
    *
-   * @var \Drupal\hpc_api\Plugin\EndpointQuery\IconQuery
+   * @var \Drupal\hpc_api\Plugin\FabricQuery\IconQuery
    */
   public $iconQuery;
 
   /**
    * {@inheritdoc}
    */
-  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition): EntityCounter {
+    /** @var self $instance */
     $instance = parent::create($container, $configuration, $plugin_id, $plugin_definition);
-    $instance->iconQuery = $instance->endpointQueryManager->createInstance('icon_query');
-    $instance->planEntitiesQuery = $instance->endpointQueryManager->createInstance('plan_entities_query');
+    $instance->iconQuery = $instance->fabricQueryManager->createInstance('icon');
+    $instance->entityQuery = $instance->fabricQueryManager->createInstance('entity');
     return $instance;
   }
 
@@ -177,23 +182,23 @@ class EntityCounter extends ConfigurationContainerItemPluginBase {
    * Get a popover trigger.
    */
   private function getPopover() {
-
+    /** @var \Drupal\ghi_base_objects\ApiObjects\BaseObjectInterface $entity */
     $entity = $this->getContextValue('entity');
 
     // Get the icon if there is any.
     $icon = NULL;
-    if ($entity && !empty($entity->icon)) {
-      $icon = $this->iconQuery->getIconEmbedCode($entity->icon);
+    if ($entity instanceof GoverningEntity && $entity->hasIcon()) {
+      $icon = $this->iconQuery->getIconEmbedCode($entity->getIcon());
     }
 
     $popover_content = NULL;
     $entities = $this->getMatchingEntities();
     if (!empty($entities)) {
       usort($entities, function ($a, $b) {
-        return strnatcmp($a->sort_key, $b->sort_key);
+        return strnatcmp($a->getSortKey(), $b->getSortKey());
       });
       $items = array_map(function ($item) {
-        return Markup::create($item->name . '<br /> ' . $item->description);
+        return Markup::create($item->getName() . '<br /> ' . $item->getDescription());
       }, $entities);
       $popover_content = [
         '#theme' => 'item_list',
@@ -225,21 +230,21 @@ class EntityCounter extends ConfigurationContainerItemPluginBase {
    *
    * @param string $entity_type
    *   The entity type.
-   * @param int $entity_prototype
-   *   The entity prototype.
+   * @param int $entity_prototype_id
+   *   The entity prototype id.
    *
-   * @return array
+   * @return \Drupal\ghi_plans\ApiObjects\Entities\EntityObjectInterface[]
    *   An array of entity objects.
    */
-  private function getMatchingEntities($entity_type = NULL, $entity_prototype = NULL) {
+  private function getMatchingEntities($entity_type = NULL, $entity_prototype_id = NULL) {
     $entity_type = $entity_type ?? $this->get('entity_type');
-    $entity_prototype = $entity_prototype ?? $this->get('entity_prototype');
+    $entity_prototype_id = $entity_prototype_id ?? $this->get('entity_prototype');
     $entities = $this->getEntities($entity_type);
-    if (empty($entities)) {
-      return [];
+    if ($entity_prototype_id === NULL) {
+      return $entities;
     }
-    return array_filter($entities, function ($entity) use ($entity_prototype) {
-      return $entity->entity_prototype_id == $entity_prototype;
+    return array_filter($entities, function (EntityObjectInterface $entity) use ($entity_prototype_id) {
+      return $entity->getPrototypeId() == $entity_prototype_id;
     });
   }
 
@@ -249,15 +254,17 @@ class EntityCounter extends ConfigurationContainerItemPluginBase {
    * @param string $entity_type
    *   Can be either "plan" or "governing".
    *
-   * @return array|null
-   *   An array of entity objects or NULL.
+   * @return \Drupal\ghi_plans\ApiObjects\Entities\EntityObjectInterface[]
+   *   An array of entity objects.
    */
   private function getEntities($entity_type) {
     $context = $this->getContext();
-    if (empty($context['base_object']) || !$context['base_object'] instanceof ContentEntityInterface) {
+    $base_object = $context['base_object'] ?? NULL;
+    $plan_object = $context['plan_object'] ?? NULL;
+    if (!$base_object instanceof ContentEntityInterface || !$plan_object instanceof Plan) {
       return [];
     }
-    return $this->planEntitiesQuery->getPlanEntities($context['base_object'], $entity_type, NULL);
+    return $this->entityQuery->getEntitiesForPlan($plan_object->getSourceId(), $base_object, $entity_type) ?? [];
   }
 
   /**
@@ -286,16 +293,15 @@ class EntityCounter extends ConfigurationContainerItemPluginBase {
     $entity_prototype_options = [];
     $weight = [];
     foreach ($this->getEntities($entity_type) ?? [] as $entity) {
-      $prototype_id = $entity->entity_prototype_id;
+      $prototype_id = $entity->getPrototypeId();
       if (empty($entity_prototype_options[$prototype_id])) {
-        $name = $entity->plural_name;
-        $entity_prototype_options[$prototype_id] = $name;
-        $weight[$prototype_id] = $entity->order_number;
+        $entity_prototype_options[$prototype_id] = $entity->getPrototype()->getNamePlural();
+        $weight[$prototype_id] = $entity->getOrderNumber();
       }
     }
 
-    uksort($entity_prototype_options, function ($prototype_id_a, $prototype_id_b) use ($weight) {
-      return $weight[$prototype_id_a] - $weight[$prototype_id_b];
+    uksort($entity_prototype_options, function ($pid_a, $pid_b) use ($weight) {
+      return $weight[$pid_a] - $weight[$pid_b];
     });
     return $entity_prototype_options;
   }

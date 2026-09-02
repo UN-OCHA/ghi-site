@@ -23,6 +23,7 @@ class ArticleWizard extends ContentWizardBase {
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container) {
+    /** @var self */
     $instance = parent::create($container);
     $instance->articleManager = $container->get('ghi_content.manager.article');
     return $instance;

@@ -35,7 +35,7 @@ trait BlockCommentTrait {
    *   The value to render as a comment.
    *
    * @return array|null
-   *   A render array or null if the value argument is not valid.
+   *   A render array or NULL if the value argument is not valid.
    */
   public function buildBlockCommentRenderArray($value) {
     if (empty($value)) {

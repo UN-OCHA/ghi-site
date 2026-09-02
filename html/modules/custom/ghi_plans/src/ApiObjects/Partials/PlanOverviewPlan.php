@@ -4,11 +4,15 @@ namespace Drupal\ghi_plans\ApiObjects\Partials;
 
 use Drupal\ghi_base_objects\ApiObjects\BaseObject;
 use Drupal\ghi_base_objects\ApiObjects\Country;
+use Drupal\ghi_plans\ApiObjects\Attachments\CaseloadAttachmentInterface;
+use Drupal\ghi_plans\ApiObjects\Mocks\PlanOverviewPlanMock;
+use Drupal\ghi_plans\ApiObjects\PlanReportingPeriod;
 use Drupal\ghi_plans\Entity\Plan;
 use Drupal\ghi_plans\Traits\AttachmentFilterTrait;
 use Drupal\ghi_plans\Traits\PlanReportingPeriodTrait;
 use Drupal\ghi_plans\Traits\PlanTypeTrait;
-use Drupal\hpc_common\Helpers\StringHelper;
+use Drupal\hpc_common\Helpers\CommonHelper;
+use Drupal\hpc_api\Helpers\StringHelper;
 
 /**
  * Abstraction class for a plan partial object.
@@ -24,23 +28,71 @@ class PlanOverviewPlan extends BaseObject {
   use AttachmentFilterTrait;
 
   /**
-   * Map the raw data.
+   * The plan type.
    *
-   * @return object
-   *   An object with the mapped data.
+   * @var string|null
    */
-  protected function map() {
-    $data = $this->getRawData();
-    return (object) [
-      'id' => $data->id,
-      'name' => $data->name,
-      'funding' => $data->funding->totalFunding ?? 0,
-      'requirements' => $data->requirements ? $data->requirements->revisedRequirements : 0,
-      'coverage' => $data->funding->progress ?? 0,
-      'caseloads' => array_map(function ($item) {
-        return new PlanOverviewCaseload($item);
-      }, $data->caseLoads ?? []),
-    ];
+  protected ?string $planType;
+
+  /**
+   * The requirements.
+   *
+   * @var float
+   */
+  protected float $requirements;
+
+  /**
+   * The funding.
+   *
+   * @var float
+   */
+  protected float $funding;
+
+  /**
+   * Whether the plan is part of the GHO.
+   *
+   * @var bool
+   */
+  protected bool $isPartOfGHO;
+
+  /**
+   * The last published reporting period id.
+   *
+   * @var int|null
+   */
+  protected ?int $lastPublishedReportingPeriodId;
+
+  /**
+   * The countries.
+   *
+   * @var \Drupal\ghi_base_objects\ApiObjects\Country[]
+   */
+  protected array $countries;
+
+  /**
+   * The caseloads.
+   *
+   * @var \Drupal\ghi_plans\ApiObjects\Attachments\CaseloadAttachment[]
+   */
+  private $caseloads;
+
+  /**
+   * {@inheritdoc}
+   */
+  public function __construct(object $data) {
+    /** @var \Drupal\ghi_plans\ApiObjects\Plan $plan */
+    $plan = $data->plan;
+    $this->rawData = $data;
+    $this->id = $plan->id();
+    $this->name = $plan->getName();
+    $this->planType = $plan->getPlanType()?->getName() ?? NULL;
+    $this->requirements = ($data->requirements ?? NULL) ?: 0;
+    $this->funding = ($data->funding ?? NULL) ?: 0;
+    $this->isPartOfGHO = $plan->isPartOfGho();
+    $this->lastPublishedReportingPeriodId = $plan->getLastPublishedReportingPeriodId();
+    $this->countries = $plan->getCountries();
+    $this->caseloads = $data->caseloads ?? [];
+    usort($this->caseloads, fn($a, $b) => strcmp($a->getCustomId(), $b->getCustomId()));
   }
 
   /**
@@ -92,34 +144,6 @@ class PlanOverviewPlan extends BaseObject {
   }
 
   /**
-   * Get the plan type object from a plan.
-   *
-   * @return object
-   *   The plan type object if found.
-   */
-  private function getTypeObject() {
-    $plan_type = $this->getRawData()->planType ?? NULL;
-    return is_object($plan_type) ? $plan_type : NULL;
-  }
-
-  /**
-   * Get a property from the plan type object.
-   *
-   * @param string $property
-   *   The property to retrieve.
-   *
-   * @return mixed|null
-   *   The value of the plan type property or NULL if not found.
-   */
-  private function getTypeProperty($property) {
-    $plan_type = $this->getTypeObject();
-    if (!$plan_type || !property_exists($plan_type, $property)) {
-      return NULL;
-    }
-    return $plan_type->$property;
-  }
-
-  /**
    * Get the plan type.
    *
    * @return \Drupal\ghi_plans\Entity\PlanType|null
@@ -139,7 +163,7 @@ class PlanOverviewPlan extends BaseObject {
     if ($fetch_from_entity && $plan_type = $this->getPlanType()) {
       return $plan_type->label();
     }
-    return $this->getTypeProperty('name');
+    return $this->planType ?? NULL;
   }
 
   /**
@@ -239,7 +263,30 @@ class PlanOverviewPlan extends BaseObject {
    *   TRUE if the plan is partof the GHO, FALSE otherwise.
    */
   public function isPartOfGho() {
-    return $this->getRawData()->isPartOfGHO ?? FALSE;
+    return $this->isPartOfGHO;
+  }
+
+  /**
+   * Get the coverage for a plan based on the given funding.
+   *
+   * @param int $precision
+   *   The precision to use (number of digits after the decimal point).
+   *
+   * @return float
+   *   The coverage for a plan.
+   */
+  public function getCoverage(int $precision = 1): float {
+    return (float) CommonHelper::calculateRatio($this->getFunding() ?: 0, $this->getRequirements(), $precision + 2) * 100;
+  }
+
+  /**
+   * Get the requirements for a plan.
+   *
+   * @return int
+   *   The plan requirements.
+   */
+  public function getRequirements(): int {
+    return (int) $this->requirements;
   }
 
   /**
@@ -248,38 +295,8 @@ class PlanOverviewPlan extends BaseObject {
    * @return int
    *   The plan funding.
    */
-  public function getFunding() {
+  public function getFunding(): int {
     return (int) $this->funding;
-  }
-
-  /**
-   * Get the coverage for a plan.
-   *
-   * @return float
-   *   The coverage for a plan.
-   */
-  public function getCoverage() {
-    return (float) $this->coverage;
-  }
-
-  /**
-   * Get the requirements for a plan.
-   *
-   * @return int
-   *   The plan funding.
-   */
-  public function getRequirements() {
-    return (int) $this->requirements;
-  }
-
-  /**
-   * Check if the current plan partial has caseloads.
-   *
-   * @return bool
-   *   TRUE of the plan has caseloads, FALSE otherwise.
-   */
-  private function hasCaseloads() {
-    return !empty($this->caseloads);
   }
 
   /**
@@ -289,106 +306,22 @@ class PlanOverviewPlan extends BaseObject {
    *   The metric type.
    * @param string $metric_name
    *   The english metric name.
-   * @param string $fallback_type
-   *   The metric type of a fallback.
    *
-   * @return int
+   * @return int|float|null
    *   The caseload value if found.
    */
-  public function getCaseloadValue($metric_type, $metric_name = NULL, $fallback_type = NULL) {
-    if (!$this->hasCaseloads()) {
-      return NULL;
-    }
-    $caseload_item = $this->getCaseloadItemByType($metric_type);
-    if (!$caseload_item && $metric_name !== NULL) {
-      // Fallback, see https://humanitarian.atlassian.net/browse/HPC-7838
-      $caseload_item = $this->getCaseloadItemByName($metric_name);
-    }
-    if ($caseload_item && property_exists($caseload_item, 'value')) {
-      $value = $caseload_item->value;
-      return $value !== NULL ? (int) $caseload_item->value : NULL;
-    }
-    if ($fallback_type !== NULL) {
-      return $this->getCaseloadValue($fallback_type);
-    }
-    return NULL;
-  }
-
-  /**
-   * Get a caseload item by metric type.
-   *
-   * @param string $type
-   *   The metric type.
-   *
-   * @return object|null
-   *   A caseload item if found.
-   */
-  private function getCaseloadItemByType($type) {
-    $caseload_items = $this->getPlanCaseloadFields();
-    if (!$caseload_items) {
+  public function getCaseloadValue(string $metric_type, ?string $metric_name = NULL): int|float|null {
+    $plan_caseload = $this->getPlanCaseload();
+    if (!$plan_caseload) {
       return NULL;
     }
 
-    $candidates = array_filter($caseload_items, function ($item) use ($type) {
-      return (strtolower($item->type) == strtolower($type));
-    });
-    if (count($candidates) != 1) {
-      return NULL;
-    }
-    return reset($candidates);
-  }
-
-  /**
-   * Get a caseload item by metric name.
-   *
-   * @param string $name
-   *   The metric name.
-   *
-   * @return object|null
-   *   A caseload item if found.
-   */
-  private function getCaseloadItemByName($name) {
-    $caseload_items = $this->getPlanCaseloadFields();
-    if (!$caseload_items) {
-      return NULL;
-    }
-
-    // We support alternative names based on RPM.
-    $alternative_names = [
-      // Reached.
-      'Reached' => [
-        'Atteints',
-        'Personas Atendidas',
-      ],
-      // Cumulative reach.
-      'Cumulative reach' => [
-        'Cumul atteint',
-        'Alcance cumulativo',
-      ],
-      // Covered.
-      'Covered' => [
-        'Couverts',
-        'Personas con Necesidades Cubiertas',
-      ],
-    ];
-
-    $candidates = array_filter($caseload_items, function ($item) use ($name, $alternative_names) {
-      if (!property_exists($item->name, 'en')) {
-        return FALSE;
-      }
-      $item_name = $item->name->en;
-      if ($item_name == $name) {
-        return TRUE;
-      }
-      if (array_key_exists($name, $alternative_names) && in_array($item_name, $alternative_names[$name])) {
-        return TRUE;
-      }
-      return FALSE;
-    });
-    if (count($candidates) != 1) {
-      return NULL;
-    }
-    return reset($candidates);
+    $value = $plan_caseload->getCaseloadValue($metric_type, $metric_name);
+    // In general, we want to return int values for the caseload values.
+    // Only if this is invoked from a PlanOverviewPlanMock object, we want
+    // to support returning float-like values, as these are entered
+    // manually for the custom rows.
+    return $value !== NULL ? ((self::class instanceof PlanOverviewPlanMock) ? $value : (int) $value) : NULL;
   }
 
   /**
@@ -400,9 +333,9 @@ class PlanOverviewPlan extends BaseObject {
    * @return array
    *   An array of caseload fields.
    */
-  public function getPlanCaseloadFields($attachment_id = NULL) {
+  public function getPlanCaseloadFields($attachment_id = NULL): array {
     $caseload = $this->getPlanCaseload($attachment_id);
-    return $caseload?->getOriginalFields() ?? [];
+    return $caseload?->getFields() ?? [];
   }
 
   /**
@@ -414,8 +347,9 @@ class PlanOverviewPlan extends BaseObject {
    * @return \Drupal\ghi_plans\ApiObjects\Attachments\CaseloadAttachmentInterface|null
    *   A caseload object or NULL.
    */
-  public function getPlanCaseload($attachment_id = NULL) {
-    return $this->findPlanCaseload($this->caseloads, $attachment_id ?? $this->getEntity()?->getPlanCaseloadId());
+  public function getPlanCaseload(?int $attachment_id = NULL): ?CaseloadAttachmentInterface {
+    $attachment_id = ($attachment_id ?? $this->getEntity()?->getPlanCaseloadId()) ?? NULL;
+    return $this->findPlanCaseload($this->caseloads, $attachment_id);
   }
 
   /**
@@ -424,12 +358,11 @@ class PlanOverviewPlan extends BaseObject {
    * @return \Drupal\ghi_plans\ApiObjects\PlanReportingPeriod|null
    *   The reporting period object or NULL.
    */
-  public function getLastPublishedReportingPeriod() {
-    $period_id = $this->getRawData()->lastPublishedReportingPeriodId;
-    if (!$period_id) {
+  public function getLastPublishedReportingPeriod(): ?PlanReportingPeriod {
+    if (!$this->lastPublishedReportingPeriodId) {
       return NULL;
     }
-    return $this->getPlanReportingPeriod($this->id(), $period_id);
+    return $this->getPlanReportingPeriod($this->id(), $this->lastPublishedReportingPeriodId);
   }
 
   /**
@@ -437,26 +370,18 @@ class PlanOverviewPlan extends BaseObject {
    *
    * @return \Drupal\ghi_base_objects\ApiObjects\Country[]
    *   An array of country objects, keyed by the country id.
-   *   Each item has the properties "id", "name" and "latLng".
    */
-  public function getCountries() {
-    $countries = [];
-    if (empty($this->getRawData()->countries)) {
-      return $countries;
-    }
-    foreach ($this->getRawData()->countries as $country) {
-      $countries[$country->id] = new Country($country);
-    }
-    return $countries;
+  public function getCountries(): array {
+    return $this->countries;
   }
 
   /**
    * Get the country for a plan.
    *
-   * @return \Drupal\ghi_base_objects\ApiObjects\Country
-   *   A country object.
+   * @return \Drupal\ghi_base_objects\ApiObjects\Country|null
+   *   A country object or NULL.
    */
-  public function getCountry() {
+  public function getCountry(): ?Country {
     $countries = $this->getCountries();
     return count($countries) ? reset($countries) : NULL;
   }

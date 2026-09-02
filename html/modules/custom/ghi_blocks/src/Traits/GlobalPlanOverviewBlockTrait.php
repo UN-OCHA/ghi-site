@@ -8,17 +8,15 @@ namespace Drupal\ghi_blocks\Traits;
 trait GlobalPlanOverviewBlockTrait {
 
   /**
-   * Get the plan query.
+   * Get the plan overview query.
    *
-   * @return \Drupal\ghi_plans\Plugin\EndpointQuery\PlanOverviewQuery
-   *   The plan query plugin.
+   * @return \Drupal\ghi_plans\Plugin\FabricQuery\PlanOverviewQuery
+   *   The plan overview query plugin.
    */
-  private function getPlanQuery() {
-    $year = $this->getContextValue('year');
-    /** @var \Drupal\hpc_api\Query\EndpointQueryPluginInterface $query_handler */
-    $query_handler = $this->getQueryHandler('plans');
-    $query_handler->setPlaceholder('year', $year);
-    return $query_handler;
+  private function getPlanOverviewQuery() {
+    /** @var \Drupal\ghi_plans\Plugin\FabricQuery\PlanOverviewQuery $query */
+    $query = $this->getQueryHandler('plans_overview');
+    return $query;
   }
 
 }

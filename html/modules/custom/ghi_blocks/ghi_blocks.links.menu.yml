@@ -7,25 +7,24 @@ system.admin_config_ghi:
 ghi_blocks.config.global:
   title: 'Global settings'
   route_name: ghi_blocks.global_config
-  description: 'Configure global settings per year'
+  description: 'Configure global settings per year.'
   parent: system.admin_config_ghi
 ghi_blocks.config.map:
   title: 'Map settings'
   route_name: ghi_blocks.map_config
-  description: 'Configure map settings'
+  description: 'Configure map settings.'
+  parent: system.admin_config_ghi
+ghi_blocks.config.block:
+  title: 'Block settings'
+  route_name: ghi_blocks.block_config
+  description: 'Configure block settings.'
   parent: system.admin_config_ghi
 ghi_blocks.config.logframe:
   title: 'Logframe settings'
   route_name: ghi_blocks.logframe_config
-  description: 'Configure logframe settings'
+  description: 'Configure logframe settings.'
   parent: system.admin_config_ghi
-ghi_blocks.config.logframe.settings:
-  title: 'Settings'
-  route_name: ghi_blocks.logframe_config
-  description: 'Configure logframe settings'
-  parent: ghi_blocks.config.logframe
-  weight: -1
-ghi_blocks.config.table.settings:
+ghi_blocks.config.table:
   title: 'Table settings'
   route_name: ghi_blocks.table_config
   description: 'Configure table settings'
@@ -34,10 +33,10 @@ ghi_blocks.config.table.settings:
 ghi_blocks.reports.invalid_layout_definitions:
   title: 'Invalid layout definitions'
   route_name: ghi_blocks.reports.invalid_layout_definitions
-  description: 'List pages with invalid layout definitions'
+  description: 'List pages with invalid layout definitions.'
   parent: system.admin_reports
 ghi_blocks.reports.broken_revisions:
   title: 'Broken revisions'
   route_name: ghi_blocks.reports.broken_revisions
-  description: 'List pages with broken revisions'
+  description: 'List pages with broken revisions.'
   parent: system.admin_reports

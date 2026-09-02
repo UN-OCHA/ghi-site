@@ -69,34 +69,36 @@ function common_design_subtheme_theme_registry_alter(&$theme_registry) {
  * they might be inside a Paragraph type (by way of viewsreference module) and
  * thus need special treatment which can happen in Twig.
  *
- * @see https://api.drupal.org/api/drupal/core%21lib%21Drupal%21Core%21Render%21theme.api.php/function/hook_theme_suggestions_HOOK_alter/8.4.x
+ * @see https://api.drupal.org/api/drupal/core%21lib%21Drupal%21Core%21Render%21theme.api.php/function/hook_theme_suggestions_HOOK_alter/11.x
  */
-function common_design_subtheme_theme_suggestions_views_view_alter(&$suggestions, $variables) {
+function common_design_subtheme_theme_suggestions_views_view_alter(&$suggestions, $variables): void {
   $suggestions[] = sprintf('views_view__%s', $variables['view']->id());
   $suggestions[] = sprintf('views_view__%s__%s', $variables['view']->id(), $variables['view']->current_display);
 }
 
 /**
- * Implements hook_theme_suggestions_item_list_alter().
+ * Implements hook_theme_suggestions_HOOK_alter().
+ *
+ * @see https://api.drupal.org/api/drupal/core%21lib%21Drupal%21Core%21Render%21theme.api.php/function/hook_theme_suggestions_HOOK_alter/11.x
  */
-function common_design_subtheme_theme_suggestions_item_list_alter(array &$suggestions, array $variables, $hook) {
+function common_design_subtheme_theme_suggestions_item_list_alter(array &$suggestions, array $variables): void {
   $plugin_type = $variables['context']['plugin_type'] ?? NULL;
   $plugin_id = $variables['context']['plugin_id'] ?? NULL;
   if ($plugin_type) {
-    $suggestions[] = $hook . '__' . strtr($plugin_type, '-', '_');
+    $suggestions[] = 'item_list__' . strtr($plugin_type, '-', '_');
   }
   if ($plugin_id) {
-    $suggestions[] = $hook . '__' . strtr($plugin_id, '-', '_');
+    $suggestions[] = 'item_list__' . strtr($plugin_id, '-', '_');
   }
   if ($plugin_type && $plugin_id) {
-    $suggestions[] = $hook . '__' . strtr($plugin_type, '-', '_') . '__' . strtr($plugin_id, '-', '_');
+    $suggestions[] = 'item_list__' . strtr($plugin_type, '-', '_') . '__' . strtr($plugin_id, '-', '_');
   }
 }
 
 /**
  * Implements hook_form_alter().
  */
-function common_design_subtheme_form_alter(&$form, FormStateInterface $form_state, $form_id) {
+function common_design_subtheme_form_alter(&$form, FormStateInterface $form_state, $form_id): void {
 
   // To use this for Views exposed forms, copy the form alter hook into your
   // subtheme and add the relevant Views IDs to this array in your subtheme.
@@ -130,7 +132,7 @@ function common_design_subtheme_form_alter(&$form, FormStateInterface $form_stat
     // This is for a Views exposed form INLINE search block.
     // There are templates needed for this. Replace cd-search.html.twig
     // with cd-search--inline.html.twig in cd-site-header.html.twig.
-    // @codingStandardsIgnoreStart
+    // phpcs:disable
     /*
     $form['#attributes']['class'][] = 'cd-search--inline__form';
     $form['#attributes']['aria-labelledby'][] = 'cd-search-form--inline';
@@ -150,7 +152,7 @@ function common_design_subtheme_form_alter(&$form, FormStateInterface $form_stat
     $form['actions']['submit']['#attributes']['class'][] = 'cd-search--inline__submit';
     $form['actions']['submit']['#attributes']['value'][] = 'Search';
     */
-    // @codingStandardsIgnoreEnd
+    // phpcs:enable
   }
 }
 
@@ -246,9 +248,6 @@ function common_design_subtheme_preprocess_block(&$variables) {
       }
       $variables['content']['#full_width'] = TRUE;
       $variables['attributes']['class'][] = 'block-highlighted';
-      // Don't show the admin links for the first block as this gives issues
-      // with the styling after using the reload admin link.
-      unset($variables['icons']);
     }
     $processed_regions[$region] = TRUE;
   }
@@ -265,9 +264,9 @@ function common_design_subtheme_preprocess_block(&$variables) {
     $variables['attributes']['class'][] = 'content-width';
   }
 
-  // Make sure that full width blocks with a title show that title inside the
+  // Make sure that full width blocks show the title inside the
   // content area.
-  if (!empty($variables['full_width']) && !empty($variables['content']['#title'])) {
+  if (!empty($variables['full_width'])) {
     $variables['title_attributes']['class'][] = 'content-width';
   }
 
@@ -690,7 +689,7 @@ function common_design_subtheme_preprocess_table(&$vars) {
   }
 
   if (!empty($vars['block_id']) && $block_settings_sort = BlockSettings::getBlockSettings($vars['block_id'], 'sort')) {
-    $sorted = TableSort::sort($vars['header'], $vars['rows'], $block_settings_sort->column ?: 0, $block_settings_sort->dir ?: 'asc');
+    $sorted = TableSort::sort($vars['header'], $vars['rows'], $block_settings_sort->column ?: 0, $block_settings_sort->dir ?: SORT_ASC);
     if ($sorted) {
       $vars['attributes']['class'][] = 'sorted';
     }
@@ -726,10 +725,11 @@ function common_design_subtheme_preprocess_item_list__key_figures(&$variables) {
   $items = &$variables['items'];
   $figures = [];
   foreach ($items as &$item) {
+    $attributes = $item['value']['#wrapper_attributes'] ?? [];
     $figures[] = array_filter([
       'label' => $item['value']['#title'],
       'value' => $item['value'][0],
-      'class' => implode(' ', $item['value']['#wrapper_attributes']['class'] ?? []),
+      'attributes' => new Attribute($attributes),
     ]);
   }
   $variables['figures'] = $figures;
@@ -761,10 +761,24 @@ function common_design_subtheme_preprocess_page_navigation_item_list(&$variables
     $wrapper_classes = $item['value']['#attributes']['class'] ?? [];
     $is_megamenu = in_array('megamenu', $wrapper_classes);
     $item_header = $is_megamenu && !empty($item['value']['header']) ? $item['value']['header'] : NULL;
+    $unique_id = Html::getUniqueId('ghi-dropdown--' . $key);
+    $item['preview'] = [
+      '#type' => 'html_tag',
+      '#tag' => 'span',
+      '#attributes' => [
+        'id' => $unique_id,
+        'class' => [
+          'cd-dropdown__btn-label',
+          'cd-dropdown__btn-preview',
+        ],
+      ],
+      'label' => $item['value']['label'],
+    ];
     $item['value'] = [
       '#type' => 'html_tag',
       '#tag' => 'div',
       '#attributes' => [
+        'data-cd-replace' => $unique_id,
         'data-cd-component' => 'cd-dropdown',
         'data-cd-icon' => 'arrow-down',
         'class' => ['cd-dropdown'],

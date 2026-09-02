@@ -2,26 +2,29 @@
 
 namespace Drupal\ghi_blocks\Plugin\ConfigurationContainerItem;
 
+use Drupal\Core\Cache\Cache;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\Markup;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\ghi_blocks\Helpers\AttachmentMatcher;
 use Drupal\ghi_blocks\Traits\PlanFootnoteTrait;
+use Drupal\ghi_form_elements\Attribute\ConfigurationContainerItem;
 use Drupal\ghi_form_elements\ConfigurationContainerItemPluginBase;
-use Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment;
+use Drupal\ghi_plans\ApiObjects\Attachments\Attachment;
 use Drupal\ghi_plans\Entity\Plan;
 use Drupal\ghi_plans\Traits\AttachmentFilterTrait;
-use Drupal\hpc_common\Helpers\StringHelper;
+use Drupal\hpc_api\Helpers\StringHelper;
+use Drupal\user\Entity\User;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Provides an attachment data item for configuration containers.
- *
- * @ConfigurationContainerItem(
- *   id = "attachment_data",
- *   label = @Translation("Attachment data"),
- *   description = @Translation("This item displays a single metric or measurement item from a selected attachment."),
- * )
  */
+#[ConfigurationContainerItem(
+  id: 'attachment_data',
+  label: new TranslatableMarkup('Attachment data'),
+  description: new TranslatableMarkup('This item displays a single metric or measurement item from a selected attachment.'),
+)]
 class AttachmentData extends ConfigurationContainerItemPluginBase {
 
   use PlanFootnoteTrait;
@@ -30,16 +33,33 @@ class AttachmentData extends ConfigurationContainerItemPluginBase {
   /**
    * The attachment query.
    *
-   * @var \Drupal\ghi_plans\Plugin\EndpointQuery\AttachmentQuery
+   * @var \Drupal\ghi_plans\Plugin\FabricQuery\AttachmentQuery
    */
   public $attachmentQuery;
 
   /**
+   * The attachment query.
+   *
+   * @var \Drupal\ghi_plans\Plugin\FabricQuery\AttachmentPrototypeQuery
+   */
+  public $attachmentPrototypeQuery;
+
+  /**
+   * The current user account.
+   *
+   * @var \Drupal\Core\Session\AccountProxyInterface
+   */
+  protected $currentUser;
+
+  /**
    * {@inheritdoc}
    */
-  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition): AttachmentData {
+    /** @var self $instance */
     $instance = parent::create($container, $configuration, $plugin_id, $plugin_definition);
-    $instance->attachmentQuery = $instance->endpointQueryManager->createInstance('attachment_query');
+    $instance->attachmentQuery = $instance->fabricQueryManager->createInstance('attachment');
+    $instance->attachmentPrototypeQuery = $instance->fabricQueryManager->createInstance('attachment_prototype');
+    $instance->currentUser = $container->get('current_user');
     return $instance;
   }
 
@@ -61,10 +81,13 @@ class AttachmentData extends ConfigurationContainerItemPluginBase {
 
     // Load an attachment if already selected.
     $attachment = NULL;
+    $errors = [];
     if (!empty($attachment_select['attachment_id'])) {
       $attachment_id = is_array($attachment_select['attachment_id']) ? reset($attachment_select['attachment_id']) : $attachment_select['attachment_id'];
       $attachment = $this->attachmentQuery->getAttachment($attachment_id);
-      $attachment = $attachment && empty($this->validateAttachment($attachment)) ? $attachment : NULL;
+      assert($attachment === NULL || $attachment instanceof Attachment);
+      $errors = $attachment ? $this->validateAttachment($attachment) : [];
+      $attachment = $attachment && empty($errors) ? $attachment : NULL;
       $attachment_select['attachment_id'] = $attachment?->id();
     }
 
@@ -72,6 +95,11 @@ class AttachmentData extends ConfigurationContainerItemPluginBase {
       $element['#element_errors'] = [
         $this->t('There was a problem loading the selected attachment. If the problem persists, please contact an administrator.'),
       ];
+      if (!empty($errors) && User::load($this->currentUser->id())?->hasRole('administrator')) {
+        $element['#element_errors'][] = $this->t('The original error message was: <em>@errors</em>', [
+          '@errors' => implode('', $errors),
+        ]);
+      }
     }
 
     // See if we are in attachment select mode (or in data point configuration
@@ -80,7 +108,7 @@ class AttachmentData extends ConfigurationContainerItemPluginBase {
 
     if (!$attachment_select_mode) {
       $element['attachment_summary'] = [
-        '#markup' => Markup::create('<strong>' . $this->t('Selected attachment: %attachment', ['%attachment' => $attachment->composed_reference]) . '</strong>'),
+        '#markup' => Markup::create('<strong>' . $this->t('Selected attachment: %attachment', ['%attachment' => $attachment->getDescription()]) . '</strong>'),
       ];
       $element['change_attachment'] = [
         '#type' => 'button',
@@ -164,6 +192,19 @@ class AttachmentData extends ConfigurationContainerItemPluginBase {
   }
 
   /**
+   * Get the data point configuration.
+   *
+   * @return array
+   *   A configuration array.
+   */
+  private function getDataPointConfig() {
+    $conf = $this->get('data_point');
+    $attachment = $this->getAttachmentObject();
+    $attachment?->handleKnownConfigIssues($conf);
+    return $conf;
+  }
+
+  /**
    * Get a default label.
    *
    * @return string|null
@@ -171,21 +212,21 @@ class AttachmentData extends ConfigurationContainerItemPluginBase {
    */
   public function getDefaultLabel() {
     $attachment = $this->getAttachmentObject();
-    $data_point_conf = $this->get('data_point');
-    $data_point_index = $data_point_conf ? $data_point_conf['data_points'][0]['index'] : NULL;
-    if (!$attachment || $data_point_index === NULL) {
+    $conf = $this->getDataPointConfig();
+    $metric_type = $conf ? $conf['data_points'][0]['metric_type'] : NULL;
+    if (!$attachment || $metric_type === NULL) {
       return NULL;
     }
-    return $attachment->getPrototype()->getDefaultFieldLabel($data_point_index, $attachment->getPlanLanguage());
+    return $attachment->getPrototype()->getDefaultFieldLabel($metric_type, $attachment->getPlanLanguage());
   }
 
   /**
    * {@inheritdoc}
    */
   public function getLabel() {
-    $data_point_conf = $this->get('data_point');
-    if (array_key_exists('label', $data_point_conf) && !empty($data_point_conf['label'])) {
-      return trim($data_point_conf['label']);
+    $conf = $this->getDataPointConfig();
+    if (array_key_exists('label', $conf) && !empty($conf['label'])) {
+      return trim($conf['label']);
     }
     return parent::getLabel();
   }
@@ -206,12 +247,14 @@ class AttachmentData extends ConfigurationContainerItemPluginBase {
     if (!$attachment) {
       return NULL;
     }
-    $data_point_conf = $this->get('data_point');
-    $build = $attachment->formatValue($data_point_conf);
+    $data_point = $this->getDataPointConfig();
+    $build = $attachment->formatValue($data_point);
+    $build['#cache']['tags'] = Cache::mergeTags($build['#cache']['tags'] ?? [], $attachment->getValueCacheTags());
 
-    $data_point_index = $data_point_conf['data_points'][0]['index'];
-    $property = $attachment->field_types[$data_point_index] ?? NULL;
-    if ($attachment->isCalculatedIndex($data_point_index) && $source = $attachment->getSourceTypeForCalculatedField($data_point_index)) {
+    // See what property to use for footnotes if any.
+    $metric_type = $data_point['data_points'][0]['metric_type'];
+    $property = $metric_type;
+    if ($attachment->isCalculatedField($metric_type) && $source = $attachment->getSourceTypeForCalculatedField($metric_type)) {
       $property = StringHelper::camelCaseToUnderscoreCase($source);
     }
 
@@ -224,19 +267,40 @@ class AttachmentData extends ConfigurationContainerItemPluginBase {
   }
 
   /**
+   * {@inheritdoc}
+   */
+  public function getCacheTags() {
+    return $this->getAttachmentObject()?->getValueCacheTags() ?? [];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getDataAttributes() {
+    $attributes = parent::getDataAttributes();
+    if ($attachment = $this->getAttachmentObject()) {
+      $attributes['data-attachment-id'] = $attachment->id();
+    }
+    if ($data_point = $this->getDataPointConfig()) {
+      $attributes['data-metric-type'] = $data_point['data_points'][0]['metric_type'];
+    }
+    return $attributes;
+  }
+
+  /**
    * Get the attachment object for this item.
    *
-   * @return \Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment|null
+   * @return \Drupal\ghi_plans\ApiObjects\Attachments\Attachment|null
    *   The attachment object.
    */
-  private function getAttachmentObject($validate = TRUE): ?DataAttachment {
+  private function getAttachmentObject($validate = TRUE): ?Attachment {
     $attachment_id = $this->get(['attachment', 'attachment_id']);
     if (!$attachment_id) {
       return NULL;
     }
     // Cast this to a scalar if necessary.
     $attachment_id = is_array($attachment_id) ? array_key_first($attachment_id) : $attachment_id;
-    $attachment = $this->attachmentQuery->getAttachment($attachment_id, FALSE, 'all');
+    $attachment = $this->attachmentQuery->getAttachment($attachment_id);
     if (!$attachment) {
       return NULL;
     }
@@ -249,13 +313,13 @@ class AttachmentData extends ConfigurationContainerItemPluginBase {
   /**
    * Validate the given attachment.
    *
-   * @param \Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment $attachment
+   * @param \Drupal\ghi_plans\ApiObjects\Attachments\Attachment $attachment
    *   The attachment to validate.
    *
    * @return array
    *   An array with validation errors.
    */
-  private function validateAttachment(DataAttachment $attachment): array {
+  private function validateAttachment(Attachment $attachment): array {
     $errors = [];
 
     /** @var \Drupal\ghi_plans\Entity\Plan $plan */
@@ -318,15 +382,17 @@ class AttachmentData extends ConfigurationContainerItemPluginBase {
 
     if ($original_attachment) {
       // Let's see if we can find an alternative attachment.
-      /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\PlanEntitiesQuery $query */
-      $query = $this->endpointQueryManager->createInstance('plan_entities_query');
-      $query->setPlaceholder('plan_id', $plan->getSourceId());
-      $attachments = $query->getDataAttachments($this->getContextValue('base_object'));
-      $filtered_attachments = AttachmentMatcher::matchDataAttachments($original_attachment, $attachments);
+      $attachments = $this->attachmentQuery->getAttachmentsForPlan($plan->getSourceId(), $this->getContextValue('base_object'), [
+        'AttachmentType' => [
+          'Caseload',
+          'Indicator',
+        ],
+      ]);
+      $filtered_attachments = AttachmentMatcher::matchAttachments($original_attachment, $attachments);
 
       // Use the default plan caseload if available.
       $caseload_id = $plan->getPlanCaseloadId();
-      if ($caseload_id && $original_attachment->getType() == 'caseload' && array_key_exists($caseload_id, $filtered_attachments)) {
+      if ($caseload_id && $original_attachment->getAttachmentType() == 'caseload' && array_key_exists($caseload_id, $filtered_attachments)) {
         $attachment_id = $caseload_id;
       }
       elseif (count($filtered_attachments) == 1) {

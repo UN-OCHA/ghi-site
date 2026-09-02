@@ -7,6 +7,7 @@
  * - figures: A list of items. Each item contains:
  *   - label: A label for the list item.
  *   - value: The content of the list element.
+ *   - attributes: HTML attributes to be applied to the list item.
  * - title: The title of the list.
  * - list_type: The tag for list element ("ul" or "ol").
  * - wrapper_attributes: HTML attributes to be applied to the list wrapper.
@@ -32,7 +33,7 @@
   {%- if figures -%}
     <{{ list_type }}{{ attributes.addClass('cd-figure-list--large') }}>
       {%- for item in figures -%}
-        <li class="cd-figure-list__item {{ item.class }}">
+        <li{{ item.attributes.addClass('cd-figure-list__item') }}>
           <div class="cd-figure-list__label">{{ item.label }}</div>
           <div class="cd-figure-list__value">{{ item.value }}</div>
         </li>

@@ -20,9 +20,7 @@ class DocumentLinkButtonBlockTest extends BlockKernelTestBase {
   public function testBlockProperties() {
     $plugin = $this->getBlockPlugin();
     $this->assertInstanceOf(DocumentLinkButton::class, $plugin);
-
-    $definition = $plugin->getPluginDefinition();
-    $this->assertFalse($definition['title']);
+    $this->assertFalse($plugin->metadata()->usesTitle);
   }
 
   /**

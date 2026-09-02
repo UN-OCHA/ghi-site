@@ -3,6 +3,10 @@
 namespace Drupal\Tests\ghi_plans\Kernel\ApiObjects;
 
 use Drupal\ghi_plans\ApiObjects\Partials\PlanOverviewPlan;
+use Drupal\ghi_plans\ApiObjects\Plan;
+use Drupal\ghi_plans\Plugin\FabricQuery\PlanQuery;
+use Drupal\hpc_api\ApiObjects\Types\PlanType;
+use Drupal\hpc_api\Query\FabricQueryManager;
 
 /**
  * Tests the PlanOverviewPlan API object.
@@ -29,46 +33,26 @@ class PlanOverviewPlanTest extends PlanApiObjectKernelTestBase {
   }
 
   /**
-   * {@inheritdoc}
-   */
-  protected function createMockRawData(array $data_overrides = []): object {
-    $plan_overview_plan_defaults = [
-      'requirements' => (object) ['totalFunding' => 100000, 'fundingProgress' => 50000, 'revisedRequirements' => 75000],
-    ];
-
-    $merged_overrides = array_merge($plan_overview_plan_defaults, $data_overrides);
-    return parent::createMockRawData($merged_overrides);
-  }
-
-  /**
    * Test PlanOverviewPlan constructor and mapping.
    */
   public function testPlanOverviewPlanConstructorAndMapping(): void {
     $raw_data = $this->createMockRawData([
-      'id' => 123,
-      'name' => 'Test Plan Overview',
-      'funding' => (object) [
-        'totalFunding' => 1000000,
-        'progress' => 75.5,
-      ],
-      'requirements' => (object) [
-        'revisedRequirements' => 1500000,
-      ],
+      'plan' => new Plan((object) [
+        'Id' => 123,
+        'Name' => 'Test Plan Overview',
+        'Year' => 2025,
+      ]),
+      'requirements' => 1500000,
+      'funding' => 1000000,
     ]);
 
     $plan_overview = new PlanOverviewPlan($raw_data);
 
-    $this->assertApiObjectBasics($plan_overview, 'plan', [
-      'id',
-      'name',
-      'funding',
-      'requirements',
-      'coverage',
-    ]);
+    $this->assertApiObjectBasics($plan_overview, 'plan');
 
-    $this->assertEquals(1000000, $plan_overview->getFunding());
     $this->assertEquals(1500000, $plan_overview->getRequirements());
-    $this->assertEquals(75.5, $plan_overview->getCoverage());
+    $this->assertEquals(1000000, $plan_overview->getFunding());
+    $this->assertEquals(66.7, $plan_overview->getCoverage());
 
     $this->assertEquals('plan', $plan_overview->getBundle());
     $this->assertEquals('Test Plan Overview', $plan_overview->getName());
@@ -93,10 +77,22 @@ class PlanOverviewPlanTest extends PlanApiObjectKernelTestBase {
    * Test PlanOverviewPlan plan types.
    */
   public function testPlanPlanTypes(): void {
+    $plan_type = $this->prophesize(PlanType::class);
+    $plan_type->getName()->willReturn('Humanitarian response plan');
+    $plan_query = $this->prophesize(PlanQuery::class);
+    $plan_query->getPlanTypeByName('Humanitarian response plan')->willReturn($plan_type->reveal());
+    $fabric_query_manager = $this->prophesize(FabricQueryManager::class);
+    $fabric_query_manager->hasDefinition('plan')->willReturn(TRUE);
+    $fabric_query_manager->createInstance('plan')->willReturn($plan_query->reveal());
+    $this->container->set('plugin.manager.fabric_query_manager', $fabric_query_manager->reveal());
+
     $raw_data = $this->createMockRawData([
-      'planType' => (object) [
-        'name' => 'Humanitarian response plan',
-      ],
+      'plan' => new Plan((object) [
+        'Id' => 123,
+        'Name' => 'Test Plan Overview',
+        'Year' => 2025,
+        'PlanType' => 'Humanitarian response plan',
+      ]),
     ]);
     $plan_overview = new PlanOverviewPlan($raw_data);
     $this->assertNull($plan_overview->getPlanType());
@@ -108,60 +104,6 @@ class PlanOverviewPlanTest extends PlanApiObjectKernelTestBase {
     $this->assertFalse($plan_overview->isFlashAppeal());
     $this->assertFalse($plan_overview->isOther());
     $this->assertFalse($plan_overview->isPartOfGho());
-  }
-
-  /**
-   * Test null or empty data handling.
-   */
-  public function testNullOrEmptyDataHandling(): void {
-    // Test with minimal data including null funding/requirements.
-    $minimal_data = $this->createMockRawData([
-      'id' => 1,
-      'name' => '',
-      'funding' => NULL,
-      'requirements' => NULL,
-    ]);
-    $plan_overview = new PlanOverviewPlan($minimal_data);
-
-    $this->assertEquals(1, $plan_overview->id());
-    $this->assertIsString($plan_overview->getName());
-    $this->assertEquals(0, $plan_overview->funding);
-    $this->assertEquals(0, $plan_overview->requirements);
-  }
-
-  /**
-   * Test invalid data structure handling.
-   */
-  public function testInvalidDataStructureHandling(): void {
-    // Test with missing funding and requirements objects.
-    $raw_data = $this->createMockRawData([
-      'id' => 123,
-      'name' => 'Test Plan',
-      'funding' => NULL,
-      'requirements' => NULL,
-    ]);
-    $plan_overview = new PlanOverviewPlan($raw_data);
-
-    $this->assertEquals(123, $plan_overview->id());
-    $this->assertEquals(0, $plan_overview->funding);
-    $this->assertEquals(0, $plan_overview->requirements);
-  }
-
-  /**
-   * Test cache tags and dependencies.
-   */
-  public function testCacheTagsAndDependencies(): void {
-    $raw_data = $this->createMockRawData();
-    $plan_overview = new PlanOverviewPlan($raw_data);
-
-    $cache_tags = $plan_overview->getCacheTags();
-    $this->assertIsArray($cache_tags);
-
-    $cache_contexts = $plan_overview->getCacheContexts();
-    $this->assertIsArray($cache_contexts);
-
-    $cache_max_age = $plan_overview->getCacheMaxAge();
-    $this->assertIsInt($cache_max_age);
   }
 
 }

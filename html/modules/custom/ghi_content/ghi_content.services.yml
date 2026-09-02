@@ -20,6 +20,13 @@ services:
   ghi_content.subarticle_renderer:
     class: Drupal\ghi_content\SubArticleRenderer
     arguments: ['@context.repository']
+  ghi_content.document_article_context:
+    class: Drupal\ghi_content\Context\DocumentArticleContext
+    arguments: ['@ghi_content.manager.article']
+  ghi_content.content_context:
+    class: Drupal\ghi_content\Context\ContentContextManager
+  ghi_content.content_url_builder:
+    class: Drupal\ghi_content\Context\ContentUrlBuilder
   ghi_content.route_subscriber:
     class: Drupal\ghi_content\EventSubscriber\RouteSubscriber
     tags:

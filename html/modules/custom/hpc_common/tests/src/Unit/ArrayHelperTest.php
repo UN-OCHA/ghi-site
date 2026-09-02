@@ -22,8 +22,8 @@ class ArrayHelperTest extends UnitTestCase {
     ];
 
     return [
-      [$array, 1, 2, FALSE, [2, 1, 'one', 'two'], NULL],
-      [$array, 1, 'one', FALSE, ['one', 2, 1, 'two'], NULL],
+      [$array, 1, 2, FALSE, [2, 1, 'one', 'two'], TRUE],
+      [$array, 1, 'one', FALSE, ['one', 2, 1, 'two'], TRUE],
       [$array, 1, 3, FALSE, [1, 2, 'one', 'two'], FALSE],
       [$array, '1', 2, TRUE, [1, 2, 'one', 'two'], FALSE],
       [$array, 1, '2', TRUE, [1, 2, 'one', 'two'], FALSE],
@@ -75,7 +75,7 @@ class ArrayHelperTest extends UnitTestCase {
    */
   public function testMapObjectsToString() {
     $class = function ($value) {
-      // @codingStandardsIgnoreStart
+      // phpcs:disable
       return new class ($value) {
         private $value;
         public function __construct($value) {
@@ -83,15 +83,17 @@ class ArrayHelperTest extends UnitTestCase {
         }
         public function __toString() { return $this->value; }
       };
-      // @codingStandardsIgnoreEnd
+      // phpcs:enable
     };
     $array = [
       6 => [6 => 'six', 5 => $class('eleven'), 9 => ['one', 'three', $class('two')]],
       2 => [2 => 'two', 7 => 'seven', 5 => 'five'],
+      1 => [2 => 'two', 3 => (object) [10 => 'ten', 11 => 'eleven'], 5 => 'five'],
     ];
     $expected = [
       6 => [6 => 'six', 5 => 'eleven', 9 => ['one', 'three', 'two']],
       2 => [2 => 'two', 7 => 'seven', 5 => 'five'],
+      1 => [2 => 'two', 3 => [10 => 'ten', 11 => 'eleven'], 5 => 'five'],
     ];
     $this->assertSame($expected, ArrayHelper::mapObjectsToString($array));
   }
@@ -171,6 +173,109 @@ class ArrayHelperTest extends UnitTestCase {
    */
   public function testDeduplicateStrings($input, $expected) {
     $this->assertSame($expected, ArrayHelper::deduplicateStrings($input));
+  }
+
+  /**
+   * Data provider for testAll.
+   */
+  public function allDataProvider() {
+    $cases = [
+      [
+        'input' => ['a', 'b', 'c', 'd'],
+        'predicate' => 'is_string',
+        'expected' => TRUE,
+      ],
+      [
+        'input' => ['a', 'b', 3, 'd'],
+        'predicate' => 'is_string',
+        'expected' => FALSE,
+      ],
+      [
+        'input' => ['a', 'b', 3, 'd'],
+        'predicate' => 'is_numeric',
+        'expected' => FALSE,
+      ],
+      [
+        'input' => [1, 2, 3, 4],
+        'predicate' => 'is_numeric',
+        'expected' => TRUE,
+      ],
+      [
+        'input' => ['a', 'b', (object) [1 => 2], 'd'],
+        'predicate' => 'is_string',
+        'expected' => FALSE,
+      ],
+    ];
+    return $cases;
+  }
+
+  /**
+   * Test deduplicateStrings function.
+   *
+   * @group ArrayHelper
+   * @dataProvider allDataProvider
+   */
+  public function testAll($input, $predicate, $expected) {
+    $this->assertSame($expected, ArrayHelper::all($input, $predicate));
+  }
+
+  /**
+   * Data provider for testAny.
+   */
+  public function anyDataProvider() {
+    $cases = [
+      [
+        'input' => ['a', 'b', 'c', 'd'],
+        'predicate' => 'is_string',
+        'expected' => TRUE,
+      ],
+      [
+        'input' => ['a', 'b', 'c', 'd'],
+        'predicate' => 'is_object',
+        'expected' => FALSE,
+      ],
+      [
+        'input' => ['a', 'b', 'c', 'd'],
+        'predicate' => 'is_array',
+        'expected' => FALSE,
+      ],
+      [
+        'input' => ['a', 'b', ['c'], 'd'],
+        'predicate' => 'is_array',
+        'expected' => TRUE,
+      ],
+      [
+        'input' => ['a', 'b', 3, 'd'],
+        'predicate' => 'is_string',
+        'expected' => TRUE,
+      ],
+      [
+        'input' => ['a', 'b', 3, 'd'],
+        'predicate' => 'is_numeric',
+        'expected' => TRUE,
+      ],
+      [
+        'input' => [1, 2, 3, 4],
+        'predicate' => 'is_numeric',
+        'expected' => TRUE,
+      ],
+      [
+        'input' => ['a', 'b', (object) [1 => 2], 'd'],
+        'predicate' => 'is_string',
+        'expected' => TRUE,
+      ],
+    ];
+    return $cases;
+  }
+
+  /**
+   * Test deduplicateStrings function.
+   *
+   * @group ArrayHelper
+   * @dataProvider anyDataProvider
+   */
+  public function testAny($input, $predicate, $expected) {
+    $this->assertSame($expected, ArrayHelper::any($input, $predicate));
   }
 
 }

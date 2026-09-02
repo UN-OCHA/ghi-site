@@ -1,5 +1,5 @@
 {
-    "_hash": "82867915d19604535c436d47069c43db1b4047d15f3f309920eb620401e0a451",
+    "_hash": "77c68fd4c5422f2679eeb400ff60f0f9fd51d21f2b1d3ff3758aff31896ab3c0",
     "patches": {
         "drupal/core": [
             {
@@ -95,8 +95,18 @@
             {
                 "package": "drupal/core",
                 "description": "Issue #2190333: Make #group FAPI / render feature work on all form/render #types out of the box",
-                "url": "patches/core-form-api-groups-2190333.patch",
+                "url": "./patches/core-form-api-groups-2190333.patch",
                 "sha256": "cadb63dc10950c244159e8e1445d214f67fb60dae761cb68cfe061a7895f2959",
+                "depth": 2,
+                "extra": {
+                    "provenance": "patches-file:composer.patches.json"
+                }
+            },
+            {
+                "package": "drupal/core",
+                "description": "Issue #2230909: Simple decimals fail to pass validation",
+                "url": "./patches/8282-10.6.x.patch",
+                "sha256": "7278cffd2694d08bea3fd7e152ec5c3e4c3ae125650f722741862855dc85cff6",
                 "depth": 2,
                 "extra": {
                     "provenance": "patches-file:composer.patches.json"
@@ -189,8 +199,8 @@
             {
                 "package": "drupal/page_manager",
                 "description": "Issue #3176661: Allow to edit page title when using Layout Builder variant",
-                "url": "https://www.drupal.org/files/issues/2022-11-15/page_manager-lb-title-3176661-15.patch",
-                "sha256": "e8cf72b4f8a8a5d4f9cfce58fee23c727b4e48e4c4bb16a7e22ae6601b8e909e",
+                "url": "patches/page_manager-lb-title-3176661-mr45.patch",
+                "sha256": "f4feacd3b206a8dcfa1a0228fa7b7e356c349803250241caa27f7286adefbe56",
                 "depth": 1,
                 "extra": {
                     "provenance": "patches-file:composer.patches.json"

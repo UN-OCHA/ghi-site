@@ -45,6 +45,12 @@
       this.tooltip = null;
       this.adminLevel = null;
       this.adminLevelControl = null;
+      this.searchControl = null;
+      // Lazy map request caches store jQuery promises, not raw responses. That
+      // lets a click/search retry attach to an in-flight request instead of
+      // starting duplicate HTTP calls for the same slice or modal content.
+      this.modalContentRequests = {};
+      this.dataSliceRequests = {};
       this.ready = false;
 
       // Chose the right admin level to start with.
@@ -75,7 +81,8 @@
 
       // Add search box.
       if (this.canSearch()) {
-        this.getMap().addControl(new ghi.searchControl(this, this.getSearchOptions()));
+        this.searchControl = new ghi.searchControl(this, this.getSearchOptions());
+        this.getMap().addControl(this.searchControl);
       }
 
       // Add disclaimer.
@@ -100,6 +107,45 @@
     }
 
     /**
+     * Destroy the map state and any runtime resources it owns.
+     */
+    destroy = function () {
+      this.setIsReady(false);
+      this.tooltip?.destroy?.();
+      this.style?.destroy?.();
+      this.legend?.destroy?.();
+      this.sidebar?.destroy?.();
+      this.throbber?.destroy?.();
+      if (this.adminLevelControl) {
+        this.getMap()?.removeControl(this.adminLevelControl);
+        this.adminLevelControl = null;
+      }
+      if (this.searchControl) {
+        this.getMap()?.removeControl(this.searchControl);
+        this.searchControl = null;
+      }
+      this.getContainer().off('.mapTabs');
+      this.getCanvasContainer().off();
+      if (this.map && typeof this.map.remove == 'function') {
+        this.map.remove();
+      }
+      this.map = null;
+    }
+
+    /**
+     * Get the style class for a style id.
+     *
+     * @param {String} style
+     *   The style id.
+     *
+     * @returns {Function|null}
+     *   The style class, or NULL if none is registered.
+     */
+    getMapStyleClass = function (style) {
+      return this.getMapController().getMapStyleClass(style);
+    }
+
+    /**
      * Get the map style for the given id.
      *
      * @param {Object} options
@@ -112,12 +158,13 @@
      */
     getMapStyle = function (options, config) {
       if (this.style === null && typeof options != 'undefined') {
-        if (options.style === 'circle') {
-          this.style = new ghi.circleMap(this.getMapController(), this, options, config);
+        let styleClass = this.getMapStyleClass(options.style);
+        if (styleClass) {
+          this.style = new styleClass(this.getMapController(), this, options, config);
         }
-        if (options.style === 'choropleth') {
-          this.style = new ghi.choroplethMap(this.getMapController(), this, options, config);
-        }
+      }
+      if (this.style === null) {
+        return null;
       }
       if ((typeof this.style['renderLocations']) != "function") {
         return null;
@@ -257,6 +304,283 @@
       return this.options;
     }
 
+    /*
+     * Lazy map terminology used below:
+     *
+     * A data slice is the locations/metric payload for one tab or variant. It
+     * is enough to render circles, update relative sizing, and power search for
+     * the active selection. A modal content request is narrower: it loads one
+     * location's sidebar data inside that active slice. Both travel over JSON
+     * fragment endpoints, but they are not interchangeable payload shapes.
+     */
+
+    /**
+     * Check if modal contents can be lazy-loaded for this map.
+     *
+     * @returns {Boolean}
+     *   TRUE if a modal content URL is available, FALSE otherwise.
+     */
+    hasLazyModalData = function () {
+      return typeof this.getOptions().modal_data_url != 'undefined' && this.getOptions().modal_data_url !== null;
+    }
+
+    /**
+     * Get the modal content endpoint for this map.
+     *
+     * @returns {String|null}
+     *   The modal content URL, if available.
+     */
+    getLazyModalDataUrl = function () {
+      return this.getOptions().modal_data_url ?? null;
+    }
+
+    /**
+     * Check if data slices can be lazy-loaded for this map.
+     *
+     * @returns {Boolean}
+     *   TRUE if a data slice URL is available, FALSE otherwise.
+     */
+    hasLazyDataSlices = function () {
+      return typeof this.getOptions().slice_data_url != 'undefined' && this.getOptions().slice_data_url !== null;
+    }
+
+    /**
+     * Get the data slice endpoint for this map.
+     *
+     * @returns {String|null}
+     *   The data slice URL, if available.
+     */
+    getLazyDataSliceUrl = function () {
+      return this.getOptions().slice_data_url ?? null;
+    }
+
+    /**
+     * Get the target data object for a tab or variant.
+     *
+     * @param {String|null} index
+     *   The current map tab index.
+     * @param {String|null} variant_id
+     *   The current variant id.
+     *
+     * @returns {Object|null}
+     *   The data target, if available.
+     */
+    getDataSliceTarget = function (index = null, variant_id = null) {
+      index = index ?? this.getCurrentIndex();
+      let data = this.hasMapTabs() && index !== null ? this.getDataForIndex(index) : this.getData();
+      if (!data) {
+        return null;
+      }
+      if (variant_id) {
+        return data.variants?.[variant_id] ?? null;
+      }
+      return data;
+    }
+
+    /**
+     * Check if a tab or variant data slice has already been loaded.
+     *
+     * @param {String|null} index
+     *   The current map tab index.
+     * @param {String|null} variant_id
+     *   The current variant id.
+     *
+     * @returns {Boolean}
+     *   TRUE if the slice is available.
+     */
+    dataSliceIsLoaded = function (index = null, variant_id = null) {
+      let target = this.getDataSliceTarget(index, variant_id);
+      return target !== null && (!target.lazy || target.slice_loaded);
+    }
+
+    /**
+     * Store a loaded data slice.
+     *
+     * @param {String|null} index
+     *   The current map tab index.
+     * @param {String|null} variant_id
+     *   The current variant id.
+     * @param {Object} data_slice
+     *   The loaded data slice.
+     */
+    setDataSlice = function (index = null, variant_id = null, data_slice = {}) {
+      index = index ?? this.getCurrentIndex();
+      let data = this.hasMapTabs() && index !== null ? this.getDataForIndex(index) : this.getData();
+      if (!data) {
+        return;
+      }
+      if (variant_id) {
+        // Variant shells are present in the initial payload so menus can be
+        // rendered before the values arrive. Merge the fetched slice into that
+        // shell to keep labels/tab metadata that were already sent.
+        data.variants = data.variants ?? {};
+        data.variants[variant_id] = Object.assign({}, data.variants[variant_id] ?? {}, data_slice);
+        return;
+      }
+      Object.assign(data, data_slice);
+    }
+
+    /**
+     * Load a tab or variant data slice when needed.
+     *
+     * @param {String|null} index
+     *   The current map tab index.
+     * @param {String|null} variant_id
+     *   The current variant id.
+     *
+     * @returns {Object}
+     *   A jQuery promise.
+     */
+    loadDataSlice = function (index = null, variant_id = null) {
+      if (this.dataSliceIsLoaded(index, variant_id) || !this.hasLazyDataSlices()) {
+        return $.Deferred().resolve(this.getDataSliceTarget(index, variant_id)).promise();
+      }
+
+      // The key matches the slice identity, not the endpoint URL. Attachment
+      // and map identity are already fixed by the map options, while index and
+      // variant are the only user-selectable parts of the slice.
+      let request_key = [index ?? 'default', variant_id ?? 'base'].join(':');
+      if (typeof this.dataSliceRequests[request_key] == 'undefined') {
+        let deferred = $.Deferred();
+        this.dataSliceRequests[request_key] = deferred.promise();
+        this.getMapController().showThrobber(this);
+        $.ajax({
+          dataType: 'json',
+          url: this.getLazyDataSliceUrl(),
+          data: {
+            data_index: index ?? 'default',
+            variant_id: variant_id,
+          },
+          success: (response) => {
+            // Store the slice in the same structure that the initial payload
+            // uses. Styles/search controls can then read from getLocations()
+            // without caring whether the data was eager or lazy.
+            this.setDataSlice(index, variant_id, response);
+            deferred.resolve(response);
+          },
+          error: () => {
+            delete this.dataSliceRequests[request_key];
+            deferred.reject();
+          },
+          complete: () => this.getMapController().hideThrobber(this)
+        });
+      }
+
+      return this.dataSliceRequests[request_key];
+    }
+
+    /**
+     * Get modal content for the given object from the current map data.
+     *
+     * @param {Object} object
+     *   The location object.
+     * @param {String|null} index
+     *   The current map tab index.
+     * @param {String|null} variant_id
+     *   The current variant id.
+     *
+     * @returns {Object|null}
+     *   The modal content if already available, or NULL otherwise.
+     */
+    getModalContent = function (object, index = null, variant_id = null) {
+      index = index ?? object.index ?? this.getCurrentIndex();
+      variant_id = variant_id ?? object.variant_id ?? this.getVariantId();
+
+      let data = this.hasMapTabs() && index !== null ? this.getDataForIndex(index) : this.getData();
+      if (!data) {
+        return object.modal_content ?? null;
+      }
+
+      let object_id = parseInt(object.object_id ?? object.location_id ?? object.id);
+      // Modal content may come from three generations of map payloads: the
+      // active variant store, the base data store, or older/eager location
+      // objects that still embed modal_content directly.
+      if (variant_id && data.variants?.[variant_id]?.modal_contents?.[object_id]) {
+        return data.variants[variant_id].modal_contents[object_id];
+      }
+      if (data.modal_contents?.[object_id]) {
+        return data.modal_contents[object_id];
+      }
+      return object.modal_content ?? null;
+    }
+
+    /**
+     * Persist modal content into the current map data.
+     *
+     * @param {String|Number} object_id
+     *   The location object id.
+     * @param {Object|null} modal_content
+     *   The modal content to store.
+     * @param {String|null} index
+     *   The current map tab index.
+     * @param {String|null} variant_id
+     *   The current variant id.
+     */
+    setModalContent = function (object_id, modal_content, index = null, variant_id = null) {
+      index = index ?? this.getCurrentIndex();
+      let data = this.hasMapTabs() && index !== null ? this.getDataForIndex(index) : this.getData();
+      if (!data || modal_content === null) {
+        return;
+      }
+
+      object_id = String(object_id);
+      if (variant_id && this.hasVariant(index, variant_id)) {
+        data.variants[variant_id].modal_contents = data.variants[variant_id].modal_contents ?? {};
+        data.variants[variant_id].modal_contents[object_id] = modal_content;
+        return;
+      }
+
+      data.modal_contents = data.modal_contents ?? {};
+      data.modal_contents[object_id] = modal_content;
+    }
+
+    /**
+     * Load modal content lazily for the given object when needed.
+     *
+     * @param {Object} object
+     *   The location object.
+     *
+     * @returns {Object}
+     *   A jQuery promise.
+     */
+    loadModalContent = function (object) {
+      let existing_modal_content = this.getModalContent(object);
+      if (existing_modal_content || !this.hasLazyModalData()) {
+        return $.Deferred().resolve(existing_modal_content).promise();
+      }
+
+      let index = object.index ?? this.getCurrentIndex();
+      let variant_id = object.variant_id ?? this.getVariantId();
+      let object_id = String(object.object_id ?? object.location_id ?? object.id);
+      // Include object id in addition to the active slice identity. A modal
+      // fragment is scoped to one location, so sharing by slice alone would
+      // return the wrong sidebar content.
+      let request_key = [index ?? 'default', variant_id ?? 'base', object_id].join(':');
+
+      if (typeof this.modalContentRequests[request_key] == 'undefined') {
+        let deferred = $.Deferred();
+        this.modalContentRequests[request_key] = deferred.promise();
+        this.getMapController().showThrobber(this);
+        $.ajax({
+          dataType: 'json',
+          url: this.getLazyModalDataUrl(),
+          data: {
+            data_index: index ?? 'default',
+            object_id: object_id,
+            variant_id: variant_id,
+          },
+          success: (response) => {
+            this.setModalContent(object_id, response, index, variant_id);
+            deferred.resolve(response);
+          },
+          error: () => deferred.reject(),
+          complete: () => this.getMapController().hideThrobber(this)
+        });
+      }
+
+      return this.modalContentRequests[request_key];
+    }
+
     /**
      * Check if the map allows searching.
      *
@@ -298,16 +622,21 @@
      * @returns
      */
     setAdminLevel = function (admin_level = null) {
-      if (!admin_level) {
-        admin_level = Math.min(...this.getAdminLevelOptions());
+      let admin_level_options = this.getAdminLevelOptions();
+      let normalized_admin_level = parseInt(admin_level, 10);
+      if (admin_level === null || Number.isNaN(normalized_admin_level) || admin_level_options.indexOf(normalized_admin_level) === -1) {
+        // Pick the lowest admin level that has data for the current variant.
+        // Object filters can remove all locations for the previously active
+        // level, so stale control state must be normalized before repainting.
+        normalized_admin_level = admin_level_options.length ? Math.min.apply(Math, admin_level_options) : null;
       }
-      if (this.adminLevel == admin_level) {
+      if (this.adminLevel === normalized_admin_level) {
         return;
       }
-      this.adminLevel = admin_level;
+      this.adminLevel = normalized_admin_level;
       if (this.isReady() && this.canSelectAdminLevel()) {
         this.updateMap(this.animationDuration, true);
-        this.adminLevelControl.updateControl(admin_level);
+        this.adminLevelControl?.updateControl?.(normalized_admin_level);
         if (this.sidebar?.isVisible()) {
           this.sidebar.hide();
         }
@@ -331,12 +660,44 @@
      *   An array of sequential numbers for the admin level.
      */
     getAdminLevelOptions = function () {
-      let data = this.getData();
-      let locations = typeof data.locations != 'undefined' ? data.locations : [];
-      let locations_admin_level = locations.map(function (item) { return item.admin_level; });
+      // Read from getLocations() rather than raw data so object-filter variants
+      // only expose admin levels that still have visible locations.
+      let locations = this.getLocations(false);
+      let locations_admin_level = locations.map(function (item) {
+        return parseInt(item.admin_level, 10);
+      }).filter(function (admin_level) {
+        return !Number.isNaN(admin_level);
+      });
       // Create an array with unique values. Sort it, because the order of the
       // locations is not guaranteed to be in the order of their admin level.
-      return [...new Set(locations_admin_level)].sort();
+      return [...new Set(locations_admin_level)].sort(function (a, b) {
+        return a - b;
+      });
+    }
+
+    /**
+     * Refresh the current map after data availability has changed.
+     */
+    refreshAdminLevelForCurrentData = function () {
+      if (!this.canSelectAdminLevel()) {
+        this.updateMap(this.animationDuration);
+        return;
+      }
+
+      let admin_level_options = this.getAdminLevelOptions();
+      let current_admin_level = parseInt(this.getAdminLevel(), 10);
+      let next_admin_level = admin_level_options.indexOf(current_admin_level) !== -1 ? current_admin_level : null;
+      if (next_admin_level === null && admin_level_options.length) {
+        next_admin_level = Math.min.apply(Math, admin_level_options);
+      }
+
+      if (this.adminLevel !== next_admin_level) {
+        this.setAdminLevel(next_admin_level);
+        return;
+      }
+
+      this.updateMap(this.animationDuration);
+      this.adminLevelControl?.updateControl?.(next_admin_level);
     }
 
     /**
@@ -399,8 +760,8 @@
 
       // Sort alphabetically to get a defined order.
       locations.sort(function(a, b) {
-        var a_name = a.hasOwnProperty('sort_key') ? a.sort_key.toLowerCase() : a.location_name.toLowerCase();
-        var b_name = b.hasOwnProperty('sort_key') ? b.sort_key.toLowerCase() : b.location_name.toLowerCase();
+        var a_name = a.hasOwnProperty('sort_key') ? a.sort_key.toLowerCase() : a.name.toLowerCase();
+        var b_name = b.hasOwnProperty('sort_key') ? b.sort_key.toLowerCase() : b.name.toLowerCase();
         return a_name.localeCompare(b_name, undefined, {numeric: true, sensitivity: 'base'});
       });
 
@@ -539,11 +900,17 @@
      * @param {Number} variant_id
      */
     setVariantId = function (index, variant_id) {
+      if (!variant_id) {
+        this.currentIndex = this.hasMapTabs() ? index : null;
+        this.variantId = null;
+        return true;
+      }
       if (!this.hasVariant(index, variant_id)) {
         return false;
       }
-      this.currentIndex = index;
+      this.currentIndex = this.hasMapTabs() ? index : null;
       this.variantId = variant_id;
+      return true;
     }
 
     /**
@@ -566,8 +933,71 @@
      *   TRUE if the current data has the given variant id, FALSE otherwise.
      */
     hasVariant = function (index, variant_id) {
-      let data = this.getDataForIndex(index);
+      let data = this.hasMapTabs() ? this.getDataForIndex(index) : this.getData();
       return data && data.hasOwnProperty('variants') && Object.keys(data.variants).length > 0 && data.variants.hasOwnProperty(variant_id);
+    }
+
+    /**
+     * Build a normal map variant from compact object-filter data.
+     *
+     * @param {String|Number} variant_id
+     *   The selected object id.
+     *
+     * @returns {Boolean}
+     *   TRUE if the variant exists or could be built.
+     */
+    ensureObjectFilterVariant = function (variant_id) {
+      if (!variant_id) {
+        return true;
+      }
+
+      let data = this.getData();
+      if (!data) {
+        return false;
+      }
+      data.variants = data.variants || {};
+      if (data.variants[variant_id]) {
+        return true;
+      }
+
+      let filter_variant = data.object_filter_variants?.[variant_id];
+      if (!filter_variant || !Array.isArray(filter_variant.location_ids)) {
+        return false;
+      }
+
+      // Compact variants only store ids and modal content. Reuse the base
+      // location objects so geometry paths, labels, and pcodes stay identical
+      // between the unfiltered and filtered map states.
+      let locations_by_id = {};
+      (data.locations || []).forEach(function (location) {
+        locations_by_id[String(location.object_id ?? location.location_id ?? location.id)] = location;
+      });
+      data.variants[variant_id] = {
+        locations: filter_variant.location_ids.map(function (location_id) {
+          let location = locations_by_id[String(location_id)] ?? null;
+          return location ? Object.assign({}, location, {object_count: 1}) : null;
+        }).filter(function (location) {
+          return location !== null;
+        }),
+        modal_contents: filter_variant.modal_contents || {},
+      };
+      return data.variants[variant_id].locations.length > 0;
+    }
+
+    /**
+     * Switch the active object-filter variant.
+     *
+     * @param {String|Number|null} variant_id
+     *   The selected object id.
+     *
+     * @returns {Boolean}
+     *   TRUE if the active variant could be set.
+     */
+    setObjectFilterVariant = function (variant_id) {
+      if (!this.ensureObjectFilterVariant(variant_id)) {
+        return false;
+      }
+      return this.setVariantId(null, variant_id || null);
     }
 
     /**
@@ -596,22 +1026,26 @@
         }
       }
 
-      // Update the map.
-      this.updateMap(this.animationDuration, true);
+      this.loadDataSlice(index).done(() => {
+        this.refreshAdminLevelForCurrentData();
 
-      if (this.sidebar?.isVisible()) {
-        // If we have an open popup, keep it open and update the content, or
-        // close it if there is nothing to show.
-        let focused_location = this.focusedLocation ? this.getLocationById(this.focusedLocation.object_id) : null;
-        let focused_feature = focused_location ? this.getFeatureByObjectId(focused_location.object_id) : null;
-        let location_is_visible = this.isOverviewMap() || (focused_location && focused_location.total > 0);
-        if (focused_location && focused_feature && location_is_visible) {
-          this.style.showSidebarForObject(this.focusedLocation);
+        if (this.sidebar?.isVisible()) {
+          // If we have an open popup, keep it open and update the content, or
+          // close it if there is nothing to show.
+          let focused_location = this.focusedLocation ? this.getLocationById(this.focusedLocation.object_id) : null;
+          let focused_feature = focused_location ? this.getFeatureByObjectId(focused_location.object_id) : null;
+          let location_is_visible = this.isOverviewMap() || (focused_location && focused_location.total > 0);
+          if (focused_location && focused_feature && location_is_visible) {
+            // The active tab's location object carries the index and variant
+            // used by getModalContent().
+            this.focusedLocation = focused_location;
+            this.showSidebarForObject(this.focusedLocation);
+          }
+          else {
+            this.hideSidebar();
+          }
         }
-        else {
-          this.hideSidebar();
-        }
-      }
+      });
     }
 
     /**
@@ -623,27 +1057,33 @@
      *   The variant id.
      */
     switchVariant = function (index, variant_id) {
-      if (this.setVariantId(index, variant_id) === false) {
-        // The variant can't be set, so we abort.
+      if (!this.hasVariant(index, variant_id)) {
         return;
       }
 
-      let $item = this.getContainer().find('.map-tabs a[data-map-index="' + index + '"]').parent('li');
-      let $toggle = $item.find('.variant-toggle');
-      let variant = this.getDataForIndex(index).variants[variant_id];
+      this.loadDataSlice(index, variant_id).done(() => {
+        if (this.setVariantId(index, variant_id) === false) {
+          // The variant can't be set, so we abort.
+          return;
+        }
 
-      // Mark the variant tab as active.
-      this.getContainer().find('.map-tabs div.cd-dropdown a').removeClass('active');
-      $item.find('.cd-dropdown').find('a[data-variant-id="' + variant_id + '"]').addClass('active');
+        let $item = this.getContainer().find('.map-tabs a[data-map-index="' + index + '"]').parent('li');
+        let $toggle = $item.find('.variant-toggle');
+        let variant = this.getDataForIndex(index).variants[variant_id];
 
-      // Update the dropdown label.
-      $toggle.find('button .ghi-dropdown__btn-label').html('#' + variant.tab_label);
+        // Mark the variant tab as active.
+        this.getContainer().find('.map-tabs div.cd-dropdown a').removeClass('active');
+        $item.find('.cd-dropdown').find('a[data-variant-id="' + variant_id + '"]').addClass('active');
 
-      // Store the currently used variant id.
-      $toggle.data('variant-id', variant_id);
+        // Update the dropdown label.
+        $toggle.find('button .ghi-dropdown__btn-label').html('#' + variant.tab_label);
 
-      // And hand over to the general tab switching which updates the data in the map.
-      this.switchTab(index);
+        // Store the currently used variant id.
+        $toggle.data('variant-id', variant_id);
+
+        // And hand over to the general tab switching which updates the data in the map.
+        this.switchTab(index);
+      });
     }
 
     /**
@@ -656,6 +1096,15 @@
      *   The location object to show in the sidebar.
      */
     showSidebarForObject = function (object) {
+      if (!this.getModalContent(object) && this.hasLazyModalData()) {
+        this.loadModalContent(object).done(() => {
+          if (this.getModalContent(object)) {
+            this.showSidebarForObject(object);
+          }
+        });
+        return;
+      }
+
       let map = this.getMap();
       let style = this.style;
 
@@ -1448,7 +1897,7 @@
 
         // Hide the label of the currently viewed country from the background
         // layer.
-        this.hideCountryLabelFromBackgroundLayer(this.options?.outline_country?.location_name ?? null);
+        this.hideCountryLabelFromBackgroundLayer(this.options?.outline_country?.name ?? null);
       }
       this.updateMapData(label_layer_id + '-source', backgroundFeatures);
     }
@@ -1491,7 +1940,7 @@
       let self = this;
 
       // Add tab change behaviour.
-      this.getContainer().find('.map-tabs a.map-tab').click(function (e) {
+      this.getContainer().find('.map-tabs a.map-tab').off('click.mapTabs').on('click.mapTabs', function (e) {
         if ($(this).parents('li').hasClass('active') && $(this).parent('li').find('button.ghi-dropdown__btn').length > 0) {
           // If a map tab is already active and there is a dropdown for variants,
           // open that instead.
@@ -1508,7 +1957,7 @@
       });
 
       // Add variant change behaviour.
-      $(this.getContainerClass() + ' .map-tabs div.cd-dropdown a').click(function (e) {
+      $(this.getContainerClass() + ' .map-tabs div.cd-dropdown a').off('click.mapTabs').on('click.mapTabs', function (e) {
         let parent_index = $(this).parents('li').find('a.map-tab').data('map-index');
         self.switchVariant(parent_index, $(this).data('variant-id'));
         e.preventDefault();

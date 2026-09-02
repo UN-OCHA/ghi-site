@@ -13,14 +13,17 @@ use Drupal\ghi_base_objects\Entity\BaseObjectAwareEntityInterface;
 use Drupal\ghi_base_objects\Helpers\BaseObjectHelper;
 use Drupal\ghi_blocks\Traits\AttachmentTableTrait;
 use Drupal\ghi_plan_clusters\Entity\PlanCluster;
-use Drupal\ghi_plans\ApiObjects\AttachmentPrototype\AttachmentPrototype;
-use Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment;
+use Drupal\ghi_plans\ApiObjects\Prototypes\AttachmentPrototype;
+use Drupal\ghi_plans\ApiObjects\Attachments\Attachment;
 use Drupal\ghi_plans\ApiObjects\Plan as ApiObjectsPlan;
 use Drupal\ghi_plans\ApiObjects\PlanEntityInterface;
+use Drupal\ghi_plans\Entity\GoverningEntity;
 use Drupal\ghi_plans\Entity\Plan;
 use Drupal\ghi_sections\Entity\SectionNodeInterface;
 use Drupal\ghi_subpages\Entity\LogframeSubpage;
 use Drupal\hpc_api\Query\EndpointQueryManager;
+use Drupal\hpc_api\Query\FabricQueryManager;
+use Drupal\hpc_common\Plugin\HPCBlockBase;
 use Drupal\layout_builder\LayoutEntityHelperTrait;
 use Drupal\layout_builder\LayoutTempstoreRepositoryInterface;
 use Drupal\layout_builder\Plugin\SectionStorage\DefaultsSectionStorage;
@@ -66,6 +69,13 @@ class LogframeManager implements ContainerInjectionInterface {
   protected $endpointQueryManager;
 
   /**
+   * The manager class for fabric query plugins.
+   *
+   * @var \Drupal\hpc_api\Query\FabricQueryManager
+   */
+  protected $fabricQueryManager;
+
+  /**
    * The plugin context handler.
    *
    * @var \Drupal\Core\Plugin\Context\ContextHandlerInterface
@@ -82,10 +92,11 @@ class LogframeManager implements ContainerInjectionInterface {
   /**
    * Public constructor.
    */
-  public function __construct(BlockManagerInterface $block_manager, UuidInterface $uuid, EndpointQueryManager $endpoint_query_manager, ContextHandlerInterface $context_handler, LayoutTempstoreRepositoryInterface $layout_tempstore_repository) {
+  public function __construct(BlockManagerInterface $block_manager, UuidInterface $uuid, EndpointQueryManager $endpoint_query_manager, FabricQueryManager $fabric_query_manager, ContextHandlerInterface $context_handler, LayoutTempstoreRepositoryInterface $layout_tempstore_repository) {
     $this->blockManager = $block_manager;
     $this->uuidGenerator = $uuid;
     $this->endpointQueryManager = $endpoint_query_manager;
+    $this->fabricQueryManager = $fabric_query_manager;
     $this->contextHandler = $context_handler;
     $this->layoutTempstoreRepository = $layout_tempstore_repository;
   }
@@ -97,6 +108,7 @@ class LogframeManager implements ContainerInjectionInterface {
     return new static(
       $container->get('plugin.manager.block'),
       $container->get('uuid'),
+      $container->get('plugin.manager.endpoint_query_manager'),
       $container->get('plugin.manager.endpoint_query_manager'),
       $container->get('context.handler'),
       $container->get('layout_builder.tempstore_repository'),
@@ -191,6 +203,7 @@ class LogframeManager implements ContainerInjectionInterface {
     }
 
     $definition = $this->blockManager->getDefinition('plan_headline_figures', FALSE);
+    $class = $definition['class'];
     $context_mapping = $this->buildContextMappingForBlock($definition, $node);
 
     $configuration = [
@@ -237,7 +250,7 @@ class LogframeManager implements ContainerInjectionInterface {
     $config = array_filter([
       'id' => $definition['id'],
       'provider' => $definition['provider'],
-      'data_sources' => $definition['data_sources'] ?? NULL,
+      'data_sources' => $class instanceof HPCBlockBase ? ($class::metadata()->dataSources ?? NULL) : NULL,
       'label' => '<none>',
       'label_display' => TRUE,
     ]) + $context_mapping;
@@ -262,6 +275,7 @@ class LogframeManager implements ContainerInjectionInterface {
       return NULL;
     }
     $definition = $this->blockManager->getDefinition('plan_entity_logframe', FALSE);
+    $class = $definition['class'];
     $context_mapping = $this->buildContextMappingForBlock($definition, $node);
 
     /** @var \Drupal\ghi_plans\Entity\Plan $plan */
@@ -334,7 +348,7 @@ class LogframeManager implements ContainerInjectionInterface {
     $config = array_filter([
       'id' => $definition['id'],
       'provider' => $definition['provider'],
-      'data_sources' => $definition['data_sources'] ?? NULL,
+      'data_sources' => $class instanceof HPCBlockBase ? ($class::metadata()->dataSources ?? NULL) : NULL,
       'label' => '<none>',
       'label_display' => TRUE,
     ]) + $context_mapping;
@@ -415,7 +429,7 @@ class LogframeManager implements ContainerInjectionInterface {
   /**
    * Build caseload columns for an attachment prototype.
    *
-   * @param \Drupal\ghi_plans\ApiObjects\AttachmentPrototype\AttachmentPrototype $attachment_prototype
+   * @param \Drupal\ghi_plans\ApiObjects\Prototypes\AttachmentPrototype $attachment_prototype
    *   The attachment prototype.
    * @param \Drupal\ghi_plans\Entity\Plan $plan
    *   The plan object that the attachment prototype belongs to.
@@ -438,7 +452,7 @@ class LogframeManager implements ContainerInjectionInterface {
     $field_types = $attachment_prototype->getFieldTypes();
     $in_need = array_search('in_need', $field_types);
     $target = array_search('target', $field_types);
-    $measure_fields = $attachment_prototype->getMeasurementMetricFields();
+    $measure_fields = $attachment_prototype->getMeasurementFields();
     $measure_keys = array_keys($measure_fields);
     $measure = count($measure_keys) ? ($measure_keys[1] ?? end($measure_keys)) : NULL;
     $available_fields = [
@@ -505,7 +519,7 @@ class LogframeManager implements ContainerInjectionInterface {
   /**
    * Build indicator columns for an attachment prototype.
    *
-   * @param \Drupal\ghi_plans\ApiObjects\AttachmentPrototype\AttachmentPrototype $attachment_prototype
+   * @param \Drupal\ghi_plans\ApiObjects\Prototypes\AttachmentPrototype $attachment_prototype
    *   The attachment prototype.
    * @param \Drupal\ghi_plans\Entity\Plan $plan
    *   The plan object that the attachment prototype belongs to.
@@ -627,8 +641,8 @@ class LogframeManager implements ContainerInjectionInterface {
     $parent = $node->getParentNode();
     if (!$parent instanceof SectionNodeInterface && $parent instanceof BaseObjectAwareEntityInterface) {
       $context_base_object = $parent->getBaseObject();
-      $ref_codes = $context_base_object?->getSourceObject()?->getValidRefCodes() ?? NULL;
-      if ($ref_codes) {
+      $ref_codes = $context_base_object instanceof GoverningEntity && $context_base_object?->getSourceObject()?->getValidRefCodes() ?? NULL;
+      if (is_array($ref_codes)) {
         $entity_types = array_intersect_key($entity_types, array_flip($ref_codes));
       }
     }
@@ -652,13 +666,13 @@ class LogframeManager implements ContainerInjectionInterface {
    * @param \Drupal\ghi_plans\Entity\Plan $plan
    *   The plan base object.
    *
-   * @return \Drupal\ghi_plans\ApiObjects\PlanPrototype
+   * @return \Drupal\ghi_plans\ApiObjects\Prototypes\PlanPrototype
    *   The prototype for the plan.
    */
   private function getPlanPrototype(Plan $plan) {
-    /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\PlanPrototypeQuery $prototype_query */
-    $prototype_query = $this->endpointQueryManager->createInstance('plan_prototype_query');
-    return $prototype_query->getPrototype($plan->getSourceId());
+    /** @var \Drupal\ghi_plans\Plugin\FabricQuery\EntityPrototypeQuery $prototype_query */
+    $prototype_query = $this->fabricQueryManager->createInstance('entity_prototype');
+    return $prototype_query->getPlanPrototype($plan->getSourceId());
   }
 
   /**
@@ -681,7 +695,7 @@ class LogframeManager implements ContainerInjectionInterface {
     ];
     foreach ($prototype->getEntityPrototypes() as $entity_prototype) {
       $ref_code = $entity_prototype->getRefCode();
-      $entity_types[$ref_code] = $entity_prototype->getPluralName();
+      $entity_types[$ref_code] = $entity_prototype->getNamePlural();
     }
     if (!empty(self::EXCLUDE_ENTITY_TYPES)) {
       $entity_types = array_diff_key($entity_types, array_flip(self::EXCLUDE_ENTITY_TYPES));
@@ -713,20 +727,18 @@ class LogframeManager implements ContainerInjectionInterface {
     $entities = [];
     $base_object = $section->getBaseObject();
     if ($base_object instanceof Plan && $ref_code == ApiObjectsPlan::ENTITY_REF_CODE) {
-      /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\EntityQuery $query */
-      $query = $this->endpointQueryManager->createInstance('entity_query');
-      $plan_data = $query->getEntity('plan', $base_object->getSourceId());
-      if ($plan_data) {
+      /** @var \Drupal\ghi_plans\Plugin\FabricQuery\PlanQuery $query */
+      $query = $this->fabricQueryManager->createInstance('plan');
+      if ($plan = $query->getPlan($base_object->getSourceId())) {
         $entities = [
-          $plan_data->id() => $plan_data,
+          $plan->id() => $plan,
         ];
       }
     }
 
-    /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\PlanEntitiesQuery $query */
-    $query = $this->endpointQueryManager->createInstance('plan_entities_query');
-    $query->setPlaceholder('plan_id', $base_object->getSourceId());
-    $entities = $entities + ($query->getPlanEntities($base_object, NULL, $filter) ?? []);
+    /** @var \Drupal\ghi_plans\Plugin\FabricQuery\EntityQuery $query */
+    $query = $this->fabricQueryManager->createInstance('entity');
+    $entities = $entities + ($query->getEntitiesForPlan($base_object->getSourceId(), $base_object, NULL, $filter) ?? []);
     // This should give us only PlanEntity objects, but let's make sure.
     $entities = is_array($entities) ? array_filter($entities, function ($entity) {
       return $entity instanceof PlanEntityInterface;
@@ -742,7 +754,7 @@ class LogframeManager implements ContainerInjectionInterface {
    * @param string $ref_code
    *   The entity ref code.
    *
-   * @return \Drupal\ghi_plans\ApiObjects\AttachmentPrototype\AttachmentPrototype[]
+   * @return \Drupal\ghi_plans\ApiObjects\Prototypes\AttachmentPrototype[]
    *   An array of attachment prototypes.
    */
   private function getAttachmentPrototypesForEntityRefCode(LogframeSubpage $node, $ref_code) {
@@ -755,8 +767,8 @@ class LogframeManager implements ContainerInjectionInterface {
     if (!$plan_id) {
       return [];
     }
-    /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\PlanAttachmentPrototypeQuery $query */
-    $query = $this->endpointQueryManager->createInstance('plan_attachment_prototype_query');
+    /** @var \Drupal\ghi_plans\Plugin\FabricQuery\AttachmentPrototypeQuery $query */
+    $query = $this->fabricQueryManager->createInstance('attachment_prototype');
     $attachment_prototypes = $query->getDataPrototypesForPlan($plan_id);
     return $this->filterAttachmentPrototypesByEntityRefCodes($attachment_prototypes, [$ref_code]);
   }
@@ -769,7 +781,7 @@ class LogframeManager implements ContainerInjectionInterface {
    * @param int $prototype_id
    *   An optional prototype id to filter for.
    *
-   * @return \Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment[]
+   * @return \Drupal\ghi_plans\ApiObjects\Attachments\Attachment[]
    *   An array of data attachments.
    */
   public function getAttachmentsForEntities(array $entities, $prototype_id = NULL) {
@@ -780,12 +792,12 @@ class LogframeManager implements ContainerInjectionInterface {
       return $entity->id;
     }, $entities);
 
-    /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\AttachmentSearchQuery $query */
-    $query = $this->endpointQueryManager->createInstance('attachment_search_query');
+    /** @var \Drupal\ghi_plans\Plugin\FabricQuery\AttachmentQuery $query */
+    $query = $this->fabricQueryManager->createInstance('attachment');
     $attachments = $query->getAttachmentsByObject('planEntity', $entity_ids);
     // Filter out non-data attachments.
     $attachments = array_filter($attachments, function ($attachment) use ($prototype_id) {
-      if (!$attachment instanceof DataAttachment) {
+      if (!$attachment instanceof Attachment) {
         return FALSE;
       }
       if ($prototype_id && $prototype_id == $attachment->getPrototype()->id()) {

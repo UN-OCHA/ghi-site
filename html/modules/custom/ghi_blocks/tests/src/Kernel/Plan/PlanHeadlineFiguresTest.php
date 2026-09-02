@@ -7,7 +7,13 @@ use Drupal\ghi_blocks\Interfaces\ConfigurableTableBlockInterface;
 use Drupal\ghi_blocks\Interfaces\ConfigValidationInterface;
 use Drupal\ghi_blocks\Interfaces\MultiStepFormBlockInterface;
 use Drupal\ghi_blocks\Plugin\Block\Plan\PlanHeadlineFigures;
+use Drupal\ghi_plans\Plugin\EndpointQuery\FlowSearchQuery;
+use Drupal\ghi_plans\Plugin\FabricQuery\AttachmentQuery;
+use Drupal\ghi_plans\Plugin\FabricQuery\GoverningEntityQuery;
+use Drupal\hpc_api\Query\EndpointQueryManager;
+use Drupal\hpc_api\Query\FabricQueryManager;
 use Drupal\Tests\ghi_blocks\Kernel\PlanBlockKernelTestBase;
+use Prophecy\Argument;
 
 /**
  * Tests the plan headline figures block plugin.
@@ -38,10 +44,10 @@ class PlanHeadlineFiguresTest extends PlanBlockKernelTestBase {
 
     $this->assertNull($plugin->label());
 
-    $definition = $plugin->getPluginDefinition();
-    $this->assertIsArray($definition['config_forms']);
-    $this->assertCount(2, $definition['config_forms']);
-    $this->assertArrayHasKey($plugin->getDefaultSubform(), $definition['config_forms']);
+    $config_forms = $plugin->metadata()->configForms;
+    $this->assertIsArray($config_forms);
+    $this->assertCount(2, $config_forms);
+    $this->assertArrayHasKey($plugin->getDefaultSubform(), $config_forms);
     $this->assertEquals('key_figures', $plugin->getDefaultSubform());
   }
 
@@ -60,6 +66,120 @@ class PlanHeadlineFiguresTest extends PlanBlockKernelTestBase {
     $this->assertEquals('tab_container', $build[0]['#theme']);
     $this->assertEquals('Population', $build[0]['#tabs'][0]['title']['#markup']);
     $this->assertCount(1, $build[0]['#tabs'][0]['items']['#items']);
+    $item = $build[0]['#tabs'][0]['items']['#items'][0];
+    $this->assertEquals('label_value', $item['#wrapper_attributes']['data-item-type']);
+    $this->assertEquals(100, $item['#wrapper_attributes']['data-raw-value']);
+  }
+
+  /**
+   * Tests percent headline figures trim insignificant decimals.
+   */
+  public function testPercentHeadlineFiguresTrimInsignificantDecimals() {
+    $flow_search_query = $this->prophesize(FlowSearchQuery::class);
+    $flow_search_query->setPlaceholder(Argument::cetera())->willReturn(NULL);
+
+    $endpoint_query_manager = $this->prophesize(EndpointQueryManager::class);
+    $endpoint_query_manager->createInstance('flow_search_query')->willReturn($flow_search_query->reveal());
+
+    $fabric_query_manager = $this->prophesize(FabricQueryManager::class);
+    $fabric_query_manager->hasDefinition(Argument::any())->willReturn(FALSE);
+    $fabric_query_manager->createInstance('governing_entity')->willReturn($this->prophesize(GoverningEntityQuery::class)->reveal());
+    $fabric_query_manager->createInstance('attachment')->willReturn($this->prophesize(AttachmentQuery::class)->reveal());
+
+    $container = \Drupal::getContainer();
+    $container->set('plugin.manager.endpoint_query_manager', $endpoint_query_manager->reveal());
+    $container->set('plugin.manager.fabric_query_manager', $fabric_query_manager->reveal());
+    \Drupal::setContainer($container);
+
+    $plugin = $this->getBlockPlugin([
+      'key_figures' => [
+        'items' => [
+          [
+            'id' => 0,
+            'item_type' => 'item_group',
+            'config' => [
+              'label' => 'Funding',
+            ],
+          ],
+          [
+            'id' => 1,
+            'item_type' => 'funding_data',
+            'config' => [
+              'data_type' => 'funding_coverage',
+            ],
+            'pid' => 0,
+          ],
+          [
+            'id' => 2,
+            'item_type' => 'label_value',
+            'config' => [
+              'label' => 'Reached',
+              'value' => 0.3,
+              'formatting' => 'percent',
+            ],
+            'pid' => 0,
+          ],
+        ],
+      ],
+    ]);
+
+    $build = $plugin->buildContent();
+    $items = $build[0]['#tabs'][0]['items']['#items'];
+
+    $this->assertEquals('hpc_percent', $items[0][0]['content']['#theme']);
+    $this->assertTrue($items[0][0]['content']['#compact_precision']);
+    $this->assertEquals('hpc_percent', $items[1][0]['#theme']);
+    $this->assertTrue($items[1][0]['#compact_precision']);
+  }
+
+  /**
+   * Tests that missing headline funding renders as zero.
+   */
+  public function testMissingHeadlineFundingRendersZero(): void {
+    $flow_search_query = $this->prophesize(FlowSearchQuery::class);
+    $flow_search_query->setPlaceholder(Argument::cetera())->willReturn(NULL);
+
+    $endpoint_query_manager = $this->prophesize(EndpointQueryManager::class);
+    $endpoint_query_manager->createInstance('flow_search_query')->willReturn($flow_search_query->reveal());
+
+    $fabric_query_manager = $this->prophesize(FabricQueryManager::class);
+    $fabric_query_manager->hasDefinition(Argument::any())->willReturn(FALSE);
+    $fabric_query_manager->createInstance('governing_entity')->willReturn($this->prophesize(GoverningEntityQuery::class)->reveal());
+    $fabric_query_manager->createInstance('attachment')->willReturn($this->prophesize(AttachmentQuery::class)->reveal());
+
+    $container = \Drupal::getContainer();
+    $container->set('plugin.manager.endpoint_query_manager', $endpoint_query_manager->reveal());
+    $container->set('plugin.manager.fabric_query_manager', $fabric_query_manager->reveal());
+    \Drupal::setContainer($container);
+
+    $plugin = $this->getBlockPlugin([
+      'key_figures' => [
+        'items' => [
+          [
+            'id' => 0,
+            'item_type' => 'item_group',
+            'config' => [
+              'label' => 'Funding',
+            ],
+          ],
+          [
+            'id' => 1,
+            'item_type' => 'funding_data',
+            'config' => [
+              'data_type' => 'funding_totals',
+            ],
+            'pid' => 0,
+          ],
+        ],
+      ],
+    ]);
+
+    $build = $plugin->buildContent();
+    $item = $build[0]['#tabs'][0]['items']['#items'][0];
+
+    $this->assertSame(0, $item['#wrapper_attributes']['data-raw-value']);
+    $this->assertNotContains('not-available', $item['#wrapper_attributes']['class']);
+    $this->assertSame(0, $item[0]['content']['#value']);
   }
 
   /**
@@ -109,28 +229,33 @@ class PlanHeadlineFiguresTest extends PlanBlockKernelTestBase {
    *   The block plugin.
    */
   private function getBlockPlugin($configuration = []) {
-    $configuration = $configuration !== FALSE ? [
-      'key_figures' => [
-        'items' => [
-          [
-            'id' => 0,
-            'item_type' => 'item_group',
-            'config' => [
-              'label' => 'Population',
+    if ($configuration === FALSE) {
+      $configuration = [];
+    }
+    elseif (empty($configuration)) {
+      $configuration = [
+        'key_figures' => [
+          'items' => [
+            [
+              'id' => 0,
+              'item_type' => 'item_group',
+              'config' => [
+                'label' => 'Population',
+              ],
             ],
-          ],
-          [
-            'id' => 1,
-            'item_type' => 'label_value',
-            'config' => [
-              'label' => 'Label',
-              'value' => 100,
+            [
+              'id' => 1,
+              'item_type' => 'label_value',
+              'config' => [
+                'label' => 'Label',
+                'value' => 100,
+              ],
+              'pid' => 0,
             ],
-            'pid' => 0,
           ],
         ],
-      ],
-    ] : [];
+      ];
+    }
     $contexts = $this->getPlanSectionContexts();
     return $this->createBlockPlugin('plan_headline_figures', $configuration ?: [], $contexts);
   }

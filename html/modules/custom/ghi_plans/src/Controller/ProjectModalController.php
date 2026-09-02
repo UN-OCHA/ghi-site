@@ -2,17 +2,25 @@
 
 namespace Drupal\ghi_plans\Controller;
 
+use Drupal\Component\Serialization\Json;
+use Drupal\Component\Utility\Html;
+use Drupal\Component\Utility\UrlHelper;
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Link;
 use Drupal\Core\Render\Markup;
 use Drupal\Core\Url;
+use Drupal\ghi_base_objects\Entity\BaseObjectChildInterface;
 use Drupal\ghi_base_objects\Entity\BaseObjectInterface;
+use Drupal\ghi_plans\ApiObjects\Project;
 use Drupal\ghi_plans\Entity\GoverningEntity;
 use Drupal\ghi_plans\Entity\Plan;
 use Drupal\ghi_plans\Traits\FtsLinkTrait;
-use Drupal\hpc_api\Query\EndpointQueryManager;
+use Drupal\ghi_plans\Traits\PlanQueryTrait;
 use Drupal\hpc_common\Helpers\ThemeHelper;
+use enshrined\svgSanitize\Sanitizer as SvgSanitizer;
+use GuzzleHttp\Exception\GuzzleException;
 use Symfony\Component\DependencyInjection\ContainerInterface;
+use Symfony\Component\HttpFoundation\Response;
 
 /**
  * Controller for project related modals.
@@ -20,6 +28,179 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 class ProjectModalController extends ControllerBase {
 
   use FtsLinkTrait;
+  use PlanQueryTrait;
+
+  /**
+   * Config object for legacy project source URLs.
+   */
+  private const LEGACY_PROJECT_CONFIG_NAME = 'ghi_plans.legacy_projects';
+
+  /**
+   * Base cache id for the indexed set of available legacy project files.
+   */
+  private const LEGACY_PROJECT_AVAILABILITY_CACHE_ID = 'ghi_plans:legacy_project_availability';
+
+  /**
+   * Cache lifetime for a successfully loaded legacy project index.
+   */
+  private const LEGACY_PROJECT_AVAILABILITY_SUCCESS_TTL = 21600;
+
+  /**
+   * Short cache lifetime for unavailable legacy project indexes.
+   */
+  private const LEGACY_PROJECT_AVAILABILITY_FAILURE_TTL = 300;
+
+  /**
+   * Cache lifetime for fetched legacy project fragments and proxied assets.
+   */
+  private const LEGACY_PROJECT_RENDER_CACHE_MAX_AGE = 600;
+
+  /**
+   * Passive image types that the legacy asset proxy may serve inline.
+   *
+   * The response type is selected from this map after inspecting the response
+   * body; an upstream Content-Type header is never trusted.
+   */
+  private const LEGACY_PROJECT_ASSET_MIME_TYPES = [
+    'avif' => 'image/avif',
+    'bmp' => 'image/bmp',
+    'gif' => 'image/gif',
+    'ico' => 'image/vnd.microsoft.icon',
+    'jpeg' => 'image/jpeg',
+    'jpg' => 'image/jpeg',
+    'png' => 'image/png',
+    'svg' => 'image/svg+xml',
+    'webp' => 'image/webp',
+  ];
+
+  /**
+   * Legacy project tags that can be rendered safely inside the Drupal page.
+   */
+  private const LEGACY_PROJECT_ALLOWED_TAGS = [
+    'a',
+    'b',
+    'br',
+    'div',
+    'em',
+    'fieldset',
+    'h1',
+    'h2',
+    'h3',
+    'h4',
+    'h5',
+    'hr',
+    'img',
+    'label',
+    'li',
+    'ol',
+    'p',
+    'section',
+    'span',
+    'strong',
+    'table',
+    'tbody',
+    'td',
+    'tfoot',
+    'th',
+    'thead',
+    'tr',
+    'ul',
+  ];
+
+  /**
+   * Legacy project tags that should be removed with their full contents.
+   */
+  private const LEGACY_PROJECT_DROP_TAGS = [
+    'audio',
+    'button',
+    'canvas',
+    'embed',
+    'form',
+    'iframe',
+    'input',
+    'link',
+    'object',
+    'script',
+    'select',
+    'style',
+    'textarea',
+    'video',
+  ];
+
+  /**
+   * Attributes preserved while normalizing the extracted legacy project HTML.
+   */
+  private const LEGACY_PROJECT_ALLOWED_ATTRIBUTES = [
+    'alt',
+    'class',
+    'colspan',
+    'href',
+    'rel',
+    'rowspan',
+    'scope',
+    'src',
+    'target',
+    'title',
+  ];
+
+  /**
+   * Legacy classes that carry project semantics or stable visual meaning.
+   */
+  private const LEGACY_PROJECT_ALLOWED_CLASSES = [
+    'align-items-center',
+    'bg-light',
+    'border-top',
+    'clusterImg',
+    'col',
+    'col-3',
+    'col-4',
+    'col-5',
+    'col-9',
+    'col-12',
+    'create-project',
+    'dependent',
+    'disableCluster',
+    'd-flex',
+    'heading-text',
+    'ind-1',
+    'ind-2',
+    'ind-3',
+    'ind-4',
+    'justify-content-between',
+    'mb-1',
+    'me-1',
+    'mt-4',
+    'mx-3',
+    'p-2',
+    'p-5',
+    'pb-3',
+    'pe-1',
+    'pe-2',
+    'padding-text',
+    'ps-1',
+    'pt-1',
+    'pt-2',
+    'pt-5',
+    'px-3',
+    'px-4',
+    'py-2',
+    'py-5',
+    'review',
+    'row',
+    'section-child',
+    'section-header',
+    'segmentation',
+    'table',
+    'table-dark',
+    'text-secondary',
+  ];
+
+  /**
+   * The endpoint query manager.
+   *
+   * @var \Drupal\hpc_api\Query\FabricQueryManager
+   */
+  public $fabricQueryManager;
 
   /**
    * The endpoint query manager.
@@ -29,19 +210,53 @@ class ProjectModalController extends ControllerBase {
   public $endpointQueryManager;
 
   /**
-   * Public constructor.
+   * The HTTP client.
+   *
+   * @var \GuzzleHttp\ClientInterface
    */
-  public function __construct(EndpointQueryManager $endpoint_query_manager) {
-    $this->endpointQueryManager = $endpoint_query_manager;
-  }
+  public $httpClient;
+
+  /**
+   * The request stack.
+   *
+   * @var \Symfony\Component\HttpFoundation\RequestStack
+   */
+  public $requestStack;
+
+  /**
+   * The cache backend.
+   *
+   * @var \Drupal\Core\Cache\CacheBackendInterface
+   */
+  public $cacheBackend;
+
+  /**
+   * The known legacy project ids, keyed by project id.
+   *
+   * NULL means availability could not be confirmed and links should fail open.
+   *
+   * @var array<int, bool>|null
+   */
+  private ?array $legacyProjectIds = NULL;
+
+  /**
+   * Whether the legacy project availability index has been loaded this request.
+   *
+   * @var bool
+   */
+  private bool $legacyProjectAvailabilityLoaded = FALSE;
 
   /**
    * {@inheritdoc}
    */
-  public static function create(ContainerInterface $container) {
-    return new static(
-      $container->get('plugin.manager.endpoint_query_manager'),
-    );
+  public static function create(ContainerInterface $container): ProjectModalController {
+    $instance = new static();
+    $instance->fabricQueryManager = $container->get('plugin.manager.fabric_query_manager');
+    $instance->endpointQueryManager = $container->get('plugin.manager.endpoint_query_manager');
+    $instance->httpClient = $container->get('http_client');
+    $instance->requestStack = $container->get('request_stack');
+    $instance->cacheBackend = $container->get('cache.default');
+    return $instance;
   }
 
   /**
@@ -105,9 +320,10 @@ class ProjectModalController extends ControllerBase {
    *   A render array.
    */
   public function buildProjectTable(BaseObjectInterface $base_object) {
-    $project_search_query = $this->getProjectSearchQuery($base_object);
-    $projects = $project_search_query->getProjects($base_object);
     $plan_object = $this->getPlanObject($base_object);
+    $cluster_context = $base_object instanceof BaseObjectChildInterface ? $base_object : NULL;
+    $project_query = $this->getProjectQuery();
+    $projects = $project_query->getProjectsForPlanId($plan_object->getSourceId(), $cluster_context);
     $build = $this->getProjectTable($projects, $plan_object);
     return $this->returnBuild($build, $this->modalTitleBaseObject($base_object, $this->t('Projects', [], ['langcode' => $plan_object?->getPlanLanguage()])));
   }
@@ -122,9 +338,11 @@ class ProjectModalController extends ControllerBase {
    *   A render array.
    */
   public function buildOrganizationList(BaseObjectInterface $base_object) {
-    $project_search_query = $this->getProjectSearchQuery($base_object);
-    $organizations = $project_search_query->getOrganizations($base_object);
     $plan_object = $this->getPlanObject($base_object);
+    $cluster_context = $base_object instanceof BaseObjectChildInterface ? $base_object : NULL;
+    $project_query = $this->getProjectQuery();
+    $organizations = $project_query->getProjectOrganizationsForPlan($plan_object, $cluster_context);
+
     $t_options = [
       'langcode' => $plan_object?->getPlanLanguage(),
     ];
@@ -152,23 +370,492 @@ class ProjectModalController extends ControllerBase {
    */
   public function buildOrganizationProjectTable(BaseObjectInterface $base_object, $organization_id) {
     $plan_object = $this->getPlanObject($base_object);
+    $organization = $this->getOrganizationQuery()->getOrganization($organization_id);
     $t_options = [
       'langcode' => $plan_object?->getPlanLanguage(),
     ];
-    $organization = $this->getOrganization($organization_id);
     if (!$organization) {
       $build = [
         '#markup' => $this->t('An error occured. The requested ressource is not available.', [], $t_options),
       ];
       return $this->returnBuild($build, $this->t('Error', [], $t_options));
     }
-    $project_search_query = $this->getProjectSearchQuery($base_object);
-    $projects = $project_search_query->getOrganizationProjects($organization, $base_object);
+
+    $cluster_context = $base_object instanceof BaseObjectChildInterface ? $base_object : NULL;
+    $project_query = $this->getProjectQuery();
+    $projects = $project_query->getProjectsForPlanId($plan_object->getSourceId(), $cluster_context, $organization_id);
+
     $build = $this->getOrganizationProjectTable($projects, $plan_object);
     $title = $this->t('@organization_name | Projects', [
       '@organization_name' => $organization->getName(),
     ], $t_options);
     return $this->returnBuild($build, $title);
+  }
+
+  /**
+   * Build the standalone legacy project page.
+   *
+   * This is also used as the modal content for project links in project tables.
+   *
+   * @param int $project_id
+   *   The project id.
+   *
+   * @return array
+   *   A render array.
+   */
+  public function buildLegacyProject($project_id): array {
+    $markup = $this->buildLegacyProjectMarkup((int) $project_id, $this->isDialogRequest());
+    return [
+      '#markup' => Markup::create($markup['html']),
+      '#attached' => [
+        'library' => ['ghi_plans/legacy_project'],
+      ],
+      '#cache' => [
+        'max-age' => self::LEGACY_PROJECT_RENDER_CACHE_MAX_AGE,
+      ],
+    ];
+  }
+
+  /**
+   * Get the title for a standalone legacy project page.
+   *
+   * @param int $project_id
+   *   The project id.
+   *
+   * @return \Drupal\Core\StringTranslation\TranslatableMarkup
+   *   The page title.
+   */
+  public function legacyProjectTitle($project_id) {
+    $project = $this->getProjectQuery()->getProject((int) $project_id);
+    if ($project) {
+      return $this->t('@project_code: @project_name', [
+        '@project_code' => $project->getProjectCode(),
+        '@project_name' => $project->getName(),
+      ]);
+    }
+    return $this->t('Project @project_id', [
+      '@project_id' => $project_id,
+    ]);
+  }
+
+  /**
+   * Build the HTML fragment used for client-side project detail paging.
+   *
+   * @param int $project_id
+   *   The project id.
+   *
+   * @return \Symfony\Component\HttpFoundation\Response
+   *   The fragment response.
+   */
+  public function buildLegacyProjectFragment($project_id): Response {
+    $markup = $this->buildLegacyProjectMarkup((int) $project_id, TRUE);
+    $response = new Response($markup['html'], $markup['status']);
+    $response->headers->set('Content-Type', 'text/html; charset=UTF-8');
+    $response->headers->set('Cache-Control', 'public, max-age=' . self::LEGACY_PROJECT_RENDER_CACHE_MAX_AGE);
+    return $response;
+  }
+
+  /**
+   * Build the sanitized legacy project wrapper markup.
+   *
+   * @param int $project_id
+   *   The project id.
+   * @param bool $modal_display
+   *   Whether the wrapper is being rendered inside a dialog.
+   *
+   * @return array{html: string, status: int}
+   *   The wrapped HTML and HTTP-like status for raw fragment responses.
+   */
+  private function buildLegacyProjectMarkup(int $project_id, bool $modal_display): array {
+    $fragment = $this->loadLegacyProjectFragment($project_id);
+    $classes = [
+      'legacy-project-wrapper',
+      $modal_display ? 'legacy-project-wrapper--modal' : 'legacy-project-wrapper--standalone',
+    ];
+    if (!$modal_display) {
+      $classes[] = 'content-width';
+    }
+
+    $html = '<div class="' . implode(' ', $classes) . '" data-legacy-project-id="' . $project_id . '">';
+    $html .= '<div class="legacy-project-content">' . $fragment['html'] . '</div>';
+    $html .= '</div>';
+
+    return [
+      'html' => $html,
+      'status' => $fragment['status'],
+    ];
+  }
+
+  /**
+   * Load and extract the legacy project content from the GitHub Pages export.
+   *
+   * @param int $project_id
+   *   The project id.
+   *
+   * @return array{html: string, status: int}
+   *   The sanitized fragment HTML and HTTP-like status.
+   */
+  private function loadLegacyProjectFragment(int $project_id): array {
+    $legacy_project_url = $this->getLegacyProjectExternalUrl($project_id);
+    if (!$legacy_project_url) {
+      return $this->buildUnavailableLegacyProjectFragment(Response::HTTP_NOT_FOUND);
+    }
+
+    try {
+      $response = $this->httpClient->get($legacy_project_url, [
+        'http_errors' => FALSE,
+        'timeout' => 10,
+      ]);
+      $html = (string) $response->getBody();
+    }
+    catch (GuzzleException $e) {
+      return $this->buildUnavailableLegacyProjectFragment(Response::HTTP_BAD_GATEWAY);
+    }
+
+    if ($response->getStatusCode() !== Response::HTTP_OK) {
+      return $this->buildUnavailableLegacyProjectFragment(Response::HTTP_NOT_FOUND);
+    }
+
+    $fragment = $this->prepareLegacyProjectFragment($html);
+    if ($fragment === NULL) {
+      return $this->buildUnavailableLegacyProjectFragment(Response::HTTP_NOT_FOUND);
+    }
+
+    return [
+      'html' => $fragment,
+      'status' => Response::HTTP_OK,
+    ];
+  }
+
+  /**
+   * Build a small fallback fragment for missing legacy project data.
+   *
+   * @param int $status
+   *   The HTTP-like status for the missing data.
+   *
+   * @return array{html: string, status: int}
+   *   The fallback fragment and status.
+   */
+  private function buildUnavailableLegacyProjectFragment(int $status): array {
+    return [
+      'html' => '<p class="legacy-project-message">' . Html::escape((string) $this->t('The requested project details are not available.')) . '</p>',
+      'status' => $status,
+    ];
+  }
+
+  /**
+   * Extract the project body from the legacy full HTML document.
+   *
+   * @param string $html
+   *   The legacy project HTML document.
+   *
+   * @return string|null
+   *   The sanitized project fragment, or NULL if the expected body is absent.
+   */
+  private function prepareLegacyProjectFragment(string $html): ?string {
+    $document = new \DOMDocument('1.0', 'UTF-8');
+    $document->preserveWhiteSpace = FALSE;
+    $document->formatOutput = FALSE;
+    $previous_errors = libxml_use_internal_errors(TRUE);
+    $loaded = $document->loadHTML('<?xml encoding="UTF-8">' . $html, LIBXML_NONET | LIBXML_NOERROR | LIBXML_NOWARNING);
+    libxml_clear_errors();
+    libxml_use_internal_errors($previous_errors);
+    if (!$loaded) {
+      return NULL;
+    }
+
+    $xpath = new \DOMXPath($document);
+    $project = $xpath
+      ->query('//*[contains(concat(" ", normalize-space(@class), " "), " create-project ")]')
+      ?->item(0);
+    if (!$project instanceof \DOMElement) {
+      return NULL;
+    }
+
+    $fragment_document = new \DOMDocument('1.0', 'UTF-8');
+    $fragment_document->preserveWhiteSpace = FALSE;
+    $fragment_document->formatOutput = FALSE;
+    $fragment = $fragment_document->importNode($project, TRUE);
+    if (!$fragment instanceof \DOMElement) {
+      return NULL;
+    }
+    $fragment_document->appendChild($fragment);
+    $this->sanitizeLegacyProjectElement($fragment);
+
+    return $fragment_document->saveHTML($fragment) ?: NULL;
+  }
+
+  /**
+   * Sanitize an imported legacy project element in place.
+   *
+   * @param \DOMElement $element
+   *   The imported element.
+   */
+  private function sanitizeLegacyProjectElement(\DOMElement $element): void {
+    $this->sanitizeLegacyProjectAttributes($element);
+
+    foreach (iterator_to_array($element->childNodes) as $child) {
+      if (!$child instanceof \DOMElement) {
+        continue;
+      }
+
+      $tag = strtolower($child->tagName);
+      if (in_array($tag, self::LEGACY_PROJECT_DROP_TAGS, TRUE)) {
+        $element->removeChild($child);
+        continue;
+      }
+
+      if (!in_array($tag, self::LEGACY_PROJECT_ALLOWED_TAGS, TRUE)) {
+        $this->sanitizeLegacyProjectElement($child);
+        while ($child->firstChild) {
+          $element->insertBefore($child->firstChild, $child);
+        }
+        $element->removeChild($child);
+        continue;
+      }
+
+      $this->sanitizeLegacyProjectElement($child);
+    }
+  }
+
+  /**
+   * Normalize attributes on a safe legacy project element.
+   *
+   * @param \DOMElement $element
+   *   The element to normalize.
+   */
+  private function sanitizeLegacyProjectAttributes(\DOMElement $element): void {
+    foreach (iterator_to_array($element->attributes) as $attribute) {
+      $name = strtolower($attribute->name);
+      $value = $attribute->value;
+
+      if (!in_array($name, self::LEGACY_PROJECT_ALLOWED_ATTRIBUTES, TRUE)) {
+        $element->removeAttribute($attribute->name);
+        continue;
+      }
+
+      switch ($name) {
+        case 'class':
+          $classes = $this->filterLegacyProjectClasses($value);
+          $classes ? $element->setAttribute('class', $classes) : $element->removeAttribute('class');
+          break;
+
+        case 'href':
+          $href = $this->normalizeLegacyProjectHref($value);
+          $href ? $element->setAttribute('href', $href) : $element->removeAttribute('href');
+          break;
+
+        case 'src':
+          $src = $this->normalizeLegacyProjectSource($value);
+          $src ? $element->setAttribute('src', $src) : $element->removeAttribute('src');
+          break;
+
+        case 'colspan':
+        case 'rowspan':
+          ctype_digit($value) ? $element->setAttribute($name, $value) : $element->removeAttribute($name);
+          break;
+
+        case 'target':
+        case 'rel':
+          // Link targets are normalized from the final href below.
+          $element->removeAttribute($name);
+          break;
+      }
+    }
+
+    if (strtolower($element->tagName) === 'a' && $element->hasAttribute('href')) {
+      $element->setAttribute('target', '_blank');
+      $element->setAttribute('rel', 'noopener noreferrer');
+    }
+  }
+
+  /**
+   * Keep only legacy classes that still carry meaning outside Bootstrap.
+   *
+   * @param string $class_attribute
+   *   The original class attribute.
+   *
+   * @return string|null
+   *   The normalized class attribute, or NULL if no classes remain.
+   */
+  private function filterLegacyProjectClasses(string $class_attribute): ?string {
+    $classes = preg_split('/\s+/', trim($class_attribute)) ?: [];
+    $classes = array_values(array_intersect($classes, self::LEGACY_PROJECT_ALLOWED_CLASSES));
+    return $classes ? implode(' ', $classes) : NULL;
+  }
+
+  /**
+   * Normalize safe link URLs inside extracted legacy project content.
+   *
+   * @param string $href
+   *   The original href attribute.
+   *
+   * @return string|null
+   *   The normalized href, or NULL if it is unsafe or unsupported.
+   */
+  private function normalizeLegacyProjectHref(string $href): ?string {
+    $href = trim(UrlHelper::stripDangerousProtocols($href));
+    if ($href === '') {
+      return NULL;
+    }
+
+    $scheme = strtolower((string) parse_url($href, PHP_URL_SCHEME));
+    if (in_array($scheme, ['http', 'https', 'mailto'], TRUE)) {
+      return $href;
+    }
+
+    if ($scheme === '') {
+      $asset_url = $this->normalizeLegacyProjectSource($href);
+      return $asset_url;
+    }
+
+    return NULL;
+  }
+
+  /**
+   * Normalize safe asset URLs inside extracted legacy project content.
+   *
+   * @param string $src
+   *   The original src or relative asset href.
+   *
+   * @return string|null
+   *   The local asset proxy URL, an allowed external URL, or NULL.
+   */
+  private function normalizeLegacyProjectSource(string $src): ?string {
+    $src = trim(UrlHelper::stripDangerousProtocols($src));
+    if ($src === '' || str_starts_with($src, '#')) {
+      return NULL;
+    }
+
+    if (UrlHelper::isExternal($src)) {
+      return preg_match('/^https?:\/\//i', $src) ? $src : NULL;
+    }
+
+    $asset_path = $this->normalizeLegacyProjectAssetPath('projects', $src);
+    if ($asset_path === NULL) {
+      return NULL;
+    }
+    if ($asset_path !== 'favicon.ico' && !str_starts_with($asset_path, '_assets/')) {
+      return NULL;
+    }
+    return $this->getLegacyProjectAssetProxyUrl($asset_path);
+  }
+
+  /**
+   * Build a proxied legacy project asset response.
+   *
+   * @return \Symfony\Component\HttpFoundation\Response
+   *   The asset response.
+   */
+  public function buildLegacyProjectAsset(): Response {
+    $asset_path = (string) $this->requestStack->getCurrentRequest()->query->get('path');
+    $asset_path = $this->normalizeLegacyProjectAssetPath('', $asset_path);
+    $expected_content_type = $asset_path !== NULL ? $this->getLegacyProjectAssetContentType($asset_path) : NULL;
+    if ($expected_content_type === NULL) {
+      return new Response('', Response::HTTP_NOT_FOUND);
+    }
+
+    $legacy_asset_url = $this->getLegacyProjectAssetExternalUrl($asset_path);
+    if (!$legacy_asset_url) {
+      return new Response('', Response::HTTP_NOT_FOUND);
+    }
+
+    try {
+      $asset_response = $this->httpClient->get($legacy_asset_url, [
+        'allow_redirects' => FALSE,
+        'http_errors' => FALSE,
+        'timeout' => 10,
+      ]);
+    }
+    catch (GuzzleException $e) {
+      return new Response('', Response::HTTP_BAD_GATEWAY);
+    }
+
+    if ($asset_response->getStatusCode() !== Response::HTTP_OK) {
+      return new Response('', Response::HTTP_NOT_FOUND);
+    }
+
+    $content = (string) $asset_response->getBody();
+    if ($expected_content_type === 'image/svg+xml') {
+      $content = $this->sanitizeLegacyProjectSvg($content);
+      if ($content === NULL) {
+        return new Response('', Response::HTTP_NOT_FOUND);
+      }
+    }
+    else {
+      $image_info = getimagesizefromstring($content);
+      if (($image_info['mime'] ?? NULL) !== $expected_content_type) {
+        return new Response('', Response::HTTP_NOT_FOUND);
+      }
+    }
+
+    $response = new Response($content);
+    $response->headers->set('Content-Type', $expected_content_type);
+    $response->headers->set('Cache-Control', 'public, max-age=' . self::LEGACY_PROJECT_RENDER_CACHE_MAX_AGE);
+    $response->headers->set('Content-Security-Policy', "default-src 'none'; style-src 'unsafe-inline'; sandbox");
+    $response->headers->set('Cross-Origin-Resource-Policy', 'same-origin');
+    $response->headers->set('X-Content-Type-Options', 'nosniff');
+    return $response;
+  }
+
+  /**
+   * Get the expected MIME type for an allowed legacy project asset path.
+   *
+   * @param string $asset_path
+   *   The normalized asset path relative to the legacy project base URL.
+   *
+   * @return string|null
+   *   The expected MIME type, or NULL when the path must not be proxied.
+   */
+  private function getLegacyProjectAssetContentType(string $asset_path): ?string {
+    if ($asset_path !== 'favicon.ico' && !str_starts_with($asset_path, '_assets/')) {
+      return NULL;
+    }
+
+    $extension = strtolower(pathinfo($asset_path, PATHINFO_EXTENSION));
+    return self::LEGACY_PROJECT_ASSET_MIME_TYPES[$extension] ?? NULL;
+  }
+
+  /**
+   * Sanitize an SVG while preserving the passive project icon markup.
+   *
+   * @param string $content
+   *   The upstream SVG content.
+   *
+   * @return string|null
+   *   The sanitized SVG, or NULL when the content is invalid.
+   */
+  private function sanitizeLegacyProjectSvg(string $content): ?string {
+    $sanitizer = new SvgSanitizer();
+    $sanitizer->removeRemoteReferences(TRUE);
+    $sanitizer->removeXMLTag(TRUE);
+    $content = $sanitizer->sanitize($content);
+    if (!is_string($content) || $content === '') {
+      return NULL;
+    }
+
+    $document = new \DOMDocument();
+    $previous_errors = libxml_use_internal_errors(TRUE);
+    $loaded = $document->loadXML($content, LIBXML_NONET | LIBXML_NOERROR | LIBXML_NOWARNING);
+    libxml_clear_errors();
+    libxml_use_internal_errors($previous_errors);
+    if (!$loaded || strtolower($document->documentElement?->localName ?? '') !== 'svg') {
+      return NULL;
+    }
+
+    // SVG 2 permits remote resources through both href and xlink:href. The
+    // sanitizer blocks active protocols but allows HTTP URLs, so restrict both
+    // forms to same-document fragment references such as <use href="#icon">.
+    foreach ($document->getElementsByTagName('*') as $element) {
+      foreach (iterator_to_array($element->attributes) as $attribute) {
+        if (strtolower($attribute->localName) === 'href' && !str_starts_with(trim($attribute->value), '#')) {
+          $element->removeAttributeNode($attribute);
+        }
+      }
+    }
+
+    $content = $document->saveXML($document->documentElement);
+    return is_string($content) && $content !== '' ? $content : NULL;
   }
 
   /**
@@ -229,24 +916,17 @@ class ProjectModalController extends ControllerBase {
       $organinizations = $project->getOrganizations();
       $organization_ids_unique = array_unique(array_merge($organization_ids_unique, array_keys($organinizations)));
 
-      $totals['targets'] += $project->target ?? 0;
-      $totals['requirements'] += $project->requirements ?? 0;
+      $totals['targets'] += $project->getTarget() ?? 0;
+      $totals['requirements'] += $project->getRequirements() ?? 0;
 
       $row = [];
       $row[] = [
-        'data' => [
-          '#type' => 'link',
-          '#title' => $project->version_code,
-          '#url' => Url::fromUri('https://projects.hpc.tools/project/' . $project->id . '/view'),
-          '#attributes' => [
-            'target' => '_blank',
-          ],
-        ],
-        'data-sort-value' => $project->version_code,
+        'data' => $this->buildLegacyProjectLink($project, $plan_object),
+        'data-sort-value' => $project->getProjectCode(),
         'data-sort-type' => 'alfa',
         'data-column-type' => 'string',
       ];
-      $row[] = $project->name;
+      $row[] = $project->getName();
       $row[] = [
         'data' => [
           '#markup' => Markup::create(implode(' | ', $this->getOrganizationLinks($organinizations))),
@@ -258,22 +938,22 @@ class ProjectModalController extends ControllerBase {
       $row[] = [
         'data' => [
           '#theme' => 'hpc_amount',
-          '#amount' => $project->target,
+          '#amount' => $project->getTarget(),
           '#scale' => 'full',
           '#decimal_format' => $decimal_format,
         ],
-        'data-sort-value' => $project->target,
+        'data-sort-value' => $project->getTarget(),
         'data-sort-type' => 'numeric',
         'data-column-type' => 'amount',
       ];
       $row[] = [
         'data' => [
           '#theme' => 'hpc_currency',
-          '#value' => $project->requirements,
+          '#value' => $project->getRequirements(),
           '#scale' => 'full',
           '#decimal_format' => $decimal_format,
         ],
-        'data-sort-value' => $project->requirements,
+        'data-sort-value' => $project->getRequirements(),
         'data-sort-type' => 'numeric',
         'data-column-type' => 'amount',
       ];
@@ -310,18 +990,24 @@ class ProjectModalController extends ControllerBase {
 
     return [
       '#theme' => 'table',
+      '#attributes' => [
+        'class' => ['legacy-project-list-table'],
+      ],
       '#cell_wrapping' => FALSE,
       '#header' => $header,
       '#sticky_rows' => $total_rows,
       '#rows' => $rows,
       '#sortable' => TRUE,
+      '#attached' => [
+        'library' => ['ghi_plans/legacy_project'],
+      ],
     ];
   }
 
   /**
    * Get the popover content for project items.
    *
-   * @param array $projects
+   * @param \Drupal\ghi_plans\ApiObjects\Project[] $projects
    *   The projects to include in the table.
    * @param \Drupal\ghi_plans\Entity\Plan|null $plan_object
    *   The plan object for context.
@@ -351,27 +1037,20 @@ class ProjectModalController extends ControllerBase {
 
     $rows = [];
     foreach ($projects as $project) {
-      $totals['requirements'] += $project->requirements ?? 0;
+      $totals['requirements'] += $project->getRequirements() ?? 0;
       $row = [];
       $row[] = [
-        'data' => [
-          '#type' => 'link',
-          '#title' => $project->version_code,
-          '#url' => Url::fromUri('https://projects.hpc.tools/project/' . $project->id . '/view'),
-          '#attributes' => [
-            'target' => '_blank',
-          ],
-        ],
+        'data' => $this->buildLegacyProjectLink($project, $plan_object),
       ];
-      $row[] = $project->name;
+      $row[] = $project->getName();
       $row[] = [
         'data' => [
           '#theme' => 'hpc_currency',
-          '#value' => $project->requirements,
+          '#value' => $project->getRequirements(),
           '#scale' => 'full',
           '#decimal_format' => $decimal_format,
         ],
-        'data-sort-value' => $project->requirements,
+        'data-sort-value' => $project->getRequirements(),
         'data-sort-type' => 'numeric',
         'data-column-type' => 'amount',
       ];
@@ -403,6 +1082,9 @@ class ProjectModalController extends ControllerBase {
       '#sticky_rows' => $total_rows,
       '#rows' => $rows,
       '#sortable' => TRUE,
+      '#attached' => [
+        'library' => ['ghi_plans/legacy_project'],
+      ],
     ];
   }
 
@@ -442,7 +1124,8 @@ class ProjectModalController extends ControllerBase {
       ],
     ];
     return array_values(array_map(function ($object) use ($link_options) {
-      return $object->url ? Link::fromTextAndUrl($object->name, Url::fromUri($object->url, $link_options))->toString() : $object->name;
+      $url = $object->getUrl($link_options);
+      return $url ? Link::fromTextAndUrl($object->getName(), $url)->toString() : $object->getName();
     }, $objects));
   }
 
@@ -455,10 +1138,298 @@ class ProjectModalController extends ControllerBase {
    * @return string[]
    *   An array of organization names.
    */
-  private function getOrganizationNames(array $objects) {
+  private function getOrganizationNames(array $objects): array {
     return array_values(array_map(function ($object) {
-      return $object->name;
+      return $object->getName();
     }, $objects));
+  }
+
+  /**
+   * Build a modal-enabled link to the legacy project details page.
+   *
+   * @param \Drupal\ghi_plans\ApiObjects\Project $project
+   *   The project object.
+   * @param \Drupal\ghi_plans\Entity\Plan|null $plan_object
+   *   The plan object for context.
+   *
+   * @return array
+   *   The link render array.
+   */
+  private function buildLegacyProjectLink(Project $project, ?Plan $plan_object = NULL): array {
+    if (!$this->legacyProjectExists($project->id())) {
+      return [
+        '#plain_text' => $project->getProjectCode(),
+      ];
+    }
+
+    $t_options = [
+      'langcode' => $plan_object?->getPlanLanguage(),
+    ];
+    $projects_label = $this->t('Projects', [], $t_options);
+    $modal_title = $plan_object ? $this->t(
+      '@plan_title | @projects_label | @project_code',
+      [
+        '@plan_title' => $plan_object->label(),
+        '@projects_label' => $projects_label,
+        '@project_code' => $project->getProjectCode(),
+      ],
+      $t_options,
+    ) : $this->legacyProjectTitle($project->id());
+    $modal_title = (string) $modal_title;
+    $fragment_url = Url::fromRoute('ghi_plans.project.legacy_fragment', [
+      'project_id' => $project->id(),
+    ])->toString();
+
+    $url = Url::fromRoute('ghi_plans.project.legacy', [
+      'project_id' => $project->id(),
+    ]);
+    $url->setOptions([
+      'attributes' => [
+        'class' => ['use-ajax', 'project-detail-modal'],
+        'data-dialog-type' => 'dialog',
+        'data-legacy-project-code' => $project->getProjectCode(),
+        'data-legacy-project-id' => $project->id(),
+        'data-legacy-project-url' => $fragment_url,
+        'data-legacy-project-title' => $modal_title,
+        'data-dialog-options' => Json::encode([
+          'target' => 'ghi-project-detail-modal',
+          'modal' => TRUE,
+          'width' => '90%',
+          'title' => $modal_title,
+          'classes' => [
+            'ui-dialog' => 'project-detail-modal ghi-modal-dialog',
+          ],
+        ]),
+        'rel' => 'nofollow',
+      ],
+    ]);
+
+    return Link::fromTextAndUrl($project->getProjectCode(), $url)->toRenderable();
+  }
+
+  /**
+   * Check if a legacy project page is known to exist.
+   *
+   * @param int $project_id
+   *   The project id.
+   *
+   * @return bool
+   *   TRUE if the project page exists, or if availability could not be checked.
+   */
+  private function legacyProjectExists($project_id): bool {
+    if (!$this->legacyProjectSettingsConfigured()) {
+      return FALSE;
+    }
+
+    $project_ids = $this->getLegacyProjectIds();
+    if ($project_ids === NULL) {
+      return TRUE;
+    }
+    return isset($project_ids[(int) $project_id]);
+  }
+
+  /**
+   * Get known legacy project ids from the cached repository tree.
+   *
+   * @return array<int, bool>|null
+   *   Project ids keyed by id, or NULL when the remote index is unavailable.
+   */
+  private function getLegacyProjectIds(): ?array {
+    if ($this->legacyProjectAvailabilityLoaded) {
+      return $this->legacyProjectIds;
+    }
+    $this->legacyProjectAvailabilityLoaded = TRUE;
+
+    $tree_url = $this->getLegacyProjectTreeUrl();
+    if (!$tree_url) {
+      return NULL;
+    }
+
+    $cache_id = self::LEGACY_PROJECT_AVAILABILITY_CACHE_ID . ':' . hash('sha256', $tree_url);
+    $cached = $this->cacheBackend->get($cache_id);
+    if ($cached) {
+      $this->legacyProjectIds = is_array($cached->data) ? $cached->data : NULL;
+      return $this->legacyProjectIds;
+    }
+
+    try {
+      // GitHub's Contents API caps large directories; the tree API gives us
+      // the complete project file list in one cacheable request.
+      $response = $this->httpClient->get($tree_url, [
+        'headers' => [
+          'Accept' => 'application/vnd.github+json',
+        ],
+        'http_errors' => FALSE,
+        'timeout' => 10,
+      ]);
+    }
+    catch (GuzzleException $e) {
+      $this->cacheBackend->set($cache_id, NULL, time() + self::LEGACY_PROJECT_AVAILABILITY_FAILURE_TTL);
+      return NULL;
+    }
+
+    if ($response->getStatusCode() !== Response::HTTP_OK) {
+      $this->cacheBackend->set($cache_id, NULL, time() + self::LEGACY_PROJECT_AVAILABILITY_FAILURE_TTL);
+      return NULL;
+    }
+
+    $data = Json::decode((string) $response->getBody());
+    if (!is_array($data) || !empty($data['truncated']) || empty($data['tree']) || !is_array($data['tree'])) {
+      $this->cacheBackend->set($cache_id, NULL, time() + self::LEGACY_PROJECT_AVAILABILITY_FAILURE_TTL);
+      return NULL;
+    }
+
+    $project_ids = [];
+    foreach ($data['tree'] as $item) {
+      if (($item['type'] ?? NULL) !== 'blob' || empty($item['path'])) {
+        continue;
+      }
+      if (preg_match('/^docs\/projects\/(\d+)\.html$/', $item['path'], $matches)) {
+        $project_ids[(int) $matches[1]] = TRUE;
+      }
+    }
+
+    $this->legacyProjectIds = $project_ids;
+    $this->cacheBackend->set($cache_id, $project_ids, time() + self::LEGACY_PROJECT_AVAILABILITY_SUCCESS_TTL);
+    return $this->legacyProjectIds;
+  }
+
+  /**
+   * Build the external legacy project URL.
+   *
+   * @param int $project_id
+   *   The project id.
+   *
+   * @return string|null
+   *   The external URL, or NULL if legacy project settings are incomplete.
+   */
+  private function getLegacyProjectExternalUrl($project_id): ?string {
+    $base_url = $this->getLegacyProjectBaseUrl();
+    return $base_url ? $base_url . '/projects/' . (int) $project_id . '.html' : NULL;
+  }
+
+  /**
+   * Build the external legacy project asset URL.
+   *
+   * @param string $asset_path
+   *   The asset path relative to the legacy project base URL.
+   *
+   * @return string|null
+   *   The external URL, or NULL if legacy project settings are incomplete.
+   */
+  private function getLegacyProjectAssetExternalUrl(string $asset_path): ?string {
+    $asset_path = $this->normalizeLegacyProjectAssetPath('', $asset_path);
+    if ($asset_path === NULL) {
+      return NULL;
+    }
+    $base_url = $this->getLegacyProjectBaseUrl();
+    return $base_url ? $base_url . '/' . $asset_path : NULL;
+  }
+
+  /**
+   * Get the configured legacy project base URL.
+   *
+   * @return string|null
+   *   The configured base URL, or NULL.
+   */
+  private function getLegacyProjectBaseUrl(): ?string {
+    return $this->getLegacyProjectSetting('base_url');
+  }
+
+  /**
+   * Get the configured legacy project tree URL.
+   *
+   * @return string|null
+   *   The configured tree URL, or NULL.
+   */
+  private function getLegacyProjectTreeUrl(): ?string {
+    return $this->getLegacyProjectSetting('tree_url');
+  }
+
+  /**
+   * Check if the legacy project integration has the required settings.
+   *
+   * @return bool
+   *   TRUE if the integration has enough settings to render links.
+   */
+  private function legacyProjectSettingsConfigured(): bool {
+    return (bool) $this->getLegacyProjectBaseUrl();
+  }
+
+  /**
+   * Get a legacy project setting value.
+   *
+   * @param string $key
+   *   The settings key.
+   *
+   * @return string|null
+   *   The configured value, or NULL.
+   */
+  private function getLegacyProjectSetting(string $key): ?string {
+    $value = $this->config(self::LEGACY_PROJECT_CONFIG_NAME)->get($key);
+    if (empty($value) || !is_string($value)) {
+      return NULL;
+    }
+    return rtrim($value, '/');
+  }
+
+  /**
+   * Build a local proxy URL for a legacy project asset path.
+   *
+   * @param string $asset_path
+   *   The asset path relative to the legacy project base URL.
+   *
+   * @return string
+   *   The local proxy URL.
+   */
+  private function getLegacyProjectAssetProxyUrl(string $asset_path): string {
+    return Url::fromRoute('ghi_plans.project.legacy_asset', [], [
+      'query' => [
+        'path' => $asset_path,
+      ],
+    ])->toString();
+  }
+
+  /**
+   * Normalize a legacy project asset path.
+   *
+   * @param string $base_path
+   *   The base path for relative references.
+   * @param string $asset_path
+   *   The asset path to normalize.
+   *
+   * @return string|null
+   *   The normalized path, or NULL when it escapes the legacy project root.
+   */
+  private function normalizeLegacyProjectAssetPath(string $base_path, string $asset_path): ?string {
+    $asset_path = parse_url($asset_path, PHP_URL_PATH) ?: $asset_path;
+    $path = str_starts_with($asset_path, '/') ? $asset_path : trim($base_path . '/' . $asset_path, '/');
+    $parts = [];
+    foreach (explode('/', $path) as $part) {
+      if ($part === '' || $part === '.') {
+        continue;
+      }
+      if ($part === '..') {
+        if (empty($parts)) {
+          return NULL;
+        }
+        array_pop($parts);
+        continue;
+      }
+      $parts[] = $part;
+    }
+    return implode('/', $parts);
+  }
+
+  /**
+   * Check if the current request is rendering dialog content.
+   *
+   * @return bool
+   *   TRUE if rendering for a dialog.
+   */
+  private function isDialogRequest(): bool {
+    $wrapper_format = (string) $this->requestStack->getCurrentRequest()->query->get('_wrapper_format');
+    return str_contains($wrapper_format, 'drupal_dialog') || str_contains($wrapper_format, 'drupal_modal');
   }
 
   /**
@@ -470,47 +1441,14 @@ class ProjectModalController extends ControllerBase {
    * @return \Drupal\ghi_plans\Entity\Plan|null
    *   The plan object.
    */
-  private function getPlanObject(BaseObjectInterface $base_object) {
-    if ($base_object->bundle() == 'plan') {
+  private function getPlanObject(BaseObjectInterface $base_object): ?Plan {
+    if ($base_object instanceof Plan) {
       return $base_object;
     }
-    /** @var \Drupal\ghi_plans\Entity\Plan $plan_object */
-    return $base_object->get('field_plan')->entity ?? NULL;
-  }
-
-  /**
-   * Get an initialized project search query.
-   *
-   * @param \Drupal\ghi_base_objects\Entity\BaseObjectInterface $base_object
-   *   The base object for which to retrieve the project search query.
-   *
-   * @return \Drupal\ghi_plans\Plugin\EndpointQuery\PlanProjectSearchQuery
-   *   An instance of the project search query.
-   */
-  private function getProjectSearchQuery(BaseObjectInterface $base_object) {
-    $plan_object = $this->getPlanObject($base_object);
-    /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\PlanProjectSearchQuery $project_search_query */
-    $project_search_query = $this->endpointQueryManager->createInstance('plan_project_search_query');
-    $project_search_query->setPlaceholder('plan_id', $plan_object->getSourceId());
-    if ($base_object instanceof GoverningEntity) {
-      $project_search_query->setFilterByClusterIds([$base_object->getSourceId()]);
+    if ($base_object instanceof BaseObjectChildInterface && $base_object->getParentBaseObject() instanceof Plan) {
+      return $base_object->getParentBaseObject();
     }
-    return $project_search_query;
-  }
-
-  /**
-   * Load an organization object.
-   *
-   * @param int $organization_id
-   *   The id of the organization.
-   *
-   * @return \Drupal\ghi_plans\ApiObjects\Organization|null
-   *   The organization object or NULL.
-   */
-  private function getOrganization($organization_id) {
-    /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\OrganizationQuery $organization_query */
-    $organization_query = $this->endpointQueryManager->createInstance('organization_query');
-    return $organization_query->getOrganization($organization_id) ?? NULL;
+    return NULL;
   }
 
 }

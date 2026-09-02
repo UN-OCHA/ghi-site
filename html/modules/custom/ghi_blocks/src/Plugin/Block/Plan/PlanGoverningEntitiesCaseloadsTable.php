@@ -2,8 +2,11 @@
 
 namespace Drupal\ghi_blocks\Plugin\Block\Plan;
 
+use Drupal\Core\Block\Attribute\Block;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Plugin\Context\EntityContextDefinition;
 use Drupal\Core\Render\Markup;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\ghi_base_objects\Helpers\BaseObjectHelper;
 use Drupal\ghi_blocks\Helpers\AttachmentMatcher;
 use Drupal\ghi_blocks\Interfaces\AttachmentTableInterface;
@@ -15,42 +18,26 @@ use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
 use Drupal\ghi_blocks\Traits\AttachmentTableTrait;
 use Drupal\ghi_blocks\Traits\ConfigValidationTrait;
 use Drupal\ghi_form_elements\Traits\ConfigurationContainerTrait;
+use Drupal\ghi_plans\ApiObjects\PlanEntityInterface;
 use Drupal\ghi_sections\Entity\SectionNodeInterface;
 use Drupal\ghi_subpages\Entity\SubpageNodeInterface;
+use Drupal\hpc_common\Plugin\HPCBlockMetadata;
 use Drupal\hpc_downloads\Interfaces\HPCDownloadExcelInterface;
 use Drupal\hpc_downloads\Interfaces\HPCDownloadPNGInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Provides a 'PlanGoverningEntitiesCaseloadsTable' block.
- *
- * @Block(
- *  id = "plan_governing_entities_caseloads_table",
- *  admin_label = @Translation("Governing Entities Caseloads Table"),
- *  category = @Translation("Plan elements"),
- *  data_sources = {
- *    "entities" = "plan_entities_query",
- *    "attachment_search" = "attachment_search_query",
- *    "attachment_prototype" = "plan_attachment_prototype_query",
- *  },
- *  default_title = @Translation("Cluster caseloads"),
- *  context_definitions = {
- *    "node" = @ContextDefinition("entity:node", label = @Translation("Node")),
- *    "plan" = @ContextDefinition("entity:base_object", label = @Translation("Plan"), constraints = { "Bundle": "plan" })
- *  },
- *  config_forms = {
- *    "base" = {
- *      "title" = @Translation("Base settings"),
- *      "callback" = "baseForm",
- *      "base_form" = TRUE
- *    },
- *    "table" = {
- *      "title" = @Translation("Table columns"),
- *      "callback" = "tableForm"
- *    }
- *  }
- * )
  */
+#[Block(
+  id: 'plan_governing_entities_caseloads_table',
+  admin_label: new TranslatableMarkup('Governing Entities Caseloads Table'),
+  category: new TranslatableMarkup('Plan elements'),
+  context_definitions: [
+    'node' => new EntityContextDefinition('entity:node', new TranslatableMarkup('Node')),
+    'plan' => new EntityContextDefinition('entity:base_object', new TranslatableMarkup('Plan'), constraints: ['Bundle' => 'plan']),
+  ],
+)]
 class PlanGoverningEntitiesCaseloadsTable extends GHIBlockBase implements ConfigurableTableBlockInterface, MultiStepFormBlockInterface, OverrideDefaultTitleBlockInterface, AttachmentTableInterface, ConfigValidationInterface, HPCDownloadExcelInterface, HPCDownloadPNGInterface {
 
   use ConfigurationContainerTrait;
@@ -63,6 +50,31 @@ class PlanGoverningEntitiesCaseloadsTable extends GHIBlockBase implements Config
    * @var \Drupal\ghi_subpages\SubpageManager
    */
   protected $subpageManager;
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function metadata(): ?HPCBlockMetadata {
+    return new HPCBlockMetadata(
+      defaultTitle: 'Cluster caseloads',
+      dataSources: [
+        'entities' => 'fabric_query:entity',
+        'attachment' => 'fabric_query:attachment',
+        'attachment_prototype' => 'fabric_query:attachment_prototype',
+      ],
+      configForms: [
+        'base' => [
+          'title' => 'Base settings',
+          'callback' => 'baseForm',
+          'base_form' => TRUE,
+        ],
+        'table' => [
+          'title' => 'Table columns',
+          'callback' => 'tableForm',
+        ],
+      ]
+    );
+  }
 
   /**
    * {@inheritdoc}
@@ -136,7 +148,8 @@ class PlanGoverningEntitiesCaseloadsTable extends GHIBlockBase implements Config
     }
 
     // Filter for the configured attachment prototype id.
-    $attachments = $this->filterAttachmentsByPrototype($attachments, $prototype->id);
+    $attachments = $this->filterAttachmentsByPrototype($attachments, $prototype->id());
+    $this->prefetchDisaggregatedDataAvailability($attachments, $columns);
 
     // Group by entity.
     $grouped_attachments = $this->groupAttachmentsByEntityId($attachments);
@@ -152,12 +165,12 @@ class PlanGoverningEntitiesCaseloadsTable extends GHIBlockBase implements Config
 
     // Sort the entities by name.
     usort($entities, function ($a, $b) {
-      return strnatcasecmp($a->getEntityName(), $b->getEntityName());
+      return strnatcasecmp($a->getDisplayName(), $b->getDisplayName());
     });
 
     $rows = [];
     foreach ($entities as $entity) {
-      $base_object = $objects[$entity->id] ?? NULL;
+      $base_object = $objects[$entity->id()] ?? NULL;
       if (!$base_object) {
         continue;
       }
@@ -172,12 +185,12 @@ class PlanGoverningEntitiesCaseloadsTable extends GHIBlockBase implements Config
 
       // Usually, clusters without caseloads will not be shown. But the element
       // can be configured to allow to display those clusters anyway.
-      if (!array_key_exists($entity->id, $grouped_attachments) && empty($conf['base']['include_non_caseloads'])) {
+      if (!array_key_exists($entity->id(), $grouped_attachments) && empty($conf['base']['include_non_caseloads'])) {
         continue;
       }
 
       // Get the attachment.
-      $attachments = $grouped_attachments[$entity->id] ?? [];
+      $attachments = $grouped_attachments[$entity->id()] ?? [];
 
       // Add the entity and the node object to the context array.
       $context['base_object'] = $base_object;
@@ -255,10 +268,10 @@ class PlanGoverningEntitiesCaseloadsTable extends GHIBlockBase implements Config
         // attachment desciption.
         $row[] = [
           'data' => [
-            '#markup' => Markup::create('<span class="name">' . $attachment->description . '</span>'),
+            '#markup' => Markup::create('<span class="name">' . $attachment->getDescription() . '</span>'),
           ],
-          'data-value' => $attachment->description,
-          'data-raw-value' => $attachment->description,
+          'data-value' => $attachment->getDescription(),
+          'data-raw-value' => $attachment->getDescription(),
           'data-sort-type' => $item_type::SORT_TYPE,
           'data-column-type' => $item_type->getColumnType(),
           'data-content' => $item_type->getLabel(),
@@ -390,16 +403,12 @@ class PlanGoverningEntitiesCaseloadsTable extends GHIBlockBase implements Config
       return NULL;
     }
     $entity_ids = array_map(function ($entity) {
-      return $entity->id;
+      return $entity->id();
     }, $entities);
 
-    $filter = array_filter([
-      'type' => 'caseload',
-    ]);
-
-    /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\AttachmentSearchQuery $query */
-    $query = $this->getQueryHandler('attachment_search');
-    return $query->getAttachmentsByObject('governingEntity', $entity_ids, $filter);
+    /** @var \Drupal\ghi_plans\Plugin\FabricQuery\AttachmentQuery $query */
+    $query = $this->getQueryHandler('attachment');
+    return $query->getAttachmentsByObject(PlanEntityInterface::ENTITY_TYPE_GOVERNING_ENTITY, $entity_ids, 'caseload');
   }
 
   /**
@@ -411,7 +420,7 @@ class PlanGoverningEntitiesCaseloadsTable extends GHIBlockBase implements Config
   private function getUniquePrototypeOptions() {
     $prototypes = $this->getUniquePrototypes();
     return array_map(function ($prototype) {
-      return $prototype->name;
+      return $prototype->getName();
     }, $prototypes);
   }
 
@@ -420,7 +429,7 @@ class PlanGoverningEntitiesCaseloadsTable extends GHIBlockBase implements Config
    *
    * @param array $attachments
    *   An array of attachment objects as returned by
-   *   AttachmentSearchQuery::getAttachmentsByObject().
+   *   AttachmentQuery::getAttachmentsByObject().
    *
    * @return array
    *   An array of arrays of attachment objects, keyed by the entity id.
@@ -428,7 +437,7 @@ class PlanGoverningEntitiesCaseloadsTable extends GHIBlockBase implements Config
   private function groupAttachmentsByEntityId(array $attachments) {
     $grouped_attachements = [];
     foreach ($attachments as $attachment) {
-      $entity_id = $attachment->source->entity_id;
+      $entity_id = $attachment->getSourceEntityId();
       if (!array_key_exists($entity_id, $grouped_attachements)) {
         $grouped_attachements[$entity_id] = [];
       }
@@ -441,7 +450,7 @@ class PlanGoverningEntitiesCaseloadsTable extends GHIBlockBase implements Config
   /**
    * Filter the given set of attachments by the given prototype id.
    *
-   * @param object[] $attachments
+   * @param \Drupal\ghi_plans\ApiObjects\Attachments\Attachment[] $attachments
    *   The attachments to filter.
    * @param int $prototype_id
    *   The prototype id to filter for.
@@ -451,7 +460,7 @@ class PlanGoverningEntitiesCaseloadsTable extends GHIBlockBase implements Config
    */
   private function filterAttachmentsByPrototype(array $attachments, $prototype_id) {
     return array_filter($attachments, function ($attachment) use ($prototype_id) {
-      return $attachment->prototype->id == $prototype_id;
+      return $attachment->getPrototype()?->id() == $prototype_id;
     });
   }
 
@@ -472,7 +481,7 @@ class PlanGoverningEntitiesCaseloadsTable extends GHIBlockBase implements Config
     foreach ($grouped_attachments as &$attachments) {
       if (!empty($attachments) && count($attachments) > 1) {
         $attachments = array_filter($attachments, function ($attachment) {
-          return !empty($attachment->description);
+          return !empty($attachment->getDescription());
         });
       }
     }
@@ -490,7 +499,7 @@ class PlanGoverningEntitiesCaseloadsTable extends GHIBlockBase implements Config
    */
   private function loadBaseObjectsForEntities(array $entities) {
     $entity_ids = array_map(function ($entity) {
-      return $entity->id;
+      return $entity->id();
     }, $entities);
 
     return BaseObjectHelper::getBaseObjectsFromOriginalIds($entity_ids, 'governing_entity');
@@ -591,10 +600,11 @@ class PlanGoverningEntitiesCaseloadsTable extends GHIBlockBase implements Config
     }
     if ($original_prototype_id && !empty($conf['base']['prototype_id'])) {
       $new_prototype_id = $conf['base']['prototype_id'];
-      /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\AttachmentPrototypeQuery $query */
-      $query = $this->endpointQueryManager->createInstance('attachment_prototype_query');
-      $original_prototype = $query->getPrototypeById($original_prototype_id);
-      $new_prototype = $query->getPrototypeById($new_prototype_id);
+      /** @var \Drupal\ghi_plans\Plugin\FabricQuery\AttachmentPrototypeQuery $query */
+      $query = $this->fabricQueryManager->createInstance('attachment_prototype');
+      $prototypes = $query->getPrototypes([$original_prototype_id, $new_prototype_id]);
+      $original_prototype = $prototypes[$original_prototype_id] ?? NULL;
+      $new_prototype = $prototypes[$new_prototype_id] ?? NULL;
       foreach ($conf['table']['columns'] as &$column) {
         if ($column['item_type'] == 'data_point') {
           $data_points = &$column['config']['data_point']['data_points'];

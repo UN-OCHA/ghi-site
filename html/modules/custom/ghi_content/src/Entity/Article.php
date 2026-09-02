@@ -10,24 +10,7 @@ use Drupal\ghi_content\RemoteContent\RemoteArticleInterface;
  */
 class Article extends ContentBase implements ContentReviewInterface {
 
-  /**
-   * Get the current context node.
-   *
-   * @return \Drupal\node\NodeInterface|null
-   *   The context node if set.
-   */
-  public function getContextNode() {
-    // If an explicit context candidate exists, let ContentBase validate it.
-    // That prevents a rejected document context from being replaced by the
-    // current route document.
-    if (!$this->contextNode) {
-      $document = $this->getCurrentDocumentNode();
-      if ($document && $this->isValidContextNode($document)) {
-        $this->setContextNode($document);
-      }
-    }
-    return parent::getContextNode();
-  }
+  public const BUNDLE = 'article';
 
   /**
    * {@inheritdoc}
@@ -39,16 +22,6 @@ class Article extends ContentBase implements ContentReviewInterface {
       $data_layer += $document->getDataLayerDocumentProperties();
     }
     return $data_layer;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function isValidContextNode($node) {
-    if ($node instanceof Document) {
-      return $node->hasArticle($this);
-    }
-    return parent::isValidContextNode($node);
   }
 
   /**
@@ -88,15 +61,7 @@ class Article extends ContentBase implements ContentReviewInterface {
    *   The chapter object.
    */
   public function getDocumentChapter(Document $document) {
-    foreach ($document->getChapters() as $chapter) {
-      $articles = $document->getChapterArticles($chapter);
-      foreach ($articles as $article) {
-        if ($article->id() == $this->id()) {
-          return $chapter;
-        }
-      }
-    }
-    return NULL;
+    return self::getDocumentArticleContext()->getArticleChapter($document, $this);
   }
 
   /**
@@ -169,6 +134,16 @@ class Article extends ContentBase implements ContentReviewInterface {
    */
   public static function getDocumentManager() {
     return \Drupal::service('ghi_content.manager.document');
+  }
+
+  /**
+   * Get the document article context service.
+   *
+   * @return \Drupal\ghi_content\Context\DocumentArticleContext
+   *   The document article context service.
+   */
+  private static function getDocumentArticleContext() {
+    return \Drupal::service('ghi_content.document_article_context');
   }
 
 }

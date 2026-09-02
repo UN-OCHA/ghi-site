@@ -2,45 +2,38 @@
 
 namespace Drupal\ghi_blocks\Plugin\Block\Plan;
 
+use Drupal\Core\Block\Attribute\Block;
+use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
+use Drupal\Core\Plugin\Context\EntityContextDefinition;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\ghi_blocks\Interfaces\ConfigValidationInterface;
 use Drupal\ghi_blocks\Interfaces\ConfigurableTableBlockInterface;
 use Drupal\ghi_blocks\Interfaces\MultiStepFormBlockInterface;
+use Drupal\ghi_blocks\Plugin\Block\BlockCommentInterface;
 use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
 use Drupal\ghi_blocks\Plugin\ConfigurationContainerItem\LineBreak;
 use Drupal\ghi_blocks\Traits\BlockCommentTrait;
 use Drupal\ghi_blocks\Traits\ConfigValidationTrait;
 use Drupal\ghi_form_elements\Traits\ConfigurationContainerGroup;
 use Drupal\ghi_form_elements\Traits\ConfigurationContainerTrait;
+use Drupal\hpc_common\Plugin\HPCBlockMetadata;
 
 /**
  * Provides a 'PlanHeadlineFigures' block.
- *
- * @Block(
- *  id = "plan_headline_figures",
- *  admin_label = @Translation("Headline Figures"),
- *  category = @Translation("Plan elements"),
- *  title = FALSE,
- *  context_definitions = {
- *    "node" = @ContextDefinition("entity:node", label = @Translation("Node")),
- *    "plan" = @ContextDefinition("entity:base_object", label = @Translation("Plan"), constraints = { "Bundle": "plan" }),
- *    "plan_cluster" = @ContextDefinition("entity:base_object", label = @Translation("Cluster"), constraints = { "Bundle": "governing_entity" }, required =  FALSE)
- *  },
- *  config_forms = {
- *    "key_figures" = {
- *      "title" = @Translation("Key figures"),
- *      "callback" = "keyFiguresForm",
- *      "base_form" = TRUE
- *    },
- *    "display" = {
- *      "title" = @Translation("Display"),
- *      "callback" = "displayForm"
- *    }
- *  }
- * )
  */
-class PlanHeadlineFigures extends GHIBlockBase implements MultiStepFormBlockInterface, ConfigurableTableBlockInterface, ContainerFactoryPluginInterface, ConfigValidationInterface {
+#[Block(
+  id: 'plan_headline_figures',
+  admin_label: new TranslatableMarkup('Headline Figures'),
+  category: new TranslatableMarkup('Plan elements'),
+  context_definitions: [
+    'node' => new EntityContextDefinition('entity:node', new TranslatableMarkup('Node')),
+    'plan' => new EntityContextDefinition('entity:base_object', new TranslatableMarkup('Plan'), constraints: ['Bundle' => 'plan']),
+    'plan_cluster' => new EntityContextDefinition('entity:base_object', new TranslatableMarkup('Cluster'), required: FALSE, constraints: ['Bundle' => 'governing_entity']),
+  ],
+)]
+class PlanHeadlineFigures extends GHIBlockBase implements MultiStepFormBlockInterface, ConfigurableTableBlockInterface, ContainerFactoryPluginInterface, ConfigValidationInterface, BlockCommentInterface {
 
   use ConfigurationContainerTrait;
   use ConfigurationContainerGroup;
@@ -52,10 +45,38 @@ class PlanHeadlineFigures extends GHIBlockBase implements MultiStepFormBlockInte
   /**
    * {@inheritdoc}
    */
+  public static function metadata(): ?HPCBlockMetadata {
+    return new HPCBlockMetadata(
+      usesTitle: FALSE,
+      configForms: [
+        'key_figures' => [
+          'title' => 'Key figures',
+          'callback' => 'keyFiguresForm',
+          'base_form' => TRUE,
+        ],
+        'display' => [
+          'title' => 'Display',
+          'callback' => 'displayForm',
+        ],
+      ],
+    );
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function label() {
     // We just want to hide the label always.
     $this->configuration['label_display'] = FALSE;
     return NULL;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getBlockComment(): ?string {
+    $conf = $this->getBlockConfig();
+    return $conf['display']['comment'] ?? NULL;
   }
 
   /**
@@ -75,6 +96,7 @@ class PlanHeadlineFigures extends GHIBlockBase implements MultiStepFormBlockInte
       return NULL;
     }
 
+    $cacheability = new CacheableMetadata();
     $tabs = [];
     foreach ($tree as $group) {
       $rendered = [];
@@ -97,17 +119,24 @@ class PlanHeadlineFigures extends GHIBlockBase implements MultiStepFormBlockInte
         if (!$item_type->isValid()) {
           continue;
         }
+        $item_build = $item_type->getRenderArray();
+        $item_cacheability = is_array($item_build) ? CacheableMetadata::createFromRenderArray($item_build) : new CacheableMetadata();
+        $item_cacheability->addCacheTags($item_type->getCacheTags());
+        $cacheability = $cacheability->merge($item_cacheability);
 
         $rendered[] = [
           '#type' => 'item',
           '#title' => $item_type->getLabel(),
-          0 => $item_type->getRenderArray(),
-          '#wrapper_attributes' => ['class' => $item_type->getClasses()],
+          0 => $item_build,
+          '#wrapper_attributes' => [
+            'class' => $item_type->getClasses(),
+          ] + $item_type->getDataAttributes(),
         ];
       }
       if (empty($rendered)) {
         continue;
       }
+      $rendered = $this->formatPercentages($rendered);
       $tab = [
         'title' => [
           '#markup' => $group_item->getLabel(),
@@ -138,17 +167,38 @@ class PlanHeadlineFigures extends GHIBlockBase implements MultiStepFormBlockInte
     }
 
     $build = [];
+    $cacheability->applyTo($build);
     $build[] = [
       '#theme' => 'tab_container',
       '#tabs' => $tabs,
     ];
-    $comment = $this->buildBlockCommentRenderArray($conf['display']['comment'] ?? NULL);
-    if ($comment) {
-      $build['comment'] = $comment;
-    }
+
     $build['#block_attributes'] = [
       'class' => ['not-collapsible'],
     ];
+    return $build;
+  }
+
+  /**
+   * Apply compact percentage formatting to headline figure render arrays.
+   *
+   * @param array $build
+   *   A render array.
+   *
+   * @return array
+   *   The render array with headline-specific formatting options applied.
+   */
+  private function formatPercentages(array $build): array {
+    if (($build['#theme'] ?? NULL) == 'hpc_percent') {
+      $build['#compact_precision'] = TRUE;
+    }
+
+    foreach ($build as $key => $value) {
+      if (is_array($value)) {
+        $build[$key] = $this->formatPercentages($value);
+      }
+    }
+
     return $build;
   }
 

@@ -32,7 +32,7 @@ class QueryHelper {
    * @return \Drupal\hpc_api\Query\EndpointQuery
    *   An instance of the EndpointQuery class.
    */
-  public static function getEndpointQueryHandler($endpoint, array $query_args = [], $api_version = 'v1', $order_by = NULL, $sort = EndpointQuery::SORT_ASC, $sort_method = EndpointQuery::SORT_METHOD_NUMERIC, $auth_method = EndpointQuery::AUTH_METHOD_BASIC) {
+  public static function getEndpointQueryHandler($endpoint, array $query_args = [], $api_version = 'v1', $order_by = NULL, $sort = SORT_ASC, $sort_method = SORT_NUMERIC, $auth_method = EndpointQuery::AUTH_METHOD_BASIC) {
     $query_handler = \Drupal::service('hpc_api.endpoint_query');
     if (!$query_handler) {
       return NULL;
@@ -76,7 +76,7 @@ class QueryHelper {
    * @return mixed
    *   The result of the endpoint query..
    */
-  public static function queryEndpoint($endpoint, array $query_args = [], $api_version = 'v1', $order_by = NULL, $sort = EndpointQuery::SORT_ASC, $sort_method = EndpointQuery::SORT_METHOD_NUMERIC, $auth_method = EndpointQuery::AUTH_METHOD_BASIC) {
+  public static function queryEndpoint($endpoint, array $query_args = [], $api_version = 'v1', $order_by = NULL, $sort = SORT_ASC, $sort_method = SORT_NUMERIC, $auth_method = EndpointQuery::AUTH_METHOD_BASIC) {
     $query_handler = self::getEndpointQueryHandler($endpoint, $query_args, $api_version, $order_by, $sort, $sort_method, $auth_method);
     return $query_handler->getData();
   }

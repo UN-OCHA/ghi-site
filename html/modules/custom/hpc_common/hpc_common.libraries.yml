@@ -10,7 +10,7 @@ icon:
 # atomiks.github.io/tippyjs
 tippy.js:
   remote: https://github.com/atomiks/tippyjs
-  license: &tippy_license
+  license:
     name: MIT
     url: https://github.com/atomiks/tippyjs/blob/master/LICENSE
     gpl-compatible: true
@@ -30,6 +30,8 @@ popover:
       css/popover.css: {}
   js:
     js/popover.js: {}
+  dependencies:
+    - hpc_common/tippy.js
 toggle:
   js:
     js/toggle.js: {}

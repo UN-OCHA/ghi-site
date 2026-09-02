@@ -8,7 +8,7 @@
 use Drupal\Core\File\FileSystem;
 use Drupal\Core\File\FileSystemInterface;
 use Drupal\hpc_api\Helpers\QueryHelper;
-use Drupal\hpc_api\Plugin\EndpointQuery\IconQuery;
+use Drupal\hpc_api\Plugin\FabricQuery\IconQuery;
 use Drupal\hpc_api\Query\EndpointQuery;
 use Psr\Http\Message\ResponseInterface;
 
@@ -94,6 +94,36 @@ function hpc_api_requirements($phase) {
     $requirements['hpc_api_cluster_icons']['value'] = t('The directory for local storage of icons exists and is writable.');
     $requirements['hpc_api_cluster_icons']['severity'] = REQUIREMENT_OK;
     hpc_api_directory_requirements(IconQuery::IMPORT_DIR, $requirements['hpc_api_cluster_icons']);
+
+    /** @var \Drupal\hpc_api\Query\FabricClient */
+    $fabric_client = \Drupal::service('hpc_api.fabric_client');
+    $fabric_client->disableCache();
+    $requirements['fabric_graphql_access'] = [
+      'title' => t('Fabric GraphQL: Access token'),
+      'description' => t('An access token can be acquired from the Fabric GraphQL service.'),
+    ];
+    $access_token = $fabric_client->getAccessToken();
+    if ($access_token) {
+      $requirements['fabric_graphql_access']['severity'] = REQUIREMENT_OK;
+      $requirements['fabric_graphql_access']['description'] = t('Access token acquired successfully.');
+    }
+    else {
+      $requirements['fabric_graphql_access']['severity'] = REQUIREMENT_ERROR;
+      $requirements['fabric_graphql_access']['description'] = t('Access token could not be acquired. Please check the configuration.');
+    }
+    $requirements['fabric_graphql_server'] = [
+      'title' => t('Fabric GraphQL: Endpoint'),
+      'description' => t('API endpoints can be queried and return status code 200'),
+    ];
+    $data = $access_token ? $fabric_client->query('__typename') : FALSE;
+    if ($data !== FALSE) {
+      $requirements['fabric_graphql_server']['severity'] = REQUIREMENT_OK;
+      $requirements['fabric_graphql_server']['description'] = t('Server responds with valid GraphQL data.');
+    }
+    else {
+      $requirements['fabric_graphql_server']['severity'] = REQUIREMENT_ERROR;
+      $requirements['fabric_graphql_server']['description'] = t('Server request failed with an unknown error. Please check the logs.');
+    }
   }
   return $requirements;
 }

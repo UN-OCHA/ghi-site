@@ -29,22 +29,13 @@ class PlanFundingSummaryQuery extends EndpointQueryBase {
    * {@inheritdoc}
    */
   public function getData(array $placeholders = [], array $query_args = []) {
-    $data = (array) parent::getData($placeholders, $query_args);
-    $data += [
+    $data = (array) parent::getData($placeholders, $query_args) + [
       'total_funding' => 0,
       'overall_funding' => 0,
-      'funding_progress' => 0,
-      'unmet_requirements' => 0,
-      'total_requirements' => 0,
-      'original_requirements' => 0,
     ];
     return [
       'total_funding' => $data['total_funding'],
-      'outside_funding' => $data['overall_funding'] - $data['total_funding'],
-      'funding_coverage' => $data['funding_progress'],
-      'funding_gap' => array_key_exists('unmet_requirements', $data) ? $data['unmet_requirements'] : $data['total_requirements'] - $data['total_funding'],
-      'original_requirements' => $data['original_requirements'],
-      'current_requirements' => $data['total_requirements'],
+      'overall_funding' => $data['overall_funding'],
     ];
   }
 
@@ -64,6 +55,32 @@ class PlanFundingSummaryQuery extends EndpointQueryBase {
       $this->data = $this->getData();
     }
     return !empty($this->data[$property]) ? $this->data[$property] : $default;
+  }
+
+  /**
+   * Get the total funding.
+   *
+   * @param int $default
+   *   Optional default value.
+   *
+   * @return float
+   *   The total funding value.
+   */
+  public function getTotalFunding($default = 0): float {
+    return (float) $this->get('total_funding', $default);
+  }
+
+  /**
+   * Get the overall funding.
+   *
+   * @param int $default
+   *   Optional default value.
+   *
+   * @return float
+   *   The overall funding value.
+   */
+  public function getOverallFunding($default = 0): float {
+    return (float) $this->get('overall_funding', $default);
   }
 
 }

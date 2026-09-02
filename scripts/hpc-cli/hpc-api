@@ -10,6 +10,10 @@ URL_MAP_STAGE="https://stage.api-hpc-tools.ahconu.org"
 URL_MAP_DEV_BLUE="https://blue.dev.api-hpc-tools.ahconu.org"
 URL_MAP_DEV_RED="https://red.dev.api-hpc-tools.ahconu.org"
 
+jr() {
+  curl -sg "$1" | jq '.'
+}
+
 # Calls using API key authentication.
 api-backend() {
   API_KEY="${HPC_API_KEY}"

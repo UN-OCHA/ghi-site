@@ -1,9 +1,16 @@
 .block-plan-operational-presence-map {
+  .map-wrapper-outer {
+    position: relative;
+  }
 
   &:not(.has-comment) {
     div.block-links {
       border-top: 0;
     }
+  }
+
+  .select-wrappers {
+    line-height: 1rem;
   }
 
   .plan-operational-presence-map-wrapper {

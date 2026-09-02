@@ -4,20 +4,22 @@ namespace Drupal\ghi_blocks\Plugin\ConfigurationContainerItem;
 
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\Markup;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\Template\Attribute;
+use Drupal\ghi_base_objects\Entity\BaseObjectChildInterface;
 use Drupal\ghi_blocks\Traits\ConfigurationItemValuePreviewTrait;
+use Drupal\ghi_form_elements\Attribute\ConfigurationContainerItem;
 use Drupal\ghi_form_elements\ConfigurationContainerItemPluginBase;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Provides an organization cluster list item for configuration containers.
- *
- * @ConfigurationContainerItem(
- *   id = "organization_cluster_list",
- *   label = @Translation("Clusters"),
- *   description = @Translation("This item displays a list of clusters per organization."),
- * )
  */
+#[ConfigurationContainerItem(
+  id: 'organization_cluster_list',
+  label: new TranslatableMarkup('Clusters'),
+  description: new TranslatableMarkup('This item displays a list of clusters per organization.'),
+)]
 class OrganizationClusterList extends ConfigurationContainerItemPluginBase {
 
   use ConfigurationItemValuePreviewTrait;
@@ -29,24 +31,25 @@ class OrganizationClusterList extends ConfigurationContainerItemPluginBase {
   /**
    * The project search query.
    *
-   * @var \Drupal\ghi_plans\Plugin\EndpointQuery\PlanProjectSearchQuery
+   * @var \Drupal\ghi_plans\Plugin\FabricQuery\ProjectQuery
    */
-  public $projectSearchQuery;
+  public $projectQuery;
 
   /**
    * The icon query.
    *
-   * @var \Drupal\hpc_api\Plugin\EndpointQuery\IconQuery
+   * @var \Drupal\hpc_api\Plugin\FabricQuery\IconQuery
    */
   public $iconQuery;
 
   /**
    * {@inheritdoc}
    */
-  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition): OrganizationClusterList {
+    /** @var self $instance */
     $instance = parent::create($container, $configuration, $plugin_id, $plugin_definition);
-    $instance->projectSearchQuery = $instance->endpointQueryManager->createInstance('plan_project_search_query');
-    $instance->iconQuery = $instance->endpointQueryManager->createInstance('icon_query');
+    $instance->projectQuery = $instance->fabricQueryManager->createInstance('project');
+    $instance->iconQuery = $instance->fabricQueryManager->createInstance('icon');
     return $instance;
   }
 
@@ -77,17 +80,18 @@ class OrganizationClusterList extends ConfigurationContainerItemPluginBase {
   /**
    * Get the clusters for the current context.
    *
-   * @return array
-   *   An array of cluste objects.
+   * @return \Drupal\ghi_plans\ApiObjects\Partials\PlanProjectCluster[]
+   *   An array of cluster objects.
    */
   private function getClusters() {
+    $plan_object = $this->getContextValue('plan_object');
     $base_object = $this->getContextValue('base_object');
     $organization = $this->getContextValue('organization');
     $clusters_by_organizations = &drupal_static(__FUNCTION__, NULL);
     if ($clusters_by_organizations === NULL) {
-      $clusters_by_organizations = $this->projectSearchQuery->getClustersByOrganization($base_object);
+      $clusters_by_organizations = $this->projectQuery->getProjectClustersByOrganization($plan_object, $base_object instanceof BaseObjectChildInterface ? $base_object : NULL);
     }
-    return $clusters_by_organizations[$organization->id] ?? NULL;
+    return $clusters_by_organizations[$organization->id()] ?? NULL;
   }
 
   /**
@@ -102,7 +106,7 @@ class OrganizationClusterList extends ConfigurationContainerItemPluginBase {
       return NULL;
     }
     return array_map(function ($cluster) {
-      return $cluster->name;
+      return $cluster->getName();
     }, $clusters);
   }
 
@@ -138,17 +142,32 @@ class OrganizationClusterList extends ConfigurationContainerItemPluginBase {
       ];
     }
     if ($display_icons) {
-      $content = array_map(function ($cluster) {
-        return [
-          0 => [
-            '#theme' => 'hpc_tooltip',
-            '#tooltip' => $cluster->name,
-            '#tag_content' => [
-              '#markup' => Markup::create($this->iconQuery->getIconEmbedCode($cluster->icon)),
+      $content = [];
+      foreach ($clusters as $cluster) {
+        $icon_uri = $this->iconQuery->getMonochromeIconUri($cluster->getIcon());
+        if (!$icon_uri) {
+          continue;
+        }
+        $content[] = [
+          '#theme' => 'hpc_tooltip',
+          '#tooltip' => $cluster->getName(),
+          '#tag_content' => [
+            '#type' => 'html_tag',
+            '#tag' => 'span',
+            '#attributes' => [
+              'class' => ['cluster-icon', 'icon'],
+            ],
+            'icon' => [
+              '#theme' => 'image',
+              '#uri' => $icon_uri,
+              '#alt' => '',
+              '#attributes' => [
+                'class' => ['cluster-icon__image'],
+              ],
             ],
           ],
         ];
-      }, $clusters);
+      }
     }
     return [
       '#type' => 'container',

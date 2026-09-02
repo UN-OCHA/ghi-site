@@ -38,8 +38,9 @@
   }
 
   &.ajax-block-error .ui-dialog-content {
-    margin-top: 2rem;
-    margin-bottom: 2rem;
+    margin-top: 1rem;
+    margin-bottom: 1rem;
+    line-height: 2rem;
   }
 
   &.ghi-modal-dialog {
@@ -61,7 +62,8 @@
         top: 20px;
         right: 18px;
         box-sizing: border-box;
-        width: 2em;
+        width: 1.6rem;
+        height: 1.6rem;
         margin: 0;
         transform: none;
         white-space: nowrap;
@@ -92,11 +94,12 @@
 
       .ui-dialog-title {
         display: flex;
-        gap: 1rem;
         flex-wrap: wrap;
         align-items: self-start;
+        width: calc(100% - 3rem);
         color: var(--ghi-default-text-color) !important;
         font-weight: 500 !important;
+        gap: 1rem;
 
         .cluster-icon {
           display: inline-block;

@@ -1,4 +1,4 @@
-(($) => {
+(($, Drupal) => {
 
   'use strict';
 
@@ -15,8 +15,7 @@
 
   Drupal.behaviors.TabContainer = {
     attach: function (context, settings) {
-      let $tabContainer = $('.tab-container-wrapper', context);
-      $.each($tabContainer, function(i, container) {
+      once('tab-container', '.tab-container-wrapper').forEach((container) => {
         Drupal.TabContainer.updateContent(container, 0);
 
         // Make the navigation work.
@@ -42,4 +41,4 @@
       });
     }
   };
-})(jQuery);
+})(jQuery, Drupal);

@@ -2,6 +2,7 @@
 
 namespace Drupal\ghi_plans\ApiObjects;
 
+use Drupal\Core\Url;
 use Drupal\ghi_base_objects\ApiObjects\BaseObject;
 use Drupal\hpc_common\Helpers\CommonHelper;
 
@@ -11,37 +12,57 @@ use Drupal\hpc_common\Helpers\CommonHelper;
 class Organization extends BaseObject {
 
   /**
-   * A list of clusters.
+   * The abbreviation.
    *
-   * @var array
+   * @var string|null
    */
-  public $clusters;
+  protected ?string $abbreviation;
 
   /**
-   * Map the raw data.
+   * The url.
    *
-   * @return object
-   *   An object with the mapped data.
+   * @var string|null
    */
-  protected function map() {
-    $data = $this->getRawData();
-    return (object) [
-      'id' => $data->id,
-      'name' => $data->name,
-      'url' => CommonHelper::assureWellFormedUri($data->url),
-    ];
+  protected ?string $url;
+
+  /**
+   * Define the dimension items used in queries.
+   */
+  const GRAPHQL_ITEMS = [
+    'Id',
+    'Name',
+    'NativeName',
+    'Abbreviation',
+    'url',
+  ];
+
+  /**
+   * {@inheritdoc}
+   */
+  public function __construct(object $data) {
+    parent::__construct($data);
+    $this->abbreviation = $data->Abbreviation ?? ($data->abbreviation ?? NULL);
+    $this->url = CommonHelper::assureWellFormedUri($data->Url ?? '');
   }
 
   /**
-   * Get the names of the associated clusters.
+   * Get the abbreviation.
    *
-   * @return string[]
-   *   An array of cluster names.
+   * @return string|null
+   *   The abbreviation of the organization.
    */
-  public function getClusterNames() {
-    return array_map(function ($cluster) {
-      return $cluster->name;
-    }, $this->map->clusters);
+  public function getAbbreviation(): ?string {
+    return $this->abbreviation;
+  }
+
+  /**
+   * Get the url.
+   *
+   * @return \Drupal\Core\Url
+   *   The url of the organization.
+   */
+  public function getUrl(?array $options = []): ?Url {
+    return $this->url ? Url::fromUri($this->url, $options) : NULL;
   }
 
 }

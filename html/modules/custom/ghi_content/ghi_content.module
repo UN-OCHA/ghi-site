@@ -35,10 +35,10 @@ use Drupal\views\ViewExecutable;
  * Implements hook_entity_bundle_info_alter().
  */
 function ghi_content_entity_bundle_info_alter(array &$bundles) {
-  $bundles['node']['article']['class'] = Article::class;
-  $bundles['node']['article']['label'] = t('Article');
-  $bundles['node']['document']['class'] = Document::class;
-  $bundles['node']['document']['label'] = t('Document');
+  $bundles['node'][Article::BUNDLE]['class'] = Article::class;
+  $bundles['node'][Article::BUNDLE]['label'] = t('Article');
+  $bundles['node'][Document::BUNDLE]['class'] = Document::class;
+  $bundles['node'][Document::BUNDLE]['label'] = t('Document');
 }
 
 /**

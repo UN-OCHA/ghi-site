@@ -7,7 +7,7 @@ dependencies:
 id: sections
 label: Sections
 type: 'canonical_entities:node'
-pattern: '[node:field_base_object:entity:type]/[node:field_base_object:entity:field_original_id]/[node:field_year]'
+pattern: '/[node:field_base_object:entity:type]/[node:field_base_object:entity:field_original_id]/[node:field_year]'
 selection_criteria:
   1d2e8ff8-a8ad-4460-95a9-6ef73981d5d9:
     id: 'entity_bundle:node'

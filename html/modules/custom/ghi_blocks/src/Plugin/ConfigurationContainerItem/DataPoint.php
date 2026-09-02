@@ -4,41 +4,31 @@ namespace Drupal\ghi_blocks\Plugin\ConfigurationContainerItem;
 
 use Drupal\Component\Serialization\Json;
 use Drupal\Component\Utility\Html;
+use Drupal\Core\Cache\Cache;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Link;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\Url;
+use Drupal\ghi_form_elements\Attribute\ConfigurationContainerItem;
 use Drupal\ghi_form_elements\ConfigurationContainerItemPluginBase;
 use Drupal\ghi_form_elements\Element\DataPoint as ElementDataPoint;
-use Drupal\ghi_plans\ApiObjects\AttachmentPrototype\AttachmentPrototype;
-use Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment;
-use Symfony\Component\DependencyInjection\ContainerInterface;
+use Drupal\ghi_plans\ApiObjects\Prototypes\AttachmentPrototype;
+use Drupal\ghi_plans\ApiObjects\Attachments\Attachment;
+use Drupal\ghi_plans\Traits\DataPointConfigBackwardsCompatibilityTrait;
+use Drupal\ghi_plans\Traits\PlanQueryTrait;
 
 /**
  * Provides a data point item for configuration containers.
- *
- * @ConfigurationContainerItem(
- *   id = "data_point",
- *   label = @Translation("Data point"),
- *   description = @Translation("This item displays a single metric or measurement item."),
- * )
  */
+#[ConfigurationContainerItem(
+  id: 'data_point',
+  label: new TranslatableMarkup('Data point'),
+  description: new TranslatableMarkup('This item displays a single metric or measurement item.'),
+)]
 class DataPoint extends ConfigurationContainerItemPluginBase {
 
-  /**
-   * The attachment query.
-   *
-   * @var \Drupal\ghi_plans\Plugin\EndpointQuery\AttachmentQuery
-   */
-  public $attachmentQuery;
-
-  /**
-   * {@inheritdoc}
-   */
-  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
-    $instance = parent::create($container, $configuration, $plugin_id, $plugin_definition);
-    $instance->attachmentQuery = $instance->endpointQueryManager->createInstance('attachment_query');
-    return $instance;
-  }
+  use DataPointConfigBackwardsCompatibilityTrait;
+  use PlanQueryTrait;
 
   /**
    * {@inheritdoc}
@@ -59,7 +49,7 @@ class DataPoint extends ConfigurationContainerItemPluginBase {
     $attachment = $this->getContextValue('attachment');
     $plan_object = $this->getContextValue('plan_object');
     $configuration = $this->getPluginConfiguration();
-    /** @var \Drupal\ghi_plans\ApiObjects\AttachmentPrototype\AttachmentPrototype $attachment_prototype */
+    /** @var \Drupal\ghi_plans\ApiObjects\Prototypes\AttachmentPrototype $attachment_prototype */
     $attachment_prototype = $configuration['attachment_prototype'];
 
     $element['data_point'] = [
@@ -80,15 +70,15 @@ class DataPoint extends ConfigurationContainerItemPluginBase {
    * {@inheritdoc}
    */
   public function getDefaultLabel() {
-    $data_point_conf = $this->getDataPointConfig();
-    $data_point_index = $data_point_conf['data_points'][0]['index'] ?? NULL;
-    if ($data_point_index === NULL) {
+    $conf = $this->getDataPointConfig();
+    $metric_type = $conf['data_points'][0]['metric_type'] ?? NULL;
+    if ($metric_type === NULL) {
       return NULL;
     }
     // Get the protoype, as that is where the labels come from.
     $attachment = $this->getContextValue('attachment');
     $attachment_prototype = $this->getContextValue('attachment_prototype');
-    if (!$attachment_prototype && $attachment instanceof DataAttachment) {
+    if (!$attachment_prototype && $attachment instanceof Attachment) {
       $attachment_prototype = $attachment->getPrototype();
     }
     if (!$attachment_prototype instanceof AttachmentPrototype) {
@@ -96,16 +86,16 @@ class DataPoint extends ConfigurationContainerItemPluginBase {
     }
     /** @var \Drupal\ghi_plans\Entity\Plan $plan_object */
     $plan_object = $this->getContextValue('plan_object') ?? NULL;
-    return $attachment_prototype->getDefaultFieldLabel($data_point_index, $plan_object?->getPlanLanguage());
+    return $attachment_prototype->getDefaultFieldLabel($metric_type, $plan_object?->getPlanLanguage());
   }
 
   /**
    * {@inheritdoc}
    */
   public function getLabel() {
-    $data_point_conf = $this->get('data_point');
-    if (array_key_exists('label', $data_point_conf) && !empty($data_point_conf['label'])) {
-      return trim($data_point_conf['label']);
+    $conf = $this->getDataPointConfig();
+    if ($conf && array_key_exists('label', $conf) && !empty($conf['label'])) {
+      return trim($conf['label']);
     }
     return parent::getLabel();
   }
@@ -115,8 +105,8 @@ class DataPoint extends ConfigurationContainerItemPluginBase {
    */
   public function getValue() {
     $attachment = $this->getAttachmentObject();
-    $data_point_conf = $this->getDataPointConfig();
-    return $attachment && $data_point_conf ? $attachment->getValue($data_point_conf) : NULL;
+    $conf = $this->getDataPointConfig();
+    return $attachment && $conf && $this->hasRequiredMetricTypes($conf) ? $attachment->getValue($conf) : NULL;
   }
 
   /**
@@ -124,17 +114,18 @@ class DataPoint extends ConfigurationContainerItemPluginBase {
    */
   public function getRenderArray() {
     $attachment = $this->getAttachmentObject();
-    $data_point_conf = $this->getDataPointConfig();
-    if (!$attachment || !$data_point_conf) {
+    $conf = $this->getDataPointConfig();
+    if (!$attachment || !$conf) {
       return NULL;
     }
     $config = $this->getPluginConfiguration();
-    $build = $attachment->formatValue($data_point_conf);
-    $data_point_index = $data_point_conf['data_points'][0]['index'] ?? NULL;
-    if (is_int($data_point_index) && !empty($config['disaggregation_modal']) && $this->canShowDisaggregatedData($attachment, $data_point_conf)) {
+    $build = $attachment->formatValue($conf);
+    $build['#cache']['tags'] = Cache::mergeTags($build['#cache']['tags'] ?? [], $attachment->getValueCacheTags());
+    $metric_type = $conf['data_points'][0]['metric_type'] ?? NULL;
+    if (is_string($metric_type) && !empty($config['disaggregation_modal']) && $this->canShowDisaggregatedData($attachment, $conf)) {
       $link_url = Url::fromRoute('ghi_plans.modal_content.dissaggregation', [
         'attachment' => $attachment->id(),
-        'metric' => $data_point_index,
+        'metric_type' => $metric_type,
         'reporting_period' => $build['#reporting_period'] ?: 'latest',
       ]);
       $link_url->setOptions([
@@ -175,12 +166,19 @@ class DataPoint extends ConfigurationContainerItemPluginBase {
   public function getTableCell() {
     $cell = parent::getTableCell();
     $attachment = $this->getAttachmentObject();
-    $data_point_conf = $this->getDataPointConfig();
-    if ($attachment && $data_point_conf) {
-      $tooltip = $attachment->getTooltip($data_point_conf);
+    $conf = $this->getDataPointConfig();
+    if ($attachment && $conf) {
+      $tooltip = $attachment->getTooltip($conf);
       $cell['export_commentary'] = $tooltip['monitoring_period']['#tooltip'] ?? NULL;
     }
     return $cell;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getCacheTags() {
+    return $this->getAttachmentObject()?->getValueCacheTags() ?? [];
   }
 
   /**
@@ -197,30 +195,32 @@ class DataPoint extends ConfigurationContainerItemPluginBase {
   /**
    * Whether the given attachment can show disaggregated data.
    *
-   * @param \Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment $attachment
+   * @param \Drupal\ghi_plans\ApiObjects\Attachments\Attachment $attachment
    *   The attachment object.
-   * @param array $data_point_conf
+   * @param array $conf
    *   The data point configuration.
    *
    * @return bool
    *   TRUE if the attachment can show disaggregated data, FALSE otherwise.
    */
-  public function canShowDisaggregatedData(DataAttachment $attachment, array $data_point_conf) {
-    return $this->getValue() && $attachment->hasDisaggregatedData() && $data_point_conf['processing'] == 'single';
+  public function canShowDisaggregatedData(Attachment $attachment, array $conf) {
+    // Check cheap local conditions before consulting the Fabric-backed
+    // disaggregation availability cache.
+    return $conf['processing'] == 'single' && $attachment->canHaveDisaggregatedData() && $this->getValue() && $attachment->hasDisaggregatedData();
   }
 
   /**
    * {@inheritdoc}
    */
   public function getColumnType() {
-    $data_point_conf = $this->getDataPointConfig();
-    if (!$data_point_conf) {
+    $conf = $this->getDataPointConfig();
+    if (!$conf) {
       return NULL;
     }
-    if ($data_point_conf['formatting'] == 'percent') {
+    if ($conf['formatting'] == 'percent') {
       return 'percentage';
     }
-    if ($data_point_conf['processing'] == 'calculated' && $data_point_conf['calculation'] == 'percentage') {
+    if ($conf['processing'] == 'calculated' && $conf['calculation'] == 'percentage') {
       return 'percentage';
     }
     return parent::getColumnType();
@@ -230,23 +230,47 @@ class DataPoint extends ConfigurationContainerItemPluginBase {
    * Get the currently configured data point configuration.
    *
    * @return array|null
-   *   An array containing the data point configuration or null if no
+   *   An array containing the data point configuration or NULL if no
    *   configuration is set.
    */
   public function getDataPointConfig() {
-    $data_point_conf = $this->get('data_point');
-    if (!is_array($data_point_conf) || empty($data_point_conf)) {
+    $conf = $this->get('data_point');
+    if (!is_array($conf) || empty($conf)) {
       return NULL;
     }
-    if (ElementDataPoint::WIDGET_SUPPORT === FALSE && is_array($data_point_conf)) {
-      $data_point_conf['widget'] = 'none';
+    if (ElementDataPoint::WIDGET_SUPPORT === FALSE && is_array($conf)) {
+      $conf['widget'] = 'none';
     }
     /** @var \Drupal\ghi_plans\Entity\Plan $plan_object */
     $plan_object = $this->getContextValue('plan_object') ?? NULL;
     $configuration = $this->getPluginConfiguration();
-    $data_point_conf['decimal_format'] = $plan_object ? $plan_object->getDecimalFormat() : NULL;
-    $data_point_conf = $data_point_conf + ($configuration['presets'] ?? []);
-    return $data_point_conf;
+    $conf['decimal_format'] = $plan_object ? $plan_object->getDecimalFormat() : NULL;
+    $conf = $conf + ($configuration['presets'] ?? []);
+
+    /** @var \Drupal\ghi_plans\ApiObjects\Prototypes\AttachmentPrototype $attachment_prototype */
+    if ($attachment_prototype = $this->getContextValue('attachment_prototype')) {
+      $this->updateDataPointConfiguration($conf, $attachment_prototype);
+    }
+    return $conf;
+  }
+
+  /**
+   * Check whether the normalized data point config has the required metrics.
+   *
+   * @param array $conf
+   *   The normalized data point configuration.
+   *
+   * @return bool
+   *   TRUE if the config can produce a data value, FALSE otherwise.
+   */
+  private function hasRequiredMetricTypes(array $conf): bool {
+    if (empty($conf['data_points'][0]['metric_type'])) {
+      return FALSE;
+    }
+    if (($conf['processing'] ?? 'single') == 'calculated' && empty($conf['data_points'][1]['metric_type'])) {
+      return FALSE;
+    }
+    return TRUE;
   }
 
   /**
@@ -267,18 +291,32 @@ class DataPoint extends ConfigurationContainerItemPluginBase {
     else {
       $classes[] = Html::getClass($this->getPluginId() . '--formatting-' . $data_point_conf['formatting']);
     }
+    if ($attachment = $this->getContextValue('attachment')) {
+      $classes[] = 'attachment-' . $attachment->id();
+    }
     return $classes;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getDataAttributes() {
+    $attributes = parent::getDataAttributes();
+    if ($attachment = $this->getAttachmentObject()) {
+      $attributes['data-attachment-id'] = $attachment->id();
+    }
+    return $attributes;
   }
 
   /**
    * Get the attachment object for this item.
    *
-   * @return \Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment|null
+   * @return \Drupal\ghi_plans\ApiObjects\Attachments\Attachment|null
    *   The attachment object or NULL.
    */
   private function getAttachmentObject() {
     $attachment = $this->getContextValue('attachment');
-    return $attachment instanceof DataAttachment ? $attachment : NULL;
+    return $attachment instanceof Attachment ? $attachment : NULL;
   }
 
 }

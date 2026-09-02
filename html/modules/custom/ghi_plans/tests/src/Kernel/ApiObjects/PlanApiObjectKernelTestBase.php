@@ -2,7 +2,7 @@
 
 namespace Drupal\Tests\ghi_plans\Kernel\ApiObjects;
 
-use Drupal\Tests\ghi_base_objects\Kernel\ApiObjects\BaseObjectKernelTestBase;
+use Drupal\Tests\ghi_base_objects\Kernel\BaseObjectKernelTestBase;
 
 /**
  * Base class for ghi_plans ApiObject kernel tests.
@@ -35,8 +35,8 @@ abstract class PlanApiObjectKernelTestBase extends BaseObjectKernelTestBase {
    */
   protected function createMockRawData(array $data_overrides = []): object {
     $default_data = [
-      'id' => rand(1, 1000),
-      'name' => $this->randomString(),
+      'Id' => rand(1, 1000),
+      'Name' => $this->randomString(),
     ];
 
     $merged_overrides = array_merge($default_data, $data_overrides);

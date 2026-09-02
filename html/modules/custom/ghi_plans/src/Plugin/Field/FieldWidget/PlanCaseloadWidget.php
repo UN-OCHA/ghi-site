@@ -5,6 +5,7 @@ namespace Drupal\ghi_plans\Plugin\Field\FieldWidget;
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Field\WidgetBase;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\ghi_plans\ApiObjects\PlanEntityInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -19,18 +20,18 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 class PlanCaseloadWidget extends WidgetBase {
 
   /**
-   * The attachment search query class.
+   * The attachment query.
    *
-   * @var \Drupal\ghi_plans\Plugin\EndpointQuery\AttachmentSearchQuery
+   * @var \Drupal\ghi_plans\Plugin\FabricQuery\AttachmentQuery
    */
-  protected $attachmentSearchQuery;
+  protected $attachmentQuery;
 
   /**
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
     $instance = parent::create($container, $configuration, $plugin_id, $plugin_definition);
-    $instance->attachmentSearchQuery = $container->get('plugin.manager.endpoint_query_manager')->createInstance('attachment_search_query');
+    $instance->attachmentQuery = $container->get('plugin.manager.fabric_query_manager')->createInstance('attachment');
     return $instance;
   }
 
@@ -47,12 +48,10 @@ class PlanCaseloadWidget extends WidgetBase {
     if (!$plan_id) {
       return $element;
     }
-    $attachments = $this->attachmentSearchQuery->getAttachmentsByObject('plan', $plan_id, [
-      'type' => 'caseload',
-    ]);
+    $attachments = $this->attachmentQuery->getAttachmentsByObject(PlanEntityInterface::ENTITY_TYPE_PLAN, $plan_id, 'caseload');
     $attachment_options = $attachments ? array_map(function ($attachment) {
       /** @var \Drupal\ghi_plans\ApiObjects\Attachments\AttachmentInterface $attachment */
-      return $attachment->getTitle() . ' (' . $attachment->id() . ')';
+      return ($attachment->getTitle() ?? $attachment->getDescription()) . ' (' . $attachment->id() . ')';
     }, $attachments) : [];
 
     $element += [

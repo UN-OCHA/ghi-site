@@ -3,40 +3,26 @@
 namespace Drupal\ghi_blocks\Plugin\ConfigurationContainerItem;
 
 use Drupal\Component\Utility\Html;
+use Drupal\Core\Cache\Cache;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\ghi_form_elements\Attribute\ConfigurationContainerItem;
 use Drupal\ghi_form_elements\ConfigurationContainerItemPluginBase;
-use Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment;
-use Symfony\Component\DependencyInjection\ContainerInterface;
+use Drupal\ghi_plans\ApiObjects\Attachments\Attachment;
 
 /**
  * Provides a monitoring period item for configuration containers.
  *
- * @ConfigurationContainerItem(
- *   id = "monitoring_period",
- *   label = @Translation("Monitoring period"),
- *   description = @Translation("This item displays the monitoring period for an attachment."),
- * )
  * @phpcs:disable DrupalPractice.FunctionCalls.InsecureUnserialize
  */
+#[ConfigurationContainerItem(
+  id: 'monitoring_period',
+  label: new TranslatableMarkup('Monitoring period'),
+  description: new TranslatableMarkup('This item displays the monitoring period for an attachment.'),
+)]
 class MonitoringPeriod extends ConfigurationContainerItemPluginBase {
 
   const ITEM_TYPE = 'monitoring_period';
-
-  /**
-   * The attachment query.
-   *
-   * @var \Drupal\ghi_plans\Plugin\EndpointQuery\AttachmentQuery
-   */
-  public $attachmentQuery;
-
-  /**
-   * {@inheritdoc}
-   */
-  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
-    $instance = parent::create($container, $configuration, $plugin_id, $plugin_definition);
-    $instance->attachmentQuery = $instance->endpointQueryManager->createInstance('attachment_query');
-    return $instance;
-  }
 
   /**
    * {@inheritdoc}
@@ -77,7 +63,16 @@ class MonitoringPeriod extends ConfigurationContainerItemPluginBase {
     if (!$attachment) {
       return NULL;
     }
-    return $attachment->formatMonitoringPeriod($this->get('display_type'));
+    $build = $attachment->formatMonitoringPeriod($this->get('display_type'));
+    $build['#cache']['tags'] = Cache::mergeTags($build['#cache']['tags'] ?? [], $attachment->getValueCacheTags());
+    return $build;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getCacheTags() {
+    return $this->getAttachmentObject()?->getValueCacheTags() ?? [];
   }
 
   /**
@@ -92,12 +87,12 @@ class MonitoringPeriod extends ConfigurationContainerItemPluginBase {
   /**
    * Get the current attachment object.
    *
-   * @return \Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment|null
+   * @return \Drupal\ghi_plans\ApiObjects\Attachments\Attachment|null
    *   The attachment object.
    */
   private function getAttachmentObject() {
     $attachment = $this->getContextValue('attachment');
-    return $attachment instanceof DataAttachment ? $attachment : NULL;
+    return $attachment instanceof Attachment ? $attachment : NULL;
   }
 
 }

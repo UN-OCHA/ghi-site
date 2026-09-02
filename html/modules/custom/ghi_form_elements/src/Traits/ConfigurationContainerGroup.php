@@ -2,7 +2,6 @@
 
 namespace Drupal\ghi_form_elements\Traits;
 
-use Drupal\hpc_api\Query\EndpointQuery;
 use Drupal\hpc_common\Helpers\ArrayHelper;
 
 /**
@@ -28,7 +27,7 @@ trait ConfigurationContainerGroup {
     $groups = array_filter($items, function ($item) {
       return $item['item_type'] == 'item_group';
     });
-    ArrayHelper::sortArrayByNumericKey($groups, 'weight', EndpointQuery::SORT_ASC);
+    ArrayHelper::sortArrayByNumericKey($groups, 'weight', SORT_ASC);
     return $groups;
   }
 
@@ -90,7 +89,7 @@ trait ConfigurationContainerGroup {
     // First assemble the groups.
     $groups = self::getGroups($items);
     if (empty($groups)) {
-      ArrayHelper::sortArrayByNumericKey($items, 'weight', EndpointQuery::SORT_ASC);
+      ArrayHelper::sortArrayByNumericKey($items, 'weight', SORT_ASC);
       return $items;
     }
 
@@ -122,10 +121,10 @@ trait ConfigurationContainerGroup {
       if (empty($group['children'])) {
         continue;
       }
-      ArrayHelper::sortArrayByNumericKey($group['children'], 'weight', EndpointQuery::SORT_ASC);
+      ArrayHelper::sortArrayByNumericKey($group['children'], 'weight', SORT_ASC);
     }
-    ArrayHelper::sortArrayByNumericKey($children, 'weight', EndpointQuery::SORT_ASC);
-    ArrayHelper::sortArrayByNumericKey($groups, 'weight', EndpointQuery::SORT_ASC);
+    ArrayHelper::sortArrayByNumericKey($children, 'weight', SORT_ASC);
+    ArrayHelper::sortArrayByNumericKey($groups, 'weight', SORT_ASC);
     return array_merge($groups, $children);
   }
 
@@ -153,7 +152,7 @@ trait ConfigurationContainerGroup {
         if (empty($child_list)) {
           continue;
         }
-        ArrayHelper::sortArrayByNumericKey($child_list, 'weight', EndpointQuery::SORT_ASC);
+        ArrayHelper::sortArrayByNumericKey($child_list, 'weight', SORT_ASC);
         foreach (array_values($child_list) as $child) {
           $child['pid'] = $item['id'];
           $sorted[] = $child;

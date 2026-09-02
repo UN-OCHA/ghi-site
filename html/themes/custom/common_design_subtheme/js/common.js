@@ -157,32 +157,13 @@
         $(this).parents('.ghi-image-wrapper').hide();
       });
 
-      $('select').filter(function () {
-        if ($(this).parents('[data-block-preview]').length) {
-          return true;
-        }
-        return !$(this).parents('.glb-canvas-form').length;
-      }).each(function () {
-        $(this).select2({
-          width: 'resolve',
-          minimumResultsForSearch: 5,
-          dropdownAutoWidth: true
-        });
-      });
-
       if (typeof sorttable != 'undefined') {
-        if (context == document) {
-          sorttable.init();
-          once('sortable-table', 'table.sortable');
-        }
-        else {
-          once('sortable-table', 'table.sortable', context).forEach(element => {
-            if (context != document && !$(element).data('once').includes('sortable-table')) {
-              sorttable.makeSortable(element);
-            }
-          });
-        }
-        once('sortable-table', 'table.sortable.autosort', context).forEach(element => {
+        once('sortable-table-init', 'table.sortable', context).forEach(element => {
+          if (context != document || !$(element).data('once').includes('sortable-table-init')) {
+            sorttable.makeSortable(element);
+          }
+        });
+        once('sortable-table-autosort', 'table.sortable.autosort', context).forEach(element => {
           if (context != document) {
             sorttable.makeSortable(element);
           }
@@ -206,7 +187,8 @@
             let columnSelector = '#' + blockId + ' table.sortable th:nth-child(' + (blockTableSort.column + 1) + ')';
             let column = $(columnSelector).get(0);
             sorttable.innerSortFunction.apply(column, []);
-            if (blockTableSort.dir == 'desc') {
+            // In PHP: SORT_DESC = 3.
+            if (blockTableSort.dir == 3) {
               sorttable.innerSortFunction.apply(column, []);
             }
           }
@@ -224,7 +206,8 @@
                 settings: {
                   sort: {
                     column: $(element).index(),
-                    dir: $(element).hasClass('sorttable-sorted-reverse') ? 'desc' : 'asc'
+                    // In PHP: SORT_ASC = 4, SORT_DESC = 3.
+                    dir: $(element).hasClass('sorttable-sorted-reverse') ? 3 : 4
                   }
                 }
               });
@@ -267,7 +250,11 @@
               if ($table.hasClass('filtered')) {
                 return;
               }
-              Drupal.CommonDesignSubtheme.SoftLimit.applyLimit($table);
+              // Sorttable's click handler rearranges the rows after this
+              // listener, so reapply the limit once that work is complete.
+              window.setTimeout(() => {
+                Drupal.CommonDesignSubtheme.SoftLimit.applyLimit($table);
+              });
             });
           }
 

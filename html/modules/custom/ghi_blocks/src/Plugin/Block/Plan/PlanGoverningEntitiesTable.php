@@ -2,8 +2,12 @@
 
 namespace Drupal\ghi_blocks\Plugin\Block\Plan;
 
+use Drupal\Core\Block\Attribute\Block;
+use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Plugin\Context\EntityContextDefinition;
 use Drupal\Core\Render\Markup;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\ghi_base_objects\Helpers\BaseObjectHelper;
 use Drupal\ghi_blocks\Interfaces\ConfigurableTableBlockInterface;
 use Drupal\ghi_blocks\Interfaces\MultiStepFormBlockInterface;
@@ -11,45 +15,29 @@ use Drupal\ghi_blocks\Interfaces\OverrideDefaultTitleBlockInterface;
 use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
 use Drupal\ghi_blocks\Traits\ConfigurationItemClusterRestrictTrait;
 use Drupal\ghi_blocks\Traits\TableSoftLimitTrait;
+use Drupal\ghi_form_elements\ConfigurationContainerItemPluginInterface;
 use Drupal\ghi_form_elements\Traits\ConfigurationContainerTrait;
-use Drupal\ghi_plans\Helpers\PlanStructureHelper;
+use Drupal\ghi_plans\ApiObjects\Entities\EntityObjectInterface;
+use Drupal\ghi_plans\ApiObjects\Entities\GoverningEntity;
+use Drupal\ghi_plans\ApiObjects\PlanEntityInterface;
+use Drupal\ghi_plans\Entity\Plan;
+use Drupal\hpc_common\Plugin\HPCBlockMetadata;
 use Drupal\hpc_downloads\Interfaces\HPCDownloadExcelInterface;
 use Drupal\hpc_downloads\Interfaces\HPCDownloadPNGInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Provides a 'PlanGoverningEntitiesTable' block.
- *
- * @Block(
- *  id = "plan_governing_entities_table",
- *  admin_label = @Translation("Governing Entities Overview Table"),
- *  category = @Translation("Plan elements"),
- *  data_sources = {
- *    "entities" = "plan_entities_query",
- *    "cluster_summary" = "plan_funding_cluster_query",
- *  },
- *  default_title = @Translation("Cluster overview"),
- *  context_definitions = {
- *    "node" = @ContextDefinition("entity:node", label = @Translation("Node")),
- *    "plan" = @ContextDefinition("entity:base_object", label = @Translation("Plan"), constraints = { "Bundle": "plan" })
- *  },
- *  config_forms = {
- *    "base" = {
- *      "title" = @Translation("Base settings"),
- *      "callback" = "baseForm",
- *      "base_form" = TRUE
- *    },
- *    "table" = {
- *      "title" = @Translation("Table columns"),
- *      "callback" = "tableForm"
- *    },
- *    "display" = {
- *      "title" = @Translation("Display"),
- *      "callback" = "displayForm"
- *    }
- *  }
- * )
  */
+#[Block(
+  id: 'plan_governing_entities_table',
+  admin_label: new TranslatableMarkup('Governing Entities Overview Table'),
+  category: new TranslatableMarkup('Plan elements'),
+  context_definitions: [
+    'node' => new EntityContextDefinition('entity:node', new TranslatableMarkup('Node')),
+    'plan' => new EntityContextDefinition('entity:base_object', new TranslatableMarkup('Plan'), constraints: ['Bundle' => 'plan']),
+  ],
+)]
 class PlanGoverningEntitiesTable extends GHIBlockBase implements ConfigurableTableBlockInterface, MultiStepFormBlockInterface, OverrideDefaultTitleBlockInterface, HPCDownloadExcelInterface, HPCDownloadPNGInterface {
 
   use ConfigurationContainerTrait;
@@ -66,6 +54,36 @@ class PlanGoverningEntitiesTable extends GHIBlockBase implements ConfigurableTab
   /**
    * {@inheritdoc}
    */
+  public static function metadata(): ?HPCBlockMetadata {
+    return new HPCBlockMetadata(
+      defaultTitle: 'Cluster overview',
+      dataSources: [
+        'entities' => 'fabric_query:entity',
+        'entity_prototype' => 'fabric_query:entity_prototype',
+        'attachment' => 'fabric_query:attachment',
+        'flow_search' => 'hpc_api:flow_search_query',
+      ],
+      configForms: [
+        'base' => [
+          'title' => 'Base settings',
+          'callback' => 'baseForm',
+          'base_form' => TRUE,
+        ],
+        'table' => [
+          'title' => 'Table columns',
+          'callback' => 'tableForm',
+        ],
+        'display' => [
+          'title' => 'Display',
+          'callback' => 'displayForm',
+        ],
+      ],
+    );
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
     /** @var static $instance */
     $instance = parent::create($container, $configuration, $plugin_id, $plugin_definition);
@@ -76,12 +94,19 @@ class PlanGoverningEntitiesTable extends GHIBlockBase implements ConfigurableTab
   /**
    * {@inheritdoc}
    */
+  public function isEmpty(): bool {
+    return empty($this->getEntityObjects());
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function buildContent() {
     $table_data = $this->buildTableData();
     if (empty($table_data)) {
       return NULL;
     }
-    return [
+    $build = [
       '#theme' => 'table',
       '#header' => $table_data['header'],
       '#rows' => $table_data['rows'],
@@ -90,6 +115,8 @@ class PlanGoverningEntitiesTable extends GHIBlockBase implements ConfigurableTab
       '#progress_groups' => TRUE,
       '#block_id' => $this->getBlockId(),
     ];
+    $table_data['cacheability']->applyTo($build);
+    return $build;
   }
 
   /**
@@ -127,18 +154,28 @@ class PlanGoverningEntitiesTable extends GHIBlockBase implements ConfigurableTab
 
     // Sort the entites by name.
     usort($entities, function ($a, $b) {
-      return strnatcasecmp($a->getEntityName(), $b->getEntityName());
+      return strnatcasecmp($a->getDisplayName(), $b->getDisplayName());
     });
 
+    $entity_ids = array_map(fn ($item) => $item->id(), $entities);
+    /** @var \Drupal\ghi_plans\Plugin\FabricQuery\AttachmentQuery $attachments_query */
+    $attachments_query = $this->getQueryHandler('attachment');
+    $attachments_query->getAttachmentsByObject(PlanEntityInterface::ENTITY_TYPE_GOVERNING_ENTITY, $entity_ids, ['cost']);
+
     $rows = [];
+    $cacheability = new CacheableMetadata();
+    $subpage_nodes = $this->subpageManager->loadSubpagesForBaseObjects($objects);
     foreach ($entities as $entity) {
-      $base_object = $objects[$entity->id] ?? NULL;
+      $base_object = $objects[$entity->id()] ?? NULL;
       if (!$base_object) {
         continue;
       }
 
       // Set the context.
-      $subpage_node = $this->subpageManager->loadSubpageForBaseObject($base_object);
+      $subpage_node = $subpage_nodes[$base_object->id()] ?? NULL;
+      if ($conf['base']['hide_unpublished_clusters'] && !$subpage_node?->isPublished()) {
+        continue;
+      }
 
       $context['base_object'] = $base_object;
       $context['context_node'] = $subpage_node;
@@ -153,6 +190,8 @@ class PlanGoverningEntitiesTable extends GHIBlockBase implements ConfigurableTab
 
         // Then add the value to the row.
         $cell = $item_type->getTableCell();
+        $cacheability = $cacheability->merge($this->getTableCellCacheability($cell, $item_type));
+
         if ($item_type->getColumnType() == 'amount') {
           $cell['data-progress-group'] = 'amount-' . $key;
         }
@@ -168,20 +207,25 @@ class PlanGoverningEntitiesTable extends GHIBlockBase implements ConfigurableTab
         continue;
       }
 
-      $rows[] = $row;
+      $rows[] = [
+        'data' => $row,
+        'data-entity-id' => $entity->id(),
+        'data-entity-type' => 'governing-entity',
+      ];
     }
 
-    /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\PlanClusterSummaryQuery $cluster_query */
-    $cluster_query = $this->getQueryHandler('cluster_summary');
+    /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\FlowSearchQuery $flow_search_query */
+    $flow_search_query = $this->getQueryHandler('flow_search');
 
     // If configured accordingly, add a "Cluster not specified row".
     if (!empty($conf['base']['include_cluster_not_reported']) && $conf['base']['include_cluster_not_reported']) {
 
-      $not_specified_entity = $cluster_query->getNotSpecifiedCluster();
+      $not_specified_entity = $flow_search_query->getNotSpecifiedCluster();
 
       if ($not_specified_entity && !empty($not_specified_entity->total_funding)) {
         $context['base_object'] = NULL;
         $context['context_node'] = NULL;
+        $context['entity'] = NULL;
         $context['raw_data'] = $not_specified_entity;
 
         $row = [];
@@ -205,7 +249,9 @@ class PlanGoverningEntitiesTable extends GHIBlockBase implements ConfigurableTab
           }
           elseif ($item_type->getPluginId() == 'funding_data' && $item_type->get('data_type') == 'funding_totals') {
             // Add the funding.
-            $row[] = $item_type->getTableCell();
+            $cell = $item_type->getTableCell();
+            $cacheability = $cacheability->merge($this->getTableCellCacheability($cell, $item_type));
+            $row[] = $cell;
           }
           else {
             $row[] = [
@@ -225,11 +271,12 @@ class PlanGoverningEntitiesTable extends GHIBlockBase implements ConfigurableTab
       }
     }
 
-    if (!empty($conf['base']['include_shared_funding']) && $conf['base']['include_shared_funding'] && $cluster_query->hasSharedFunding()) {
+    if (!empty($conf['base']['include_shared_funding']) && $conf['base']['include_shared_funding'] && $flow_search_query->hasSharedClusterFunding()) {
       $context['base_object'] = NULL;
       $context['context_node'] = NULL;
+      $context['entity'] = NULL;
       $context['raw_data'] = (object) [
-        'total_funding' => $cluster_query->getSharedFunding(),
+        'total_funding' => $flow_search_query->getSharedClusterFunding(),
       ];
 
       $row = [];
@@ -255,7 +302,9 @@ class PlanGoverningEntitiesTable extends GHIBlockBase implements ConfigurableTab
           /** @var \Drupal\ghi_blocks\Plugin\ConfigurationContainerItem\FundingData $item_type */
           $item_type->disableFtsLink();
           // Add the funding.
-          $row[] = $item_type->getTableCell();
+          $cell = $item_type->getTableCell();
+          $cacheability = $cacheability->merge($this->getTableCellCacheability($cell, $item_type));
+          $row[] = $cell;
         }
         else {
           $row[] = [
@@ -276,7 +325,28 @@ class PlanGoverningEntitiesTable extends GHIBlockBase implements ConfigurableTab
     return [
       'header' => $header,
       'rows' => $rows,
+      'cacheability' => $cacheability,
     ];
+  }
+
+  /**
+   * Get cacheability metadata from a table cell.
+   *
+   * @param array $cell
+   *   The table cell.
+   * @param \Drupal\ghi_form_elements\ConfigurationContainerItemPluginInterface $item_type
+   *   The item type plugin that built the cell.
+   *
+   * @return \Drupal\Core\Cache\CacheableMetadata
+   *   The cacheability metadata for the cell.
+   */
+  private function getTableCellCacheability(array $cell, ConfigurationContainerItemPluginInterface $item_type): CacheableMetadata {
+    $cacheability = new CacheableMetadata();
+    $cacheability->addCacheTags($item_type->getCacheTags());
+    if (is_array($cell['data'] ?? NULL)) {
+      $cacheability = $cacheability->merge(CacheableMetadata::createFromRenderArray($cell['data']));
+    }
+    return $cacheability;
   }
 
   /**
@@ -291,6 +361,7 @@ class PlanGoverningEntitiesTable extends GHIBlockBase implements ConfigurableTab
         'include_cluster_not_reported' => FALSE,
         'include_shared_funding' => FALSE,
         'hide_target_values_for_projects' => FALSE,
+        'hide_unpublished_clusters' => FALSE,
         'cluster_restrict' => [],
       ],
       'table' => [
@@ -343,6 +414,13 @@ class PlanGoverningEntitiesTable extends GHIBlockBase implements ConfigurableTab
       '#default_value' => $this->getDefaultFormValueFromFormState($form_state, 'hide_target_values_for_projects'),
     ];
 
+    $form['hide_unpublished_clusters'] = [
+      '#type' => 'checkbox',
+      '#title' => $this->t('Hide clusters with a cluster subpage that is not displayed.'),
+      '#description' => $this->t('Check this if you want to hide the clusters with a cluster subpage that is set to "Not displayed".'),
+      '#default_value' => $this->getDefaultFormValueFromFormState($form_state, 'hide_unpublished_clusters'),
+    ];
+
     $form['cluster_restrict'] = $this->buildClusterRestrictFormElement($this->getDefaultFormValueFromFormState($form_state, 'cluster_restrict'));
 
     return $form;
@@ -392,19 +470,21 @@ class PlanGoverningEntitiesTable extends GHIBlockBase implements ConfigurableTab
   /**
    * Get all governing entity objects for the current block instance.
    *
-   * @return \Drupal\ghi_plans\ApiObjects\Entities\EntityObjectInterface[]|null
-   *   An array of entity objects, aka clusters or NULL.
+   * @return \Drupal\ghi_plans\ApiObjects\Entities\GoverningEntity[]
+   *   An array of governing entity objects, aka clusters.
    */
-  private function getEntityObjects() {
-    /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\PlanEntitiesQuery $query */
+  private function getEntityObjects(): array {
+    /** @var \Drupal\ghi_plans\Plugin\FabricQuery\EntityQuery $query */
     $query = $this->getQueryHandler('entities');
-    return $query->getPlanEntities($this->getPageNode(), 'governing');
+    $entities = $query?->getEntitiesForPlan($this->getCurrentPlanId(), $this->getPageNode(), 'governing') ?? [];
+    $entities = array_filter($entities, fn (EntityObjectInterface $entity): bool => $entity instanceof GoverningEntity);
+    return $entities;
   }
 
   /**
    * Load the nodes associated to the entities.
    *
-   * @param array $entities
+   * @param \Drupal\ghi_plans\ApiObjects\Entities\EntityObjectInterface[] $entities
    *   The entity objects.
    *
    * @return \Drupal\ghi_base_objects\Entity\BaseObjectInterface[]
@@ -412,7 +492,7 @@ class PlanGoverningEntitiesTable extends GHIBlockBase implements ConfigurableTab
    */
   private function loadBaseObjectsForEntities(array $entities) {
     $entity_ids = array_map(function ($entity) {
-      return $entity->id;
+      return $entity->id();
     }, $entities);
 
     return BaseObjectHelper::getBaseObjectsFromOriginalIds($entity_ids, 'governing_entity');
@@ -442,9 +522,51 @@ class PlanGoverningEntitiesTable extends GHIBlockBase implements ConfigurableTab
    */
   private function getGenericEntityName() {
     $context = $this->getBlockContext();
-    $plan_structure = PlanStructureHelper::getRpmPlanStructure($context['plan_object']);
-    $first_gve = !empty($plan_structure['governing_entities']) ? reset($plan_structure['governing_entities']) : NULL;
-    return $first_gve ? $first_gve->label_singular : $this->t('Cluster');
+    $plan = $context['plan_object'];
+    assert($plan instanceof Plan);
+
+    // Prefer the structure label; PlanClusterType can differ from the actual
+    // governing entity prototype used for table rows.
+    if ($prototype_label = $this->getGenericEntityPrototypeName($plan)) {
+      return $prototype_label;
+    }
+
+    $t_options = ['langcode' => $plan->getPlanLanguage()];
+    $cluster_label_map = [
+      Plan::CLUSTER_TYPE_CLUSTER => $this->t('Cluster', [], $t_options),
+      Plan::CLUSTER_TYPE_SECTOR => $this->t('Sector', [], $t_options),
+    ];
+    return $cluster_label_map[$plan->getPlanClusterType()] ?? $cluster_label_map[Plan::CLUSTER_TYPE_CLUSTER];
+  }
+
+  /**
+   * Get the singular governing entity label from the plan prototype.
+   *
+   * @param \Drupal\ghi_plans\Entity\Plan $plan
+   *   The plan object.
+   *
+   * @return string|null
+   *   The prototype label, or NULL if the plan prototype is unavailable.
+   */
+  private function getGenericEntityPrototypeName(Plan $plan): ?string {
+    $plan_id = $plan->getSourceId();
+    if (!$plan_id) {
+      return NULL;
+    }
+
+    /** @var \Drupal\ghi_plans\Plugin\FabricQuery\EntityPrototypeQuery|null $prototype_query */
+    $prototype_query = $this->getQueryHandler('entity_prototype');
+    $plan_prototype = $prototype_query?->getPlanPrototype($plan_id);
+    if (!$plan_prototype) {
+      return NULL;
+    }
+
+    foreach ($plan_prototype->getEntityPrototypes() as $entity_prototype) {
+      if ($entity_prototype->isGoverningEntity()) {
+        return $entity_prototype->getNameSingular();
+      }
+    }
+    return NULL;
   }
 
   /**
@@ -488,7 +610,11 @@ class PlanGoverningEntitiesTable extends GHIBlockBase implements ConfigurableTab
    * {@inheritdoc}
    */
   public function buildDownloadData() {
-    return $this->buildTableData();
+    $table_data = $this->buildTableData();
+    return $table_data ? [
+      'header' => $table_data['header'],
+      'rows' => $table_data['rows'],
+    ] : $table_data;
   }
 
 }

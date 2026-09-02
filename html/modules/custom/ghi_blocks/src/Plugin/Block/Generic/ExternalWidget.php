@@ -3,30 +3,29 @@
 namespace Drupal\ghi_blocks\Plugin\Block\Generic;
 
 use Drupal\Component\Utility\UrlHelper;
+use Drupal\Core\Block\Attribute\Block;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Plugin\Context\ContextDefinition;
+use Drupal\Core\Plugin\Context\EntityContextDefinition;
 use Drupal\Core\Url;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
 use Drupal\ghi_form_elements\Helpers\FormElementHelper;
+use Drupal\hpc_common\Plugin\HPCBlockMetadata;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Provides an 'External Widget' block.
- *
- * @Block(
- *  id = "generic_external_widget",
- *  admin_label = @Translation("External Widget"),
- *  category = @Translation("Generic elements"),
- *  title = FALSE,
- *  valid_source_elements = {
- *    "generic_external_widgets",
- *    "plan_external_widget"
- *  },
- *  context_definitions = {
- *    "plan" = @ContextDefinition("entity:base_object:plan", label = @Translation("Plan"), required = FALSE),
- *    "year" = @ContextDefinition("integer", label = @Translation("Year"), required = FALSE)
- *  }
- * )
  */
+#[Block(
+  id: 'generic_external_widget',
+  admin_label: new TranslatableMarkup('External Widget'),
+  category: new TranslatableMarkup('Generic elements'),
+  context_definitions: [
+    'plan' => new EntityContextDefinition('entity:base_object:plan', new TranslatableMarkup('Plan'), required: FALSE),
+    'year' => new ContextDefinition(data_type: 'integer', label: new TranslatableMarkup("Year"), required: FALSE),
+  ]
+)]
 class ExternalWidget extends GHIBlockBase {
 
   const MAX_ITEMS = 2;
@@ -40,6 +39,13 @@ class ExternalWidget extends GHIBlockBase {
    * @var \Drupal\Core\Extension\ExtensionPathResolver
    */
   protected $extensionPathResolver;
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function metadata(): ?HPCBlockMetadata {
+    return new HPCBlockMetadata(usesTitle: FALSE);
+  }
 
   /**
    * {@inheritdoc}

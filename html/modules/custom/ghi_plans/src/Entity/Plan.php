@@ -9,9 +9,14 @@ use Drupal\ghi_base_objects\ApiObjects\Country;
 use Drupal\ghi_base_objects\Entity\BaseObject;
 use Drupal\ghi_base_objects\Entity\BaseObjectFocusCountryInterface;
 use Drupal\ghi_base_objects\Entity\BaseObjectMetaDataInterface;
+use Drupal\ghi_base_objects\Entity\Country as EntityCountry;
+use Drupal\ghi_plans\ApiObjects\Attachments\CaseloadAttachmentInterface;
 use Drupal\ghi_plans\Traits\AttachmentFilterTrait;
 use Drupal\ghi_plans\Traits\FtsLinkTrait;
+use Drupal\ghi_plans\Traits\PlanQueryTrait;
 use Drupal\ghi_plans\Traits\PlanTypeTrait;
+use Drupal\hpc_api\Traits\DateTimeTrait;
+use Drupal\hpc_common\Helpers\CommonHelper;
 
 /**
  * Bundle class for plan base objects.
@@ -21,7 +26,10 @@ class Plan extends BaseObject implements BaseObjectMetaDataInterface, BaseObject
   use PlanTypeTrait;
   use FtsLinkTrait;
   use AttachmentFilterTrait;
+  use PlanQueryTrait;
+  use DateTimeTrait;
 
+  public const BUNDLE = 'plan';
   public const CLUSTER_TYPE_CLUSTER = 'cluster';
   public const CLUSTER_TYPE_SECTOR = 'sector';
 
@@ -71,13 +79,40 @@ class Plan extends BaseObject implements BaseObjectMetaDataInterface, BaseObject
   }
 
   /**
+   * Get the main country for a plan.
+   *
+   * @return \Drupal\ghi_base_objects\Entity\Country|null
+   *   A country base object or NULL.
+   */
+  public function getMainCountry(): ?EntityCountry {
+    $focus_country = $this->getFocusCountry();
+    if ($focus_country) {
+      return $focus_country;
+    }
+    $countries = $this->getCountries();
+    $country = reset($countries);
+    return $country instanceof EntityCountry ? $country : NULL;
+  }
+
+  /**
    * {@inheritdoc}
    */
-  public function getFocusCountry() {
+  public function getCountries() {
+    if (!$this->hasField('field_country')) {
+      return NULL;
+    }
+    return $this->get('field_country')->referencedEntities();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getFocusCountry(): ?EntityCountry {
     if (!$this->hasField('field_focus_country')) {
       return NULL;
     }
-    return $this->get('field_focus_country')->entity;
+    $country = $this->get('field_focus_country')->entity;
+    return $country instanceof EntityCountry ? $country : NULL;
   }
 
   /**
@@ -112,10 +147,10 @@ class Plan extends BaseObject implements BaseObjectMetaDataInterface, BaseObject
       return NULL;
     }
     return new Country((object) [
-      'id' => $focus_country?->getSourceId() ?? $default_country->id(),
-      'name' => $focus_country?->label() ?? $default_country->getName(),
-      'latitude' => $lat_lng[0],
-      'longitude' => $lat_lng[1],
+      'Id' => $focus_country?->getSourceId() ?? $default_country->id(),
+      'Name' => $focus_country?->label() ?? $default_country->getName(),
+      'Latitude' => $lat_lng[0],
+      'Longitude' => $lat_lng[1],
     ]);
   }
 
@@ -200,6 +235,163 @@ class Plan extends BaseObject implements BaseObjectMetaDataInterface, BaseObject
    */
   public function isOther() {
     return $this->isType('Other');
+  }
+
+  /**
+   * Get the plan type.
+   *
+   * @return \Drupal\ghi_plans\Entity\PlanCostingType|null
+   *   The plan type.
+   */
+  public function getPlanCostingType() {
+    if (!$this->hasField('field_plan_costing')) {
+      return NULL;
+    }
+    return $this->get('field_plan_costing')?->entity ?? NULL;
+  }
+
+  /**
+   * Update the financial data for a plan.
+   */
+  public function updateFinancialData(): void {
+    $financial_data = $this->getPlanQuery()->fetchFinancialData($this->getSourceId());
+    if ($this->hasField('field_funding_total')) {
+      $this->get('field_funding_total')?->setValue($financial_data['total_funding']);
+    }
+    if ($this->hasField('field_funding_overall')) {
+      $this->get('field_funding_overall')?->setValue($financial_data['overall_funding']);
+    }
+
+    if ($this->hasField('field_requirements')) {
+      $this->get('field_requirements')->setValue($financial_data['current_requirements']);
+    }
+    if ($this->hasField('field_requirements_original')) {
+      $this->get('field_requirements_original')->setValue($financial_data['original_requirements']);
+    }
+
+    if ($this->hasField('field_requirements_updated')) {
+      $this->get('field_requirements_updated')->setValue(self::getRequestTime());
+    }
+  }
+
+  /**
+   * Get the total funding for a plan.
+   *
+   * @return float|null
+   *   The total funding for the plan.
+   */
+  public function getTotalFunding(): ?float {
+    if (!$this->hasField('field_funding_total')) {
+      return NULL;
+    }
+    $funding_total = $this->get('field_funding_total')->value;
+    return $funding_total !== NULL ? (float) $funding_total : NULL;
+  }
+
+  /**
+   * Get the overall funding for a plan.
+   *
+   * @return float|null
+   *   The overall funding for the plan.
+   */
+  public function getOverallFunding(): ?float {
+    if (!$this->hasField('field_funding_overall')) {
+      return NULL;
+    }
+    $funding_overall = $this->get('field_funding_overall')->value;
+    return $funding_overall !== NULL ? (float) $funding_overall : NULL;
+  }
+
+  /**
+   * Get the outside funding.
+   *
+   * @return float
+   *   The outside funding value.
+   */
+  public function getOutsideFunding(): float {
+    $total_funding = $this->getTotalFunding();
+    $overall_funding = $this->getOverallFunding();
+    return $overall_funding - $total_funding;
+  }
+
+  /**
+   * Get the requirements for a plan.
+   *
+   * @return float|null
+   *   The requirements for the plan.
+   */
+  public function getRequirements(): ?float {
+    if (!$this->hasField('field_requirements')) {
+      return NULL;
+    }
+    $requirements = $this->get('field_requirements')->value;
+    return $requirements !== NULL ? (float) $requirements : NULL;
+  }
+
+  /**
+   * Get the requirements for a plan.
+   *
+   * @return float|null
+   *   The requirements for the plan.
+   */
+  public function getOriginalRequirements(): ?float {
+    if (!$this->hasField('field_requirements_original')) {
+      return NULL;
+    }
+    $requirements = $this->get('field_requirements_original')->value;
+    return $requirements !== NULL ? (float) $requirements : NULL;
+  }
+
+  /**
+   * Get the coverage for a plan.
+   *
+   * @return float
+   *   The coverage.
+   */
+  public function getCoverage(): float {
+    return (float) CommonHelper::calculateRatio($this->getTotalFunding() ?? 0, $this->getRequirements()) * 100;
+  }
+
+  /**
+   * Get the funding gap for a plan.
+   *
+   * @return float
+   *   The funding gap.
+   */
+  public function getFundingGap(): float {
+    return $this->getRequirements() - $this->getTotalFunding();
+  }
+
+  /**
+   * Check if the plan uses plan requirements.
+   *
+   * @return bool
+   *   TRUE if the plan has its own requirements, FALSE otherwise.
+   */
+  public function usePlanRequirements() {
+    return $this->getPlanCostingType()?->isPlanRequirements() ?? FALSE;
+  }
+
+  /**
+   * Check if the plan uses cluster requirements.
+   *
+   * @return bool
+   *   TRUE if the plan gets its requirements from the sum of the cluster
+   *   requirements, FALSE otherwise.
+   */
+  public function useClusterRequirements() {
+    return $this->getPlanCostingType()?->isClusterRequirements() ?? FALSE;
+  }
+
+  /**
+   * Check if the plan uses project requirements.
+   *
+   * @return bool
+   *   TRUE if the plan gets its requirements from the sum of the project
+   *   requirements, FALSE otherwise.
+   */
+  public function useProjectRequirements() {
+    return $this->getPlanCostingType() === NULL;
   }
 
   /**
@@ -302,6 +494,20 @@ class Plan extends BaseObject implements BaseObjectMetaDataInterface, BaseObject
   }
 
   /**
+   * Get the id of the last published reporting period.
+   *
+   * @return int|null
+   *   The id or NULL.
+   */
+  public function getLastPublishedReportingPeriodId(): ?int {
+    if (!$this->hasField('field_latest_published_period_id')) {
+      return NULL;
+    }
+    $value = $this->get('field_latest_published_period_id')->value ?? NULL;
+    return $value !== NULL ? (int) $value : NULL;
+  }
+
+  /**
    * Get the plan status label.
    *
    * @return string|null
@@ -351,10 +557,10 @@ class Plan extends BaseObject implements BaseObjectMetaDataInterface, BaseObject
    * @param array $caseloads
    *   The caseloads to choose from.
    *
-   * @return object|null
+   * @return \Drupal\ghi_plans\ApiObjects\Attachments\CaseloadAttachmentInterface|null
    *   A caseload object or NULL.
    */
-  public function getPlanCaseload(array $caseloads) {
+  public function getPlanCaseload(array $caseloads): ?CaseloadAttachmentInterface {
     return $this->findPlanCaseload($caseloads, $this->getPlanCaseloadId());
   }
 

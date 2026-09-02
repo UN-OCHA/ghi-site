@@ -78,6 +78,7 @@ module:
   hpc_api: 0
   hpc_common: 0
   hpc_downloads: 0
+  hpc_remote_data_cache: 0
   hpc_security: 0
   image: 0
   image_effects: 0
@@ -127,6 +128,7 @@ module:
   page_manager_ui: 0
   path: 0
   path_alias: 0
+  pcb: 0
   phpexcel: 0
   publishcontent: 0
   queue_ui: 0

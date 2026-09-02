@@ -78,6 +78,9 @@
 
       thead {
         th {
+          position: relative;
+          padding-right: 1rem;
+          vertical-align: bottom;
           white-space: nowrap;
           text-transform: uppercase;
           color: var(--ghi-default-text-color);
@@ -93,7 +96,7 @@
         &.sorttable-sorted,
         &.sorttable-sorted-reverse {
           // Make room for the sortable icon.
-          padding-right: 5px;
+          padding-right: 1rem;
 
           & > span {
             display: inline-block;
@@ -153,6 +156,10 @@
           }
         }
 
+        td {
+          padding: 1.5rem 1rem 1.5rem 2rem;
+        }
+
         td:first-child.subrow {
           padding-left: 2rem;
         }
@@ -208,6 +215,10 @@
           display: inline-block;
           vertical-align: middle;
 
+          .material-icon {
+            font-size: 1rem;
+          }
+
           a {
             text-decoration: none;
           }
@@ -253,8 +264,12 @@
     }
 
     &:last-child {
-      padding-right: 0.5rem;
+      padding-right: 0.5rem !important;
     }
+  }
+
+  td[data-column="0"] {
+    white-space: nowrap;
   }
 
   tr.totals-row,
@@ -274,6 +289,63 @@
       .cell-wrapper-inner,
       .value-wrapper {
         justify-content: flex-start;
+      }
+    }
+  }
+}
+
+#main-content,
+.ghi-modal-dialog {
+  .table-wrapper table.ghi-table.legacy-project-list-table {
+    width: 100%;
+    table-layout: fixed;
+
+    // Project count modals have five dense columns. Keep this override after
+    // the generic modal table styles so project names cannot push
+    // organizations and amounts outside the viewport.
+    th,
+    td {
+      padding-inline: 0.5rem;
+      white-space: normal;
+      overflow-wrap: anywhere;
+
+      &:nth-child(1) {
+        width: 22%;
+      }
+
+      &:nth-child(2) {
+        width: 29%;
+      }
+
+      &:nth-child(3) {
+        width: 23%;
+      }
+
+      &:is(:nth-child(4), :nth-child(5)) {
+        width: 13%;
+        text-align: right;
+      }
+
+      &:last-child {
+        padding-right: 0.5rem;
+      }
+    }
+
+    td {
+      a {
+        text-decoration: underline;
+      }
+
+      &:is(:nth-child(4), :nth-child(5)) {
+        white-space: nowrap;
+        overflow-wrap: normal;
+      }
+
+      &:first-child a {
+        white-space: normal;
+        overflow-wrap: anywhere;
+        color: inherit;
+        font-size: inherit;
       }
     }
   }

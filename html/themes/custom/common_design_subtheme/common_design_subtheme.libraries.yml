@@ -9,7 +9,8 @@ global-styling:
     - core/jquery
     - core/once
     - common_design_subtheme/sorttable
-    - common_design_subtheme/select2
+    - common_design_subtheme/select2-styling
+    - common_design_subtheme/icons
     - common_design/cd-dropdown
     # This is not technically a dependency, but on pages that have no visible
     # element using cd-tables, but at least one hidden, not having this already
@@ -51,13 +52,28 @@ ghi-table-progress-indicator:
     theme:
       components/ghi-table-progress-indicator/ghi-table-progress-indicator.css: {}
 
+select2-styling:
+  version: 2
+  css:
+    component:
+      /libraries/select2/dist/css/select2.min.css: {}
+
 select2:
   version: 2
   js:
     /libraries/select2/dist/js/select2.min.js: {}
-  css:
-    component:
-      /libraries/select2/dist/css/select2.min.css: {}
+    js/select2.js: {}
+  dependencies:
+    - common_design_subtheme/select2-styling
+    - core/drupal
+    - core/jquery
+    - core/once
+
+icons:
+  js:
+    js/icons.js: {}
+  dependencies:
+    - core/drupal
 
 # External libraries
 swiper:
@@ -74,6 +90,11 @@ ghi-entity-logframe:
       components/ghi-entity-logframe/ghi-entity-logframe.css: {}
   js:
     components/ghi-entity-logframe/ghi-entity-logframe.js: {}
+  dependencies:
+    - core/drupal
+    - core/drupal.ajax
+    - core/jquery
+    - core/once
 
 # Libraries specific to GHI.
 ghi-grid:

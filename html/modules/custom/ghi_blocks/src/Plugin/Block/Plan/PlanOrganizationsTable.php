@@ -2,7 +2,9 @@
 
 namespace Drupal\ghi_blocks\Plugin\Block\Plan;
 
+use Drupal\Core\Block\Attribute\Block;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Plugin\Context\EntityContextDefinition;
 use Drupal\ghi_blocks\Interfaces\ConfigurableTableBlockInterface;
 use Drupal\ghi_blocks\Interfaces\MultiStepFormBlockInterface;
 use Drupal\ghi_blocks\Interfaces\OverrideDefaultTitleBlockInterface;
@@ -12,47 +14,55 @@ use Drupal\ghi_blocks\Traits\TableSoftLimitTrait;
 use Drupal\ghi_form_elements\Traits\ConfigurationContainerTrait;
 use Drupal\hpc_downloads\Interfaces\HPCDownloadExcelInterface;
 use Drupal\hpc_downloads\Interfaces\HPCDownloadPNGInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\ghi_base_objects\Entity\BaseObjectChildInterface;
+use Drupal\hpc_common\Plugin\HPCBlockMetadata;
 
 /**
  * Provides a 'PlanOrganizationsTable' block.
- *
- * @Block(
- *  id = "plan_organizations_table",
- *  admin_label = @Translation("Organizations Table"),
- *  category = @Translation("Plan elements"),
- *  data_sources = {
- *    "entities" = "plan_entities_query",
- *    "project_search" = "plan_project_search_query",
- *    "project_funding" = "plan_project_funding_query",
- *  },
- *  default_title = @Translation("Organizations overview"),
- *  context_definitions = {
- *    "node" = @ContextDefinition("entity:node", label = @Translation("Node")),
- *    "plan" = @ContextDefinition("entity:base_object", label = @Translation("Plan"), constraints = { "Bundle": "plan" }),
- *    "plan_cluster" = @ContextDefinition("entity:base_object", label = @Translation("Cluster"), constraints = { "Bundle": "governing_entity" }, required =  FALSE)
- *  },
- *  config_forms = {
- *    "organizations" = {
- *      "title" = @Translation("Organizations"),
- *      "callback" = "organizationsForm",
- *      "base_form" = TRUE
- *    },
- *    "table" = {
- *      "title" = @Translation("Table columns"),
- *      "callback" = "tableForm"
- *    },
- *    "display" = {
- *      "title" = @Translation("Display"),
- *      "callback" = "displayForm"
- *    }
- *  }
- * )
  */
+#[Block(
+  id: 'plan_organizations_table',
+  admin_label: new TranslatableMarkup('Organizations Table'),
+  category: new TranslatableMarkup('Plan elements'),
+  context_definitions: [
+    'node' => new EntityContextDefinition('entity:node', new TranslatableMarkup('Node')),
+    'plan' => new EntityContextDefinition('entity:base_object', new TranslatableMarkup('Plan'), constraints: ['Bundle' => 'plan']),
+    'plan_cluster' => new EntityContextDefinition('entity:base_object', new TranslatableMarkup('Cluster'), required: FALSE, constraints: ['Bundle' => 'governing_entity']),
+  ],
+)]
 class PlanOrganizationsTable extends GHIBlockBase implements ConfigurableTableBlockInterface, MultiStepFormBlockInterface, OverrideDefaultTitleBlockInterface, HPCDownloadExcelInterface, HPCDownloadPNGInterface {
 
   use ConfigurationContainerTrait;
   use TableSoftLimitTrait;
   use OrganizationsBlockTrait;
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function metadata(): ?HPCBlockMetadata {
+    return new HPCBlockMetadata(
+      defaultTitle: 'Organizations overview',
+      dataSources: [
+        'project_search' => 'fabric_query:project',
+      ],
+      configForms: [
+        'organizations' => [
+          'title' => 'Organizations',
+          'callback' => 'organizationsForm',
+          'base_form' => TRUE,
+        ],
+        'table' => [
+          'title' => 'Table columns',
+          'callback' => 'tableForm',
+        ],
+        'display' => [
+          'title' => 'Display',
+          'callback' => 'displayForm',
+        ],
+      ]
+    );
+  }
 
   /**
    * {@inheritdoc}
@@ -74,6 +84,16 @@ class PlanOrganizationsTable extends GHIBlockBase implements ConfigurableTableBl
   }
 
   /**
+   * {@inheritdoc}
+   */
+  public function isEmpty(): bool {
+    $conf = $this->getBlockConfig();
+    $organizations = $this->getConfiguredOrganizations();
+    $columns = $this->getConfiguredItems($conf['table']['columns']);
+    return (empty($columns) || empty($organizations));
+  }
+
+  /**
    * Build the table data for this element.
    *
    * @return array
@@ -81,10 +101,8 @@ class PlanOrganizationsTable extends GHIBlockBase implements ConfigurableTableBl
    */
   private function buildTableData() {
     $conf = $this->getBlockConfig();
-
     $organizations = $this->getConfiguredOrganizations();
     $columns = $this->getConfiguredItems($conf['table']['columns']);
-
     if (empty($columns) || empty($organizations)) {
       return NULL;
     }
@@ -269,8 +287,8 @@ class PlanOrganizationsTable extends GHIBlockBase implements ConfigurableTableBl
     $organizations = $this->getOrganizations();
     return array_map(function ($organization) {
       return [
-        'id' => $organization->id,
-        'organization_name' => $organization->name,
+        'id' => $organization->id(),
+        'organization_name' => $organization->getName(),
       ];
     }, $organizations);
   }
@@ -295,16 +313,15 @@ class PlanOrganizationsTable extends GHIBlockBase implements ConfigurableTableBl
    * {@inheritdoc}
    */
   public function getBlockContext() {
-    /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\PlanProjectSearchQuery $project_search_query */
-    $project_search_query = $this->getQueryHandler('project_search');
-    if ($cluster_context = $this->getClusterContext()) {
-      $project_search_query->setClusterContext($cluster_context->getSourceId());
-    }
+    /** @var \Drupal\ghi_plans\Plugin\FabricQuery\ProjectQuery $project_query */
+    $project_query = $this->getQueryHandler('project_search');
+    $cluster_context = $this->getClusterContext();
+    $plan_object = $this->getCurrentPlanObject();
     return [
       'page_node' => $this->getPageNode(),
-      'plan_object' => $this->getCurrentPlanObject(),
+      'plan_object' => $plan_object,
       'base_object' => $this->getCurrentBaseObject(),
-      'projects' => $project_search_query->getProjects(),
+      'projects' => $project_query->getProjectsForPlanId($plan_object->getSourceId(), $cluster_context instanceof BaseObjectChildInterface ? $cluster_context : NULL),
     ];
   }
 

@@ -3,11 +3,13 @@ name: Run tests
 on: [pull_request]
 
 jobs:
-  tests:
+  quality:
+    name: Build and Quality
     runs-on: ubuntu-latest
     permissions:
-      contents: write
+      contents: read
       checks: write
+      id-token: write
       pull-requests: write
       actions: read
       statuses: write
@@ -62,19 +64,15 @@ jobs:
         id: aws
         uses: aws-actions/configure-aws-credentials@v6
         with:
-          aws-access-key-id: ${{ secrets.ECR_AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.ECR_AWS_SECRET_ACCESS_KEY }}
-          aws-region: us-east-1
+          role-to-assume: ${{ vars.AWS_ROLE }}
+          role-session-name: ${{ github.run_id }}
+          aws-region: ${{ vars.AWS_REGION }}
 
       - name: Login to Public ECR
         id: aws-login
-        uses: docker/login-action@v4
+        uses: aws-actions/amazon-ecr-login@v2
         with:
-          registry: public.ecr.aws
-          username: ${{ secrets.ECR_AWS_ACCESS_KEY_I }}
-          password: ${{ secrets.ECR_AWS_SECRET_ACCESS_KEY }}
-        env:
-          AWS_REGION: us-east-1
+          registry-type: public
 
       - name: Build Image
         id: build
@@ -84,6 +82,18 @@ jobs:
             make
         env:
           fail-fast: true
+
+      - name: Save Image Artifact
+        id: image
+        run: |
+          docker save unocha/ghi-site:local | gzip -1 > /tmp/ghi-site-local.tar.gz
+
+      - name: Upload Image Artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: ghi-site-local-image
+          path: /tmp/ghi-site-local.tar.gz
+          retention-days: 1
 
       - name: Setup Environment
         id: docker
@@ -113,8 +123,122 @@ jobs:
         env:
           fail-fast: true
 
+      - name: Stop Environment
+        if: always()
+        run: docker compose -f .github/tests/docker-compose.yml down -v
+
+  phpunit:
+    name: PHPUnit (${{ matrix.label }})
+    runs-on: ubuntu-latest
+    needs: quality
+    permissions:
+      contents: read
+      id-token: write
+      actions: read
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - label: Unit
+            testsuite: unit
+            coverage: unit
+            shard: 0
+            shards: 0
+            test_path: ''
+          - label: Kernel 1/3
+            testsuite: kernel
+            coverage: kernel-1
+            shard: 1
+            shards: 3
+            test_path: '*/tests/src/Kernel/*Test.php'
+          - label: Kernel 2/3
+            testsuite: kernel
+            coverage: kernel-2
+            shard: 2
+            shards: 3
+            test_path: '*/tests/src/Kernel/*Test.php'
+          - label: Kernel 3/3
+            testsuite: kernel
+            coverage: kernel-3
+            shard: 3
+            shards: 3
+            test_path: '*/tests/src/Kernel/*Test.php'
+          - label: Functional 1/4
+            testsuite: functional
+            coverage: functional-1
+            shard: 1
+            shards: 4
+            test_path: '*/tests/src/Functional/*Test.php'
+          - label: Functional 2/4
+            testsuite: functional
+            coverage: functional-2
+            shard: 2
+            shards: 4
+            test_path: '*/tests/src/Functional/*Test.php'
+          - label: Functional 3/4
+            testsuite: functional
+            coverage: functional-3
+            shard: 3
+            shards: 4
+            test_path: '*/tests/src/Functional/*Test.php'
+          - label: Functional 4/4
+            testsuite: functional
+            coverage: functional-4
+            shard: 4
+            shards: 4
+            test_path: '*/tests/src/Functional/*Test.php'
+          - label: Functional JavaScript
+            testsuite: functional-javascript
+            coverage: functional-javascript
+            shard: 0
+            shards: 0
+            test_path: ''
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v6
+
+      - name: Download Image Artifact
+        uses: actions/download-artifact@v8
+        with:
+          name: ghi-site-local-image
+          path: /tmp/ghi-site-image
+
+      - name: Load Image
+        run: gunzip -c /tmp/ghi-site-image/ghi-site-local.tar.gz | docker load
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v6
+        with:
+          role-to-assume: ${{ vars.AWS_ROLE }}
+          role-session-name: ${{ github.run_id }}-${{ matrix.coverage }}
+          aws-region: ${{ vars.AWS_REGION }}
+
+      - name: Login to Public ECR
+        uses: aws-actions/amazon-ecr-login@v2
+        with:
+          registry-type: public
+
+      - name: Setup Environment
+        uses: cafuego/command-output@main
+        with:
+          run: |
+            docker compose -f .github/tests/docker-compose.yml up -d
+            sleep 10
+            docker ps -a
+            docker compose -f .github/tests/docker-compose.yml exec -w /srv/www -T drupal composer install
+        env:
+          fail-fast: true
+
+      - name: Install Subtheme
+        if: ${{ matrix.testsuite != 'unit' }}
+        uses: cafuego/command-output@main
+        with:
+          run: |
+            docker compose -f .github/tests/docker-compose.yml exec -w /srv/www -T drupal /usr/bin/composer run sub-theme
+
       - name: Install Environment
-        id: install
+        if: ${{ matrix.testsuite != 'unit' }}
         uses: cafuego/command-output@main
         with:
           run: |
@@ -122,29 +246,125 @@ jobs:
         env:
           fail-fast: true
 
-      - name: Run tests
-        id: tests
+      - name: Run PHPUnit
+        id: phpunit
         uses: cafuego/command-output@main
         with:
           run: |
-            docker compose -f .github/tests/docker-compose.yml exec -T drupal drush -y en dblog
+            if [ "${{ matrix.testsuite }}" != "unit" ]; then
+              docker compose -f .github/tests/docker-compose.yml exec -T drupal drush -y en dblog
+            fi
             docker compose -f .github/tests/docker-compose.yml exec -T drupal chmod -R 777 /srv/www/html/sites/default/files /srv/www/html/sites/default/private
             docker compose -f .github/tests/docker-compose.yml exec -T drupal mkdir -p /srv/www/html/build/logs
             docker compose -f .github/tests/docker-compose.yml exec -T drupal chmod -R 777 /srv/www/html/build/logs
             docker compose -f .github/tests/docker-compose.yml exec -T drupal mkdir -p /srv/www/html/sites/simpletest/browser_output
             docker compose -f .github/tests/docker-compose.yml exec -T drupal chmod -R 777 /srv/www/html/sites/simpletest
-            docker compose -f .github/tests/docker-compose.yml exec -T -u appuser -w /srv/www -e XDEBUG_MODE=coverage -e BROWSERTEST_OUTPUT_DIRECTORY=/tmp -e BROWSERTEST_OUTPUT_BASE_URL=http://127.0.0.1:8081 -e DTT_BASE_URL=http://127.0.0.1 -e SIMPLETEST_BASE_URL=http://127.0.0.1 -e SIMPLETEST_DB=mysql://ghi:ghi@mysql/ghi drupal ./vendor/bin/paraunit coverage --clover /srv/www/html/build/logs/clover.xml -c /srv/www
+
+            COVERAGE_FILE="/srv/www/html/build/logs/coverage-${{ matrix.coverage }}.cov"
+            PHPUNIT_CONFIG="/srv/www"
+            PHPUNIT_ARGS=(--testsuite "${{ matrix.testsuite }}")
+            if [ "${{ matrix.shards }}" -gt 0 ]; then
+              TEST_FILES=()
+              while IFS= read -r test_file; do
+                TEST_FILES+=("$test_file")
+              done < <(find html/modules/custom -path '${{ matrix.test_path }}' -type f | sort | awk -v shard="${{ matrix.shard }}" -v shards="${{ matrix.shards }}" '((NR - 1) % shards) == (shard - 1)')
+              printf '%s shard %s/%s test files:\n' "${{ matrix.testsuite }}" "${{ matrix.shard }}" "${{ matrix.shards }}"
+              printf '%s\n' "${TEST_FILES[@]}"
+              SHARD_CONFIG="/tmp/phpunit-${{ matrix.coverage }}.xml"
+              python3 .github/tests/build-phpunit-shard.py --config phpunit.xml --suite "${{ matrix.coverage }}" --output "$SHARD_CONFIG" "${TEST_FILES[@]}"
+              docker cp "$SHARD_CONFIG" "$(docker compose -f .github/tests/docker-compose.yml ps -q drupal)":/srv/www/phpunit-${{ matrix.coverage }}.xml
+              PHPUNIT_CONFIG="/srv/www/phpunit-${{ matrix.coverage }}.xml"
+              PHPUNIT_ARGS=(--testsuite "${{ matrix.coverage }}")
+            fi
+            docker compose -f .github/tests/docker-compose.yml exec -T -u appuser -w /srv/www -e XDEBUG_MODE=coverage -e BROWSERTEST_OUTPUT_DIRECTORY=/tmp -e BROWSERTEST_OUTPUT_BASE_URL=http://127.0.0.1:8081 -e DTT_BASE_URL=http://ghi-test-site.test -e SIMPLETEST_BASE_URL=http://ghi-test-site.test -e SIMPLETEST_DB=mysql://ghi:ghi@mysql/ghi drupal ./vendor/bin/phpunit -c "$PHPUNIT_CONFIG" --coverage-php "$COVERAGE_FILE" "${PHPUNIT_ARGS[@]}"
         env:
           fail-fast: true
 
-      - name: Copy Coveralls
-        id: copy_coveralls
-        if: success()
-        run: docker cp "$(docker compose -f .github/tests/docker-compose.yml ps -q drupal)":/srv/www/html/build/logs/clover.xml . || echo "skip=true" >> "$GITHUB_OUTPUT"
+      - name: Copy Coverage Data
+        if: always()
+        run: |
+          mkdir -p coverage
+          docker cp "$(docker compose -f .github/tests/docker-compose.yml ps -q drupal)":/srv/www/html/build/logs/coverage-${{ matrix.coverage }}.cov coverage/ || true
 
-      - name: Monitor coverage
-        id: coveralls
-        if: ${{ steps.copy_coveralls.outputs.skip != 'true' }}
+      - name: Upload Coverage Data
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: coverage-${{ matrix.coverage }}
+          path: coverage/coverage-${{ matrix.coverage }}.cov
+          if-no-files-found: ignore
+          retention-days: 1
+
+      - name: DB Logs
+        if: failure()
+        uses: cafuego/command-output@main
+        with:
+          run: |
+            docker compose -f .github/tests/docker-compose.yml exec -T drupal drush watchdog:show || true
+
+      - name: PHP Logs
+        if: failure()
+        uses: cafuego/command-output@main
+        with:
+          run: |
+            docker compose -f .github/tests/docker-compose.yml exec -T drupal grep -i fatal /var/log/php/error.log || true
+
+      - name: Browser Logs
+        if: ${{ failure() && matrix.testsuite == 'functional-javascript' }}
+        run: docker logs ghi-test-browser --tail 250 || true
+
+      - name: Stop Environment
+        if: always()
+        run: docker compose -f .github/tests/docker-compose.yml down -v
+
+  coverage:
+    name: Coverage
+    runs-on: ubuntu-latest
+    needs: phpunit
+    if: ${{ needs.phpunit.result == 'success' }}
+    permissions:
+      contents: write
+      checks: write
+      pull-requests: write
+      actions: read
+      statuses: write
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v6
+
+      - name: Extract PHP Version
+        id: php
+        uses: docker://ghcr.io/un-ocha/actions:extract-php-version-main
+        with:
+          docker_file: 'docker/Dockerfile'
+          docker_image: 'public.ecr.aws/unocha/php-k8s'
+
+      - name: Setup PHP with PECL extension
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ steps.php.outputs.php_version }}
+          tools: composer
+
+      - name: Download Coverage Data
+        uses: actions/download-artifact@v8
+        with:
+          pattern: coverage-*
+          path: coverage-data
+          merge-multiple: true
+
+      - name: Install PHPCOV
+        run: composer global require phpunit/phpcov:8.2.1 --no-interaction --no-progress
+
+      - name: Merge Coverage
+        run: |
+          sudo mkdir -p /srv
+          sudo rm -rf /srv/www
+          sudo ln -s "$GITHUB_WORKSPACE" /srv/www
+          find coverage-data -type f -name '*.cov' -print
+          "$(composer global config bin-dir --absolute)/phpcov" merge --clover clover.xml coverage-data
+
+      - name: Monitor Coverage
         uses: slavcodev/coverage-monitor-action@v1
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
@@ -154,22 +374,22 @@ jobs:
           threshold_metric: "lines"
           comment_footer: false
 
-      - name: DB Logs
-        id: dblog
-        if: failure()
-        uses: cafuego/command-output@main
-        with:
-          run: |
-            docker compose -f .github/tests/docker-compose.yml exec -T drupal drush watchdog:show
+  tests:
+    name: tests
+    runs-on: ubuntu-latest
+    needs:
+      - quality
+      - phpunit
+      - coverage
+    if: always()
+    permissions:
+      contents: write
+      checks: write
+      pull-requests: write
+      actions: read
+      statuses: write
 
-      - name: PHP Logs
-        id: phplog
-        if: failure()
-        uses: cafuego/command-output@main
-        with:
-          run: |
-            docker compose -f tests/docker-compose.yml exec -T drupal grep -i fatal /var/log/php/error.log
-
+    steps:
       - name: Find Comment
         uses: peter-evans/find-comment@v4
         id: fc
@@ -185,29 +405,16 @@ jobs:
           issue-number: ${{ github.event.pull_request.number }}
           body: |
             ### Build output
-            #### Composer Validate `${{ steps.validate.outcome }}`
-            #### PHP Lint `${{ steps.lint.outcome }}`
-            #### Docker Build `${{ steps.build.outcome }}`
-            #### Environment Setup `${{ steps.docker.outcome }}`
-            #### Site Install `${{ steps.install.outcome }}`
-            #### PHP Code Sniffer `${{ steps.phpcs.outcome }}`
-
-            <details><summary>Software Versions</summary>
-            <code>${{ steps.versions.outputs.stdout }}</code>
-            </details>
-            <details><summary>Drupal Logs</summary>
-            <code>${{ steps.dblog.outputs.stdout }}</code>
-            </details>
-            <details><summary>PHP Logs</summary>
-            <code>${{ steps.phplog.outputs.stdout }}</code>
-            </details>
+            #### Build and quality `${{ needs.quality.result }}`
+            #### PHPUnit matrix `${{ needs.phpunit.result }}`
+            #### Coverage `${{ needs.coverage.result }}`
 
             *Pusher: @${{ github.actor }}, Action: `${{ github.event_name }}`, Workflow: `${{ github.workflow }}`*
           edit-mode: replace
 
       - name: Slack Success Notification
         id: slack_success
-        if: success()
+        if: ${{ needs.quality.result == 'success' && needs.phpunit.result == 'success' && needs.coverage.result == 'success' }}
         uses: slackapi/slack-github-action@v3
         with:
           method: chat.postMessage
@@ -234,7 +441,7 @@ jobs:
 
       - name: Slack Failure Notification
         id: slack_failure
-        if: failure()
+        if: ${{ needs.quality.result != 'success' || needs.phpunit.result != 'success' || needs.coverage.result != 'success' }}
         uses: slackapi/slack-github-action@v3
         with:
           method: chat.postMessage
@@ -258,3 +465,9 @@ jobs:
                 }
               ]
             }
+
+      - name: Check Results
+        run: |
+          test "${{ needs.quality.result }}" = "success"
+          test "${{ needs.phpunit.result }}" = "success"
+          test "${{ needs.coverage.result }}" = "success"

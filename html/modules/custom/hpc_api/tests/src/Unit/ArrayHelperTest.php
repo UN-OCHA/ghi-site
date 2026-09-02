@@ -4,7 +4,6 @@ namespace Drupal\Tests\hpc_api\Unit;
 
 use Drupal\hpc_api\Helpers\ArrayHelper;
 use Drupal\Tests\UnitTestCase;
-use Drupal\hpc_api\Query\EndpointQuery;
 
 /**
  * @covers Drupal\hpc_api\Helpers\ArrayHelper
@@ -137,10 +136,10 @@ class ArrayHelperTest extends UnitTestCase {
     ];
 
     return [
-      [$array, 'total', EndpointQuery::SORT_ASC, SORT_NUMERIC, ['apple', 'orange', 'strawberry']],
-      [$array, 'total', EndpointQuery::SORT_DESC, SORT_NUMERIC, ['strawberry', 'orange', 'apple']],
-      [$array, 'name', EndpointQuery::SORT_ASC, SORT_STRING, ['apple', 'orange', 'strawberry']],
-      [$array, 'name', EndpointQuery::SORT_DESC, SORT_STRING, ['strawberry', 'orange', 'apple']],
+      [$array, 'total', SORT_ASC, SORT_NUMERIC, ['apple', 'orange', 'strawberry']],
+      [$array, 'total', SORT_DESC, SORT_NUMERIC, ['strawberry', 'orange', 'apple']],
+      [$array, 'name', SORT_ASC, SORT_STRING, ['apple', 'orange', 'strawberry']],
+      [$array, 'name', SORT_DESC, SORT_STRING, ['strawberry', 'orange', 'apple']],
     ];
   }
 
@@ -169,8 +168,8 @@ class ArrayHelperTest extends UnitTestCase {
     ];
 
     return [
-      [$array, 'total', EndpointQuery::SORT_ASC, 100, [0, 2, 1]],
-      [$array, 'total', EndpointQuery::SORT_DESC, 100, [1, 2, 0]],
+      [$array, 'total', SORT_ASC, 100, [0, 2, 1]],
+      [$array, 'total', SORT_DESC, 100, [1, 2, 0]],
     ];
   }
 
@@ -216,8 +215,8 @@ class ArrayHelperTest extends UnitTestCase {
     ];
 
     return [
-      [$array, 'organizations', EndpointQuery::SORT_ASC, [1, 0, 3, 2]],
-      [$array, 'organizations', EndpointQuery::SORT_DESC, [2, 3, 0, 1]],
+      [$array, 'organizations', SORT_ASC, [1, 0, 3, 2]],
+      [$array, 'organizations', SORT_DESC, [2, 3, 0, 1]],
     ];
   }
 
@@ -264,8 +263,8 @@ class ArrayHelperTest extends UnitTestCase {
     ];
 
     return [
-      [$array, 'Gender Marker', EndpointQuery::SORT_ASC, [1, 0, 2]],
-      [$array, 'Gender Marker', EndpointQuery::SORT_DESC, [2, 0, 1]],
+      [$array, 'Gender Marker', SORT_ASC, [1, 0, 2]],
+      [$array, 'Gender Marker', SORT_DESC, [2, 0, 1]],
     ];
   }
 
@@ -389,10 +388,10 @@ class ArrayHelperTest extends UnitTestCase {
     ];
 
     return [
-      [$array, 'cost', EndpointQuery::SORT_ASC, SORT_NUMERIC, [1, 0, 2]],
-      [$array, 'cost', EndpointQuery::SORT_DESC, SORT_NUMERIC, [2, 0, 1]],
-      [$array, 'item', EndpointQuery::SORT_ASC, SORT_STRING, [2, 0, 1]],
-      [$array, 'item', EndpointQuery::SORT_DESC, SORT_STRING, [1, 0, 2]],
+      [$array, 'cost', SORT_ASC, SORT_NUMERIC, [1, 0, 2]],
+      [$array, 'cost', SORT_DESC, SORT_NUMERIC, [2, 0, 1]],
+      [$array, 'item', SORT_ASC, SORT_STRING, [2, 0, 1]],
+      [$array, 'item', SORT_DESC, SORT_STRING, [1, 0, 2]],
     ];
   }
 
@@ -415,7 +414,7 @@ class ArrayHelperTest extends UnitTestCase {
    */
   public function sortObjectsByMethodDataProvider() {
     $class = function ($item, $cost) {
-      // @codingStandardsIgnoreStart
+      // phpcs:disable
       return new class ($item, $cost) {
         private $item;
         private $cost;
@@ -426,7 +425,7 @@ class ArrayHelperTest extends UnitTestCase {
         public function getCost() { return $this->cost; }
         public function getItem() { return $this->item; }
       };
-      // @codingStandardsIgnoreEnd
+      // phpcs:enable
     };
 
     $array = [
@@ -436,10 +435,10 @@ class ArrayHelperTest extends UnitTestCase {
     ];
 
     return [
-      [$array, 'getCost', EndpointQuery::SORT_ASC, SORT_NUMERIC, [1, 0, 2]],
-      [$array, 'getCost', EndpointQuery::SORT_DESC, SORT_NUMERIC, [2, 0, 1]],
-      [$array, 'getItem', EndpointQuery::SORT_ASC, SORT_STRING, [2, 0, 1]],
-      [$array, 'getItem', EndpointQuery::SORT_DESC, SORT_STRING, [1, 0, 2]],
+      [$array, 'getCost', SORT_ASC, SORT_NUMERIC, [1, 0, 2]],
+      [$array, 'getCost', SORT_DESC, SORT_NUMERIC, [2, 0, 1]],
+      [$array, 'getItem', SORT_ASC, SORT_STRING, [2, 0, 1]],
+      [$array, 'getItem', SORT_DESC, SORT_STRING, [1, 0, 2]],
     ];
   }
 
@@ -455,6 +454,238 @@ class ArrayHelperTest extends UnitTestCase {
       return $data[$key];
     }, $result_order));
     $this->assertSame($expected, $data);
+  }
+
+  /**
+   * Test keyByProperty method.
+   *
+   * @group ArrayHelper
+   */
+  public function testKeyByProperty() {
+    $object1 = new \stdClass();
+    $object1->id = 1;
+    $object1->name = 'One';
+
+    $object2 = new \stdClass();
+    $object2->id = 2;
+    $object2->name = 'Two';
+
+    $array = [$object1, $object2];
+    $result = ArrayHelper::keyByProperty($array, 'id');
+
+    $this->assertArrayHasKey(1, $result);
+    $this->assertArrayHasKey(2, $result);
+    $this->assertSame('One', $result[1]->name);
+    $this->assertSame('Two', $result[2]->name);
+  }
+
+  /**
+   * Data provider for filterArray.
+   */
+  public function filterArrayDataProvider() {
+    $array = [
+      ['id' => 1, 'name' => 'One', 'category' => 'a'],
+      ['id' => 2, 'name' => 'Two', 'category' => 'b'],
+      ['id' => 3, 'name' => 'Three', 'category' => 'a'],
+    ];
+
+    return [
+      [$array, ['category' => 'a'], 2],
+      [$array, ['category' => 'b'], 1],
+      [$array, ['id' => 2], 1],
+    ];
+  }
+
+  /**
+   * Data provider for filterArray with object methods.
+   */
+  public function filterArrayObjectMethodDataProvider() {
+    $array = [
+      $this->createFilterableObject(1, 'caseload', [101, 102]),
+      $this->createFilterableObject(2, 'indicator', [102, 103]),
+      $this->createFilterableObject(3, 'caseload', [104]),
+    ];
+
+    return [
+      [$array, ['getType' => 'caseload'], [1, 3]],
+      [$array, ['getType' => ['indicator']], [2]],
+      [$array, ['getPrototypeIds' => 102], [1, 2]],
+      [$array, ['getType' => 'caseload', 'getPrototypeIds' => 102], [1]],
+    ];
+  }
+
+  /**
+   * Data provider for filterArray with property paths.
+   */
+  public function filterArrayPropertyPathDataProvider() {
+    $array = [
+      ['id' => 1, 'category' => 'a', 'parent' => (object) ['child' => (object) ['name' => 'alpha']]],
+      ['id' => 2, 'category' => 'b', 'parent' => (object) ['child' => NULL]],
+      ['id' => 3, 'category' => 'a', 'parent' => NULL],
+      ['id' => 4, 'category' => 'c'],
+    ];
+
+    return [
+      [$array, ['category' => ['a']], [1, 3]],
+      [$array, ['missing' => NULL], [1, 2, 3, 4]],
+      [$array, ['parent.child.name' => 'alpha'], [1]],
+      [$array, ['parent.child.name' => NULL], []],
+    ];
+  }
+
+  /**
+   * Test filterArray method.
+   *
+   * @group ArrayHelper
+   * @dataProvider filterArrayDataProvider
+   */
+  public function testFilterArray($array, $filters, $expected_count) {
+    $result = ArrayHelper::filterArray($array, $filters);
+    $this->assertCount($expected_count, $result);
+  }
+
+  /**
+   * Test filterArray method with object method filters.
+   *
+   * @group ArrayHelper
+   * @dataProvider filterArrayObjectMethodDataProvider
+   */
+  public function testFilterArrayWithObjectMethodFilters($array, $filters, $expected_ids) {
+    $result = ArrayHelper::filterArray($array, $filters);
+    $this->assertSame($expected_ids, array_map(fn($item) => $item->id, $result));
+  }
+
+  /**
+   * Test filterArray method with property path filters.
+   *
+   * @group ArrayHelper
+   * @dataProvider filterArrayPropertyPathDataProvider
+   */
+  public function testFilterArrayWithPropertyPathFilters($array, $filters, $expected_ids) {
+    $result = ArrayHelper::filterArray($array, $filters);
+    $this->assertSame($expected_ids, array_column($result, 'id'));
+  }
+
+  /**
+   * Data provider for sumArraysByKey.
+   */
+  public function sumArraysByKeyDataProvider() {
+    return [
+      [[['value' => 10], ['value' => 20], ['value' => 30]], 'value', 60],
+      [[], 'value', 0],
+      [[['value' => 5]], 'value', 5],
+    ];
+  }
+
+  /**
+   * Test sumArraysByKey method.
+   *
+   * @group ArrayHelper
+   * @dataProvider sumArraysByKeyDataProvider
+   */
+  public function testSumArraysByKey($array, $key, $expected) {
+    $result = ArrayHelper::sumArraysByKey($array, $key);
+    $this->assertSame($expected, $result);
+  }
+
+  /**
+   * Create a filterable test object.
+   */
+  private function createFilterableObject($id, $type, array $prototype_ids) {
+    return new class($id, $type, $prototype_ids) {
+
+      /**
+       * The test object id.
+       *
+       * @var int
+       */
+      public $id;
+
+      /**
+       * The test object type.
+       *
+       * @var string
+       */
+      private $type;
+
+      /**
+       * The test prototype ids.
+       *
+       * @var array
+       */
+      private $prototypeIds;
+
+      /**
+       * Constructs a filterable test object.
+       */
+      public function __construct($id, $type, array $prototype_ids) {
+        $this->id = $id;
+        $this->type = $type;
+        $this->prototypeIds = $prototype_ids;
+      }
+
+      /**
+       * Get the type.
+       */
+      public function getType() {
+        return $this->type;
+      }
+
+      /**
+       * Get the prototype ids.
+       */
+      public function getPrototypeIds() {
+        return $this->prototypeIds;
+      }
+
+    };
+  }
+
+  /**
+   * Data provider for insertItem.
+   */
+  public function insertItemDataProvider() {
+    return [
+      [['a', 'b', 'c'], 1, 'x', ['a', 'x', 'b', 'c']],
+      [['a', 'b', 'c'], 0, 'x', ['x', 'a', 'b', 'c']],
+      [['a', 'b', 'c'], 3, 'x', ['a', 'b', 'c', 'x']],
+    ];
+  }
+
+  /**
+   * Test insertItem method.
+   *
+   * @group ArrayHelper
+   * @dataProvider insertItemDataProvider
+   */
+  public function testInsertItem($array, $pos, $value, $expected) {
+    $result = ArrayHelper::insertItem($array, $pos, $value);
+    $this->assertSame($expected, $result);
+  }
+
+  /**
+   * Test sortObjectsByCallback method with numeric comparison.
+   *
+   * @group ArrayHelper
+   */
+  public function testSortObjectsByCallbackNumeric() {
+    $object1 = new \stdClass();
+    $object1->value = 3;
+    $object1->id = 1;
+
+    $object2 = new \stdClass();
+    $object2->value = 1;
+    $object2->id = 2;
+
+    $object3 = new \stdClass();
+    $object3->value = 2;
+    $object3->id = 3;
+
+    $array = [$object1, $object2, $object3];
+    ArrayHelper::sortObjectsByCallback($array, fn ($obj) => $obj->value, SORT_ASC, SORT_NUMERIC);
+
+    $values = array_map(fn($obj) => $obj->value, $array);
+    $this->assertSame([1, 2, 3], array_values($values));
   }
 
 }

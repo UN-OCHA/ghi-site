@@ -120,20 +120,7 @@ abstract class EndpointQueryBase extends PluginBase implements EndpointQueryPlug
   public function getData(array $placeholders = [], array $query_args = []) {
     $this->endpointQuery->setPlaceholders($placeholders);
     $this->endpointQuery->setEndpointArguments($query_args);
-
-    $cache_args = [
-      'endpoint' => $this->getFullEndpointUrl(),
-      'auth_method' => $this->endpointQuery->getAuthMethod(),
-    ];
-
-    // Cache the result in memory.
-    $cache_key = $this->getCacheKey($cache_args);
-    if ($data = $this->cache($cache_key)) {
-      return $data;
-    }
-    $data = $this->endpointQuery->getData();
-    $this->setCache($cache_key, $data);
-    return $data;
+    return $this->endpointQuery->getData();
   }
 
   /**
@@ -184,10 +171,13 @@ abstract class EndpointQueryBase extends PluginBase implements EndpointQueryPlug
     $cache_tags = $this->cacheTags;
     $placeholders = $this->getPlaceholders() ?? [];
     foreach ($placeholders as $key => $value) {
-      Cache::mergeTags($cache_tags, [$key . ':' . $value]);
+      if (!is_scalar($value)) {
+        continue;
+      }
+      $cache_tags = Cache::mergeTags($cache_tags, [$key . ':' . $value]);
     }
     if (array_key_exists('plan_id', $placeholders)) {
-      Cache::mergeTags($cache_tags, ['plan_data']);
+      $cache_tags = Cache::mergeTags($cache_tags, ['plan_data']);
     }
     return $cache_tags;
   }

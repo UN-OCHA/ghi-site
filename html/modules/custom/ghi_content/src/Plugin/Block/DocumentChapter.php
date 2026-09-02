@@ -2,44 +2,53 @@
 
 namespace Drupal\ghi_content\Plugin\Block;
 
-use Drupal\Core\Cache\Cache;
+use Drupal\Core\Block\Attribute\Block;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Plugin\Context\EntityContextDefinition;
 use Drupal\Core\Render\Markup;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\ghi_blocks\Interfaces\MultiStepFormBlockInterface;
 use Drupal\ghi_blocks\Interfaces\OverrideDefaultTitleBlockInterface;
-use Drupal\ghi_content\Entity\ContentBase;
+use Drupal\ghi_content\Entity\Document as DocumentNode;
 use Drupal\ghi_content\RemoteContent\RemoteChapterInterface;
 use Drupal\ghi_content\RemoteContent\RemoteDocumentInterface;
+use Drupal\hpc_common\Plugin\HPCBlockMetadata;
 
 /**
  * Provides a 'DocumentChapter' block.
- *
- * @Block(
- *  id = "document_chapter",
- *  admin_label = @Translation("Document chapter"),
- *  category = @Translation("Narrative Content"),
- *  context_definitions = {
- *    "node" = @ContextDefinition("entity:node", label = @Translation("Node"), required = FALSE),
- *  },
- *  config_forms = {
- *    "document_select" = {
- *      "title" = @Translation("Document selection"),
- *      "callback" = "documentSelectForm",
- *      "base_form" = TRUE
- *    },
- *    "chapter" = {
- *      "title" = @Translation("Chapter"),
- *      "callback" = "chapterForm"
- *    },
- *    "display" = {
- *      "title" = @Translation("Display"),
- *      "callback" = "displayForm"
- *    }
- *  }
- * )
  */
+#[Block(
+  id: 'document_chapter',
+  admin_label: new TranslatableMarkup('Document chapter'),
+  category: new TranslatableMarkup('Narrative Content'),
+  context_definitions: [
+    'node' => new EntityContextDefinition('entity:node', new TranslatableMarkup('Node'), required: FALSE),
+  ]
+)]
 class DocumentChapter extends ContentBlockBase implements MultiStepFormBlockInterface, OverrideDefaultTitleBlockInterface {
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function metadata(): ?HPCBlockMetadata {
+    return new HPCBlockMetadata(
+      configForms: [
+        'document_select' => [
+          'title' => 'Document selection',
+          'callback' => 'documentSelectForm',
+          'base_form' => TRUE,
+        ],
+        'chapter' => [
+          'title' => 'Chapter',
+          'callback' => 'chapterForm',
+        ],
+        'display' => [
+          'title' => 'Display',
+          'callback' => 'displayForm',
+        ],
+      ]
+    );
+  }
 
   /**
    * {@inheritdoc}
@@ -61,28 +70,18 @@ class DocumentChapter extends ContentBlockBase implements MultiStepFormBlockInte
     if (!$chapter) {
       return NULL;
     }
-    $document_node = $this->documentManager->loadNodeForRemoteContent($this->getDocument());
-    if (!$document_node instanceof ContentBase) {
+    $document_node = $this->documentManager->loadNodeForRemoteContent(
+      $this->getDocument()
+    );
+    if (!$document_node instanceof DocumentNode) {
       return NULL;
     }
-    $cache_tags = [];
-    $cache_max_age = Cache::PERMANENT;
-    $cache_tags = Cache::mergeTags($cache_tags, $document_node->getCacheTags());
-    $articles = [];
-    foreach ($this->getChapterArticles() as $_article) {
-      $article = clone $_article;
-      if (!$article->setContextNodeIfValid($document_node)) {
-        // A rejected document context would render bare article links, so keep
-        // both the block and cloned article out of reusable caches.
-        $cache_max_age = 0;
-        $article->mergeCacheMaxAge(0);
-      }
-      // The document node cache tags are already included above. Article
-      // invalidation tags are enough for these cards and avoid relationship
-      // expansion through Article::getCacheTags().
-      $cache_tags = Cache::mergeTags($cache_tags, $article->getCacheTagsToInvalidate() ?? []);
-      $articles[] = $article;
-    }
+    $cacheability = $this->documentArticleContext->createCacheability($document_node);
+    $articles = $this->documentArticleContext->prepareArticles(
+      $this->documentArticleContext->loadArticlesForChapter($chapter, TRUE),
+      $document_node,
+      $cacheability
+    );
 
     if (empty($articles)) {
       return NULL;
@@ -91,9 +90,9 @@ class DocumentChapter extends ContentBlockBase implements MultiStepFormBlockInte
     // Prepare the build.
     $build = [
       '#cache' => [
-        'tags' => $cache_tags,
+        'tags' => $cacheability->getCacheTags(),
         'contexts' => ['url.path'],
-        'max-age' => $cache_max_age,
+        'max-age' => $cacheability->getCacheMaxAge(),
       ],
       '#attributes' => [
         'class' => [],
@@ -325,21 +324,6 @@ class DocumentChapter extends ContentBlockBase implements MultiStepFormBlockInte
     }
     $chapter_id = $conf['chapter']['chapter_id'];
     return $document->getChapter($chapter_id);
-  }
-
-  /**
-   * Get the articles for the configured chapter.
-   *
-   * @return \Drupal\ghi_content\Entity\Article[]
-   *   An array of article node objects.
-   */
-  private function getChapterArticles() {
-    $chapter = $this->getChapter();
-    if (!$chapter) {
-      return NULL;
-    }
-    $article_ids = $chapter->getArticleIds();
-    return $this->articleManager->loadAccessibleNodesForRemoteIds($chapter->getSource()->getPluginId(), $article_ids);
   }
 
   /**

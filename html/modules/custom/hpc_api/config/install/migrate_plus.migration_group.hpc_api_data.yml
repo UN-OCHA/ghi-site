@@ -8,7 +8,7 @@
 id: hpc_api_data
 
 # A human-friendly label for the group.
-label: HPC API Data
+label: HPC Fabric API
 
 # More information about the group.
 description: Import data from the HPC API.

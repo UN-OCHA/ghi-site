@@ -13,6 +13,21 @@ use Drupal\hpc_api\ApiObjects\ApiObjectInterface;
 interface PlanEntityInterface extends ApiObjectInterface {
 
   /**
+   * The Fabric source entity type for plan objects.
+   */
+  const ENTITY_TYPE_PLAN = 'plan';
+
+  /**
+   * The Fabric source entity type for logframe/plan entity objects.
+   */
+  const ENTITY_TYPE_PLAN_ENTITY = 'planEntity';
+
+  /**
+   * The Fabric source entity type for governing entity objects.
+   */
+  const ENTITY_TYPE_GOVERNING_ENTITY = 'governingEntity';
+
+  /**
    * Get a name for an entity.
    *
    * @return string
@@ -34,10 +49,10 @@ interface PlanEntityInterface extends ApiObjectInterface {
   /**
    * Get the description for an entity.
    *
-   * @return string
+   * @return string|null
    *   The full name.
    */
-  public function getDescription();
+  public function getDescription(): ?string;
 
   /**
    * Get the ref code for the entity type that this entity belongs to.

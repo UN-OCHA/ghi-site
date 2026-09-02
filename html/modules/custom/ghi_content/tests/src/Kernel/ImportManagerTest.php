@@ -19,8 +19,8 @@ use Drupal\node\Entity\NodeType;
 use Drupal\taxonomy\Entity\Term;
 use Drupal\Tests\field\Traits\EntityReferenceFieldCreationTrait;
 use Drupal\Tests\ghi_base_objects\Traits\FieldTestTrait;
-use Drupal\Tests\ghi_blocks\Traits\PrivateMethodTrait;
 use Drupal\Tests\ghi_content\Traits\ContentTestTrait;
+use Drupal\Tests\hpc_api\Traits\PrivateAccessorTrait;
 use Prophecy\Argument;
 
 /**
@@ -33,7 +33,7 @@ class ImportManagerTest extends KernelTestBase {
   use TaxonomyTestTrait;
   use FieldTestTrait;
   use EntityReferenceFieldCreationTrait;
-  use PrivateMethodTrait;
+  use PrivateAccessorTrait;
   use ContentTestTrait;
 
   /**

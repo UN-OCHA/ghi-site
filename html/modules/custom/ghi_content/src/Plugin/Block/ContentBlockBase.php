@@ -32,6 +32,13 @@ abstract class ContentBlockBase extends GHIBlockBase {
   protected $documentManager;
 
   /**
+   * The document article context service.
+   *
+   * @var \Drupal\ghi_content\Context\DocumentArticleContext
+   */
+  protected $documentArticleContext;
+
+  /**
    * The renderer service.
    *
    * @var \Drupal\Core\Render\RendererInterface
@@ -58,6 +65,7 @@ abstract class ContentBlockBase extends GHIBlockBase {
     }
     $instance->articleManager = $container->get('ghi_content.manager.article');
     $instance->documentManager = $container->get('ghi_content.manager.document');
+    $instance->documentArticleContext = $container->get('ghi_content.document_article_context');
     $instance->renderer = $container->get('renderer');
     $instance->dateFormatter = $container->get('date.formatter');
 
@@ -69,6 +77,16 @@ abstract class ContentBlockBase extends GHIBlockBase {
    */
   protected function getRemoteSource() {
     return $this->remoteSource;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function supportsLazyLoading() {
+    // Disable lazy loading to prevent issues with sub-articles. Lazy loading
+    // on narrative content blocks is not very important anyway, due to the
+    // small amount of API requests.
+    return FALSE;
   }
 
 }

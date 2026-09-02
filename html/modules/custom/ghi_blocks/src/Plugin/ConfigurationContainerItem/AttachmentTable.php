@@ -3,28 +3,30 @@
 namespace Drupal\ghi_blocks\Plugin\ConfigurationContainerItem;
 
 use Drupal\Component\Utility\SortArray;
+use Drupal\Core\Cache\Cache;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\ghi_blocks\Interfaces\AttachmentTableInterface;
 use Drupal\ghi_blocks\Traits\AttachmentTableTrait;
+use Drupal\ghi_form_elements\Attribute\ConfigurationContainerItem;
 use Drupal\ghi_form_elements\ConfigurationContainerItemCustomActionsInterface;
 use Drupal\ghi_form_elements\ConfigurationContainerItemPluginBase;
 use Drupal\ghi_form_elements\Traits\ConfigurationContainerItemCustomActionTrait;
 use Drupal\ghi_form_elements\Traits\ConfigurationContainerTrait;
-use Drupal\ghi_plans\ApiObjects\AttachmentPrototype\AttachmentPrototype;
-use Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment;
+use Drupal\ghi_plans\ApiObjects\Prototypes\AttachmentPrototype;
+use Drupal\ghi_plans\ApiObjects\Attachments\Attachment;
 use Drupal\ghi_plans\ApiObjects\Attachments\IndicatorAttachment;
 use Drupal\ghi_plans\ApiObjects\PlanEntityInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Provides an attachment table item for configuration containers.
- *
- * @ConfigurationContainerItem(
- *   id = "attachment_table",
- *   label = @Translation("Attachment table"),
- *   description = @Translation("This item allows the creation of attachment tables."),
- * )
  */
+#[ConfigurationContainerItem(
+  id: 'attachment_table',
+  label: new TranslatableMarkup('Attachment table'),
+  description: new TranslatableMarkup('This item allows the creation of attachment tables.'),
+)]
 class AttachmentTable extends ConfigurationContainerItemPluginBase implements ConfigurationContainerItemCustomActionsInterface, AttachmentTableInterface {
 
   use ConfigurationContainerTrait;
@@ -48,7 +50,8 @@ class AttachmentTable extends ConfigurationContainerItemPluginBase implements Co
   /**
    * {@inheritdoc}
    */
-  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition): AttachmentTable {
+    /** @var self $instance */
     $instance = parent::create($container, $configuration, $plugin_id, $plugin_definition);
     $instance->configurationContainerItemManager = $container->get('plugin.manager.configuration_container_item_manager');
     $instance->uuidService = $container->get('uuid');
@@ -59,7 +62,7 @@ class AttachmentTable extends ConfigurationContainerItemPluginBase implements Co
    * {@inheritdoc}
    */
   public function getRenderArray() {
-    /** @var \Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment[] $attachments */
+    /** @var \Drupal\ghi_plans\ApiObjects\Attachments\Attachment[] $attachments */
     $attachments = $this->getContextValue('attachments');
     $prototype = $this->getAttachmentPrototype();
     $prototype_id = $prototype->id();
@@ -74,10 +77,13 @@ class AttachmentTable extends ConfigurationContainerItemPluginBase implements Co
     $plan_entity = $this->getContextValue('plan_entity');
     $attachments = $this->filterAttachments($attachments, $prototype_id, $plan_entity);
     $columns = $this->getColumns();
+    $this->prefetchDisaggregatedDataAvailability($attachments, $columns);
 
     $rows = [];
+    $cache_tags = [];
     $context = $this->getBlockContext();
     foreach ($attachments as $attachment) {
+      $cache_tags = Cache::mergeTags($cache_tags, $attachment->getValueCacheTags());
       $context['attachment'] = $attachment;
       $row = [];
       $skip_row = FALSE;
@@ -85,6 +91,7 @@ class AttachmentTable extends ConfigurationContainerItemPluginBase implements Co
 
         /** @var \Drupal\ghi_form_elements\ConfigurationContainerItemPluginInterface $item_type */
         $item_type = $this->getItemTypePluginForColumn($column, $context);
+        $cache_tags = Cache::mergeTags($cache_tags, $item_type->getCacheTags());
 
         // Then add the value to the row.
         $cell = $item_type->getTableCell();
@@ -114,9 +121,26 @@ class AttachmentTable extends ConfigurationContainerItemPluginBase implements Co
       '#sortable' => TRUE,
       '#progress_groups' => TRUE,
       '#empty' => $this->t('No data found for this table.'),
-      '#prototype' => $prototype,
+      '#prototype_id' => $prototype_id,
       '#download_label' => $this->getDownloadLabel() ?? $prototype->getTypeLabel(),
+      '#cache' => [
+        'tags' => $cache_tags,
+      ],
     ];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getCacheTags() {
+    $cache_tags = [];
+    $attachments = $this->getContextValue('attachments') ?? [];
+    foreach ($attachments as $attachment) {
+      if ($attachment instanceof Attachment) {
+        $cache_tags = Cache::mergeTags($cache_tags, $attachment->getValueCacheTags());
+      }
+    }
+    return $cache_tags;
   }
 
   /**
@@ -255,7 +279,7 @@ class AttachmentTable extends ConfigurationContainerItemPluginBase implements Co
     foreach ($attachments as $attachment) {
       $attachment_options[$attachment->id()] = [
         'id' => $attachment->id(),
-        'composed_reference' => $attachment->composed_reference,
+        'composed_reference' => $attachment->getComposedReference(),
         'description' => $attachment->getDescription(),
       ];
     }
@@ -355,7 +379,7 @@ class AttachmentTable extends ConfigurationContainerItemPluginBase implements Co
   /**
    * Get the available attachment prototypes.
    *
-   * @return \Drupal\ghi_plans\ApiObjects\AttachmentPrototype\AttachmentPrototype[]
+   * @return \Drupal\ghi_plans\ApiObjects\Prototypes\AttachmentPrototype[]
    *   An array of attachment prototype objects.
    */
   private function getAttachmentPrototypes() {
@@ -373,7 +397,7 @@ class AttachmentTable extends ConfigurationContainerItemPluginBase implements Co
    * @param int $prototype_id
    *   An optional prototype id to filter for.
    *
-   * @return \Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment[]
+   * @return \Drupal\ghi_plans\ApiObjects\Attachments\Attachment[]
    *   An array of data attachments.
    */
   public function getAttachmentsForEntities(array $entities, $prototype_id = NULL) {
@@ -381,8 +405,8 @@ class AttachmentTable extends ConfigurationContainerItemPluginBase implements Co
       return NULL;
     }
 
-    /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\AttachmentSearchQuery $query */
-    $query = $this->endpointQueryManager->createInstance('attachment_search_query');
+    /** @var \Drupal\ghi_plans\Plugin\FabricQuery\AttachmentQuery $query */
+    $query = $this->fabricQueryManager->createInstance('attachment');
     $attachments = $query->getAttachmentsForEntities($entities);
 
     // Filter the attachments.
@@ -402,12 +426,12 @@ class AttachmentTable extends ConfigurationContainerItemPluginBase implements Co
    * @param \Drupal\ghi_plans\ApiObjects\PlanEntityInterface $plan_entity
    *   An optional plan entity object.
    *
-   * @return \Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment[]
+   * @return \Drupal\ghi_plans\ApiObjects\Attachments\Attachment[]
    *   An array of data attachments.
    */
   private function filterAttachments(array $attachments, $prototype_id = NULL, $plan_entity = NULL) {
     $attachments = array_filter($attachments, function ($attachment) use ($prototype_id, $plan_entity) {
-      if (!$attachment instanceof DataAttachment) {
+      if (!$attachment instanceof Attachment) {
         return FALSE;
       }
       if ($prototype_id && $prototype_id != $attachment->getPrototype()?->id()) {
@@ -428,7 +452,7 @@ class AttachmentTable extends ConfigurationContainerItemPluginBase implements Co
   /**
    * Get the attachment prototype to use for the current element.
    *
-   * @return \Drupal\ghi_plans\ApiObjects\AttachmentPrototype\AttachmentPrototype|null
+   * @return \Drupal\ghi_plans\ApiObjects\Prototypes\AttachmentPrototype|null
    *   The attachment prototype object.
    */
   public function getAttachmentPrototype($attachments = NULL) {
@@ -442,7 +466,7 @@ class AttachmentTable extends ConfigurationContainerItemPluginBase implements Co
    * @param int $prototype_id
    *   The prototype id.
    *
-   * @return \Drupal\ghi_plans\ApiObjects\AttachmentPrototype\AttachmentPrototype|null
+   * @return \Drupal\ghi_plans\ApiObjects\Prototypes\AttachmentPrototype|null
    *   The attachment prototype object.
    */
   public function getAttachmentPrototypeById($prototype_id) {
@@ -537,9 +561,9 @@ class AttachmentTable extends ConfigurationContainerItemPluginBase implements Co
     if (!$prototype_id) {
       return NULL;
     }
-    /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\AttachmentPrototypeQuery $query */
-    $query = $this->endpointQueryManager->createInstance('attachment_prototype_query');
-    $original_prototype = $query->getPrototypeById($prototype_id);
+    /** @var \Drupal\ghi_plans\Plugin\FabricQuery\AttachmentPrototypeQuery $query */
+    $query = $this->fabricQueryManager->createInstance('attachment_prototype');
+    $original_prototype = $query->getPrototype($prototype_id);
     if (!$original_prototype) {
       return NULL;
     }

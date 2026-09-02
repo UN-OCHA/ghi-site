@@ -1,0 +1,23 @@
+uuid: 0c1446aa-6d41-4ad4-91cf-1e17137027f8
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.base_object.field_funding_total
+    - ghi_base_objects.base_object_type.plan
+id: base_object.plan.field_funding_total
+field_name: field_funding_total
+entity_type: base_object
+bundle: plan
+label: 'Funding (Total)'
+description: 'The total funding is set and updated automatically by a cron job.'
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  min: null
+  max: null
+  prefix: ''
+  suffix: ''
+field_type: decimal

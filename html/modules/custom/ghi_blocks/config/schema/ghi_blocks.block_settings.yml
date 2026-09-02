@@ -1,0 +1,7 @@
+ghi_blocks.block_settings:
+  type: config_object
+  label: 'GHI Block settings'
+  mapping:
+    lazy_load:
+      type: boolean
+      label: 'Lazy load blocks'

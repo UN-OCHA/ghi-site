@@ -4,8 +4,11 @@ namespace Drupal\ghi_blocks\Plugin\Block\Plan;
 
 use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Component\Utility\Html;
+use Drupal\Core\Block\Attribute\Block;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Plugin\Context\EntityContextDefinition;
 use Drupal\Core\Render\Markup;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\ghi_blocks\Interfaces\AttachmentTableInterface;
 use Drupal\ghi_blocks\Interfaces\ConfigurableTableBlockInterface;
 use Drupal\ghi_blocks\Interfaces\MultiStepFormBlockInterface;
@@ -14,50 +17,28 @@ use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
 use Drupal\ghi_blocks\Traits\AttachmentTableTrait;
 use Drupal\ghi_form_elements\Helpers\FormElementHelper;
 use Drupal\ghi_form_elements\Traits\ConfigurationContainerTrait;
-use Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment;
+use Drupal\ghi_plans\ApiObjects\Attachments\Attachment;
+use Drupal\ghi_plans\ApiObjects\Entities\EntityObjectInterface;
 use Drupal\ghi_plans\ApiObjects\Entities\PlanEntity;
+use Drupal\ghi_plans\ApiObjects\PlanEntityInterface;
 use Drupal\hpc_api\Helpers\ArrayHelper;
-use Drupal\hpc_api\Query\EndpointQuery;
+use Drupal\hpc_common\Plugin\HPCBlockMetadata;
 use Drupal\hpc_downloads\Interfaces\HPCDownloadExcelInterface;
 use Drupal\hpc_downloads\Interfaces\HPCDownloadPNGInterface;
 
 /**
  * Provides a 'PlanEntityAttachmentsTable' block.
- *
- * @Block(
- *  id = "plan_entity_attachments_table",
- *  admin_label = @Translation("Entity Attachments Table"),
- *  category = @Translation("Plan elements"),
- *  data_sources = {
- *    "entities" = "plan_entities_query",
- *    "entity" = "entity_query",
- *    "attachment" = "attachment_query",
- *    "attachment_search" = "attachment_search_query",
- *    "attachment_prototype" = "plan_attachment_prototype_query",
- *  },
- *  default_title = @Translation("Indicator overview"),
- *  context_definitions = {
- *    "node" = @ContextDefinition("entity:node", label = @Translation("Node")),
- *    "plan" = @ContextDefinition("entity:base_object", label = @Translation("Plan"), constraints = { "Bundle": "plan" }),
- *    "plan_cluster" = @ContextDefinition("entity:base_object", label = @Translation("Cluster"), constraints = { "Bundle": "governing_entity" }, required =  FALSE)
- *  },
- *  config_forms = {
- *    "attachments" = {
- *      "title" = @Translation("Attachments"),
- *      "callback" = "attachmentsForm"
- *    },
- *    "table" = {
- *      "title" = @Translation("Table"),
- *      "callback" = "tableForm"
- *    },
- *    "display" = {
- *      "title" = @Translation("Display"),
- *      "callback" = "displayForm",
- *      "base_form" = TRUE
- *    }
- *  }
- * )
  */
+#[Block(
+  id: 'plan_entity_attachments_table',
+  admin_label: new TranslatableMarkup('Entity Attachments Table'),
+  category: new TranslatableMarkup('Plan elements'),
+  context_definitions: [
+    'node' => new EntityContextDefinition('entity:node', new TranslatableMarkup('Node')),
+    'plan' => new EntityContextDefinition('entity:base_object', new TranslatableMarkup('Plan'), constraints: ['Bundle' => 'plan']),
+    'plan_cluster' => new EntityContextDefinition('entity:base_object', new TranslatableMarkup('Cluster'), required: FALSE, constraints: ['Bundle' => 'governing_entity']),
+  ],
+)]
 class PlanEntityAttachmentsTable extends GHIBlockBase implements ConfigurableTableBlockInterface, MultiStepFormBlockInterface, OverrideDefaultTitleBlockInterface, AttachmentTableInterface, HPCDownloadExcelInterface, HPCDownloadPNGInterface {
 
   use ConfigurationContainerTrait;
@@ -72,6 +53,35 @@ class PlanEntityAttachmentsTable extends GHIBlockBase implements ConfigurableTab
    * @var bool
    */
   private $isExport = FALSE;
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function metadata(): ?HPCBlockMetadata {
+    return new HPCBlockMetadata(
+      defaultTitle: 'Indicator overview',
+      dataSources: [
+        'entities' => 'fabric_query:entity',
+        'attachment' => 'fabric_query:attachment',
+        'attachment_prototype' => 'fabric_query:attachment_prototype',
+      ],
+      configForms: [
+        'attachments' => [
+          'title' => 'Attachments',
+          'callback' => 'attachmentsForm',
+        ],
+        'table' => [
+          'title' => 'Table',
+          'callback' => 'tableForm',
+        ],
+        'display' => [
+          'title' => 'Display',
+          'callback' => 'displayForm',
+          'base_form' => TRUE,
+        ],
+      ]
+    );
+  }
 
   /**
    * {@inheritdoc}
@@ -125,14 +135,15 @@ class PlanEntityAttachmentsTable extends GHIBlockBase implements ConfigurableTab
    * @return \Drupal\ghi_plans\ApiObjects\Entities\EntityObjectInterface|null
    *   The entity object.
    */
-  private function getCurrentEntity() {
+  private function getCurrentEntity(): ?EntityObjectInterface {
     $entity_id = $this->getCurrentEntityId();
     if (!$entity_id) {
       return NULL;
     }
-    /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\EntityQuery $query */
-    $query = $this->getQueryHandler('entity');
-    return $query->getEntity('planEntity', $entity_id) ?? $query->getEntity('governingEntity', $entity_id);
+    /** @var \Drupal\ghi_plans\Plugin\FabricQuery\EntityQuery $query */
+    $query = $this->getQueryHandler('entities');
+    $entity = $query->getEntity(PlanEntityInterface::ENTITY_TYPE_PLAN_ENTITY, $entity_id) ?? $query->getEntity(PlanEntityInterface::ENTITY_TYPE_GOVERNING_ENTITY, $entity_id);
+    return $entity instanceof EntityObjectInterface ? $entity : NULL;
   }
 
   /**
@@ -176,10 +187,11 @@ class PlanEntityAttachmentsTable extends GHIBlockBase implements ConfigurableTab
       return NULL;
     }
 
-    /** @var \Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment[] $attachments */
+    /** @var \Drupal\ghi_plans\ApiObjects\Attachments\Attachment[] $attachments */
     if ($this->isGroupedTable()) {
       $attachments = $this->getAttachmentsForCurrentEntity();
     }
+    $this->prefetchDisaggregatedDataAvailability($attachments, $columns);
 
     $context = $this->getBlockContext();
     $current_entity_id = NULL;
@@ -190,14 +202,16 @@ class PlanEntityAttachmentsTable extends GHIBlockBase implements ConfigurableTab
 
       $context['attachment'] = $attachment;
 
-      if (!$this->isGroupedTable() && (empty($current_entity_id) || $current_entity_id != $attachment->source->entity_id) && in_array($attachment->source->entity_id, $entity_id_options)) {
+      $source_entity_id = $attachment->getSourceEntityId();
+      $is_new_source_entity = empty($current_entity_id) || $current_entity_id != $source_entity_id;
+      if (!$this->isGroupedTable() && $is_new_source_entity && in_array($source_entity_id, $entity_id_options)) {
         $entity = $attachment->getSourceEntity();
-        $current_entity_id = $attachment->source->entity_id;
+        $current_entity_id = $source_entity_id;
         $rows[] = [
           [
             'data' => new FormattableMarkup('@composed_reference: @description', [
-              '@composed_reference' => $entity->composed_reference,
-              '@description' => $entity->description ?? '',
+              '@composed_reference' => $entity->getComposedReference(),
+              '@description' => $entity->getDescription() ?? '',
             ]),
             'colspan' => count($columns),
             'class' => 'group-name',
@@ -247,9 +261,9 @@ class PlanEntityAttachmentsTable extends GHIBlockBase implements ConfigurableTab
   private function getAttachmentsForCurrentEntity() {
     $attachments = $this->getSelectedAttachments() ?? [];
     $entity_id = $this->getCurrentEntityId();
-    $attachments = array_filter($attachments, function (DataAttachment $attachment) use ($entity_id) {
+    $attachments = array_filter($attachments, function (Attachment $attachment) use ($entity_id) {
       $entity = $attachment->getSourceEntity();
-      if (!$entity) {
+      if (!$entity instanceof EntityObjectInterface) {
         return NULL;
       }
       if ($entity->id() == $entity_id) {
@@ -274,10 +288,13 @@ class PlanEntityAttachmentsTable extends GHIBlockBase implements ConfigurableTab
     $entities = [];
     foreach ($attachments as $attachment) {
       $entity = $attachment->getSourceEntity();
+      if (!$entity instanceof EntityObjectInterface) {
+        continue;
+      }
       $entities[$entity->id()] = $entity;
     }
     // Sort the entities.
-    ArrayHelper::sortObjectsByStringProperty($entities, 'sort_key', EndpointQuery::SORT_ASC);
+    ArrayHelper::sortObjectsByStringProperty($entities, 'sort_key', SORT_ASC);
     return $entities;
   }
 
@@ -292,31 +309,15 @@ class PlanEntityAttachmentsTable extends GHIBlockBase implements ConfigurableTab
     $entity_options = [];
     foreach ($entities as $entity) {
       if ($entity instanceof PlanEntity) {
-        // @codingStandardsIgnoreStart
-        // if ($parent_id = $entity->getMainLevelParentId()) {
-        //   $parent_entity = PlanEntityHelper::getPlanEntity($parent_id);
-        //   $parent_entity_name = $parent_entity->getEntityName();
-        //   $group_name = $parent_entity->getGroupName();
-        //   $entity_options[$group_name] = $entity_options[$group_name] ?? [];
-        //   $entity_options[$group_name][$parent_entity->id()] = $parent_entity_name;
-        //   ksort($entity_options[$group_name]);
-        // }
-        // else {
-        //   $group_name = $entity->getGroupName();
-        //   $entity_options[$group_name] = $entity_options[$group_name] ?? [];
-        //   $entity_options[$group_name][$entity->id()] = $entity->getEntityName();
-        //   ksort($entity_options[$group_name]);
-        // }
-        // @codingStandardsIgnoreEnd
         $group_name = $entity->getGroupName();
         $entity_options[$group_name] = $entity_options[$group_name] ?? [];
-        $entity_options[$group_name][$entity->id()] = $entity->getEntityName();
+        $entity_options[$group_name][$entity->id()] = $entity->getDisplayName();
         ksort($entity_options[$group_name]);
       }
       else {
-        $entity_name = $entity->getEntityName();
+        $entity_name = $entity->getDisplayName();
         $entity_options[$entity_name] = $entity_options[$entity_name] ?? [];
-        $entity_options[$entity_name][$entity->id()] = $entity->getEntityName();
+        $entity_options[$entity_name][$entity->id()] = $entity->getDisplayName();
         ksort($entity_options[$entity_name]);
       }
     }
@@ -331,7 +332,7 @@ class PlanEntityAttachmentsTable extends GHIBlockBase implements ConfigurableTab
    */
   private function getCurrentEntityOptionsFlat() {
     return array_map(function ($entity) {
-      return $entity->getEntityName();
+      return $entity->getDisplayName();
     }, $this->getCurrentEntities());
   }
 
@@ -345,7 +346,7 @@ class PlanEntityAttachmentsTable extends GHIBlockBase implements ConfigurableTab
     // Get the attachments and configured columns.
     $entity_options = $this->getCurrentEntityOptionsGrouped();
     $current_entity = $this->getCurrentEntity();
-    $entity_description = $current_entity?->description ?? NULL;
+    $entity_description = $current_entity?->getDescription();
 
     $build = [
       '#type' => 'container',
@@ -360,7 +361,7 @@ class PlanEntityAttachmentsTable extends GHIBlockBase implements ConfigurableTab
         '#uri' => $this->getCurrentUri(),
       ],
       [
-        '#markup' => Markup::create($entity_description),
+        '#markup' => Markup::create((string) $entity_description),
       ],
     ];
     if ($current_entity instanceof PlanEntity && $contributes_to = $this->buildContributesToHeading($current_entity)) {
@@ -397,6 +398,16 @@ class PlanEntityAttachmentsTable extends GHIBlockBase implements ConfigurableTab
         'default_entity' => NULL,
       ],
     ];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function canShowSubform(array $form, FormStateInterface $form_state, $subform_key) {
+    if (empty($this->getSelectedAttachments())) {
+      return $subform_key == 'attachments';
+    }
+    return TRUE;
   }
 
   /**
@@ -552,7 +563,7 @@ class PlanEntityAttachmentsTable extends GHIBlockBase implements ConfigurableTab
   /**
    * Get the attachment objects selected for the current block.
    *
-   * @return \Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment[]
+   * @return \Drupal\ghi_plans\ApiObjects\Attachments\Attachment[]
    *   An array of attachment objects.
    */
   private function getSelectedAttachments() {
@@ -561,12 +572,12 @@ class PlanEntityAttachmentsTable extends GHIBlockBase implements ConfigurableTab
     if (empty($attachment_ids)) {
       return NULL;
     }
-    /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\AttachmentSearchQuery $query */
-    $query = $this->getQueryHandler('attachment_search');
+    /** @var \Drupal\ghi_plans\Plugin\FabricQuery\AttachmentQuery $query */
+    $query = $this->getQueryHandler('attachment');
     $attachments = $query->getAttachmentsById($attachment_ids);
     // Filter out non-data attachments.
     $attachments = array_filter($attachments, function ($attachment) {
-      return $attachment instanceof DataAttachment && !empty($attachment->getSourceEntity());
+      return $attachment instanceof Attachment && $attachment->getSourceEntity() instanceof EntityObjectInterface;
     });
     $this->groupAndSortAttachments($attachments);
     return $attachments;
@@ -575,7 +586,7 @@ class PlanEntityAttachmentsTable extends GHIBlockBase implements ConfigurableTab
   /**
    * Group and sort attachments.
    *
-   * @param \Drupal\ghi_plans\ApiObjects\Attachments\DataAttachment[] $attachments
+   * @param \Drupal\ghi_plans\ApiObjects\Attachments\Attachment[] $attachments
    *   The attachments to group and sort.
    */
   private function groupAndSortAttachments(array &$attachments) {
@@ -591,11 +602,11 @@ class PlanEntityAttachmentsTable extends GHIBlockBase implements ConfigurableTab
       $entities[$entity_id]['attachments'][] = $attachment;
     }
     uasort($entities, function ($_a, $_b) {
-      return strnatcmp($_a['entity']->sort_key, $_b['entity']->sort_key);
+      return strnatcmp($_a['entity']->getSortKey(), $_b['entity']->getSortKey());
     });
     $attachments = [];
     foreach ($entities as $_entity) {
-      uasort($_entity['attachments'], function (DataAttachment $attachment_a, DataAttachment $attachment_b) {
+      uasort($_entity['attachments'], function (Attachment $attachment_a, Attachment $attachment_b) {
         return strnatcmp($attachment_a->getTitle(), $attachment_b->getTitle());
       });
       $attachments = array_merge($attachments, $_entity['attachments']);
@@ -610,18 +621,19 @@ class PlanEntityAttachmentsTable extends GHIBlockBase implements ConfigurableTab
       return NULL;
     }
     $entity_ids = array_map(function ($entity) {
-      return $entity->id;
+      return $entity->id();
     }, $entities);
-    $filter = array_filter([
-      'type' => 'indicator',
-    ]);
+    $attachment_type = 'indicator';
 
-    /** @var \Drupal\ghi_plans\Plugin\EndpointQuery\AttachmentSearchQuery $query */
-    $query = $this->getQueryHandler('attachment_search');
-    $attachments = $query->getAttachmentsByObject('governingEntity', $entity_ids, $filter) + $query->getAttachmentsByObject('planEntity', $entity_ids, $filter);
+    /** @var \Drupal\ghi_plans\Plugin\FabricQuery\AttachmentQuery $query */
+    $query = $this->getQueryHandler('attachment');
+    $attachments = $query->getAttachmentsByObject([
+      PlanEntityInterface::ENTITY_TYPE_GOVERNING_ENTITY,
+      PlanEntityInterface::ENTITY_TYPE_PLAN_ENTITY,
+    ], $entity_ids, $attachment_type);
     // Filter out non-data attachments.
     $attachments = array_filter($attachments, function ($attachment) {
-      return $attachment instanceof DataAttachment;
+      return $attachment instanceof Attachment;
     });
     return $attachments;
   }

@@ -1,5 +1,6 @@
 .select-wrappers {
   position: absolute;
+  z-index: 900;
   top: -1.8rem;
   right: 0;
   display: inline-block;
@@ -21,7 +22,31 @@ div.ajax-switcher-wrapper {
     margin: 0 1rem 0 0;
 
     .form-item {
+      position: relative;
       display: inline-block;
+      margin: 0;
+
+      & > .select2-container--open {
+        z-index: 901;
+        top: 100% !important;
+        right: 0 !important;
+        bottom: auto !important;
+        left: auto !important;
+      }
+    }
+
+    select {
+      width: auto;
+      max-width: min(28rem, calc(100vw - 2rem));
+      min-height: 1.4rem;
+      padding: 0 24px 0 0;
+      cursor: pointer;
+      white-space: nowrap;
+      color: var(--ghi-default-text-color);
+      border: 0;
+      background-color: transparent;
+      font-size: var(--cd-font-size--small);
+      font-weight: bold;
     }
 
     .select2,
@@ -32,6 +57,10 @@ div.ajax-switcher-wrapper {
       white-space: nowrap;
       border: none;
       background-color: transparent;
+
+      &.select2-selection--single {
+        position: relative;
+      }
 
       .select2-selection__rendered {
         display: inline-block;
@@ -50,6 +79,28 @@ div.ajax-switcher-wrapper {
           display: none;
         }
       }
+      .select2-selection__arrow {
+        position: absolute;
+        top: 50%;
+        right: 0;
+        display: block;
+        width: 16px;
+        height: 16px;
+        transform: translateY(-50%);
+
+        b {
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          width: 0;
+          height: 0;
+          margin: 0;
+          transform: translate(-50%, -25%);
+          border-width: 5px 4px 0 4px;
+          border-style: solid;
+          border-color: var(--ghi-default-text-color) transparent transparent transparent;
+        }
+      }
       .icon {
         position: absolute;
         top: 13px;
@@ -63,6 +114,8 @@ div.ajax-switcher-wrapper {
 }
 
 .select2-dropdown {
+  z-index: 901;
+
   &.select2-dropdown--below {
     border-top: 0.5px solid;
   }
@@ -86,14 +139,19 @@ div.ajax-switcher-wrapper {
       }
     }
 
-    ul.selectric-group {
-      li {
-        padding-left: 2rem;
-        font-weight: normal;
+    .select2-results__option--group {
+      padding: 0;
 
-        &.selectric-group-label {
-          padding-left: 18px;
-          font-weight: bold;
+      .select2-results__group {
+        display: block;
+        padding: 8px 18px;
+        font-weight: bold;
+      }
+
+      .select2-results__options--nested {
+        .select2-results__option {
+          padding-left: 2rem;
+          font-weight: normal;
         }
       }
     }

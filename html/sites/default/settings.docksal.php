@@ -42,6 +42,19 @@ $config['ghi_content.remote_sources'] = [
   ],
 ];
 
+$config['fabric_graphql.settings'] = [
+  'workspace_id' => getenv('FABRIC_WORKSPACE_ID'),
+  'endpoint_id' => getenv('FABRIC_ENDPOINT_ID'),
+  'host' => getenv('FABRIC_HOST'),
+  'tenant_id' => getenv('FABRIC_TENANT_ID'),
+  'client_id' => getenv('FABRIC_CLIENT_ID'),
+  'client_secret' => getenv('FABRIC_CLIENT_SECRET'),
+];
+
+// Keep local Docksal requests direct so developers do not need cron or queue
+// processing to see current remote data while working.
+$config['hpc_remote_data_cache.settings']['enabled'] = FALSE;
+
 // Solr config.
 $config['search_api.server.solr_server']['backend_config']['connector'] = 'standard';
 $config['search_api.server.solr_server']['backend_config']['connector_config']['host'] = 'solr';

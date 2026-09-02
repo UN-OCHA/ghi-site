@@ -2,7 +2,7 @@
 
   'use strict';
 
-  const REGEXP = '/[.*+?^${}()|[\]\\]/g';
+  const REGEXP_SPECIAL_CHARS = /[.*+?^${}()|[\]\\]/g;
 
   if (!window.ghi) {
     window.ghi = {};
@@ -25,7 +25,6 @@
      *   The search options.
      */
     constructor (state, options) {
-      let self = this;
       this.state = state;
 
       let defaults = {
@@ -37,7 +36,7 @@
       };
       this.options = Object.assign({}, defaults, options);
       this.updateSearchIndex(this.state.getLocations(false));
-      this.state.getMap().on('data', (event) => {
+      this.dataHandler = (event) => {
         let source_id = event.sourceId ?? null;
         let source_loaded = event.isSourceLoaded ?? false;
         let transition = event.source?.data?.properties?.transition ?? false;
@@ -46,8 +45,23 @@
           // loaded and we are not currently in a transition animation.
           return;
         }
-        self.updateSearchIndex();
-      });
+        this.updateSearchIndex();
+      };
+      this.windowClickHandler = (event) => this.handleWindowClick(event);
+      this.state.getMap().on('data', this.dataHandler);
+    }
+
+    /**
+     * Escape text for use in a regular expression.
+     *
+     * @param {String} text
+     *   The search text.
+     *
+     * @returns {String}
+     *   Escaped search text.
+     */
+    escapeSearchText = function (text) {
+      return text.replace(REGEXP_SPECIAL_CHARS, '\\$&');
     }
 
     /**
@@ -61,7 +75,7 @@
         this.searchIndex[location.object_id] = {
           loc: location.latLng,
           object_id: location.object_id,
-          object_title: location.object_title ?? location.location_name,
+          object_title: location.object_title ?? location.name,
           pcode: location.pcode ?? null,
           plan_type: location.plan_type ?? null,
           admin_level: location.admin_level ?? null,
@@ -114,9 +128,14 @@
       wrapper.appendChild(input);
 
       let cancel = document.createElement('a');
-      cancel.innerHTML = '<span class="material-icon">cancel</span>';
       cancel.className = 'search-cancel';
       cancel.setAttribute('title', Drupal.t('Cancel'));
+      let cancelIcon = document.createElement('span');
+      cancelIcon.className = 'material-icon';
+      cancelIcon.dataset.hpcIcon = 'cancel';
+      cancelIcon.setAttribute('aria-hidden', 'true');
+      cancel.appendChild(cancelIcon);
+      Drupal.attachBehaviors(cancel);
       cancel.addEventListener('click', (e) => this.cancelSearch());
       wrapper.appendChild(cancel);
 
@@ -137,7 +156,7 @@
       alert.setAttribute('style', 'display: none');
       this._container.appendChild(alert);
 
-      window.addEventListener('click', (e) => this.handleWindowClick(e));
+      window.addEventListener('click', this.windowClickHandler);
 
       return this._container;
     }
@@ -149,7 +168,11 @@
      * called by Map#removeControl internally.
      */
     onRemove = function () {
-      this._container.parentNode.removeChild(this._container);
+      window.removeEventListener('click', this.windowClickHandler);
+      this.state.getMap()?.off('data', this.dataHandler);
+      if (this._container.parentNode) {
+        this._container.parentNode.removeChild(this._container);
+      }
       this._map = undefined;
     }
 
@@ -225,11 +248,11 @@
       let records = this.searchIndex;
       var results = {};
 
-      text = text.replace(REGEXP, '');  // Sanitize remove all special characters.
-      if (text === '') {
+      let search_text = this.escapeSearchText(text);
+      if (search_text === '') {
         return [];
       }
-      let regular_expression = new RegExp(this.options.initial ? '^' : '' + text, !this.options.casesensitive ? 'i' : undefined);
+      let regular_expression = new RegExp((this.options.initial ? '^' : '') + search_text, !this.options.casesensitive ? 'i' : undefined);
       for (var object_id in records) {
         let record = records[object_id];
         if (regular_expression.test(record.object_title)) {
@@ -310,7 +333,7 @@
      */
     buildResultItem = function (record) {
       let input = $(this._container).find('.search-input').val();
-      let search_text = input.replace(REGEXP, '');
+      let search_text = this.escapeSearchText(input);
       let regex = new RegExp(search_text, "gi");
       let state = this.state;
       let item = document.createElement('li');

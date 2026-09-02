@@ -3,7 +3,6 @@
 namespace Drupal\ghi_plans\Traits;
 
 use Drupal\ghi_plans\ApiObjects\Attachments\CaseloadAttachmentInterface;
-use Drupal\hpc_api\Query\EndpointQuery;
 use Drupal\hpc_common\Helpers\ArrayHelper;
 
 /**
@@ -20,7 +19,7 @@ trait AttachmentFilterTrait {
    * @return string
    *   The type used in the API.
    */
-  private function mapAttachmentType($type) {
+  private function mapAttachmentType($type): string {
     $type_map = [
       'caseload' => 'caseLoad',
     ];
@@ -36,7 +35,7 @@ trait AttachmentFilterTrait {
    * @return array
    *   A prepared filter array.
    */
-  private function prepareAttachmentFilter(array $filter) {
+  private function prepareAttachmentFilter(array $filter): array {
     if (empty($filter)) {
       return $filter;
     }
@@ -64,7 +63,7 @@ trait AttachmentFilterTrait {
    * @return array
    *   An array with the attachments who match the filter.
    */
-  public function filterAttachments(array $attachments, array $filter) {
+  public function filterAttachments(array $attachments, array $filter): array {
     return ArrayHelper::filterArray($attachments, $this->prepareAttachmentFilter($filter));
   }
 
@@ -73,19 +72,19 @@ trait AttachmentFilterTrait {
    *
    * This is currently called from \Drupal\ghi_plans\Entity\Plan and from
    * \Drupal\ghi_plans\ApiObjects\Partials with different arguments. The former
-   * passes in an array of first-level DataAttachment objects, whereas the
+   * passes in an array of first-level Attachment objects, whereas the
    * latter passes in an array of partial attachment data coming from the plan
    * overview endpoint. This function tries to handle both.
    *
    * @param \Drupal\ghi_plans\ApiObjects\Attachments\CaseloadAttachmentInterface[] $caseloads
    *   A list of caseload attachment objects.
    * @param int $attachment_id
-   *   An attachment id.
+   *   Optional attachment id.
    *
    * @return \Drupal\ghi_plans\ApiObjects\Attachments\CaseloadAttachmentInterface|null
    *   A caseload object or NULL.
    */
-  public function findPlanCaseload(array $caseloads, $attachment_id) {
+  public function findPlanCaseload(array $caseloads, ?int $attachment_id = NULL): ?CaseloadAttachmentInterface {
     $caseload = NULL;
 
     $caseloads = array_filter($caseloads, function ($_caseload) {
@@ -109,7 +108,7 @@ trait AttachmentFilterTrait {
       // Or we try to find the real plan level caseload attachment by looking
       // for the ones with PiN data.
       $matching_caseloads = array_filter($caseloads, function ($_caseload) {
-        return in_array('inNeed', $_caseload->getOriginalFieldTypes());
+        return in_array('inNeed', $_caseload->getFieldTypes());
       });
       $caseload = !empty($matching_caseloads) ? reset($matching_caseloads) : NULL;
     }
@@ -117,7 +116,7 @@ trait AttachmentFilterTrait {
     // Or we try to deduce the suitable attachment by selecting the one with
     // the lowest custom reference.
     if ($caseload === NULL) {
-      ArrayHelper::sortObjectsByMethod($caseloads, 'getCustomId', EndpointQuery::SORT_ASC, SORT_STRING);
+      ArrayHelper::sortObjectsByMethod($caseloads, 'getCustomId', SORT_ASC, SORT_STRING);
       $caseload = count($caseloads) ? reset($caseloads) : NULL;
     }
     return $caseload;

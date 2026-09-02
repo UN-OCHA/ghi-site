@@ -1,0 +1,123 @@
+<?php
+
+namespace Drupal\ghi_plans\Form;
+
+use Drupal\Core\Form\FormStateInterface;
+use Drupal\ghi_plans\ApiObjects\PlanEntityInterface;
+
+/**
+ * Provides a form to lookup plan entity data.
+ */
+class PlanEntityLookupForm extends BaseLookupForm {
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getFormId(): string {
+    return 'entity_lookup_form';
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function buildForm(array $form, FormStateInterface $form_state): array {
+    $form['filter'] = [
+      '#type' => 'container',
+      '#tree' => FALSE,
+      '#attributes' => [
+        'style' => 'display: flex; gap: 1rem; flex-wrap: wrap; align-items: anchor-center;',
+      ],
+    ];
+    $form['filter']['entity_type'] = [
+      '#type' => 'select',
+      '#title' => $this->t('Entity type'),
+      '#options' => [
+        PlanEntityInterface::ENTITY_TYPE_PLAN => $this->t('Plan'),
+        PlanEntityInterface::ENTITY_TYPE_PLAN_ENTITY => $this->t('Plan entity'),
+        PlanEntityInterface::ENTITY_TYPE_GOVERNING_ENTITY => $this->t('Governing entity'),
+      ],
+    ];
+    $form['filter']['entity_id'] = [
+      '#type' => 'number',
+      '#title' => $this->t('Entity ID'),
+    ];
+    $form['filter']['submit'] = [
+      '#type' => 'submit',
+      '#value' => $this->t('Submit'),
+    ];
+
+    $entity_type = $form_state->getValue('entity_type');
+    $entity_id = $form_state->getValue('entity_id');
+    if (!$entity_id) {
+      return $form;
+    }
+
+    if ($entity_type == PlanEntityInterface::ENTITY_TYPE_PLAN) {
+      $entity = $this->getPlanQuery()?->disableCache()->getPlan($entity_id) ?? NULL;
+    }
+    else {
+      $entities = $this->getEntityQuery()?->disableCache()->getEntities($entity_type, [$entity_id]) ?? [];
+      $entity = reset($entities);
+    }
+
+    if ($entity) {
+      $form['entity_type'] = [
+        '#type' => 'html_tag',
+        '#tag' => 'pre',
+        '#value' => $this->t('Entity type: @type', [
+          '@type' => get_class($entity),
+        ]),
+      ];
+      $form['data'] = [
+        '#type' => 'details',
+        '#title' => $this->t('Processed data'),
+        '#open' => TRUE,
+        'children' => [
+          '#type' => 'html_tag',
+          '#tag' => 'pre',
+          '#value' => print_r($entity->toArray(), TRUE),
+        ],
+      ];
+      $form['source_data'] = [
+        '#type' => 'details',
+        '#title' => $this->t('Source data'),
+        'children' => [
+          '#type' => 'html_tag',
+          '#tag' => 'pre',
+          '#value' => print_r($entity->getRawData(), TRUE),
+        ],
+      ];
+      $form['source_data_json'] = [
+        '#type' => 'details',
+        '#title' => $this->t('Source data (JSON)'),
+        'children' => [
+          '#type' => 'html_tag',
+          '#tag' => 'pre',
+          '#value' => json_encode($entity->getRawData(), JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE),
+        ],
+      ];
+
+      foreach ($this->getPublicMethodResults($entity) as $method_name => $result) {
+        $form['public_method_' . $method_name] = [
+          '#type' => 'details',
+          '#title' => $method_name,
+          'children' => [
+            '#type' => 'html_tag',
+            '#tag' => 'pre',
+            '#value' => print_r($result, TRUE),
+          ],
+        ];
+      }
+    }
+
+    return $form;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function submitForm(array &$form, FormStateInterface $form_state): void {
+    $form_state->setRebuild();
+  }
+
+}
