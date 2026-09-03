@@ -32,6 +32,9 @@
     "drupal/image_widget_crop": {
       "Issue #3401986: The containers summary text should not be overwritten": "https://www.drupal.org/files/issues/2023-11-15/3401986-2.patch"
     },
+    "drupal/layout_builder_ipe": {
+      "Issue #3620545: Preserve block content structure when adding enhanced UI controls": "patches/layout_builder_ipe-3620545-mr-11.patch"
+    },
     "drupal/page_manager": {
       "Issue #3176661: Allow to edit page title when using Layout Builder variant": "patches/page_manager-lb-title-3176661-mr45.patch"
     },

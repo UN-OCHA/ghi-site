@@ -1,6 +1,7 @@
 disable_layout_page: true
 hide_local_tasks_block: false
 show_discard_changes_link: true
+show_gin_lb_discard_button: true
 enhance_ui: true
 override_entity_changed_constraint: true
 non_concurrent_editing: true

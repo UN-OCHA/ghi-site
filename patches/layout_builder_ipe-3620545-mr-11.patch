@@ -1,0 +1,517 @@
+diff --git a/css/compatibility.css b/css/compatibility.css
+index 4458b60..130f78f 100644
+--- a/css/compatibility.css
++++ b/css/compatibility.css
+@@ -1,4 +1,6 @@
+-body:not(.layout-builder-ipe-editing) .layout-builder-block a.layout-builder__link--add.link-before,
+-body:not(.layout-builder-ipe-editing) .layout-builder-block a.layout-builder__link--add.link-after {
++/* Avoid layout shifts before behaviors move controls into their owning block. */
++a.layout-builder__link--add[data-layout-builder-ipe-block-uuid][hidden],
++body:not(.layout-builder-ipe-editing) a.layout-builder__link--add.link-before,
++body:not(.layout-builder-ipe-editing) a.layout-builder__link--add.link-after {
+   display: none !important;
+ }
+diff --git a/js/ipe.js b/js/ipe.js
+index 9f36484..0a979c5 100644
+--- a/js/ipe.js
++++ b/js/ipe.js
+@@ -269,15 +269,22 @@
+       }
+ 
+       $('body.layout-builder-ipe-editing .layout-builder__region').each(function () {
++        const $region = $(this);
+         const hasBlocks = $(this).find('.layout-builder-block').length > 0;
+         const $enhancedLinks = $('a.layout-builder__link--add.link-before, a.layout-builder__link--add.link-after', this);
+ 
+-        // Core hides every non-contextual child of a block when previews are
+-        // disabled. Move the enhanced controls out of the themed content
+-        // wrapper so that they can remain available around the placeholder.
++        // The server renders controls outside the block to leave its content
++        // untouched. Move them into the owning block for positioning and drag
++        // handling, but outside themed content so preview toggles retain them.
+         $enhancedLinks.each(function () {
+           const $link = $(this);
+-          $link.appendTo($link.closest('.layout-builder-block')).css('display', '');
++          const blockUuid = $link.attr('data-layout-builder-ipe-block-uuid');
++          const $block = blockUuid
++            ? $region.find(`[data-layout-block-uuid="${CSS.escape(blockUuid)}"]`).first()
++            : $link.closest('.layout-builder-block');
++          if ($block.length) {
++            $link.appendTo($block).removeAttr('hidden').css('display', '');
++          }
+         });
+ 
+         if (hasBlocks && enhanceUi && $enhancedLinks.length) {
+diff --git a/layout_builder_ipe.module b/layout_builder_ipe.module
+index 3e79253..9e057d2 100644
+--- a/layout_builder_ipe.module
++++ b/layout_builder_ipe.module
+@@ -16,6 +16,21 @@ use Drupal\layout_builder\Entity\LayoutEntityDisplayInterface;
+ use Drupal\layout_builder\Form\OverridesEntityForm;
+ use Drupal\layout_builder_ipe\Element\LayoutBuilderIpe;
+ 
++/**
++ * Implements hook_theme().
++ */
++function layout_builder_ipe_theme() {
++  return [
++    'layout_builder_ipe_enhanced_controls' => [
++      'variables' => [
++        'before' => NULL,
++        'children' => NULL,
++        'after' => NULL,
++      ],
++    ],
++  ];
++}
++
+ /**
+  * Implements hook_ajax_render_alter().
+  */
+diff --git a/src/EventSubscriber/BlockComponentRenderArray.php b/src/EventSubscriber/BlockComponentRenderArray.php
+index 760b6d3..793fa59 100644
+--- a/src/EventSubscriber/BlockComponentRenderArray.php
++++ b/src/EventSubscriber/BlockComponentRenderArray.php
+@@ -113,11 +113,12 @@ class BlockComponentRenderArray implements EventSubscriberInterface {
+       $before = $this->layoutBuilderUi->createAddButton($component, $section_storage, $delta, LayoutBuilderUi::BEFORE);
+       $after = $this->layoutBuilderUi->createAddButton($component, $section_storage, $delta, LayoutBuilderUi::AFTER);
+       if ($before || $after) {
+-        $content = $build['content'] ?? [];
+-        $build['content'] = [
+-          'layout_builder_ipe_before' => $before,
+-          'component' => $content,
+-          'layout_builder_ipe_after' => $after,
++        // Wrap the uncacheable preview component, not its content: block
++        // preprocess hooks need the original content structure, and the content
++        // may have render cache keys, a lazy builder, or element defaults.
++        $build['#theme_wrappers']['layout_builder_ipe_enhanced_controls'] = [
++          '#before' => $before,
++          '#after' => $after,
+         ];
+       }
+     }
+diff --git a/src/LayoutBuilder/LayoutBuilderUi.php b/src/LayoutBuilder/LayoutBuilderUi.php
+index 451f9db..dea36f3 100644
+--- a/src/LayoutBuilder/LayoutBuilderUi.php
++++ b/src/LayoutBuilder/LayoutBuilderUi.php
+@@ -155,6 +155,8 @@ class LayoutBuilderUi {
+           ],
+           'attributes' => [
+             'class' => $classes,
++            'data-layout-builder-ipe-block-uuid' => $component->getUuid(),
++            'hidden' => TRUE,
+             'data-dialog-type' => 'dialog',
+             'data-dialog-renderer' => 'off_canvas',
+           ],
+diff --git a/tests/src/FunctionalJavascript/LayoutBuilderIpeUiNodeTest.php b/tests/src/FunctionalJavascript/LayoutBuilderIpeUiNodeTest.php
+index 7b523e7..bccd3c9 100644
+--- a/tests/src/FunctionalJavascript/LayoutBuilderIpeUiNodeTest.php
++++ b/tests/src/FunctionalJavascript/LayoutBuilderIpeUiNodeTest.php
+@@ -278,6 +278,16 @@ class LayoutBuilderIpeUiNodeTest extends LayoutBuilderIpeUiBase {
+    * Tests enhanced add controls with content previews disabled.
+    */
+   public function testEnhancedControlsWithoutContentPreview(): void {
++    $section = new Section('layout_onecol');
++    foreach (['First block', 'Second block'] as $label) {
++      $section->appendComponent(new SectionComponent($this->container->get('uuid')->generate(), 'content', [
++        'id' => 'system_powered_by_block',
++        'label' => $label,
++        'label_display' => TRUE,
++        'provider' => 'system',
++      ]));
++    }
++    $this->nodeLb->set('layout_builder__layout', [$section])->save();
+     $this->drupalLogin($this->editor);
+     $this->setIpeSetting('enhance_ui', TRUE);
+ 
+@@ -290,6 +300,50 @@ class LayoutBuilderIpeUiNodeTest extends LayoutBuilderIpeUiBase {
+     $assert_session->waitForElementVisible('css', '#layout-builder-ipe-wrapper.edit-layout');
+ 
+     $assert_session->elementExists('css', '.layout-builder-block > a.layout-builder__link--add.link-before');
++    $blocks = $page->findAll('css', '.layout-builder__region > .layout-builder-block');
++    $this->assertCount(2, $blocks);
++    foreach ($blocks as $block) {
++      $controls = $block->findAll('css', ':scope > a[data-layout-builder-ipe-block-uuid]');
++      $this->assertCount(2, $controls);
++      foreach ($controls as $control) {
++        $this->assertSame($block->getAttribute('data-layout-block-uuid'), $control->getAttribute('data-layout-builder-ipe-block-uuid'));
++        $this->assertFalse($control->hasAttribute('hidden'));
++      }
++    }
++    $assert_session->elementNotExists('css', '.layout-builder__region > a[data-layout-builder-ipe-block-uuid]');
++
++    // Recreate the server-side placement, then reattach behaviors. Neither the
++    // pending controls nor their relocation should move blocks or the viewport.
++    $positions = $this->getSession()->evaluateScript(<<<'JS'
++      (() => {
++        const region = document.querySelector('.layout-builder__region');
++        const blocks = Array.from(region.querySelectorAll('.layout-builder-block'));
++        const measure = () => ({
++          scroll: window.scrollY,
++          blocks: blocks.map(block => {
++            const rect = block.getBoundingClientRect();
++            return [rect.x, rect.y, rect.width, rect.height];
++          }),
++        });
++        const mounted = measure();
++        blocks.forEach(block => {
++          const before = block.querySelector(':scope > a.link-before');
++          const after = block.querySelector(':scope > a.link-after');
++          before.hidden = true;
++          after.hidden = true;
++          block.before(before);
++          block.after(after);
++        });
++        const pending = measure();
++        const hidden = Array.from(region.querySelectorAll(':scope > a[data-layout-builder-ipe-block-uuid]'))
++          .every(link => getComputedStyle(link).display === 'none');
++        Drupal.attachBehaviors(region, drupalSettings);
++        return { mounted, pending, reattached: measure(), hidden };
++      })()
++      JS);
++    $this->assertTrue($positions['hidden']);
++    $this->assertSame($positions['mounted'], $positions['pending']);
++    $this->assertSame($positions['mounted'], $positions['reattached']);
+     $add_links = $page->findAll('css', 'a.layout-builder__link--add[data-layout-builder-ipe-processed]');
+     $this->assertNotEmpty($add_links);
+     foreach ($add_links as $add_link) {
+@@ -300,7 +354,8 @@ class LayoutBuilderIpeUiNodeTest extends LayoutBuilderIpeUiBase {
+     $page->find('css', '#layout-builder-content-preview')->uncheck();
+     $block = $assert_session->elementExists('css', '.layout-builder-block');
+     $block->mouseOver();
+-    $assert_session->waitForElementVisible('css', '.layout-builder-block > a.layout-builder__link--add.link-before');
++    $this->assertNotEmpty($assert_session->waitForElementVisible('css', '.layout-builder-block > a.layout-builder__link--add.link-before'));
++    $this->assertNotEmpty($assert_session->waitForElementVisible('css', '.layout-builder-block > a.layout-builder__link--add.link-after'));
+   }
+ 
+   /**
+diff --git a/tests/src/Unit/BlockComponentRenderArrayTest.php b/tests/src/Unit/BlockComponentRenderArrayTest.php
+index 485ce19..13abd5a 100644
+--- a/tests/src/Unit/BlockComponentRenderArrayTest.php
++++ b/tests/src/Unit/BlockComponentRenderArrayTest.php
+@@ -26,7 +26,7 @@ class BlockComponentRenderArrayTest extends UnitTestCase {
+   /**
+    * Tests a large layout is indexed once and buttons remain render arrays.
+    */
+-  public function testLayoutIsIndexedOnceAcrossComponentEvents(): void {
++  public function testLayoutIsIndexedOnceAndContentStructureIsPreserved(): void {
+     $components = [];
+     $sections = [];
+     for ($delta = 0; $delta < 100; $delta++) {
+@@ -78,10 +78,15 @@ class BlockComponentRenderArrayTest extends UnitTestCase {
+     $this->assertSame(['component-7', 7, LayoutBuilderUi::AFTER], $calls[15]);
+     $this->assertSame(['component-42', 42, LayoutBuilderUi::BEFORE], $calls[84]);
+     $this->assertSame(['component-42', 42, LayoutBuilderUi::AFTER], $calls[85]);
+-    $this->assertSame('before', $outputs[7]['content']['layout_builder_ipe_before']['#placement']);
+-    $this->assertSame(['#markup' => 'Original component-7'], $outputs[7]['content']['component']);
+-    $this->assertSame(['button:after'], $outputs[7]['content']['layout_builder_ipe_after']['#cache']['tags']);
+-    $this->assertSame(['#markup' => 'Original component-42'], $outputs[42]['content']['component']);
++    $this->assertSame('Original metadata', $outputs[7]['content']['#original_metadata']);
++    $this->assertSame(['#markup' => 'Original component-7'], $outputs[7]['content']['original_child']);
++    $this->assertArrayNotHasKey('component', $outputs[7]['content']);
++    $this->assertArrayNotHasKey('#theme_wrappers', $outputs[7]['content']);
++    $this->assertSame('Existing wrapper', $outputs[7]['#theme_wrappers']['container']['#attributes']['title']);
++    $wrapper = $outputs[7]['#theme_wrappers']['layout_builder_ipe_enhanced_controls'];
++    $this->assertSame('before', $wrapper['#before']['#placement']);
++    $this->assertSame(['button:after'], $wrapper['#after']['#cache']['tags']);
++    $this->assertSame(['#markup' => 'Original component-42'], $outputs[42]['content']['original_child']);
+     $this->assertContains('layout_builder_ipe/enhanced_ui', $outputs[42]['#attached']['library']);
+   }
+ 
+@@ -93,8 +98,16 @@ class BlockComponentRenderArrayTest extends UnitTestCase {
+     $event->method('getComponent')->willReturn($component);
+     $event->method('getContexts')->willReturn(['view_mode' => $view_mode_context]);
+     $event->method('getBuild')->willReturn([
++      '#theme_wrappers' => [
++        'container' => [
++          '#attributes' => ['title' => 'Existing wrapper'],
++        ],
++      ],
+       'content' => [
+-        '#markup' => 'Original ' . $component->getUuid(),
++        '#original_metadata' => 'Original metadata',
++        'original_child' => [
++          '#markup' => 'Original ' . $component->getUuid(),
++        ],
+       ],
+     ]);
+     $event->method('inPreview')->willReturn(TRUE);
+diff --git a/templates/layout-builder-ipe-enhanced-controls.html.twig b/templates/layout-builder-ipe-enhanced-controls.html.twig
+new file mode 100644
+index 0000000..5249802
+--- /dev/null
++++ b/templates/layout-builder-ipe-enhanced-controls.html.twig
+@@ -0,0 +1,14 @@
++{#
++/**
++ * @file
++ * Wraps a Layout Builder component with enhanced placement controls.
++ *
++ * Available variables:
++ * - before: The add-block control before the component.
++ * - children: The complete rendered block, including its theme wrappers.
++ * - after: The add-block control after the component.
++ */
++#}
++{{ before }}
++{{ children }}
++{{ after }}
+diff --git a/tests/src/Kernel/BlockComponentRenderArrayTest.php b/tests/src/Kernel/BlockComponentRenderArrayTest.php
+new file mode 100644
+index 0000000..ef3c194
+--- /dev/null
++++ b/tests/src/Kernel/BlockComponentRenderArrayTest.php
+@@ -0,0 +1,253 @@
++<?php
++
++namespace Drupal\Tests\layout_builder_ipe\Kernel;
++
++use Drupal\Core\Access\AccessResult;
++use Drupal\Core\Block\BlockPluginInterface;
++use Drupal\Core\Cache\Cache;
++use Drupal\Core\Config\ConfigFactoryInterface;
++use Drupal\Core\Config\ImmutableConfig;
++use Drupal\Core\Entity\EntityInterface;
++use Drupal\Core\Security\TrustedCallbackInterface;
++use Drupal\Core\Session\AccountInterface;
++use Drupal\KernelTests\KernelTestBase;
++use Drupal\layout_builder\Event\SectionComponentBuildRenderArrayEvent;
++use Drupal\layout_builder\EventSubscriber\BlockComponentRenderArray as CoreBlockComponentRenderArray;
++use Drupal\layout_builder\Section;
++use Drupal\layout_builder\SectionComponent;
++use Drupal\layout_builder\SectionStorageInterface;
++use Drupal\layout_builder_ipe\EventSubscriber\BlockComponentRenderArray;
++use Drupal\layout_builder_ipe\LayoutBuilder\LayoutBuilderUi;
++use Drupal\layout_builder_ipe\LayoutBuilderIpeAccess;
++use Drupal\layout_builder_ipe\LayoutBuilderIpeContext;
++use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
++
++/**
++ * Tests enhanced controls with Drupal's renderer and block preprocessing.
++ *
++ * @group layout_builder_ipe
++ */
++#[RunTestsInSeparateProcesses]
++class BlockComponentRenderArrayTest extends KernelTestBase implements TrustedCallbackInterface {
++
++  /**
++   * {@inheritdoc}
++   */
++  protected static $modules = [
++    'system',
++    'user',
++    'field',
++    'text',
++    'filter',
++    'block',
++    'contextual',
++    'layout_discovery',
++    'layout_builder',
++    'layout_builder_ipe',
++  ];
++
++  /**
++   * Number of times cacheable content was actually rendered.
++   */
++  protected static int $contentBuilds = 0;
++
++  /**
++   * Number of times the lazy builder was called.
++   */
++  protected static int $lazyBuilds = 0;
++
++  /**
++   * Tests block preprocessing can move a direct child after the main content.
++   */
++  public function testPreprocessedFootnoteFollowsContent(): void {
++    $registry = $this->container->get('theme.registry')->getRuntime();
++    $definition = $registry->get('block');
++    $definition['preprocess functions'][] = static::class . '::preprocessBlock';
++    $registry->set('block', $definition);
++
++    foreach ([FALSE, TRUE] as $preview) {
++      $build = $this->createComponentBuild([
++        'comment' => ['#markup' => 'Footnote'],
++        'figures' => ['#markup' => 'Figures'],
++      ], $preview);
++      $markup = (string) $this->container->get('renderer')->renderRoot($build);
++      $this->assertMatchesRegularExpression('/Figures.*Footnote/s', $markup);
++    }
++  }
++
++  /**
++   * Tests preview controls never enter or disappear into the content cache.
++   */
++  public function testRenderCacheIsolationInBothDirections(): void {
++    foreach ([FALSE, TRUE] as $preview_first) {
++      static::$contentBuilds = 0;
++      $content = [
++        '#markup' => 'Cacheable content',
++        '#cache' => [
++          'keys' => ['ipe_content', (string) (int) $preview_first],
++          'tags' => ['ipe:content'],
++        ],
++        '#pre_render' => [[static::class, 'countContentBuild']],
++      ];
++      foreach ([$preview_first, !$preview_first] as $preview) {
++        $build = $this->createComponentBuild($content, $preview);
++        $markup = (string) $this->container->get('renderer')->renderRoot($build);
++        $this->assertStringContainsString('Cacheable content', $markup);
++        if ($preview) {
++          $this->assertSame(0, $build['#cache']['max-age']);
++          $this->assertStringContainsString('Before control', $markup);
++          $this->assertStringContainsString('After control', $markup);
++          $this->assertContains('ipe:controls', $build['#cache']['tags']);
++          $this->assertTrue($build['#attached']['drupalSettings']['ipe_controls']);
++        }
++        else {
++          $this->assertStringNotContainsString('Before control', $markup);
++          $this->assertStringNotContainsString('After control', $markup);
++          $this->assertNotContains('ipe:controls', $build['#cache']['tags']);
++          $this->assertArrayNotHasKey('ipe_controls', $build['#attached']['drupalSettings'] ?? []);
++        }
++      }
++      // The second render must actually hit the same child cache entry.
++      $this->assertSame(1, static::$contentBuilds);
++    }
++  }
++
++  /**
++   * Tests both immediate and placeholder-based lazy builders remain valid.
++   */
++  public function testLazyBuilders(): void {
++    foreach ([FALSE, TRUE] as $placeholder) {
++      static::$lazyBuilds = 0;
++      $content = [
++        '#lazy_builder' => [static::class . '::buildLazyContent', []],
++        '#create_placeholder' => $placeholder,
++      ];
++      $build = $this->createComponentBuild($content);
++      $this->assertSame($content, $build['content']);
++      $markup = (string) $this->container->get('renderer')->renderRoot($build);
++      $this->assertMatchesRegularExpression('/Before control.*Lazy content.*After control/s', $markup);
++      $this->assertStringNotContainsString('<drupal-render-placeholder', $markup);
++      $this->assertSame(1, static::$lazyBuilds);
++      $this->assertContains('ipe:lazy', $build['#cache']['tags']);
++    }
++  }
++
++  /**
++   * Tests root render elements retain their default theme wrappers.
++   */
++  public function testElementDefaults(): void {
++    $build = $this->createComponentBuild([
++      '#type' => 'container',
++      'figures' => ['#markup' => '<p>Figures</p>'],
++    ]);
++    $markup = (string) $this->container->get('renderer')->renderRoot($build);
++    $this->assertMatchesRegularExpression('/<div>\s*<p>Figures<\/p>\s*<\/div>/', $markup);
++    $this->assertMatchesRegularExpression('/Before control.*Figures.*After control/s', $markup);
++  }
++
++  /**
++   * Tests inaccessible content stays hidden without removing its controls.
++   */
++  public function testInaccessibleContent(): void {
++    $build = $this->createComponentBuild([
++      '#access' => FALSE,
++      '#markup' => 'Inaccessible content',
++    ]);
++    $markup = (string) $this->container->get('renderer')->renderRoot($build);
++    $this->assertStringNotContainsString('Inaccessible content', $markup);
++    $this->assertStringContainsString('Before control', $markup);
++    $this->assertStringContainsString('After control', $markup);
++  }
++
++  /**
++   * Simulates a theme that moves a footnote from the direct content children.
++   */
++  public static function preprocessBlock(array &$variables): void {
++    if (isset($variables['content']['comment'])) {
++      $comment = $variables['content']['comment'];
++      unset($variables['content']['comment']);
++      $variables['content']['trailing_comment'] = $comment;
++    }
++  }
++
++  /**
++   * Counts uncached renders without changing the content.
++   */
++  public static function countContentBuild(array $element): array {
++    static::$contentBuilds++;
++    return $element;
++  }
++
++  /**
++   * Builds deferred block content.
++   */
++  public static function buildLazyContent(): array {
++    static::$lazyBuilds++;
++    return [
++      '#markup' => 'Lazy content',
++      '#cache' => ['tags' => ['ipe:lazy']],
++    ];
++  }
++
++  /**
++   * {@inheritdoc}
++   */
++  public static function trustedCallbacks(): array {
++    return ['countContentBuild', 'buildLazyContent'];
++  }
++
++  /**
++   * Builds a component through core and IPE, including event cache metadata.
++   */
++  protected function createComponentBuild(array $content, bool $preview = TRUE): array {
++    $block = $this->createMock(BlockPluginInterface::class);
++    $block->method('build')->willReturn($content);
++    $block->method('label')->willReturn('Test block');
++    $block->method('getConfiguration')->willReturn([
++      'provider' => 'system',
++      'label' => 'Test block',
++      'label_display' => FALSE,
++    ]);
++    $block->method('getPluginId')->willReturn('ipe_render_test');
++    $block->method('getBaseId')->willReturn('ipe_render_test');
++    $block->method('getCacheMaxAge')->willReturn(Cache::PERMANENT);
++    $block->method('getCacheContexts')->willReturn([]);
++    $block->method('getCacheTags')->willReturn([]);
++    $block->method('access')->willReturn(AccessResult::allowed());
++    $component = $this->getMockBuilder(SectionComponent::class)
++      ->setConstructorArgs(['test-component', 'content'])
++      ->onlyMethods(['getPlugin'])
++      ->getMock();
++    $component->method('getPlugin')->willReturn($block);
++    $storage = $this->createMock(SectionStorageInterface::class);
++    $storage->method('getSections')->willReturn([new Section('layout_onecol', [], [$component])]);
++    $entity = $this->createMock(EntityInterface::class);
++    $context = $this->createMock(LayoutBuilderIpeContext::class);
++    $context->method('getSectionStorage')->willReturn($storage);
++    $context->method('getEntityFromSectionStorage')->willReturn($entity);
++    $access = $this->createMock(LayoutBuilderIpeAccess::class);
++    $access->method('ipeEnabled')->willReturn(TRUE);
++    $ui = $this->createMock(LayoutBuilderUi::class);
++    $ui->method('createAddButton')->willReturnCallback(static function (SectionComponent $component, SectionStorageInterface $storage, int $delta, string $placement): array {
++      return [
++        '#markup' => ucfirst($placement) . ' control',
++        '#cache' => ['tags' => ['ipe:controls']],
++        '#attached' => ['drupalSettings' => ['ipe_controls' => TRUE]],
++      ];
++    });
++    $config = $this->createMock(ImmutableConfig::class);
++    $config->method('get')->with('enhance_ui')->willReturn(TRUE);
++    $config_factory = $this->createMock(ConfigFactoryInterface::class);
++    $config_factory->method('get')->willReturn($config);
++
++    $event = new SectionComponentBuildRenderArrayEvent($component, [], $preview);
++    $core = new CoreBlockComponentRenderArray($this->createMock(AccountInterface::class));
++    $core->onBuildRender($event);
++    $subscriber = new BlockComponentRenderArray($context, $access, $ui, $config_factory);
++    $subscriber->onBuildRender($event);
++    $build = $event->getBuild();
++    $event->getCacheableMetadata()->applyTo($build);
++    return $build;
++  }
++
++}
