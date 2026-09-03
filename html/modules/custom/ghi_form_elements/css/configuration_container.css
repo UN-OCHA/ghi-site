@@ -60,6 +60,10 @@
   width: 100%;
   border-top: 1px solid var(--gin-border-color-layer);
   background-color: var(--gin-bg-app);
+  border-bottom-left-radius: 8px;
+  border-bottom-right-radius: 8px;
+  margin: 0 2px 2px 2px;
+  width: calc(100% - 4px);
 }
 .form-type--configuration_container .actions-wrapper > *:first-child {
   margin-right: 0 !important;

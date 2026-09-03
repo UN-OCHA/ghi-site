@@ -175,6 +175,7 @@ form.ghi-glb-form.glb-canvas-form .glb-canvas-form__actions,
   padding-right: 1rem;
   padding-left: 1rem;
   flex-direction: row-reverse;
+  gap: 0.75rem;
   border-top: 1px solid var(--gin-border-color-layer);
   background: var(--gin-bg-app);
 }
@@ -251,4 +252,129 @@ form.ghi-glb-form.glb-canvas-form .glb-canvas-form__actions input[disabled],
 #layout-builder-modal a.tabledrag-handle .handle {
   margin-top: 0.4rem;
   background-position-x: 0;
+}
+
+/* Let IPE's modal integration own the form footer introduced in 1.0.0-rc2. */
+.ui-dialog:has(#layout-builder-modal) .ui-dialog-title,
+.ui-dialog.layout-builder-ipe-modal:not(.ui-dialog-off-canvas) .ui-dialog-title {
+  font-size: 1rem !important;
+}
+.ui-dialog:has(#layout-builder-modal form.confirmation),
+.ui-dialog:has(#layout-builder-modal form.layout-builder-ipe-confirmation) {
+  box-sizing: border-box;
+  left: 50% !important;
+  width: calc(100% - 2rem) !important;
+  max-width: 650px !important;
+  transform: translateX(-50%);
+}
+body.layout-builder-ipe-editing #layout-builder-modal.layout-builder-ipe-modal-content--form {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  margin-bottom: 0;
+}
+body.layout-builder-ipe-editing #layout-builder-modal.layout-builder-ipe-modal-content--form.has-second-level-actions {
+  margin-bottom: 0;
+}
+body.layout-builder-ipe-editing #layout-builder-modal.layout-builder-ipe-modal-content--form > form.glb-canvas-form > .second-level-actions-wrapper {
+  position: static;
+  flex: 0 0 auto;
+  box-sizing: border-box;
+  width: 100%;
+  margin: 0;
+  padding: 0 1.5rem;
+}
+body.layout-builder-ipe-editing #layout-builder-modal.layout-builder-ipe-modal-content--form > form.glb-canvas-form {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+  height: 100%;
+  overflow: hidden;
+}
+body.layout-builder-ipe-editing #layout-builder-modal.layout-builder-ipe-modal-content--form > form.glb-canvas-form > .glb-canvas-form__settings {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
+}
+#layout-builder-modal.layout-builder-ipe-modal-content--form > form.glb-canvas-form > .glb-canvas-form__settings[data-drupal-selector="edit-description"]:empty {
+  display: none;
+  padding: 0;
+}
+body.layout-builder-ipe-editing #layout-builder-modal.layout-builder-ipe-modal-content--form > form.glb-canvas-form > .glb-canvas-form__actions {
+  position: static !important;
+  flex: 0 0 auto;
+  flex-wrap: wrap;
+  height: auto;
+  flex-direction: row;
+  text-align: left;
+}
+body.layout-builder-ipe-editing #layout-builder-modal.layout-builder-ipe-modal-content--form > form.glb-canvas-form > .glb-canvas-form__actions.gin-sticky-form-actions {
+  height: auto;
+}
+body.layout-builder-ipe-editing #layout-builder-modal.layout-builder-ipe-modal-content--form > form.glb-canvas-form > .glb-canvas-form__actions .ghi-layout-builder-subform-buttons {
+  position: static;
+  display: flex;
+  flex: 1 1 auto;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+}
+body.layout-builder-ipe-editing #layout-builder-modal.layout-builder-ipe-modal-content--form > form.glb-canvas-form > .glb-canvas-form__actions .ghi-layout-builder-subform-buttons > * {
+  margin: 0 !important;
+}
+/* Keep the main submit at the inline end, matching the established modal order. */
+body.layout-builder-ipe-editing #layout-builder-modal.layout-builder-ipe-modal-content--form > form.glb-canvas-form > .glb-canvas-form__actions > [data-drupal-selector="edit-actions-cancel"] {
+  order: 1;
+}
+body.layout-builder-ipe-editing #layout-builder-modal.layout-builder-ipe-modal-content--form > form.glb-canvas-form > .glb-canvas-form__actions > [data-drupal-selector="edit-actions-submit"] {
+  order: 2;
+}
+
+/* Keep non-editing frontend forms padded and scrollable within the viewport. */
+body:not(.layout-builder-ipe-editing) #layout-builder-modal.layout-builder-ipe-modal-content--form:not(:has(form.layout-builder-ipe-confirmation)) form.ghi-glb-form.glb-canvas-form {
+  flex: 0 1 auto;
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 0;
+  margin: 0 !important;
+}
+body:not(.layout-builder-ipe-editing) #layout-builder-modal.layout-builder-ipe-modal-content--form:not(:has(form.layout-builder-ipe-confirmation)) form.ghi-glb-form.glb-canvas-form > .glb-canvas-form__settings[data-drupal-selector="edit-settings"] {
+  flex: 0 1 auto;
+  box-sizing: border-box;
+  width: 100%;
+  max-height: calc(100vh - 15rem);
+  padding: 1rem 1.5rem;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+body:not(.layout-builder-ipe-editing) #layout-builder-modal.layout-builder-ipe-modal-content--form form.ghi-glb-form .form-item-overwrite .glb-form-item__description {
+  max-width: none !important;
+}
+
+/* IPE confirmations provide their own compact message and action spacing. */
+#layout-builder-modal:has(form.layout-builder-ipe-confirmation) {
+  margin-bottom: 0;
+  padding: 0 !important;
+}
+#layout-builder-modal:has(form.layout-builder-ipe-confirmation) > .gin-confirm-form {
+  margin: 0;
+}
+#layout-builder-modal form.layout-builder-ipe-confirmation > .glb-canvas-form__settings:empty {
+  display: none;
+  padding: 0;
+}
+/* Match the content breathing room of the legacy hide/unhide confirmations. */
+#layout-builder-modal form.layout-builder-ipe-confirmation > .layout-builder-ipe-confirmation__message {
+  padding: 2rem 1.5rem !important;
+}
+#layout-builder-modal form.layout-builder-ipe-confirmation > .glb-canvas-form__actions {
+  position: static !important;
+  height: auto;
+  padding: 1rem 1.5rem;
+  flex-direction: row;
+  text-align: left;
+}
+#layout-builder-modal form.layout-builder-ipe-confirmation > .glb-canvas-form__actions > .glb-button {
+  margin: 0 !important;
 }

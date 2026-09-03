@@ -618,11 +618,8 @@ abstract class BaseContentManager implements ContainerInjectionInterface {
   /**
    * Save a content node programatically.
    *
-   * Besides saving the node, this does 2 additional things.
-   * 1. It handles the presence of an IPE token, which would prevent updates to
-   *    the layout sections when issued from the node edit form.
-   * 2. It updates the migration status of the node, so that it doesn't get
-   *    wrongly flagged as needing an update.
+   * Besides saving the node, this updates its migration status so that it
+   * doesn't get wrongly flagged as needing an update.
    *
    * @param \Drupal\node\NodeInterface $node
    *   The node object.
@@ -633,14 +630,6 @@ abstract class BaseContentManager implements ContainerInjectionInterface {
    *   status.
    */
   public function saveContentNode(NodeInterface $node, $update_migration_state = TRUE) {
-    // If the layout builder ipe module is used, we need to remove their token,
-    // otherwhise layout updates (paragraphs) will be reverted before saving
-    // because this action is issued from the node edit form.
-    $ipe_token = $this->request->get('layout_builder_ipe_token');
-    if ($ipe_token) {
-      $this->request->request->remove('layout_builder_ipe_token');
-    }
-
     // Save the node.
     $node->save();
 

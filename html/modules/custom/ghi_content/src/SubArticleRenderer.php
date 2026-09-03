@@ -79,9 +79,9 @@ class SubArticleRenderer {
     $rendered_count = 0;
     $next_offset = $offset;
     $contexts = $contexts + $this->getBaseObjectContexts($context_node) + $this->getRuntimeContexts();
-    $contexts += [
-      'layout_builder.entity' => EntityContext::fromEntity($article),
-    ];
+    // Nested components belong to this article, even when the parent passed
+    // its own layout entity along with the other rendering contexts.
+    $contexts['layout_builder.entity'] = EntityContext::fromEntity($article);
     foreach (array_values($components) as $component_offset => $component) {
       if ($component_offset < $offset) {
         continue;

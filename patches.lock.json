@@ -1,5 +1,5 @@
 {
-    "_hash": "77c68fd4c5422f2679eeb400ff60f0f9fd51d21f2b1d3ff3758aff31896ab3c0",
+    "_hash": "c0030d63c2e217e860607e6e805a5cea1f39fe5acccb19688bf2b1f75bebc854",
     "patches": {
         "drupal/core": [
             {
@@ -195,6 +195,18 @@
                 }
             }
         ],
+        "drupal/layout_builder_ipe": [
+            {
+                "package": "drupal/layout_builder_ipe",
+                "description": "Issue #3620545: Preserve block content structure when adding enhanced UI controls",
+                "url": "patches/layout_builder_ipe-3620545-mr-11.patch",
+                "sha256": "887aced77cf94a9489aff016274eff821d310c53dc8681c9a238cae5739c87ca",
+                "depth": 1,
+                "extra": {
+                    "provenance": "patches-file:composer.patches.json"
+                }
+            }
+        ],
         "drupal/page_manager": [
             {
                 "package": "drupal/page_manager",
@@ -261,16 +273,6 @@
                 "description": "Handle case if user is in blocked state after SSO Authorization",
                 "url": "./patches/openid_connect-3390668-6.patch",
                 "sha256": "3dfdaf6593f62c629db9d4a8701ebb7bf8a6ae9f479c4d5d89e1799d37a5a422",
-                "depth": 1,
-                "extra": {
-                    "provenance": "patches-file:composer.patches.json"
-                }
-            },
-            {
-                "package": "drupal/openid_connect",
-                "description": "Incorrect context in hook_redirect_logout_alter",
-                "url": "./patches/openid_connect-3577436-191.patch",
-                "sha256": "c04ff5f48e1a4e495bc22329b203dd42b0e9cbaa9ec2f0f08e96697dc66c17db",
                 "depth": 1,
                 "extra": {
                     "provenance": "patches-file:composer.patches.json"

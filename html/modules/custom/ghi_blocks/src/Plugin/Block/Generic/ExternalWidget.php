@@ -461,7 +461,9 @@ class ExternalWidget extends GHIBlockBase {
     // Make sure we only apply this if we are sufficiently sure that we know
     // what we have.
     $last_filter_index = $this->getLastHdxQuickchartsFilterIndex($query_args);
-    $page_year = $this->hasContext('year') ? $this->getContextValue('year') : NULL;
+    // An article can provide a year context without an actual year value.
+    $year_context = $this->getContexts()['year'] ?? NULL;
+    $page_year = $year_context?->hasContextValue() ? $year_context->getContextValue() : NULL;
     if ($last_filter_index != 1 || !$page_year) {
       return;
     }

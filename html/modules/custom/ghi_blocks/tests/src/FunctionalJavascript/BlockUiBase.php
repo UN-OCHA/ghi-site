@@ -64,6 +64,11 @@ abstract class BlockUiBase extends WebDriverTestBase {
       ->set('admin', 'gin')
       ->save();
 
+    $this->config('layout_builder_ipe.settings')
+      ->set('show_discard_changes_link', TRUE)
+      ->set('show_gin_lb_discard_button', TRUE)
+      ->save();
+
     $this->config('system.performance')
       ->set('js.preprocess', TRUE);
     $this->assertTrue($this->config('system.performance')->get('js.preprocess'), 'JS aggregation is on');

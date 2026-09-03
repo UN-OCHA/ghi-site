@@ -8,13 +8,10 @@ use Drupal\layout_builder\LayoutBuilderEvents;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
 /**
- * Listen to the block component render event that emitted by layout builder.
+ * Preserves Layout Builder component identity on HPC blocks.
  *
- * This is only used to add the blocks uuid to it's configuration, so that the
- * hpc_downnloads module can easily access it.
- *
- * This is only needed for node displays, because page_manager already adds the
- * block uuid to it's blocks.
+ * Downloads and lazy rendering use the component UUID and owning entity to
+ * find the saved block, including when it is embedded in another page.
  */
 class BlockComponentRenderArray implements EventSubscriberInterface {
 
@@ -46,6 +43,13 @@ class BlockComponentRenderArray implements EventSubscriberInterface {
       $block_config = $block->getConfiguration();
       $block_config['uuid'] = $event->getComponent()->getUuid();
       $block->setConfiguration($block_config);
+
+      // Blocks without a declared node context still need their layout owner
+      // so lazy callbacks can find them outside the current page's layout.
+      $contexts = $event->getContexts();
+      if (isset($contexts['layout_builder.entity'])) {
+        $block->setContext('layout_builder.entity', $contexts['layout_builder.entity']);
+      }
     }
   }
 

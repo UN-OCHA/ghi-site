@@ -32,6 +32,9 @@
     "drupal/image_widget_crop": {
       "Issue #3401986: The containers summary text should not be overwritten": "https://www.drupal.org/files/issues/2023-11-15/3401986-2.patch"
     },
+    "drupal/layout_builder_ipe": {
+      "Issue #3620545: Preserve block content structure when adding enhanced UI controls": "patches/layout_builder_ipe-3620545-mr-11.patch"
+    },
     "drupal/page_manager": {
       "Issue #3176661: Allow to edit page title when using Layout Builder variant": "patches/page_manager-lb-title-3176661-mr45.patch"
     },
@@ -51,8 +54,7 @@
       "Issue #2844205: Provide hook_seckit_options_alter() D8": "./patches/2844205.mr.patch"
     },
     "drupal/openid_connect": {
-        "Handle case if user is in blocked state after SSO Authorization": "./patches/openid_connect-3390668-6.patch",
-        "Incorrect context in hook_redirect_logout_alter": "./patches/openid_connect-3577436-191.patch"
+        "Handle case if user is in blocked state after SSO Authorization": "./patches/openid_connect-3390668-6.patch"
     },
     "drupal/openid_connect_windows_aad": {
         "Failed to get authentication tokens for Windows Azure AD": "./patches/openid_connect_windows_aad-3346603-5.patch"
