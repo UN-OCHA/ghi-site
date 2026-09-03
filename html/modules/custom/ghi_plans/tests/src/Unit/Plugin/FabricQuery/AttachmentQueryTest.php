@@ -4,12 +4,14 @@ namespace Drupal\Tests\ghi_plans\Unit\Plugin\FabricQuery;
 
 use Drupal\ghi_base_objects\Entity\BaseObjectInterface;
 use Drupal\ghi_plans\ApiObjects\Attachments\Attachment;
+use Drupal\ghi_plans\ApiObjects\Measurements\Measurement;
 use Drupal\ghi_plans\ApiObjects\PlanEntityInterface;
 use Drupal\ghi_plans\Entity\GoverningEntity;
 use Drupal\ghi_plans\Plugin\FabricQuery\AttachmentQuery;
 use Drupal\ghi_plans\Plugin\FabricQuery\EntityQuery;
 use Drupal\hpc_api\ObjectStore;
 use Drupal\hpc_api\Query\FabricQuery;
+use Drupal\hpc_api\ApiObjects\Types\MetricType;
 use Drupal\Tests\hpc_api\Traits\PrivateAccessorTrait;
 use Drupal\Tests\UnitTestCase;
 
@@ -252,6 +254,68 @@ class AttachmentQueryTest extends UnitTestCase {
     $this->assertStringContainsString('max(field: ValueNum)', $fabric_client->query);
     $this->assertStringContainsString('ValueNum: { gt: 0 }', $fabric_client->query);
     $this->assertStringContainsString('GenderId: { isNull: true }', $fabric_client->query);
+  }
+
+  /**
+   * Tests that map metric availability uses attachment field names.
+   */
+  public function testMappableMapMetricAvailability(): void {
+    $attachment = $this->createMock(Attachment::class);
+    $attachment->method('id')->willReturn(1001);
+    $attachment->method('getFields')->willReturn([
+      'in_need' => 'People in need',
+      'cumulative_reach' => 'Cumulative reach',
+    ]);
+    $measurement = $this->createMock(Measurement::class);
+    $measurement->method('id')->willReturn(2001);
+    $attachment->method('getMeasurements')->willReturn([$measurement]);
+
+    $in_need = $this->createMock(MetricType::class);
+    $in_need->method('getMachineName')->willReturn('in_need');
+    $cumulative_reach = $this->createMock(MetricType::class);
+    $cumulative_reach->method('getMachineName')->willReturn('cumulative_reach');
+
+    $attachment_query = $this->getMockBuilder(AttachmentQuery::class)
+      ->setConstructorArgs([[], 'attachment', []])
+      ->onlyMethods(['getMappableMapMetricSummary', 'getMetricType'])
+      ->getMock();
+    $attachment_query->method('getMappableMapMetricSummary')->with(1001, [2001])->willReturn([
+      'base' => [3001 => ['count' => 2, 'max' => 25]],
+      'measurements' => [2001 => [3002 => ['count' => 3, 'max' => 40]]],
+      'max' => 40,
+      'query_succeeded' => TRUE,
+    ]);
+    $attachment_query->method('getMetricType')->willReturnMap([
+      [3001, $in_need],
+      [3002, $cumulative_reach],
+    ]);
+
+    $this->assertSame([
+      'base' => ['in_need'],
+      'measurements' => [2001 => ['cumulative_reach']],
+    ], $attachment_query->getMappableMapMetricAvailability($attachment));
+  }
+
+  /**
+   * Tests that a failed availability query does not imply missing data.
+   */
+  public function testMappableMapMetricAvailabilityIsUnknownAfterQueryFailure(): void {
+    $attachment = $this->createMock(Attachment::class);
+    $attachment->method('id')->willReturn(1001);
+    $attachment->method('getMeasurements')->willReturn([]);
+
+    $attachment_query = $this->getMockBuilder(AttachmentQuery::class)
+      ->setConstructorArgs([[], 'attachment', []])
+      ->onlyMethods(['getMappableMapMetricSummary'])
+      ->getMock();
+    $attachment_query->method('getMappableMapMetricSummary')->with(1001, [])->willReturn([
+      'base' => [],
+      'measurements' => [],
+      'max' => 0,
+      'query_succeeded' => FALSE,
+    ]);
+
+    $this->assertNull($attachment_query->getMappableMapMetricAvailability($attachment));
   }
 
   /**
