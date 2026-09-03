@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\ghi_content\Kernel;
 
+use Drupal\Core\Plugin\Context\EntityContext;
 use Drupal\ghi_content\Entity\Article;
 use Drupal\KernelTests\KernelTestBase;
 use Drupal\layout_builder\Entity\LayoutBuilderEntityViewDisplay;
@@ -38,6 +39,7 @@ class SubArticleRendererTest extends KernelTestBase {
     'file',
     'filter',
     'hpc_api',
+    'hpc_common',
     'ghi_base_objects',
     'ghi_blocks',
     'ghi_content_test',
@@ -148,6 +150,74 @@ class SubArticleRendererTest extends KernelTestBase {
     $build = $subarticle_renderer->build($article);
     $output = $renderer->renderRoot($build);
     $this->assertStringContainsString('Mapped plan context: Mapped test plan', (string) $output);
+  }
+
+  /**
+   * Tests that nested widgets are lazy loaded from their own article's layout.
+   *
+   * @dataProvider parentLayoutContextProvider
+   */
+  public function testBuildLazyWidgetWithOwningArticle(bool $has_parent_context) {
+    $this->createBaseObjectType(['id' => 'plan']);
+    $this->config('ghi_blocks.block_settings')->set('lazy_load', TRUE)->save();
+    $this->container->get('router.builder')->rebuild();
+
+    $widget_url = 'https://app.powerbi.com/view?r=test-report';
+    $component = new SectionComponent('widget-component', 'content', [
+      'id' => 'generic_external_widget',
+      'provider' => 'ghi_blocks',
+      'hpc' => [
+        'select_number' => 1,
+        'widgets' => [
+          [
+            'widget_url' => $widget_url,
+            'widget_height' => '600px',
+          ],
+        ],
+      ],
+    ]);
+    $article = Article::create([
+      'type' => 'article',
+      'title' => 'Article containing a Power BI widget',
+      'status' => TRUE,
+    ]);
+    $article->set(OverridesSectionStorage::FIELD_NAME, [
+      ['section' => new Section('layout_onecol', [], [$component])],
+    ]);
+    $article->save();
+
+    $contexts = [];
+    if ($has_parent_context) {
+      $parent = Article::create([
+        'type' => 'article',
+        'title' => 'Parent article',
+        'status' => TRUE,
+      ]);
+      $parent->save();
+      $contexts['layout_builder.entity'] = EntityContext::fromEntity($parent);
+    }
+
+    $subarticle_renderer = $this->container->get('ghi_content.subarticle_renderer');
+    $this->assertSame(1, $subarticle_renderer->countComponents($article));
+    $build = $subarticle_renderer->build($article, NULL, $contexts);
+    $this->assertArrayHasKey('widget-component', $build);
+    $lazy_builder = $build['widget-component']['content']['content']['#lazy_builder'];
+    $this->assertSame($article->toUrl()->toString(), $lazy_builder[1][2]);
+
+    $content = $lazy_builder[0](...$lazy_builder[1]);
+    $output = $this->container->get('renderer')->renderRoot($content);
+    $this->assertStringContainsString('<iframe', (string) $output);
+    $this->assertStringContainsString($widget_url, (string) $output);
+  }
+
+  /**
+   * Provides nested rendering contexts with and without a parent layout owner.
+   */
+  public function parentLayoutContextProvider(): array {
+    return [
+      'standalone sub-article' => [FALSE],
+      'nested sub-article' => [TRUE],
+    ];
   }
 
   /**

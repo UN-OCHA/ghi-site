@@ -3,7 +3,12 @@
 namespace Drupal\Tests\ghi_blocks\Kernel\Global;
 
 use Drupal\Core\Form\FormState;
+use Drupal\Core\Plugin\Context\Context;
+use Drupal\Core\Plugin\Context\ContextDefinition;
+use Drupal\Core\Plugin\Context\EntityContext;
 use Drupal\ghi_blocks\Plugin\Block\Generic\ExternalWidget;
+use Drupal\node\Entity\Node;
+use Drupal\node\Entity\NodeType;
 use Drupal\Tests\ghi_base_objects\Traits\BaseObjectTestTrait;
 use Drupal\Tests\ghi_blocks\Kernel\BlockKernelTestBase;
 
@@ -22,7 +27,10 @@ class ExternalWidgetBlockTest extends BlockKernelTestBase {
    * @var array
    */
   protected static $modules = [
+    'system',
     'field',
+    'node',
+    'user',
   ];
 
   /**
@@ -35,6 +43,7 @@ class ExternalWidgetBlockTest extends BlockKernelTestBase {
     $this->createBaseObjectType([
       'id' => 'plan',
     ]);
+    NodeType::create(['type' => 'article', 'name' => 'Article'])->save();
   }
 
   /**
@@ -87,6 +96,62 @@ class ExternalWidgetBlockTest extends BlockKernelTestBase {
 
     $build = $plugin->buildContent();
     $this->assertNull($build);
+  }
+
+  /**
+   * Tests HDX URL processing with populated and empty year contexts.
+   *
+   * @dataProvider yearContextProvider
+   */
+  public function testBuildHdxWidgetWithYearContext(?int $year, bool $article_owner) {
+    $data_url = 'https://docs.google.com/spreadsheets/d/' . ExternalWidget::GOOGLE_SHEET . '/export?format=csv';
+    $proxy_url = 'https://proxy.hxlstandard.org/data.csv?filter01=select&select-query01-01=%23country%2Bcode=G&filter02=select&select-query02-01=%23date%2Byear=2020&url=' . rawurlencode($data_url);
+    $chart = [
+      'bites' => [
+        ['uiProperties' => ['dataTitle' => 'Response plan funding', 'title' => 'Configured chart title']],
+      ],
+    ];
+    $widget_url = 'https://data.humdata.org/visualization/quickcharts.html#;url=' . rawurlencode($proxy_url) . ';embeddedConfig=' . rawurlencode(json_encode($chart));
+    $plugin = $this->getBlockPlugin([$this->buildWidgetConfiguration($widget_url)]);
+    $plugin->setContextMapping(['year' => 'year']);
+    $plugin->setContext('year', new Context(new ContextDefinition('integer', required: FALSE), $year));
+    if ($article_owner) {
+      $plugin->setContext('layout_builder.entity', EntityContext::fromEntity(Node::create(['type' => 'article'])));
+    }
+
+    $build = $plugin->buildContent();
+    $this->assertSame('iframe', $build[0][0]['#tag']);
+    $parts = explode(';', $build[0][0]['#attributes']['src']);
+    array_shift($parts);
+    $params = [];
+    foreach ($parts as $part) {
+      [$key, $value] = explode('=', $part, 2);
+      $params[$key] = rawurldecode($value);
+    }
+
+    if ($year === NULL || $article_owner) {
+      // Without a page year, keep the chart's configured filters and title.
+      $this->assertSame($proxy_url, $params['url']);
+      $this->assertSame($chart, json_decode($params['embeddedConfig'], TRUE));
+    }
+    else {
+      parse_str(parse_url($params['url'], PHP_URL_QUERY), $query);
+      $this->assertSame('#date+year > {{ ' . $year . ' - 10 }}', $query['select-query02-01']);
+      $this->assertSame('#date+year <= ' . $year, $query['select-query03-01']);
+      $processed_chart = json_decode($params['embeddedConfig'], TRUE);
+      $this->assertStringContainsString((string) $year, $processed_chart['bites'][0]['uiProperties']['title']);
+    }
+  }
+
+  /**
+   * Provides populated and empty contexts, including an empty required context.
+   */
+  public function yearContextProvider(): array {
+    return [
+      'populated year' => [2025, FALSE],
+      'article with no year' => [2025, TRUE],
+      'empty optional year' => [NULL, FALSE],
+    ];
   }
 
   /**
