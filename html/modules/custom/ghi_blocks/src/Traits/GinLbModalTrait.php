@@ -30,6 +30,7 @@ trait GinLbModalTrait {
     $form['actions']['#gin_lb_form'] = TRUE;
     $form['#gin_lb_form'] = TRUE;
     $form['#ghi_modal_form'] = TRUE;
+    $form['#ghi_inline_errors_only'] = TRUE;
     $form['#after_build'][] = [FormAlter::class, 'afterBuildAttachGinLbForm'];
   }
 

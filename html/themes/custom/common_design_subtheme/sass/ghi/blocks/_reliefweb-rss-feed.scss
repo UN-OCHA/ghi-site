@@ -1,0 +1,84 @@
+.ghi-block-generic-reliefweb-rss-feed .block-content {
+  .reliefweb-rss-feed__list {
+    display: flex;
+    flex-direction: column;
+    margin-block: 0;
+    padding-inline-start: 0;
+    gap: 0.5rem;
+
+    @include tablet {
+      flex-direction: row;
+      flex-wrap: wrap;
+      align-items: stretch;
+    }
+  }
+
+  .reliefweb-rss-feed__item {
+    display: flex;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+
+    @include tablet {
+      flex: 0 1 calc(50% - 0.25rem);
+    }
+  }
+
+  .reliefweb-rss-feed__card {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    width: 100%;
+    min-height: 11rem;
+    padding: 2rem;
+    background-color: var(--ghi-default-background-color);
+  }
+
+  .reliefweb-rss-feed__title-wrapper {
+    margin-bottom: 1rem;
+  }
+
+  .reliefweb-rss-feed__item-link {
+    display: inline-block;
+    text-decoration: none;
+    color: var(--ghi-default-text-color);
+    font-size: var(--cd-font-size--medium);
+    font-weight: bold;
+    line-height: 1.25;
+
+    &:hover,
+    &:focus {
+      text-decoration: underline;
+      color: var(--ghi-default-text-color);
+    }
+  }
+
+  .reliefweb-rss-feed__meta {
+    margin-top: auto;
+    color: var(--ghi-default-text-color);
+    font-size: var(--cd-font-size--tiny);
+
+    &::before {
+      display: block;
+      width: 15%;
+      padding-top: 1.5rem;
+      content: " ";
+      border-top: 4px solid var(--ghi-yellow);
+    }
+  }
+
+  .reliefweb-rss-feed__date,
+  .reliefweb-rss-feed__source {
+    display: inline;
+  }
+
+  .reliefweb-rss-feed__source {
+    &::before {
+      content: " | ";
+    }
+  }
+
+  .reliefweb-rss-feed__view-more {
+    margin-top: 1.5rem;
+  }
+}
