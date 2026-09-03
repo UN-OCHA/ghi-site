@@ -1,5 +1,5 @@
 {
-    "_hash": "77c68fd4c5422f2679eeb400ff60f0f9fd51d21f2b1d3ff3758aff31896ab3c0",
+    "_hash": "128a2cf8c4c07f79de9736b5199e49dd2c46434798ae9819b36a1e04c1c95312",
     "patches": {
         "drupal/core": [
             {
@@ -261,16 +261,6 @@
                 "description": "Handle case if user is in blocked state after SSO Authorization",
                 "url": "./patches/openid_connect-3390668-6.patch",
                 "sha256": "3dfdaf6593f62c629db9d4a8701ebb7bf8a6ae9f479c4d5d89e1799d37a5a422",
-                "depth": 1,
-                "extra": {
-                    "provenance": "patches-file:composer.patches.json"
-                }
-            },
-            {
-                "package": "drupal/openid_connect",
-                "description": "Incorrect context in hook_redirect_logout_alter",
-                "url": "./patches/openid_connect-3577436-191.patch",
-                "sha256": "c04ff5f48e1a4e495bc22329b203dd42b0e9cbaa9ec2f0f08e96697dc66c17db",
                 "depth": 1,
                 "extra": {
                     "provenance": "patches-file:composer.patches.json"
