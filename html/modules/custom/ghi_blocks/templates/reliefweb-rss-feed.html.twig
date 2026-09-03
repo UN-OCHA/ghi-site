@@ -1,0 +1,31 @@
+<div class="reliefweb-rss-feed">
+  {% if items %}
+    <ul class="reliefweb-rss-feed__list">
+      {% for item in items %}
+        <li class="reliefweb-rss-feed__item">
+          <article class="reliefweb-rss-feed__card">
+            <div class="reliefweb-rss-feed__title-wrapper">
+              {{ item.link }}
+            </div>
+            {% if item.formatted_date or item.source %}
+              <div class="reliefweb-rss-feed__meta">
+                {% if item.formatted_date %}
+                  <span class="reliefweb-rss-feed__date">{{ item.formatted_date }}</span>
+                {% endif %}
+                {% if item.source %}
+                  <span class="reliefweb-rss-feed__source">{{ item.source }}</span>
+                {% endif %}
+              </div>
+            {% endif %}
+          </article>
+        </li>
+      {% endfor %}
+    </ul>
+  {% endif %}
+
+  {% if view_more_link %}
+    <div class="reliefweb-rss-feed__view-more">
+      {{ view_more_link }}
+    </div>
+  {% endif %}
+</div>

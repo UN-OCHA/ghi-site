@@ -1118,6 +1118,7 @@ abstract class GHIBlockBase extends HPCBlockBase implements TrustedCallbackInter
   public function blockForm($form, FormStateInterface $form_state) {
     parent::blockForm($form, $form_state);
     $form['#ghi_modal_form'] = TRUE;
+    $form['#ghi_inline_errors_only'] = TRUE;
 
     $form_state->set('block', $this);
     $this->setFormState($form_state);
@@ -1416,6 +1417,12 @@ abstract class GHIBlockBase extends HPCBlockBase implements TrustedCallbackInter
       $form_state->setValue($current_subform, $step_values);
       $form_state->set(['storage', $current_subform], $step_values);
       $form_state->setTemporaryValue($current_subform, $step_values);
+      $this->validateVisibleSubformForPreview($form_state);
+      if ($form_state->getErrors()) {
+        $form_state->set('preview', FALSE);
+        $form_state->setRebuild();
+        return;
+      }
 
       // Store the current tab, so that we can get back to it later.
       $this->processVerticalTabsSubmit($form_state->getCompleteForm()['settings']['container'], $form_state);
@@ -1423,6 +1430,29 @@ abstract class GHIBlockBase extends HPCBlockBase implements TrustedCallbackInter
 
     // Important to rebuild, otherwhise the preview won't update.
     $form_state->setRebuild();
+  }
+
+  /**
+   * Validate the visible configuration subform before entering preview.
+   *
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   Form state interface.
+   */
+  private function validateVisibleSubformForPreview(FormStateInterface $form_state): void {
+    $complete_form = &$form_state->getCompleteForm();
+    if (!is_array($complete_form) || empty($complete_form['settings']) || !is_array($complete_form['settings'])) {
+      return;
+    }
+    $complete_form += [
+      '#parents' => [],
+      '#array_parents' => [],
+    ];
+    $settings_form = &$complete_form['settings'];
+    if (!isset($settings_form['#parents']) || !isset($settings_form['#array_parents'])) {
+      return;
+    }
+    $subform_state = SubformState::createForSubform($settings_form, $complete_form, $form_state);
+    $this->validateConfigurationForm($settings_form, $subform_state);
   }
 
   /**
@@ -1658,6 +1688,7 @@ abstract class GHIBlockBase extends HPCBlockBase implements TrustedCallbackInter
    *   The form state object.
    */
   public function blockFormAlter(array &$form, FormStateInterface $form_state) {
+    $form['#ghi_inline_errors_only'] = TRUE;
     $form['#attributes']['class'][] = Html::getClass($this->getPluginId());
 
     // Make sure the actions element is a container. GIN Layout Builder does
@@ -1732,6 +1763,7 @@ abstract class GHIBlockBase extends HPCBlockBase implements TrustedCallbackInter
       '#name' => 'preview-toggle',
       // Note: This doesn't work. We manually add the checked attribute later.
       '#default_value' => (bool) $is_preview,
+      '#limit_validation_errors' => FALSE,
       '#ajax' => [
         'event' => 'change',
         'callback' => [$this, 'navigateFormStep'],
@@ -1805,7 +1837,10 @@ abstract class GHIBlockBase extends HPCBlockBase implements TrustedCallbackInter
       // on the form state each time they are retrieved.
       if ($form_state->has('current_settings')) {
         $values = $form_state->getValues();
-        $values = $form_state->get('current_settings') + $values;
+        // The submitted payload must win for the active tab; current settings
+        // only fill in tabs that are absent, for example when submitting from
+        // preview.
+        $values = $values + $form_state->get('current_settings');
         $form_state->setValues($values);
       }
       $this->formSubmitter->executeSubmitHandlers($form, $form_state);
@@ -1942,9 +1977,9 @@ abstract class GHIBlockBase extends HPCBlockBase implements TrustedCallbackInter
   /**
    * Get currently available temporary settings.
    *
-   * This first looks in the storage of the form state object, then in the
-   * submitted values and then as a last fallback in the current plugin
-   * configuration.
+   * This first looks in the submitted values, then in the storage of the form
+   * state object, then in previously persisted temporary values and then as a
+   * last fallback in the current plugin configuration.
    *
    * @param \Drupal\Core\Form\FormStateInterface $form_state
    *   The form state object.
@@ -1973,7 +2008,9 @@ abstract class GHIBlockBase extends HPCBlockBase implements TrustedCallbackInter
         $temporary_values = $form_state->hasTemporaryValue($form_key) ? (array) $form_state->getTemporaryValue($form_key) : [];
         $storage_values = $form_state->has($storage_key) ? (array) $form_state->get($storage_key) : [];
         $submitted_values = !empty($values[$form_key]) ? $values[$form_key] : [];
-        $settings[$form_key] = $temporary_values + $storage_values + $submitted_values;
+        // Prefer the freshest values, while keeping array union semantics so
+        // configuration-container item keys are not renumbered.
+        $settings[$form_key] = $submitted_values + $storage_values + $temporary_values;
 
         if (empty($settings[$form_key]) && !empty($this->configuration['hpc'][$form_key])) {
           $settings[$form_key] = $this->configuration['hpc'][$form_key];

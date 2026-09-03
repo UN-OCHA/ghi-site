@@ -243,6 +243,7 @@ class GHIBlockTest extends BlockKernelTestBase {
     $this->assertArrayHasKey('container', $configuration_form);
     $this->assertArrayHasKey('context_mapping', $configuration_form);
     $this->assertArrayHasKey('#ghi_modal_form', $configuration_form);
+    $this->assertArrayHasKey('#ghi_inline_errors_only', $configuration_form);
     $this->assertArrayHasKey('provider', $configuration_form);
 
     $this->assertArrayHasKey('label', $configuration_form['container']);
@@ -263,6 +264,8 @@ class GHIBlockTest extends BlockKernelTestBase {
     $block_form['#submit'] = [];
     $plugin->blockFormAlter($block_form, $form_state);
     $this->assertContains('generic-datawrapper', $block_form['#attributes']['class']);
+    $this->assertArrayHasKey('#ghi_inline_errors_only', $block_form);
+    $this->assertFalse($block_form['actions']['subforms']['preview']['#limit_validation_errors']);
   }
 
   /**
@@ -317,6 +320,120 @@ class GHIBlockTest extends BlockKernelTestBase {
 
     $controller = BlockPreviewController::create($this->container);
     $this->assertInstanceOf(AjaxResponse::class, $controller->preview($token));
+  }
+
+  /**
+   * Tests that multi-step form values survive tabs, preview, and submit.
+   */
+  public function testMultistepValuesSurviveTabsPreviewAndSubmit() {
+    $plugin = $this->getDocumentLinksBlockPlugin();
+    $documents = [
+      12 => [
+        'item_type' => 'document_link',
+        'config' => [
+          'label' => 'Situation report',
+          'url' => 'https://example.com/report.pdf',
+        ],
+      ],
+    ];
+    $publications_url = 'https://reliefweb.int/updates?advanced-search=%28PC13%29';
+
+    $form_state = new FormState();
+    $form_state->set('block', $plugin);
+    $form_state->set('current_subform', 'documents');
+    $plugin->setFormState($form_state);
+
+    // Initial form builds seed default values that must not override the first
+    // submitted values from a tab switch.
+    $this->callPrivateMethod($plugin, 'getTemporarySettings', [$form_state]);
+
+    $form_state->setValue(['documents', 'documents'], $documents);
+    $form_state->setTriggeringElement([
+      '#parents' => ['actions', 'subforms', 'display'],
+    ]);
+    $element = [];
+    GHIBlockBase::ajaxMultiStepSubmit($element, $form_state);
+
+    $settings = $this->callPrivateMethod($plugin, 'getTemporarySettings', [$form_state]);
+    $this->assertSame('display', $form_state->get('current_subform'));
+    $this->assertSame($documents, $settings['documents']['documents']);
+
+    $form_state->setValues([
+      'display' => [
+        'publications_url' => $publications_url,
+      ],
+    ]);
+    $form_state->setTriggeringElement([
+      '#parents' => ['actions', 'subforms', 'preview'],
+      '#default_value' => FALSE,
+    ]);
+    $complete_form = [
+      'settings' => [
+        'container' => [],
+      ],
+    ];
+    $form_state->setCompleteForm($complete_form);
+    $plugin->blockElementValidate($element, $form_state);
+
+    $settings = $this->callPrivateMethod($plugin, 'getTemporarySettings', [$form_state]);
+    $this->assertSame($documents, $settings['documents']['documents']);
+    $this->assertSame($publications_url, $settings['display']['publications_url']);
+
+    $form_state->setValues([]);
+    $form_state->set('original_submit_handlers', []);
+    $form_state->setTriggeringElement([
+      '#parents' => ['actions', 'submit'],
+    ]);
+    $form = [
+      'actions' => [
+        'submit' => [
+          '#parents' => ['actions', 'submit'],
+        ],
+      ],
+    ];
+    $plugin->submitForm($form, $form_state);
+    $plugin->blockSubmit($form, $form_state);
+
+    $configuration = $plugin->getConfiguration()['hpc'];
+    $this->assertSame($documents, $configuration['documents']['documents']);
+    $this->assertSame($publications_url, $configuration['display']['publications_url']);
+  }
+
+  /**
+   * Tests that submitted multi-step values win over remembered settings.
+   */
+  public function testMultistepSubmitUsesLatestVisibleTabValues() {
+    $old_publications_url = 'https://reliefweb.int/updates?advanced-search=%28PC13%29';
+    $new_publications_url = 'https://reliefweb.int/updates?advanced-search=%28PC13%29_%28F10%29';
+    $plugin = $this->getDocumentLinksBlockPlugin([], $old_publications_url);
+
+    $form_state = new FormState();
+    $form_state->set('block', $plugin);
+    $form_state->set('current_subform', 'display');
+    $form_state->set('original_submit_handlers', []);
+    $plugin->setFormState($form_state);
+    $this->callPrivateMethod($plugin, 'getTemporarySettings', [$form_state]);
+
+    $form_state->setValues([
+      'display' => [
+        'publications_url' => $new_publications_url,
+      ],
+    ]);
+    $form_state->setTriggeringElement([
+      '#parents' => ['actions', 'submit'],
+    ]);
+    $form = [
+      'actions' => [
+        'submit' => [
+          '#parents' => ['actions', 'submit'],
+        ],
+      ],
+    ];
+    $plugin->submitForm($form, $form_state);
+    $plugin->blockSubmit($form, $form_state);
+
+    $configuration = $plugin->getConfiguration()['hpc'];
+    $this->assertSame($new_publications_url, $configuration['display']['publications_url']);
   }
 
   /**

@@ -56,6 +56,11 @@ class DatawrapperBlockTest extends BlockKernelTestBase {
     $form['embed']['#parents'] = ['container'];
     $form_state->set('current_subform', 'basic');
 
+    // Empty values are handled by the Form API required validation.
+    $form_state->setValue(['basic', 'embed'], '');
+    $plugin->blockValidate(['container' => $form], $form_state);
+    $this->assertEmpty($form_state->getErrors());
+
     // Validate a valid embed code.
     $form_state->setValue(['basic', 'embed'], self::EMBED_CODE_VALID);
     $plugin->blockValidate(['container' => $form], $form_state);

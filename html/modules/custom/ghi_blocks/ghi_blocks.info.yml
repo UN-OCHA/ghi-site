@@ -13,6 +13,7 @@ dependencies:
   - layout_builder_lock:layout_builder_lock
   - hpc_common:hpc_common
   - hpc_downloads:hpc_downloads
+  - hpc_remote_data_cache:hpc_remote_data_cache
   - ghi_base_objects:ghi_base_objects
   - ghi_plans:ghi_plans
   - ghi_homepage:ghi_homepage
