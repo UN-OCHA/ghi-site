@@ -111,16 +111,21 @@ class Datawrapper extends GHIBlockBase {
     $values = $form_state->getValue($form_state->get('current_subform'));
     $subform = $form['container'];
 
-    $embed = $values['embed'];
-    $src = $this->extractEmbedAttribute($embed, 'src');
-    $url = parse_url($src);
-    if (!UrlHelper::isValid($src, TRUE)) {
-      $form_state->setError($subform['embed'], $this->t('Please enter a full URL for the embed source, containing protocol, host and path, e.g. <em>https://datawrapper.dwcdn.net</em>.'));
+    $embed = trim($values['embed'] ?? '');
+    if ($embed === '') {
+      return;
     }
 
+    $src = $this->extractEmbedAttribute($embed, 'src');
+    if (!$src || !UrlHelper::isValid($src, TRUE)) {
+      $form_state->setError($subform['embed'], $this->t('Please enter a full URL for the embed source, containing protocol, host and path, e.g. <em>https://datawrapper.dwcdn.net</em>.'));
+      return;
+    }
+
+    $url = parse_url($src);
     $is_valid = FALSE;
     foreach (array_keys($allowed_hosts) as $domain) {
-      if (strpos($url['host'], $domain) !== FALSE) {
+      if (!empty($url['host']) && strpos($url['host'], $domain) !== FALSE) {
         $is_valid = TRUE;
         break;
       }

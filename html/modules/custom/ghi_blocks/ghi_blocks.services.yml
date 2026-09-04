@@ -29,3 +29,10 @@ services:
   ghi_blocks.page_template_queue:
     class: Drupal\ghi_blocks\Services\PageTemplateQueue
     arguments: ['@entity_type.manager', '@database', '@queue']
+  ghi_blocks.form_error_handler:
+    class: Drupal\ghi_blocks\Form\InlineOnlyFormErrorHandler
+    decorates: form_error_handler
+    arguments: ['@ghi_blocks.form_error_handler.inner', '@messenger']
+  ghi_blocks.reliefweb_rss_feed:
+    class: Drupal\ghi_blocks\ReliefWeb\ReliefWebRssFeed
+    arguments: ['@http_client', '@logger.factory', '@?hpc_remote_data_cache.cache']
