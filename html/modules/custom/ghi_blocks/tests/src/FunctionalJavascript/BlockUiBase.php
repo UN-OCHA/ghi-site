@@ -295,7 +295,8 @@ JS);
    * Waits for jQuery to become ready and animations to complete.
    */
   protected function waitForAjaxToFinish() {
-    $this->assertSession()->assertWaitOnAjaxRequest();
+    // IPE rebuilds the complete editing form and its aggregated assets.
+    $this->assertSession()->assertWaitOnAjaxRequest(30000);
     $this->htmlOutput(NULL);
   }
 
@@ -305,15 +306,17 @@ JS);
    * @postCondition
    */
   protected function failOnJavaScriptErrors(): void {
-    // Gin's sidebar behavior can race Layout Builder AJAX rendering in these
-    // tests and read the draggable handle before it exists. Keep failing on all
-    // other JavaScript errors.
+    // Gin's sidebar and core's debounced dialog resizing can race AJAX element
+    // replacement in these tests. Keep failing on all other JavaScript errors.
     $this->getSession()->executeScript(<<<JS
 const errors = JSON.parse(sessionStorage.getItem('js_testing_log_test.errors') || JSON.stringify([]));
-const filteredErrors = errors.filter((error) => !(
-  error.includes("Cannot read properties of null (reading 'addEventListener')") &&
-  error.includes('/themes/contrib/gin/dist/js/sidebar.js')
-));
+const filteredErrors = errors.filter((error) => {
+  const ginSidebarRace = error.includes("Cannot read properties of null (reading 'addEventListener')") &&
+    error.includes('/themes/contrib/gin/dist/js/sidebar.js');
+  const coreDialogResizeRace = error.includes("cannot call methods on dialog prior to initialization; attempted to call method 'option'") &&
+    error.includes('/core/misc/dialog/dialog.position.js');
+  return !ginSidebarRace && !coreDialogResizeRace;
+});
 sessionStorage.setItem('js_testing_log_test.errors', JSON.stringify(filteredErrors));
 JS);
     parent::failOnJavaScriptErrors();

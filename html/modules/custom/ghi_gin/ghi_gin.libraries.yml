@@ -12,6 +12,7 @@ gin_toolbar:
       css/gin_toolbar.css: {}
       css/gin_status_chips.css: {}
   js:
-    js/gin_toolbar.js: { minified: true, preprocess: false }
+    js/gin_toolbar.js: {}
   dependencies:
-    - toolbar/toolbar
+    - core/drupal
+    - core/once
