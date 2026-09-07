@@ -1,16 +1,10 @@
 .ghi-block-generic-reliefweb-rss-feed .block-content {
   .reliefweb-rss-feed__list {
-    display: flex;
-    flex-direction: column;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
     margin-block: 0;
     padding-inline-start: 0;
     gap: 0.5rem;
-
-    @include tablet {
-      flex-direction: row;
-      flex-wrap: wrap;
-      align-items: stretch;
-    }
   }
 
   .reliefweb-rss-feed__item {
@@ -18,9 +12,21 @@
     margin: 0;
     padding: 0;
     list-style: none;
+  }
 
+  .reliefweb-rss-feed--two-columns .reliefweb-rss-feed__list {
     @include tablet {
-      flex: 0 1 calc(50% - 0.25rem);
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  .reliefweb-rss-feed--three-columns .reliefweb-rss-feed__list {
+    @include tablet {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    @include desktop {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
     }
   }
 

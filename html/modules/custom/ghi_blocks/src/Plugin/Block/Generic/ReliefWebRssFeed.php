@@ -30,6 +30,14 @@ class ReliefWebRssFeed extends GHIBlockBase implements MultiStepFormBlockInterfa
   private const DEFAULT_ITEM_COUNT = 4;
   private const MIN_ITEM_COUNT = 1;
   private const MAX_ITEM_COUNT = 6;
+  private const DISPLAY_STYLE_TWO_COLUMNS = 'two_columns';
+  private const DISPLAY_STYLE_THREE_COLUMNS = 'three_columns';
+  private const DISPLAY_STYLE_STACKED = 'stacked';
+  private const DISPLAY_STYLES = [
+    self::DISPLAY_STYLE_TWO_COLUMNS,
+    self::DISPLAY_STYLE_THREE_COLUMNS,
+    self::DISPLAY_STYLE_STACKED,
+  ];
   private const RENDER_CACHE_MAX_AGE = 3600;
 
   /**
@@ -96,6 +104,7 @@ class ReliefWebRssFeed extends GHIBlockBase implements MultiStepFormBlockInterfa
     return [
       '#theme' => 'reliefweb_rss_feed',
       '#items' => array_map(fn (array $item) => $this->buildItem($item), $items),
+      '#display_style' => $this->sanitizeDisplayStyle($conf['display']['display_style'] ?? self::DISPLAY_STYLE_TWO_COLUMNS),
       '#view_more_link' => $this->buildViewMoreLink($conf['display'] ?? []),
       '#cache' => [
         'max-age' => self::RENDER_CACHE_MAX_AGE,
@@ -116,6 +125,7 @@ class ReliefWebRssFeed extends GHIBlockBase implements MultiStepFormBlockInterfa
       ],
       'display' => [
         'item_count' => self::DEFAULT_ITEM_COUNT,
+        'display_style' => self::DISPLAY_STYLE_TWO_COLUMNS,
         'view_more_url' => NULL,
         'view_more_label' => NULL,
       ],
@@ -182,6 +192,14 @@ class ReliefWebRssFeed extends GHIBlockBase implements MultiStepFormBlockInterfa
       '#required' => TRUE,
     ];
 
+    $form['display_style'] = [
+      '#type' => 'select',
+      '#title' => $this->t('Display style'),
+      '#options' => $this->getDisplayStyleOptions(),
+      '#default_value' => $this->sanitizeDisplayStyle($this->getDefaultFormValueFromFormState($form_state, 'display_style') ?? self::DISPLAY_STYLE_TWO_COLUMNS),
+      '#required' => TRUE,
+    ];
+
     $form['view_more_url'] = [
       '#type' => 'textfield',
       '#title' => $this->t('View more URL'),
@@ -236,6 +254,11 @@ class ReliefWebRssFeed extends GHIBlockBase implements MultiStepFormBlockInterfa
           '@min' => self::MIN_ITEM_COUNT,
           '@max' => self::MAX_ITEM_COUNT,
         ]));
+      }
+
+      $display_style = $values['display_style'] ?? self::DISPLAY_STYLE_TWO_COLUMNS;
+      if (array_key_exists('display_style', $subform) && !in_array($display_style, self::DISPLAY_STYLES, TRUE)) {
+        $form_state->setError($subform['display_style'], $this->t('Please select a valid display style.'));
       }
 
       $view_more_url = trim($values['view_more_url'] ?? '');
@@ -313,6 +336,33 @@ class ReliefWebRssFeed extends GHIBlockBase implements MultiStepFormBlockInterfa
    */
   private function sanitizeItemCount(mixed $item_count): int {
     return min(self::MAX_ITEM_COUNT, max(self::MIN_ITEM_COUNT, (int) $item_count));
+  }
+
+  /**
+   * Get the display style options.
+   *
+   * @return array
+   *   The display style options.
+   */
+  private function getDisplayStyleOptions(): array {
+    return [
+      self::DISPLAY_STYLE_TWO_COLUMNS => $this->t('2 columns'),
+      self::DISPLAY_STYLE_THREE_COLUMNS => $this->t('3 columns'),
+      self::DISPLAY_STYLE_STACKED => $this->t('Stacked 1-column items'),
+    ];
+  }
+
+  /**
+   * Normalize the configured display style.
+   *
+   * @param mixed $display_style
+   *   The configured value.
+   *
+   * @return string
+   *   The safe display style.
+   */
+  private function sanitizeDisplayStyle(mixed $display_style): string {
+    return in_array($display_style, self::DISPLAY_STYLES, TRUE) ? $display_style : self::DISPLAY_STYLE_TWO_COLUMNS;
   }
 
 }

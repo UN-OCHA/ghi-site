@@ -1,4 +1,4 @@
-<div class="reliefweb-rss-feed">
+<div class="reliefweb-rss-feed reliefweb-rss-feed--{{ display_style|default('two_columns')|clean_class }}">
   {% if items %}
     <ul class="reliefweb-rss-feed__list">
       {% for item in items %}

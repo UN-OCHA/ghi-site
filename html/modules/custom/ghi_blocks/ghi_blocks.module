@@ -47,6 +47,7 @@ function ghi_blocks_theme($existing, $type, $theme, $path) {
     'reliefweb_rss_feed' => [
       'variables' => [
         'items' => [],
+        'display_style' => NULL,
         'view_more_link' => NULL,
       ],
       'template' => 'reliefweb-rss-feed',

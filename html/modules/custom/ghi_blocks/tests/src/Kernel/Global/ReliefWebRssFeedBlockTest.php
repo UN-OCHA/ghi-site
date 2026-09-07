@@ -51,6 +51,7 @@ class ReliefWebRssFeedBlockTest extends BlockKernelTestBase {
 
     $this->assertSame('reliefweb_rss_feed', $build['#theme']);
     $this->assertCount(3, $build['#items']);
+    $this->assertSame('two_columns', $build['#display_style']);
     $this->assertSame('UNICEF Venezuela Humanitarian Situation Report No. 8', $build['#items'][0]['title']);
     $this->assertSame('link', $build['#items'][0]['link']['#type']);
     $this->assertSame('2 Sep 2026', $build['#items'][0]['formatted_date']);
@@ -61,6 +62,23 @@ class ReliefWebRssFeedBlockTest extends BlockKernelTestBase {
     $this->assertContains('cd-button', $build['#view_more_link']['#url']->getOption('attributes')['class']);
     $this->assertSame(3600, $build['#cache']['max-age']);
     $this->assertSame(['reliefweb_rss_feed:test'], $build['#cache']['tags']);
+  }
+
+  /**
+   * Tests the block build with configured display styles.
+   */
+  public function testBlockBuildDisplayStyles(): void {
+    $plugin = $this->getBlockPlugin(3, NULL, NULL, 'three_columns');
+    $build = $plugin->buildContent();
+    $this->assertSame('three_columns', $build['#display_style']);
+
+    $plugin = $this->getBlockPlugin(3, NULL, NULL, 'stacked');
+    $build = $plugin->buildContent();
+    $this->assertSame('stacked', $build['#display_style']);
+
+    $plugin = $this->getBlockPlugin(3, NULL, NULL, 'invalid');
+    $build = $plugin->buildContent();
+    $this->assertSame('two_columns', $build['#display_style']);
   }
 
   /**
@@ -109,12 +127,15 @@ class ReliefWebRssFeedBlockTest extends BlockKernelTestBase {
     $form_state->set('current_subform', 'display');
     $display_form = $plugin->displayForm(['#parents' => []], $form_state);
     $this->assertArrayHasKey('item_count', $display_form);
+    $this->assertArrayHasKey('display_style', $display_form);
     $this->assertArrayHasKey('view_more_url', $display_form);
     $this->assertArrayHasKey('view_more_label', $display_form);
 
     $display_form['item_count']['#parents'] = ['container', 'item_count'];
+    $display_form['display_style']['#parents'] = ['container', 'display_style'];
     $display_form['view_more_url']['#parents'] = ['container', 'view_more_url'];
     $form_state->setValue(['display', 'item_count'], 7);
+    $form_state->setValue(['display', 'display_style'], 'invalid');
     $form_state->setValue(['display', 'view_more_url'], '/internal-link');
     $plugin->blockValidate(['container' => $display_form], $form_state);
     $this->assertNotEmpty($form_state->getErrors());
@@ -310,17 +331,20 @@ class ReliefWebRssFeedBlockTest extends BlockKernelTestBase {
    *   The optional view more URL.
    * @param string|null $view_more_label
    *   The optional view more label.
+   * @param string|null $display_style
+   *   The display style.
    *
    * @return \Drupal\ghi_blocks\Plugin\Block\Generic\ReliefWebRssFeed
    *   The block plugin.
    */
-  private function getBlockPlugin(int $item_count = 4, ?string $view_more_url = NULL, ?string $view_more_label = NULL): ReliefWebRssFeed {
+  private function getBlockPlugin(int $item_count = 4, ?string $view_more_url = NULL, ?string $view_more_label = NULL, ?string $display_style = 'two_columns'): ReliefWebRssFeed {
     $configuration = [
       'feed' => [
         'feed_url' => self::FEED_URL,
       ],
       'display' => [
         'item_count' => $item_count,
+        'display_style' => $display_style,
         'view_more_url' => $view_more_url,
         'view_more_label' => $view_more_label,
       ],
