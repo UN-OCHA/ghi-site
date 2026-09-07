@@ -103,14 +103,14 @@ final class MapModalContent {
    *   The extracted modal content entries.
    */
   private static function extractFromDataset(array &$dataset, string $data_index, array &$entries): void {
-    if (isset($dataset['modal_contents']) && is_array($dataset['modal_contents'])) {
+    $modal_contents = self::extractModalContents($dataset);
+    if (!empty($modal_contents)) {
       $entries[] = [
         'data_index' => $data_index,
         'variant_id' => self::DEFAULT_VARIANT_ID,
-        'modal_contents' => $dataset['modal_contents'],
+        'modal_contents' => $modal_contents,
       ];
     }
-    unset($dataset['modal_contents']);
 
     if (empty($dataset['variants']) || !is_array($dataset['variants'])) {
       // Compact object-filter variants are not full map variants yet, but their
@@ -123,14 +123,14 @@ final class MapModalContent {
       if (!is_array($variant)) {
         continue;
       }
-      if (isset($variant['modal_contents']) && is_array($variant['modal_contents'])) {
+      $modal_contents = self::extractModalContents($variant);
+      if (!empty($modal_contents)) {
         $entries[] = [
           'data_index' => $data_index,
           'variant_id' => (string) $variant_id,
-          'modal_contents' => $variant['modal_contents'],
+          'modal_contents' => $modal_contents,
         ];
       }
-      unset($variant['modal_contents']);
     }
     unset($variant);
     // Some maps ship object filters separately from normal variants to avoid
@@ -168,6 +168,38 @@ final class MapModalContent {
       unset($variant['modal_contents']);
     }
     unset($variant);
+  }
+
+  /**
+   * Extract modal content from a data set or variant.
+   *
+   * @param array $dataset
+   *   The map data set or variant.
+   *
+   * @return array
+   *   The modal content keyed by object id.
+   */
+  private static function extractModalContents(array &$dataset): array {
+    $modal_contents = isset($dataset['modal_contents']) && is_array($dataset['modal_contents']) ? $dataset['modal_contents'] : [];
+    unset($dataset['modal_contents']);
+
+    if (empty($dataset['locations']) || !is_array($dataset['locations'])) {
+      return $modal_contents;
+    }
+
+    foreach ($dataset['locations'] as &$location) {
+      if (!is_array($location)) {
+        continue;
+      }
+      $object_id = $location['object_id'] ?? $location['id'] ?? NULL;
+      if ($object_id !== NULL && isset($location['modal_contents']) && is_array($location['modal_contents'])) {
+        $modal_contents[(string) $object_id] = $location['modal_contents'];
+      }
+      unset($location['modal_contents']);
+    }
+    unset($location);
+
+    return $modal_contents;
   }
 
 }

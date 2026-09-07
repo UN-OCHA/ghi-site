@@ -6,6 +6,16 @@ configuration_container:
       css/attachment_select.css: {}
       css/data_point.css: {}
 
+map_dataset:
+  css:
+    component:
+      css/map_dataset.css: {}
+  js:
+    js/map_dataset.js: {}
+  dependencies:
+    - core/drupal
+    - core/once
+
 states_regex:
   js:
     js/states.regex.js: {}
