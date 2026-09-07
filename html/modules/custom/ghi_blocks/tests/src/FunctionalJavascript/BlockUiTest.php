@@ -34,10 +34,14 @@ class BlockUiTest extends BlockUiBase {
 
     // Check that the form and the main editor actions are there.
     $assert_session->elementExists('css', 'form.layout-builder-form');
-    $assert_session->buttonExists('Discard changes');
+    $assert_session->linkExists('Discard changes');
     $assert_session->buttonExists('Save layout');
     $assert_session->linkExists('Close editor');
-    $assert_session->elementExists('css', '.gin-secondary-toolbar .glb-button-close-editor');
+    $assert_session->elementExists('css', '#layout-builder-ipe-toolbar .layout-builder-ipe-close-editor');
+    $assert_session->elementExists('css', '#layout-builder-ipe-toolbar .layout-builder-ipe-discard-changes');
+    $sidebar_toggle = $assert_session->elementExists('css', '#layout-builder-ipe-toolbar .meta-sidebar__trigger');
+    $this->assertFalse($sidebar_toggle->isVisible());
+    $this->assertFalse($assert_session->elementExists('css', '#gin_sidebar')->isVisible());
 
     // Open the "add new block" dialog.
     $assert_session->linkExists('Add block');
@@ -89,9 +93,10 @@ class BlockUiTest extends BlockUiBase {
     $assert_session->waitForElementRemoved('css', '#layout-builder-modal');
 
     // Close the editor without discarding the temporary layout.
-    $this->clickButtonWithText('Close editor');
+    $this->clickLinkWithText('Close editor');
     $assert_session->waitForElementVisible('css', '#layout-builder-ipe-wrapper:not(.edit-layout)');
     $assert_session->elementExists('css', '#layout-builder-ipe-wrapper:not(.edit-layout)');
+    $assert_session->elementNotExists('css', '#layout-builder-ipe-toolbar');
     $assert_session->elementExists('css', '.layout-builder-ipe-actions .layout-builder-ipe--link-customize.dropbutton-wrapper');
     $assert_session->linkExists('Customize');
     $assert_session->linkExists('Discard changes');

@@ -195,18 +195,6 @@
                 }
             }
         ],
-        "drupal/layout_builder_ipe": [
-            {
-                "package": "drupal/layout_builder_ipe",
-                "description": "Issue #3620545: Preserve block content structure when adding enhanced UI controls",
-                "url": "patches/layout_builder_ipe-3620545-mr-11.patch",
-                "sha256": "887aced77cf94a9489aff016274eff821d310c53dc8681c9a238cae5739c87ca",
-                "depth": 1,
-                "extra": {
-                    "provenance": "patches-file:composer.patches.json"
-                }
-            }
-        ],
         "drupal/page_manager": [
             {
                 "package": "drupal/page_manager",
