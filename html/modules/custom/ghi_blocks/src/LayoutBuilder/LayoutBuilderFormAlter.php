@@ -50,6 +50,8 @@ class LayoutBuilderFormAlter {
     $form_object = $form_state->getFormObject();
     $section_storage = $form_object->getSectionStorage();
 
+    $form['#ghi_inline_errors_only'] = TRUE;
+
     // Hide the admin label because it's kind of redundant.
     $form['settings']['admin_label']['#access'] = FALSE;
 
