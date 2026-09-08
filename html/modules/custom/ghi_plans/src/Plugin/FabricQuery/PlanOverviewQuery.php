@@ -104,9 +104,20 @@ class PlanOverviewQuery extends FabricQueryBase {
     }
 
     $plans = $this->planQuery->getPlansByYear($year);
+    if (empty($plans)) {
+      return;
+    }
     $plan_ids = $this->extractIds($plans);
     /** @var \Drupal\ghi_plans\Entity\Plan[] $plan_objects */
     $plan_objects = BaseObjectHelper::getBaseObjectsFromOriginalIds($plan_ids, 'plan');
+
+    // Fabric can return plans that have not been imported into Drupal yet.
+    // Only load overview data for plans with a matching base object.
+    $plans = array_filter($plans, fn ($plan) => isset($plan_objects[$plan->id()]));
+    if (empty($plans)) {
+      return;
+    }
+    $plan_ids = $this->extractIds($plans);
     $this->attachmentPrototypeQuery->getDataPrototypesForPlans($plan_ids, FALSE);
 
     $attachments = $this->attachmentQuery->getAttachmentsByObject(PlanEntityInterface::ENTITY_TYPE_PLAN, $plan_ids, [

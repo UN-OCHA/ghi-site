@@ -334,9 +334,12 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
    *   TRUE if the attachment can be considered for map rendering.
    */
   private function attachmentHasMapPotential(AttachmentInterface $attachment): bool {
+    // Map metadata needs the imported plan for its ID and language settings.
+    // A configured Fabric attachment can outlive its matching Drupal plan.
     return $attachment instanceof Attachment
       && $attachment->canHaveDisaggregatedData()
-      && $attachment->getPlanId() == $this->getCurrentPlanId();
+      && $attachment->getPlanId() == $this->getCurrentPlanId()
+      && $attachment->getPlanObject() !== NULL;
   }
 
   /**
