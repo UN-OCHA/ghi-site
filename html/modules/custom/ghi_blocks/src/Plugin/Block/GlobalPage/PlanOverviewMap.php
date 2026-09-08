@@ -658,7 +658,7 @@ class PlanOverviewMap extends GHIBlockBase implements LazyMapBlockInterface {
   private function getPlanLocation(PlanOverviewPlan $plan) {
     $plan_entity = $plan->getEntity();
     $default_country = $plan->getCountry();
-    return $plan_entity->getFocusCountryMapLocation($default_country) ?? $default_country;
+    return $plan_entity?->getFocusCountryMapLocation($default_country) ?? $default_country;
   }
 
   /**
