@@ -10,6 +10,7 @@ use Drupal\Core\Render\Markup;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\ghi_base_objects\Helpers\BaseObjectHelper;
 use Drupal\ghi_blocks\Interfaces\ConfigurableTableBlockInterface;
+use Drupal\ghi_blocks\Interfaces\DeprecatedBlockInterface;
 use Drupal\ghi_blocks\Interfaces\MultiStepFormBlockInterface;
 use Drupal\ghi_blocks\Interfaces\OverrideDefaultTitleBlockInterface;
 use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
@@ -31,14 +32,14 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  */
 #[Block(
   id: 'plan_governing_entities_table',
-  admin_label: new TranslatableMarkup('Governing Entities Overview Table'),
+  admin_label: new TranslatableMarkup('Governing Entities Table'),
   category: new TranslatableMarkup('Plan elements'),
   context_definitions: [
     'node' => new EntityContextDefinition('entity:node', new TranslatableMarkup('Node')),
     'plan' => new EntityContextDefinition('entity:base_object', new TranslatableMarkup('Plan'), constraints: ['Bundle' => 'plan']),
   ],
 )]
-class PlanGoverningEntitiesTable extends GHIBlockBase implements ConfigurableTableBlockInterface, MultiStepFormBlockInterface, OverrideDefaultTitleBlockInterface, HPCDownloadExcelInterface, HPCDownloadPNGInterface {
+class PlanGoverningEntitiesTable extends GHIBlockBase implements ConfigurableTableBlockInterface, MultiStepFormBlockInterface, OverrideDefaultTitleBlockInterface, HPCDownloadExcelInterface, HPCDownloadPNGInterface, DeprecatedBlockInterface {
 
   use ConfigurationContainerTrait;
   use ConfigurationItemClusterRestrictTrait;
@@ -360,7 +361,6 @@ class PlanGoverningEntitiesTable extends GHIBlockBase implements ConfigurableTab
       'base' => [
         'include_cluster_not_reported' => FALSE,
         'include_shared_funding' => FALSE,
-        'hide_target_values_for_projects' => FALSE,
         'hide_unpublished_clusters' => FALSE,
         'cluster_restrict' => [],
       ],
@@ -405,13 +405,6 @@ class PlanGoverningEntitiesTable extends GHIBlockBase implements ConfigurableTab
       '#title' => $this->t('Include a line with funding shared across multiple clusters'),
       '#description' => $this->t('Check this if you want an additional line added that only shows the plan funding that is shared across multiple clusters.'),
       '#default_value' => $this->getDefaultFormValueFromFormState($form_state, 'include_shared_funding'),
-    ];
-
-    $form['hide_target_values_for_projects'] = [
-      '#type' => 'checkbox',
-      '#title' => $this->t('Hide target values for projects'),
-      '#description' => $this->t('Check this if you want to hide the target values from the project details popover.'),
-      '#default_value' => $this->getDefaultFormValueFromFormState($form_state, 'hide_target_values_for_projects'),
     ];
 
     $form['hide_unpublished_clusters'] = [
@@ -615,6 +608,15 @@ class PlanGoverningEntitiesTable extends GHIBlockBase implements ConfigurableTab
       'header' => $table_data['header'],
       'rows' => $table_data['rows'],
     ] : $table_data;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getBlockConfigForReplacement() {
+    // Keep saved layouts and templates intact while hiding this legacy type
+    // from the add-element picker.
+    return NULL;
   }
 
 }

@@ -266,7 +266,6 @@ class PlanGoverningEntitiesTableTest extends PlanBlockKernelTestBase {
       'base' => [
         'include_cluster_not_reported' => TRUE,
         'include_shared_funding' => TRUE,
-        'hide_target_values_for_projects' => FALSE,
         'hide_unpublished_clusters' => FALSE,
         'cluster_restrict' => [],
       ],
@@ -459,7 +458,6 @@ class PlanGoverningEntitiesTableTest extends PlanBlockKernelTestBase {
     $base_form = $plugin->baseForm([], $form_state);
     $this->assertArrayHasKey('include_cluster_not_reported', $base_form);
     $this->assertArrayHasKey('include_shared_funding', $base_form);
-    $this->assertArrayHasKey('hide_target_values_for_projects', $base_form);
     $this->assertArrayHasKey('cluster_restrict', $base_form);
 
     $table_form = $plugin->tableForm([], $form_state);

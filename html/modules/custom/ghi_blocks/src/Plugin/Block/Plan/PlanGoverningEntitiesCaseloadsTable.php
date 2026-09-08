@@ -12,6 +12,7 @@ use Drupal\ghi_blocks\Helpers\AttachmentMatcher;
 use Drupal\ghi_blocks\Interfaces\AttachmentTableInterface;
 use Drupal\ghi_blocks\Interfaces\ConfigValidationInterface;
 use Drupal\ghi_blocks\Interfaces\ConfigurableTableBlockInterface;
+use Drupal\ghi_blocks\Interfaces\DeprecatedBlockInterface;
 use Drupal\ghi_blocks\Interfaces\MultiStepFormBlockInterface;
 use Drupal\ghi_blocks\Interfaces\OverrideDefaultTitleBlockInterface;
 use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
@@ -38,7 +39,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
     'plan' => new EntityContextDefinition('entity:base_object', new TranslatableMarkup('Plan'), constraints: ['Bundle' => 'plan']),
   ],
 )]
-class PlanGoverningEntitiesCaseloadsTable extends GHIBlockBase implements ConfigurableTableBlockInterface, MultiStepFormBlockInterface, OverrideDefaultTitleBlockInterface, AttachmentTableInterface, ConfigValidationInterface, HPCDownloadExcelInterface, HPCDownloadPNGInterface {
+class PlanGoverningEntitiesCaseloadsTable extends GHIBlockBase implements ConfigurableTableBlockInterface, MultiStepFormBlockInterface, OverrideDefaultTitleBlockInterface, AttachmentTableInterface, ConfigValidationInterface, HPCDownloadExcelInterface, HPCDownloadPNGInterface, DeprecatedBlockInterface {
 
   use ConfigurationContainerTrait;
   use AttachmentTableTrait;
@@ -622,6 +623,15 @@ class PlanGoverningEntitiesCaseloadsTable extends GHIBlockBase implements Config
       }
     }
     $this->setBlockConfig($conf);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getBlockConfigForReplacement() {
+    // Keep saved layouts and templates intact while hiding this legacy type
+    // from the add-element picker.
+    return NULL;
   }
 
 }
