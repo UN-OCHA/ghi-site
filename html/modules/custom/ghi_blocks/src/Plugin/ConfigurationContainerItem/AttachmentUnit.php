@@ -39,7 +39,7 @@ class AttachmentUnit extends ConfigurationContainerItemPluginBase {
     if (!$attachment || !$attachment instanceof Attachment) {
       return NULL;
     }
-    $langcode = $attachment->getPlanObject()->getPlanLanguage();
+    $langcode = $attachment->getPlanLanguage();
     return $attachment->getUnitLabel($langcode);
   }
 

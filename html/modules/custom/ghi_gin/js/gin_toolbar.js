@@ -1,8 +1,5 @@
-/* eslint-disable no-bitwise, no-nested-ternary, no-mutable-exports, comma-dangle, strict */
-
-'use strict';
-
-(($, Drupal, drupalSettings) => {
+(function (Drupal, once) {
+  'use strict';
 
   const suspendFrontendActions = (activeAction) => {
     const actionContainer = activeAction.closest('.layout-builder-ipe-actions');
@@ -29,16 +26,7 @@
     }, 10000);
   };
 
-  Drupal.toolbar.ToolbarVisualView.prototype.updateToolbarHeight = function () {
-    const $glbToolbar = $('.gin-secondary-toolbar');
-    if ($glbToolbar.length) {
-      $('body').addClass('has-secondary-toolbar');
-      $glbToolbar.addClass('gin-secondary-toolbar--processed');
-      this.triggerDisplace();
-    }
-  };
-
-  Drupal.behaviors.ghiGinLbToolbar = {
+  Drupal.behaviors.ghiIpeFrontendActions = {
     attach: (context) => {
       once('ghi-ipe-customize-transition', '.layout-builder-ipe-actions > .layout-builder-ipe--link-customize:not(.dropbutton-wrapper)', context).forEach((item) => {
         item.addEventListener('click', () => {
@@ -48,36 +36,7 @@
           suspendFrontendActions(item);
         }, true);
       });
-      once('glb-button-close-editor', '.glb-button-close-editor').forEach((item) => {
-        item.addEventListener('click', function () {
-          const closeLink = document.querySelector('.layout-builder-ipe-close-editor');
-          if (closeLink) {
-            window.location.assign(closeLink.href);
-          }
-        });
-      });
-      once('glb-button-discard', '.glb-button-discard ').forEach((item) => {
-        item.addEventListener('click', function () {
-          const frontendDiscardLink = document.querySelector('.layout-builder-ipe-actions > .layout-builder-ipe--link-discard');
-          if (frontendDiscardLink) {
-            // Page Manager's embedded cancel button submits immediately. Use
-            // IPE's frontend link so the shared confirmation is shown first.
-            frontendDiscardLink.click();
-            return;
-          }
-          // The discard changes button for page manager pages.
-          const cancelButton = document.querySelector('#gin_sidebar .form-actions .glb-button[data-drupal-selector="edit-cancel"]');
-          if (cancelButton) {
-            cancelButton.click();
-          }
-          // The discard changes button for entity pages.
-          const discardButton = document.querySelector('#gin_sidebar .form-actions .glb-button[data-drupal-selector="edit-discard-changes"]');
-          if (discardButton) {
-            discardButton.click();
-          }
-        });
-      });
     },
   };
 
-})(jQuery, Drupal, drupalSettings);
+})(Drupal, once);
