@@ -18,7 +18,7 @@ function hpc_api_cache_flush() {
 }
 
 /**
- * Delete and recreate the given directory.
+ * Delete the contents of the given directory without replacing it.
  *
  * Use this only for directories whose whole contents are disposable.
  *
@@ -28,10 +28,22 @@ function hpc_api_cache_flush() {
 function hpc_api_clear_directory_contents($dir) {
   /** @var \Drupal\Core\File\FileSystem $file_system */
   $file_system = \Drupal::service('file_system');
-  if (file_exists($dir)) {
-    $file_system->deleteRecursive($dir);
+  if (!is_dir($dir)) {
+    $file_system->prepareDirectory($dir, FileSystemInterface::CREATE_DIRECTORY | FileSystemInterface::MODIFY_PERMISSIONS);
+    return;
   }
-  $file_system->prepareDirectory($dir, FileSystemInterface::CREATE_DIRECTORY | FileSystemInterface::MODIFY_PERMISSIONS);
+
+  // Preserve the directory's ownership, permissions, and any mount point.
+  // Iterate local paths without building a filtered scanDirectory() listing.
+  $path = $file_system->realpath($dir) ?: $dir;
+  foreach (new \FilesystemIterator($path, \FilesystemIterator::SKIP_DOTS | \FilesystemIterator::CURRENT_AS_PATHNAME) as $entry) {
+    // NFS retains deleted-but-open files under .nfs names until readers close
+    // them. Trying to unlink these placeholders can abort a cache rebuild.
+    if (str_starts_with(basename($entry), '.nfs')) {
+      continue;
+    }
+    $file_system->deleteRecursive($entry);
+  }
 }
 
 /**
