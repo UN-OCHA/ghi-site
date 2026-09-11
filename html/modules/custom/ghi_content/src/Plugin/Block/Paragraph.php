@@ -6,7 +6,9 @@ use Drupal\Component\Utility\Html;
 use Drupal\Core\Block\Attribute\Block;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Render\BubbleableMetadata;
 use Drupal\Core\Render\Markup;
+use Drupal\Core\Render\RenderContext;
 use Drupal\Core\Security\TrustedCallbackInterface;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\Url;
@@ -103,7 +105,15 @@ class Paragraph extends ContentBlockBase implements OptionalTitleBlockInterface,
     if (!$paragraph) {
       return;
     }
-    return $this->buildParagraph($paragraph, $this->label(), $this->isPreview());
+    // Nested articles are rendered into HTML before the paragraph is cached.
+    // Keep their placeholder callbacks and other bubbling metadata with that
+    // cached content so they remain available on subsequent requests.
+    $context = new RenderContext();
+    $build = $this->renderer->executeInRenderContext($context, fn () => $this->buildParagraph($paragraph, $this->label(), $this->isPreview()));
+    if (!$context->isEmpty()) {
+      BubbleableMetadata::createFromRenderArray($build)->merge($context->pop())->applyTo($build);
+    }
+    return $build;
   }
 
   /**
