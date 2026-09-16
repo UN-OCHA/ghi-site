@@ -1,0 +1,33 @@
+ghi_subpages.page_sets:
+  type: config_object
+  label: 'Operation page sets'
+  mapping:
+    page_sets:
+      type: sequence
+      label: 'Page sets'
+      orderby: key
+      sequence:
+        type: mapping
+        label: 'Page set'
+        mapping:
+          base_object_type:
+            type: string
+            label: 'Base object type'
+          effective_from:
+            type: integer
+            label: 'First year'
+          effective_to:
+            type: integer
+            label: 'Last year'
+          create_on_insert:
+            type: sequence
+            label: 'Bundles created on insert'
+            sequence:
+              type: string
+              label: 'Bundle'
+          navigation_order:
+            type: sequence
+            label: 'Default navigation order'
+            sequence:
+              type: string
+              label: 'Menu slot'
