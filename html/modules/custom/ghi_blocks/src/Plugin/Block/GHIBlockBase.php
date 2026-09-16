@@ -527,7 +527,9 @@ abstract class GHIBlockBase extends HPCBlockBase implements TrustedCallbackInter
           ],
         ],
       ];
-      if ($this->hasReliableIsEmpty()) {
+      // Hide disabled titles before the outer wrapper renders. The lazy
+      // callback only replaces its content and cannot remove an outer heading.
+      if (!$this->shouldDisplayTitle() || $this->hasReliableIsEmpty()) {
         $this->applyTitleDisplay($build);
       }
       return $build;

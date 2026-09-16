@@ -238,6 +238,24 @@ class GHIBlockTest extends BlockKernelTestBase {
   }
 
   /**
+   * Tests that lazy wrappers respect blocks that disable their titles.
+   */
+  public function testLazyBuildSuppressesDisabledTitle() {
+    $this->config('ghi_blocks.block_settings')
+      ->set('lazy_load', TRUE)
+      ->save();
+
+    $plugin = $this->createBlockPlugin('generic_datawrapper', [
+      'embed' => self::EMBED_CODE_VALID,
+    ], [], 'Configured title', TRUE);
+    $build = $plugin->build();
+
+    $this->assertArrayHasKey('#lazy_builder', $build['content']);
+    $this->assertFalse($plugin->getConfiguration()['label_display']);
+    $this->assertArrayNotHasKey('#title', $build);
+  }
+
+  /**
    * Tests that override default titles are available on lazy builds.
    */
   public function testOverrideDefaultTitleLazyBuild() {
