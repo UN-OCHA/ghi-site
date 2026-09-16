@@ -265,7 +265,7 @@ jobs:
           name: phpunit-results-${{ matrix.coverage }}
           path: test-results/
           if-no-files-found: warn
-          retention-days: 14
+          retention-days: 3
 
       - name: Copy Coverage Data
         if: always()
@@ -327,16 +327,16 @@ jobs:
           path: test-results/
           merge-multiple: true
 
+      - name: Summarize PHPUnit Timings
+        run: python3 .github/tests/summarize_phpunit_results.py test-results --output timing-history/timings.json
+
       - name: Save PHPUnit Timing History
         uses: actions/upload-artifact@v7
         with:
-          name: phpunit-timings
-          path: test-results/*.xml
+          name: phpunit-timings-v1
+          path: timing-history/timings.json
           if-no-files-found: error
           retention-days: 30
-
-      - name: Summarize PHPUnit Timings
-        run: python3 .github/tests/summarize_phpunit_results.py test-results
 
       - name: Extract PHP Version
         id: php
