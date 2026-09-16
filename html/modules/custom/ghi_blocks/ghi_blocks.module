@@ -6,6 +6,7 @@
  */
 
 use Drupal\Component\Serialization\Json;
+use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Link;
@@ -568,6 +569,17 @@ function ghi_blocks_page_attachments(array &$attachments) {
   if (\Drupal::currentUser()->isAnonymous()) {
     // Nothing to do for anonymous.
     return;
+  }
+
+  $ipe_config = \Drupal::config('layout_builder_ipe.settings');
+  CacheableMetadata::createFromRenderArray($attachments)
+    ->addCacheableDependency($ipe_config)
+    ->applyTo($attachments);
+  if ($ipe_config->get('enhance_ui')) {
+    // The CSS only applies in enhanced IPE edit mode. Loading it for signed-in
+    // users also covers empty layouts, which have no component render event
+    // from which Layout Builder IPE could attach the library itself.
+    $attachments['#attached']['library'][] = 'layout_builder_ipe/enhanced_ui';
   }
   if (ghi_blocks_is_layout_builder_route()) {
     $attachments['#attached']['library'][] = 'ghi_blocks/layout_builder_gin';
