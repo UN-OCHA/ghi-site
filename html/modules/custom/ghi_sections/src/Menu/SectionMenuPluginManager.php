@@ -43,4 +43,16 @@ class SectionMenuPluginManager extends DefaultPluginManager {
     return $optional_plugins;
   }
 
+  /**
+   * Allows modules to alter the ordered definitions for a section.
+   *
+   * @param array $definitions
+   *   The plugin definitions, keyed by plugin ID.
+   * @param \Drupal\ghi_sections\Entity\SectionNodeInterface $section
+   *   The section for which the definitions will be instantiated.
+   */
+  public function alterDefinitionsForSection(array &$definitions, SectionNodeInterface $section): void {
+    $this->moduleHandler->alter('ghi_section_menu_items_for_section', $definitions, $section);
+  }
+
 }

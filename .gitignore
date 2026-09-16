@@ -37,6 +37,7 @@ buildlog.txt
 /.composer
 
 # Ignore local dev directories.
+/config_dev/language/
 /shared/
 /database/
 /private/

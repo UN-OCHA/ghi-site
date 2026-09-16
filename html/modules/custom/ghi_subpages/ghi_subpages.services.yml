@@ -1,7 +1,10 @@
 services:
   ghi_subpages.manager:
     class: Drupal\ghi_subpages\SubpageManager
-    arguments: ['@module_handler', '@entity_type.manager', '@entity_type.bundle.info' , '@ghi_sections.manager', '@renderer', '@current_user', '@messenger']
+    arguments: ['@module_handler', '@entity_type.manager', '@entity_type.bundle.info' , '@ghi_sections.manager', '@renderer', '@current_user', '@messenger', '@lock']
+  ghi_subpages.page_set_resolver:
+    class: Drupal\ghi_subpages\PageSetResolver
+    arguments: ['@config.factory']
   ghi_subpages.logframe_manager:
     class: Drupal\ghi_subpages\LogframeManager
     arguments: ['@plugin.manager.block', '@uuid', '@plugin.manager.endpoint_query_manager', '@plugin.manager.fabric_query_manager', '@context.handler', '@layout_builder.tempstore_repository', '@ghi_subpages.logframe_table_config_builder']

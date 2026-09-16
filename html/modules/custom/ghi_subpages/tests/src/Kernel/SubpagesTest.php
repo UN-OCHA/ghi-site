@@ -66,7 +66,7 @@ class SubpagesTest extends KernelTestBase {
     $this->installEntitySchema('path_alias');
     $this->installSchema('system', 'sequences');
     $this->installSchema('node', ['node_access']);
-    $this->installConfig(['system', 'node', 'field', 'pathauto']);
+    $this->installConfig(['system', 'node', 'field', 'pathauto', 'ghi_subpages']);
 
     $this->entityTypeManager = $this->container->get('entity_type.manager');
 
@@ -100,8 +100,10 @@ class SubpagesTest extends KernelTestBase {
    * Test that subpages are created and deleted together with a section.
    */
   public function testSectionSubpageLogic() {
+    // The shared section fixture uses a 2025 plan, so it must resolve to the
+    // legacy page set rather than every supported subpage bundle.
     $existing_subpages = $this->entityTypeManager->getStorage('node')->loadByProperties([
-      'type' => self::SUBPAGE_BUNDLES,
+      'type' => self::LEGACY_SUBPAGE_BUNDLES,
     ]);
     $this->assertEmpty($existing_subpages);
 
@@ -110,10 +112,10 @@ class SubpagesTest extends KernelTestBase {
 
     // Confirm that we have the expected number of subpages now.
     $existing_subpages = $this->entityTypeManager->getStorage('node')->loadByProperties([
-      'type' => self::SUBPAGE_BUNDLES,
+      'type' => self::LEGACY_SUBPAGE_BUNDLES,
     ]);
     // Confirm every subpage has the reference to the section set.
-    $this->assertCount(count(self::SUBPAGE_BUNDLES), $existing_subpages);
+    $this->assertCount(count(self::LEGACY_SUBPAGE_BUNDLES), $existing_subpages);
     foreach ($existing_subpages as $subpage) {
       $this->assertInstanceOf(SubpageNodeInterface::class, $subpage);
       $parent_node = $subpage->getParentBaseNode();
@@ -124,9 +126,52 @@ class SubpagesTest extends KernelTestBase {
     // Delete the section, which should also delete the subpages.
     $section->delete();
     $existing_subpages = $this->entityTypeManager->getStorage('node')->loadByProperties([
-      'type' => self::SUBPAGE_BUNDLES,
+      'type' => self::LEGACY_SUBPAGE_BUNDLES,
     ]);
     $this->assertEmpty($existing_subpages);
+  }
+
+  /**
+   * Sections from 2027 onward receive only the configured initial structure.
+   */
+  public function test2027AndLaterInsertDoesNotRecreateDeletedPages() {
+    foreach ([2027, 2028] as $year) {
+      $plan = $this->createBaseObject([
+        'type' => 'plan',
+        'field_year' => $year,
+      ]);
+      $section = $this->createSection([
+        'field_base_object' => ['target_id' => $plan->id()],
+      ]);
+      $nodes = $this->entityTypeManager->getStorage('node')->loadByProperties([
+        'field_entity_reference' => $section->id(),
+      ]);
+      $bundles = array_values(array_unique(array_map(static fn ($node) => $node->bundle(), $nodes)));
+      sort($bundles);
+      $this->assertSame(['needs', 'progress', 'response'], $bundles, "Unexpected initial subpages for $year.");
+      $this->assertCount(3, $nodes);
+      foreach ($nodes as $child) {
+        $this->assertFalse($child->isPublished());
+      }
+
+      /** @var \Drupal\ghi_sections\Menu\SectionMenuStorage $menu_storage */
+      $menu_storage = $this->container->get('ghi_sections.section_menu.storage');
+      $menu_storage->setSection($section);
+      $menu_ids = array_map(static fn ($item) => $item->getPluginId(), $menu_storage->getDefaultMenuItems());
+      $this->assertSame(['standard_subpage:needs', 'standard_subpage:response', 'standard_subpage:progress'], $menu_ids);
+    }
+
+    $matching_needs = $this->entityTypeManager->getStorage('node')->loadByProperties([
+      'type' => 'needs',
+      'field_entity_reference' => $section->id(),
+    ]);
+    $needs = reset($matching_needs);
+    $needs->delete();
+    $section->save();
+    $this->assertEmpty($this->entityTypeManager->getStorage('node')->loadByProperties([
+      'type' => 'needs',
+      'field_entity_reference' => $section->id(),
+    ]));
   }
 
 }
