@@ -66,7 +66,7 @@ class SubpagesTest extends KernelTestBase {
     $this->installEntitySchema('path_alias');
     $this->installSchema('system', 'sequences');
     $this->installSchema('node', ['node_access']);
-    $this->installConfig(['system', 'node', 'field', 'pathauto']);
+    $this->installConfig(['system', 'node', 'field', 'pathauto', 'ghi_subpages']);
 
     $this->entityTypeManager = $this->container->get('entity_type.manager');
 
@@ -127,6 +127,47 @@ class SubpagesTest extends KernelTestBase {
       'type' => self::SUBPAGE_BUNDLES,
     ]);
     $this->assertEmpty($existing_subpages);
+  }
+
+  /**
+   * New 2027 sections receive only the configured initial structure.
+   */
+  public function test2027InsertDoesNotRecreateDeletedPages() {
+    $plan = $this->createBaseObject([
+      'type' => 'plan',
+      'field_year' => 2027,
+    ]);
+    $section = $this->createSection([
+      'field_base_object' => ['target_id' => $plan->id()],
+    ]);
+    $nodes = $this->entityTypeManager->getStorage('node')->loadByProperties([
+      'field_entity_reference' => $section->id(),
+    ]);
+    $bundles = array_values(array_unique(array_map(static fn ($node) => $node->bundle(), $nodes)));
+    sort($bundles);
+    $this->assertSame(['needs', 'progress', 'response'], $bundles);
+    $this->assertCount(3, $nodes);
+    foreach ($nodes as $child) {
+      $this->assertFalse($child->isPublished());
+    }
+
+    /** @var \Drupal\ghi_sections\Menu\SectionMenuStorage $menu_storage */
+    $menu_storage = $this->container->get('ghi_sections.section_menu.storage');
+    $menu_storage->setSection($section);
+    $menu_ids = array_map(static fn ($item) => $item->getPluginId(), $menu_storage->getDefaultMenuItems());
+    $this->assertSame(['standard_subpage:needs', 'standard_subpage:response', 'standard_subpage:progress'], $menu_ids);
+
+    $matching_needs = $this->entityTypeManager->getStorage('node')->loadByProperties([
+      'type' => 'needs',
+      'field_entity_reference' => $section->id(),
+    ]);
+    $needs = reset($matching_needs);
+    $needs->delete();
+    $section->save();
+    $this->assertEmpty($this->entityTypeManager->getStorage('node')->loadByProperties([
+      'type' => 'needs',
+      'field_entity_reference' => $section->id(),
+    ]));
   }
 
 }

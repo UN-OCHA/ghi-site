@@ -1,0 +1,21 @@
+uuid: eaa8b82a-5bc9-461c-91f3-83dff5739072
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.layout_builder__layout
+    - node.type.response
+  module:
+    - layout_builder
+id: node.response.layout_builder__layout
+field_name: layout_builder__layout
+entity_type: node
+bundle: response
+label: Layout
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: layout_section
