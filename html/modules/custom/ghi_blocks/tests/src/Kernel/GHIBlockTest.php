@@ -197,6 +197,47 @@ class GHIBlockTest extends BlockKernelTestBase {
   }
 
   /**
+   * Tests that cached content keeps its heading without an outer block title.
+   *
+   * @dataProvider cachedContentTitleProvider
+   */
+  public function testCachedContentSuppressesOuterTitle(string $plugin_id, bool $title_processed) {
+    $plugin = $this->createBlockPlugin($plugin_id, [], [], 'Operations', TRUE);
+    $content = [
+      '#title_processed' => $title_processed,
+      'title' => [
+        '#type' => 'html_tag',
+        '#tag' => 'h2',
+        '#value' => 'Operations',
+      ],
+    ];
+    // A cache hit restores content, but not configuration changes made inside
+    // buildContent(), such as the homepage block disabling its outer label.
+    $cache_parts = $this->callPrivateMethod($plugin, 'getContentCacheKeyParts');
+    $cache_key = $plugin->getCacheKey($cache_parts, NULL, 'doBuildContent');
+    $plugin->cache($cache_key, $content);
+
+    $build = $plugin->doBuildContent(['#title' => 'Operations']);
+
+    $this->assertFalse($plugin->getConfiguration()['label_display']);
+    $this->assertArrayNotHasKey('#title', $build);
+    $this->assertSame($content['title'], $build['title']);
+  }
+
+  /**
+   * Provides blocks whose outer titles must stay hidden on cache hits.
+   *
+   * @return array
+   *   Plugin IDs and whether their cached content has processed the title.
+   */
+  public static function cachedContentTitleProvider(): array {
+    return [
+      'titles disabled by metadata' => ['generic_datawrapper', FALSE],
+      'title handled by content' => ['ghi_blocks_override_default_title_test', TRUE],
+    ];
+  }
+
+  /**
    * Tests that override default titles are available on lazy builds.
    */
   public function testOverrideDefaultTitleLazyBuild() {

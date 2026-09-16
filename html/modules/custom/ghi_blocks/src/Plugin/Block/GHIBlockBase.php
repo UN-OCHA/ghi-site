@@ -677,6 +677,10 @@ abstract class GHIBlockBase extends HPCBlockBase implements TrustedCallbackInter
    */
   protected function applyTitleDisplay(array &$build, ?array &$build_content = NULL): void {
     if (!$this->shouldDisplayTitle() || !empty($build_content['#title_processed'])) {
+      // Cache hits skip buildContent(), so suppress the configured label here
+      // even when the plugin normally hides it while building its content.
+      $this->configuration['label_display'] = FALSE;
+      unset($build['#title']);
       return;
     }
 
