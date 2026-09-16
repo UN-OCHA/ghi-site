@@ -39,7 +39,7 @@ trait SubpageTestTrait {
     $this->createTeamVocabulary();
 
     // Create the content types for the subpage types.
-    foreach (self::SUBPAGE_BUNDLES as $bundle) {
+    foreach ([...self::SUBPAGE_BUNDLES, 'needs', 'response'] as $bundle) {
       $this->createContentType([
         'type' => $bundle,
         'name' => ucfirst($bundle),

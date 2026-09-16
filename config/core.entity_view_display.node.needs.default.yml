@@ -1,0 +1,106 @@
+uuid: 2c535f50-8c46-4ad4-9671-a5028d61a73d
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.field.node.needs.field_entity_reference
+    - field.field.node.needs.field_hero_image
+    - field.field.node.needs.field_protected
+    - field.field.node.needs.field_team
+    - field.field.node.needs.layout_builder__layout
+    - node.type.needs
+  module:
+    - entity_access_password
+    - layout_builder
+    - layout_builder_ipe
+    - layout_builder_restrictions
+    - layout_discovery
+    - user
+third_party_settings:
+  layout_builder_ipe:
+    enabled: true
+  layout_builder:
+    enabled: true
+    allow_custom: true
+    sections:
+      -
+        layout_id: layout_onecol
+        layout_settings:
+          label: Content
+          context_mapping: {  }
+        components: {  }
+        third_party_settings:
+          layout_builder_lock:
+            lock:
+              5: 5
+              6: 6
+              7: 7
+  layout_builder_restrictions:
+    allowed_block_categories:
+      - 'Chaos Tools'
+      - 'Content fields'
+      - 'Country elements'
+      - 'Custom block types'
+      - Forms
+      - 'Generic elements'
+      - 'Geofield Map'
+      - Global
+      - 'Inline blocks'
+      - 'Lists (Views)'
+      - 'Mailing list'
+      - Menus
+      - 'Narrative Content'
+      - Page
+      - 'Plan cluster elements'
+      - 'Plan elements'
+      - Sections
+      - 'Social Auth'
+      - System
+      - User
+      - Views
+      - core
+    entity_view_mode_restriction:
+      allowed_layouts:
+        - layout_onecol
+      denylisted_blocks: {  }
+      allowlisted_blocks:
+        'Inline blocks':
+          - 'inline_block:basic'
+      restricted_categories:
+        - 'Chaos Tools'
+        - 'Content fields'
+        - 'Custom block types'
+        - Forms
+        - 'Geofield Map'
+        - Global
+        - 'Lists (Views)'
+        - 'Mailing list'
+        - Menus
+        - Page
+        - 'Plan cluster elements'
+        - 'Social Auth'
+        - System
+        - User
+        - Views
+        - core
+id: node.needs.default
+targetEntityType: node
+bundle: needs
+mode: default
+content:
+  field_protected:
+    type: entity_access_password_form
+    label: above
+    settings:
+      help_text: ''
+    third_party_settings: {  }
+    weight: 109
+    region: content
+hidden:
+  field_entity_reference: true
+  field_hero_image: true
+  field_team: true
+  langcode: true
+  layout_builder__layout: true
+  links: true
+  search_api_excerpt: true

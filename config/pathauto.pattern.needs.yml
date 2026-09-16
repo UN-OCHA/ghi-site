@@ -1,0 +1,22 @@
+uuid: 722e0a76-5f2e-44c9-ab83-73094af149b4
+langcode: en
+status: true
+dependencies:
+  module:
+    - node
+id: needs
+label: Needs
+type: 'canonical_entities:node'
+pattern: '/[node:field_entity_reference:entity:url:path]/needs'
+selection_criteria:
+  6e266e54-ab05-44b0-b657-c1e401b0a382:
+    id: 'entity_bundle:node'
+    negate: false
+    uuid: 6e266e54-ab05-44b0-b657-c1e401b0a382
+    context_mapping:
+      node: node
+    bundles:
+      needs: needs
+selection_logic: and
+weight: -5
+relationships: {  }

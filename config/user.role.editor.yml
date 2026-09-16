@@ -13,16 +13,26 @@ dependencies:
     - core.entity_view_display.node.population.default
     - core.entity_view_display.node.presence.default
     - core.entity_view_display.node.progress.default
+    - core.entity_view_display.node.needs.default
+    - core.entity_view_display.node.response.default
     - core.entity_view_display.node.section.default
     - core.entity_view_display.page_template.page_template.default
     - entity_browser.browser.articles
     - filter.format.html_text
     - node.type.custom_subpage
+    - node.type.financials
+    - node.type.logframe
+    - node.type.needs
+    - node.type.population
+    - node.type.presence
+    - node.type.progress
+    - node.type.response
   module:
     - contextual
     - entity_browser
     - filter
     - ghi_content
+    - ghi_subpages
     - ghi_templates
     - layout_builder
     - layout_builder_ipe
@@ -51,9 +61,26 @@ permissions:
   - 'configure editable population node layout overrides'
   - 'configure editable presence node layout overrides'
   - 'configure editable progress node layout overrides'
+  - 'configure editable needs node layout overrides'
+  - 'configure editable response node layout overrides'
   - 'configure editable section node layout overrides'
   - 'create custom_subpage content'
+  - 'create financials content'
+  - 'create logframe content'
+  - 'create needs content'
+  - 'create population content'
+  - 'create presence content'
+  - 'create progress content'
+  - 'create response content'
+  - 'delete any financials content'
+  - 'delete any logframe content'
+  - 'delete any needs content'
+  - 'delete any population content'
+  - 'delete any presence content'
+  - 'delete any progress content'
+  - 'delete any response content'
   - 'delete own custom_subpage content'
+  - 'manage operation page structure'
   - 'publish editable node type article'
   - 'publish editable node type custom_subpage'
   - 'publish editable node type document'
@@ -63,6 +90,8 @@ permissions:
   - 'publish editable node type population'
   - 'publish editable node type presence'
   - 'publish editable node type progress'
+  - 'publish editable node type needs'
+  - 'publish editable node type response'
   - 'publish editable node type section'
   - 'unpublish editable node type article'
   - 'unpublish editable node type custom_subpage'
@@ -73,6 +102,8 @@ permissions:
   - 'unpublish editable node type population'
   - 'unpublish editable node type presence'
   - 'unpublish editable node type progress'
+  - 'unpublish editable node type needs'
+  - 'unpublish editable node type response'
   - 'unpublish editable node type section'
   - 'use layout builder ipe on editable article node layout overrides'
   - 'use layout builder ipe on editable custom_subpage node layout overrides'
@@ -85,6 +116,8 @@ permissions:
   - 'use layout builder ipe on editable population node layout overrides'
   - 'use layout builder ipe on editable presence node layout overrides'
   - 'use layout builder ipe on editable progress node layout overrides'
+  - 'use layout builder ipe on editable needs node layout overrides'
+  - 'use layout builder ipe on editable response node layout overrides'
   - 'use layout builder ipe on editable section node layout overrides'
   - 'use page templates'
   - 'use text format html_text'

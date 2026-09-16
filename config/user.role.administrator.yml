@@ -13,6 +13,8 @@ dependencies:
     - core.entity_view_display.node.population.default
     - core.entity_view_display.node.presence.default
     - core.entity_view_display.node.progress.default
+    - core.entity_view_display.node.needs.default
+    - core.entity_view_display.node.response.default
     - core.entity_view_display.node.section.default
     - core.entity_view_display.page_template.page_template.default
     - entity_browser.browser.articles
@@ -30,6 +32,8 @@ dependencies:
     - node.type.population
     - node.type.presence
     - node.type.progress
+    - node.type.needs
+    - node.type.response
     - node.type.section
     - taxonomy.vocabulary.operations_category
     - taxonomy.vocabulary.plan_type
@@ -47,6 +51,7 @@ dependencies:
     - ghi_embargoed_access
     - ghi_geojson
     - ghi_sections
+    - ghi_subpages
     - ghi_teams
     - ghi_templates
     - layout_builder
@@ -97,6 +102,21 @@ permissions:
   - 'administer users'
   - 'assign all roles'
   - 'bypass node access'
+  - 'manage operation page structure'
+  - 'create population content'
+  - 'create financials content'
+  - 'create presence content'
+  - 'create logframe content'
+  - 'create progress content'
+  - 'create needs content'
+  - 'create response content'
+  - 'delete any population content'
+  - 'delete any financials content'
+  - 'delete any presence content'
+  - 'delete any logframe content'
+  - 'delete any progress content'
+  - 'delete any needs content'
+  - 'delete any response content'
   - 'configure all homepage node layout overrides'
   - 'configure any layout'
   - 'configure editable article node layout overrides'
@@ -110,6 +130,8 @@ permissions:
   - 'configure editable population node layout overrides'
   - 'configure editable presence node layout overrides'
   - 'configure editable progress node layout overrides'
+  - 'configure editable needs node layout overrides'
+  - 'configure editable response node layout overrides'
   - 'configure editable section node layout overrides'
   - 'create and edit custom blocks'
   - 'create content translations'
@@ -150,6 +172,8 @@ permissions:
   - 'edit any population content'
   - 'edit any presence content'
   - 'edit any progress content'
+  - 'edit any needs content'
+  - 'edit any response content'
   - 'edit any section content'
   - 'edit own article content'
   - 'edit own custom_subpage content'
@@ -163,6 +187,8 @@ permissions:
   - 'edit own population content'
   - 'edit own presence content'
   - 'edit own progress content'
+  - 'edit own needs content'
+  - 'edit own response content'
   - 'edit own section content'
   - 'edit terms in operations_category'
   - 'edit terms in plan_type'
@@ -182,6 +208,8 @@ permissions:
   - 'publish any node type population'
   - 'publish any node type presence'
   - 'publish any node type progress'
+  - 'publish any node type needs'
+  - 'publish any node type response'
   - 'publish any node type section'
   - 'publish editable content'
   - 'publish editable node type article'
@@ -196,6 +224,8 @@ permissions:
   - 'publish editable node type population'
   - 'publish editable node type presence'
   - 'publish editable node type progress'
+  - 'publish editable node type needs'
+  - 'publish editable node type response'
   - 'publish editable node type section'
   - 'publish own node type article'
   - 'publish own node type custom_subpage'
@@ -209,6 +239,8 @@ permissions:
   - 'publish own node type population'
   - 'publish own node type presence'
   - 'publish own node type progress'
+  - 'publish own node type needs'
+  - 'publish own node type response'
   - 'publish own node type section'
   - 'show block configuration code'
   - 'show page layout configuration code'
@@ -219,6 +251,8 @@ permissions:
   - 'translate population node'
   - 'translate presence node'
   - 'translate progress node'
+  - 'translate needs node'
+  - 'translate response node'
   - 'translate section node'
   - 'unpublish any content'
   - 'unpublish any node type article'
@@ -233,6 +267,8 @@ permissions:
   - 'unpublish any node type population'
   - 'unpublish any node type presence'
   - 'unpublish any node type progress'
+  - 'unpublish any node type needs'
+  - 'unpublish any node type response'
   - 'unpublish any node type section'
   - 'unpublish editable content'
   - 'unpublish editable node type article'
@@ -247,6 +283,8 @@ permissions:
   - 'unpublish editable node type population'
   - 'unpublish editable node type presence'
   - 'unpublish editable node type progress'
+  - 'unpublish editable node type needs'
+  - 'unpublish editable node type response'
   - 'unpublish editable node type section'
   - 'unpublish own node type article'
   - 'unpublish own node type custom_subpage'
@@ -260,6 +298,8 @@ permissions:
   - 'unpublish own node type population'
   - 'unpublish own node type presence'
   - 'unpublish own node type progress'
+  - 'unpublish own node type needs'
+  - 'unpublish own node type response'
   - 'unpublish own node type section'
   - 'update any media'
   - 'update content translations'
@@ -276,6 +316,8 @@ permissions:
   - 'use layout builder ipe on editable population node layout overrides'
   - 'use layout builder ipe on editable presence node layout overrides'
   - 'use layout builder ipe on editable progress node layout overrides'
+  - 'use layout builder ipe on editable needs node layout overrides'
+  - 'use layout builder ipe on editable response node layout overrides'
   - 'use layout builder ipe on editable section node layout overrides'
   - 'use page templates'
   - 'use text format html_text'
@@ -295,6 +337,8 @@ permissions:
   - 'view any unpublished population content'
   - 'view any unpublished presence content'
   - 'view any unpublished progress content'
+  - 'view any unpublished needs content'
+  - 'view any unpublished response content'
   - 'view any unpublished section content'
   - 'view ghi geojson files'
   - 'view media'
