@@ -18,23 +18,27 @@ def parse_args():
     return parser.parse_args()
 
 
-def main():
-    args = parse_args()
-    tree = ET.parse(args.config)
+def build_config(config, suite_name, output, files):
+    tree = ET.parse(config)
     root = tree.getroot()
     testsuites = root.find("testsuites")
     if testsuites is None:
-        raise RuntimeError(f"No <testsuites> element found in {args.config}")
+        raise RuntimeError(f"No <testsuites> element found in {config}")
 
     testsuites.clear()
-    suite = ET.SubElement(testsuites, "testsuite", {"name": args.suite})
-    for file_name in args.files:
+    suite = ET.SubElement(testsuites, "testsuite", {"name": suite_name})
+    for file_name in files:
         file_path = Path(file_name).as_posix()
         file_element = ET.SubElement(suite, "file")
         file_element.text = file_path if file_path.startswith("./") else f"./{file_path}"
 
-    args.output.parent.mkdir(parents=True, exist_ok=True)
-    tree.write(args.output, encoding="UTF-8", xml_declaration=True)
+    output.parent.mkdir(parents=True, exist_ok=True)
+    tree.write(output, encoding="UTF-8", xml_declaration=True)
+
+
+def main():
+    args = parse_args()
+    build_config(args.config, args.suite, args.output, args.files)
 
 
 if __name__ == "__main__":

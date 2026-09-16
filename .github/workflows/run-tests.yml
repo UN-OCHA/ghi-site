@@ -127,94 +127,60 @@ jobs:
         if: always()
         run: docker compose -f .github/tests/docker-compose.yml down -v
 
+  test-plan:
+    name: Plan PHPUnit shards
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: read
+    outputs:
+      matrix: ${{ steps.plan.outputs.matrix }}
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v6
+
+      - name: Test Shard Planner
+        run: python3 -m unittest discover -s .github/tests -p 'test_*.py'
+
+      - name: Restore PHPUnit Timings
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPOSITORY: ${{ github.repository }}
+          HEAD_BRANCH: ${{ github.head_ref }}
+        run: python3 .github/tests/restore_phpunit_timings.py --repository "$REPOSITORY" --branch "$HEAD_BRANCH"
+
+      - name: Plan PHPUnit Shards
+        id: plan
+        run: python3 .github/tests/plan_phpunit_shards.py
+
+      - name: Upload PHPUnit Plan
+        uses: actions/upload-artifact@v7
+        with:
+          name: phpunit-plan
+          path: phpunit-plan/
+          retention-days: 7
+
   phpunit:
     name: PHPUnit (${{ matrix.label }})
     runs-on: ubuntu-latest
-    needs: quality
+    needs: [quality, test-plan]
     permissions:
       contents: read
       id-token: write
       actions: read
     strategy:
       fail-fast: false
-      matrix:
-        include:
-          - label: Unit
-            testsuite: unit
-            coverage: unit
-            shard: 0
-            shards: 0
-            test_path: ''
-          - label: Kernel 1/6
-            testsuite: kernel
-            coverage: kernel-1
-            shard: 1
-            shards: 6
-            test_path: '*/tests/src/Kernel/*Test.php'
-          - label: Kernel 2/6
-            testsuite: kernel
-            coverage: kernel-2
-            shard: 2
-            shards: 6
-            test_path: '*/tests/src/Kernel/*Test.php'
-          - label: Kernel 3/6
-            testsuite: kernel
-            coverage: kernel-3
-            shard: 3
-            shards: 6
-            test_path: '*/tests/src/Kernel/*Test.php'
-          - label: Kernel 4/6
-            testsuite: kernel
-            coverage: kernel-4
-            shard: 4
-            shards: 6
-            test_path: '*/tests/src/Kernel/*Test.php'
-          - label: Kernel 5/6
-            testsuite: kernel
-            coverage: kernel-5
-            shard: 5
-            shards: 6
-            test_path: '*/tests/src/Kernel/*Test.php'
-          - label: Kernel 6/6
-            testsuite: kernel
-            coverage: kernel-6
-            shard: 6
-            shards: 6
-            test_path: '*/tests/src/Kernel/*Test.php'
-          - label: Functional 1/4
-            testsuite: functional
-            coverage: functional-1
-            shard: 1
-            shards: 4
-            test_path: '*/tests/src/Functional/*Test.php'
-          - label: Functional 2/4
-            testsuite: functional
-            coverage: functional-2
-            shard: 2
-            shards: 4
-            test_path: '*/tests/src/Functional/*Test.php'
-          - label: Functional 3/4
-            testsuite: functional
-            coverage: functional-3
-            shard: 3
-            shards: 4
-            test_path: '*/tests/src/Functional/*Test.php'
-          - label: Functional 4/4
-            testsuite: functional
-            coverage: functional-4
-            shard: 4
-            shards: 4
-            test_path: '*/tests/src/Functional/*Test.php'
-          - label: Functional JavaScript
-            testsuite: functional-javascript
-            coverage: functional-javascript
-            shard: 0
-            shards: 0
-            test_path: ''
+      matrix: ${{ fromJSON(needs.test-plan.outputs.matrix) }}
 
     steps:
       - name: Checkout Code
         uses: actions/checkout@v6
+
+      - name: Download PHPUnit Plan
+        uses: actions/download-artifact@v8
+        with:
+          name: phpunit-plan
+          path: phpunit-plan/
 
       - name: Download Image Artifact
         uses: actions/download-artifact@v8
@@ -279,24 +245,27 @@ jobs:
             docker compose -f .github/tests/docker-compose.yml exec -T drupal chmod -R 777 /srv/www/html/sites/simpletest
 
             COVERAGE_FILE="/srv/www/html/build/logs/coverage-${{ matrix.coverage }}.cov"
-            PHPUNIT_CONFIG="/srv/www"
-            PHPUNIT_ARGS=(--testsuite "${{ matrix.testsuite }}")
-            if [ "${{ matrix.shards }}" -gt 0 ]; then
-              TEST_FILES=()
-              while IFS= read -r test_file; do
-                TEST_FILES+=("$test_file")
-              done < <(find html/modules/custom -path '${{ matrix.test_path }}' -type f | sort | awk -v shard="${{ matrix.shard }}" -v shards="${{ matrix.shards }}" '((NR - 1) % shards) == (shard - 1)')
-              printf '%s shard %s/%s test files:\n' "${{ matrix.testsuite }}" "${{ matrix.shard }}" "${{ matrix.shards }}"
-              printf '%s\n' "${TEST_FILES[@]}"
-              SHARD_CONFIG="/tmp/phpunit-${{ matrix.coverage }}.xml"
-              python3 .github/tests/build-phpunit-shard.py --config phpunit.xml --suite "${{ matrix.coverage }}" --output "$SHARD_CONFIG" "${TEST_FILES[@]}"
-              docker cp "$SHARD_CONFIG" "$(docker compose -f .github/tests/docker-compose.yml ps -q drupal)":/srv/www/phpunit-${{ matrix.coverage }}.xml
-              PHPUNIT_CONFIG="/srv/www/phpunit-${{ matrix.coverage }}.xml"
-              PHPUNIT_ARGS=(--testsuite "${{ matrix.coverage }}")
-            fi
-            docker compose -f .github/tests/docker-compose.yml exec -T -u appuser -w /srv/www -e XDEBUG_MODE=coverage -e BROWSERTEST_OUTPUT_DIRECTORY=/tmp -e BROWSERTEST_OUTPUT_BASE_URL=http://127.0.0.1:8081 -e DTT_BASE_URL=http://ghi-test-site.test -e SIMPLETEST_BASE_URL=http://ghi-test-site.test -e SIMPLETEST_DB=mysql://ghi:ghi@mysql/ghi drupal ./vendor/bin/phpunit -c "$PHPUNIT_CONFIG" --coverage-php "$COVERAGE_FILE" "${PHPUNIT_ARGS[@]}"
+            PHPUNIT_CONFIG="/srv/www/phpunit-${{ matrix.coverage }}.xml"
+            JUNIT_FILE="/srv/www/html/build/logs/junit-${{ matrix.coverage }}.xml"
+            docker cp "phpunit-plan/phpunit-${{ matrix.coverage }}.xml" "$(docker compose -f .github/tests/docker-compose.yml ps -q drupal)":"$PHPUNIT_CONFIG"
+            docker compose -f .github/tests/docker-compose.yml exec -T -u appuser -w /srv/www -e XDEBUG_MODE=coverage -e BROWSERTEST_OUTPUT_DIRECTORY=/tmp -e BROWSERTEST_OUTPUT_BASE_URL=http://127.0.0.1:8081 -e DTT_BASE_URL=http://ghi-test-site.test -e SIMPLETEST_BASE_URL=http://ghi-test-site.test -e SIMPLETEST_DB=mysql://ghi:ghi@mysql/ghi drupal ./vendor/bin/phpunit -c "$PHPUNIT_CONFIG" --coverage-php "$COVERAGE_FILE" --log-junit "$JUNIT_FILE" --testsuite "${{ matrix.coverage }}"
         env:
           fail-fast: true
+
+      - name: Copy PHPUnit Results
+        if: always()
+        run: |
+          mkdir -p test-results
+          docker cp "$(docker compose -f .github/tests/docker-compose.yml ps -q drupal)":/srv/www/html/build/logs/junit-${{ matrix.coverage }}.xml test-results/ || true
+
+      - name: Upload PHPUnit Results
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: phpunit-results-${{ matrix.coverage }}
+          path: test-results/
+          if-no-files-found: warn
+          retention-days: 14
 
       - name: Copy Coverage Data
         if: always()
@@ -351,6 +320,24 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v6
 
+      - name: Download PHPUnit Results
+        uses: actions/download-artifact@v8
+        with:
+          pattern: phpunit-results-*
+          path: test-results/
+          merge-multiple: true
+
+      - name: Save PHPUnit Timing History
+        uses: actions/upload-artifact@v7
+        with:
+          name: phpunit-timings
+          path: test-results/*.xml
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Summarize PHPUnit Timings
+        run: python3 .github/tests/summarize_phpunit_results.py test-results
+
       - name: Extract PHP Version
         id: php
         uses: docker://ghcr.io/un-ocha/actions:extract-php-version-main
@@ -396,6 +383,7 @@ jobs:
     name: tests
     runs-on: ubuntu-latest
     needs:
+      - test-plan
       - quality
       - phpunit
       - coverage
@@ -423,6 +411,7 @@ jobs:
           issue-number: ${{ github.event.pull_request.number }}
           body: |
             ### Build output
+            #### Test plan `${{ needs.test-plan.result }}`
             #### Build and quality `${{ needs.quality.result }}`
             #### PHPUnit matrix `${{ needs.phpunit.result }}`
             #### Coverage `${{ needs.coverage.result }}`
@@ -486,6 +475,7 @@ jobs:
 
       - name: Check Results
         run: |
+          test "${{ needs.test-plan.result }}" = "success"
           test "${{ needs.quality.result }}" = "success"
           test "${{ needs.phpunit.result }}" = "success"
           test "${{ needs.coverage.result }}" = "success"
