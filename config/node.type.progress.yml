@@ -10,7 +10,7 @@ third_party_settings:
     available_menus: {  }
     parent: ''
   ghi_subpages:
-    page_title: 'Progress reports'
+    page_title: 'Response Progress and Monitoring'
 name: Progress
 type: progress
 description: 'A progress page for any of the base entities of this site, e.g. for plans, countries, regions, ...'

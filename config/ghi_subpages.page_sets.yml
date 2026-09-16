@@ -1,0 +1,36 @@
+page_sets:
+  ia_2027:
+    base_object_type: plan
+    effective_from: 2027
+    effective_to: 2027
+    create_on_insert:
+      - needs
+      - response
+      - progress
+    navigation_order:
+      - needs
+      - response
+      - progress
+      - clusters
+      - population
+      - financials
+      - presence
+      - logframe
+  legacy:
+    base_object_type: plan
+    effective_to: 2026
+    create_on_insert:
+      - population
+      - financials
+      - presence
+      - logframe
+      - progress
+    navigation_order:
+      - population
+      - financials
+      - presence
+      - logframe
+      - progress
+      - clusters
+      - needs
+      - response
