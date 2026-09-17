@@ -70,6 +70,10 @@ class ArticleCollection extends GHIBlockBase implements MultiStepFormBlockInterf
       $item_type = $this->getItemTypePluginForColumn($item, $context);
       $cache_tags = Cache::mergeTags($cache_tags, $item_type->getCacheTags() ?? []);
       $rendered = $item_type->getRenderArray();
+      // The block's cache-tag collector does not inspect #tabs. Copy each tab's
+      // dependencies onto the block so article and document updates invalidate
+      // its cached content.
+      $cache_tags = Cache::mergeTags($cache_tags, $rendered['#cache']['tags'] ?? []);
       if (empty($rendered)) {
         continue;
       }

@@ -527,7 +527,9 @@ abstract class GHIBlockBase extends HPCBlockBase implements TrustedCallbackInter
           ],
         ],
       ];
-      if ($this->hasReliableIsEmpty()) {
+      // Hide disabled titles before the outer wrapper renders. The lazy
+      // callback only replaces its content and cannot remove an outer heading.
+      if (!$this->shouldDisplayTitle() || $this->hasReliableIsEmpty()) {
         $this->applyTitleDisplay($build);
       }
       return $build;
@@ -677,6 +679,10 @@ abstract class GHIBlockBase extends HPCBlockBase implements TrustedCallbackInter
    */
   protected function applyTitleDisplay(array &$build, ?array &$build_content = NULL): void {
     if (!$this->shouldDisplayTitle() || !empty($build_content['#title_processed'])) {
+      // Cache hits skip buildContent(), so suppress the configured label here
+      // even when the plugin normally hides it while building its content.
+      $this->configuration['label_display'] = FALSE;
+      unset($build['#title']);
       return;
     }
 
