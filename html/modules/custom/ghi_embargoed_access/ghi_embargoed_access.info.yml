@@ -3,7 +3,7 @@ description: Provides support for embargoed access to specific pages.
 package: GHI
 
 type: module
-core_version_requirement: ^9 || ^10
+core_version_requirement: ^10.3 || ^11
 
 dependencies:
   - entity_access_password:entity_access_password
