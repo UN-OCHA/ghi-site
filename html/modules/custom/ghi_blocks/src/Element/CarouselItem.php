@@ -93,7 +93,7 @@ class CarouselItem extends FormElementBase {
       '#title' => t('Image'),
       '#upload_location' => self::THUMBNAIL_DIRECTORY,
       '#upload_validators' => [
-        'file_validate_extensions' => ['jpg jpeg png gif'],
+        'FileExtension' => ['extensions' => 'jpg jpeg png gif'],
       ],
       '#default_value' => $element['#default_value']['image'] ?? NULL,
     ];

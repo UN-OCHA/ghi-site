@@ -139,14 +139,14 @@ class RemoteRefreshQueueTest extends UnitTestCase {
     $node = $this->createMock(Article::class);
     $node->method('id')->willReturn(789);
 
+    $lookups = [];
     $content_manager = $this->createMock(BaseContentManager::class);
     $content_manager->expects($this->exactly(2))
       ->method('loadNodesForRemoteIds')
-      ->withConsecutive(
-        ['hpc_content_module', [123], FALSE],
-        ['hpc_content_module', [123], TRUE],
-      )
-      ->willReturnOnConsecutiveCalls([], [$node]);
+      ->willReturnCallback(function (string $source, array $remote_ids, bool $reset = FALSE) use (&$lookups, $node): array {
+        $lookups[] = [$source, $remote_ids, $reset];
+        return $reset ? [$node] : [];
+      });
     $content_manager->expects($this->once())->method('updateNodeFromRemote')->with($node)->willReturn(TRUE);
     $content_manager->expects($this->once())->method('saveContentNode')->with($node, FALSE);
     $content_manager->expects($this->once())->method('loadRemoteContentForNode')->with($node, TRUE);
@@ -211,6 +211,10 @@ class RemoteRefreshQueueTest extends UnitTestCase {
       'event' => 'saved',
     ]);
 
+    $this->assertSame([
+      ['hpc_content_module', [123], FALSE],
+      ['hpc_content_module', [123], TRUE],
+    ], $lookups);
     $this->assertCount(2, $info_messages);
     $this->assertSame('Created local @type node @nid from @event event from remote source @source with remote id @remote_id.', $info_messages[0][0]);
     $this->assertSame('Processed @event event for local @type node @nid from remote source @source with remote id @remote_id.', $info_messages[1][0]);

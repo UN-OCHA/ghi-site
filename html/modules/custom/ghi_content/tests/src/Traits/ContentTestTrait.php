@@ -19,6 +19,7 @@ use Drupal\layout_builder\Section;
 use Drupal\layout_builder\SectionComponent;
 use Drupal\node\Entity\NodeType;
 use Prophecy\Argument;
+use Prophecy\PhpUnit\ProphecyTrait;
 
 /**
  * Provides methods to create content in tests.
@@ -28,6 +29,7 @@ use Prophecy\Argument;
 trait ContentTestTrait {
 
   use PathautoTestHelperTrait;
+  use ProphecyTrait;
 
   /**
    * Setup an article content type.
