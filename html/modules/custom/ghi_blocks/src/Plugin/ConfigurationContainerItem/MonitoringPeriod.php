@@ -6,6 +6,7 @@ use Drupal\Component\Utility\Html;
 use Drupal\Core\Cache\Cache;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\ghi_blocks\Interfaces\AttachmentContextItemInterface;
 use Drupal\ghi_form_elements\Attribute\ConfigurationContainerItem;
 use Drupal\ghi_form_elements\ConfigurationContainerItemPluginBase;
 use Drupal\ghi_plans\ApiObjects\Attachments\Attachment;
@@ -20,7 +21,7 @@ use Drupal\ghi_plans\ApiObjects\Attachments\Attachment;
   label: new TranslatableMarkup('Monitoring period'),
   description: new TranslatableMarkup('This item displays the monitoring period for an attachment.'),
 )]
-class MonitoringPeriod extends ConfigurationContainerItemPluginBase {
+class MonitoringPeriod extends ConfigurationContainerItemPluginBase implements AttachmentContextItemInterface {
 
   const ITEM_TYPE = 'monitoring_period';
 
