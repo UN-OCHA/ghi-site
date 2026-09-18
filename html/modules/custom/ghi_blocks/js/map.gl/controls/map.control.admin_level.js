@@ -70,6 +70,16 @@
         return this._container;
       }
 
+      let buttons = document.createElement('div');
+      buttons.className = 'button-container';
+      if (this.state.getOptions().admin_level_label) {
+        let label = document.createElement('div');
+        label.className = 'label';
+        label.innerHTML = Drupal.t('Admin level');
+        this._container.appendChild(label);
+        this._container.className += ' has-label';
+      }
+
       // Add one button per admin level.
       for (let value = 1; value <= admin_level_max; value++) {
         let button = document.createElement('button');
@@ -88,10 +98,11 @@
           button.setAttribute('tabindex', 0);
         }
         button.addEventListener('click', (e) => this.changeAdminLevel(e));
-        this._container.appendChild(button);
+        buttons.appendChild(button);
       }
+      this._container.appendChild(buttons);
       // Add a tooltip to the control.
-      this.tooltip = tippy($(this._container).get(0), {
+      this.tooltip = tippy($(buttons).get(0), {
         content: Drupal.t('Select Admin Level View'),
       });
 
