@@ -106,4 +106,43 @@ class MapModalContentTest extends UnitTestCase {
     $this->assertSame([10], $map['json']['object_filter_variants']['100']['location_ids']);
   }
 
+  /**
+   * Tests extraction from modal content embedded in locations.
+   */
+  public function testExtractFromLocationModalContents(): void {
+    $map = [
+      'json' => [
+        [
+          'label' => 'Composite map tab',
+          'locations' => [
+            [
+              'object_id' => 1,
+              'name' => 'Location 1',
+              'modal_contents' => [
+                52191 => [
+                  'polygon' => '<p>Polygon modal</p>',
+                ],
+              ],
+            ],
+          ],
+        ],
+      ],
+    ];
+
+    $entries = MapModalContent::extractFromMap($map);
+
+    $this->assertCount(1, $entries);
+    $this->assertSame('0', $entries[0]['data_index']);
+    $this->assertSame(MapModalContent::DEFAULT_VARIANT_ID, $entries[0]['variant_id']);
+    $this->assertSame([
+      '1' => [
+        52191 => [
+          'polygon' => '<p>Polygon modal</p>',
+        ],
+      ],
+    ], $entries[0]['modal_contents']);
+    $this->assertArrayNotHasKey('modal_contents', $map['json'][0]['locations'][0]);
+    $this->assertSame('Location 1', $map['json'][0]['locations'][0]['name']);
+  }
+
 }
