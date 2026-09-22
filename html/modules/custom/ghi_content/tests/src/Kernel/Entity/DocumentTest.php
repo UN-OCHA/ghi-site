@@ -11,12 +11,12 @@ use Drupal\Tests\taxonomy\Traits\TaxonomyTestTrait;
 use Drupal\Tests\user\Traits\UserCreationTrait;
 use Drupal\Tests\ghi_base_objects\Traits\FieldTestTrait;
 use Drupal\Tests\ghi_content\Traits\ContentTestTrait;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
  * Tests the document entity.
- *
- * @group ghi_content
  */
+#[Group('ghi_content')]
 class DocumentTest extends KernelTestBase {
 
   use TaxonomyTestTrait;

@@ -20,12 +20,12 @@ use Drupal\layout_builder\SectionComponent;
 use Drupal\Tests\ghi_base_objects\Traits\BaseObjectTestTrait;
 use Drupal\node\Entity\NodeType;
 use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
  * Tests the sub-article renderer.
- *
- * @group ghi_content
  */
+#[Group('ghi_content')]
 class SubArticleRendererTest extends KernelTestBase {
 
   use BaseObjectTestTrait;

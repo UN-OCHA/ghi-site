@@ -6,13 +6,14 @@ use Drupal\Core\File\FileSystemInterface;
 use Drupal\ghi_geojson\GeoJson;
 use Drupal\ghi_geojson\GeoJsonLocationInterface;
 use Drupal\KernelTests\KernelTestBase;
+use PHPUnit\Framework\Attributes\CoversMethod;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
  * Kernel tests for the GeoJson::getGeoJsonPublicFilePath method.
- *
- * @coversDefaultClass \Drupal\ghi_geojson\GeoJson
- * @group ghi_geojson
  */
+#[CoversMethod(GeoJson::class, 'getGeoJsonPublicFilePath')]
+#[Group('ghi_geojson')]
 class GeoJsonGetGeoJsonPublicFilePathTest extends KernelTestBase {
 
   /**
@@ -131,8 +132,6 @@ class GeoJsonGetGeoJsonPublicFilePathTest extends KernelTestBase {
 
   /**
    * Tests successful public file path retrieval for country level (admin 0).
-   *
-   * @covers ::getGeoJsonPublicFilePath
    */
   public function testGetGeoJsonPublicFilePathCountrySuccess(): void {
     $uuid = 'test-uuid-country-afg';
@@ -156,8 +155,6 @@ class GeoJsonGetGeoJsonPublicFilePathTest extends KernelTestBase {
 
   /**
    * Tests successful public file path retrieval for admin level 1.
-   *
-   * @covers ::getGeoJsonPublicFilePath
    */
   public function testGetGeoJsonPublicFilePathAdminLevelSuccess(): void {
     $uuid = 'test-uuid-admin1-afg';
@@ -181,8 +178,6 @@ class GeoJsonGetGeoJsonPublicFilePathTest extends KernelTestBase {
 
   /**
    * Tests that existing public file is not overwritten.
-   *
-   * @covers ::getGeoJsonPublicFilePath
    */
   public function testGetGeoJsonPublicFilePathExistingFile(): void {
     $uuid = 'test-uuid-existing';
@@ -206,8 +201,6 @@ class GeoJsonGetGeoJsonPublicFilePathTest extends KernelTestBase {
 
   /**
    * Tests return value when source file doesn't exist.
-   *
-   * @covers ::getGeoJsonPublicFilePath
    */
   public function testGetGeoJsonPublicFilePathNoSourceFile(): void {
     $uuid = 'test-uuid-no-source';
@@ -228,8 +221,6 @@ class GeoJsonGetGeoJsonPublicFilePathTest extends KernelTestBase {
 
   /**
    * Tests return value when location has no ISO3 code.
-   *
-   * @covers ::getGeoJsonPublicFilePath
    */
   public function testGetGeoJsonPublicFilePathNoIso3(): void {
     $uuid = 'test-uuid-no-iso3';
@@ -250,8 +241,6 @@ class GeoJsonGetGeoJsonPublicFilePathTest extends KernelTestBase {
 
   /**
    * Tests behavior with invalid admin level configuration.
-   *
-   * @covers ::getGeoJsonPublicFilePath
    */
   public function testGetGeoJsonPublicFilePathInvalidAdminLevel(): void {
     $uuid = 'test-uuid-invalid-admin';
@@ -273,8 +262,6 @@ class GeoJsonGetGeoJsonPublicFilePathTest extends KernelTestBase {
 
   /**
    * Tests behavior with version that finds newer version fallback.
-   *
-   * @covers ::getGeoJsonPublicFilePath
    */
   public function testGetGeoJsonPublicFilePathVersionFallback(): void {
     $uuid = 'test-uuid-version-fallback';
@@ -296,8 +283,6 @@ class GeoJsonGetGeoJsonPublicFilePathTest extends KernelTestBase {
 
   /**
    * Tests behavior with version that is newer than all available versions.
-   *
-   * @covers ::getGeoJsonPublicFilePath
    */
   public function testGetGeoJsonPublicFilePathFutureVersion(): void {
     $uuid = 'test-uuid-future-version';
@@ -319,8 +304,6 @@ class GeoJsonGetGeoJsonPublicFilePathTest extends KernelTestBase {
 
   /**
    * Tests multiple calls with same location return consistent results.
-   *
-   * @covers ::getGeoJsonPublicFilePath
    */
   public function testGetGeoJsonPublicFilePathConsistentResults(): void {
     $uuid = 'test-uuid-consistent';

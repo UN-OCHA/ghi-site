@@ -4,12 +4,12 @@ namespace Drupal\Tests\hpc_common\Unit;
 
 use Drupal\Tests\UnitTestCase;
 use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
  * Tests preprocess functions for HPC Common theme hooks.
- *
- * @group hpc_common
  */
+#[Group('hpc_common')]
 class HpcCommonThemePreprocessTest extends UnitTestCase {
 
   /**

@@ -11,13 +11,13 @@ use Drupal\Tests\ghi_subpages\Traits\SubpageTestTrait;
 use Drupal\Tests\taxonomy\Traits\TaxonomyTestTrait;
 use Drupal\ghi_subpages\Helpers\SubpageHelper;
 use Drupal\layout_builder\LayoutEntityHelperTrait;
+use PHPUnit\Framework\Attributes\Group;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Tests the node pages.
- *
- * @group ghi_subpages
  */
+#[Group('ghi_subpages')]
 class SubpagePageTest extends BrowserTestBase {
 
   use BaseObjectTestTrait;

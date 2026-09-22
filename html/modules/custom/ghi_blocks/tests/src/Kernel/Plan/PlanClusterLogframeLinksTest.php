@@ -9,12 +9,12 @@ use Drupal\node\Entity\Node;
 use Drupal\Tests\ghi_blocks\Kernel\PlanBlockKernelTestBase;
 use Drupal\Tests\ghi_plan_clusters\Traits\PlanClusterTestTrait;
 use Drupal\Tests\ghi_subpages\Traits\SubpageTestTrait;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
  * Tests the plan cluster logframe links block plugin.
- *
- * @group ghi_blocks
  */
+#[Group('ghi_blocks')]
 class PlanClusterLogframeLinksTest extends PlanBlockKernelTestBase {
 
   use SubpageTestTrait;

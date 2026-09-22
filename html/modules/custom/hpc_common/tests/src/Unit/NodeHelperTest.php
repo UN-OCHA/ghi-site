@@ -12,13 +12,15 @@ use Drupal\Tests\UnitTestCase;
 use Drupal\hpc_common\Helpers\NodeHelper;
 use Drupal\node\Entity\Node;
 use Drupal\node\NodeStorageInterface;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Group;
 use Prophecy\Argument;
 
 /**
- * @covers Drupal\hpc_common\Helpers\NodeHelper
+ * Tests the node helper.
  */
+#[CoversClass(NodeHelper::class)]
 class NodeHelperTest extends UnitTestCase {
 
   /**

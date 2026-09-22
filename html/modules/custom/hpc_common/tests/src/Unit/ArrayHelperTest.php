@@ -4,12 +4,14 @@ namespace Drupal\Tests\hpc_common\Unit;
 
 use Drupal\Tests\UnitTestCase;
 use Drupal\hpc_common\Helpers\ArrayHelper;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Group;
 
 /**
- * @covers Drupal\hpc_common\Helpers\ArrayHelper
+ * Tests the common array helper.
  */
+#[CoversClass(ArrayHelper::class)]
 class ArrayHelperTest extends UnitTestCase {
 
   /**
@@ -47,9 +49,8 @@ class ArrayHelperTest extends UnitTestCase {
 
   /**
    * Test arrayMapAssoc function.
-   *
-   * @group ArrayHelper
    */
+  #[Group('ArrayHelper')]
   public function testArrayMapAssoc() {
     $array = [
       6 => ['six'],
@@ -71,9 +72,8 @@ class ArrayHelperTest extends UnitTestCase {
 
   /**
    * Test mapObjectsToString function.
-   *
-   * @group ArrayHelper
    */
+  #[Group('ArrayHelper')]
   public function testMapObjectsToString() {
     $class = function ($value) {
       // phpcs:disable
@@ -101,9 +101,8 @@ class ArrayHelperTest extends UnitTestCase {
 
   /**
    * Test sortMultiDimensionalArrayByKeys function.
-   *
-   * @group ArrayHelper
    */
+  #[Group('ArrayHelper')]
   public function testSortMultiDimensionalArrayByKeys() {
     $array = [
       6 => [6 => 'six', 5 => 'five', 9 => ['one', 'three', 'two']],
@@ -119,9 +118,8 @@ class ArrayHelperTest extends UnitTestCase {
 
   /**
    * Test reduceArray function.
-   *
-   * @group ArrayHelper
    */
+  #[Group('ArrayHelper')]
   public function testReduceArray() {
     $array = [
       6 => [6 => 'six', 5 => 0, 9 => [], 10 => [1 => 'one', 2 => FALSE]],

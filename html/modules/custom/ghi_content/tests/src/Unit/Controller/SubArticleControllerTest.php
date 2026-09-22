@@ -10,14 +10,14 @@ use Drupal\Core\Session\AccountInterface;
 use Drupal\ghi_content\Controller\SubArticleController;
 use Drupal\ghi_content\Entity\Article;
 use Drupal\Tests\UnitTestCase;
+use PHPUnit\Framework\Attributes\Group;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
 
 /**
  * Tests the sub-article AJAX controller.
- *
- * @group ghi_content
  */
+#[Group('ghi_content')]
 class SubArticleControllerTest extends UnitTestCase {
 
   /**

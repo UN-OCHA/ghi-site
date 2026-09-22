@@ -19,14 +19,16 @@ use GuzzleHttp\HandlerStack;
 use GuzzleHttp\Middleware;
 use GuzzleHttp\Psr7\Response;
 use PHPUnit\Framework\Assert;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
 use Prophecy\Argument;
 use Prophecy\PhpUnit\ProphecyTrait;
 
 /**
- * @covers \Drupal\hpc_api\Query\FabricClient
- *
- * @group HPC API
+ * Tests the Fabric client.
  */
+#[CoversClass(FabricClient::class)]
+#[Group('HPC API')]
 class FabricClientTest extends UnitTestCase {
 
   use ProphecyTrait;

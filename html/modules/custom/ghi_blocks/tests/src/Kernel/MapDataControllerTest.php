@@ -17,13 +17,13 @@ use Drupal\layout_builder\Section;
 use Drupal\layout_builder\SectionComponent;
 use Drupal\Tests\hpc_api\Traits\PrivateAccessorTrait;
 use Drupal\Tests\user\Traits\UserCreationTrait;
+use PHPUnit\Framework\Attributes\Group;
 use Symfony\Component\HttpFoundation\Request;
 
 /**
  * Tests the lazy map data controller.
- *
- * @group ghi_blocks
  */
+#[Group('ghi_blocks')]
 class MapDataControllerTest extends KernelTestBase {
 
   use UserCreationTrait;

@@ -3,12 +3,12 @@
 namespace Drupal\Tests\ghi_base_objects\Unit;
 
 use Drupal\ghi_base_objects_test\ApiObjects\CustomApiObject;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
  * Tests the api base object class.
- *
- * @group ghi_base_objects
  */
+#[Group('ghi_base_objects')]
 class CustomApiObjectTest extends ApiBaseObjectTestBase {
 
   /**

@@ -7,16 +7,17 @@ use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Render\RendererInterface;
 use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\Tests\UnitTestCase;
+use PHPUnit\Framework\Attributes\CoversNothing;
+use PHPUnit\Framework\Attributes\Group;
 use Twig\Environment;
 use Twig\Loader\FilesystemLoader;
 use Twig\TwigFilter;
 
 /**
  * Tests isolated footnote rendering and inline link whitespace.
- *
- * @group ghi_content
- * @coversNothing
  */
+#[CoversNothing]
+#[Group('ghi_content')]
 class FootnotesTest extends UnitTestCase {
 
   /**

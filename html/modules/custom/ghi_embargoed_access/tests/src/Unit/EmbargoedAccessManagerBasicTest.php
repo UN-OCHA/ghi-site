@@ -17,13 +17,22 @@ use Drupal\ghi_embargoed_access\EmbargoedAccessManager;
 use Drupal\node\NodeInterface;
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\ghi_subpages\Entity\SubpageNodeInterface;
+use PHPUnit\Framework\Attributes\CoversMethod;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
  * Basic unit tests for the EmbargoedAccessManager.
- *
- * @coversDefaultClass \Drupal\ghi_embargoed_access\EmbargoedAccessManager
- * @group ghi_embargoed_access
  */
+#[CoversMethod(EmbargoedAccessManager::class, 'embargoedAccessEnabled')]
+#[CoversMethod(EmbargoedAccessManager::class, 'entityAccess')]
+#[CoversMethod(EmbargoedAccessManager::class, 'getOperationLinks')]
+#[CoversMethod(EmbargoedAccessManager::class, 'getProtectedParent')]
+#[CoversMethod(EmbargoedAccessManager::class, 'getProtectionStatus')]
+#[CoversMethod(EmbargoedAccessManager::class, 'isProtected')]
+#[CoversMethod(EmbargoedAccessManager::class, 'protectNode')]
+#[CoversMethod(EmbargoedAccessManager::class, 'supportsProtections')]
+#[CoversMethod(EmbargoedAccessManager::class, 'unprotectNode')]
+#[Group('ghi_embargoed_access')]
 class EmbargoedAccessManagerBasicTest extends UnitTestCase {
 
   /**
@@ -203,8 +212,6 @@ class EmbargoedAccessManagerBasicTest extends UnitTestCase {
 
   /**
    * Tests embargoedAccessEnabled when disabled.
-   *
-   * @covers ::embargoedAccessEnabled
    */
   public function testEmbargoedAccessEnabledDisabled(): void {
     $this->mockEmbargoedAccessState(FALSE);
@@ -213,8 +220,6 @@ class EmbargoedAccessManagerBasicTest extends UnitTestCase {
 
   /**
    * Tests embargoedAccessEnabled when enabled.
-   *
-   * @covers ::embargoedAccessEnabled
    */
   public function testEmbargoedAccessEnabledEnabled(): void {
     $this->mockEmbargoedAccessState(TRUE);
@@ -223,8 +228,6 @@ class EmbargoedAccessManagerBasicTest extends UnitTestCase {
 
   /**
    * Tests supportsProtections.
-   *
-   * @covers ::supportsProtections
    */
   public function testSupportsProtections(): void {
     $node = $this->createMock(NodeInterface::class);
@@ -238,8 +241,6 @@ class EmbargoedAccessManagerBasicTest extends UnitTestCase {
 
   /**
    * Tests supportsProtections when field is missing.
-   *
-   * @covers ::supportsProtections
    */
   public function testSupportsProtectionsNoField(): void {
     $node = $this->createMock(NodeInterface::class);
@@ -253,8 +254,6 @@ class EmbargoedAccessManagerBasicTest extends UnitTestCase {
 
   /**
    * Tests protected nodes can be unprotected when embargo is disabled.
-   *
-   * @covers ::getOperationLinks
    */
   public function testOperationLinksShowUnprotectWhenEmbargoDisabled(): void {
     $fieldItemList = $this->createProtectionField(TRUE);
@@ -283,8 +282,6 @@ class EmbargoedAccessManagerBasicTest extends UnitTestCase {
 
   /**
    * Tests unprotected nodes can be protected when embargo is disabled.
-   *
-   * @covers ::getOperationLinks
    */
   public function testOperationLinksShowProtectWhenEmbargoDisabled(): void {
     $node = $this->createNodeWithProtectionState(FALSE);
@@ -312,8 +309,6 @@ class EmbargoedAccessManagerBasicTest extends UnitTestCase {
 
   /**
    * Tests entityAccess when embargo is disabled.
-   *
-   * @covers ::entityAccess
    */
   public function testEntityAccessEmbargoDisabled(): void {
     $node = $this->createMock(NodeInterface::class);
@@ -323,9 +318,6 @@ class EmbargoedAccessManagerBasicTest extends UnitTestCase {
 
   /**
    * Tests isProtected when node is protected.
-   *
-   * @covers ::isProtected
-   * @covers ::getProtectionStatus
    */
   public function testIsProtectedTrue(): void {
     $node = $this->createNodeWithProtectionState(TRUE);
@@ -336,9 +328,6 @@ class EmbargoedAccessManagerBasicTest extends UnitTestCase {
 
   /**
    * Tests isProtected when node is not protected.
-   *
-   * @covers ::isProtected
-   * @covers ::getProtectionStatus
    */
   public function testIsProtectedFalse(): void {
     $node = $this->createNodeWithProtectionState(FALSE);
@@ -349,9 +338,6 @@ class EmbargoedAccessManagerBasicTest extends UnitTestCase {
 
   /**
    * Tests isProtected when embargo is disabled and node not protected.
-   *
-   * @covers ::isProtected
-   * @covers ::getProtectionStatus
    */
   public function testIsProtectedNullEmbargoDisabled(): void {
     $node = $this->createMock(NodeInterface::class);
@@ -362,9 +348,6 @@ class EmbargoedAccessManagerBasicTest extends UnitTestCase {
 
   /**
    * Tests isProtected when embargo is disabled and node is protected.
-   *
-   * @covers ::isProtected
-   * @covers ::getProtectionStatus
    */
   public function testIsProtectedTrueEmbargoDisabled(): void {
     $node = $this->createNodeWithProtectionState(TRUE);
@@ -375,8 +358,6 @@ class EmbargoedAccessManagerBasicTest extends UnitTestCase {
 
   /**
    * Tests getProtectedParent returns null when no parent.
-   *
-   * @covers ::getProtectedParent
    */
   public function testGetProtectedParentNull(): void {
     $node = $this->createMock(NodeInterface::class);
@@ -386,8 +367,6 @@ class EmbargoedAccessManagerBasicTest extends UnitTestCase {
 
   /**
    * Tests getProtectedParent returns parent for subpage with protected parent.
-   *
-   * @covers ::getProtectedParent
    */
   public function testGetProtectedParentSubpage(): void {
     $parentNode = $this->createNodeWithProtectionState(TRUE);
@@ -403,8 +382,6 @@ class EmbargoedAccessManagerBasicTest extends UnitTestCase {
 
   /**
    * Tests protectNode when already protected.
-   *
-   * @covers ::protectNode
    */
   public function testProtectNodeAlreadyProtected(): void {
     $node = $this->createNodeWithProtectionState(TRUE);
@@ -418,8 +395,6 @@ class EmbargoedAccessManagerBasicTest extends UnitTestCase {
 
   /**
    * Tests protectNode successfully protects node.
-   *
-   * @covers ::protectNode
    */
   public function testProtectNodeSuccessful(): void {
     $fieldItemList = $this->createProtectionField(FALSE);
@@ -441,8 +416,6 @@ class EmbargoedAccessManagerBasicTest extends UnitTestCase {
 
   /**
    * Tests unprotectNode when already unprotected.
-   *
-   * @covers ::unprotectNode
    */
   public function testUnprotectNodeAlreadyUnprotected(): void {
     $node = $this->createNodeWithProtectionState(FALSE);
@@ -456,8 +429,6 @@ class EmbargoedAccessManagerBasicTest extends UnitTestCase {
 
   /**
    * Tests unprotectNode successfully unprotects node.
-   *
-   * @covers ::unprotectNode
    */
   public function testUnprotectNodeSuccessful(): void {
     $fieldItemList = $this->createProtectionField(TRUE);
@@ -475,8 +446,6 @@ class EmbargoedAccessManagerBasicTest extends UnitTestCase {
 
   /**
    * Tests unprotectNode clears stored protection when embargo is disabled.
-   *
-   * @covers ::unprotectNode
    */
   public function testUnprotectNodeSuccessfulWhenEmbargoDisabled(): void {
     $fieldItemList = $this->createProtectionField(TRUE);
@@ -494,8 +463,6 @@ class EmbargoedAccessManagerBasicTest extends UnitTestCase {
 
   /**
    * Tests entityAccess with password protection when access denied.
-   *
-   * @covers ::entityAccess
    */
   public function testEntityAccessWithPasswordProtection(): void {
     $node = $this->createNodeWithProtectionState(TRUE);
@@ -509,8 +476,6 @@ class EmbargoedAccessManagerBasicTest extends UnitTestCase {
 
   /**
    * Tests entityAccess with password protection when access granted.
-   *
-   * @covers ::entityAccess
    */
   public function testEntityAccessWithPasswordProtectionGranted(): void {
     $node = $this->createNodeWithProtectionState(TRUE);

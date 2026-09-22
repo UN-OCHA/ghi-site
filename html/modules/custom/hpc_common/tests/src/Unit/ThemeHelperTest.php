@@ -7,13 +7,15 @@ use Drupal\Core\Extension\ExtensionPathResolver;
 use Drupal\Core\Render\RendererInterface;
 use Drupal\Tests\UnitTestCase;
 use Drupal\hpc_common\Helpers\ThemeHelper;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Group;
 use Twig\Environment;
 
 /**
- * @covers Drupal\hpc_common\Helpers\ThemeHelper
+ * Tests the theme helper.
  */
+#[CoversClass(ThemeHelper::class)]
 class ThemeHelperTest extends UnitTestCase {
 
   /**
@@ -232,9 +234,8 @@ class ThemeHelperTest extends UnitTestCase {
 
   /**
    * Test the getNumberSuffix function.
-   *
-   * @group ThemeHelper
    */
+  #[Group('ThemeHelper')]
   public function testGetNumberSuffix() {
     $this->assertEquals('k', ThemeHelper::getNumberSuffix('thousand'));
     $this->assertEquals(' thousand', ThemeHelper::getNumberSuffix('thousand', FALSE));
@@ -248,9 +249,8 @@ class ThemeHelperTest extends UnitTestCase {
 
   /**
    * Test the themeFtsIcon function.
-   *
-   * @group ThemeHelper
    */
+  #[Group('ThemeHelper')]
   public function testThemeFtsIcon() {
     $expected = [
       '#theme' => 'image',

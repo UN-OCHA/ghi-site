@@ -10,12 +10,12 @@ use Drupal\ghi_blocks\Interfaces\MultiStepFormBlockInterface;
 use Drupal\ghi_blocks\Interfaces\OverrideDefaultTitleBlockInterface;
 use Drupal\ghi_blocks\Plugin\Block\Generic\DocumentLinks;
 use Drupal\Tests\ghi_blocks\Kernel\BlockKernelTestBase;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
  * Tests the document links block plugin.
- *
- * @group ghi_blocks
  */
+#[Group('ghi_blocks')]
 class DocumentLinksBlockTest extends BlockKernelTestBase {
 
   /**
