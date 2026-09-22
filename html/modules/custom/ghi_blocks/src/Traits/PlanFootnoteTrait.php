@@ -99,6 +99,9 @@ trait PlanFootnoteTrait {
    */
   public function getRenderedFootnoteTooltip($footnotes, $property) {
     $build = $this->buildFootnoteTooltip($footnotes, $property);
+    if ($build === NULL) {
+      return NULL;
+    }
     return ThemeHelper::render($build, FALSE);
   }
 

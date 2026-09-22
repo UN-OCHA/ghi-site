@@ -54,10 +54,16 @@ class MapDataControllerTest extends KernelTestBase {
       'current_uri' => '/admin',
       'map_id' => 'test-map',
     ]);
-    $this->container->get('request_stack')->push($request);
+    $request_stack = $this->container->get('request_stack');
+    $request_stack->push($request);
 
-    $controller = MapDataController::create($this->container);
-    $response = $controller->data('plan_attachment_map', 'block_uuid');
+    try {
+      $controller = MapDataController::create($this->container);
+      $response = $controller->data('plan_attachment_map', 'block_uuid');
+    }
+    finally {
+      $request_stack->pop();
+    }
 
     $this->assertSame(403, $response->getStatusCode());
     $this->assertSame([], $response->getCommands());
@@ -73,10 +79,16 @@ class MapDataControllerTest extends KernelTestBase {
       'map_id' => 'test-map',
       'data_index' => 'people-targeted-0',
     ]);
-    $this->container->get('request_stack')->push($request);
+    $request_stack = $this->container->get('request_stack');
+    $request_stack->push($request);
 
-    $controller = MapDataController::create($this->container);
-    $response = $controller->dataFragment('plan_attachment_map', 'block_uuid');
+    try {
+      $controller = MapDataController::create($this->container);
+      $response = $controller->dataFragment('plan_attachment_map', 'block_uuid');
+    }
+    finally {
+      $request_stack->pop();
+    }
 
     $this->assertSame(403, $response->getStatusCode());
     $this->assertContains('user.permissions', $response->getCacheableMetadata()->getCacheContexts());
@@ -92,10 +104,16 @@ class MapDataControllerTest extends KernelTestBase {
       'data_index' => 'people-targeted-0',
       'object_id' => '10',
     ]);
-    $this->container->get('request_stack')->push($request);
+    $request_stack = $this->container->get('request_stack');
+    $request_stack->push($request);
 
-    $controller = MapDataController::create($this->container);
-    $response = $controller->modalData('plan_attachment_map', 'block_uuid');
+    try {
+      $controller = MapDataController::create($this->container);
+      $response = $controller->modalData('plan_attachment_map', 'block_uuid');
+    }
+    finally {
+      $request_stack->pop();
+    }
 
     $this->assertSame(403, $response->getStatusCode());
     $this->assertContains('user.permissions', $response->getCacheableMetadata()->getCacheContexts());

@@ -317,27 +317,4 @@ class GeoJsonDirectoryListTest extends KernelTestBase {
     $this->assertTrue($admin1_markup_found, 'Should find file as markup when links disabled.');
   }
 
-  /**
-   * {@inheritdoc}
-   */
-  protected function tearDown(): void {
-    // Clean up test directories if they exist.
-    try {
-      $paths_to_clean = [
-        $this->testDirectory,
-        'public://test_empty_directory',
-      ];
-
-      foreach ($paths_to_clean as $path) {
-        if ($this->fileSystem && is_dir($path)) {
-          $this->fileSystem->deleteRecursive($path);
-        }
-      }
-    } catch (\Exception $e) {
-      // Ignore cleanup errors during tearDown.
-    }
-
-    parent::tearDown();
-  }
-
 }
