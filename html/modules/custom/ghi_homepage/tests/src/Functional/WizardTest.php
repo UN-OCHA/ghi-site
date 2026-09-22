@@ -32,6 +32,7 @@ class WizardTest extends BrowserTestBase {
    * @var array
    */
   protected static $modules = [
+    'toolbar',
     'gin_lb',
     'ghi_homepage',
   ];

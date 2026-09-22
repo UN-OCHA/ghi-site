@@ -322,21 +322,4 @@ class GeoJsonDeleteVersionTest extends KernelTestBase {
     $this->assertFalse(file_exists($test_file), 'Files should be deleted along with directory.');
   }
 
-  /**
-   * {@inheritdoc}
-   */
-  protected function tearDown(): void {
-    // Clean up test directories if they exist.
-    try {
-      $base_path = 'public://geojson_sources';
-      if ($this->fileSystem) {
-        $this->fileSystem->deleteRecursive($base_path);
-      }
-    } catch (\Exception $e) {
-      // Ignore cleanup errors during tearDown.
-    }
-
-    parent::tearDown();
-  }
-
 }

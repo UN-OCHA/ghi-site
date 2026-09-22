@@ -294,7 +294,7 @@ jobs:
               PHPUNIT_CONFIG="/srv/www/phpunit-${{ matrix.coverage }}.xml"
               PHPUNIT_ARGS=(--testsuite "${{ matrix.coverage }}")
             fi
-            docker compose -f .github/tests/docker-compose.yml exec -T -u appuser -w /srv/www -e XDEBUG_MODE=coverage -e BROWSERTEST_OUTPUT_DIRECTORY=/tmp -e BROWSERTEST_OUTPUT_BASE_URL=http://127.0.0.1:8081 -e DTT_BASE_URL=http://ghi-test-site.test -e SIMPLETEST_BASE_URL=http://ghi-test-site.test -e SIMPLETEST_DB=mysql://ghi:ghi@mysql/ghi drupal ./vendor/bin/phpunit -c "$PHPUNIT_CONFIG" --coverage-php "$COVERAGE_FILE" "${PHPUNIT_ARGS[@]}"
+            docker compose -f .github/tests/docker-compose.yml exec -T -u appuser -w /srv/www -e XDEBUG_MODE=coverage -e BROWSERTEST_OUTPUT_DIRECTORY=/tmp -e BROWSERTEST_OUTPUT_BASE_URL=http://127.0.0.1:8081 -e DTT_BASE_URL=http://ghi-test-site.test -e SIMPLETEST_BASE_URL=http://ghi-test-site.test -e SIMPLETEST_DB=mysql://ghi:ghi@mysql/ghi drupal ./vendor/bin/phpunit -c "$PHPUNIT_CONFIG" --cache-directory /srv/www/html/build/logs/phpunit-cache --coverage-php "$COVERAGE_FILE" "${PHPUNIT_ARGS[@]}"
         env:
           fail-fast: true
 
