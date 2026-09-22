@@ -6,12 +6,12 @@ use Drupal\Core\Form\FormState;
 use Drupal\file\Entity\File;
 use Drupal\ghi_blocks\Element\CarouselItem;
 use Drupal\ghi_blocks\Plugin\ConfigurationContainerItem\Link;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
  * Tests image upload constraints in block configuration forms.
- *
- * @group ghi_blocks
  */
+#[Group('ghi_blocks')]
 class ImageUploadValidationTest extends BlockKernelTestBase {
 
   /**

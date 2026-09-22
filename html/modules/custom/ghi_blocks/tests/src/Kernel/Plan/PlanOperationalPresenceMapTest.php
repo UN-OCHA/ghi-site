@@ -10,13 +10,13 @@ use Drupal\ghi_blocks\Map\MapModalContent;
 use Drupal\ghi_blocks\Plugin\Block\Plan\PlanOperationalPresenceMap;
 use Drupal\layout_builder\SectionStorageInterface;
 use Drupal\Tests\ghi_blocks\Kernel\PlanBlockKernelTestBase;
+use PHPUnit\Framework\Attributes\Group;
 use Symfony\Component\HttpFoundation\Request;
 
 /**
  * Tests the plan operational presence map block plugin.
- *
- * @group ghi_blocks
  */
+#[Group('ghi_blocks')]
 class PlanOperationalPresenceMapTest extends PlanBlockKernelTestBase {
 
   /**

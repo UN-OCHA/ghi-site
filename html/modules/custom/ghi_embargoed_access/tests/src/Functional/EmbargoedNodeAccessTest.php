@@ -12,12 +12,12 @@ use Drupal\entity_access_password\Service\PasswordAccessManagerInterface;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\node\NodeInterface;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
  * Tests the access to embargoed content.
- *
- * @group ghi_embargoed_access
  */
+#[Group('ghi_embargoed_access')]
 class EmbargoedNodeAccessTest extends BrowserTestBase {
 
   use EntityReferenceFieldCreationTrait;

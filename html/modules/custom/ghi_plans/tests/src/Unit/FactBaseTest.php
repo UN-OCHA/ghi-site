@@ -5,12 +5,12 @@ namespace Drupal\Tests\ghi_plans\Unit;
 use Drupal\ghi_plans\ApiObjects\Facts\AttachmentFact;
 use Drupal\ghi_plans\ApiObjects\Facts\FactBase;
 use Drupal\Tests\UnitTestCase;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
  * Tests the fact base object.
- *
- * @group ghi_plans
  */
+#[Group('ghi_plans')]
 class FactBaseTest extends UnitTestCase {
 
   /**

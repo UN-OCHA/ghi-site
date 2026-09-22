@@ -11,12 +11,15 @@ use Drupal\Tests\node\Traits\NodeCreationTrait;
 use Drupal\Tests\user\Traits\UserCreationTrait;
 use Drupal\ghi_teams\Entity\Team;
 use Drupal\node\Entity\NodeType;
+use PHPUnit\Framework\Attributes\CoversFunction;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
  * Tests node access records and grants.
- *
- * @group ghi_teams
  */
+#[CoversFunction('ghi_teams_node_access_records')]
+#[CoversFunction('ghi_teams_node_grants')]
+#[Group('ghi_teams')]
 class TeamNodeAccessTest extends KernelTestBase {
 
   use TeamTestTrait;
@@ -71,8 +74,6 @@ class TeamNodeAccessTest extends KernelTestBase {
 
   /**
    * Test node access records.
-   *
-   * @covers ::ghi_teams_node_access_records
    */
   public function testNodeAccessRecord() {
     $team = $this->createTeam();
@@ -104,8 +105,6 @@ class TeamNodeAccessTest extends KernelTestBase {
 
   /**
    * Test node access grants.
-   *
-   * @covers ::ghi_teams_node_grants
    */
   public function testNodeAccessGrants() {
     $team = $this->createTeam();

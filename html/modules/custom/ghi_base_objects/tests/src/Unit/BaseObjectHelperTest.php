@@ -14,13 +14,13 @@ use Drupal\ghi_base_objects\Entity\BaseObject;
 use Drupal\ghi_base_objects\Entity\BaseObjectInterface;
 use Drupal\ghi_base_objects\Helpers\BaseObjectHelper;
 use Drupal\node\Entity\Node;
+use PHPUnit\Framework\Attributes\Group;
 use Prophecy\Prophecy\MethodProphecy;
 
 /**
  * Tests the base object entity.
- *
- * @group ghi_base_objects
  */
+#[Group('ghi_base_objects')]
 class BaseObjectHelperTest extends UnitTestCase {
 
   use BaseObjectTestTrait;

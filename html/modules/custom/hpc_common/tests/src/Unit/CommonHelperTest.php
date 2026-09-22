@@ -7,13 +7,15 @@ use Drupal\Core\Extension\ExtensionPathResolver;
 use Drupal\Core\Render\RendererInterface;
 use Drupal\Tests\UnitTestCase;
 use Drupal\hpc_common\Helpers\CommonHelper;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Group;
 use Twig\Environment;
 
 /**
- * @covers Drupal\hpc_common\Helpers\CommonHelper
+ * Tests common helper methods.
  */
+#[CoversClass(CommonHelper::class)]
 class CommonHelperTest extends UnitTestCase {
 
   /**

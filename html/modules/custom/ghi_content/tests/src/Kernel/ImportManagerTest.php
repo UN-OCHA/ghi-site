@@ -22,13 +22,13 @@ use Drupal\Tests\ghi_base_objects\Traits\FieldTestTrait;
 use Drupal\Tests\ghi_content\Traits\ContentTestTrait;
 use Drupal\Tests\hpc_api\Traits\PrivateAccessorTrait;
 use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
 use Prophecy\Argument;
 
 /**
  * Tests the import manager.
- *
- * @group ghi_content
  */
+#[Group('ghi_content')]
 class ImportManagerTest extends KernelTestBase {
 
   use TaxonomyTestTrait;

@@ -7,12 +7,12 @@ use Drupal\ghi_plans\ApiObjects\Plan;
 use Drupal\ghi_plans\Plugin\FabricQuery\PlanQuery;
 use Drupal\hpc_api\ApiObjects\Types\PlanType;
 use Drupal\hpc_api\Query\FabricQueryManager;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
  * Tests the PlanOverviewPlan API object.
- *
- * @group ghi_plans
  */
+#[Group('ghi_plans')]
 class PlanOverviewPlanTest extends PlanApiObjectKernelTestBase {
 
   /**

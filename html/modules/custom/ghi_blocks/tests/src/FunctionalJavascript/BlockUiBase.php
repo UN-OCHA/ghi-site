@@ -8,13 +8,14 @@ use Drupal\TestTools\Extension\HtmlLogging\HtmlOutputLogger;
 use Drupal\Tests\field\Traits\BodyFieldCreationTrait;
 use Drupal\block_content\Entity\BlockContentType;
 use Drupal\layout_builder\Entity\LayoutBuilderEntityViewDisplay;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\PostCondition;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Base class for testing the GHI specific block UI.
- *
- * @group ghi_blocks
  */
+#[Group('ghi_blocks')]
 abstract class BlockUiBase extends WebDriverTestBase {
 
   use BodyFieldCreationTrait;
@@ -306,9 +307,8 @@ JS);
 
   /**
    * {@inheritdoc}
-   *
-   * @postCondition
    */
+  #[PostCondition]
   protected function failOnJavaScriptErrors(): void {
     // Gin's sidebar and core's debounced dialog resizing can race AJAX element
     // replacement in these tests. Keep failing on all other JavaScript errors.

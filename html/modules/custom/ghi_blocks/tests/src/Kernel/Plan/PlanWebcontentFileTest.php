@@ -8,13 +8,13 @@ use Drupal\ghi_blocks\Plugin\Block\Plan\PlanWebcontentFile;
 use Drupal\hpc_api\ApiObjects\FileAsset;
 use Drupal\hpc_api\Plugin\FabricQuery\FileAssetQuery;
 use Drupal\Tests\ghi_blocks\Kernel\PlanBlockKernelTestBase;
+use PHPUnit\Framework\Attributes\Group;
 use Prophecy\Argument;
 
 /**
  * Tests the plan webcontent file block plugin.
- *
- * @group ghi_blocks
  */
+#[Group('ghi_blocks')]
 class PlanWebcontentFileTest extends PlanBlockKernelTestBase {
 
   /**

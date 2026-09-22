@@ -20,16 +20,17 @@ use GuzzleHttp\HandlerStack;
 use GuzzleHttp\Middleware;
 use GuzzleHttp\Psr7\Response;
 use PHPUnit\Framework\Assert;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Group;
 use Prophecy\Argument;
 use Prophecy\PhpUnit\ProphecyTrait;
 
 /**
- * @covers Drupal\hpc_api\Query\EndpointQuery
- *
- * @group HPC API
+ * Tests endpoint queries.
  */
+#[CoversClass(EndpointQuery::class)]
+#[Group('HPC API')]
 class EndpointQueryTest extends UnitTestCase {
 
   use ProphecyTrait;
@@ -218,9 +219,8 @@ class EndpointQueryTest extends UnitTestCase {
 
   /**
    * Check the base url is set correctly.
-   *
-   * @group EndpointQuery
    */
+  #[Group('EndpointQuery')]
   public function testGetBaseUrl() {
     $this->assertEquals('https://api.hpc.tools', $this->query->getBaseUrl());
   }
@@ -335,9 +335,8 @@ class EndpointQueryTest extends UnitTestCase {
 
   /**
    * Test getting the data.
-   *
-   * @group EndpointQuery
    */
+  #[Group('EndpointQuery')]
   public function testGetData() {
     // Test usage year API.
     $this->assertUsageYearApi();

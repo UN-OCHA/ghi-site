@@ -13,13 +13,13 @@ use Drupal\ghi_plans\Plugin\FabricQuery\GoverningEntityQuery;
 use Drupal\hpc_api\Query\EndpointQueryManager;
 use Drupal\hpc_api\Query\FabricQueryManager;
 use Drupal\Tests\ghi_blocks\Kernel\PlanBlockKernelTestBase;
+use PHPUnit\Framework\Attributes\Group;
 use Prophecy\Argument;
 
 /**
  * Tests the plan headline figures block plugin.
- *
- * @group ghi_blocks
  */
+#[Group('ghi_blocks')]
 class PlanHeadlineFiguresTest extends PlanBlockKernelTestBase {
 
   /**

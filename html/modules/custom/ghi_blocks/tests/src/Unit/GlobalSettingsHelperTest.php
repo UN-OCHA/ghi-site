@@ -7,12 +7,12 @@ use Drupal\ghi_blocks\Helpers\GlobalSettingsHelper;
 use Drupal\ghi_plans\ApiObjects\Partials\PlanOverviewPlan;
 use Drupal\ghi_sections\SectionManager;
 use Drupal\Tests\UnitTestCase;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
  * Tests global settings access and plan type icons.
- *
- * @group ghi_blocks
  */
+#[Group('ghi_blocks')]
 class GlobalSettingsHelperTest extends UnitTestCase {
 
   /**

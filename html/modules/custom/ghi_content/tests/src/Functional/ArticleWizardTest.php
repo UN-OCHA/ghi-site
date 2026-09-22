@@ -10,12 +10,12 @@ use Drupal\Tests\ghi_content\Traits\ContentTestTrait;
 use Drupal\Tests\taxonomy\Traits\TaxonomyTestTrait;
 use Drupal\ghi_content\ContentManager\ArticleManager;
 use Drupal\node\Entity\Node;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
  * Tests the article wizard pages.
- *
- * @group ghi_sections
  */
+#[Group('ghi_sections')]
 class ArticleWizardTest extends BrowserTestBase {
 
   use EntityReferenceFieldCreationTrait;

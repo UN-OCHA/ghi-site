@@ -18,13 +18,13 @@ use Drupal\ghi_sections\Entity\Section;
 use Drupal\node\Entity\NodeType;
 use Drupal\node\NodeInterface;
 use Drupal\taxonomy\Entity\Term;
+use PHPUnit\Framework\Attributes\Group;
 use Symfony\Component\HttpFoundation\Request;
 
 /**
  * Tests some features of the abstract ContentBase class.
- *
- * @group ghi_content
  */
+#[Group('ghi_content')]
 class ContentBaseTest extends KernelTestBase {
 
   use TaxonomyTestTrait;

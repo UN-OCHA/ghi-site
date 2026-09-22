@@ -4,12 +4,12 @@ namespace Drupal\Tests\ghi_blocks\Unit;
 
 use Drupal\ghi_blocks\Map\MapModalContent;
 use Drupal\Tests\UnitTestCase;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
  * Tests map modal content helpers.
- *
- * @group ghi_blocks
  */
+#[Group('ghi_blocks')]
 class MapModalContentTest extends UnitTestCase {
 
   /**

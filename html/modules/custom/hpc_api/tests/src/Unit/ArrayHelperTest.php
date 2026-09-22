@@ -4,12 +4,14 @@ namespace Drupal\Tests\hpc_api\Unit;
 
 use Drupal\hpc_api\Helpers\ArrayHelper;
 use Drupal\Tests\UnitTestCase;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Group;
 
 /**
- * @covers Drupal\hpc_api\Helpers\ArrayHelper
+ * Tests the API array helper.
  */
+#[CoversClass(ArrayHelper::class)]
 class ArrayHelperTest extends UnitTestCase {
 
   /**
@@ -449,9 +451,8 @@ class ArrayHelperTest extends UnitTestCase {
 
   /**
    * Test keyByProperty method.
-   *
-   * @group ArrayHelper
    */
+  #[Group('ArrayHelper')]
   public function testKeyByProperty() {
     $object1 = new \stdClass();
     $object1->id = 1;
@@ -651,9 +652,8 @@ class ArrayHelperTest extends UnitTestCase {
 
   /**
    * Test sortObjectsByCallback method with numeric comparison.
-   *
-   * @group ArrayHelper
    */
+  #[Group('ArrayHelper')]
   public function testSortObjectsByCallbackNumeric() {
     $object1 = new \stdClass();
     $object1->value = 3;

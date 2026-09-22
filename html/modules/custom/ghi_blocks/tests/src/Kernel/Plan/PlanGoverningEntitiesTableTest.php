@@ -25,13 +25,13 @@ use Drupal\hpc_downloads\Interfaces\HPCDownloadExcelInterface;
 use Drupal\hpc_downloads\Interfaces\HPCDownloadPNGInterface;
 use Drupal\Tests\ghi_blocks\Kernel\PlanBlockKernelTestBase;
 use Drupal\Tests\ghi_subpages\Traits\SubpageTestTrait;
+use PHPUnit\Framework\Attributes\Group;
 use Prophecy\Argument;
 
 /**
  * Tests the plan governing entities table block plugin.
- *
- * @group ghi_blocks
  */
+#[Group('ghi_blocks')]
 class PlanGoverningEntitiesTableTest extends PlanBlockKernelTestBase {
 
   use SubpageTestTrait;

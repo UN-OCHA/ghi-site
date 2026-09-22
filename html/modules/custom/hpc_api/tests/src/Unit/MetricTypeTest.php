@@ -4,12 +4,12 @@ namespace Drupal\Tests\hpc_api\Unit;
 
 use Drupal\hpc_api\ApiObjects\Types\MetricType;
 use Drupal\Tests\UnitTestCase;
+use PHPUnit\Framework\Attributes\CoversClass;
 
 /**
  * Tests for metric type objects.
- *
- * @covers \Drupal\hpc_api\ApiObjects\Types\MetricType
  */
+#[CoversClass(MetricType::class)]
 class MetricTypeTest extends UnitTestCase {
 
   /**

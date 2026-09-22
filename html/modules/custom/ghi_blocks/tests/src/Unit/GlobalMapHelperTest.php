@@ -4,10 +4,13 @@ namespace Drupal\Tests\ghi_blocks\Unit;
 
 use Drupal\Tests\UnitTestCase;
 use Drupal\ghi_blocks\Helpers\GlobalMapHelper;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
- * @covers Drupal\ghi_blocks\Helpers\GlobalMapHelper
+ * Tests the global map helper.
  */
+#[CoversClass(GlobalMapHelper::class)]
 class GlobalMapHelperTest extends UnitTestCase {
 
   /**
@@ -21,9 +24,8 @@ class GlobalMapHelperTest extends UnitTestCase {
 
   /**
    * Test getStyleUrl returns correct URL format.
-   *
-   * @group GlobalMapHelper
    */
+  #[Group('GlobalMapHelper')]
   public function testGetStyleUrl() {
     $result = GlobalMapHelper::getStyleUrl();
 
@@ -34,9 +36,8 @@ class GlobalMapHelperTest extends UnitTestCase {
 
   /**
    * Test getMapConfigCacheTags returns expected cache tags.
-   *
-   * @group GlobalMapHelper
    */
+  #[Group('GlobalMapHelper')]
   public function testGetMapConfigCacheTags() {
     $result = GlobalMapHelper::getMapConfigCacheTags();
 

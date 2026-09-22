@@ -8,12 +8,12 @@ use Drupal\Tests\ghi_sections\Traits\SectionTestTrait;
 use Drupal\Tests\pathauto\Functional\PathautoTestHelperTrait;
 use Drupal\node\Entity\Node;
 use Drupal\pathauto\PathautoState;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
  * Test class for section aliases tests.
- *
- * @group ghi_sections
  */
+#[Group('ghi_sections')]
 class SectionAliasTest extends KernelTestBase {
 
   use EntityReferenceFieldCreationTrait;
