@@ -4,12 +4,14 @@ namespace Drupal\Tests\hpc_common\Unit;
 
 use Drupal\Tests\UnitTestCase;
 use Drupal\hpc_api\Helpers\StringHelper;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Group;
 
 /**
- * @covers Drupal\hpc_api\Helpers\StringHelper
+ * Tests the string helper.
  */
+#[CoversClass(StringHelper::class)]
 class StringHelperTest extends UnitTestCase {
 
   /**

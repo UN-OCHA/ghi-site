@@ -7,12 +7,12 @@ use Drupal\Tests\ghi_subpages\Traits\SubpageTestTrait;
 use Drupal\ghi_sections\Entity\SectionNodeInterface;
 use Drupal\ghi_subpages\Entity\SubpageNodeInterface;
 use Drupal\hpc_api\Helpers\StringHelper;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
  * Test class for section subpages tests.
- *
- * @group ghi_subpages
  */
+#[Group('ghi_subpages')]
 class SubpagesTest extends KernelTestBase {
 
   use SubpageTestTrait;

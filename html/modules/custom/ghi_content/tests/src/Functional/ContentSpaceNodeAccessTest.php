@@ -10,12 +10,12 @@ use Drupal\Tests\ghi_teams\Traits\TeamTestTrait;
 use Drupal\Tests\taxonomy\Traits\TaxonomyTestTrait;
 use Drupal\ghi_teams\Entity\ContentSpace;
 use Drupal\ghi_teams\Entity\Team;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
  * Tests the content space based access logic for content.
- *
- * @group ghi_content
  */
+#[Group('ghi_content')]
 class ContentSpaceNodeAccessTest extends BrowserTestBase {
 
   use EntityReferenceFieldCreationTrait;

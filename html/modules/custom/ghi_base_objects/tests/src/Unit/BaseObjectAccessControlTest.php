@@ -10,12 +10,12 @@ use Drupal\ghi_base_objects\BaseObjectAccessControlHandler;
 use Drupal\Tests\UnitTestCase;
 use Drupal\Tests\hpc_api\Traits\PrivateAccessorTrait;
 use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
  * Tests the base object entity.
- *
- * @group ghi_base_objects
  */
+#[Group('ghi_base_objects')]
 class BaseObjectAccessControlTest extends UnitTestCase {
 
   use PrivateAccessorTrait;

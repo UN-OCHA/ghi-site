@@ -6,19 +6,18 @@ use Drupal\Core\DependencyInjection\ContainerBuilder;
 use Drupal\Core\Render\RendererInterface;
 use Drupal\hpc_downloads\DownloadMethods\Excel;
 use Drupal\Tests\UnitTestCase;
+use PHPUnit\Framework\Attributes\CoversMethod;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
  * Tests rendering cell values for Excel exports.
- *
- * @coversDefaultClass \Drupal\hpc_downloads\DownloadMethods\Excel
- * @group hpc_downloads
  */
+#[CoversMethod(Excel::class, 'renderValue')]
+#[Group('hpc_downloads')]
 class ExcelTest extends UnitTestCase {
 
   /**
    * Tests rendering both standalone render arrays and table cell data.
-   *
-   * @covers ::renderValue
    */
   public function testRenderValueInIsolation(): void {
     $build = ['#plain_text' => 'Export & value'];

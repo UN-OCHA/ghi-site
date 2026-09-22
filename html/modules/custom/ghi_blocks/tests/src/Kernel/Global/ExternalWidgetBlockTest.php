@@ -12,12 +12,12 @@ use Drupal\node\Entity\NodeType;
 use Drupal\Tests\ghi_base_objects\Traits\BaseObjectTestTrait;
 use Drupal\Tests\ghi_blocks\Kernel\BlockKernelTestBase;
 use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
  * Tests the external widget block plugin.
- *
- * @group ghi_blocks
  */
+#[Group('ghi_blocks')]
 class ExternalWidgetBlockTest extends BlockKernelTestBase {
 
   use BaseObjectTestTrait;

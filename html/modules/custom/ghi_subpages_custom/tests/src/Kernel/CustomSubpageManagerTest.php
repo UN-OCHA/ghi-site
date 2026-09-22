@@ -9,12 +9,12 @@ use Drupal\Tests\user\Traits\UserCreationTrait;
 use Drupal\ghi_sections\Menu\SectionMenuItemInterface;
 use Drupal\ghi_subpages_custom\Plugin\SectionMenuItem\CustomSubpage as SectionMenuItemCustomSubpage;
 use Drupal\node\Entity\NodeType;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
  * Tests the custom subpage manager.
- *
- * @group ghi_subpages_custom
  */
+#[Group('ghi_subpages_custom')]
 class CustomSubpageManagerTest extends SectionMenuTestBase {
 
   use UserCreationTrait;

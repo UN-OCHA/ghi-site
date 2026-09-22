@@ -7,16 +7,17 @@ use Drupal\Tests\UnitTestCase;
 use Drupal\ghi_form_elements\LinkTarget\ExternalLinkTarget;
 use Drupal\ghi_form_elements\LinkTarget\InternalLinkTarget;
 use Drupal\node\NodeInterface;
+use PHPUnit\Framework\Attributes\CoversClass;
 
 /**
  * Test link target classes.
  */
+#[CoversClass(ExternalLinkTarget::class)]
+#[CoversClass(InternalLinkTarget::class)]
 class LinkTargetTest extends UnitTestCase {
 
   /**
    * Test internal link targets.
-   *
-   * @covers Drupal\ghi_form_elements\LinkTarget\InternalLinkTarget
    */
   public function testInternalLinkTarget() {
     $node = $this->prophesize(NodeInterface::class);
@@ -29,8 +30,6 @@ class LinkTargetTest extends UnitTestCase {
 
   /**
    * Test external link targets.
-   *
-   * @covers Drupal\ghi_form_elements\LinkTarget\ExternalLinkTarget
    */
   public function testExternalLinkTarget() {
     $url = $this->prophesize(Url::class);

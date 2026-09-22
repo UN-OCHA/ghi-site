@@ -5,12 +5,14 @@ namespace Drupal\Tests\hpc_api\Unit;
 use Drupal\Tests\UnitTestCase;
 use Drupal\hpc_api\Traits\ObjectFilterTrait;
 use Drupal\hpc_api\ApiObjects\ApiObjectInterface;
+use PHPUnit\Framework\Attributes\CoversTrait;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Group;
 
 /**
- * @covers Drupal\hpc_api\Traits\ObjectFilterTrait
+ * Tests object filtering.
  */
+#[CoversTrait(ObjectFilterTrait::class)]
 class ObjectFilterTraitTest extends UnitTestCase {
 
   use ObjectFilterTrait;
@@ -64,9 +66,8 @@ class ObjectFilterTraitTest extends UnitTestCase {
 
   /**
    * Test filterObjects throws exception for non-scalar/array values.
-   *
-   * @group ObjectFilterTrait
    */
+  #[Group('ObjectFilterTrait')]
   public function testFilterObjectsThrowsExceptionForInvalidFilter() {
     $objects = [new TestApiObject(['name' => 'John'])];
 
@@ -76,9 +77,8 @@ class ObjectFilterTraitTest extends UnitTestCase {
 
   /**
    * Test filterObjects with empty filter.
-   *
-   * @group ObjectFilterTrait
    */
+  #[Group('ObjectFilterTrait')]
   public function testFilterObjectsWithEmptyFilter() {
     $objects = [
       new TestApiObject(['name' => 'John']),

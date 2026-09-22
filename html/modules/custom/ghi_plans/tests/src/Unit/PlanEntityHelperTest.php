@@ -5,12 +5,14 @@ namespace Drupal\Tests\ghi_plans\Unit;
 use Drupal\Tests\UnitTestCase;
 use Drupal\ghi_plans\ApiObjects\PlanEntityInterface;
 use Drupal\ghi_plans\Helpers\PlanEntityHelper;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Group;
 
 /**
- * @covers Drupal\ghi_plans\Helpers\PlanEntityHelper
+ * Tests the plan entity helper.
  */
+#[CoversClass(PlanEntityHelper::class)]
 class PlanEntityHelperTest extends UnitTestCase {
 
   /**

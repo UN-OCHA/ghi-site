@@ -5,12 +5,12 @@ namespace Drupal\Tests\ghi_blocks\Kernel\Global;
 use Drupal\Core\Form\FormState;
 use Drupal\ghi_blocks\Plugin\Block\Generic\Datawrapper;
 use Drupal\Tests\ghi_blocks\Kernel\BlockKernelTestBase;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
  * Tests the datawrapper block plugin.
- *
- * @group ghi_blocks
  */
+#[Group('ghi_blocks')]
 class DatawrapperBlockTest extends BlockKernelTestBase {
 
   const EMBED_CODE_VALID = '<iframe src="https://datawrapper.dwcdn.net/CHART_ID"></iframe>';

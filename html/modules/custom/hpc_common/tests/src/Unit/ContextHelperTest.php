@@ -15,13 +15,15 @@ use Drupal\hpc_common\Helpers\ContextHelper;
 use Drupal\node\NodeInterface;
 use Drupal\node\NodeStorageInterface;
 use Drupal\user\UserInterface;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Group;
 use Prophecy\Argument;
 
 /**
- * @covers Drupal\hpc_common\Helpers\ContextHelper
+ * Tests the context helper.
  */
+#[CoversClass(ContextHelper::class)]
 class ContextHelperTest extends UnitTestCase {
 
   /**

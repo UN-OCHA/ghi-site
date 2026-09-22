@@ -13,13 +13,13 @@ use Drupal\hpc_remote_data_cache\RemoteDataCacheItem;
 use GuzzleHttp\Client;
 use GuzzleHttp\ClientInterface;
 use PHPUnit\Framework\Assert;
+use PHPUnit\Framework\Attributes\Group;
 use Symfony\Component\HttpFoundation\RequestStack;
 
 /**
  * Tests the HPC content module remote source.
- *
- * @group ghi_content
  */
+#[Group('ghi_content')]
 class HpcContentModuleTest extends UnitTestCase {
 
   /**

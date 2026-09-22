@@ -8,12 +8,12 @@ use Drupal\ghi_blocks\Interfaces\ConfigurableTableBlockInterface;
 use Drupal\ghi_blocks\Plugin\Block\Generic\LinkCarousel;
 use Drupal\ghi_blocks\Plugin\Block\ImageProviderBlockInterface;
 use Drupal\Tests\ghi_blocks\Kernel\BlockKernelTestBase;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
  * Tests the link carousel block plugin.
- *
- * @group ghi_blocks
  */
+#[Group('ghi_blocks')]
 class LinkCarouselBlockTest extends BlockKernelTestBase {
 
   /**

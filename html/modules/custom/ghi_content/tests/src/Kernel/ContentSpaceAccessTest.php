@@ -11,12 +11,15 @@ use Drupal\Tests\node\Traits\NodeCreationTrait;
 use Drupal\Tests\user\Traits\UserCreationTrait;
 use Drupal\ghi_teams\Entity\ContentSpace;
 use Drupal\node\Entity\NodeType;
+use PHPUnit\Framework\Attributes\CoversFunction;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
  * Tests node access records and grants.
- *
- * @group ghi_content
  */
+#[CoversFunction('ghi_content_node_access_records')]
+#[CoversFunction('ghi_content_node_grants')]
+#[Group('ghi_content')]
 class ContentSpaceAccessTest extends KernelTestBase {
 
   use TeamTestTrait;
@@ -79,8 +82,6 @@ class ContentSpaceAccessTest extends KernelTestBase {
 
   /**
    * Test node access records.
-   *
-   * @covers ::ghi_content_node_access_records
    */
   public function testNodeAccessRecord() {
     $content_space = $this->createContentSpace();
@@ -112,8 +113,6 @@ class ContentSpaceAccessTest extends KernelTestBase {
 
   /**
    * Test node access grants.
-   *
-   * @covers ::ghi_content_node_grants
    */
   public function testNodeAccessGrants() {
     $content_space = $this->createContentSpace();

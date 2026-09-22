@@ -5,13 +5,14 @@ namespace Drupal\Tests\ghi_geojson\Kernel;
 use Drupal\Core\File\FileSystemInterface;
 use Drupal\ghi_geojson\GeoJson;
 use Drupal\KernelTests\KernelTestBase;
+use PHPUnit\Framework\Attributes\CoversMethod;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
  * Kernel tests for the GeoJson::renameVersion method.
- *
- * @coversDefaultClass \Drupal\ghi_geojson\GeoJson
- * @group ghi_geojson
  */
+#[CoversMethod(GeoJson::class, 'renameVersion')]
+#[Group('ghi_geojson')]
 class GeoJsonRenameVersionTest extends KernelTestBase {
 
   /**
@@ -99,8 +100,6 @@ class GeoJsonRenameVersionTest extends KernelTestBase {
 
   /**
    * Tests successful version renaming.
-   *
-   * @covers ::renameVersion
    */
   public function testRenameVersionSuccess(): void {
     $iso3 = 'AFG';
@@ -145,8 +144,6 @@ class GeoJsonRenameVersionTest extends KernelTestBase {
 
   /**
    * Tests renaming to existing directory fails.
-   *
-   * @covers ::renameVersion
    */
   public function testRenameVersionToExistingDirectoryFails(): void {
     $iso3 = 'AFG';
@@ -173,8 +170,6 @@ class GeoJsonRenameVersionTest extends KernelTestBase {
 
   /**
    * Tests renaming non-existent directory fails.
-   *
-   * @covers ::renameVersion
    */
   public function testRenameVersionNonExistentDirectoryFails(): void {
     $iso3 = 'AFG';
@@ -198,8 +193,6 @@ class GeoJsonRenameVersionTest extends KernelTestBase {
 
   /**
    * Tests renaming with invalid ISO3 code fails.
-   *
-   * @covers ::renameVersion
    */
   public function testRenameVersionInvalidIso3Fails(): void {
     $invalid_iso3 = 'INVALID';
@@ -219,8 +212,6 @@ class GeoJsonRenameVersionTest extends KernelTestBase {
 
   /**
    * Tests that cache tags are invalidated on successful rename.
-   *
-   * @covers ::renameVersion
    */
   public function testRenameVersionInvalidatesCacheTags(): void {
     $iso3 = 'IRQ';
@@ -249,8 +240,6 @@ class GeoJsonRenameVersionTest extends KernelTestBase {
 
   /**
    * Tests renaming preserves directory structure and permissions.
-   *
-   * @covers ::renameVersion
    */
   public function testRenameVersionPreservesStructureAndPermissions(): void {
     $iso3 = 'IRQ';
@@ -295,8 +284,6 @@ class GeoJsonRenameVersionTest extends KernelTestBase {
 
   /**
    * Tests renaming with special characters in version names.
-   *
-   * @covers ::renameVersion
    */
   public function testRenameVersionWithSpecialCharacters(): void {
     // First create a directory with a special character version name.

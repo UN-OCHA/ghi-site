@@ -13,12 +13,12 @@ use Drupal\ghi_blocks\Plugin\Block\Plan\PlanAttachmentMap;
 use Drupal\ghi_plans\ApiObjects\Attachments\Attachment;
 use Drupal\ghi_plans\Plugin\FabricQuery\AttachmentQuery;
 use Drupal\Tests\ghi_blocks\Kernel\PlanBlockKernelTestBase;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
  * Tests the plan attachment map block plugin.
- *
- * @group ghi_blocks
  */
+#[Group('ghi_blocks')]
 class PlanAttachmentMapTest extends PlanBlockKernelTestBase {
 
   /**

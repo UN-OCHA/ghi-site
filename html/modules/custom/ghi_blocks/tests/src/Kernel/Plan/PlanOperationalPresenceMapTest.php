@@ -8,12 +8,12 @@ use Drupal\ghi_blocks\Interfaces\OverrideDefaultTitleBlockInterface;
 use Drupal\ghi_blocks\Map\MapModalContent;
 use Drupal\ghi_blocks\Plugin\Block\Plan\PlanOperationalPresenceMap;
 use Drupal\Tests\ghi_blocks\Kernel\PlanBlockKernelTestBase;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
  * Tests the plan operational presence map block plugin.
- *
- * @group ghi_blocks
  */
+#[Group('ghi_blocks')]
 class PlanOperationalPresenceMapTest extends PlanBlockKernelTestBase {
 
   /**

@@ -10,13 +10,14 @@ use Drupal\layout_builder\Section;
 use Drupal\layout_builder\SectionComponent;
 use Drupal\layout_builder\SectionStorage\SectionStorageManagerInterface;
 use Drupal\layout_builder\SectionStorageInterface;
+use PHPUnit\Framework\Attributes\Group;
 use Prophecy\Argument;
 use Prophecy\PhpUnit\ProphecyTrait;
 
 /**
- * @coversDefaultClass \Drupal\layout_builder\SectionComponent
- * @group layout_builder
+ * Tests the base object reference controller.
  */
+#[Group('layout_builder')]
 class BaseObjectReferenceControllerTest extends UnitTestCase {
 
   use ProphecyTrait;

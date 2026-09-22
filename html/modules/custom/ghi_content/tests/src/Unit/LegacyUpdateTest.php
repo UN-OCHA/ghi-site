@@ -5,12 +5,12 @@ namespace Drupal\Tests\ghi_content\Unit;
 use Drupal\Core\DependencyInjection\ContainerBuilder;
 use Drupal\Core\File\FileSystemInterface;
 use Drupal\Tests\UnitTestCase;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
  * Tests that old update hooks retain their original filesystem targets.
- *
- * @group ghi_content
  */
+#[Group('ghi_content')]
 class LegacyUpdateTest extends UnitTestCase {
 
   /**

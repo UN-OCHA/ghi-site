@@ -6,12 +6,12 @@ use Drupal\Core\Plugin\Context\Context;
 use Drupal\Core\Plugin\Context\ContextDefinition;
 use Drupal\ghi_blocks\Plugin\Block\GlobalPage\KeyFigures;
 use Drupal\Tests\ghi_blocks\Kernel\PlanBlockKernelTestBase;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
  * Tests the Key Figures block plugin.
- *
- * @group ghi_blocks
  */
+#[Group('ghi_blocks')]
 class KeyFiguresTest extends PlanBlockKernelTestBase {
 
   /**

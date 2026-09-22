@@ -10,12 +10,12 @@ use Drupal\Core\Form\FormState;
 use Drupal\ghi_templates\Form\PageTemplateForm;
 use Drupal\Tests\UnitTestCase;
 use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
  * Tests page template form save results and redirects.
- *
- * @group ghi_templates
  */
+#[Group('ghi_templates')]
 class PageTemplateFormTest extends UnitTestCase {
 
   /**

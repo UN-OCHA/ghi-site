@@ -4,19 +4,20 @@ namespace Drupal\Tests\ghi_form_elements\Unit;
 
 use Drupal\Tests\UnitTestCase;
 use Drupal\ghi_form_elements\Traits\ConfigurationContainerGroup;
+use PHPUnit\Framework\Attributes\CoversTrait;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Group;
 
 /**
- * @covers Drupal\ghi_form_elements\Traits\ConfigurationContainerGroup
+ * Tests configuration container grouping.
  */
+#[CoversTrait(ConfigurationContainerGroup::class)]
 class ConfigurationContainerGroupTest extends UnitTestCase {
 
   /**
    * Test buildTree.
-   *
-   * @group ConfigurationContainerGroup
    */
+  #[Group('ConfigurationContainerGroup')]
   public function testGetGroups() {
 
     $items = [

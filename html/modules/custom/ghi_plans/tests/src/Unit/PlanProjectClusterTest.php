@@ -3,12 +3,12 @@
 namespace Drupal\Tests\ghi_plans\Unit;
 
 use Drupal\ghi_plans\ApiObjects\Partials\PlanProjectCluster;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
  * Tests the PlanProjectCluster API object.
- *
- * @group ghi_plans
  */
+#[Group('ghi_plans')]
 class PlanProjectClusterTest extends ApiObjectTestBase {
 
   /**

@@ -12,12 +12,12 @@ use Drupal\ghi_sections\Entity\Section;
 use Drupal\node\Entity\NodeType;
 use Drupal\taxonomy\TermInterface;
 use Drupal\Tests\ghi_content\Traits\ContentTestTrait;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
  * Tests the document manager.
- *
- * @group ghi_content
  */
+#[Group('ghi_content')]
 class DocumentManagerTest extends KernelTestBase {
 
   use TaxonomyTestTrait;

@@ -4,12 +4,12 @@ namespace Drupal\Tests\ghi_subpages\Functional;
 
 use Drupal\Tests\BrowserTestBase;
 use Drupal\Tests\ghi_subpages\Traits\SubpageTestTrait;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
  * Tests aspects of the subpages UI.
- *
- * @group ghi_subpages
  */
+#[Group('ghi_subpages')]
 class SubpagesUiTest extends BrowserTestBase {
 
   use SubpageTestTrait;

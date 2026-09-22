@@ -7,12 +7,12 @@ use Drupal\ghi_content\Controller\MigrationBatchController;
 use Drupal\ghi_content\Entity\Article;
 use Drupal\node\Entity\NodeType;
 use Drupal\node\NodeInterface;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
  * Tests migration cleanup publishing decisions.
- *
- * @group ghi_content
  */
+#[Group('ghi_content')]
 class MigrationBatchControllerTest extends KernelTestBase {
 
   /**

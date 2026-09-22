@@ -10,12 +10,12 @@ use Drupal\Tests\pathauto\Functional\PathautoTestHelperTrait;
 use Drupal\node\Entity\Node;
 use Drupal\pathauto\PathautoGeneratorInterface;
 use Drupal\pathauto\PathautoState;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
  * Test class for section aliases tests.
- *
- * @group ghi_subpages
  */
+#[Group('ghi_subpages')]
 class SubpageAliasTest extends KernelTestBase {
 
   use ContentTypeCreationTrait;

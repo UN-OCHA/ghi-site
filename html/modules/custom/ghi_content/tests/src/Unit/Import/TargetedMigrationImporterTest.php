@@ -11,15 +11,15 @@ use Drupal\migrate\Plugin\MigrateIdMapInterface;
 use Drupal\migrate\Plugin\MigrateSourceInterface;
 use Drupal\migrate\Plugin\MigrationInterface;
 use Drupal\Tests\UnitTestCase;
+use PHPUnit\Framework\Attributes\Group;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\EventDispatcher\EventDispatcher;
 use Psr\Log\NullLogger;
 
 /**
  * Tests targeted migration imports.
- *
- * @group ghi_content
  */
+#[Group('ghi_content')]
 class TargetedMigrationImporterTest extends UnitTestCase {
 
   /**

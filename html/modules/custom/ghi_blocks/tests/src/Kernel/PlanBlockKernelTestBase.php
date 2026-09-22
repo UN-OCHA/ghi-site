@@ -14,13 +14,13 @@ use Drupal\Tests\ghi_base_objects\Traits\BaseObjectTestTrait;
 use Drupal\Tests\ghi_sections\Traits\SectionTestTrait;
 use Drupal\Tests\taxonomy\Traits\TaxonomyTestTrait;
 use Drupal\Tests\user\Traits\UserCreationTrait;
+use PHPUnit\Framework\Attributes\Group;
 use Prophecy\Argument;
 
 /**
  * Base class for plan block kernel tests.
- *
- * @group ghi_blocks
  */
+#[Group('ghi_blocks')]
 abstract class PlanBlockKernelTestBase extends BlockKernelTestBase {
 
   use BaseObjectTestTrait;

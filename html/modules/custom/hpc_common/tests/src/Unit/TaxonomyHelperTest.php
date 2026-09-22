@@ -10,12 +10,14 @@ use Drupal\Tests\UnitTestCase;
 use Drupal\hpc_common\Helpers\TaxonomyHelper;
 use Drupal\taxonomy\Entity\Term;
 use Drupal\taxonomy\TermStorageInterface;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Group;
 
 /**
- * @covers Drupal\hpc_common\Helpers\TaxonomyHelper
+ * Tests the taxonomy helper.
  */
+#[CoversClass(TaxonomyHelper::class)]
 class TaxonomyHelperTest extends UnitTestCase {
 
   /**

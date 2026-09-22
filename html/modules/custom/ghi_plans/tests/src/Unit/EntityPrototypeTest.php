@@ -3,12 +3,12 @@
 namespace Drupal\Tests\ghi_plans\Unit\ApiObjects;
 
 use Drupal\Tests\ghi_plans\Unit\ApiObjectTestBase;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
  * Tests the EntityPrototype API object.
- *
- * @group ghi_plans
  */
+#[Group('ghi_plans')]
 class EntityPrototypeTest extends ApiObjectTestBase {
 
   /**

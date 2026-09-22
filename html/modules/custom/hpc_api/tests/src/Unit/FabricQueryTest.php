@@ -5,14 +5,16 @@ namespace Drupal\Tests\hpc_api\Unit;
 use Drupal\Tests\UnitTestCase;
 use Drupal\hpc_api\Query\FabricQuery;
 use Drupal\Tests\hpc_api\Traits\PrivateAccessorTrait;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Group;
 
 /**
- * @covers Drupal\hpc_api\Query\FabricQuery
+ * Tests Fabric queries.
  *
  * phpcs:disable Squiz.Arrays.ArrayDeclaration.KeySpecified
  */
+#[CoversClass(FabricQuery::class)]
 class FabricQueryTest extends UnitTestCase {
 
   use PrivateAccessorTrait;

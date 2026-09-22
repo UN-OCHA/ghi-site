@@ -8,12 +8,12 @@ use Drupal\hpc_api\Query\FabricClient;
 use Drupal\hpc_api\Query\FabricQuery;
 use Drupal\Tests\hpc_api\Traits\PrivateAccessorTrait;
 use Drupal\Tests\UnitTestCase;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
  * Tests the LocationQuery Fabric query plugin.
- *
- * @group ghi_base_objects
  */
+#[Group('ghi_base_objects')]
 class LocationQueryTest extends UnitTestCase {
 
   use PrivateAccessorTrait;

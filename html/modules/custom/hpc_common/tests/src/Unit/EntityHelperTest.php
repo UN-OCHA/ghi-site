@@ -6,17 +6,19 @@ use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\hpc_common\Helpers\EntityHelper;
 use Drupal\Tests\UnitTestCase;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
- * @covers Drupal\hpc_common\Helpers\EntityHelper
+ * Tests the entity helper.
  */
+#[CoversClass(EntityHelper::class)]
 class EntityHelperTest extends UnitTestCase {
 
   /**
    * Test getting an original id from an entity.
-   *
-   * @group EntityHelper
    */
+  #[Group('EntityHelper')]
   public function testGetOriginalIdFromEntity() {
     // Test behavior if field is not empty.
     $field = $this->prophesize(FieldItemListInterface::class);

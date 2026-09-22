@@ -5,12 +5,14 @@ namespace Drupal\Tests\ghi_blocks\Unit;
 use Drupal\Tests\UnitTestCase;
 use Drupal\ghi_blocks\Helpers\AttachmentMatcher;
 use Drupal\ghi_plans\ApiObjects\Prototypes\AttachmentPrototype;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Group;
 
 /**
- * @covers Drupal\ghi_blocks\Helpers\AttachmentMatcher
+ * Tests attachment matching.
  */
+#[CoversClass(AttachmentMatcher::class)]
 class AttachmentMatcherTest extends UnitTestCase {
 
   /**

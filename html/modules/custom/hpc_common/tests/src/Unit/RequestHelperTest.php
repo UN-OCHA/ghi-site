@@ -14,6 +14,7 @@ use Drupal\Core\TypedData\TypedDataManagerInterface;
 use Drupal\node\Entity\Node;
 use Drupal\Tests\UnitTestCase;
 use Drupal\hpc_common\Helpers\RequestHelper;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Group;
 use Symfony\Component\HttpFoundation\ParameterBag;
@@ -21,8 +22,9 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
 
 /**
- * @covers Drupal\hpc_common\Helpers\RequestHelper
+ * Tests the request helper.
  */
+#[CoversClass(RequestHelper::class)]
 class RequestHelperTest extends UnitTestCase {
 
   /**
@@ -143,9 +145,8 @@ class RequestHelperTest extends UnitTestCase {
 
   /**
    * Test flattenQuery method.
-   *
-   * @group RequestHelper
    */
+  #[Group('RequestHelper')]
   public function testFlattenQuery() {
     $query = ['name' => 'test', 'page' => 1];
     $result = RequestHelper::flattenQuery($query);
@@ -154,9 +155,8 @@ class RequestHelperTest extends UnitTestCase {
 
   /**
    * Test flattenQuery with empty array.
-   *
-   * @group RequestHelper
    */
+  #[Group('RequestHelper')]
   public function testFlattenQueryEmptyArray() {
     $result = RequestHelper::flattenQuery([]);
     $this->assertSame('', $result);

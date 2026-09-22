@@ -12,12 +12,12 @@ use Drupal\ghi_plans\Entity\Plan;
 use Drupal\ghi_plans\Plugin\FabricQuery\AttachmentQuery;
 use Drupal\Tests\hpc_api\Traits\PrivateAccessorTrait;
 use Drupal\Tests\UnitTestCase;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
  * Tests rendering fallbacks when remote data has no imported plan entity.
- *
- * @group ghi_blocks
  */
+#[Group('ghi_blocks')]
 class MissingPlanEntityTest extends UnitTestCase {
 
   use PrivateAccessorTrait;
