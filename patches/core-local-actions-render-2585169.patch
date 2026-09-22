@@ -1,0 +1,385 @@
+diff --git a/core/lib/Drupal/Core/Menu/LocalActionManager.php b/core/lib/Drupal/Core/Menu/LocalActionManager.php
+index 32870e6..5bae6f9 100644
+--- a/core/lib/Drupal/Core/Menu/LocalActionManager.php
++++ b/core/lib/Drupal/Core/Menu/LocalActionManager.php
+@@ -205,6 +205,9 @@ public function getActionsForRoute($route_appears) {
+     }
+     $cacheability->applyTo($links);
+ 
++    // Allow modules to alter local actions.
++    $this->moduleHandler->alter('local_actions_render', $links, $route_appears);
++
+     return $links;
+   }
+ 
+diff --git a/core/lib/Drupal/Core/Menu/LocalTaskManager.php b/core/lib/Drupal/Core/Menu/LocalTaskManager.php
+index 132e6fd..7e433cd 100644
+--- a/core/lib/Drupal/Core/Menu/LocalTaskManager.php
++++ b/core/lib/Drupal/Core/Menu/LocalTaskManager.php
+@@ -382,7 +382,8 @@ public function getLocalTasks($route_name, $level = 0) {
+         ];
+ 
+         // Allow modules to alter local tasks.
+-        $this->moduleHandler->alter('menu_local_tasks', $this->taskData[$route_name], $route_name, $cacheability);
++        $this->moduleHandler->alterDeprecated('Deprecated in drupal:12.0.0 and is removed from drupal:13.0.0. Use hook_local_tasks_render_alter() instead. See https://www.drupal.org/node/3028611', 'menu_local_tasks', $this->taskData[$route_name], $route_name, $cacheability);
++        $this->moduleHandler->alter('local_tasks_render', $this->taskData[$route_name], $route_name, $cacheability);
+         $this->taskData[$route_name]['cacheability'] = $cacheability;
+       }
+       else {
+diff --git a/core/lib/Drupal/Core/Menu/LocalTaskManagerInterface.php b/core/lib/Drupal/Core/Menu/LocalTaskManagerInterface.php
+index 9352e40..3d65ef2 100644
+--- a/core/lib/Drupal/Core/Menu/LocalTaskManagerInterface.php
++++ b/core/lib/Drupal/Core/Menu/LocalTaskManagerInterface.php
+@@ -66,7 +66,7 @@ public function getTasksBuild($current_route_name, RefinableCacheableDependencyI
+    *   - route_name: The route name for the current page used to collect the
+    *     local tasks.
+    *
+-   * @see hook_menu_local_tasks_alter()
++   * @see hook_local_tasks_render_alter()
+    */
+   public function getLocalTasks($route_name, $level = 0);
+ 
+diff --git a/core/lib/Drupal/Core/Menu/menu.api.php b/core/lib/Drupal/Core/Menu/menu.api.php
+index f014b08..23f0a23 100644
+--- a/core/lib/Drupal/Core/Menu/menu.api.php
++++ b/core/lib/Drupal/Core/Menu/menu.api.php
+@@ -93,8 +93,8 @@
+  *
+  * Local tasks from other modules can be altered using
+  * hook_local_tasks_alter().
+- * Additionally, hook_menu_local_tasks_alter() can be used to dynamically alter
+- * local tasks before they are rendered.
++ * Additionally, hook_local_tasks_render_alter() can be used to dynamically
++ * alter local tasks before they are rendered.
+  *
+  * @todo Derivatives are in flux for these; when they are more stable, add
+  *   documentation here.
+@@ -310,6 +310,10 @@ function hook_menu_links_discovered_alter(&$links) {
+  * @param \Drupal\Core\Cache\RefinableCacheableDependencyInterface $cacheability
+  *   The cacheability metadata for the current route's local tasks.
+  *
++ * @deprecated in drupal:12.0.0 and is removed from drupal:13.0.0. Use
++ *   hook_local_tasks_render_alter() instead.
++ *
++ * @see https://www.drupal.org/node/3028611
+  * @see hook_local_tasks_alter()
+  *
+  * @ingroup menu
+@@ -333,6 +337,54 @@ function hook_menu_local_tasks_alter(&$data, $route_name, \Drupal\Core\Cache\Ref
+   $cacheability->addCacheContexts(['user.permissions']);
+ }
+ 
++/**
++ * Alter local tasks displayed on the page before they are rendered.
++ *
++ * This hook is invoked by \Drupal\Core\Menu\LocalTaskManager::getLocalTasks().
++ * The system-determined tabs are passed in by reference. Additional
++ * tabs may be added.
++ *
++ * The local tasks are under the 'tabs' element and keyed by plugin ID.
++ *
++ * Each local task is an associative array containing:
++ * - #theme: The theme function to use to render.
++ * - #link: An associative array containing:
++ *   - title: The localized title of the link.
++ *   - url: a Url object.
++ *   - localized_options: An array of options to pass to
++ *     \Drupal\Core\Utility\LinkGeneratorInterface::generate().
++ * - #weight: The link's weight compared to other links.
++ * - #active: Whether the link should be marked as 'active'.
++ *
++ * @param array $data
++ *   An associative array containing list of (up to 2) tab levels that contain a
++ *   list of tabs keyed by plugin ID, each one being an associative array
++ *   as described above.
++ * @param string $route_name
++ *   The route name of the page.
++ * @param \Drupal\Core\Cache\RefinableCacheableDependencyInterface $cacheability
++ *   The cacheability metadata for the current route's local tasks.
++ *
++ * @ingroup menu
++ */
++function hook_local_tasks_render_alter(&$data, $route_name, \Drupal\Core\Cache\RefinableCacheableDependencyInterface &$cacheability) {
++  // Add a tab linking to node/add to all pages.
++  $data['tabs'][0]['node.add_page'] = [
++    '#theme' => 'menu_local_task',
++    '#link' => [
++      'title' => t('Example tab'),
++      'url' => Url::fromRoute('node.add_page'),
++      'localized_options' => [
++        'attributes' => [
++          'title' => t('Add content'),
++        ],
++      ],
++    ],
++  ];
++  // The tab we're adding is dependent on a user's access to add content.
++  $cacheability->addCacheContexts(['user.permissions']);
++}
++
+ /**
+  * Alter local actions plugins.
+  *
+@@ -347,6 +399,47 @@ function hook_menu_local_tasks_alter(&$data, $route_name, \Drupal\Core\Cache\Ref
+ function hook_menu_local_actions_alter(&$local_actions) {
+ }
+ 
++/**
++ * Alter local actions displayed on the page before they are rendered.
++ *
++ * Each local action is an associative array containing:
++ * - #theme: The theme function to use to render.
++ * - #link: An associative array containing:
++ *   - title: The localized title of the link.
++ *   - url: a Url object.
++ *   - localized_options: An array of options to pass to
++ *     \Drupal\Core\Utility\LinkGeneratorInterface::generate().
++ * - #access: The access result to see whether the link is accessible or not.
++ * - #weight: The link's weight compared to other links.
++ *
++ * @param array $data
++ *   An associative array containing all the local actions for the given route,
++ *   keyed by plugin ID, and their cacheability metadata in '#cache'.
++ *   Implementations must preserve existing cacheability metadata when adding
++ *   their own cache tags, cache contexts or cache max-age.
++ * @param string $route_appears
++ *   The name of the route that the local actions appear on.
++ *
++ * @see \Drupal\Core\Menu\LocalActionManager
++ */
++function hook_local_actions_render_alter(&$data, $route_appears) {
++  // Add an additional local action for a certain route.
++  if ($route_appears == 'my.route') {
++    $data['node.add_article'] = [
++      '#theme' => 'menu_local_action',
++      '#link' => [
++        'title' => t('Add article'),
++        'url' => Url::fromRoute('node.add', ['node_type' => 'article']),
++        'localized_options' => [
++          'attributes' => [
++            'title' => t('Add article'),
++          ],
++        ],
++      ],
++    ];
++  }
++}
++
+ /**
+  * Alter local tasks plugins.
+  *
+diff --git a/core/modules/contact/src/Hook/ContactHooks.php b/core/modules/contact/src/Hook/ContactHooks.php
+index fbf7a2b..c77ab59 100644
+--- a/core/modules/contact/src/Hook/ContactHooks.php
++++ b/core/modules/contact/src/Hook/ContactHooks.php
+@@ -101,13 +101,13 @@ public function entityExtraFieldInfo(): array {
+   }
+ 
+   /**
+-   * Implements hook_menu_local_tasks_alter().
++   * Implements hook_local_tasks_render_alter().
+    *
+    * Hides the 'Contact' tab on the user profile if the user does not have an
+    * email address configured.
+    */
+-  #[Hook('menu_local_tasks_alter')]
+-  public function menuLocalTasksAlter(&$data, $route_name): void {
++  #[Hook('local_tasks_render_alter')]
++  public function localTasksRenderAlter(&$data, $route_name): void {
+     if ($route_name == 'entity.user.canonical' && isset($data['tabs'][0])) {
+       foreach ($data['tabs'][0] as $href => $tab_data) {
+         if ($href == 'entity.user.contact_form') {
+diff --git a/core/modules/contact/tests/src/Unit/ContactTest.php b/core/modules/contact/tests/src/Unit/ContactTest.php
+index f4da8b5..c4e1531 100644
+--- a/core/modules/contact/tests/src/Unit/ContactTest.php
++++ b/core/modules/contact/tests/src/Unit/ContactTest.php
+@@ -15,13 +15,13 @@
+ class ContactTest extends UnitTestCase {
+ 
+   /**
+-   * Test contact_menu_local_tasks_alter doesn't throw warnings.
++   * Test contact_local_tasks_render_alter doesn't throw warnings.
+    */
+-  public function testLocalTasksAlter(): void {
++  public function testLocalTasksRenderAlter(): void {
+     require_once $this->root . '/core/modules/contact/contact.module';
+     $data = [];
+-    $contactMenuLocalTasksAlter = new ContactHooks();
+-    $contactMenuLocalTasksAlter->menuLocalTasksAlter($data, 'entity.user.canonical');
++    $contactLocalTasksRenderAlter = new ContactHooks();
++    $contactLocalTasksRenderAlter->localTasksRenderAlter($data, 'entity.user.canonical');
+     $this->assertTrue(TRUE, 'No warning thrown');
+   }
+ 
+diff --git a/core/modules/system/tests/modules/menu_test/menu_test.links.action.yml b/core/modules/system/tests/modules/menu_test/menu_test.links.action.yml
+index f52a017..1996d3b 100644
+--- a/core/modules/system/tests/modules/menu_test/menu_test.links.action.yml
++++ b/core/modules/system/tests/modules/menu_test/menu_test.links.action.yml
+@@ -25,6 +25,7 @@ menu_test.local_action2:
+   weight: -10
+   appears_on:
+     - menu_test.local_action1
++    - menu_test.local_action6
+ 
+ menu_test.local_action4:
+   route_name: menu_test.local_action4
+diff --git a/core/modules/system/tests/modules/menu_test/src/Hook/MenuTestHooks.php b/core/modules/system/tests/modules/menu_test/src/Hook/MenuTestHooks.php
+index 25da8a8..a9b29ae 100644
+--- a/core/modules/system/tests/modules/menu_test/src/Hook/MenuTestHooks.php
++++ b/core/modules/system/tests/modules/menu_test/src/Hook/MenuTestHooks.php
+@@ -34,10 +34,10 @@ public function menuLinksDiscoveredAlter(&$links): void {
+   }
+ 
+   /**
+-   * Implements hook_menu_local_tasks_alter().
++   * Implements hook_local_tasks_render_alter().
+    */
+-  #[Hook('menu_local_tasks_alter')]
+-  public function menuLocalTasksAlter(&$data, $route_name, RefinableCacheableDependencyInterface &$cacheability): void {
++  #[Hook('local_tasks_render_alter')]
++  public function localTasksRenderAlter(&$data, $route_name, RefinableCacheableDependencyInterface &$cacheability): void {
+     if (in_array($route_name, ['menu_test.tasks_default'])) {
+       $data['tabs'][0]['foo'] = [
+         '#theme' => 'menu_local_task',
+@@ -63,4 +63,16 @@ public function menuLocalTasksAlter(&$data, $route_name, RefinableCacheableDepen
+     $cacheability->addCacheTags(['kittens:dwarf-cat']);
+   }
+ 
++  /**
++   * Implements hook_local_actions_render_alter().
++   */
++  #[Hook('local_actions_render_alter')]
++  public function localActionsRenderAlter(&$data, $route_appears): void {
++    // Change the link title for local_action2 if on test route 6.
++    if ($route_appears === 'menu_test.local_action6') {
++      $data['menu_test.local_action2']['#link']['title'] = 'Dynamic title override';
++      $data['#cache']['tags'][] = 'local-actions-render';
++    }
++  }
++
+ }
+diff --git a/core/modules/system/tests/src/Functional/Menu/LocalActionTest.php b/core/modules/system/tests/src/Functional/Menu/LocalActionTest.php
+index 331101c..7a686e6 100644
+--- a/core/modules/system/tests/src/Functional/Menu/LocalActionTest.php
++++ b/core/modules/system/tests/src/Functional/Menu/LocalActionTest.php
+@@ -59,16 +59,19 @@ public function testLocalAction(): void {
+     // Test a local action title that changes based on a config value.
+     $this->drupalGet(Url::fromRoute('menu_test.local_action6'));
+     $this->assertLocalAction([
++      [Url::fromRoute('menu_test.local_action2'), 'Dynamic title override'],
+       [Url::fromRoute('menu_test.local_action5'), 'Original title'],
+     ]);
+     // Verify the expected cache tag in the response headers.
+     $this->assertSession()->responseHeaderContains('x-drupal-cache-tags', 'config:menu_test.links.action');
++    $this->assertSession()->responseHeaderContains('x-drupal-cache-tags', 'local-actions-render');
+     /** @var \Drupal\Core\Config\Config $config */
+     $config = $this->container->get('config.factory')->getEditable('menu_test.links.action');
+     $config->set('title', 'New title');
+     $config->save();
+     $this->drupalGet(Url::fromRoute('menu_test.local_action6'));
+     $this->assertLocalAction([
++      [Url::fromRoute('menu_test.local_action2'), 'Dynamic title override'],
+       [Url::fromRoute('menu_test.local_action5'), 'New title'],
+     ]);
+   }
+diff --git a/core/modules/views_ui/src/ViewFormBase.php b/core/modules/views_ui/src/ViewFormBase.php
+index e76e768..c88bdd5 100644
+--- a/core/modules/views_ui/src/ViewFormBase.php
++++ b/core/modules/views_ui/src/ViewFormBase.php
+@@ -77,10 +77,10 @@ protected function prepareEntity() {
+   /**
+    * Adds tabs for navigating across Displays when editing a View.
+    *
+-   * This function can be called from hook_menu_local_tasks_alter() to implement
+-   * these tabs as secondary local tasks, or it can be called from elsewhere if
+-   * having them as secondary local tasks isn't desired. The caller is
+-   * responsible for setting the active tab's #active property to TRUE.
++   * This function can be called from hook_local_tasks_render_alter() to
++   * implement these tabs as secondary local tasks, or it can be called from
++   * elsewhere if having them as secondary local tasks isn't desired. The caller
++   * is responsible for setting the active tab's #active property to TRUE.
+    *
+    * @param \Drupal\views_ui\ViewUI $view
+    *   The ViewUI entity.
+diff --git a/core/tests/Drupal/KernelTests/Core/Menu/LocalTaskManagerTest.php b/core/tests/Drupal/KernelTests/Core/Menu/LocalTaskManagerTest.php
+new file mode 100644
+index 0000000..799330a
+--- /dev/null
++++ b/core/tests/Drupal/KernelTests/Core/Menu/LocalTaskManagerTest.php
+@@ -0,0 +1,76 @@
++<?php
++
++declare(strict_types=1);
++
++namespace Drupal\KernelTests\Core\Menu;
++
++use Drupal\Core\Cache\RefinableCacheableDependencyInterface;
++use Drupal\Core\Hook\Attribute\Hook;
++use Drupal\Core\Menu\LocalTaskManager;
++use Drupal\KernelTests\KernelTestBase;
++use PHPUnit\Framework\Attributes\CoversClass;
++use PHPUnit\Framework\Attributes\Group;
++use PHPUnit\Framework\Attributes\IgnoreDeprecations;
++use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
++
++/**
++ * Tests the local task manager.
++ */
++#[CoversClass(LocalTaskManager::class)]
++#[Group('Menu')]
++#[RunTestsInSeparateProcesses]
++class LocalTaskManagerTest extends KernelTestBase {
++
++  /**
++   * {@inheritdoc}
++   */
++  protected static $modules = ['system', 'user'];
++
++  /**
++   * Tests that legacy task alters run before the replacement hook.
++   */
++  #[IgnoreDeprecations]
++  public function testDeprecatedLocalTasksAlter(): void {
++    $this->expectUserDeprecationMessage('The deprecated alter hook hook_menu_local_tasks_alter() is implemented in these locations: Drupal\KernelTests\Core\Menu\LocalTaskManagerTest::menuLocalTasksAlter. Deprecated in drupal:12.0.0 and is removed from drupal:13.0.0. Use hook_local_tasks_render_alter() instead. See https://www.drupal.org/node/3028611');
++
++    /** @var \Drupal\Core\Menu\LocalTaskManagerInterface $manager */
++    $manager = $this->container->get('plugin.manager.menu.local_task');
++    $tasks = $manager->getLocalTasks('test_route');
++    $this->assertSame('Altered task', $tasks['tabs']['test']['#link']['title']);
++    $this->assertSame('test_route', $tasks['route_name']);
++    $this->assertSame(['legacy-task', 'altered-task'], $tasks['cacheability']->getCacheTags());
++    $this->assertSame(['route', 'user.permissions'], $tasks['cacheability']->getCacheContexts());
++    $this->assertSame(60, $tasks['cacheability']->getCacheMaxAge());
++
++    // Both tab levels share the altered data and its cacheability metadata.
++    $secondary_tasks = $manager->getLocalTasks('test_route', 1);
++    $this->assertSame([], $secondary_tasks['tabs']);
++    $this->assertSame($tasks['cacheability'], $secondary_tasks['cacheability']);
++  }
++
++  /**
++   * Implements hook_menu_local_tasks_alter().
++   */
++  #[Hook('menu_local_tasks_alter')]
++  public function menuLocalTasksAlter(array &$data, string $route_name, RefinableCacheableDependencyInterface &$cacheability): void {
++    $this->assertSame('test_route', $route_name);
++    $data['tabs'][0]['test']['#link']['title'] = 'Legacy task';
++    $cacheability->addCacheTags(['legacy-task']);
++    $cacheability->addCacheContexts(['user.permissions']);
++  }
++
++  /**
++   * Implements hook_local_tasks_render_alter().
++   */
++  #[Hook('local_tasks_render_alter')]
++  public function localTasksRenderAlter(array &$data, string $route_name, RefinableCacheableDependencyInterface &$cacheability): void {
++    $this->assertSame('test_route', $route_name);
++    // The new hook must receive the legacy hook's changes, not the original data.
++    $this->assertSame('Legacy task', $data['tabs'][0]['test']['#link']['title']);
++    $this->assertSame(['legacy-task'], $cacheability->getCacheTags());
++    $data['tabs'][0]['test']['#link']['title'] = 'Altered task';
++    $cacheability->addCacheTags(['altered-task']);
++    $cacheability->mergeCacheMaxAge(60);
++  }
++
++}

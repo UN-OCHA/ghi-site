@@ -1,5 +1,5 @@
 {
-    "_hash": "0f39b31de653081e6e7482947315e35d373f99328651aa70c9e336543af5af65",
+    "_hash": "b85c56ea629f08648a05baeba17025574c3b5d356c97c845e4123a6332a31415",
     "patches": {
         "drupal/big_pipe_sessionless": [
             {
@@ -17,18 +17,8 @@
             {
                 "package": "drupal/core",
                 "description": "Issue #2820359: Add #element_submit and #limit_element_submit just like #element_validate and #limit_validation_errors",
-                "url": "patches/core-element-submit-2820359-121.patch",
-                "sha256": "70b50a5f3a3fb45395c320edc2b59ad98427bce7fc1cbfce409a9c6eaebe91d0",
-                "depth": 2,
-                "extra": {
-                    "provenance": "patches-file:composer.patches.json"
-                }
-            },
-            {
-                "package": "drupal/core",
-                "description": "Issue #2844620: Automatically split headers into multiple lines when they exceed 8k",
-                "url": "patches/core-automatically-split-headers-into-multiple-lines-when-they-exceed-8k-2844620.patch",
-                "sha256": "7d63c2832db9f98849fbebfa9e5d516154bf7ddf3fa477907eb898c9b55322fa",
+                "url": "https://www.drupal.org/files/issues/2026-09-19/2820359-11.4.7.patch",
+                "sha256": "97fe46a489ba03827a1197b38902c79c6439b11a565878fea4f84d782c2caffc",
                 "depth": 2,
                 "extra": {
                     "provenance": "patches-file:composer.patches.json"
@@ -76,16 +66,6 @@
             },
             {
                 "package": "drupal/core",
-                "description": "Issue #2329253: Allow the ChangedItem to skip updating the entity's changed timestamp when synchronizing (f.e. when migrating)",
-                "url": "https://www.drupal.org/files/issues/2024-07-30/2329253-10.x.patch",
-                "sha256": "316697156913cbfe5fd8017432f4f225c7516bd56da11b200c0b24a86e6a6594",
-                "depth": 2,
-                "extra": {
-                    "provenance": "patches-file:composer.patches.json"
-                }
-            },
-            {
-                "package": "drupal/core",
                 "description": "Issue #?? (maybe #2837833): 'Required contexts without a value",
                 "url": "./patches/missing-context-value-in-layout-builder-admin.patch",
                 "sha256": "b041fe6bccb52237a8b8544ff59fa9fea47b24ac159cf8f2b94c54f7fec0b9c7",
@@ -97,8 +77,18 @@
             {
                 "package": "drupal/core",
                 "description": "Issue #2190333: Make #group FAPI / render feature work on all form/render #types out of the box",
-                "url": "./patches/core-form-api-groups-2190333.patch",
-                "sha256": "cadb63dc10950c244159e8e1445d214f67fb60dae761cb68cfe061a7895f2959",
+                "url": "patches/core-form-groups-2190333.patch",
+                "sha256": "43f2630292c75000f4f83f4048bdefaa6e140796735a5032ea277b8451d92f04",
+                "depth": 2,
+                "extra": {
+                    "provenance": "patches-file:composer.patches.json"
+                }
+            },
+            {
+                "package": "drupal/core",
+                "description": "Issue #2926030: Prevent duplicate rendering of group members with #render_children",
+                "url": "patches/core-group-render-2926030.patch",
+                "sha256": "236fb3063bc137c9865d25d4e32a5ff48b635d707865487e51a5351d4bf4fbbd",
                 "depth": 2,
                 "extra": {
                     "provenance": "patches-file:composer.patches.json"
@@ -107,8 +97,8 @@
             {
                 "package": "drupal/core",
                 "description": "Issue #2230909: Simple decimals fail to pass validation",
-                "url": "./patches/8282-10.6.x.patch",
-                "sha256": "7278cffd2694d08bea3fd7e152ec5c3e4c3ae125650f722741862855dc85cff6",
+                "url": "https://www.drupal.org/files/issues/2026-09-19/2230909-11.4.7.patch",
+                "sha256": "1e4815c8c4de108ca66e95e0c332cd14401ff3b5a17e2b04c615624274e84149",
                 "depth": 2,
                 "extra": {
                     "provenance": "patches-file:composer.patches.json"
@@ -117,8 +107,28 @@
             {
                 "package": "drupal/core",
                 "description": "Issue #2585169: Unable to alter local actions prior to rendering",
-                "url": "https://www.drupal.org/files/issues/2024-12-19/2585169-63-10.4.x.patch",
-                "sha256": "9995f49107320a8dd1d8c84ae7add1a543be50175a17bb447c3b9c335e010fde",
+                "url": "patches/core-local-actions-render-2585169.patch",
+                "sha256": "e298879fcb6c8e338da524f0364beee3892a9151b011b915d21e83cfad439815",
+                "depth": 2,
+                "extra": {
+                    "provenance": "patches-file:composer.patches.json"
+                }
+            },
+            {
+                "package": "drupal/core",
+                "description": "Issue #3622419: Restore EntityQuery AND groups for unlimited-cardinality fields",
+                "url": "https://git.drupalcode.org/project/drupal/-/commit/802f07cf141d4332aa7edd261e8fd70abbd18329.patch",
+                "sha256": "5e6bc7c6d2a8b64796b87b14ed3e9a23b12187e8d4f0b4c76d5998d259ad5d9f",
+                "depth": 2,
+                "extra": {
+                    "provenance": "patches-file:composer.patches.json"
+                }
+            },
+            {
+                "package": "drupal/core",
+                "description": "Issue #3568380: Propagate OpenTelemetry context into fibers",
+                "url": "patches/core-opentelemetry-fibers-3568380.patch",
+                "sha256": "3b7ea0f523c377a8cb9f10f9d436572a57283d36aa0646678f27619e874d2834",
                 "depth": 2,
                 "extra": {
                     "provenance": "patches-file:composer.patches.json"

@@ -50,7 +50,7 @@ class ThemeHelper {
     // Render the build array using the renderer service.
     $renderer = \Drupal::service('renderer');
     $has_render_context = $renderer->hasRenderContext();
-    $render_value = $has_render_context ? $renderer->render($build) : $renderer->renderPlain($build);
+    $render_value = $has_render_context ? $renderer->render($build) : $renderer->renderInIsolation($build);
     // Re-enable twig debug if it's been enabled before.
     if ($twig_debug) {
       $twig_service->enableDebug();

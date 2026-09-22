@@ -9,6 +9,7 @@ use Drupal\Core\Session\AccountInterface;
 use Drupal\ghi_base_objects\BaseObjectAccessControlHandler;
 use Drupal\Tests\UnitTestCase;
 use Drupal\Tests\hpc_api\Traits\PrivateAccessorTrait;
+use PHPUnit\Framework\Attributes\DataProvider;
 
 /**
  * Tests the base object entity.
@@ -22,26 +23,23 @@ class BaseObjectAccessControlTest extends UnitTestCase {
   /**
    * Data provider for checkAccess.
    */
-  public function baseObjectAccessControlHandlerDataProvider() {
-    $entity = $this->prophesize(EntityInterface::class);
-    $account = $this->prophesize(AccountInterface::class);
-
+  public static function baseObjectAccessControlHandlerDataProvider() {
     return [
       [
-        [$entity->reveal(), 'view label', $account->reveal()], AccessResult::allowed(),
+        'view label', AccessResult::allowed(),
       ],
       [
-        [$entity->reveal(), 'view', $account->reveal()], AccessResult::forbidden(),
+        'view', AccessResult::forbidden(),
       ],
     ];
   }
 
   /**
    * Test BaseObjectAccessControlHandler::checkAccess.
-   *
-   * @dataProvider baseObjectAccessControlHandlerDataProvider
    */
-  public function testBaseObjectAccessControlHandler($args, $expected) {
+  #[DataProvider('baseObjectAccessControlHandlerDataProvider')]
+  public function testBaseObjectAccessControlHandler($operation, $expected) {
+    $args = [$this->createMock(EntityInterface::class), $operation, $this->createMock(AccountInterface::class)];
     $entity_type = $this->prophesize(EntityTypeInterface::class);
     $handler = new BaseObjectAccessControlHandler($entity_type->reveal());
     $this->assertEquals($expected, $this->callPrivateMethod($handler, 'checkAccess', $args));

@@ -14,11 +14,13 @@ use Drupal\hpc_remote_data_cache\RemoteDataCacheItem;
 use Drupal\Tests\UnitTestCase;
 use GuzzleHttp\Client;
 use GuzzleHttp\ClientInterface;
+use GuzzleHttp\Handler\MockHandler;
+use GuzzleHttp\HandlerStack;
+use GuzzleHttp\Middleware;
 use GuzzleHttp\Psr7\Response;
 use PHPUnit\Framework\Assert;
 use Prophecy\Argument;
 use Prophecy\PhpUnit\ProphecyTrait;
-use Psr\Http\Message\ResponseInterface;
 
 /**
  * @covers \Drupal\hpc_api\Query\FabricClient
@@ -74,34 +76,19 @@ class FabricClientTest extends UnitTestCase {
    * Test request timeout options for Fabric GraphQL requests.
    */
   public function testFabricRequestUsesConfiguredTimeouts(): void {
-    $http_client = new class() extends Client {
-
-      /**
-       * Captured requests.
-       *
-       * @var array
-       */
-      public array $requests = [];
-
-      /**
-       * {@inheritdoc}
-       */
-      public function post($uri, array $options = []): ResponseInterface {
-        $this->requests[] = [
-          'uri' => $uri,
-          'options' => $options,
-        ];
-        return new Response(200, [], '{"data":{"plans":{"items":[]}}}');
-      }
-
-    };
+    $requests = [];
+    $handler = HandlerStack::create(new MockHandler([
+      new Response(200, [], '{"data":{"plans":{"items":[]}}}'),
+    ]));
+    $handler->push(Middleware::history($requests));
+    $http_client = new Client(['handler' => $handler]);
 
     $client = $this->createFabricClientWithAccessToken($http_client);
     $client->disableCache();
     $client->query('plans { items { Id } }');
 
-    $this->assertSame(2, $http_client->requests[0]['options']['connect_timeout']);
-    $this->assertSame(8, $http_client->requests[0]['options']['timeout']);
+    $this->assertSame(2, $requests[0]['options']['connect_timeout']);
+    $this->assertSame(8, $requests[0]['options']['timeout']);
   }
 
   /**
@@ -130,16 +117,11 @@ class FabricClientTest extends UnitTestCase {
    * Test that Fabric query filter tags are written to the remote data cache.
    */
   public function testRemoteDataCacheStoresDerivedQueryTags(): void {
-    $http_client = new class() extends Client {
-
-      /**
-       * {@inheritdoc}
-       */
-      public function post($uri, array $options = []): ResponseInterface {
-        return new Response(200, [], '{"data":{"attachments":{"items":[{"Id":52188}]}}}');
-      }
-
-    };
+    $http_client = new Client([
+      'handler' => new MockHandler([
+        new Response(200, [], '{"data":{"attachments":{"items":[{"Id":52188}]}}}'),
+      ]),
+    ]);
 
     $remote_cache = $this->prophesize(RemoteDataCacheInterface::class);
     $remote_cache->isEnabled()->willReturn(TRUE);
@@ -173,13 +155,9 @@ class FabricClientTest extends UnitTestCase {
     $remote_cache->canServeExpiredOnError()->willReturn(TRUE);
     $remote_cache->set(Argument::cetera())->shouldNotBeCalled();
 
-    $http_client = new class() extends Client {
-
-      /**
-       * {@inheritdoc}
-       */
-      public function post($uri, array $options = []): ResponseInterface {
-        return new Response(200, [], Json::encode([
+    $http_client = new Client([
+      'handler' => new MockHandler([
+        new Response(200, [], Json::encode([
           'data' => [
             'plans' => NULL,
           ],
@@ -189,10 +167,9 @@ class FabricClientTest extends UnitTestCase {
               'path' => ['plans'],
             ],
           ],
-        ]));
-      }
-
-    };
+        ])),
+      ]),
+    ]);
 
     $client = $this->createFabricClientWithAccessToken($http_client, $remote_cache->reveal());
     $error = NULL;
@@ -328,17 +305,11 @@ class FabricClientTest extends UnitTestCase {
    *   The HTTP client test double.
    */
   private function mockHttpClientThatFailsOnPost(): ClientInterface {
-    return new class extends Client {
-
-      /**
-       * {@inheritdoc}
-       */
-      public function post($uri, array $options = []): ResponseInterface {
+    return new Client([
+      'handler' => static function () {
         Assert::fail('Fabric HTTP post must not be called on a remote data cache hit.');
-        throw new \LogicException('Unreachable.');
-      }
-
-    };
+      },
+    ]);
   }
 
   /**

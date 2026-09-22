@@ -11,6 +11,7 @@ use Drupal\node\Entity\Node;
 use Drupal\node\Entity\NodeType;
 use Drupal\Tests\ghi_base_objects\Traits\BaseObjectTestTrait;
 use Drupal\Tests\ghi_blocks\Kernel\BlockKernelTestBase;
+use PHPUnit\Framework\Attributes\DataProvider;
 
 /**
  * Tests the external widget block plugin.
@@ -100,9 +101,8 @@ class ExternalWidgetBlockTest extends BlockKernelTestBase {
 
   /**
    * Tests HDX URL processing with populated and empty year contexts.
-   *
-   * @dataProvider yearContextProvider
    */
+  #[DataProvider('yearContextProvider')]
   public function testBuildHdxWidgetWithYearContext(?int $year, bool $article_owner) {
     $data_url = 'https://docs.google.com/spreadsheets/d/' . ExternalWidget::GOOGLE_SHEET . '/export?format=csv';
     $proxy_url = 'https://proxy.hxlstandard.org/data.csv?filter01=select&select-query01-01=%23country%2Bcode=G&filter02=select&select-query02-01=%23date%2Byear=2020&url=' . rawurlencode($data_url);
@@ -146,7 +146,7 @@ class ExternalWidgetBlockTest extends BlockKernelTestBase {
   /**
    * Provides populated and empty contexts, including an empty required context.
    */
-  public function yearContextProvider(): array {
+  public static function yearContextProvider(): array {
     return [
       'populated year' => [2025, FALSE],
       'article with no year' => [2025, TRUE],

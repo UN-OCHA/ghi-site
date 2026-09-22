@@ -11,6 +11,7 @@ use Drupal\ghi_blocks\Interfaces\OptionalTitleBlockInterface;
 use Drupal\ghi_blocks\Interfaces\OverrideDefaultTitleBlockInterface;
 use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
 use Drupal\layout_builder\SectionStorageInterface;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\ExpectationFailedException;
 use Symfony\Component\HttpFoundation\Request;
 
@@ -198,9 +199,8 @@ class GHIBlockTest extends BlockKernelTestBase {
 
   /**
    * Tests that cached content keeps its heading without an outer block title.
-   *
-   * @dataProvider cachedContentTitleProvider
    */
+  #[DataProvider('cachedContentTitleProvider')]
   public function testCachedContentSuppressesOuterTitle(string $plugin_id, bool $title_processed) {
     $plugin = $this->createBlockPlugin($plugin_id, [], [], 'Operations', TRUE);
     $content = [

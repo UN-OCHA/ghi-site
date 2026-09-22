@@ -14,6 +14,19 @@ class GlobalSettingsHelper {
   use GlobalSettingsTrait;
 
   /**
+   * Provides config access for GlobalSettingsTrait outside a form or block.
+   *
+   * @param string $name
+   *   The configuration object name.
+   *
+   * @return \Drupal\Core\Config\ImmutableConfig
+   *   The configuration object.
+   */
+  protected function config($name) {
+    return \Drupal::config($name);
+  }
+
+  /**
    * Get the global config for a specific year.
    *
    * @param int $year
