@@ -313,21 +313,4 @@ class GeoJsonRenameVersionTest extends KernelTestBase {
     $this->assertTrue(file_exists($preserved_file), 'Files should be preserved when renaming directories with special characters.');
   }
 
-  /**
-   * {@inheritdoc}
-   */
-  protected function tearDown(): void {
-    // Clean up test directories if they exist.
-    try {
-      $base_path = 'public://geojson_sources';
-      if ($this->fileSystem) {
-        $this->fileSystem->deleteRecursive($base_path);
-      }
-    } catch (\Exception $e) {
-      // Ignore cleanup errors during tearDown.
-    }
-
-    parent::tearDown();
-  }
-
 }

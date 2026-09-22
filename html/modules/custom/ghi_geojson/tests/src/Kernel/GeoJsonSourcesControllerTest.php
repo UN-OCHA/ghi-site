@@ -90,6 +90,9 @@ class GeoJsonSourcesControllerTest extends KernelTestBase {
     $this->installEntitySchema('file');
     $this->installConfig(['layout_builder_modal']);
 
+    // Keep archives outside the virtual filesystem, but isolated per test.
+    $this->setSetting('file_temp_path', sys_get_temp_dir() . '/' . $this->databasePrefix);
+
     $this->fileSystem = $this->container->get('file_system');
     $this->geoJsonService = $this->container->get('geojson');
     $this->geoJsonDirectoryList = $this->container->get('geojson.directory_list');
@@ -383,24 +386,19 @@ class GeoJsonSourcesControllerTest extends KernelTestBase {
    * {@inheritdoc}
    */
   protected function tearDown(): void {
-    // Clean up test directories if they exist.
+    // Core cleans up public files. Temporary archives use a real directory;
+    // use its path because Drupal's stream wrappers are unregistered by now.
     try {
-      $paths_to_clean = [
-        GeoJson::GEOJSON_SOURCE_DIR,
-        GeoJson::ARCHIVE_TEMP_DIR,
-      ];
-
-      foreach ($paths_to_clean as $path) {
-        if ($this->fileSystem && is_dir($path)) {
+      if ($this->fileSystem) {
+        $path = $this->fileSystem->getTempDirectory();
+        if (is_dir($path)) {
           $this->fileSystem->deleteRecursive($path);
         }
       }
     }
-    catch (\Exception $e) {
-      // Ignore cleanup errors during tearDown.
+    finally {
+      parent::tearDown();
     }
-
-    parent::tearDown();
   }
 
 }

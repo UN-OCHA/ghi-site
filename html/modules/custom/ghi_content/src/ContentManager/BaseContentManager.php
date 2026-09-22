@@ -802,7 +802,7 @@ abstract class BaseContentManager implements ContainerInjectionInterface {
     $bundle_label = $node->type->entity->label();
     $t_args = [
       '@label' => strtolower($bundle_label),
-      '@remote_source' => $this->getRemoteSource($node)?->getPluginLabel(),
+      '@remote_source' => $this->getRemoteSource($node)?->getPluginLabel() ?? $this->t('Content Management backend'),
     ];
 
     // Disable the image field because we sync this automatically.
