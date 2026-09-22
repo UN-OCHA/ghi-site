@@ -83,6 +83,8 @@ class ContentSpaceNodeAccessTest extends BrowserTestBase {
     // Edit the node and confirm the node edit form can be loaded.
     $this->drupalGet($node->toUrl('edit-form')->toString());
     $assert_session->statusCodeEquals(200);
+    // Nodes without a remote source must still have a usable edit form.
+    $assert_session->pageTextContains('The source of this article page has been removed on Content Management backend.');
 
     // Now try with a user who is not associated to the content space.
     $this->drupalLogin($this->drupalCreateUser($permissions, NULL, FALSE, [

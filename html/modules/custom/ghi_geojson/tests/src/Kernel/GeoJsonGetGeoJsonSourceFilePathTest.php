@@ -384,26 +384,4 @@ class GeoJsonGetGeoJsonSourceFilePathTest extends KernelTestBase {
     $this->assertTrue(file_exists($result1), 'File should exist.');
   }
 
-  /**
-   * {@inheritdoc}
-   */
-  protected function tearDown(): void {
-    // Clean up test directories if they exist.
-    try {
-      $paths_to_clean = [
-        'public://geojson_sources',
-      ];
-
-      foreach ($paths_to_clean as $path) {
-        if ($this->fileSystem && is_dir($path)) {
-          $this->fileSystem->deleteRecursive($path);
-        }
-      }
-    } catch (\Exception $e) {
-      // Ignore cleanup errors during tearDown.
-    }
-
-    parent::tearDown();
-  }
-
 }
