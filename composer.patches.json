@@ -4,17 +4,18 @@
       "Issue #3428235: Drupal 11 compatibility": "https://www.drupal.org/files/issues/2025-10-02/3428235-big_pipe_sessionless-22.d11.patch"
     },
     "drupal/core": {
-      "Issue #2820359: Add #element_submit and #limit_element_submit just like #element_validate and #limit_validation_errors": "patches/core-element-submit-2820359-121.patch",
-      "Issue #2844620: Automatically split headers into multiple lines when they exceed 8k": "patches/core-automatically-split-headers-into-multiple-lines-when-they-exceed-8k-2844620.patch",
+      "Issue #2820359: Add #element_submit and #limit_element_submit just like #element_validate and #limit_validation_errors": "https://www.drupal.org/files/issues/2026-09-19/2820359-11.4.7.patch",
       "Issue #3008924: Callers of LayoutEntityHelperTrait::getEntitySections() do not account for the view mode": "./patches/3008924-rerolled-24.patch",
       "Issue #151311: Split 'administer permissions' into a new administer roles permissions": "https://www.drupal.org/files/issues/2023-01-19/split_administer_permissions_151311-72.patch",
       "Issue #2755791: Ajax error ajax.$form.ajaxSubmit() is not a function": "https://www.drupal.org/files/issues/2023-08-07/drupal-ajax-error-2755791-18_0.patch",
       "Issue #3001188: Make it possible to add relationships to layout builder": "./patches/3001188-make-it-possible-to-add-relationships-to-layout-builder.patch",
-      "Issue #2329253: Allow the ChangedItem to skip updating the entity's changed timestamp when synchronizing (f.e. when migrating)": "https://www.drupal.org/files/issues/2024-07-30/2329253-10.x.patch",
       "Issue #?? (maybe #2837833): 'Required contexts without a value": "./patches/missing-context-value-in-layout-builder-admin.patch",
-      "Issue #2190333: Make #group FAPI / render feature work on all form/render #types out of the box": "./patches/core-form-api-groups-2190333.patch",
-      "Issue #2230909: Simple decimals fail to pass validation": "./patches/8282-10.6.x.patch",
-      "Issue #2585169: Unable to alter local actions prior to rendering": "https://www.drupal.org/files/issues/2024-12-19/2585169-63-10.4.x.patch"
+      "Issue #2190333: Make #group FAPI / render feature work on all form/render #types out of the box": "patches/core-form-groups-2190333.patch",
+      "Issue #2926030: Prevent duplicate rendering of group members with #render_children": "patches/core-group-render-2926030.patch",
+      "Issue #2230909: Simple decimals fail to pass validation": "https://www.drupal.org/files/issues/2026-09-19/2230909-11.4.7.patch",
+      "Issue #2585169: Unable to alter local actions prior to rendering": "patches/core-local-actions-render-2585169.patch",
+      "Issue #3622419: Restore EntityQuery AND groups for unlimited-cardinality fields": "https://git.drupalcode.org/project/drupal/-/commit/802f07cf141d4332aa7edd261e8fd70abbd18329.patch",
+      "Issue #3568380: Propagate OpenTelemetry context into fibers": "patches/core-opentelemetry-fibers-3568380.patch"
     },
     "drupal/file_mdm": {
       "Issue #3570037: Deprecated Error": "https://www.drupal.org/files/issues/2026-03-20/file_mdm-nullable-3570037-8.patch"

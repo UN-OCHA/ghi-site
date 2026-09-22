@@ -178,8 +178,8 @@ class ProjectCounter extends ConfigurationContainerItemPluginBase {
    * @param string $data_type
    *   The data type.
    *
-   * @return int
-   *   The number of project related items of the given type.
+   * @return int|null
+   *   The item count, or NULL for an unsupported data type.
    */
   private function getValueForDataType($data_type) {
     $plan_object = $this->getContextValue('plan_object');
@@ -192,6 +192,7 @@ class ProjectCounter extends ConfigurationContainerItemPluginBase {
       case 'organizations_count':
         return count($this->projectQuery->getProjectOrganizationsForPlan($plan_object, $base_object));
     }
+    return NULL;
   }
 
   /**

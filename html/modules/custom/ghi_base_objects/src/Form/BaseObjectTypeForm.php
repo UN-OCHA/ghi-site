@@ -68,6 +68,7 @@ class BaseObjectTypeForm extends EntityForm {
         ]));
     }
     $form_state->setRedirectUrl($base_object_type->toUrl('collection'));
+    return $status;
   }
 
 }

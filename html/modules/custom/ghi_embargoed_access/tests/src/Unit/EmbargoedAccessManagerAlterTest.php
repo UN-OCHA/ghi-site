@@ -4,6 +4,8 @@ namespace Drupal\Tests\ghi_embargoed_access\Unit;
 
 use Drupal\Core\Config\Config;
 use Drupal\Core\Config\ConfigFactoryInterface;
+use Drupal\Core\Entity\ContentEntityFormInterface;
+use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Entity\EntityFieldManagerInterface;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
@@ -19,7 +21,6 @@ use Drupal\entity_access_password\Service\RouteParserInterface;
 use Drupal\ghi_embargoed_access\EmbargoedAccessManager;
 use Drupal\node\NodeInterface;
 use Drupal\ghi_subpages\Entity\SubpageNodeInterface;
-use Drupal\node\NodeForm;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\ParameterBag;
 
@@ -393,7 +394,7 @@ class EmbargoedAccessManagerAlterTest extends UnitTestCase {
   public function testAlterNodeFormModifiesProtectedField(): void {
     $node = $this->createMock(NodeInterface::class);
 
-    $nodeForm = $this->createMock(NodeForm::class);
+    $nodeForm = $this->createMock(ContentEntityFormInterface::class);
     $nodeForm->method('getEntity')->willReturn($node);
 
     $formState = $this->createMock(FormStateInterface::class);
@@ -434,7 +435,7 @@ class EmbargoedAccessManagerAlterTest extends UnitTestCase {
     $subpage = $this->createMock(SubpageNodeInterface::class);
     $subpage->method('getParentBaseNode')->willReturn($parent);
 
-    $nodeForm = $this->createMock(NodeForm::class);
+    $nodeForm = $this->createMock(ContentEntityFormInterface::class);
     $nodeForm->method('getEntity')->willReturn($subpage);
 
     $formState = $this->createMock(FormStateInterface::class);
@@ -458,6 +459,23 @@ class EmbargoedAccessManagerAlterTest extends UnitTestCase {
     $this->assertArrayHasKey('is_protected_parent', $form['field_protected']['widget'][0]);
     $this->assertTrue($form['field_protected']['widget'][0]['is_protected_parent']['#default_value']);
     $this->assertEquals('disabled', $form['field_protected']['widget'][0]['is_protected_parent']['#disabled']);
+  }
+
+  /**
+   * Tests that non-node entity forms are not altered.
+   *
+   * @covers ::alterNodeForm
+   */
+  public function testAlterNodeFormIgnoresOtherEntities(): void {
+    $entity_form = $this->createMock(ContentEntityFormInterface::class);
+    $entity_form->method('getEntity')->willReturn($this->createMock(ContentEntityInterface::class));
+    $form_state = $this->createMock(FormStateInterface::class);
+    $form_state->method('getFormObject')->willReturn($entity_form);
+
+    $form = ['field_protected' => ['#access' => TRUE]];
+    $expected = $form;
+    $this->embargoedAccessManager->alterNodeForm($form, $form_state);
+    $this->assertSame($expected, $form);
   }
 
 }

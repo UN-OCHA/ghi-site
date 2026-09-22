@@ -3,7 +3,9 @@
 namespace Drupal\Tests\ghi_form_elements\Unit;
 
 use Drupal\Core\Ajax\AjaxResponse;
+use Drupal\Core\Form\FormState;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\ghi_form_elements\Element\ClusterRestrict;
 use Drupal\Tests\UnitTestCase;
 use Drupal\Tests\ghi_form_elements\AjaxElementTestClass;
 
@@ -11,6 +13,38 @@ use Drupal\Tests\ghi_form_elements\AjaxElementTestClass;
  * @covers Drupal\ghi_form_elements\Traits\AjaxElementTrait
  */
 class AjaxElementTraitTest extends UnitTestCase {
+
+  /**
+   * Tests render-element processing still delegates to core's AJAX processing.
+   */
+  public function testProcessAjaxForm(): void {
+    $element = [
+      '#array_parents' => ['container', 'restriction'],
+      'child' => ['#ajax' => []],
+    ];
+    $complete_form = [];
+    $processed = ClusterRestrict::processAjaxForm($element, new FormState(), $complete_form);
+
+    $this->assertSame(['ajax-enabled'], $processed['child']['#attributes']['class']);
+    // Core records that no AJAX settings were found on the parent itself.
+    $this->assertFalse($processed['#ajax_processed']);
+  }
+
+  /**
+   * Tests form preparation does not require a render-element parent class.
+   */
+  public function testPrepareAjaxForm(): void {
+    $form = [
+      '#array_parents' => ['container'],
+      'child' => ['#ajax' => []],
+    ];
+    $class = new AjaxElementTestClass();
+    $class->prepareAjaxForm($form, new FormState());
+
+    $this->assertSame(['container'], $class->getElementParentsFormKey());
+    $this->assertSame(['ajax-enabled'], $form['child']['#attributes']['class']);
+    $this->assertArrayNotHasKey('#ajax_processed', $form);
+  }
 
   /**
    * Test getWrapperId.

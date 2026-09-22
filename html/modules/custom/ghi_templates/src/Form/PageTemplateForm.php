@@ -75,7 +75,7 @@ class PageTemplateForm extends ContentEntityForm {
    * {@inheritdoc}
    */
   public function save(array $form, FormStateInterface $form_state) {
-    parent::save($form, $form_state);
+    $status = parent::save($form, $form_state);
 
     $entity = $this->entity;
     if ($entity->id()) {
@@ -95,6 +95,7 @@ class PageTemplateForm extends ContentEntityForm {
       $this->messenger()->addError($this->t('The page template could not be saved.'));
       $form_state->setRebuild();
     }
+    return $status;
   }
 
 }

@@ -228,9 +228,8 @@ abstract class ContentBase extends Node implements NodeInterface, ImageNodeInter
   /**
    * Check if this node is the main object on the page.
    *
-   * @return bool
-   *   TRUE if the current node is the main object on the page, FALSE
-   *   otherwise.
+   * @return bool|null
+   *   TRUE if the current node is the main object on the page, NULL otherwise.
    */
   public function isStandalonePage() {
     $document = $this->getCurrentDocumentNode();
@@ -241,6 +240,7 @@ abstract class ContentBase extends Node implements NodeInterface, ImageNodeInter
     if ($this instanceof ContentBase && !$section) {
       return TRUE;
     }
+    return NULL;
   }
 
   /**
@@ -453,8 +453,9 @@ abstract class ContentBase extends Node implements NodeInterface, ImageNodeInter
   /**
    * Get the node with the image to be displayed.
    *
-   * @return \Drupal\ghi_sections\Entity\ImageNodeInterface
-   *   A node object holding an image to be used as hero image.
+   * @return \Drupal\ghi_sections\Entity\ImageNodeInterface|false|null
+   *   A node holding a hero image, FALSE when display is disabled, or NULL when
+   *   no image is available.
    */
   public function getNodeWithHeroImage() {
     if (!$this->shouldDisplayHeroImage()) {
@@ -479,6 +480,7 @@ abstract class ContentBase extends Node implements NodeInterface, ImageNodeInter
     if ($context_node instanceof ContentBase && $context_node->shouldDisplayHeroImage()) {
       return $context_node->getNodeWithHeroImage();
     }
+    return NULL;
   }
 
   /**

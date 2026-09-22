@@ -3,6 +3,7 @@
 namespace Drupal\Tests\hpc_common\Unit;
 
 use Drupal\Tests\UnitTestCase;
+use PHPUnit\Framework\Attributes\DataProvider;
 
 /**
  * Tests preprocess functions for HPC Common theme hooks.
@@ -23,7 +24,7 @@ class HpcCommonThemePreprocessTest extends UnitTestCase {
   /**
    * Data provider for testPreprocessHpcPercent.
    */
-  public function preprocessHpcPercentDataProvider() {
+  public static function preprocessHpcPercentDataProvider() {
     return [
       [15.96, NULL, FALSE, '16.0<span class="suffix">%</span>'],
       [15.96, NULL, TRUE, '16<span class="suffix">%</span>'],
@@ -36,9 +37,8 @@ class HpcCommonThemePreprocessTest extends UnitTestCase {
 
   /**
    * Tests percentage formatting.
-   *
-   * @dataProvider preprocessHpcPercentDataProvider
    */
+  #[DataProvider('preprocessHpcPercentDataProvider')]
   public function testPreprocessHpcPercent(float $percent, ?int $precision, bool $compact_precision, string $expected) {
     $variables = [
       'percent' => $percent,

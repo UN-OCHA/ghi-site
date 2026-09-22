@@ -4,6 +4,8 @@ namespace Drupal\Tests\ghi_blocks\FunctionalJavascript;
 
 use Drupal\Component\Render\FormattableMarkup;
 use Drupal\FunctionalJavascriptTests\WebDriverTestBase;
+use Drupal\TestTools\Extension\HtmlLogging\HtmlOutputLogger;
+use Drupal\Tests\field\Traits\BodyFieldCreationTrait;
 use Drupal\block_content\Entity\BlockContentType;
 use Drupal\layout_builder\Entity\LayoutBuilderEntityViewDisplay;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -14,6 +16,8 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  * @group ghi_blocks
  */
 abstract class BlockUiBase extends WebDriverTestBase {
+
+  use BodyFieldCreationTrait;
 
   const BUNDLE = 'page';
 
@@ -166,7 +170,7 @@ abstract class BlockUiBase extends WebDriverTestBase {
       'revision' => 1,
     ]);
     $bundle->save();
-    block_content_add_body_field($bundle->id());
+    $this->createBodyField('block_content', $bundle->id());
   }
 
   /**
@@ -337,7 +341,7 @@ JS);
     // Do not use the file_url_generator service as the module_handler service
     // might not be available.
     $uri = $this->htmlOutputBaseUrl . '/sites/simpletest/browser_output/' . $html_output_filename;
-    file_put_contents($this->htmlOutputFile, $uri . "\n", FILE_APPEND);
+    HtmlOutputLogger::log($uri);
   }
 
 }

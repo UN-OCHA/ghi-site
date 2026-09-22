@@ -158,8 +158,8 @@ class HeroImageFormatter extends ResponsiveImageFormatter implements ContainerFa
    * @param \Drupal\Core\Entity\FieldableEntityInterface $entity
    *   The entity to start.
    *
-   * @return \Drupal\Core\Field\FieldItemListInterface
-   *   A field item list instance.
+   * @return \Drupal\Core\Field\FieldItemListInterface|null
+   *   A field item list instance, or NULL when no parent image is available.
    */
   private function getParentImage(FieldableEntityInterface $entity) {
     $field_definitions = $entity->getFieldDefinitions();
@@ -196,6 +196,7 @@ class HeroImageFormatter extends ResponsiveImageFormatter implements ContainerFa
         }
       }
     }
+    return NULL;
   }
 
 }

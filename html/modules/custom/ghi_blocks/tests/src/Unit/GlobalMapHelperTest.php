@@ -11,6 +11,15 @@ use Drupal\ghi_blocks\Helpers\GlobalMapHelper;
 class GlobalMapHelperTest extends UnitTestCase {
 
   /**
+   * Tests that the helper can translate the map disclaimer without a block.
+   */
+  public function testGetDefaultMapDisclaimer() {
+    $helper = new GlobalMapHelper();
+    $helper->setStringTranslation($this->getStringTranslationStub());
+    $this->assertStringContainsString('United Nations', $helper->getDefaultMapDisclaimer());
+  }
+
+  /**
    * Test getStyleUrl returns correct URL format.
    *
    * @group GlobalMapHelper

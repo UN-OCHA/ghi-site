@@ -372,7 +372,11 @@ jobs:
           merge-multiple: true
 
       - name: Install PHPCOV
-        run: composer global require phpunit/phpcov:8.2.1 --no-interaction --no-progress
+        run: |
+          # Match the test jobs' tool and library versions when reading serialized coverage.
+          PHPCOV_VERSION=$(jq -er '."packages-dev"[] | select(.name == "phpunit/phpcov") | .version' composer.lock)
+          COVERAGE_VERSION=$(jq -er '."packages-dev"[] | select(.name == "phpunit/php-code-coverage") | .version' composer.lock)
+          composer global require "phpunit/phpcov:${PHPCOV_VERSION}" "phpunit/php-code-coverage:${COVERAGE_VERSION}" --no-interaction --no-progress
 
       - name: Merge Coverage
         run: |

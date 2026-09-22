@@ -5,6 +5,8 @@ namespace Drupal\Tests\ghi_blocks\Unit;
 use Drupal\Tests\UnitTestCase;
 use Drupal\ghi_blocks\Helpers\AttachmentMatcher;
 use Drupal\ghi_plans\ApiObjects\Prototypes\AttachmentPrototype;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
  * @covers Drupal\ghi_blocks\Helpers\AttachmentMatcher
@@ -14,7 +16,7 @@ class AttachmentMatcherTest extends UnitTestCase {
   /**
    * Data provider for testMatchDataPointOnAttachmentPrototypes.
    */
-  public function matchDataPointOnAttachmentPrototypesDataProvider() {
+  public static function matchDataPointOnAttachmentPrototypesDataProvider() {
     return [
       'same type returns original index' => [
         ['type_a', 'type_b', 'type_c'],
@@ -57,10 +59,9 @@ class AttachmentMatcherTest extends UnitTestCase {
 
   /**
    * Test matchDataPointOnAttachmentPrototypes.
-   *
-   * @dataProvider matchDataPointOnAttachmentPrototypesDataProvider
-   * @group AttachmentMatcher
    */
+  #[DataProvider('matchDataPointOnAttachmentPrototypesDataProvider')]
+  #[Group('AttachmentMatcher')]
   public function testMatchDataPointOnAttachmentPrototypes(array $original_fields, array $new_fields, int $data_point_index, int $expected) {
     $prototype_1 = $this->createMockAttachmentPrototype($original_fields);
     $prototype_2 = $this->createMockAttachmentPrototype($new_fields);

@@ -4,6 +4,8 @@ namespace Drupal\Tests\hpc_common\Unit;
 
 use Drupal\Tests\UnitTestCase;
 use Drupal\hpc_common\Helpers\ArrayHelper;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
  * @covers Drupal\hpc_common\Helpers\ArrayHelper
@@ -13,7 +15,7 @@ class ArrayHelperTest extends UnitTestCase {
   /**
    * Data provider for testSwapArray.
    */
-  public function swapArrayDataProvider() {
+  public static function swapArrayDataProvider() {
     $array = [
       1 => 'one',
       2 => 'two',
@@ -32,10 +34,9 @@ class ArrayHelperTest extends UnitTestCase {
 
   /**
    * Test swap array function.
-   *
-   * @group ArrayHelper
-   * @dataProvider swapArrayDataProvider
    */
+  #[Group('ArrayHelper')]
+  #[DataProvider('swapArrayDataProvider')]
   public function testSwapArray($data, $key1, $key2, $strict, $result_order, $return_value) {
     $this->assertEquals($return_value, ArrayHelper::swap($data, $key1, $key2, $strict));
     $expected = array_combine($result_order, array_map(function ($key) use ($data) {
@@ -137,7 +138,7 @@ class ArrayHelperTest extends UnitTestCase {
   /**
    * Data provider for testDeduplicateStrings.
    */
-  public function deduplicateStringsDataProvider() {
+  public static function deduplicateStringsDataProvider() {
     $cases = [
       [
         'input' => [],
@@ -167,10 +168,9 @@ class ArrayHelperTest extends UnitTestCase {
 
   /**
    * Test deduplicateStrings function.
-   *
-   * @group ArrayHelper
-   * @dataProvider deduplicateStringsDataProvider
    */
+  #[Group('ArrayHelper')]
+  #[DataProvider('deduplicateStringsDataProvider')]
   public function testDeduplicateStrings($input, $expected) {
     $this->assertSame($expected, ArrayHelper::deduplicateStrings($input));
   }
@@ -178,7 +178,7 @@ class ArrayHelperTest extends UnitTestCase {
   /**
    * Data provider for testAll.
    */
-  public function allDataProvider() {
+  public static function allDataProvider() {
     $cases = [
       [
         'input' => ['a', 'b', 'c', 'd'],
@@ -211,10 +211,9 @@ class ArrayHelperTest extends UnitTestCase {
 
   /**
    * Test deduplicateStrings function.
-   *
-   * @group ArrayHelper
-   * @dataProvider allDataProvider
    */
+  #[Group('ArrayHelper')]
+  #[DataProvider('allDataProvider')]
   public function testAll($input, $predicate, $expected) {
     $this->assertSame($expected, ArrayHelper::all($input, $predicate));
   }
@@ -222,7 +221,7 @@ class ArrayHelperTest extends UnitTestCase {
   /**
    * Data provider for testAny.
    */
-  public function anyDataProvider() {
+  public static function anyDataProvider() {
     $cases = [
       [
         'input' => ['a', 'b', 'c', 'd'],
@@ -270,10 +269,9 @@ class ArrayHelperTest extends UnitTestCase {
 
   /**
    * Test deduplicateStrings function.
-   *
-   * @group ArrayHelper
-   * @dataProvider anyDataProvider
    */
+  #[Group('ArrayHelper')]
+  #[DataProvider('anyDataProvider')]
   public function testAny($input, $predicate, $expected) {
     $this->assertSame($expected, ArrayHelper::any($input, $predicate));
   }

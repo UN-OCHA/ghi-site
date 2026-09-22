@@ -5,6 +5,7 @@ namespace Drupal\Tests\ghi_content\Kernel;
 use Drupal\Core\Field\FieldStorageDefinitionInterface;
 use Drupal\KernelTests\KernelTestBase;
 use Drupal\Tests\field\Traits\EntityReferenceFieldCreationTrait;
+use Drupal\Tests\ghi_base_objects\Traits\FieldTestTrait;
 use Drupal\Tests\taxonomy\Traits\TaxonomyTestTrait;
 use Drupal\Tests\user\Traits\UserCreationTrait;
 use Drupal\ghi_sections\Entity\Section;
@@ -22,6 +23,7 @@ class DocumentManagerTest extends KernelTestBase {
   use TaxonomyTestTrait;
   use UserCreationTrait;
   use EntityReferenceFieldCreationTrait;
+  use FieldTestTrait;
   use ContentTestTrait;
 
   /**
