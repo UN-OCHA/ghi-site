@@ -6,11 +6,14 @@ use Drupal\Core\DependencyInjection\ContainerBuilder;
 use Drupal\Core\Session\AccountProxyInterface;
 use Drupal\Tests\UnitTestCase;
 use Drupal\hpc_common\Helpers\UserHelper;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
 use Prophecy\Argument;
 
 /**
- * @covers Drupal\hpc_common\Helpers\UserHelper
+ * Tests the user helper.
  */
+#[CoversClass(UserHelper::class)]
 class UserHelperTest extends UnitTestCase {
 
   /**
@@ -36,9 +39,8 @@ class UserHelperTest extends UnitTestCase {
 
   /**
    * Test if user is administrator method.
-   *
-   * @group UserHelper
    */
+  #[Group('UserHelper')]
   public function testIsAdministrator() {
     $this->mockCurrentUser(FALSE);
     $this->assertEquals(FALSE, UserHelper::isAdministrator());

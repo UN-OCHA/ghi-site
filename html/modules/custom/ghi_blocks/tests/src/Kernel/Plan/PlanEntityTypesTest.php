@@ -4,12 +4,12 @@ namespace Drupal\Tests\ghi_blocks\Kernel\Plan;
 
 use Drupal\ghi_blocks\Plugin\Block\Plan\PlanEntityTypes;
 use Drupal\Tests\ghi_blocks\Kernel\PlanBlockKernelTestBase;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
  * Tests the plan entity types block plugin.
- *
- * @group ghi_blocks
  */
+#[Group('ghi_blocks')]
 class PlanEntityTypesTest extends PlanBlockKernelTestBase {
 
   /**

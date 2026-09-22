@@ -8,13 +8,14 @@ use Drupal\Tests\ghi_base_objects\Traits\BaseObjectTestTrait;
 use Drupal\Tests\ghi_base_objects\Traits\FieldTestTrait;
 use Drupal\Tests\taxonomy\Traits\TaxonomyTestTrait;
 use Drupal\ghi_base_objects\Form\BaseObjectForm;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
  * Tests the node wizard pages.
- *
- * @group ghi_base_objects
- * @covers \Drupal\ghi_base_objects\Form\BaseObjectForm
  */
+#[CoversClass(BaseObjectForm::class)]
+#[Group('ghi_base_objects')]
 class BaseObjectFormTest extends BrowserTestBase {
 
   use BaseObjectTestTrait;

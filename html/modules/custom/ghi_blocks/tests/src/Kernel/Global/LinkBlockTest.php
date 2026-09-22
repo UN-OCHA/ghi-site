@@ -9,12 +9,12 @@ use Drupal\ghi_blocks\Interfaces\OptionalTitleBlockInterface;
 use Drupal\ghi_blocks\Plugin\Block\Generic\Links;
 use Drupal\ghi_image\CropManager;
 use Drupal\Tests\ghi_blocks\Kernel\BlockKernelTestBase;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
  * Tests the link block plugin.
- *
- * @group ghi_blocks
  */
+#[Group('ghi_blocks')]
 class LinkBlockTest extends BlockKernelTestBase {
 
   /**

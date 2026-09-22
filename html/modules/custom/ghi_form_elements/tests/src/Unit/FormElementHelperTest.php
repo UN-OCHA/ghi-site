@@ -4,12 +4,14 @@ namespace Drupal\Tests\ghi_form_elements\Unit;
 
 use Drupal\Tests\UnitTestCase;
 use Drupal\ghi_form_elements\Helpers\FormElementHelper;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Group;
 
 /**
- * @covers Drupal\ghi_form_elements\Helpers\FormElementHelper
+ * Tests the form element helper.
  */
+#[CoversClass(FormElementHelper::class)]
 class FormElementHelperTest extends UnitTestCase {
 
   /**
@@ -57,9 +59,8 @@ class FormElementHelperTest extends UnitTestCase {
 
   /**
    * Test getStateSelector method.
-   *
-   * @group FormElementHelper
    */
+  #[Group('FormElementHelper')]
   public function testGetStateSelector() {
     $element = [
       '#parents' => ['form', 'field_name'],
@@ -70,9 +71,8 @@ class FormElementHelperTest extends UnitTestCase {
 
   /**
    * Test getStateSelector with empty subkeys.
-   *
-   * @group FormElementHelper
    */
+  #[Group('FormElementHelper')]
   public function testGetStateSelectorEmptySubkeys() {
     $element = [
       '#parents' => ['form', 'field_name'],

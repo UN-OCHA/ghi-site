@@ -13,12 +13,12 @@ use Drupal\ghi_base_objects\Form\BaseObjectForm;
 use Drupal\ghi_base_objects\Form\BaseObjectTypeForm;
 use Drupal\Tests\UnitTestCase;
 use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
  * Tests base object form save results and redirects.
- *
- * @group ghi_base_objects
  */
+#[Group('ghi_base_objects')]
 class EntityFormSaveTest extends UnitTestCase {
 
   /**

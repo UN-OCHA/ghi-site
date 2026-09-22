@@ -5,17 +5,19 @@ namespace Drupal\Tests\ghi_blocks\Unit;
 use Drupal\Tests\UnitTestCase;
 use Drupal\ghi_blocks\Helpers\FundingDataConfigurationUpdateHelper;
 use Drupal\layout_builder\SectionComponent;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
- * @covers Drupal\ghi_blocks\Helpers\FundingDataConfigurationUpdateHelper
+ * Tests funding data configuration updates.
  */
+#[CoversClass(FundingDataConfigurationUpdateHelper::class)]
 class FundingDataConfigurationUpdateHelperTest extends UnitTestCase {
 
   /**
    * Test updateGlobalKeyFiguresComponent with empty items.
-   *
-   * @group FundingDataConfigurationUpdateHelper
    */
+  #[Group('FundingDataConfigurationUpdateHelper')]
   public function testUpdateGlobalKeyFiguresComponentEmptyItems() {
     $component = $this->createMockComponent([]);
     $result = FundingDataConfigurationUpdateHelper::updateGlobalKeyFiguresComponent($component);
@@ -24,9 +26,8 @@ class FundingDataConfigurationUpdateHelperTest extends UnitTestCase {
 
   /**
    * Test updateGlobalKeyFiguresComponent with non-matching item type.
-   *
-   * @group FundingDataConfigurationUpdateHelper
    */
+  #[Group('FundingDataConfigurationUpdateHelper')]
   public function testUpdateGlobalKeyFiguresComponentNonMatchingType() {
     $configuration = [
       'hpc' => [
@@ -50,9 +51,8 @@ class FundingDataConfigurationUpdateHelperTest extends UnitTestCase {
 
   /**
    * Test updatePlanHeadlineFiguresComponent with empty items.
-   *
-   * @group FundingDataConfigurationUpdateHelper
    */
+  #[Group('FundingDataConfigurationUpdateHelper')]
   public function testUpdatePlanHeadlineFiguresComponentEmptyItems() {
     $component = $this->createMockComponent([]);
     $result = FundingDataConfigurationUpdateHelper::updatePlanHeadlineFiguresComponent($component);
@@ -61,9 +61,8 @@ class FundingDataConfigurationUpdateHelperTest extends UnitTestCase {
 
   /**
    * Test updatePlanHeadlineFiguresComponent with matching funding_data.
-   *
-   * @group FundingDataConfigurationUpdateHelper
    */
+  #[Group('FundingDataConfigurationUpdateHelper')]
   public function testUpdatePlanHeadlineFiguresComponentMatchingData() {
     $configuration = [
       'hpc' => [
@@ -87,9 +86,8 @@ class FundingDataConfigurationUpdateHelperTest extends UnitTestCase {
 
   /**
    * Test updateStandardTableComponent with empty columns.
-   *
-   * @group FundingDataConfigurationUpdateHelper
    */
+  #[Group('FundingDataConfigurationUpdateHelper')]
   public function testUpdateStandardTableComponentEmptyColumns() {
     $component = $this->createMockComponent([]);
     $result = FundingDataConfigurationUpdateHelper::updateStandardTableComponent($component);
@@ -98,9 +96,8 @@ class FundingDataConfigurationUpdateHelperTest extends UnitTestCase {
 
   /**
    * Test updateStandardTableComponent with matching funding_data.
-   *
-   * @group FundingDataConfigurationUpdateHelper
    */
+  #[Group('FundingDataConfigurationUpdateHelper')]
   public function testUpdateStandardTableComponentMatchingData() {
     $configuration = [
       'hpc' => [

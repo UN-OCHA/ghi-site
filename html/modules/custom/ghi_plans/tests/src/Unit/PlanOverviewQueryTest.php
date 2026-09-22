@@ -15,12 +15,12 @@ use Drupal\ghi_plans\Plugin\FabricQuery\PlanQuery;
 use Drupal\Tests\hpc_api\Traits\PrivateAccessorTrait;
 use Drupal\Tests\UnitTestCase;
 use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
  * Tests overview retrieval when Fabric plans have not been imported.
- *
- * @group ghi_plans
  */
+#[Group('ghi_plans')]
 class PlanOverviewQueryTest extends UnitTestCase {
 
   use PrivateAccessorTrait;

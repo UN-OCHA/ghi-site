@@ -15,13 +15,13 @@ use Drupal\ghi_content\Plugin\QueueWorker\RemoteRefreshQueue;
 use Drupal\migrate\Plugin\MigrationInterface;
 use Drupal\migrate\Plugin\MigrationPluginManagerInterface;
 use Drupal\Tests\UnitTestCase;
+use PHPUnit\Framework\Attributes\Group;
 use Psr\Log\LoggerInterface;
 
 /**
  * Tests remote refresh queue items.
- *
- * @group ghi_content
  */
+#[Group('ghi_content')]
 class RemoteRefreshQueueTest extends UnitTestCase {
 
   /**

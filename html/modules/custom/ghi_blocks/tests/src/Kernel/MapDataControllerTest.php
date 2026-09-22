@@ -19,6 +19,7 @@ use Drupal\layout_builder\Section;
 use Drupal\layout_builder\SectionComponent;
 use Drupal\Tests\hpc_api\Traits\PrivateAccessorTrait;
 use Drupal\Tests\user\Traits\UserCreationTrait;
+use PHPUnit\Framework\Attributes\Group;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
@@ -26,9 +27,8 @@ use Symfony\Component\Routing\Exception\RouteNotFoundException;
 
 /**
  * Tests the lazy map data and block preview controllers.
- *
- * @group ghi_blocks
  */
+#[Group('ghi_blocks')]
 class MapDataControllerTest extends KernelTestBase {
 
   use UserCreationTrait;

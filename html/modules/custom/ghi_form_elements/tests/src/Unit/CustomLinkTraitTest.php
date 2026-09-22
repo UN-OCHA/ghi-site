@@ -12,17 +12,20 @@ use Drupal\Core\Url;
 use Drupal\Core\Utility\UnroutedUrlAssemblerInterface;
 use Drupal\Tests\UnitTestCase;
 use Drupal\Tests\ghi_form_elements\CustomLinkTestClass;
+use Drupal\ghi_form_elements\Traits\CustomLinkTrait;
 use Drupal\ghi_sections\Entity\SectionNodeInterface;
 use Drupal\ghi_subpages\Entity\FinancialsSubpage;
 use Drupal\ghi_subpages\Entity\PopulationSubpage;
 use Drupal\ghi_subpages\SubpageManager;
 use Drupal\node\NodeInterface;
 use Drupal\path_alias\AliasManagerInterface;
+use PHPUnit\Framework\Attributes\CoversTrait;
 use Prophecy\Argument;
 
 /**
- * @covers Drupal\ghi_form_elements\Traits\CustomLinkTrait
+ * Tests custom link handling.
  */
+#[CoversTrait(CustomLinkTrait::class)]
 class CustomLinkTraitTest extends UnitTestCase {
 
   /**

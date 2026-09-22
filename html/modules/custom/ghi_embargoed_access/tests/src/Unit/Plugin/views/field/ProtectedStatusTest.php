@@ -7,14 +7,16 @@ use Drupal\ghi_embargoed_access\Plugin\views\field\ProtectedStatus;
 use Drupal\node\NodeInterface;
 use Drupal\Tests\UnitTestCase;
 use Drupal\views\ResultRow;
+use PHPUnit\Framework\Attributes\CoversMethod;
+use PHPUnit\Framework\Attributes\Group;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Unit tests for ProtectedStatus views field plugin.
- *
- * @coversDefaultClass \Drupal\ghi_embargoed_access\Plugin\views\field\ProtectedStatus
- * @group ghi_embargoed_access
  */
+#[CoversMethod(ProtectedStatus::class, 'getValue')]
+#[CoversMethod(ProtectedStatus::class, 'query')]
+#[Group('ghi_embargoed_access')]
 class ProtectedStatusTest extends UnitTestCase {
 
   /**
@@ -54,8 +56,6 @@ class ProtectedStatusTest extends UnitTestCase {
 
   /**
    * Tests query method does nothing.
-   *
-   * @covers ::query
    */
   public function testQuery(): void {
     // Query method should do nothing, just ensure it doesn't throw errors.
@@ -65,8 +65,6 @@ class ProtectedStatusTest extends UnitTestCase {
 
   /**
    * Tests getValue with valid node.
-   *
-   * @covers ::getValue
    */
   public function testGetValueWithValidNode(): void {
     $node = $this->createMock(NodeInterface::class);
@@ -85,8 +83,6 @@ class ProtectedStatusTest extends UnitTestCase {
 
   /**
    * Tests getValue with node that is not protected.
-   *
-   * @covers ::getValue
    */
   public function testGetValueWithUnprotectedNode(): void {
     $node = $this->createMock(NodeInterface::class);
@@ -105,8 +101,6 @@ class ProtectedStatusTest extends UnitTestCase {
 
   /**
    * Tests getValue with no entity.
-   *
-   * @covers ::getValue
    */
   public function testGetValueWithNoEntity(): void {
     $result_row = new ResultRow();
@@ -121,8 +115,6 @@ class ProtectedStatusTest extends UnitTestCase {
 
   /**
    * Tests getValue with non-node entity.
-   *
-   * @covers ::getValue
    */
   public function testGetValueWithNonNodeEntity(): void {
     $non_node_entity = new \stdClass();

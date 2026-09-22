@@ -6,13 +6,14 @@ use Drupal\Core\File\FileSystemInterface;
 use Drupal\ghi_geojson\GeoJson;
 use Drupal\ghi_geojson\GeoJsonLocationInterface;
 use Drupal\KernelTests\KernelTestBase;
+use PHPUnit\Framework\Attributes\CoversMethod;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
  * Kernel tests for the GeoJson::getGeoJsonSourceFilePath method.
- *
- * @coversDefaultClass \Drupal\ghi_geojson\GeoJson
- * @group ghi_geojson
  */
+#[CoversMethod(GeoJson::class, 'getGeoJsonSourceFilePath')]
+#[Group('ghi_geojson')]
 class GeoJsonGetGeoJsonSourceFilePathTest extends KernelTestBase {
 
   /**
@@ -139,8 +140,6 @@ class GeoJsonGetGeoJsonSourceFilePathTest extends KernelTestBase {
 
   /**
    * Tests successful source file path retrieval for country level (admin 0).
-   *
-   * @covers ::getGeoJsonSourceFilePath
    */
   public function testGetGeoJsonSourceFilePathCountryMinified(): void {
     $location = $this->createMockLocation('AFG', 0, NULL, '2023');
@@ -154,8 +153,6 @@ class GeoJsonGetGeoJsonSourceFilePathTest extends KernelTestBase {
 
   /**
    * Tests successful source file path retrieval for country level non-minified.
-   *
-   * @covers ::getGeoJsonSourceFilePath
    */
   public function testGetGeoJsonSourceFilePathCountryNonMinified(): void {
     $location = $this->createMockLocation('IRQ', 0, NULL, '2022');
@@ -169,8 +166,6 @@ class GeoJsonGetGeoJsonSourceFilePathTest extends KernelTestBase {
 
   /**
    * Tests successful source file path retrieval for admin level 1.
-   *
-   * @covers ::getGeoJsonSourceFilePath
    */
   public function testGetGeoJsonSourceFilePathAdminLevel1(): void {
     $location = $this->createMockLocation('SYR', 1, 'TEST_PCODE_001', '2021');
@@ -184,8 +179,6 @@ class GeoJsonGetGeoJsonSourceFilePathTest extends KernelTestBase {
 
   /**
    * Tests successful source file path retrieval for admin level 2.
-   *
-   * @covers ::getGeoJsonSourceFilePath
    */
   public function testGetGeoJsonSourceFilePathAdminLevel2(): void {
     $location = $this->createMockLocation('AFG', 2, 'TEST_PCODE_002', '2023');
@@ -199,8 +192,6 @@ class GeoJsonGetGeoJsonSourceFilePathTest extends KernelTestBase {
 
   /**
    * Tests version fallback behavior when requesting older version.
-   *
-   * @covers ::getGeoJsonSourceFilePath
    */
   public function testGetGeoJsonSourceFilePathVersionFallback(): void {
     // Request version 2020, should fallback to 2023 (newest available >= 2020).
@@ -215,8 +206,6 @@ class GeoJsonGetGeoJsonSourceFilePathTest extends KernelTestBase {
 
   /**
    * Tests version fallback behavior when requesting version between available ones.
-   *
-   * @covers ::getGeoJsonSourceFilePath
    */
   public function testGetGeoJsonSourceFilePathVersionFallbackMiddle(): void {
     // Request version 2022 for SYR, should get 2023 (newest >= 2022).
@@ -231,8 +220,6 @@ class GeoJsonGetGeoJsonSourceFilePathTest extends KernelTestBase {
 
   /**
    * Tests version fallback behavior when requesting future version.
-   *
-   * @covers ::getGeoJsonSourceFilePath
    */
   public function testGetGeoJsonSourceFilePathFutureVersionFallback(): void {
     // Request version 2025, should fallback to 'current'.
@@ -247,8 +234,6 @@ class GeoJsonGetGeoJsonSourceFilePathTest extends KernelTestBase {
 
   /**
    * Tests fallback to non-minified when minified file doesn't exist.
-   *
-   * @covers ::getGeoJsonSourceFilePath
    */
   public function testGetGeoJsonSourceFilePathFallbackToNonMinified(): void {
     // Remove minified file to test fallback.
@@ -268,8 +253,6 @@ class GeoJsonGetGeoJsonSourceFilePathTest extends KernelTestBase {
 
   /**
    * Tests return NULL when location has no ISO3 code.
-   *
-   * @covers ::getGeoJsonSourceFilePath
    */
   public function testGetGeoJsonSourceFilePathNoIso3(): void {
     $location = $this->createMockLocation(NULL, 0, NULL, '2023');
@@ -281,8 +264,6 @@ class GeoJsonGetGeoJsonSourceFilePathTest extends KernelTestBase {
 
   /**
    * Tests return NULL when location has empty ISO3 code.
-   *
-   * @covers ::getGeoJsonSourceFilePath
    */
   public function testGetGeoJsonSourceFilePathEmptyIso3(): void {
     $location = $this->createMockLocation('', 0, NULL, '2023');
@@ -294,8 +275,6 @@ class GeoJsonGetGeoJsonSourceFilePathTest extends KernelTestBase {
 
   /**
    * Tests exception when country directory doesn't exist.
-   *
-   * @covers ::getGeoJsonSourceFilePath
    */
   public function testGetGeoJsonSourceFilePathNoCountryDirectory(): void {
     $location = $this->createMockLocation('XXX', 0, NULL, '2023');
@@ -307,8 +286,6 @@ class GeoJsonGetGeoJsonSourceFilePathTest extends KernelTestBase {
 
   /**
    * Tests return NULL when admin level 1+ has no pcode.
-   *
-   * @covers ::getGeoJsonSourceFilePath
    */
   public function testGetGeoJsonSourceFilePathAdminLevelNoPcode(): void {
     $location = $this->createMockLocation('AFG', 1, NULL, '2023');
@@ -320,8 +297,6 @@ class GeoJsonGetGeoJsonSourceFilePathTest extends KernelTestBase {
 
   /**
    * Tests return NULL when admin level 1+ has empty pcode.
-   *
-   * @covers ::getGeoJsonSourceFilePath
    */
   public function testGetGeoJsonSourceFilePathAdminLevelEmptyPcode(): void {
     $location = $this->createMockLocation('AFG', 2, '', '2023');
@@ -333,8 +308,6 @@ class GeoJsonGetGeoJsonSourceFilePathTest extends KernelTestBase {
 
   /**
    * Tests return NULL when requested file doesn't exist and no fallback available.
-   *
-   * @covers ::getGeoJsonSourceFilePath
    */
   public function testGetGeoJsonSourceFilePathNoFileExists(): void {
     $location = $this->createMockLocation('AFG', 1, 'NONEXISTENT_PCODE', '2023');
@@ -346,8 +319,6 @@ class GeoJsonGetGeoJsonSourceFilePathTest extends KernelTestBase {
 
   /**
    * Tests using explicit version parameter over location version.
-   *
-   * @covers ::getGeoJsonSourceFilePath
    */
   public function testGetGeoJsonSourceFilePathExplicitVersion(): void {
     // Location has version 2023, but we explicitly request 2021 (which falls back to 2023).
@@ -362,8 +333,6 @@ class GeoJsonGetGeoJsonSourceFilePathTest extends KernelTestBase {
 
   /**
    * Tests exact version match when requesting available version.
-   *
-   * @covers ::getGeoJsonSourceFilePath
    */
   public function testGetGeoJsonSourceFilePathExactVersionMatch(): void {
     // Request exactly version 2023 which should be found.
@@ -378,8 +347,6 @@ class GeoJsonGetGeoJsonSourceFilePathTest extends KernelTestBase {
 
   /**
    * Tests 'current' version handling.
-   *
-   * @covers ::getGeoJsonSourceFilePath
    */
   public function testGetGeoJsonSourceFilePathCurrentVersion(): void {
     $location = $this->createMockLocation('AFG', 0, NULL, 'current');
@@ -393,8 +360,6 @@ class GeoJsonGetGeoJsonSourceFilePathTest extends KernelTestBase {
 
   /**
    * Tests return NULL when 'current' directory doesn't exist.
-   *
-   * @covers ::getGeoJsonSourceFilePath
    */
   public function testGetGeoJsonSourceFilePathCurrentVersionNotExists(): void {
     // IRQ doesn't have a 'current' directory in our test setup.
@@ -407,8 +372,6 @@ class GeoJsonGetGeoJsonSourceFilePathTest extends KernelTestBase {
 
   /**
    * Tests multiple calls return consistent results.
-   *
-   * @covers ::getGeoJsonSourceFilePath
    */
   public function testGetGeoJsonSourceFilePathConsistentResults(): void {
     $location = $this->createMockLocation('AFG', 1, 'TEST_PCODE_001', '2022');

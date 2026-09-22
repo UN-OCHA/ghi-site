@@ -8,10 +8,13 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\ghi_form_elements\Element\ClusterRestrict;
 use Drupal\Tests\UnitTestCase;
 use Drupal\Tests\ghi_form_elements\AjaxElementTestClass;
+use Drupal\ghi_form_elements\Traits\AjaxElementTrait;
+use PHPUnit\Framework\Attributes\CoversTrait;
 
 /**
- * @covers Drupal\ghi_form_elements\Traits\AjaxElementTrait
+ * Tests AJAX element handling.
  */
+#[CoversTrait(AjaxElementTrait::class)]
 class AjaxElementTraitTest extends UnitTestCase {
 
   /**

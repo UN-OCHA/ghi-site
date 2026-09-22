@@ -19,20 +19,19 @@ use Drupal\ghi_content\RemoteSource\RemoteSourceInterface;
 use Drupal\layout_builder\LayoutTempstoreRepositoryInterface;
 use Drupal\node\NodeInterface;
 use Drupal\Tests\UnitTestCase;
+use PHPUnit\Framework\Attributes\CoversMethod;
+use PHPUnit\Framework\Attributes\Group;
 use Symfony\Component\EventDispatcher\EventDispatcher;
 
 /**
  * Tests image imports using the file replacement policy.
- *
- * @group ghi_content
- * @coversDefaultClass \Drupal\ghi_content\Import\ImportManager
  */
+#[CoversMethod(ImportManager::class, 'importImage')]
+#[Group('ghi_content')]
 class ImportImageTest extends UnitTestCase {
 
   /**
    * Tests that importing an image replaces an existing file at its destination.
-   *
-   * @covers ::importImage
    */
   public function testImportImage() {
     $source = $this->createMock(RemoteSourceInterface::class);

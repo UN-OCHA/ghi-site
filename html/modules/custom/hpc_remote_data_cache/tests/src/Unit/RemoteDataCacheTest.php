@@ -17,14 +17,16 @@ use Drupal\hpc_remote_data_cache\RemoteDataCacheItem;
 use Drupal\hpc_remote_data_cache\RemoteDataCacheRefresherManager;
 use Drupal\hpc_remote_data_cache\RemoteDataCacheRefresherInterface;
 use Drupal\hpc_remote_data_cache\RemoteDataCacheRefreshResult;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
 use Prophecy\Argument;
 use Prophecy\PhpUnit\ProphecyTrait;
 
 /**
- * @covers \Drupal\hpc_remote_data_cache\RemoteDataCache
- *
- * @group HPC Remote Data Cache
+ * Tests the remote data cache.
  */
+#[CoversClass(RemoteDataCache::class)]
+#[Group('HPC Remote Data Cache')]
 class RemoteDataCacheTest extends UnitTestCase {
 
   use ProphecyTrait;

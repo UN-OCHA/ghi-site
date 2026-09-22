@@ -9,12 +9,12 @@ use Drupal\ghi_plans\Plugin\EndpointQuery\FlowSearchQuery;
 use Drupal\ghi_plans\Plugin\FabricQuery\GoverningEntityQuery;
 use Drupal\Tests\UnitTestCase;
 use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
  * Tests cluster restriction with block and configuration item contexts.
- *
- * @group ghi_blocks
  */
+#[Group('ghi_blocks')]
 class ConfigurationItemClusterRestrictTraitTest extends UnitTestCase {
 
   /**
