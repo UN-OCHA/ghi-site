@@ -2,6 +2,7 @@
 
 namespace Drupal\ghi_blocks\Helpers;
 
+use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\ghi_blocks\Traits\GlobalMapTrait;
 
 /**
@@ -12,5 +13,6 @@ use Drupal\ghi_blocks\Traits\GlobalMapTrait;
 class GlobalMapHelper {
 
   use GlobalMapTrait;
+  use StringTranslationTrait;
 
 }

@@ -1,0 +1,307 @@
+diff --git a/core/lib/Drupal/Component/Utility/OpenTelemetry.php b/core/lib/Drupal/Component/Utility/OpenTelemetry.php
+new file mode 100644
+index 0000000000000000000000000000000000000000..ab87b078949376ee4d12b4097fab00c1c239d1aa
+--- /dev/null
++++ b/core/lib/Drupal/Component/Utility/OpenTelemetry.php
+@@ -0,0 +1,44 @@
++<?php
++
++namespace Drupal\Component\Utility;
++
++use OpenTelemetry\Context\Context;
++
++/**
++ * Provides helpers for open telemetry.
++ *
++ * @ingroup utility
++ */
++class OpenTelemetry {
++
++  /**
++   * Binds the given callback to the current open telemetry context.
++   *
++   * @param callable(): T $callback
++   *   The callback to be bound.
++   *
++   * @return callable(): T
++   *   The bound closure if open telemetry is available, otherwise the original
++   *   callback.
++   *
++   * @template T
++   */
++  public static function bindContext(callable $callback): callable {
++    if (class_exists(Context::class)) {
++      $parent = Context::getCurrent();
++      return static function (mixed ...$args) use ($parent, $callback) {
++        $scope = Context::storage()->attach($parent);
++        try {
++          return $callback(...$args);
++        }
++        finally {
++          $scope->detach();
++        }
++      };
++    }
++    else {
++      return $callback;
++    }
++  }
++
++}
+diff --git a/core/lib/Drupal/Core/Field/Plugin/Field/FieldType/EntityReferenceItemBase.php b/core/lib/Drupal/Core/Field/Plugin/Field/FieldType/EntityReferenceItemBase.php
+index 42782ec04e721cfb9bf006a97be1a4339440ffbb..afa88bba6e4bffcfab9ace1fd1bf007b60c53d89 100644
+--- a/core/lib/Drupal/Core/Field/Plugin/Field/FieldType/EntityReferenceItemBase.php
++++ b/core/lib/Drupal/Core/Field/Plugin/Field/FieldType/EntityReferenceItemBase.php
+@@ -3,6 +3,7 @@
+ namespace Drupal\Core\Field\Plugin\Field\FieldType;
+ 
+ use Drupal\Core\Field\FieldItemBase;
++use Drupal\Core\Utility\Async;
+ use Drupal\Core\Utility\FiberResumeType;
+ 
+ /**
+@@ -22,7 +23,7 @@ public function __get($property_name) {
+     // __get() call can incorrectly trigger PHP's recursion guarding.
+     // See https://github.com/php/php-src/issues/14983
+     if ($property_name === 'entity' && \Fiber::getCurrent()) {
+-      $fiber = new \Fiber(fn() => parent::__get($property_name));
++      $fiber = Async::createFiber(fn() => parent::__get($property_name));
+       $fiber->start();
+       while (!$fiber->isTerminated()) {
+         if ($fiber->isSuspended()) {
+diff --git a/core/lib/Drupal/Core/Render/Renderer.php b/core/lib/Drupal/Core/Render/Renderer.php
+index 29dea3d3e14e6b343cef11acc48c18ce69701da0..6389855f2aa9766eab6d9a66c2b6a418af22e241 100644
+--- a/core/lib/Drupal/Core/Render/Renderer.php
++++ b/core/lib/Drupal/Core/Render/Renderer.php
+@@ -15,6 +15,7 @@
+ use Drupal\Core\Security\TrustedCallbackInterface;
+ use Drupal\Core\Security\DoTrustedCallbackTrait;
+ use Drupal\Core\Theme\ThemeManagerInterface;
++use Drupal\Core\Utility\Async;
+ use Drupal\Core\Utility\CallableResolver;
+ use Drupal\Core\Utility\FiberResumeType;
+ use Symfony\Component\HttpFoundation\RequestStack;
+@@ -616,7 +617,7 @@ public function executeInRenderContext(RenderContext $context, callable $callabl
+     // Set the provided context and call the callable, it will use that context.
+     $this->setCurrentRenderContext($context);
+ 
+-    $fiber = new \Fiber(static fn () => $callable());
++    $fiber = Async::createFiber($callable);
+     $fiber->start();
+     $resume_type = NULL;
+     while (!$fiber->isTerminated()) {
+@@ -741,9 +742,9 @@ protected function replacePlaceholders(array &$elements) {
+       }
+       else {
+         // Get the render array for the given placeholder.
+-        $fibers[$placeholder] = new \Fiber(function () use ($placeholder_element) {
+-          return [$this->doRenderPlaceholder($placeholder_element), $placeholder_element];
+-        });
++        $fibers[$placeholder] = Async::createFiber(
++          fn() => [$this->doRenderPlaceholder($placeholder_element), $placeholder_element]
++        );
+       }
+     }
+     $iterations = 0;
+diff --git a/core/lib/Drupal/Core/Utility/Async.php b/core/lib/Drupal/Core/Utility/Async.php
+new file mode 100644
+index 0000000000000000000000000000000000000000..4cea4cbd87be68c0aee8f839bcd9e397e51d0ac6
+--- /dev/null
++++ b/core/lib/Drupal/Core/Utility/Async.php
+@@ -0,0 +1,30 @@
++<?php
++
++namespace Drupal\Core\Utility;
++
++use Drupal\Component\Utility\OpenTelemetry;
++
++/**
++ * Helper functions to create fibers in a consistent way.
++ *
++ * @template TStart
++ * @template TResume
++ * @template TReturn
++ * @template TSuspend
++ */
++class Async {
++
++  /**
++   * Creates and returns a new fiber.
++   *
++   * @param callable $callback
++   *   Function to invoke when starting the fiber.
++   *
++   * @return \Fiber<TStart,TResume,TReturn,TSuspend>
++   *   The fiber
++   */
++  public static function createFiber(callable $callback): \Fiber {
++    return new \Fiber(OpenTelemetry::bindContext($callback));
++  }
++
++}
+diff --git a/core/modules/big_pipe/src/Render/BigPipe.php b/core/modules/big_pipe/src/Render/BigPipe.php
+index e90e40b42dd117e5ce457a73d117a2932a5104a6..34192d1f1656b05f796dee08cec5ceb2d7af4f39 100644
+--- a/core/modules/big_pipe/src/Render/BigPipe.php
++++ b/core/modules/big_pipe/src/Render/BigPipe.php
+@@ -20,6 +20,7 @@
+ use Drupal\Core\Routing\LocalRedirectResponse;
+ use Drupal\Core\Routing\RequestContext;
+ use Drupal\Core\Utility\FiberResumeType;
++use Drupal\Core\Utility\Async;
+ use Psr\Log\LoggerInterface;
+ use Symfony\Component\HttpFoundation\RedirectResponse;
+ use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
+@@ -498,7 +499,9 @@ protected function sendPlaceholders(array $placeholders, array $placeholder_orde
+         continue;
+       }
+       $placeholder_render_array = $placeholders[$placeholder_id];
+-      $fibers[$placeholder_id] = new \Fiber(fn() => $this->renderPlaceholder($placeholder_id, $placeholder_render_array));
++      $fibers[$placeholder_id] = Async::createFiber(
++        fn () => $this->renderPlaceholder($placeholder_id, $placeholder_render_array)
++      );
+     }
+     $iterations = 0;
+     while (count($fibers) > 0) {
+diff --git a/core/modules/big_pipe/tests/src/Unit/Render/FiberPlaceholderTest.php b/core/modules/big_pipe/tests/src/Unit/Render/FiberPlaceholderTest.php
+index 9d1b52bc13276a385a51bcc95f393de8204eb795..05b534787bae8cf68856db7859fc1f1311a08442 100644
+--- a/core/modules/big_pipe/tests/src/Unit/Render/FiberPlaceholderTest.php
++++ b/core/modules/big_pipe/tests/src/Unit/Render/FiberPlaceholderTest.php
+@@ -16,6 +16,7 @@
+ use Drupal\Core\Routing\RequestContext;
+ use Drupal\Core\Security\TrustedCallbackInterface;
+ use Drupal\Core\Theme\ThemeManagerInterface;
++use Drupal\Core\Utility\Async;
+ use Drupal\Core\Utility\CallableResolver;
+ use Drupal\Tests\UnitTestCase;
+ use PHPUnit\Framework\Attributes\CoversClass;
+@@ -105,7 +106,7 @@ public function testLongPlaceholderFiberSuspendingLoop(): void {
+ 
+     // Capture the result to avoid PHPUnit complaining.
+     ob_start();
+-    $fiber = new \Fiber(function () use ($bigpipe, $response) {
++    $fiber = Async::createFiber(function () use ($bigpipe, $response) {
+       $bigpipe->sendContent($response);
+     });
+     $fiber->start();
+diff --git a/core/tests/Drupal/KernelTests/Core/Entity/EntityApiTest.php b/core/tests/Drupal/KernelTests/Core/Entity/EntityApiTest.php
+index ced681b44aaa51fd4738fc956f4991fc55eea04c..1f665438da5b846f9e1c9eea5917417761f4b0fc 100644
+--- a/core/tests/Drupal/KernelTests/Core/Entity/EntityApiTest.php
++++ b/core/tests/Drupal/KernelTests/Core/Entity/EntityApiTest.php
+@@ -6,6 +6,7 @@
+ 
+ use Drupal\Core\Database\Database;
+ use Drupal\Core\Entity\EntityStorageException;
++use Drupal\Core\Utility\Async;
+ use Drupal\entity_test\Entity\EntityTest;
+ use Drupal\entity_test\EntityTestHelper;
+ use Drupal\user\UserInterface;
+@@ -159,8 +160,8 @@ public function testLazyPreLoading(): void {
+     $entity->save();
+     $ids[] = $entity->id();
+ 
+-    $fiber1 = new \Fiber(fn () => $storage->load($ids[0]));
+-    $fiber2 = new \Fiber(fn () => $storage->load($ids[1]));
++    $fiber1 = Async::createFiber(fn () => $storage->load($ids[0]));
++    $fiber2 = Async::createFiber(fn () => $storage->load($ids[1]));
+ 
+     // Make sure the entity cache is empty.
+     $this->container->get('entity.memory_cache')->reset();
+@@ -205,8 +206,8 @@ public function testLazyPreLoadingMultiple(): void {
+     $entity->save();
+     $ids[] = $entity->id();
+ 
+-    $fiber1 = new \Fiber(fn () => $storage->loadMultiple([$ids[0]]));
+-    $fiber2 = new \Fiber(fn () => $storage->loadMultiple([$ids[1]]));
++    $fiber1 = Async::createFiber(fn () => $storage->loadMultiple([$ids[0]]));
++    $fiber2 = Async::createFiber(fn () => $storage->loadMultiple([$ids[1]]));
+ 
+     // Make sure the entity cache is empty.
+     $this->container->get('entity.memory_cache')->reset();
+@@ -260,11 +261,11 @@ public function testLazyPreLoadingAdditional(): void {
+     $entity->save();
+     $ids[] = $entity->id();
+ 
+-    $fiber1 = new \Fiber(function () use ($ids, $storage) {
++    $fiber1 = Async::createFiber(function () use ($ids, $storage) {
+       $storage->loadMultiple([$ids[0]]);
+       return $storage->loadMultiple([$ids[2]]);
+     });
+-    $fiber2 = new \Fiber(fn () => $storage->loadMultiple([$ids[1]]));
++    $fiber2 = Async::createFiber(fn () => $storage->loadMultiple([$ids[1]]));
+ 
+     // Make sure the entity cache is empty.
+     $this->container->get('entity.memory_cache')->reset();
+diff --git a/core/tests/Drupal/KernelTests/Core/Entity/EntityReferenceFieldTest.php b/core/tests/Drupal/KernelTests/Core/Entity/EntityReferenceFieldTest.php
+index d8c2eb4ec02924bbbd6fd15ef7b9b38348ad4509..3cb1d6d8daa0eca594a380d3a4939313bc5acd44 100644
+--- a/core/tests/Drupal/KernelTests/Core/Entity/EntityReferenceFieldTest.php
++++ b/core/tests/Drupal/KernelTests/Core/Entity/EntityReferenceFieldTest.php
+@@ -9,6 +9,7 @@
+ use Drupal\Core\Field\BaseFieldDefinition;
+ use Drupal\Core\Field\FieldException;
+ use Drupal\Core\Field\FieldStorageDefinitionInterface;
++use Drupal\Core\Utility\Async;
+ use Drupal\entity_test\Entity\EntityTestStringId;
+ use Drupal\entity_test\EntityTestHelper;
+ use Drupal\field\Entity\FieldConfig;
+@@ -106,7 +107,7 @@ public function testEntityReferenceListFiberSuspension(): void {
+ 
+     $entity = $storage->load($entity->id());
+ 
+-    $fiber = new \Fiber(fn() => $entity->{$this->fieldName}->entity);
++    $fiber = Async::createFiber(fn() => $entity->{$this->fieldName}->entity);
+     $fiber->start();
+     $referenced_entity = $entity->{$this->fieldName}->entity;
+     $this->assertIsObject($referenced_entity);
+@@ -131,7 +132,7 @@ public function testEntityReferenceItemFiberSuspension(): void {
+     $entity = $storage->load($entity->id());
+     $field_item = $entity->get($this->fieldName)->first();
+ 
+-    $fiber = new \Fiber(fn() => $field_item->entity);
++    $fiber = Async::createFiber(fn() => $field_item->entity);
+     $fiber->start();
+     $referenced_entity = $field_item->entity;
+     $this->assertIsObject($referenced_entity);
+diff --git a/core/tests/Drupal/Tests/Core/Menu/LocalTaskManagerTest.php b/core/tests/Drupal/Tests/Core/Menu/LocalTaskManagerTest.php
+index faa32301cdb9827396a2c10ed35c6796c799f13c..8f30a0e67f92e0b1675fc3218f2349785ddba4b5 100644
+--- a/core/tests/Drupal/Tests/Core/Menu/LocalTaskManagerTest.php
++++ b/core/tests/Drupal/Tests/Core/Menu/LocalTaskManagerTest.php
+@@ -21,6 +21,7 @@
+ use Drupal\Core\Routing\RouteMatchInterface;
+ use Drupal\Core\Routing\RouteProviderInterface;
+ use Drupal\Core\Session\AccountInterface;
++use Drupal\Core\Utility\Async;
+ use Drupal\Tests\UnitTestCase;
+ use PHPUnit\Framework\Attributes\CoversClass;
+ use PHPUnit\Framework\Attributes\Group;
+@@ -495,8 +496,8 @@ public function testGetTasksBuildWithFibers(): void {
+       ->method('getRawParameters')
+       ->willReturn(new InputBag());
+ 
+-    $first_fiber = new \Fiber(fn () => $this->manager->getLocalTasks('menu_local_task_test_tasks_view', 0));
+-    $second_fiber = new \Fiber(fn () => $this->manager->getLocalTasks('menu_local_task_test_tasks_view', 1));
++    $first_fiber = Async::createFiber(fn () => $this->manager->getLocalTasks('menu_local_task_test_tasks_view', 0));
++    $second_fiber = Async::createFiber(fn () => $this->manager->getLocalTasks('menu_local_task_test_tasks_view', 1));
+ 
+     $fibers = [$first_fiber, $second_fiber];
+     $suspended = FALSE;
+diff --git a/core/tests/Drupal/Tests/Core/Render/RendererTest.php b/core/tests/Drupal/Tests/Core/Render/RendererTest.php
+index 0428285e066391980d675104ce881cca0c2fd107..a6c24f03e37734c9696e4a411779c56f15352e89 100644
+--- a/core/tests/Drupal/Tests/Core/Render/RendererTest.php
++++ b/core/tests/Drupal/Tests/Core/Render/RendererTest.php
+@@ -18,6 +18,7 @@
+ use Drupal\Core\Security\TrustedCallbackInterface;
+ use Drupal\Core\Template\Attribute;
+ use Drupal\Core\Theme\ThemeManagerInterface;
++use Drupal\Core\Utility\Async;
+ use PHPUnit\Framework\Attributes\CoversClass;
+ use PHPUnit\Framework\Attributes\DataProvider;
+ use PHPUnit\Framework\Attributes\Group;
+@@ -1195,7 +1196,7 @@ public function testExecuteInRenderContext(): void {
+       // ::renderInIsolation() calls without either having been completed.
+       $fibers = [];
+       foreach ([0, 1] as $key) {
+-        $fibers[] = new \Fiber(static fn () => $fiber_callback());
++        $fibers[] = Async::createFiber(static fn () => $fiber_callback());
+       }
+       while ($fibers) {
+         foreach ($fibers as $key => $fiber) {

@@ -1,0 +1,1 @@
+window.hpcSecurityTest = true;

@@ -210,7 +210,7 @@ class RequestHelper {
     if ($build_info['args'][0] == 'page_manager.page') {
       return $contexts;
     }
-    elseif ($build_info['callback_object'] instanceof PanelsIPEBlockPluginForm) {
+    elseif (class_exists(PanelsIPEBlockPluginForm::class) && $build_info['callback_object'] instanceof PanelsIPEBlockPluginForm) {
       // Panels.
       if (!empty($current_path)) {
         $contexts = self::getContextsForPath($current_path);

@@ -2,17 +2,17 @@
 
 <phpunit
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    xsi:noNamespaceSchemaLocation="https://schema.phpunit.de/9.3/phpunit.xsd"
+    xsi:noNamespaceSchemaLocation="https://schema.phpunit.de/11.5/phpunit.xsd"
     bootstrap="html/core/tests/bootstrap.php" colors="true"
     beStrictAboutTestsThatDoNotTestAnything="true"
     beStrictAboutOutputDuringTests="true"
     beStrictAboutChangesToGlobalState="true"
     failOnWarning="true"
-    printerClass="\Drupal\Tests\Listeners\HtmlOutputPrinter"
+    cacheDirectory=".phpunit.cache"
   >
   <php>
     <ini name="error_reporting" value="32767"/>
-    <ini name="memory_limit" value="-1"/>
+    <ini name="memory_limit" value="512M"/>
     <env name="SIMPLETEST_BASE_URL" value="http://ghi-site.docksal.site"/>
     <env name="SIMPLETEST_DB" value="sqlite://localhost//tmp/test.sqlite"/>
     <env name="BROWSERTEST_OUTPUT_DIRECTORY" value="/tmp"/>
@@ -29,14 +29,18 @@
     <env name="SYMFONY_DEPRECATIONS_HELPER" value="disabled" />
 
   </php>
-  <coverage includeUncoveredFiles="false">
+  <coverage includeUncoveredFiles="false"/>
+  <source>
     <include>
       <directory suffix=".php">./html/modules/custom</directory>
     </include>
     <exclude>
       <directory suffix=".php">./html/modules/custom/**/tests</directory>
     </exclude>
-  </coverage>
+  </source>
+  <extensions>
+    <bootstrap class="Drupal\TestTools\Extension\HtmlLogging\HtmlOutputLogger"/>
+  </extensions>
   <testsuites>
     <testsuite name="unit">
       <directory>./html/modules/custom/*/tests/src/Unit</directory>

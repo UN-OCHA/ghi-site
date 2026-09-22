@@ -302,8 +302,8 @@ class SmugmugImage extends FormElementBase {
   /**
    * Get the SmugMug image search service.
    *
-   * @return \Drupal\smugmug_api\Service\ImageSearch
-   *   The SmugMug image search service.
+   * @return \Drupal\smugmug_api\Service\ImageSearch|null
+   *   The SmugMug image search service, or NULL if unavailable.
    */
   private static function getSmugmugImageSearchService() {
     try {
@@ -312,13 +312,14 @@ class SmugmugImage extends FormElementBase {
     catch (\Exception $e) {
       // Fail silently.
     }
+    return NULL;
   }
 
   /**
    * Get the SmugMug image service.
    *
-   * @return \Drupal\smugmug_api\Service\Image
-   *   The SmugMug image service.
+   * @return \Drupal\smugmug_api\Service\Image|null
+   *   The SmugMug image service, or NULL if unavailable.
    */
   private static function getSmugmugImageService() {
     try {
@@ -327,6 +328,7 @@ class SmugmugImage extends FormElementBase {
     catch (\Exception $e) {
       // Fail silently.
     }
+    return NULL;
   }
 
   /**

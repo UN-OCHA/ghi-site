@@ -4,6 +4,7 @@ namespace Drupal\Tests\hpc_remote_data_cache\Unit;
 
 use Drupal\Tests\UnitTestCase;
 use Drupal\hpc_remote_data_cache\RemoteDataCacheItem;
+use PHPUnit\Framework\Attributes\DataProvider;
 
 /**
  * @covers \Drupal\hpc_remote_data_cache\RemoteDataCacheItem
@@ -19,9 +20,8 @@ class RemoteDataCacheItemTest extends UnitTestCase {
    *   The request timestamp.
    * @param string $expected_state
    *   The expected item state.
-   *
-   * @dataProvider stateProvider
    */
+  #[DataProvider('stateProvider')]
   public function testStates(int $request_time, string $expected_state): void {
     $item = $this->createItem($request_time);
     $this->assertSame($expected_state, $item->getState());
@@ -33,7 +33,7 @@ class RemoteDataCacheItemTest extends UnitTestCase {
    * @return array
    *   The test cases.
    */
-  public function stateProvider(): array {
+  public static function stateProvider(): array {
     return [
       [1000, RemoteDataCacheItem::STATE_FRESH],
       [1200, RemoteDataCacheItem::STATE_FRESH],

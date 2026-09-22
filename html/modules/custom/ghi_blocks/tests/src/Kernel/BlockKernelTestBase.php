@@ -25,6 +25,7 @@ abstract class BlockKernelTestBase extends KernelTestBase {
     'layout_discovery',
     'migrate',
     'hpc_api',
+    'hpc_common',
     'ghi_form_elements',
     'ghi_sections',
     'ghi_blocks',
