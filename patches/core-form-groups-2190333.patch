@@ -1,0 +1,599 @@
+diff --git a/core/lib/Drupal/Core/Datetime/Element/Datetime.php b/core/lib/Drupal/Core/Datetime/Element/Datetime.php
+index de6d239..6d7e431 100644
+--- a/core/lib/Drupal/Core/Datetime/Element/Datetime.php
++++ b/core/lib/Drupal/Core/Datetime/Element/Datetime.php
+@@ -33,10 +33,6 @@ public function getInfo() {
+       '#process' => [
+         [static::class, 'processDatetime'],
+         [static::class, 'processAjaxForm'],
+-        [static::class, 'processGroup'],
+-      ],
+-      '#pre_render' => [
+-        [static::class, 'preRenderGroup'],
+       ],
+       '#theme' => 'datetime_form',
+       '#theme_wrappers' => ['datetime_wrapper'],
+diff --git a/core/lib/Drupal/Core/Render/Element/Checkbox.php b/core/lib/Drupal/Core/Render/Element/Checkbox.php
+index 65be5d2..519cbdb 100644
+--- a/core/lib/Drupal/Core/Render/Element/Checkbox.php
++++ b/core/lib/Drupal/Core/Render/Element/Checkbox.php
+@@ -35,11 +35,9 @@ public function getInfo() {
+       '#process' => [
+         [static::class, 'processCheckbox'],
+         [static::class, 'processAjaxForm'],
+-        [static::class, 'processGroup'],
+       ],
+       '#pre_render' => [
+         [static::class, 'preRenderCheckbox'],
+-        [static::class, 'preRenderGroup'],
+       ],
+       '#theme' => 'input__checkbox',
+       '#theme_wrappers' => ['form_element'],
+diff --git a/core/lib/Drupal/Core/Render/Element/Details.php b/core/lib/Drupal/Core/Render/Element/Details.php
+index 28e7396..60790d9 100644
+--- a/core/lib/Drupal/Core/Render/Element/Details.php
++++ b/core/lib/Drupal/Core/Render/Element/Details.php
+@@ -47,12 +47,10 @@ public function getInfo() {
+       '#summary_attributes' => [],
+       '#value' => NULL,
+       '#process' => [
+-        [static::class, 'processGroup'],
+         [static::class, 'processAjaxForm'],
+       ],
+       '#pre_render' => [
+         [static::class, 'preRenderDetails'],
+-        [static::class, 'preRenderGroup'],
+       ],
+       '#theme_wrappers' => ['details'],
+     ];
+diff --git a/core/lib/Drupal/Core/Render/Element/Fieldset.php b/core/lib/Drupal/Core/Render/Element/Fieldset.php
+index af03967..40cb7fa 100644
+--- a/core/lib/Drupal/Core/Render/Element/Fieldset.php
++++ b/core/lib/Drupal/Core/Render/Element/Fieldset.php
+@@ -32,12 +32,8 @@ class Fieldset extends RenderElementBase {
+   public function getInfo() {
+     return [
+       '#process' => [
+-        [static::class, 'processGroup'],
+         [static::class, 'processAjaxForm'],
+       ],
+-      '#pre_render' => [
+-        [static::class, 'preRenderGroup'],
+-      ],
+       '#value' => NULL,
+       '#theme_wrappers' => ['fieldset'],
+     ];
+diff --git a/core/lib/Drupal/Core/Render/Element/Textfield.php b/core/lib/Drupal/Core/Render/Element/Textfield.php
+index de144ab..8f20896 100644
+--- a/core/lib/Drupal/Core/Render/Element/Textfield.php
++++ b/core/lib/Drupal/Core/Render/Element/Textfield.php
+@@ -51,11 +51,9 @@ public function getInfo() {
+         [static::class, 'processAutocomplete'],
+         [static::class, 'processAjaxForm'],
+         [static::class, 'processPattern'],
+-        [static::class, 'processGroup'],
+       ],
+       '#pre_render' => [
+         [static::class, 'preRenderTextfield'],
+-        [static::class, 'preRenderGroup'],
+       ],
+       '#theme' => 'input__textfield',
+       '#theme_wrappers' => ['form_element'],
+diff --git a/core/lib/Drupal/Core/Render/Element/VerticalTabs.php b/core/lib/Drupal/Core/Render/Element/VerticalTabs.php
+index bf55119..293d288 100644
+--- a/core/lib/Drupal/Core/Render/Element/VerticalTabs.php
++++ b/core/lib/Drupal/Core/Render/Element/VerticalTabs.php
+@@ -139,4 +139,18 @@ public static function processVerticalTabs(&$element, FormStateInterface $form_s
+     return $element;
+   }
+ 
++  /**
++   * {@inheritdoc}
++   */
++  public static function processGroup(&$element, FormStateInterface $form_state, &$complete_form) {
++    return $element;
++  }
++
++  /**
++   * {@inheritdoc}
++   */
++  public static function preRenderGroup($element) {
++    return $element;
++  }
++
+ }
+diff --git a/core/lib/Drupal/Core/Render/ElementInfoManager.php b/core/lib/Drupal/Core/Render/ElementInfoManager.php
+index f6eb329..ee64ccb 100644
+--- a/core/lib/Drupal/Core/Render/ElementInfoManager.php
++++ b/core/lib/Drupal/Core/Render/ElementInfoManager.php
+@@ -114,6 +114,7 @@ protected function buildInfo($theme_name) {
+       }
+     });
+     foreach ($this->getDefinitions() as $element_type => $definition) {
++      $class = $definition['class'];
+       $element = $this->createInstance($element_type);
+       $element_info = $element->getInfo();
+ 
+@@ -121,8 +122,21 @@ protected function buildInfo($theme_name) {
+       // will receive input, and assign the value callback.
+       if ($element instanceof FormElementInterface) {
+         $element_info['#input'] = TRUE;
+-        $element_info['#value_callback'] = [$definition['class'], 'valueCallback'];
++        $element_info['#value_callback'] = [$class, 'valueCallback'];
+       }
++      // Add the processGroup #process callback, unless already set.
++      $process = $element_info['#process'] ?? [];
++      if (!in_array('processGroup', array_column($process, 1))) {
++        $process[] = [$class, 'processGroup'];
++      }
++      $element_info['#process'] = $process;
++
++      // Add the preRenderGroup #pre_render callback, unless already set.
++      $pre_render = $element_info['#pre_render'] ?? [];
++      if (!in_array('preRenderGroup', array_column($pre_render, 1))) {
++        $pre_render[] = [$class, 'preRenderGroup'];
++      }
++      $element_info['#pre_render'] = $pre_render;
+       $info[$element_type] = $element_info;
+     }
+     restore_error_handler();
+diff --git a/core/modules/file/src/Element/ManagedFile.php b/core/modules/file/src/Element/ManagedFile.php
+index aae4097..b2021c2 100644
+--- a/core/modules/file/src/Element/ManagedFile.php
++++ b/core/modules/file/src/Element/ManagedFile.php
+@@ -203,6 +203,10 @@ public static function uploadAjaxCallback(&$form, FormStateInterface &$form_stat
+       $form[$current_file_count]['#attributes']['class'][] = 'ajax-new-content';
+     }
+ 
++    // Render the widget directly, but preserve #groups so its own group members
++    // are still rendered, as in FormAjaxResponseBuilder::buildResponse().
++    unset($form['#group']);
++
+     $status_messages = ['#type' => 'status_messages'];
+     $form['#prefix'] .= $renderer->renderRoot($status_messages);
+     $output = $renderer->renderRoot($form);
+diff --git a/core/modules/file/tests/file_module_test/src/Form/FileModuleTestForm.php b/core/modules/file/tests/file_module_test/src/Form/FileModuleTestForm.php
+index 65b2f4e..32d934f 100644
+--- a/core/modules/file/tests/file_module_test/src/Form/FileModuleTestForm.php
++++ b/core/modules/file/tests/file_module_test/src/Form/FileModuleTestForm.php
+@@ -40,6 +40,15 @@ public function getFormId() {
+   public function buildForm(array $form, FormStateInterface $form_state, $tree = TRUE, $extended = TRUE, $multiple = FALSE, $default_fids = NULL) {
+     $form['#tree'] = (bool) $tree;
+ 
++    // Keep the group before its members in the render order.
++    if ($this->getRequest()->query->get('grouped')) {
++      $form['group'] = [
++        '#type' => 'details',
++        '#title' => $this->t('File group'),
++        '#open' => TRUE,
++      ];
++    }
++
+     $form['nested']['file'] = [
+       '#type' => 'managed_file',
+       '#title' => $this->t('Managed <em>@type</em>', ['@type' => 'file & butter']),
+@@ -60,6 +69,11 @@ public function buildForm(array $form, FormStateInterface $form_state, $tree = T
+       '#title' => $this->t('Type a value and ensure it stays'),
+     ];
+ 
++    if (isset($form['group'])) {
++      $form['nested']['file']['#group'] = 'group';
++      $form['textfield']['#group'] = $tree ? 'nested][file' : 'file';
++    }
++
+     $form['submit'] = [
+       '#type' => 'submit',
+       '#value' => $this->t('Save'),
+diff --git a/core/modules/file/tests/src/FunctionalJavascript/FileManagedFileElementTest.php b/core/modules/file/tests/src/FunctionalJavascript/FileManagedFileElementTest.php
+index 6e07b0d..8cbe7ae 100644
+--- a/core/modules/file/tests/src/FunctionalJavascript/FileManagedFileElementTest.php
++++ b/core/modules/file/tests/src/FunctionalJavascript/FileManagedFileElementTest.php
+@@ -110,6 +110,40 @@ public function testManagedFile(): void {
+     }
+   }
+ 
++  /**
++   * Tests AJAX upload and removal without changing grouped file value parents.
++   */
++  public function testGroupedManagedFile(): void {
++    $filename = 'public://grouped-file.txt';
++    file_put_contents($filename, $this->randomString(128));
++    $this->drupalGet('file/test/1/0/0', ['query' => ['grouped' => 1]]);
++    $assert_session = $this->assertSession();
++    $assert_session->elementExists('css', '#edit-group input[name="files[nested_file]"]');
++
++    // The widget's own group member must survive each AJAX replacement.
++    // @todo Once https://www.drupal.org/project/drupal/issues/2926030 is fixed,
++    //   also assert uniqueness and value preservation. Duplicate inputs currently
++    //   prevent those checks.
++    $textfield_selector = '#edit-group .form-managed-file input[name="textfield"]';
++    $assert_session->elementExists('css', $textfield_selector);
++
++    $this->getSession()->getPage()->attachFileToField('files[nested_file]', $this->container->get('file_system')->realpath($filename));
++    $this->assertNotNull($assert_session->waitForElement('css', '#edit-group .file--mime-text-plain'));
++    $assert_session->elementExists('css', $textfield_selector);
++    $fid = $this->getLastFileId();
++    $this->submitForm([], 'Save');
++    $assert_session->pageTextContains("The file ids are $fid.");
++
++    $this->drupalGet('file/test/1/0/0/' . $fid, ['query' => ['grouped' => 1]]);
++    $this->getSession()->getPage()->pressButton('Remove');
++    $assert_session->assertWaitOnAjaxRequest();
++    $assert_session->elementExists('css', '#edit-group input[name="files[nested_file]"]');
++    $assert_session->elementNotExists('css', '#edit-group .file--mime-text-plain');
++    $assert_session->elementExists('css', $textfield_selector);
++    $this->submitForm([], 'Save');
++    $assert_session->pageTextContains('The file ids are .');
++  }
++
+   /**
+    * Retrieves the fid of the last inserted file.
+    */
+diff --git a/core/modules/system/tests/modules/ajax_forms_test/src/Form/AjaxFormsTestSimpleForm.php b/core/modules/system/tests/modules/ajax_forms_test/src/Form/AjaxFormsTestSimpleForm.php
+index fecac59..9dec091 100644
+--- a/core/modules/system/tests/modules/ajax_forms_test/src/Form/AjaxFormsTestSimpleForm.php
++++ b/core/modules/system/tests/modules/ajax_forms_test/src/Form/AjaxFormsTestSimpleForm.php
+@@ -76,6 +76,32 @@ public function buildForm(array $form, FormStateInterface $form_state) {
+       '#open' => TRUE,
+     ];
+ 
++    $form['select_category'] = [
++      '#type' => 'select',
++      '#title' => $this->t('Category'),
++      '#group' => 'test_group',
++      '#options' => [
++        'a' => $this->t('Category A'),
++        'b' => $this->t('Category B'),
++      ],
++      '#ajax' => [
++        'callback' => [static::class, 'selectGroupCallback'],
++        'wrapper' => 'select-in-group-wrapper',
++      ],
++    ];
++    $category = $form_state->getValue('select_category', 'a');
++    $form['select_in_group'] = [
++      '#type' => 'select',
++      '#title' => $this->t('Select in a group'),
++      '#group' => 'test_group',
++      '#options' => [
++        $category . '1' => $category . '1',
++        $category . '2' => $category . '2',
++      ],
++      '#prefix' => '<div id="select-in-group-wrapper">',
++      '#suffix' => '</div>',
++    ];
++
+     // Test ajax element in a #group.
+     $form['checkbox_in_group_wrapper'] = [
+       '#type' => 'container',
+@@ -158,6 +184,19 @@ public function buildForm(array $form, FormStateInterface $form_state) {
+     return $form;
+   }
+ 
++  /**
++   * AJAX callback for the grouped select.
++   *
++   * @param array $form
++   *   The form array.
++   *
++   * @return array
++   *   The form element to return via AJAX.
++   */
++  public static function selectGroupCallback(array $form): array {
++    return $form['select_in_group'];
++  }
++
+   /**
+    * AJAX callback for textfield.
+    *
+@@ -188,6 +227,7 @@ public static function emailFieldCallback(array $form): array {
+    * {@inheritdoc}
+    */
+   public function submitForm(array &$form, FormStateInterface $form_state) {
++    $this->messenger()->addStatus($this->t('Selected @value.', ['@value' => $form_state->getValue('select_in_group')]));
+   }
+ 
+ }
+diff --git a/core/modules/system/tests/modules/form_test/src/Form/FormTestGroupDetailsForm.php b/core/modules/system/tests/modules/form_test/src/Form/FormTestGroupDetailsForm.php
+index 226eb70..9f915e5 100644
+--- a/core/modules/system/tests/modules/form_test/src/Form/FormTestGroupDetailsForm.php
++++ b/core/modules/system/tests/modules/form_test/src/Form/FormTestGroupDetailsForm.php
+@@ -48,6 +48,17 @@ public function buildForm(array $form, FormStateInterface $form_state, $required
+         'data-summary-attribute' => 'test',
+       ],
+     ];
++    $form['grouped_select'] = [
++      '#type' => 'select',
++      '#title' => 'Grouped select',
++      '#options' => ['one' => 'One', 'two' => 'Two'],
++      '#group' => 'details',
++    ];
++    $form['grouped_textarea'] = [
++      '#type' => 'textarea',
++      '#title' => 'Grouped textarea',
++      '#group' => 'details',
++    ];
+     $form['description_attributes'] = [
+       '#type' => 'details',
+       '#title' => 'Details element with description',
+diff --git a/core/modules/system/tests/src/Functional/Form/ElementTest.php b/core/modules/system/tests/src/Functional/Form/ElementTest.php
+index 37385cc..9d56e9a 100644
+--- a/core/modules/system/tests/src/Functional/Form/ElementTest.php
++++ b/core/modules/system/tests/src/Functional/Form/ElementTest.php
+@@ -182,6 +182,11 @@ protected function testSubmitButtonAttribute(): void {
+   protected function testGroupElements(): void {
+     $this->drupalGet('form-test/group-details');
+     $this->assertSession()->elementsCount('xpath', '//div[@class="details-wrapper"]//div[@class="details-wrapper"]//label', 1);
++    $this->assertSession()->elementExists('css', '#edit-details select[name="grouped_select"]');
++    $this->assertSession()->elementExists('css', '#edit-details textarea[name="grouped_textarea"]');
++    $this->assertSession()->elementsCount('css', 'select[name="grouped_select"]', 1);
++    $this->assertSession()->elementsCount('css', 'textarea[name="grouped_textarea"]', 1);
++    $this->assertSession()->responseContains('core/misc/components/resize.module.css');
+     $this->drupalGet('form-test/group-container');
+     $this->assertSession()->elementsCount('xpath', '//div[@id="edit-container"]//div[@class="details-wrapper"]//label', 1);
+     $this->drupalGet('form-test/group-fieldset');
+diff --git a/core/tests/Drupal/FunctionalJavascriptTests/Ajax/AjaxInGroupTest.php b/core/tests/Drupal/FunctionalJavascriptTests/Ajax/AjaxInGroupTest.php
+index c2e8125..b60f99d 100644
+--- a/core/tests/Drupal/FunctionalJavascriptTests/Ajax/AjaxInGroupTest.php
++++ b/core/tests/Drupal/FunctionalJavascriptTests/Ajax/AjaxInGroupTest.php
+@@ -63,4 +63,31 @@ public function testSimpleAjaxFormValue(): void {
+     $assert_session->responseContains('Another AJAX checkbox in a nested group');
+   }
+ 
++  /**
++   * Tests updating a grouped select's options via AJAX and submitting its value.
++   */
++  public function testSelectInGroup(): void {
++    $this->drupalGet('ajax_forms_test_get_form');
++
++    $assert_session = $this->assertSession();
++    $selector = '#edit-test-group select[name="select_in_group"]';
++    $assert_session->elementExists('css', $selector . ' option[value="a1"]');
++
++    // Repeated replacements must keep the select in its group without copies.
++    foreach (['b', 'a', 'b'] as $category) {
++      $this->getSession()->getPage()->selectFieldOption('select_category', $category);
++      $assert_session->assertWaitOnAjaxRequest();
++      $assert_session->elementExists('css', $selector . ' option[value="' . $category . '1"]');
++      $assert_session->elementExists('css', $selector . ' option[value="' . $category . '2"]');
++      $assert_session->elementsCount('css', $selector . ' option', 2);
++      $assert_session->elementsCount('css', 'select[name="select_in_group"]', 1);
++    }
++
++    // The submit handler reports getValue('select_in_group') in the message.
++    // Checking that message verifies that grouping preserves the submitted
++    // value at its original form-state key.
++    $this->submitForm(['select_in_group' => 'b2'], 'submit');
++    $assert_session->pageTextContains('Selected b2.');
++  }
++
+ }
+diff --git a/core/tests/Drupal/KernelTests/Core/Render/Element/WeightTest.php b/core/tests/Drupal/KernelTests/Core/Render/Element/WeightTest.php
+index ddfb51c..413a0c4 100644
+--- a/core/tests/Drupal/KernelTests/Core/Render/Element/WeightTest.php
++++ b/core/tests/Drupal/KernelTests/Core/Render/Element/WeightTest.php
+@@ -96,9 +96,11 @@ public function testProcessWeightSelectMax(): void {
+       '#process' => [
+         [Select::class, 'processSelect'],
+         [Select::class, 'processAjaxForm'],
++        [Select::class, 'processGroup'],
+       ],
+       '#pre_render' => [
+         [Select::class, 'preRenderSelect'],
++        [Select::class, 'preRenderGroup'],
+       ],
+     ]);
+ 
+@@ -114,12 +116,14 @@ public function testProcessWeightSelectMax(): void {
+     $assert('number', $number, [
+       '#process' => [
+         [Number::class, 'processAjaxForm'],
++        [Number::class, 'processGroup'],
+       ],
+       '#element_validate' => [
+         [Number::class, 'validateNumber'],
+       ],
+       '#pre_render' => [
+         [Number::class, 'preRenderNumber'],
++        [Number::class, 'preRenderGroup'],
+         // The custom callback is appended.
+         /* @see \Drupal\element_info_test\ElementInfoTestNumberBuilder::preRender */
+         [ElementInfoTestNumberBuilder::class, 'preRender'],
+diff --git a/core/tests/Drupal/Tests/Core/Render/Element/GroupCallbacksTest.php b/core/tests/Drupal/Tests/Core/Render/Element/GroupCallbacksTest.php
+new file mode 100644
+index 0000000..c1553c5
+--- /dev/null
++++ b/core/tests/Drupal/Tests/Core/Render/Element/GroupCallbacksTest.php
+@@ -0,0 +1,61 @@
++<?php
++
++declare(strict_types=1);
++
++namespace Drupal\Tests\Core\Render\Element;
++
++use Drupal\Core\Datetime\Element\Datetime;
++use Drupal\Core\Render\Element\Checkbox;
++use Drupal\Core\Render\Element\Container;
++use Drupal\Core\Render\Element\Details;
++use Drupal\Core\Render\Element\Fieldset;
++use Drupal\Core\Render\Element\Textarea;
++use Drupal\Core\Render\Element\Textfield;
++use Drupal\Tests\UnitTestCase;
++use PHPUnit\Framework\Attributes\DataProvider;
++use PHPUnit\Framework\Attributes\Group;
++
++/**
++ * Tests that generic grouping preserves element-specific callbacks.
++ */
++#[Group('Render')]
++class GroupCallbacksTest extends UnitTestCase {
++
++  /**
++   * Tests that element callbacks remain callable and retain AJAX processing.
++   */
++  #[DataProvider('providerElementCallbacks')]
++  public function testElementCallbacks(string $class, array $process, array $pre_render): void {
++    $element = new $class([], 'test', []);
++    $info = $element->getInfo();
++    // These are method-name expectations, not render arrays.
++    foreach (['process' => $process, 'pre_render' => $pre_render] as $property => $methods) {
++      foreach ($methods as $method) {
++        $this->assertContains([$class, $method], $info['#' . $property]);
++      }
++      foreach ($info['#' . $property] ?? [] as $callback) {
++        $this->assertIsCallable($callback);
++      }
++    }
++  }
++
++  /**
++   * Provides the callbacks that grouping must not remove.
++   */
++  public static function providerElementCallbacks(): array {
++    return [
++      'datetime' => [Datetime::class, ['processDatetime', 'processAjaxForm'], []],
++      'checkbox' => [Checkbox::class, ['processCheckbox', 'processAjaxForm'], ['preRenderCheckbox']],
++      'container' => [Container::class, ['processContainer'], ['preRenderContainer']],
++      'details' => [Details::class, ['processAjaxForm'], ['preRenderDetails']],
++      'fieldset' => [Fieldset::class, ['processAjaxForm'], []],
++      'textarea' => [Textarea::class, ['processAjaxForm'], ['preRenderAttachments']],
++      'textfield' => [
++        Textfield::class,
++        ['processAutocomplete', 'processAjaxForm', 'processPattern'],
++        ['preRenderTextfield'],
++      ],
++    ];
++  }
++
++}
+diff --git a/core/tests/Drupal/Tests/Core/Render/ElementInfoManagerTest.php b/core/tests/Drupal/Tests/Core/Render/ElementInfoManagerTest.php
+index e793e3e..37ffb76 100644
+--- a/core/tests/Drupal/Tests/Core/Render/ElementInfoManagerTest.php
++++ b/core/tests/Drupal/Tests/Core/Render/ElementInfoManagerTest.php
+@@ -5,6 +5,8 @@
+ namespace Drupal\Tests\Core\Render;
+ 
+ use Drupal\Core\Extension\ThemeHandlerInterface;
++use Drupal\Core\Render\Element\Container;
++use Drupal\Core\Render\Element\Textfield;
+ use Drupal\Core\Render\ElementInfoManager;
+ use Drupal\Core\Theme\ActiveTheme;
+ use Drupal\Tests\UnitTestCase;
+@@ -73,11 +75,14 @@ protected function setUp(): void {
+   /**
+    * Tests the getInfo() method when render element plugins are used.
+    *
++   * Data sets can supply plugin info with existing callbacks to check that the
++   * manager preserves them. By default, the plugin declares no callbacks.
++   *
+    * @legacy-covers ::getInfo
+    * @legacy-covers ::buildInfo
+    */
+   #[DataProvider('providerTestGetInfoElementPlugin')]
+-  public function testGetInfoElementPlugin($plugin_class, $expected_info): void {
++  public function testGetInfoElementPlugin(string $plugin_class, $expected_info, array $plugin_info = ['#theme' => 'page']): void {
+     $this->moduleHandler->expects($this->once())
+       ->method('alter')
+       ->with('element_info', $this->anything())
+@@ -86,9 +91,7 @@ public function testGetInfoElementPlugin($plugin_class, $expected_info): void {
+     $plugin = $this->createMock($plugin_class);
+     $plugin->expects($this->once())
+       ->method('getInfo')
+-      ->willReturn([
+-        '#theme' => 'page',
+-      ]);
++      ->willReturn($plugin_info);
+ 
+     $element_info = $this->getMockBuilder('Drupal\Core\Render\ElementInfoManager')
+       ->setConstructorArgs([
+@@ -112,7 +115,7 @@ public function testGetInfoElementPlugin($plugin_class, $expected_info): void {
+     $element_info->expects($this->once())
+       ->method('getDefinitions')
+       ->willReturn([
+-        'page' => ['class' => 'TestElementPlugin'],
++        'page' => ['class' => $plugin_class],
+       ]);
+ 
+     $this->assertEquals($expected_info, $element_info->getInfo('page'));
+@@ -127,24 +130,39 @@ public function testGetInfoElementPlugin($plugin_class, $expected_info): void {
+   public static function providerTestGetInfoElementPlugin(): array {
+     $data = [];
+     $data[] = [
+-      'Drupal\Core\Render\Element\ElementInterface',
++      Container::class,
+       [
+         '#type' => 'page',
+         '#theme' => 'page',
+         '#defaults_loaded' => TRUE,
++        '#process' => [[Container::class, 'processGroup']],
++        '#pre_render' => [[Container::class, 'preRenderGroup']],
+       ],
+     ];
+ 
+     $data[] = [
+-      'Drupal\Core\Render\Element\FormElementInterface',
++      Textfield::class,
+       [
+         '#type' => 'page',
+         '#theme' => 'page',
+         '#input' => TRUE,
+-        '#value_callback' => ['TestElementPlugin', 'valueCallback'],
++        '#value_callback' => [Textfield::class, 'valueCallback'],
+         '#defaults_loaded' => TRUE,
++        '#process' => [[Textfield::class, 'processGroup']],
++        '#pre_render' => [[Textfield::class, 'preRenderGroup']],
+       ],
+     ];
++    // Container puts grouping callbacks before its own callbacks. The manager
++    // must preserve that order without adding duplicate grouping callbacks.
++    $callbacks = [
++      '#process' => [[Container::class, 'processGroup'], [Container::class, 'processContainer']],
++      '#pre_render' => [[Container::class, 'preRenderGroup'], [Container::class, 'preRenderContainer']],
++    ];
++    $data['existing group callbacks retain their order'] = [
++      Container::class,
++      $callbacks + ['#type' => 'page', '#defaults_loaded' => TRUE],
++      $callbacks,
++    ];
+     return $data;
+   }
+ 
+diff --git a/core/tests/Drupal/KernelTests/Core/Render/Element/DeprecatedElementTest.php b/core/tests/Drupal/KernelTests/Core/Render/Element/DeprecatedElementTest.php
+index 92e476a..fa17d1d 100644
+--- a/core/tests/Drupal/KernelTests/Core/Render/Element/DeprecatedElementTest.php
++++ b/core/tests/Drupal/KernelTests/Core/Render/Element/DeprecatedElementTest.php
+@@ -5,6 +5,7 @@
+ namespace Drupal\KernelTests\Core\Render\Element;
+ 
+ use Drupal\Core\Form\FormState;
++use Drupal\element_info_test\Element\Deprecated;
+ use Drupal\element_info_test\Element\DeprecatedExtendsFormElement;
+ use Drupal\element_info_test\Element\DeprecatedExtendsRenderElement;
+ use Drupal\KernelTests\KernelTestBase;
+@@ -29,11 +30,14 @@ class DeprecatedElementTest extends KernelTestBase {
+   public function testBuildInfo(): void {
+     $info_manager = $this->container->get('plugin.manager.element_info');
+     $element_names = [
+-      'deprecated',
+-      'deprecated_extends_render',
++      'deprecated' => Deprecated::class,
++      'deprecated_extends_render' => DeprecatedExtendsRenderElement::class,
+     ];
+-    foreach ($element_names as $element_name) {
++    // Grouping callbacks are added to deprecated element plugins as well.
++    foreach ($element_names as $element_name => $class) {
+       $this->assertSame([
++        '#process' => [[$class, 'processGroup']],
++        '#pre_render' => [[$class, 'preRenderGroup']],
+         '#type' => $element_name,
+         '#defaults_loaded' => TRUE,
+       ], $info_manager->getInfo($element_name));
+@@ -42,6 +46,8 @@ public function testBuildInfo(): void {
+     $this->assertSame([
+       '#input' => TRUE,
+       '#value_callback' => [DeprecatedExtendsFormElement::class, 'valueCallback'],
++      '#process' => [[DeprecatedExtendsFormElement::class, 'processGroup']],
++      '#pre_render' => [[DeprecatedExtendsFormElement::class, 'preRenderGroup']],
+       '#type' => 'deprecated_extends_form',
+       '#defaults_loaded' => TRUE,
+     ], $info_manager->getInfo('deprecated_extends_form'));

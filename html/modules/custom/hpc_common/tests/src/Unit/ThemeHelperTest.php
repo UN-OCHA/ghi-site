@@ -7,6 +7,8 @@ use Drupal\Core\Extension\ExtensionPathResolver;
 use Drupal\Core\Render\RendererInterface;
 use Drupal\Tests\UnitTestCase;
 use Drupal\hpc_common\Helpers\ThemeHelper;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
 use Twig\Environment;
 
 /**
@@ -58,7 +60,7 @@ class ThemeHelperTest extends UnitTestCase {
   /**
    * Data provider for testTheme.
    */
-  public function themeDataProvider() {
+  public static function themeDataProvider() {
     return [
       ['test_theme',
         [
@@ -92,18 +94,34 @@ class ThemeHelperTest extends UnitTestCase {
 
   /**
    * Test calling the theme function.
-   *
-   * @group ThemeHelper
-   * @dataProvider themeDataProvider
    */
+  #[Group('ThemeHelper')]
+  #[DataProvider('themeDataProvider')]
   public function testTheme($theme_key, $options, $cast_to_string, $xss_filter, $result) {
     $this->assertEquals($result, ThemeHelper::theme($theme_key, $options, $cast_to_string, $xss_filter));
   }
 
   /**
+   * Tests rendering without an existing render context.
+   */
+  public function testRenderInIsolation() {
+    $build = ['#markup' => '<strong>Isolated markup</strong>'];
+    $renderer = $this->createMock(RendererInterface::class);
+    $renderer->method('hasRenderContext')->willReturn(FALSE);
+    $renderer->expects($this->once())
+      ->method('renderInIsolation')
+      ->with($build)
+      ->willReturn(' <strong>Isolated markup</strong> ');
+    $renderer->expects($this->never())->method('render');
+    \Drupal::getContainer()->set('renderer', $renderer);
+
+    $this->assertSame('<strong>Isolated markup</strong>', ThemeHelper::render($build, FALSE));
+  }
+
+  /**
    * Data provider for testGetThemeOptions.
    */
-  public function getThemeOptionsDataProvider() {
+  public static function getThemeOptionsDataProvider() {
     // phpcs:disable
     $items = [
       // Amount.
@@ -201,10 +219,9 @@ class ThemeHelperTest extends UnitTestCase {
 
   /**
    * Test calling the theme function.
-   *
-   * @group ThemeHelper
-   * @dataProvider getThemeOptionsDataProvider
    */
+  #[Group('ThemeHelper')]
+  #[DataProvider('getThemeOptionsDataProvider')]
   public function testGetThemeOptions($theme_function, $value, $options, $expected) {
     if ($expected instanceof \Exception) {
       $this->expectExceptionObject($expected);

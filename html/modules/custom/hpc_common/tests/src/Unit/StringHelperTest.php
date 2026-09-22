@@ -4,6 +4,8 @@ namespace Drupal\Tests\hpc_common\Unit;
 
 use Drupal\Tests\UnitTestCase;
 use Drupal\hpc_api\Helpers\StringHelper;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
  * @covers Drupal\hpc_api\Helpers\StringHelper
@@ -13,7 +15,7 @@ class StringHelperTest extends UnitTestCase {
   /**
    * Data provider for makeCamelCase.
    */
-  public function makeCamelCaseDataProvider() {
+  public static function makeCamelCaseDataProvider() {
     return [
       ['camel_test', FALSE, 'CamelTest'],
       ['Hardik_Pandya', TRUE, 'hardikPandya'],
@@ -22,10 +24,9 @@ class StringHelperTest extends UnitTestCase {
 
   /**
    * Test to make a string camelcase.
-   *
-   * @group StringHelper
-   * @dataProvider makeCamelCaseDataProvider
    */
+  #[Group('StringHelper')]
+  #[DataProvider('makeCamelCaseDataProvider')]
   public function testMakeCamelCase($string, $initial_lower_case, $result) {
     $this->assertEquals($result, StringHelper::makeCamelCase($string, $initial_lower_case));
   }
@@ -33,7 +34,7 @@ class StringHelperTest extends UnitTestCase {
   /**
    * Data provider for testCamelCaseToUnderscoreCase.
    */
-  public function camelCaseToUnderscoreCaseDataProvider() {
+  public static function camelCaseToUnderscoreCaseDataProvider() {
     return [
       ['camelCase', 'camel_case'],
       ['camelCaseCase', 'camel_case_case'],
@@ -45,10 +46,9 @@ class StringHelperTest extends UnitTestCase {
 
   /**
    * Test making string camel case.
-   *
-   * @group StringHelper
-   * @dataProvider camelCaseToUnderscoreCaseDataProvider
    */
+  #[Group('StringHelper')]
+  #[DataProvider('camelCaseToUnderscoreCaseDataProvider')]
   public function testCamelCaseToUnderscoreCase($string, $result) {
     $this->assertEquals($result, StringHelper::camelCaseToUnderscoreCase($string));
   }
@@ -56,7 +56,7 @@ class StringHelperTest extends UnitTestCase {
   /**
    * Data provider for testGetAbbreviation.
    */
-  public function getAbbreviationDataProvider() {
+  public static function getAbbreviationDataProvider() {
     return [
       ['camelCase', 'camelCase'],
       ['camel Case Case', 'CCC'],
@@ -68,10 +68,9 @@ class StringHelperTest extends UnitTestCase {
 
   /**
    * Test making string camel case.
-   *
-   * @group StringHelper
-   * @dataProvider getAbbreviationDataProvider
    */
+  #[Group('StringHelper')]
+  #[DataProvider('getAbbreviationDataProvider')]
   public function testGetAbbreviation($string, $result) {
     $this->assertEquals($result, StringHelper::getAbbreviation($string));
   }
@@ -79,7 +78,7 @@ class StringHelperTest extends UnitTestCase {
   /**
    * Data provider for renderString.
    */
-  public function renderStringDataProvider() {
+  public static function renderStringDataProvider() {
     return [
       ['<h1>Hello World!</h1>', FALSE, '<h1>Hello World!</h1>'],
       ['<h1>Hello World!</h1>', TRUE, 'Hello World!'],
@@ -88,10 +87,9 @@ class StringHelperTest extends UnitTestCase {
 
   /**
    * Test rendering a string.
-   *
-   * @group StringHelper
-   * @dataProvider renderStringDataProvider
    */
+  #[Group('StringHelper')]
+  #[DataProvider('renderStringDataProvider')]
   public function testRenderString($string, $is_export, $result) {
     $this->assertEquals($result, StringHelper::renderString($string, $is_export));
   }

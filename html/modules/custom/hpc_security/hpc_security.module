@@ -5,6 +5,7 @@
  * Hook implementations and general purpose functions for HPC Security.
  */
 
+use Drupal\Component\Utility\UrlHelper;
 use Drupal\Core\Render\Markup;
 use Drupal\Core\Site\Settings;
 use Drupal\hpc_security\Element\HpcHtmlPreRender;
@@ -117,7 +118,8 @@ function hpc_security_get_hash_from_url($url) {
     return NULL;
   }
   $url = str_replace($base_url, '', $url);
-  $url = str_replace(\Drupal::state()->get('system.css_js_query_string'), '', $url);
+  // Asset query strings and fragments are not part of the local filename.
+  $url = UrlHelper::parse($url)['path'];
   $url = trim($url, '/?');
 
   if (!file_exists($url)) {

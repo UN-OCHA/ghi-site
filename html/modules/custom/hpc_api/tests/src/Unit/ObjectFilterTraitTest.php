@@ -5,6 +5,8 @@ namespace Drupal\Tests\hpc_api\Unit;
 use Drupal\Tests\UnitTestCase;
 use Drupal\hpc_api\Traits\ObjectFilterTrait;
 use Drupal\hpc_api\ApiObjects\ApiObjectInterface;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
  * @covers Drupal\hpc_api\Traits\ObjectFilterTrait
@@ -16,7 +18,7 @@ class ObjectFilterTraitTest extends UnitTestCase {
   /**
    * Data provider for testFilterObjects.
    */
-  public function filterObjectsDataProvider() {
+  public static function filterObjectsDataProvider() {
     return [
       'filter by scalar value' => [
         [
@@ -48,10 +50,9 @@ class ObjectFilterTraitTest extends UnitTestCase {
 
   /**
    * Test filterObjects with mock objects.
-   *
-   * @dataProvider filterObjectsDataProvider
-   * @group ObjectFilterTrait
    */
+  #[DataProvider('filterObjectsDataProvider')]
+  #[Group('ObjectFilterTrait')]
   public function testFilterObjects($objects_data, $filter, $expected_count) {
     $objects = array_map(function ($data) {
       return new TestApiObject($data);

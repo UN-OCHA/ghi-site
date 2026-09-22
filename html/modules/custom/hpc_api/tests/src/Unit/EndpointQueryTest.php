@@ -15,11 +15,15 @@ use Drupal\hpc_remote_data_cache\RemoteDataCacheInterface;
 use Drupal\hpc_remote_data_cache\RemoteDataCacheItem;
 use GuzzleHttp\Client;
 use GuzzleHttp\ClientInterface;
+use GuzzleHttp\Handler\MockHandler;
+use GuzzleHttp\HandlerStack;
+use GuzzleHttp\Middleware;
 use GuzzleHttp\Psr7\Response;
 use PHPUnit\Framework\Assert;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
 use Prophecy\Argument;
 use Prophecy\PhpUnit\ProphecyTrait;
-use Psr\Http\Message\ResponseInterface;
 
 /**
  * @covers Drupal\hpc_api\Query\EndpointQuery
@@ -132,7 +136,7 @@ class EndpointQueryTest extends UnitTestCase {
   /**
    * Data provider for substitutePlaceholders.
    */
-  public function substitutePlaceholdersDataProvider() {
+  public static function substitutePlaceholdersDataProvider() {
     return [
       [
         'fts/{bundle}/{id}',
@@ -154,10 +158,9 @@ class EndpointQueryTest extends UnitTestCase {
 
   /**
    * Check the placeholders are substituted correctly.
-   *
-   * @group EndpointQuery
-   * @dataProvider substitutePlaceholdersDataProvider
    */
+  #[Group('EndpointQuery')]
+  #[DataProvider('substitutePlaceholdersDataProvider')]
   public function testSubstitutePlaceholders($endpoint, $placeholders, $result) {
     // Set placeholders.
     $this->query->setPlaceholders($placeholders);
@@ -168,7 +171,7 @@ class EndpointQueryTest extends UnitTestCase {
   /**
    * Data provider for getAuthHeaders.
    */
-  public function getAuthHeadersDataProvider() {
+  public static function getAuthHeadersDataProvider() {
     return [
       [EndpointQuery::AUTH_METHOD_BASIC, 'Basic YXV0aG5hbWU6YXV0aHBhc3M='],
       [EndpointQuery::AUTH_METHOD_API_KEY, 'Bearer apikey123'],
@@ -177,10 +180,9 @@ class EndpointQueryTest extends UnitTestCase {
 
   /**
    * Check the auth headers are set correctly.
-   *
-   * @group EndpointQuery
-   * @dataProvider getAuthHeadersDataProvider
    */
+  #[Group('EndpointQuery')]
+  #[DataProvider('getAuthHeadersDataProvider')]
   public function testGetAuthHeaders($auth_method, $authorization_header_value) {
     // Set arguments.
     $this->query->setArguments([
@@ -195,7 +197,7 @@ class EndpointQueryTest extends UnitTestCase {
   /**
    * Data provider for getAuthMethod.
    */
-  public function getAuthMethodDataProvider() {
+  public static function getAuthMethodDataProvider() {
     return [
       [EndpointQuery::AUTH_METHOD_NONE, EndpointQuery::AUTH_METHOD_NONE],
       [EndpointQuery::AUTH_METHOD_BASIC, EndpointQuery::AUTH_METHOD_BASIC],
@@ -206,10 +208,9 @@ class EndpointQueryTest extends UnitTestCase {
 
   /**
    * Check the auth method is set correctly.
-   *
-   * @group EndpointQuery
-   * @dataProvider getAuthMethodDataProvider
    */
+  #[Group('EndpointQuery')]
+  #[DataProvider('getAuthMethodDataProvider')]
   public function testGetAuthMethod($auth_method, $result) {
     $this->query->setAuthMethod($auth_method);
     $this->assertEquals($result, $this->query->getAuthMethod());
@@ -227,7 +228,7 @@ class EndpointQueryTest extends UnitTestCase {
   /**
    * Data provider for getFullEndpointUrl.
    */
-  public function getFullEndpointUrlDataProvider() {
+  public static function getFullEndpointUrlDataProvider() {
     return [
       [
         'fts/flow/usage-years/location/1',
@@ -244,10 +245,9 @@ class EndpointQueryTest extends UnitTestCase {
 
   /**
    * Check the full endpoint url is set correctly.
-   *
-   * @group EndpointQuery
-   * @dataProvider getFullEndpointUrlDataProvider
    */
+  #[Group('EndpointQuery')]
+  #[DataProvider('getFullEndpointUrlDataProvider')]
   public function testGetFullEndpointUrl($endpoint, $query_args, $result) {
     // Set arguments.
     $this->query->setArguments([
@@ -354,7 +354,8 @@ class EndpointQueryTest extends UnitTestCase {
    */
   public function testEndpointRequestUsesConfiguredTimeouts(): void {
     $payload = file_get_contents(__DIR__ . '/Mocks/plan-projects-id-642-year-2018-groupBy-plan.json');
-    $client = $this->mockCapturingHttpClient($payload);
+    $requests = [];
+    $client = $this->mockCapturingHttpClient($payload, $requests);
     $query = $this->createEndpointQueryWithClient($client);
     $query->setArguments([
       'endpoint' => 'fts/project/plan',
@@ -367,8 +368,8 @@ class EndpointQueryTest extends UnitTestCase {
 
     $query->getData();
 
-    $this->assertSame(3, $client->requests[0]['options']['connect_timeout']);
-    $this->assertSame(25, $client->requests[0]['options']['timeout']);
+    $this->assertSame(3, $requests[0]['options']['connect_timeout']);
+    $this->assertSame(25, $requests[0]['options']['timeout']);
   }
 
   /**
@@ -376,7 +377,8 @@ class EndpointQueryTest extends UnitTestCase {
    */
   public function testFlowCustomSearchRequestUsesConfiguredTimeout(): void {
     $payload = file_get_contents(__DIR__ . '/Mocks/usage-year-location-id-1.json');
-    $client = $this->mockCapturingHttpClient($payload);
+    $requests = [];
+    $client = $this->mockCapturingHttpClient($payload, $requests);
     $query = $this->createEndpointQueryWithClient($client);
     $query->setArguments([
       'endpoint' => 'fts/flow/custom-search',
@@ -387,8 +389,8 @@ class EndpointQueryTest extends UnitTestCase {
 
     $query->getData();
 
-    $this->assertSame(3, $client->requests[0]['options']['connect_timeout']);
-    $this->assertSame(6, $client->requests[0]['options']['timeout']);
+    $this->assertSame(3, $requests[0]['options']['connect_timeout']);
+    $this->assertSame(6, $requests[0]['options']['timeout']);
   }
 
   /**
@@ -713,37 +715,16 @@ class EndpointQueryTest extends UnitTestCase {
    *
    * @param string $payload
    *   The response body.
+   * @param array $requests
+   *   Captured requests populated by Guzzle's history middleware.
    *
    * @return \GuzzleHttp\ClientInterface
    *   The HTTP client.
    */
-  private function mockCapturingHttpClient(string $payload): ClientInterface {
-    return new class($payload) extends Client {
-
-      /**
-       * Captured requests.
-       *
-       * @var array
-       */
-      public array $requests = [];
-
-      /**
-       * Constructs the test client.
-       */
-      public function __construct(private readonly string $payload) {}
-
-      /**
-       * {@inheritdoc}
-       */
-      public function get($uri, array $options = []): ResponseInterface {
-        $this->requests[] = [
-          'uri' => $uri,
-          'options' => $options,
-        ];
-        return new Response(200, [], $this->payload);
-      }
-
-    };
+  private function mockCapturingHttpClient(string $payload, array &$requests): ClientInterface {
+    $handler = HandlerStack::create(new MockHandler([new Response(200, [], $payload)]));
+    $handler->push(Middleware::history($requests));
+    return new Client(['handler' => $handler]);
   }
 
   /**
@@ -753,17 +734,11 @@ class EndpointQueryTest extends UnitTestCase {
    *   The HTTP client test double.
    */
   private function mockHttpClientThatFailsOnGet(): ClientInterface {
-    return new class extends Client {
-
-      /**
-       * {@inheritdoc}
-       */
-      public function get($uri, array $options = []): ResponseInterface {
+    return new Client([
+      'handler' => static function () {
         Assert::fail('Endpoint HTTP get must not be called on a remote data cache hit.');
-        throw new \LogicException('Unreachable.');
-      }
-
-    };
+      },
+    ]);
   }
 
   /**

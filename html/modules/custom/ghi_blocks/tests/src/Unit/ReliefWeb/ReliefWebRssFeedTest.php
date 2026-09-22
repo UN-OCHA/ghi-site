@@ -10,6 +10,7 @@ use Drupal\hpc_remote_data_cache\RemoteDataCacheInterface;
 use Drupal\hpc_remote_data_cache\RemoteDataCacheItem;
 use GuzzleHttp\ClientInterface;
 use GuzzleHttp\Psr7\Response;
+use PHPUnit\Framework\Attributes\DataProvider;
 
 /**
  * @covers \Drupal\ghi_blocks\ReliefWeb\ReliefWebRssFeed
@@ -27,9 +28,8 @@ class ReliefWebRssFeedTest extends UnitTestCase {
    *   The URL to validate.
    * @param bool $expected
    *   The expected result.
-   *
-   * @dataProvider feedUrlValidationProvider
    */
+  #[DataProvider('feedUrlValidationProvider')]
   public function testFeedUrlValidation(string $url, bool $expected): void {
     $this->assertSame($expected, $this->createService()->isValidFeedUrl($url));
   }
@@ -40,7 +40,7 @@ class ReliefWebRssFeedTest extends UnitTestCase {
    * @return array
    *   The test cases.
    */
-  public function feedUrlValidationProvider(): array {
+  public static function feedUrlValidationProvider(): array {
     return [
       'reliefweb country feed' => [self::FEED_URL, TRUE],
       'reliefweb filtered updates feed' => [

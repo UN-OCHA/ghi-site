@@ -7,7 +7,6 @@
   - index: Index of the footnote
 #}
 {% set label = 'Jump to footnote @index'|t({'@index': index}) %}
-{% apply spaceless %}
 {#
   The use of `<sup>` to be closer to standards (of course that depends on
   the languages. The text is also a simple number for the same standard reason
@@ -16,9 +15,4 @@
   tooltip without having screen readers reading the label twice (aria-label +
   title).
 #}
-<sup id="{{ id }}" class="gho-footnote-reference">
-  <a href="#{{ target }}" aria-label="{{ label }}">
-    <span title="{{ label }}" aria-hidden="true">{{ index }}</span>
-  </a>
-</sup>
-{% endapply %}
+<sup id="{{ id }}" class="gho-footnote-reference"><a href="#{{ target }}" aria-label="{{ label }}"><span title="{{ label }}" aria-hidden="true">{{ index }}</span></a></sup>

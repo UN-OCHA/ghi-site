@@ -51,8 +51,8 @@ trait ConfigurationItemClusterRestrictTrait {
       return NULL;
     }
 
-    $context = $this->getContext();
-    $plan_node = $context['plan_object'];
+    // Blocks and configuration items expose values through this common API.
+    $plan_node = $this->getContextValue('plan_object');
     if (!$plan_node instanceof Plan) {
       return NULL;
     }

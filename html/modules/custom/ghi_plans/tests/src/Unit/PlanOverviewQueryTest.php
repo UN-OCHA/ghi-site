@@ -14,6 +14,7 @@ use Drupal\ghi_plans\Plugin\FabricQuery\PlanOverviewQuery;
 use Drupal\ghi_plans\Plugin\FabricQuery\PlanQuery;
 use Drupal\Tests\hpc_api\Traits\PrivateAccessorTrait;
 use Drupal\Tests\UnitTestCase;
+use PHPUnit\Framework\Attributes\DataProvider;
 
 /**
  * Tests overview retrieval when Fabric plans have not been imported.
@@ -31,9 +32,8 @@ class PlanOverviewQueryTest extends UnitTestCase {
    *   The plan IDs returned by Fabric.
    * @param int[] $imported_ids
    *   The plan IDs with matching Drupal entities.
-   *
-   * @dataProvider planIdsProvider
    */
+  #[DataProvider('planIdsProvider')]
   public function testOnlyImportedPlansAreRetrieved(array $fabric_ids, array $imported_ids): void {
     drupal_static_reset();
     $plans = [];

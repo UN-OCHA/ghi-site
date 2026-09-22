@@ -24,6 +24,9 @@ class LinkCarouselBlockTest extends BlockKernelTestBase {
   protected static $modules = [
     'user',
     'file',
+    'field',
+    'image',
+    'breakpoint',
     'responsive_image',
   ];
 
@@ -117,7 +120,6 @@ class LinkCarouselBlockTest extends BlockKernelTestBase {
    */
   private function buildItem($id) {
     return [
-      'id' => $id,
       'id' => $id,
       'pid' => NULL,
       'item_type' => 'carousel_item',

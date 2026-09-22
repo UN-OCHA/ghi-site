@@ -199,7 +199,7 @@ trait GlobalSettingsTrait {
     if (!empty($config['plan_type_icons'])) {
       // Add plan type icons to plan name column.
       unset($header['type']);
-      $rows = ArrayHelper::arrayMapAssoc(function ($row, $plan_id) use ($plans, $plan_type_short_name) {
+      $rows = ArrayHelper::arrayMapAssoc(function ($row, $plan_id) use ($plans) {
         /** @var \Drupal\ghi_plans\ApiObjects\Partials\PlanOverviewPlan $plan */
         $plan = $plans[$plan_id] ?? NULL;
         unset($row['type']);

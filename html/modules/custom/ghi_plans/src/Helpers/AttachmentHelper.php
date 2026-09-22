@@ -94,8 +94,8 @@ class AttachmentHelper {
    * @param string $id_type
    *   The id type.
    *
-   * @return string
-   *   The custom id.
+   * @return string|null
+   *   The custom id, or NULL for an unsupported id type.
    */
   public static function getCustomAttachmentId(AttachmentInterface $attachment, $id_type) {
     switch ($id_type) {
@@ -108,6 +108,7 @@ class AttachmentHelper {
       case 'composed_reference':
         return $attachment->getComposedReference();
     }
+    return NULL;
   }
 
 }
