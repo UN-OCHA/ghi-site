@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "2b3c5e0e9371b39f05a137daf7c8e709",
+    "content-hash": "244f278e5826531d6f60df8b517c330a",
     "packages": [
         {
             "name": "asm89/stack-cors",
@@ -2416,7 +2416,7 @@
                 "shasum": "e894f61cb862511b3a79ed256f83c2c8fb98d5c7"
             },
             "require": {
-                "drupal/core": "^9 || ^10"
+                "drupal/core": "^8 || ^9 || ^10 || ^11 || ^12"
             },
             "type": "drupal-module",
             "extra": {
@@ -5564,7 +5564,7 @@
                 "shasum": "fc8ea60619b6b4682bade340e13fb4565d3a7e0c"
             },
             "require": {
-                "drupal/core": "^9.1 || ^10"
+                "drupal/core": "^8 || ^9 || ^10 || ^11 || ^12"
             },
             "type": "drupal-module",
             "extra": {
@@ -10051,6 +10051,68 @@
                 "source": "https://github.com/mck89/peast/tree/v1.17.7"
             },
             "time": "2026-07-21T11:56:06+00:00"
+        },
+        {
+            "name": "mglaman/composer-drupal-lenient",
+            "version": "2.0.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/mglaman/composer-drupal-lenient.git",
+                "reference": "7bfe79bfcccf1b0f3dafee7e36468dccfc2e56bb"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/mglaman/composer-drupal-lenient/zipball/7bfe79bfcccf1b0f3dafee7e36468dccfc2e56bb",
+                "reference": "7bfe79bfcccf1b0f3dafee7e36468dccfc2e56bb",
+                "shasum": ""
+            },
+            "require": {
+                "composer-plugin-api": "^2.0",
+                "php": ">=8.3"
+            },
+            "require-dev": {
+                "composer/composer": "^2.3",
+                "drupal/core": "^11 || ^12",
+                "phpstan/extension-installer": "^1.1",
+                "phpstan/phpstan": "^1.6",
+                "phpstan/phpstan-phpunit": "^1.1",
+                "phpstan/phpstan-strict-rules": "^1.2",
+                "phpunit/phpunit": "^9.5",
+                "squizlabs/php_codesniffer": "^3.6"
+            },
+            "type": "composer-plugin",
+            "extra": {
+                "class": "ComposerDrupalLenient\\Plugin"
+            },
+            "autoload": {
+                "files": [
+                    "src/autoload.php"
+                ],
+                "psr-4": {
+                    "ComposerDrupalLenient\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "GPL-2.0-or-later"
+            ],
+            "authors": [
+                {
+                    "name": "Matt Glaman",
+                    "email": "nmd.matt@gmail.com"
+                }
+            ],
+            "support": {
+                "issues": "https://github.com/mglaman/composer-drupal-lenient/issues",
+                "source": "https://github.com/mglaman/composer-drupal-lenient/tree/2.0.0"
+            },
+            "funding": [
+                {
+                    "url": "https://github.com/mglaman",
+                    "type": "github"
+                }
+            ],
+            "time": "2026-03-20T20:28:20+00:00"
         },
         {
             "name": "microsoft/kiota-abstractions",
@@ -17905,70 +17967,6 @@
             }
         },
         {
-            "name": "drupal/yaml_content",
-            "version": "1.0.0-alpha9",
-            "source": {
-                "type": "git",
-                "url": "https://git.drupalcode.org/project/yaml_content.git",
-                "reference": "8.x-1.0-alpha9"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://ftp.drupal.org/files/projects/yaml_content-8.x-1.0-alpha9.zip",
-                "reference": "8.x-1.0-alpha9",
-                "shasum": "21854b567ef6b9a17883da061c03850f136cc9d1"
-            },
-            "require": {
-                "drupal/core": "^9 || ^10"
-            },
-            "require-dev": {
-                "mikey179/vfsstream": "^1.0"
-            },
-            "type": "drupal-module",
-            "extra": {
-                "drupal": {
-                    "version": "8.x-1.0-alpha9",
-                    "datestamp": "1690397386",
-                    "security-coverage": {
-                        "status": "not-covered",
-                        "message": "Project has not opted into security advisory coverage!"
-                    }
-                },
-                "drush": {
-                    "services": {
-                        "drush.services.yml": "^9"
-                    }
-                }
-            },
-            "notification-url": "https://packages.drupal.org/8/downloads",
-            "license": [
-                "GPL-2.0-or-later"
-            ],
-            "authors": [
-                {
-                    "name": "damienmckenna",
-                    "homepage": "https://www.drupal.org/user/108450"
-                },
-                {
-                    "name": "shrop",
-                    "homepage": "https://www.drupal.org/user/14767"
-                },
-                {
-                    "name": "slucero",
-                    "homepage": "https://www.drupal.org/user/1612534"
-                },
-                {
-                    "name": "yovince",
-                    "homepage": "https://www.drupal.org/user/3503856"
-                }
-            ],
-            "description": "Demo content generator using yaml content templates.",
-            "homepage": "https://www.drupal.org/project/yaml_content",
-            "support": {
-                "source": "https://git.drupalcode.org/project/yaml_content"
-            }
-        },
-        {
             "name": "google/protobuf",
             "version": "v5.36.2",
             "source": {
@@ -22036,11 +22034,11 @@
     "stability-flags": {
         "drupal/auto_entitylabel": 10,
         "drupal/aws": 20,
+        "drupal/gin_lb": 10,
         "drupal/layout_builder_lock": 5,
         "drupal/page_manager": 10,
         "drupal/rabbit_hole": 10,
-        "drupal/xhprof": 10,
-        "drupal/yaml_content": 15
+        "drupal/xhprof": 10
     },
     "prefer-stable": true,
     "prefer-lowest": false,

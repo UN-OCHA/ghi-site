@@ -1,6 +1,18 @@
 {
-    "_hash": "c0030d63c2e217e860607e6e805a5cea1f39fe5acccb19688bf2b1f75bebc854",
+    "_hash": "0f39b31de653081e6e7482947315e35d373f99328651aa70c9e336543af5af65",
     "patches": {
+        "drupal/big_pipe_sessionless": [
+            {
+                "package": "drupal/big_pipe_sessionless",
+                "description": "Issue #3428235: Drupal 11 compatibility",
+                "url": "https://www.drupal.org/files/issues/2025-10-02/3428235-big_pipe_sessionless-22.d11.patch",
+                "sha256": "319de6cd164e86ef14dbc6f5a055eb4081c302eb6905a3dad5af6c51bfc33e41",
+                "depth": 1,
+                "extra": {
+                    "provenance": "patches-file:composer.patches.json"
+                }
+            }
+        ],
         "drupal/core": [
             {
                 "package": "drupal/core",
@@ -27,16 +39,6 @@
                 "description": "Issue #3008924: Callers of LayoutEntityHelperTrait::getEntitySections() do not account for the view mode",
                 "url": "./patches/3008924-rerolled-24.patch",
                 "sha256": "42ff4bbbc8bfbc87b072107996bd3af1a04fce1aad89cc634a68d45ff606b91e",
-                "depth": 2,
-                "extra": {
-                    "provenance": "patches-file:composer.patches.json"
-                }
-            },
-            {
-                "package": "drupal/core",
-                "description": "Issue #2902481: Add GROUP_CONCAT aggregate function to views",
-                "url": "https://www.drupal.org/files/issues/2024-08-09/add_group_concat_aggregate-2902481-44.patch",
-                "sha256": "248299a0a10a59763744b211da2131e57c3a031423a238d601a3e4238c5d734a",
                 "depth": 2,
                 "extra": {
                     "provenance": "patches-file:composer.patches.json"
@@ -189,6 +191,18 @@
                 "description": "Issue #3401986: The containers summary text should not be overwritten",
                 "url": "https://www.drupal.org/files/issues/2023-11-15/3401986-2.patch",
                 "sha256": "dac66defbddda3923b37ff5a55eea1d259655cd6807338471a51d1ba509361da",
+                "depth": 1,
+                "extra": {
+                    "provenance": "patches-file:composer.patches.json"
+                }
+            }
+        ],
+        "drupal/maintenance200": [
+            {
+                "package": "drupal/maintenance200",
+                "description": "Issue #3431791: Drupal 11 compatibility",
+                "url": "https://www.drupal.org/files/issues/2024-03-18/maintenance200.8.x-2.1.rector.patch",
+                "sha256": "a18c917b199168ded802407a11e2d9eb75b1933c75aea4e60701c3ba0f6ea623",
                 "depth": 1,
                 "extra": {
                     "provenance": "patches-file:composer.patches.json"
