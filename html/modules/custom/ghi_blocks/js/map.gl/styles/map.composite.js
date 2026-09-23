@@ -94,6 +94,17 @@
     }
 
     /**
+     * Get the rendered layer to check before capturing a PNG.
+     *
+     * @returns {String}
+     *   The admin area layer id.
+     */
+    getSnapshotLayerId = function () {
+      // Pies are HTML markers, so there is no Mapbox composite feature layer.
+      return this.adminAreaLayerId;
+    }
+
+    /**
      * Setup the style.
      */
     setup = function () {
