@@ -228,10 +228,10 @@ abstract class ContentBase extends Node implements NodeInterface, ImageNodeInter
   /**
    * Check if this node is the main object on the page.
    *
-   * @return bool|null
-   *   TRUE if the current node is the main object on the page, NULL otherwise.
+   * @return bool
+   *   TRUE if the current node is the main object on the page, FALSE otherwise.
    */
-  public function isStandalonePage() {
+  public function isStandalonePage(): bool {
     $document = $this->getCurrentDocumentNode();
     $section = $this->getCurrentSectionNode();
     if ($this instanceof Article && !$document && !$section) {
@@ -240,7 +240,7 @@ abstract class ContentBase extends Node implements NodeInterface, ImageNodeInter
     if ($this instanceof ContentBase && !$section) {
       return TRUE;
     }
-    return NULL;
+    return FALSE;
   }
 
   /**

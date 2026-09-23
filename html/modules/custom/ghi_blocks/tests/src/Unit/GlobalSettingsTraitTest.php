@@ -3,7 +3,7 @@
 namespace Drupal\Tests\ghi_blocks\Unit;
 
 use Drupal\Core\DependencyInjection\ContainerBuilder;
-use Drupal\ghi_blocks\Helpers\GlobalSettingsHelper;
+use Drupal\ghi_blocks\Traits\GlobalSettingsTrait;
 use Drupal\ghi_plans\ApiObjects\Partials\PlanOverviewPlan;
 use Drupal\ghi_sections\SectionManager;
 use Drupal\Tests\UnitTestCase;
@@ -13,10 +13,10 @@ use PHPUnit\Framework\Attributes\Group;
  * Tests global settings access and plan type icons.
  */
 #[Group('ghi_blocks')]
-class GlobalSettingsHelperTest extends UnitTestCase {
+class GlobalSettingsTraitTest extends UnitTestCase {
 
   /**
-   * Tests that the trait and static helper read the same year settings.
+   * Tests reading settings for configured and missing years.
    */
   public function testYearConfig(): void {
     $settings = ['plan_type_icons' => TRUE];
@@ -26,10 +26,11 @@ class GlobalSettingsHelperTest extends UnitTestCase {
     ]));
     \Drupal::setContainer($container);
 
-    $helper = new GlobalSettingsHelper();
-    $this->assertSame($settings, $helper->getYearConfig('2026'));
-    $this->assertSame($settings, GlobalSettingsHelper::getConfig('2026'));
-    $this->assertNull($helper->getYearConfig('2025'));
+    $consumer = new class() {
+      use GlobalSettingsTrait;
+    };
+    $this->assertSame($settings, $consumer->getYearConfig('2026'));
+    $this->assertNull($consumer->getYearConfig('2025'));
   }
 
   /**
@@ -50,9 +51,11 @@ class GlobalSettingsHelperTest extends UnitTestCase {
     $header = ['name' => 'Name', 'type' => 'Type'];
     $rows = [1 => ['name' => 'Example', 'type' => 'HRP']];
     $cache_tags = [];
-    $helper = new GlobalSettingsHelper();
-    $method = new \ReflectionMethod($helper, 'applyGlobalConfigurationTable');
-    $method->invokeArgs($helper, [&$header, &$rows, &$cache_tags, '2026', [1 => $plan]]);
+    $consumer = new class() {
+      use GlobalSettingsTrait;
+    };
+    $method = new \ReflectionMethod($consumer, 'applyGlobalConfigurationTable');
+    $method->invokeArgs($consumer, [&$header, &$rows, &$cache_tags, '2026', [1 => $plan]]);
 
     $this->assertArrayNotHasKey('type', $header);
     $this->assertArrayNotHasKey('type', $rows[1]);

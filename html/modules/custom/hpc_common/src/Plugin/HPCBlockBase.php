@@ -403,12 +403,8 @@ abstract class HPCBlockBase extends BlockBase implements HPCPluginInterface, Con
       // Page manager page.
       $this->page = $page_parameters['_page_manager_page']->id();
     }
-    elseif (!empty($page_parameters['panels_storage_id'])) {
-      // Used when in configuration editing context with Panels IPE.
-      [$this->page] = explode('-', $page_parameters['panels_storage_id'], 2);
-    }
     elseif (!empty($page_parameters['tempstore_id']) && $page_parameters['tempstore_id'] == 'page_manager.page') {
-      // Used when configuring using the Panels UI.
+      // Used when configuring using the Page Manager UI.
       [$this->page] = explode('-', $page_parameters['machine_name'], 2);
     }
     elseif (!empty($page_parameters['node'])) {
@@ -460,12 +456,8 @@ abstract class HPCBlockBase extends BlockBase implements HPCPluginInterface, Con
     if (!empty($page_parameters['_page_manager_page_variant'])) {
       $this->pageVariant = $page_parameters['_page_manager_page_variant']->id();
     }
-    elseif (!empty($page_parameters['panels_storage_id'])) {
-      // Used when in configuration editing context with Panels IPE.
-      $this->pageVariant = $page_parameters['panels_storage_id'];
-    }
     elseif (!empty($page_parameters['tempstore_id']) && $page_parameters['tempstore_id'] == 'page_manager.page') {
-      // Used when configuring using the Panels UI.
+      // Used when configuring using the Page Manager UI.
       $this->pageVariant = explode('-', $page_parameters['machine_name'], 2)[0];
     }
     elseif (!empty($page_parameters['node'])) {
