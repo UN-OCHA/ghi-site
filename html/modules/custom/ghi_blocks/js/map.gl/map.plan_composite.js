@@ -23,6 +23,7 @@
         empty_message: Drupal.t('Be sure to enter a location name within the current response plan.')
       },
       pcodes_enabled: mapConfig.pcodes_enabled ?? false,
+      compact_polygon_legend: mapConfig.compact_polygon_legend ?? true,
       label_min_zoom: mapConfig.label_min_zoom ?? 0
     };
     if (options.pcodes_enabled) {
@@ -52,6 +53,12 @@
         triggerSelector: '.map-tab',
         buildOptions: buildOptions
       });
+    },
+    detach: function(context, settings, trigger) {
+      if (!window.ghi || !window.ghi.mapLazy) {
+        return;
+      }
+      window.ghi.mapLazy.detach('plan_composite_map', context, settings, trigger);
     }
   };
 

@@ -2,9 +2,13 @@
 
 namespace Drupal\Tests\ghi_blocks\Kernel\Plan;
 
+use Drupal\Core\Form\FormState;
+use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\ghi_blocks\Map\MapModalContent;
 use Drupal\ghi_blocks\Plugin\Block\Plan\PlanCompositeMap;
+use Drupal\layout_builder\SectionStorageInterface;
 use Drupal\Tests\ghi_blocks\Kernel\PlanBlockKernelTestBase;
+use Symfony\Component\HttpFoundation\Request;
 
 /**
  * Tests the plan composite map block plugin.
@@ -19,6 +23,42 @@ class PlanCompositeMapTest extends PlanBlockKernelTestBase {
   public function testBlockPluginInstantiation(): void {
     $plugin = $this->getBlockPlugin();
     $this->assertInstanceOf(PlanCompositeMap::class, $plugin);
+  }
+
+  /**
+   * Tests that editor maps resolve unsaved storage rather than the public page.
+   */
+  public function testLayoutPreviewMapUri(): void {
+    $plugin = $this->getBlockPlugin();
+    $plugin->setCurrentUri('/plan/1266');
+    $this->assertSame('/plan/1266', $this->callPrivateMethod($plugin, 'getMapPageUri'));
+
+    $route_match = $this->createMock(RouteMatchInterface::class);
+    $route_match->method('getParameter')->with('section_storage')->willReturn($this->createMock(SectionStorageInterface::class));
+    $this->setPrivateProperty($plugin, 'routeMatch', $route_match);
+    $editor_uri = '/layout_builder/add/block/overrides/node.17152/0/content/plan_composite_map';
+    $this->container->get('request_stack')->push(Request::create($editor_uri, 'POST', ['currentPath' => '/plan/1266']));
+    $this->assertSame($editor_uri, $this->callPrivateMethod($plugin, 'getMapPageUri'));
+  }
+
+  /**
+   * Tests that the legend option defaults on and reflects saved configuration.
+   */
+  public function testCompactPolygonLegendConfiguration(): void {
+    $plugin = $this->getBlockPlugin();
+    $form_state = (new FormState())
+      ->set('block', $plugin)
+      ->set('current_subform', 'common');
+    $form = $plugin->commonForm([], $form_state);
+    $this->assertTrue($form['compact_polygon_legend']['#default_value']);
+
+    foreach ([TRUE, FALSE] as $compact) {
+      $configuration = $plugin->getConfiguration();
+      $configuration['hpc']['common']['compact_polygon_legend'] = $compact;
+      $plugin->setConfiguration($configuration);
+      $form = $plugin->commonForm([], $form_state);
+      $this->assertSame($compact, $form['compact_polygon_legend']['#default_value']);
+    }
   }
 
   /**

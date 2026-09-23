@@ -801,6 +801,7 @@
       let state = this.state;
       let options = this.state.getOptions();
       $legend_container = $legend_container ?? this.state.getContainer().find('div.map-legend');
+      state.destroyRangeLegendTooltips();
       $legend_container.html('');
 
       if (this.showPolygons()) {
@@ -810,7 +811,7 @@
           .text(polygon_data.metric_label)
           .addClass('label');
         $polygon_legend.append($label);
-        $polygon_legend.append(this.state.createRangeLegend(this.getDataRanges(), this.config.polygon_colors));
+        $polygon_legend.append(this.state.createRangeLegend(this.getDataRanges(), this.config.polygon_colors, options.compact_polygon_legend));
         $legend_container.append($polygon_legend);
       }
 

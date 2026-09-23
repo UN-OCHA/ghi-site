@@ -73,7 +73,7 @@ class PlanOverviewMap extends GHIBlockBase implements LazyMapBlockInterface {
         'block_uuid' => $block_uuid,
       ], [
         'query' => [
-          'current_uri' => $this->getCurrentUri(),
+          'current_uri' => $this->getMapPageUri(),
           'map_id' => $chart_id,
         ],
       ])->toString() : NULL,

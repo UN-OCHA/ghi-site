@@ -123,7 +123,7 @@ class PlanCompositeMap extends GHIBlockBase implements MultiStepFormBlockInterfa
     $chart_id = Html::getUniqueId('plan-composite-map');
     $block_uuid = $this->getUuid();
     $data_url_query = array_filter([
-      'current_uri' => $this->getCurrentUri(),
+      'current_uri' => $this->getMapPageUri(),
       'map_id' => $chart_id,
     ], fn ($value) => $value !== NULL && $value !== '');
     $map_tabs = NULL;
@@ -206,6 +206,7 @@ class PlanCompositeMap extends GHIBlockBase implements MultiStepFormBlockInterfa
       'disclaimer' => $conf['common']['disclaimer'] ?: $this->getDefaultMapDisclaimer($this->getCurrentPlanObject()->getPlanLanguage()),
       'pcodes_enabled' => $conf['common']['pcodes_enabled'] ?? TRUE,
       'label_min_zoom' => (int) ($conf['common']['label_min_zoom'] ?? 6),
+      'compact_polygon_legend' => (bool) ($conf['common']['compact_polygon_legend'] ?? TRUE),
       'style' => 'composite',
       'outline_country' => $outline_country,
     ] + $map['settings'];
@@ -365,6 +366,7 @@ class PlanCompositeMap extends GHIBlockBase implements MultiStepFormBlockInterfa
         'disclaimer' => NULL,
         'pcodes_enabled' => FALSE,
         'label_min_zoom' => 6,
+        'compact_polygon_legend' => TRUE,
         'comment' => NULL,
       ],
     ];
@@ -471,6 +473,13 @@ class PlanCompositeMap extends GHIBlockBase implements MultiStepFormBlockInterfa
       '#default_value' => $this->getDefaultFormValueFromFormState($form_state, [
         'label_min_zoom',
       ]) ?? 0,
+    ];
+
+    $form['compact_polygon_legend'] = [
+      '#type' => 'checkbox',
+      '#title' => $this->t('Use compact numbers in the polygon legend'),
+      '#description' => $this->t('Shorten large legend values, for example 1.2k or 2.4M, on the map and in downloads. Rounded labels are marked with ≈; exact ranges remain available on hover. This does not change the color classification.'),
+      '#default_value' => $this->getDefaultFormValueFromFormState($form_state, 'compact_polygon_legend') ?? TRUE,
     ];
 
     $form['comment'] = $this->buildBlockCommentFormElement($this->getDefaultFormValueFromFormState($form_state, [
@@ -607,8 +616,7 @@ class PlanCompositeMap extends GHIBlockBase implements MultiStepFormBlockInterfa
     /** @var \Drupal\ghi_plans\Plugin\FabricQuery\AttachmentQuery $query */
     $query = $this->getQueryHandler('attachment');
     return $query->getAttachmentsForPlan($plan_object->getSourceId(), $this->getCurrentBaseObject(), [
-      'Caseload',
-      'Indicator',
+      'AttachmentType' => ['Caseload', 'Indicator'],
     ]);
   }
 

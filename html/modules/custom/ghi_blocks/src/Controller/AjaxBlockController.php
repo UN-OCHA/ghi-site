@@ -8,19 +8,24 @@ use Drupal\Core\Access\AccessManagerInterface;
 use Drupal\Core\Access\AccessResultInterface;
 use Drupal\Core\Ajax\AjaxHelperTrait;
 use Drupal\Core\Ajax\AjaxResponse;
+use Drupal\Core\Ajax\HtmlCommand;
 use Drupal\Core\Ajax\OpenModalDialogCommand;
 use Drupal\Core\Ajax\ReplaceCommand;
+use Drupal\Core\Cache\CacheableAjaxResponse;
+use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
 use Drupal\Core\Plugin\Context\EntityContext;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Url;
+use Drupal\ghi_blocks\Interfaces\LazyMapBlockInterface;
 use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
 use Drupal\ghi_blocks\Plugin\Block\Plan\PlanEntityLogframe;
 use Drupal\hpc_common\Helpers\BlockHelper;
 use Drupal\layout_builder\Event\SectionComponentBuildRenderArrayEvent;
 use Drupal\layout_builder\LayoutBuilderEvents;
 use Drupal\layout_builder\LayoutEntityHelperTrait;
+use Drupal\layout_builder\SectionStorageInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
@@ -112,6 +117,18 @@ class AjaxBlockController extends ControllerBase implements ContainerInjectionIn
     $block_instance = BlockHelper::getBlockInstance($uri, $plugin_id, $block_uuid);
     if (!$block_instance) {
       return $this->sendErrorResponse();
+    }
+
+    $page_parameters = $this->router->match($uri);
+    if ($block_instance instanceof LazyMapBlockInterface && ($page_parameters['section_storage'] ?? NULL) instanceof SectionStorageInterface) {
+      // The helper resolved the editor's unsaved configuration. Rebuilding
+      // from the node below would restore the saved component instead. Keep
+      // the existing editor wrapper and its placement/contextual controls.
+      $selector = '.ghi-block-' . Html::getClass($block_uuid) . ' > .block-content';
+      $ajax_response = new CacheableAjaxResponse();
+      $ajax_response->addCacheableDependency((new CacheableMetadata())->setCacheMaxAge(0));
+      $ajax_response->addCommand(new HtmlCommand($selector, $block_instance->buildContent()));
+      return $ajax_response;
     }
 
     $build = NULL;
