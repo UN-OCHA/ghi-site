@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\ghi_blocks\Kernel\Plan;
 
+use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\ghi_blocks\Interfaces\ConfigValidationInterface;
 use Drupal\ghi_blocks\Interfaces\LazyMapDataFragmentBlockInterface;
 use Drupal\ghi_blocks\Interfaces\LazyMapBlockInterface;
@@ -12,7 +13,9 @@ use Drupal\ghi_blocks\Map\MapPayload;
 use Drupal\ghi_blocks\Plugin\Block\Plan\PlanAttachmentMap;
 use Drupal\ghi_plans\ApiObjects\Attachments\Attachment;
 use Drupal\ghi_plans\Plugin\FabricQuery\AttachmentQuery;
+use Drupal\layout_builder\SectionStorageInterface;
 use Drupal\Tests\ghi_blocks\Kernel\PlanBlockKernelTestBase;
+use Symfony\Component\HttpFoundation\Request;
 
 /**
  * Tests the plan attachment map block plugin.
@@ -175,6 +178,17 @@ class PlanAttachmentMapTest extends PlanBlockKernelTestBase {
     $plugin->setQueryHandler('attachment', $query);
 
     $this->assertFalse($plugin->isEmpty());
+
+    // Import/add forms carry the public page URI, but switching attachments
+    // must resolve the same unsaved layout as the initial map request.
+    $plugin->setCurrentUri('/plan/1263');
+    $route_match = $this->createMock(RouteMatchInterface::class);
+    $route_match->method('getParameter')->with('section_storage')->willReturn($this->createMock(SectionStorageInterface::class));
+    $this->setPrivateProperty($plugin, 'routeMatch', $route_match);
+    $editor_uri = '/layout_builder/add/block/overrides/node.1/0/content/plan_attachment_map';
+    $this->container->get('request_stack')->push(Request::create($editor_uri));
+    $switcher = $this->callPrivateMethod($plugin, 'getAttachmentSwitcher');
+    $this->assertSame($editor_uri, $switcher[0]['#uri']);
   }
 
   /**

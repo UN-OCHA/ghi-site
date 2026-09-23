@@ -88,6 +88,7 @@ map.gl.control.admin_level:
     js/map.gl/controls/map.control.admin_level.js: {}
   dependencies:
     - core/jquery
+    - hpc_common/tippy.js
 
 map.gl.control.disclaimer:
   js:
@@ -105,6 +106,7 @@ map.gl.state:
     js/map.gl/map.state.js: {}
   dependencies:
     - core/jquery
+    - hpc_common/tippy.js
 
 map.gl:
   js:

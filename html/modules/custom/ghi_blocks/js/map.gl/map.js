@@ -330,6 +330,7 @@
         }
         let style = state.style ?? null;
         let layerId = style && typeof style.getFeatureLayerId === 'function' ? style.getFeatureLayerId() : null;
+        layerId = style?.getSnapshotLayerId?.() ?? layerId;
         let locations = typeof state.getLocations === 'function' ? state.getLocations() : [];
         if (isReady && style && style.loaded !== true) {
           isReady = false;
@@ -371,17 +372,21 @@
           return;
         }
 
-        let snapshot = element.querySelector(':scope > .mapboxgl-canvas-snapshot');
+        let snapshot = canvas.parentElement.querySelector(':scope > .mapboxgl-canvas-snapshot');
         if (!snapshot) {
           snapshot = document.createElement('img');
           snapshot.className = 'mapboxgl-canvas-snapshot';
           snapshot.alt = '';
           snapshot.setAttribute('aria-hidden', 'true');
           snapshot.style.display = 'block';
+          snapshot.style.position = 'absolute';
+          snapshot.style.top = '0';
+          snapshot.style.left = '0';
           snapshot.style.width = '100%';
           snapshot.style.height = mapContainer.offsetHeight + 'px';
           snapshot.style.objectFit = 'cover';
-          element.appendChild(snapshot);
+          // Keep HTML markers above the bitmap in the same positioned container.
+          canvas.parentElement.insertBefore(snapshot, canvas);
         }
 
         requestAnimationFrame(() => {
@@ -389,7 +394,8 @@
             try {
               let snapshotUrl = canvas.toDataURL('image/png');
               snapshot.src = snapshotUrl;
-              mapContainer.style.display = 'none';
+              // Only hide WebGL; HTML pies and map controls must remain visible.
+              canvas.style.visibility = 'hidden';
               element.setAttribute('data-map-snapshot-ready', '');
               blockElement?.classList.add('map-image-loaded');
               map.off('idle', syncSnapshot);

@@ -45,6 +45,7 @@
       this.focusId = null;
       this.focusedLocation = null;
       this.tooltip = null;
+      this.rangeLegendTooltips = [];
       this.adminLevel = null;
       this.adminLevelControl = null;
       this.searchControl = null;
@@ -114,6 +115,7 @@
     destroy = function () {
       this.setIsReady(false);
       this.tooltip?.destroy?.();
+      this.destroyRangeLegendTooltips();
       this.style?.destroy?.();
       this.legend?.destroy?.();
       this.sidebar?.destroy?.();
@@ -2047,17 +2049,27 @@
     }
 
     /**
+     * Remove range tooltips before replacing the legend or destroying the map.
+     */
+    destroyRangeLegendTooltips = function () {
+      this.rangeLegendTooltips.forEach((tooltip) => tooltip.destroy());
+      this.rangeLegendTooltips = [];
+    }
+
+    /**
      * Create a range based legend.
      *
      * @param {Object} ranges
      *   The ranges to be used.
      * @param {Object} colors
      *   The colors to be used.
+     * @param {Boolean} compact
+     *   Whether to abbreviate large values in the legend labels.
      *
      * @returns {Object}
      *   A jQuery node object.
      */
-    createRangeLegend = function (ranges, colors) {
+    createRangeLegend = function (ranges, colors, compact = false) {
       var $legend = $('<ul>');
       for (let i in ranges) {
         let index = parseInt(i, 10);
@@ -2079,6 +2091,34 @@
           text = min != max ? Drupal.theme('number', min) + ' - ' + Drupal.theme('number', max) : Drupal.theme('number', min);
         }
         var $legend_item = $('<li>');
+        if (compact) {
+          const format = (value) => Drupal.theme('number', value, Math.abs(value) >= 1000);
+          const min_label = format(min);
+          let compact_text = min_label;
+          if (index == ranges.length - 1 && ranges.length > 1) {
+            compact_text = '>= ' + min_label;
+          }
+          else if (ranges.length > 1) {
+            const max = ranges[next_index] - 1;
+            const max_label = format(max);
+            // Keep narrow ranges exact if rounding would hide their boundaries.
+            if (min != max) {
+              compact_text = min_label == max_label ? text : min_label + ' - ' + max_label;
+            }
+          }
+          if (compact_text != text) {
+            $legend_item.attr('tabindex', '0');
+            this.rangeLegendTooltips.push(tippy($legend_item.get(0), {
+              content: text,
+              allowHTML: false,
+              appendTo: document.body,
+              trigger: 'mouseenter focus',
+              hideOnClick: false,
+            }));
+            // Printed legends must also make the loss of precision explicit.
+            text = '≈ ' + compact_text;
+          }
+        }
         var $legend_marker = $('<span>')
           .addClass('legend-marker')
           .css('background-color', colors[index]);

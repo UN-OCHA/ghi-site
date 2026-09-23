@@ -416,14 +416,24 @@ class ConfigurationContainer extends FormElementBase {
           $items[$index]['config'][$custom_action] = $values[$custom_action];
         }
 
+        $new_mode = 'list';
         // Let the item type react to it's submitted values.
         if ($id && $item = self::getItemById($items, $id)) {
           $item_type = self::getItemTypeInstance($item, $element);
           $item_type->submitForm($values['plugin_config'] ?? [], $mode);
+
+          if ($mode == 'add_item' && $item_type instanceof ConfigurationContainerItemCustomActionsInterface) {
+            // Read the action from the built form, not submitted values.
+            $redirect_action = $element['item_config']['plugin_config']['#submit_redirect_custom_action'] ?? NULL;
+            $actions = $item_type->getCustomActions();
+            if (isset($actions[$redirect_action]) && $item_type->isValidAction($redirect_action)) {
+              $new_mode = 'custom_action';
+              self::set($element, $form_state, 'edit_item', $id);
+              self::set($element, $form_state, 'custom_action', $redirect_action);
+            }
+          }
         }
 
-        // Switch to list mode.
-        $new_mode = 'list';
         self::set($element, $form_state, 'current_item_type', NULL);
         break;
 
