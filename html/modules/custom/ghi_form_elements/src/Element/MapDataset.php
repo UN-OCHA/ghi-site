@@ -347,8 +347,8 @@ class MapDataset extends FormElementBase {
       '#dataset_id' => $element['#dataset_id'],
     ];
 
-    $element['full_pie'] = self::buildDatasetRow($element, $form_state, $rows['full_pie'] + $common_row_options);
     $element['polygon'] = self::buildDatasetRow($element, $form_state, $rows['polygon'] + $common_row_options);
+    $element['full_pie'] = self::buildDatasetRow($element, $form_state, $rows['full_pie'] + $common_row_options);
     foreach ($rows['slices'] as $key => $row) {
       $element['slices'][$key] = self::buildDatasetRow($element, $form_state, $row + $common_row_options);
     }
