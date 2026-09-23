@@ -11,7 +11,6 @@ use Drupal\Core\Plugin\Context\ContextDefinition;
 use Drupal\Core\Plugin\Context\EntityContext;
 use Drupal\node\Entity\Node;
 use Drupal\node\NodeInterface;
-use Drupal\panels_ipe\Form\PanelsIPEBlockPluginForm;
 use Symfony\Component\HttpFoundation\Request;
 
 /**
@@ -209,12 +208,6 @@ class RequestHelper {
     $contexts = [];
     if ($build_info['args'][0] == 'page_manager.page') {
       return $contexts;
-    }
-    elseif (class_exists(PanelsIPEBlockPluginForm::class) && $build_info['callback_object'] instanceof PanelsIPEBlockPluginForm) {
-      // Panels.
-      if (!empty($current_path)) {
-        $contexts = self::getContextsForPath($current_path);
-      }
     }
     else {
       // @todo Verify that this works, e.g. with plan nodes.
