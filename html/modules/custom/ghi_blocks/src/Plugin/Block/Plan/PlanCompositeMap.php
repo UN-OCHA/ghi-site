@@ -168,12 +168,6 @@ class PlanCompositeMap extends GHIBlockBase implements MultiStepFormBlockInterfa
       '#attached' => $attachments,
     ];
 
-    $comment = $this->buildBlockCommentRenderArray($this->getBlockComment());
-    if ($comment) {
-      $comment['#attributes']['class'][] = 'content-width';
-      $build['comment'] = $comment;
-    }
-
     CacheableMetadata::createFromObject($this->getCurrentBaseObject())
       ->addCacheTags($this->getMapConfigCacheTags())
       ->applyTo($build);
