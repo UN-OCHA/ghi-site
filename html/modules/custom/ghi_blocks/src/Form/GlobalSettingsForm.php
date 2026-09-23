@@ -79,7 +79,8 @@ class GlobalSettingsForm extends ConfigFormBase {
     ];
 
     foreach ($homepage_years as $year) {
-      $year_config = $this->getYearConfig($year);
+      // Read override-free values so configuration overrides are not saved.
+      $year_config = $this->config($this->getConfigKey())->get($year);
 
       $form['years'][$year] = [
         '#type' => 'details',

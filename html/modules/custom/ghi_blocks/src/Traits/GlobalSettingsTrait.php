@@ -54,9 +54,7 @@ trait GlobalSettingsTrait {
    */
   public function getYearConfig($year) {
     $config_key = $this->getConfigKey();
-    /** @var \Drupal\Core\Config\Config|\Drupal\Core\Config\ImmutableConfig $config */
-    $config = $this->config($config_key);
-    return $config ? $config->get($year) : NULL;
+    return \Drupal::config($config_key)->get($year);
   }
 
   /**

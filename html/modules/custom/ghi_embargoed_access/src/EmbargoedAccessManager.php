@@ -6,7 +6,6 @@ use Drupal\Core\Access\CsrfTokenGenerator;
 use Drupal\Core\Cache\Cache;
 use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Config\ConfigFactoryInterface;
-use Drupal\Core\Entity\ContentEntityFormInterface;
 use Drupal\Core\Entity\EntityFieldManagerInterface;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
@@ -24,6 +23,7 @@ use Drupal\ghi_content\Traits\ContentPathTrait;
 use Drupal\ghi_sections\Entity\SectionNodeInterface;
 use Drupal\ghi_subpages\Entity\SubpageNodeInterface;
 use Drupal\node\Entity\NodeType;
+use Drupal\node\Form\NodeForm;
 use Drupal\node\NodeInterface;
 use Drupal\search_api\Plugin\search_api\datasource\ContentEntityTrackingManager;
 
@@ -350,7 +350,7 @@ class EmbargoedAccessManager {
    */
   public function alterNodeForm(array &$form, FormStateInterface $form_state) {
     $form_object = $form_state->getFormObject();
-    if (!$form_object instanceof ContentEntityFormInterface || !$form_object->getEntity() instanceof NodeInterface) {
+    if (!$form_object instanceof NodeForm) {
       return;
     }
     if (empty($form[self::PROTECTED_FIELD])) {

@@ -163,7 +163,7 @@ class RequestHelperTest extends UnitTestCase {
   }
 
   /**
-   * Tests Layout Builder contexts without the optional Panels IPE module.
+   * Tests extracting plan contexts from Layout Builder forms and subforms.
    */
   #[DataProvider('formContextProvider')]
   public function testGetContextsFromFormState(bool $subform): void {
@@ -187,7 +187,7 @@ class RequestHelperTest extends UnitTestCase {
       ['field_original_id', (object) ['value' => 42]],
     ]);
     $form_state = new FormState();
-    $form_state->setBuildInfo(['args' => ['layout_builder'], 'callback_object' => new \stdClass()]);
+    $form_state->setBuildInfo(['args' => ['layout_builder']]);
     $form_state->setTemporaryValue('gathered_contexts', [
       'layout_builder.entity' => new Context(new ContextDefinition('any'), $node),
     ]);

@@ -19,6 +19,7 @@ use Drupal\Core\DependencyInjection\Container;
 use Drupal\entity_access_password\Service\PasswordAccessManagerInterface;
 use Drupal\entity_access_password\Service\RouteParserInterface;
 use Drupal\ghi_embargoed_access\EmbargoedAccessManager;
+use Drupal\node\Form\NodeForm;
 use Drupal\node\NodeInterface;
 use Drupal\ghi_subpages\Entity\SubpageNodeInterface;
 use PHPUnit\Framework\Attributes\CoversMethod;
@@ -384,7 +385,7 @@ class EmbargoedAccessManagerAlterTest extends UnitTestCase {
   public function testAlterNodeFormModifiesProtectedField(): void {
     $node = $this->createMock(NodeInterface::class);
 
-    $nodeForm = $this->createMock(ContentEntityFormInterface::class);
+    $nodeForm = $this->createMock(NodeForm::class);
     $nodeForm->method('getEntity')->willReturn($node);
 
     $formState = $this->createMock(FormStateInterface::class);
@@ -423,7 +424,7 @@ class EmbargoedAccessManagerAlterTest extends UnitTestCase {
     $subpage = $this->createMock(SubpageNodeInterface::class);
     $subpage->method('getParentBaseNode')->willReturn($parent);
 
-    $nodeForm = $this->createMock(ContentEntityFormInterface::class);
+    $nodeForm = $this->createMock(NodeForm::class);
     $nodeForm->method('getEntity')->willReturn($subpage);
 
     $formState = $this->createMock(FormStateInterface::class);
