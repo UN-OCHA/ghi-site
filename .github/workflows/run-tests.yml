@@ -3,8 +3,8 @@ name: Run tests
 on: [pull_request]
 
 jobs:
-  quality:
-    name: Build and Quality
+  build:
+    name: Build
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -95,6 +95,40 @@ jobs:
           path: /tmp/ghi-site-local.tar.gz
           retention-days: 1
 
+  quality:
+    name: PHPCS
+    runs-on: ubuntu-latest
+    needs: build
+    permissions:
+      contents: read
+      id-token: write
+      actions: read
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v6
+
+      - name: Download Image Artifact
+        uses: actions/download-artifact@v8
+        with:
+          name: ghi-site-local-image
+          path: /tmp/ghi-site-image
+
+      - name: Load Image
+        run: gunzip -c /tmp/ghi-site-image/ghi-site-local.tar.gz | docker load
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v6
+        with:
+          role-to-assume: ${{ vars.AWS_ROLE }}
+          role-session-name: ${{ github.run_id }}-phpcs
+          aws-region: ${{ vars.AWS_REGION }}
+
+      - name: Login to Public ECR
+        uses: aws-actions/amazon-ecr-login@v2
+        with:
+          registry-type: public
+
       - name: Setup Environment
         id: docker
         uses: cafuego/command-output@main
@@ -130,7 +164,8 @@ jobs:
   phpunit:
     name: PHPUnit (${{ matrix.label }})
     runs-on: ubuntu-latest
-    needs: quality
+    # Start tests as soon as the image is available, alongside PHPCS.
+    needs: build
     permissions:
       contents: read
       id-token: write
@@ -400,6 +435,7 @@ jobs:
     name: tests
     runs-on: ubuntu-latest
     needs:
+      - build
       - quality
       - phpunit
       - coverage
@@ -427,7 +463,8 @@ jobs:
           issue-number: ${{ github.event.pull_request.number }}
           body: |
             ### Build output
-            #### Build and quality `${{ needs.quality.result }}`
+            #### Build `${{ needs.build.result }}`
+            #### PHPCS `${{ needs.quality.result }}`
             #### PHPUnit matrix `${{ needs.phpunit.result }}`
             #### Coverage `${{ needs.coverage.result }}`
 
@@ -436,7 +473,7 @@ jobs:
 
       - name: Slack Success Notification
         id: slack_success
-        if: ${{ needs.quality.result == 'success' && needs.phpunit.result == 'success' && needs.coverage.result == 'success' }}
+        if: ${{ needs.build.result == 'success' && needs.quality.result == 'success' && needs.phpunit.result == 'success' && needs.coverage.result == 'success' }}
         uses: slackapi/slack-github-action@v3
         with:
           method: chat.postMessage
@@ -463,7 +500,7 @@ jobs:
 
       - name: Slack Failure Notification
         id: slack_failure
-        if: ${{ needs.quality.result != 'success' || needs.phpunit.result != 'success' || needs.coverage.result != 'success' }}
+        if: ${{ needs.build.result != 'success' || needs.quality.result != 'success' || needs.phpunit.result != 'success' || needs.coverage.result != 'success' }}
         uses: slackapi/slack-github-action@v3
         with:
           method: chat.postMessage
@@ -490,6 +527,7 @@ jobs:
 
       - name: Check Results
         run: |
+          test "${{ needs.build.result }}" = "success"
           test "${{ needs.quality.result }}" = "success"
           test "${{ needs.phpunit.result }}" = "success"
           test "${{ needs.coverage.result }}" = "success"
