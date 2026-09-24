@@ -356,7 +356,15 @@ class ArticleCollection extends ConfigurationContainerItemPluginBase implements 
       }, $articles);
     }
 
+    // Article cache tags resolve remote document membership. Only do that for
+    // displayed articles, after card selection and context have been applied.
+    $cache_tags = $this->getCacheTags();
+    foreach ($articles as $article) {
+      $cache_tags = Cache::mergeTags($cache_tags, $article->getCacheTags());
+    }
+
     $build = [
+      '#cache' => ['tags' => $cache_tags],
       '#theme' => 'article_collection_' . ($display['type'] ?? self::DISPLAY_TYPE_CARDS),
       '#title' => $this->t('Article collection'),
       '#articles' => $articles,
@@ -510,12 +518,9 @@ class ArticleCollection extends ConfigurationContainerItemPluginBase implements 
    * {@inheritdoc}
    */
   public function getCacheTags() {
-    $articles = $this->getArticles(NULL, FALSE) ?? [];
-    $cache_tags = [];
-    foreach ($articles as $article) {
-      $cache_tags = Cache::mergeTags($cache_tags, $article->getCacheTags());
-    }
-    return $cache_tags;
+    // List membership can change when any article is created, updated, or
+    // deleted. Do not load every matching article just to track that change.
+    return ['node_list:article'];
   }
 
 }

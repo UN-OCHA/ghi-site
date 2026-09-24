@@ -3,7 +3,15 @@
 namespace Drupal\Tests\ghi_content\Kernel;
 
 use Drupal\Core\Plugin\Context\EntityContext;
+use Drupal\Core\Render\BubbleableMetadata;
+use Drupal\Core\Render\RenderContext;
+use Drupal\ghi_content\ContentManager\ArticleManager;
 use Drupal\ghi_content\Entity\Article;
+use Drupal\ghi_content\Plugin\Block\Paragraph;
+use Drupal\ghi_content\RemoteContent\RemoteArticleInterface;
+use Drupal\ghi_content\RemoteContent\RemoteParagraphInterface;
+use Drupal\ghi_content\RemoteSource\RemoteSourceInterface;
+use Drupal\ghi_content\RemoteSource\RemoteSourceManager;
 use Drupal\KernelTests\KernelTestBase;
 use Drupal\layout_builder\Entity\LayoutBuilderEntityViewDisplay;
 use Drupal\layout_builder\Plugin\SectionStorage\OverridesSectionStorage;
@@ -218,6 +226,97 @@ class SubArticleRendererTest extends KernelTestBase {
       'standalone sub-article' => [FALSE],
       'nested sub-article' => [TRUE],
     ];
+  }
+
+  /**
+   * Tests that cached paragraph content retains nested widget placeholders.
+   */
+  public function testParagraphContentCachePreservesNestedWidget() {
+    $this->createBaseObjectType(['id' => 'plan']);
+    $this->config('ghi_blocks.block_settings')->set('lazy_load', TRUE)->save();
+    $this->config('ghi_content.article_settings')->set('subarticle_local_render', TRUE)->save();
+    $this->config('hpc_api.settings')->set('cache_lifetime', 3600)->save();
+    $this->container->get('router.builder')->rebuild();
+
+    $widget_url = 'https://app.powerbi.com/view?r=cached-report';
+    $article = Article::create([
+      'type' => 'article',
+      'title' => 'Cached nested widget',
+      'status' => TRUE,
+    ]);
+    $article->set(OverridesSectionStorage::FIELD_NAME, [
+      [
+        'section' => new Section('layout_onecol', [], [
+          new SectionComponent('cached-widget', 'content', [
+            'id' => 'generic_external_widget',
+            'provider' => 'ghi_blocks',
+            'hpc' => [
+              'select_number' => 1,
+              'widgets' => [['widget_url' => $widget_url, 'widget_height' => '600px']],
+            ],
+          ]),
+        ]),
+      ],
+    ]);
+    $article->save();
+
+    $remote_article = $this->createMock(RemoteArticleInterface::class);
+    $remote_source = $this->createMock(RemoteSourceInterface::class);
+    $remote_source->method('getArticle')->willReturn($remote_article);
+    $remote_source->method('getLinkMap')->willReturn([]);
+    $remote_paragraph = $this->createMock(RemoteParagraphInterface::class);
+    $remote_paragraph->method('getId')->willReturn('remote-paragraph');
+    $remote_paragraph->method('getType')->willReturn('sub_article');
+    $remote_paragraph->method('getSource')->willReturn($remote_source);
+    $remote_paragraph->method('getConfiguration')->willReturn(['article_id' => 42]);
+    $render_calls = 0;
+    $remote_paragraph->method('getRendered')->willReturnCallback(static function () use (&$render_calls) {
+      $render_calls++;
+      return '<div class="gho-sub-article-paragraph"><article><div class="gho-sub-article__content"></div></article></div>';
+    });
+    $remote_article->method('getParagraph')->willReturn($remote_paragraph);
+
+    $source_manager = $this->createMock(RemoteSourceManager::class);
+    $source_manager->method('createInstance')->willReturn($remote_source);
+    $this->container->set('plugin.manager.remote_source', $source_manager);
+    $article_manager = $this->createMock(ArticleManager::class);
+    $article_manager->method('loadNodeForRemoteContent')->willReturn($article);
+    $this->container->set('ghi_content.manager.article', $article_manager);
+
+    $configuration = [
+      'uuid' => 'cached-paragraph',
+      'hpc' => [
+        'article_select' => ['article' => ['remote_source' => 'test', 'article_id' => 42]],
+        'paragraph' => ['paragraph_id' => ['remote-paragraph']],
+      ],
+    ];
+    $block_manager = $this->container->get('plugin.manager.block');
+    $renderer = $this->container->get('renderer');
+    $this->assertTrue($this->container->get('current_user')->isAnonymous());
+
+    for ($pass = 0; $pass < 2; $pass++) {
+      $block = $block_manager->createInstance('paragraph', $configuration);
+      $context = new RenderContext();
+      $build = $renderer->executeInRenderContext($context, fn () => $block->doBuildContent(['#theme_wrappers' => ['container' => ['#attributes' => []]]]));
+      if (!$context->isEmpty()) {
+        BubbleableMetadata::createFromRenderArray($build)->merge($context->pop())->applyTo($build);
+      }
+      $output = (string) $renderer->renderRoot($build);
+      $this->assertStringContainsString($widget_url, $output, "The nested widget renders on cache pass $pass.");
+      $this->assertStringNotContainsString('<drupal-render-placeholder', $output);
+
+      if ($pass === 0) {
+        $cold_render_calls = $render_calls;
+        $this->assertGreaterThan(0, $cold_render_calls);
+      }
+      else {
+        $this->assertSame($cold_render_calls, $render_calls, 'The second render uses cached paragraph content.');
+      }
+
+      // Rebuild the outer render tree while retaining the block-content cache.
+      drupal_static_reset(Paragraph::class . '::cache');
+      $this->container->get('cache.render')->deleteAll();
+    }
   }
 
   /**
