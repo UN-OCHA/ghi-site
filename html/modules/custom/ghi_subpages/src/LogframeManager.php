@@ -11,9 +11,9 @@ use Drupal\Core\Plugin\Context\EntityContext;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\ghi_base_objects\Entity\BaseObjectAwareEntityInterface;
 use Drupal\ghi_base_objects\Helpers\BaseObjectHelper;
+use Drupal\ghi_subpages\Logframe\LogframeTableConfigBuilder;
 use Drupal\ghi_blocks\Traits\AttachmentTableTrait;
 use Drupal\ghi_plan_clusters\Entity\PlanCluster;
-use Drupal\ghi_plans\ApiObjects\Prototypes\AttachmentPrototype;
 use Drupal\ghi_plans\ApiObjects\Attachments\Attachment;
 use Drupal\ghi_plans\ApiObjects\Plan as ApiObjectsPlan;
 use Drupal\ghi_plans\ApiObjects\PlanEntityInterface;
@@ -90,15 +90,23 @@ class LogframeManager implements ContainerInjectionInterface {
   protected $layoutTempstoreRepository;
 
   /**
+   * The standard logframe table configuration builder.
+   *
+   * @var \Drupal\ghi_subpages\Logframe\LogframeTableConfigBuilder
+   */
+  protected $tableConfigBuilder;
+
+  /**
    * Public constructor.
    */
-  public function __construct(BlockManagerInterface $block_manager, UuidInterface $uuid, EndpointQueryManager $endpoint_query_manager, FabricQueryManager $fabric_query_manager, ContextHandlerInterface $context_handler, LayoutTempstoreRepositoryInterface $layout_tempstore_repository) {
+  public function __construct(BlockManagerInterface $block_manager, UuidInterface $uuid, EndpointQueryManager $endpoint_query_manager, FabricQueryManager $fabric_query_manager, ContextHandlerInterface $context_handler, LayoutTempstoreRepositoryInterface $layout_tempstore_repository, LogframeTableConfigBuilder $table_config_builder) {
     $this->blockManager = $block_manager;
     $this->uuidGenerator = $uuid;
     $this->endpointQueryManager = $endpoint_query_manager;
     $this->fabricQueryManager = $fabric_query_manager;
     $this->contextHandler = $context_handler;
     $this->layoutTempstoreRepository = $layout_tempstore_repository;
+    $this->tableConfigBuilder = $table_config_builder;
   }
 
   /**
@@ -112,6 +120,7 @@ class LogframeManager implements ContainerInjectionInterface {
       $container->get('plugin.manager.endpoint_query_manager'),
       $container->get('context.handler'),
       $container->get('layout_builder.tempstore_repository'),
+      $container->get('ghi_subpages.logframe_table_config_builder'),
     );
   }
 
@@ -327,22 +336,7 @@ class LogframeManager implements ContainerInjectionInterface {
       return strnatcasecmp($a->type, $b->type);
     });
     foreach (array_values($attachment_prototypes) as $id => $attachment_prototype) {
-      $table_config = [
-        'id' => $id,
-        'item_type' => 'attachment_table',
-        'config' => [
-          'attachment_prototype' => $attachment_prototype->id(),
-        ],
-      ];
-      $columns = [];
-      if ($attachment_prototype->isIndicator()) {
-        $columns = $this->buildIndicatorColumns($attachment_prototype, $plan);
-      }
-      else {
-        $columns = $this->buildCaseloadColumns($attachment_prototype, $plan);
-      }
-      $table_config['config']['table_form']['columns'] = $columns;
-      $configuration['hpc']['tables']['attachment_tables'][] = $table_config;
+      $configuration['hpc']['tables']['attachment_tables'][] = $this->tableConfigBuilder->build($attachment_prototype, $plan, $id);
     }
     // Append a new component.
     $config = array_filter([
@@ -424,186 +418,6 @@ class LogframeManager implements ContainerInjectionInterface {
       }
     }
     return $context_mapping;
-  }
-
-  /**
-   * Build caseload columns for an attachment prototype.
-   *
-   * @param \Drupal\ghi_plans\ApiObjects\Prototypes\AttachmentPrototype $attachment_prototype
-   *   The attachment prototype.
-   * @param \Drupal\ghi_plans\Entity\Plan $plan
-   *   The plan object that the attachment prototype belongs to.
-   *
-   * @return array
-   *   Configuration array for table columns compatible with configuration
-   *   container items.
-   */
-  private function buildCaseloadColumns(AttachmentPrototype $attachment_prototype, Plan $plan) {
-    $columns = [];
-    // Setup the columns.
-    $columns[] = [
-      'item_type' => 'attachment_label',
-      'config' => [
-        'label' => NULL,
-      ],
-      'id' => 0,
-    ];
-    // Take the in need and target metrics and the preferred measurement.
-    $field_types = $attachment_prototype->getFieldTypes();
-    $in_need = in_array('in_need', $field_types, TRUE) ? 'in_need' : NULL;
-    $target = in_array('target', $field_types, TRUE) ? 'target' : NULL;
-    $measure_fields = $attachment_prototype->getMeasurementFields();
-    $measure_candidates = [
-      'cumulative_reach',
-      'latest_reach',
-      'periodical_reach',
-    ];
-    $available_measures = array_intersect($measure_candidates, array_keys($measure_fields));
-    $measure = $available_measures ? reset($available_measures) : array_key_first($measure_fields);
-    $available_fields = [
-      $in_need,
-      $target,
-      $measure,
-    ];
-    $available_fields = array_filter($available_fields);
-    foreach ($available_fields as $metric_type) {
-      $columns[] = [
-        'id' => count($columns),
-        'item_type' => 'data_point',
-        'config' => [
-          'label' => '',
-          'data_point' => [
-            'processing' => 'single',
-            'calculation' => 'addition',
-            'data_points' => [
-              0 => [
-                'metric_type' => $metric_type,
-                'monitoring_period' => 'latest',
-              ],
-              1 => [
-                'metric_type' => NULL,
-                'monitoring_period' => 'latest',
-              ],
-            ],
-            'formatting' => 'auto',
-            'widget' => 'none',
-          ],
-        ],
-      ];
-    }
-    if ($measure && $target) {
-      $columns[] = [
-        'id' => count($columns),
-        'item_type' => 'data_point',
-        'config' => [
-          'label' => $attachment_prototype->getDefaultFieldLabel($measure, $plan->getPlanLanguage()) . ' %',
-          'data_point' => [
-            'processing' => 'calculated',
-            'calculation' => 'percentage',
-            'data_points' => [
-              0 => [
-                'metric_type' => $measure,
-                'monitoring_period' => 'latest',
-              ],
-              1 => [
-                'metric_type' => $target,
-                'monitoring_period' => 'latest',
-              ],
-            ],
-            'formatting' => 'auto',
-            'widget' => 'none',
-          ],
-        ],
-      ];
-    }
-    return $columns;
-  }
-
-  /**
-   * Build indicator columns for an attachment prototype.
-   *
-   * @param \Drupal\ghi_plans\ApiObjects\Prototypes\AttachmentPrototype $attachment_prototype
-   *   The attachment prototype.
-   * @param \Drupal\ghi_plans\Entity\Plan $plan
-   *   The plan object that the attachment prototype belongs to.
-   *
-   * @return array
-   *   Configuration array for table columns compatible with configuration
-   *   container items.
-   */
-  private function buildIndicatorColumns(AttachmentPrototype $attachment_prototype, Plan $plan) {
-    // Setup the columns.
-    $columns = [];
-    $columns[] = [
-      'item_type' => 'attachment_label',
-      'config' => [
-        'label' => NULL,
-      ],
-      'id' => count($columns),
-    ];
-    $columns[] = [
-      'item_type' => 'attachment_unit',
-      'config' => [
-        'label' => $this->t('Unit', [], ['langcode' => $plan->getPlanLanguage()]),
-      ],
-      'id' => count($columns),
-    ];
-
-    // Take the first metric of type target.
-    $field_types = $attachment_prototype->getFieldTypes();
-    $target = in_array('target', $field_types, TRUE) ? 'target' : NULL;
-
-    // Take the first available measurement from a pool of valid candidates.
-    $measure_candidates = [
-      'periodical_measure',
-      'measure',
-      'cumulative_measure',
-    ];
-    $available_measures = array_intersect($measure_candidates, $field_types);
-    $measure = $available_measures ? reset($available_measures) : NULL;
-
-    // Collect the available fields.
-    $available_fields = array_filter([$target, $measure]);
-    foreach ($available_fields as $metric_type) {
-      $columns[] = [
-        'id' => count($columns),
-        'item_type' => 'data_point',
-        'config' => [
-          'label' => '',
-          'data_point' => [
-            'processing' => 'single',
-            'calculation' => 'addition',
-            'data_points' => [
-              0 => [
-                'metric_type' => $metric_type,
-                'use_calculation_method' => '1',
-              ],
-              1 => [
-                'metric_type' => NULL,
-                'use_calculation_method' => '1',
-              ],
-            ],
-            'formatting' => 'auto',
-            'widget' => 'none',
-          ],
-        ],
-      ];
-    }
-    if ($measure) {
-      $columns[] = [
-        'id' => count($columns),
-        'item_type' => 'spark_line_chart',
-        'config' => [
-          'label' => $this->t('Progress', [], ['langcode' => $plan->getPlanLanguage()]),
-          'data_point' => $measure,
-          'baseline' => $target,
-          'use_calculation_method' => FALSE,
-          'monitoring_periods' => [],
-          'show_baseline' => 0,
-        ],
-      ];
-    }
-    return $columns;
   }
 
   /**
