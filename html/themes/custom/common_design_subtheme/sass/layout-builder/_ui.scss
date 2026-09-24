@@ -3,6 +3,11 @@
     color: var(--ghi-default-text-color);
   }
 
+  button.ghi-download__btn {
+    font-family: inherit;
+    font-size: var(--cd-font-size--small);
+  }
+
   &[data-block-preview="plan_webcontent_file"] {
     padding: 0;
   }
