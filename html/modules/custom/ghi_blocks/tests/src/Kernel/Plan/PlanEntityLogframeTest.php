@@ -15,6 +15,7 @@ use Drupal\ghi_blocks\Plugin\Block\Plan\PlanEntityLogframe;
 use Drupal\ghi_plans\ApiObjects\Entities\EntityObjectInterface;
 use Drupal\ghi_plans\ApiObjects\Plan;
 use Drupal\ghi_plans\ApiObjects\PlanEntityInterface;
+use Drupal\ghi_subpages\Logframe\LogframeTableConfigBuilder;
 use Drupal\ghi_subpages\LogframeManager;
 use Drupal\Tests\ghi_blocks\Kernel\PlanBlockKernelTestBase;
 
@@ -24,6 +25,11 @@ use Drupal\Tests\ghi_blocks\Kernel\PlanBlockKernelTestBase;
  * @group ghi_blocks
  */
 class PlanEntityLogframeTest extends PlanBlockKernelTestBase {
+
+  /**
+   * {@inheritdoc}
+   */
+  protected static $modules = ['hpc_downloads'];
 
   /**
    * Tests the block plugin instantiation.
@@ -303,6 +309,7 @@ class PlanEntityLogframeTest extends PlanBlockKernelTestBase {
     $logframe_manager = $this->prophesize(LogframeManager::class);
     $container = \Drupal::getContainer();
     $container->set('ghi_subpages.logframe_manager', $logframe_manager->reveal());
+    $container->set('ghi_subpages.logframe_table_config_builder', new LogframeTableConfigBuilder($container->get('string_translation')));
 
     return $this->createBlockPlugin('plan_entity_logframe', $configuration, $contexts);
   }

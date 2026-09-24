@@ -142,3 +142,42 @@ msgstr "Projet suivant"
 
 msgid "@project_code: @project_name"
 msgstr "@project_code : @project_name"
+
+msgid "Download full logframe"
+msgstr "Télécharger le cadre logique complet"
+
+msgid "Download cluster logframe"
+msgstr "Télécharger le cadre logique du cluster"
+
+msgid "Download sector logframe"
+msgstr "Télécharger le cadre logique du secteur"
+
+msgid "Download logframe"
+msgstr "Télécharger le cadre logique"
+
+msgid "Download scope"
+msgstr "Périmètre du téléchargement"
+
+msgid "Entity type"
+msgstr "Type d’entité"
+
+msgid "Entity reference"
+msgstr "Référence de l’entité"
+
+msgid "Entity description"
+msgstr "Description de l’entité"
+
+msgid "Parent type"
+msgstr "Type de l’entité parente"
+
+msgid "Parent reference"
+msgstr "Référence de l’entité parente"
+
+msgid "Parent description"
+msgstr "Description de l’entité parente"
+
+msgid "Attachment reference"
+msgstr "Référence de la pièce jointe"
+
+msgid "Data"
+msgstr "Données"

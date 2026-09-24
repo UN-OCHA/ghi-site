@@ -6,6 +6,8 @@ use Drupal\KernelTests\KernelTestBase;
 use Drupal\Tests\ghi_subpages\Traits\SubpageTestTrait;
 use Drupal\ghi_sections\Entity\SectionNodeInterface;
 use Drupal\ghi_subpages\Entity\SubpageNodeInterface;
+use Drupal\ghi_subpages\Logframe\LogframeTableConfigBuilder;
+use Drupal\ghi_subpages\LogframeManager;
 use Drupal\hpc_api\Helpers\StringHelper;
 
 /**
@@ -83,6 +85,15 @@ class SubpagesTest extends KernelTestBase {
       $subpage->save();
       $this->assertInstanceOf('\\Drupal\ghi_subpages\\Entity\\' . StringHelper::makeCamelCase($bundle_name, FALSE) . 'Subpage', $subpage);
     }
+  }
+
+  /**
+   * Tests logframe service availability before the blocks module is enabled.
+   */
+  public function testLogframeServicesWithoutBlocks(): void {
+    $this->assertFalse($this->container->get('module_handler')->moduleExists('ghi_blocks'));
+    $this->assertInstanceOf(LogframeTableConfigBuilder::class, $this->container->get('ghi_subpages.logframe_table_config_builder'));
+    $this->assertInstanceOf(LogframeManager::class, $this->container->get('ghi_subpages.logframe_manager'));
   }
 
   /**
