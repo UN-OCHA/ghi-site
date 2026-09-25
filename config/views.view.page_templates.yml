@@ -620,13 +620,6 @@ display:
             multiple: false
             remember_roles:
               authenticated: authenticated
-              anonymous: '0'
-              administrator: '0'
-              global_editor: '0'
-              editor: '0'
-              rpm_administrator: '0'
-              plan_lead: '0'
-              cluster_lead: '0'
             placeholder: ''
             autocomplete_filter: 0
             autocomplete_min_chars: '0'
@@ -685,13 +678,6 @@ display:
             multiple: false
             remember_roles:
               authenticated: authenticated
-              anonymous: '0'
-              administrator: '0'
-              global_editor: '0'
-              editor: '0'
-              rpm_administrator: '0'
-              plan_lead: '0'
-              cluster_lead: '0'
             reduce: true
           is_grouped: false
           group_info:
@@ -733,13 +719,6 @@ display:
             multiple: false
             remember_roles:
               authenticated: authenticated
-              anonymous: '0'
-              administrator: '0'
-              global_editor: '0'
-              editor: '0'
-              rpm_administrator: '0'
-              plan_lead: '0'
-              cluster_lead: '0'
           is_grouped: true
           group_info:
             label: Status
@@ -843,6 +822,7 @@ display:
           empty_table: true
           caption: ''
           description: ''
+          class: ''
       row:
         type: fields
       query:

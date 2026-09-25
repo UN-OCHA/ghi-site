@@ -3,12 +3,14 @@
 namespace Drupal\Tests\ghi_teams\Kernel;
 
 use Drupal\KernelTests\KernelTestBase;
+use PHPUnit\Framework\Attributes\CoversFunction;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
  * Tests some preprocess functions in ghi_teams.
- *
- * @group ghi_teams
  */
+#[CoversFunction('ghi_teams_preprocess_taxonomy_term')]
+#[Group('ghi_teams')]
 class TeamPreprocessTest extends KernelTestBase {
 
   /**
@@ -22,8 +24,6 @@ class TeamPreprocessTest extends KernelTestBase {
 
   /**
    * Tests ghi_teams_preprocess_taxonomy_term marks term pages as admin pages.
-   *
-   * @covers ::ghi_teams_preprocess_taxonomy_term
    */
   public function testPreprocessTaxonomyTerm() {
     $variables = [];

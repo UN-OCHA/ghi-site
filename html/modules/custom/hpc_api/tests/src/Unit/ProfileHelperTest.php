@@ -4,17 +4,19 @@ namespace Drupal\Tests\hpc_api\Unit;
 
 use Drupal\Tests\UnitTestCase;
 use Drupal\hpc_api\Helpers\ProfileHelper;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
- * @covers Drupal\hpc_api\Helpers\ProfileHelper
+ * Tests the profile helper.
  */
+#[CoversClass(ProfileHelper::class)]
 class ProfileHelperTest extends UnitTestCase {
 
   /**
    * Test profileStart returns a key.
-   *
-   * @group ProfileHelper
    */
+  #[Group('ProfileHelper')]
   public function testProfileStartReturnsKey() {
     $key = ProfileHelper::profileStart('test_operation');
     $this->assertNotEmpty($key);
@@ -23,9 +25,8 @@ class ProfileHelperTest extends UnitTestCase {
 
   /**
    * Test profileEnd completes a profile.
-   *
-   * @group ProfileHelper
    */
+  #[Group('ProfileHelper')]
   public function testProfileEnd() {
     ProfileHelper::profileStart('test_operation');
     ProfileHelper::profileEnd('test_operation');
@@ -37,9 +38,8 @@ class ProfileHelperTest extends UnitTestCase {
 
   /**
    * Test profileSummary returns array.
-   *
-   * @group ProfileHelper
    */
+  #[Group('ProfileHelper')]
   public function testProfileSummaryReturnsArray() {
     ProfileHelper::profileStart('test_op');
     ProfileHelper::profileEnd('test_op');
@@ -50,9 +50,8 @@ class ProfileHelperTest extends UnitTestCase {
 
   /**
    * Test duplicate keys get incremented.
-   *
-   * @group ProfileHelper
    */
+  #[Group('ProfileHelper')]
   public function testDuplicateKeysIncremented() {
     $key1 = ProfileHelper::profileStart('duplicate');
     $key2 = ProfileHelper::profileStart('duplicate');

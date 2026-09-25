@@ -4,13 +4,12 @@ namespace Drupal\Tests\ghi_geojson\Functional;
 
 use Drupal\Core\File\FileSystemInterface;
 use Drupal\Tests\BrowserTestBase;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
  * Functional tests for the GeoJsonSourcesController.
- *
- * @coversDefaultClass \Drupal\ghi_geojson\Controller\GeoJsonSourcesController
- * @group ghi_geojson
  */
+#[Group('ghi_geojson')]
 class GeoJsonSourcesControllerTest extends BrowserTestBase {
 
   /**

@@ -5,17 +5,19 @@ namespace Drupal\Tests\ghi_blocks\Unit;
 use Drupal\Tests\UnitTestCase;
 use Drupal\ghi_blocks\Helpers\LinkConfigurationUpdateHelper;
 use Drupal\layout_builder\SectionComponent;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
- * @covers Drupal\ghi_blocks\Helpers\LinkConfigurationUpdateHelper
+ * Tests link configuration updates.
  */
+#[CoversClass(LinkConfigurationUpdateHelper::class)]
 class LinkConfigurationUpdateHelperTest extends UnitTestCase {
 
   /**
    * Test updatePlanHeadlineFiguresComponent with empty items.
-   *
-   * @group LinkConfigurationUpdateHelper
    */
+  #[Group('LinkConfigurationUpdateHelper')]
   public function testUpdatePlanHeadlineFiguresComponentEmptyItems() {
     $component = $this->createMockComponent([]);
     $result = LinkConfigurationUpdateHelper::updatePlanHeadlineFiguresComponent($component);
@@ -24,9 +26,8 @@ class LinkConfigurationUpdateHelperTest extends UnitTestCase {
 
   /**
    * Test updatePlanHeadlineFiguresComponent with add_link.
-   *
-   * @group LinkConfigurationUpdateHelper
    */
+  #[Group('LinkConfigurationUpdateHelper')]
   public function testUpdatePlanHeadlineFiguresComponentWithAddLink() {
     $configuration = [
       'hpc' => [
@@ -57,9 +58,8 @@ class LinkConfigurationUpdateHelperTest extends UnitTestCase {
 
   /**
    * Test updateLinksComponent with empty links.
-   *
-   * @group LinkConfigurationUpdateHelper
    */
+  #[Group('LinkConfigurationUpdateHelper')]
   public function testUpdateLinksComponentEmptyLinks() {
     $component = $this->createMockComponent([]);
     $result = LinkConfigurationUpdateHelper::updateLinksComponent($component);
@@ -68,9 +68,8 @@ class LinkConfigurationUpdateHelperTest extends UnitTestCase {
 
   /**
    * Test updateLinksComponent with link item.
-   *
-   * @group LinkConfigurationUpdateHelper
    */
+  #[Group('LinkConfigurationUpdateHelper')]
   public function testUpdateLinksComponentWithLinkItem() {
     $configuration = [
       'hpc' => [
@@ -99,9 +98,8 @@ class LinkConfigurationUpdateHelperTest extends UnitTestCase {
 
   /**
    * Test updatePlanEntityTypesComponent with empty display.
-   *
-   * @group LinkConfigurationUpdateHelper
    */
+  #[Group('LinkConfigurationUpdateHelper')]
   public function testUpdatePlanEntityTypesComponentEmptyDisplay() {
     $component = $this->createMockComponent([]);
     $result = LinkConfigurationUpdateHelper::updatePlanEntityTypesComponent($component);
@@ -110,9 +108,8 @@ class LinkConfigurationUpdateHelperTest extends UnitTestCase {
 
   /**
    * Test updatePlanEntityTypesComponent with link.
-   *
-   * @group LinkConfigurationUpdateHelper
    */
+  #[Group('LinkConfigurationUpdateHelper')]
   public function testUpdatePlanEntityTypesComponentWithLink() {
     $configuration = [
       'hpc' => [

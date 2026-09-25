@@ -9,12 +9,12 @@ use Drupal\Tests\ghi_base_objects\Traits\FieldTestTrait;
 use Drupal\Tests\taxonomy\Traits\TaxonomyTestTrait;
 use Drupal\taxonomy\Entity\Term;
 use Drupal\taxonomy\Entity\Vocabulary;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
  * Tests the node wizard pages.
- *
- * @group ghi_sections
  */
+#[Group('ghi_sections')]
 class WizardTest extends BrowserTestBase {
 
   use BaseObjectTestTrait;

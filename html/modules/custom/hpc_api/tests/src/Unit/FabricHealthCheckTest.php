@@ -8,14 +8,16 @@ use Drupal\Core\State\StateInterface;
 use Drupal\hpc_api\FabricHealthCheck;
 use Drupal\hpc_api\Query\FabricClient;
 use Drupal\Tests\UnitTestCase;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
 use Prophecy\Argument;
 use Prophecy\PhpUnit\ProphecyTrait;
 
 /**
- * @covers \Drupal\hpc_api\FabricHealthCheck
- *
- * @group HPC API
+ * Tests the Fabric health check.
  */
+#[CoversClass(FabricHealthCheck::class)]
+#[Group('HPC API')]
 class FabricHealthCheckTest extends UnitTestCase {
 
   use ProphecyTrait;

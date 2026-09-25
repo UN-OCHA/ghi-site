@@ -5,12 +5,12 @@ namespace Drupal\Tests\ghi_base_objects\Kernel;
 use Drupal\Core\Link;
 use Drupal\KernelTests\KernelTestBase;
 use Drupal\Tests\ghi_base_objects\Traits\BaseObjectTestTrait;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
  * Tests the admin listing fallback when views is not enabled.
- *
- * @group ghi_base_objects
  */
+#[Group('ghi_base_objects')]
 class BaseObjectListBuilderTest extends KernelTestBase {
 
   use BaseObjectTestTrait;

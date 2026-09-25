@@ -8,12 +8,12 @@ use Drupal\layout_builder\Entity\LayoutBuilderEntityViewDisplay;
 use Drupal\layout_builder\LayoutEntityHelperTrait;
 use Drupal\layout_builder\Plugin\SectionStorage\DefaultsSectionStorage;
 use Drupal\layout_builder\Plugin\SectionStorage\OverridesSectionStorage;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
  * Tests aspects of the page elements UI.
- *
- * @group ghi_blocks
  */
+#[Group('ghi_blocks')]
 class PageElementsUiTest extends BrowserTestBase {
 
   use SubpageTestTrait;

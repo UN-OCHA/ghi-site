@@ -138,6 +138,7 @@ abstract class EntityObjectBase extends ApiObjectBase implements EntityObjectInt
       case 'composed_reference':
         return $this->getComposedReference();
     }
+    return NULL;
   }
 
   /**

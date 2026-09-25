@@ -12,13 +12,13 @@ use Drupal\ghi_plans\Plugin\FabricQuery\PlanQuery;
 use Drupal\hpc_downloads\Interfaces\HPCDownloadExcelInterface;
 use Drupal\hpc_downloads\Interfaces\HPCDownloadPNGInterface;
 use Drupal\Tests\ghi_blocks\Kernel\PlanBlockKernelTestBase;
+use PHPUnit\Framework\Attributes\Group;
 use Prophecy\Argument;
 
 /**
  * Tests the plan caseload trends block plugin.
- *
- * @group ghi_blocks
  */
+#[Group('ghi_blocks')]
 class PlanCaseloadTrendsTableTest extends PlanBlockKernelTestBase {
 
   const PLAN_ID = 10;

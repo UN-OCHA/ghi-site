@@ -12,13 +12,13 @@ use Drupal\ghi_plans\Plugin\FabricQuery\AttachmentQuery;
 use Drupal\hpc_api\Query\EndpointQueryManager;
 use Drupal\hpc_api\Query\FabricQueryManager;
 use Drupal\Tests\UnitTestCase;
+use PHPUnit\Framework\Attributes\Group;
 use Symfony\Component\DependencyInjection\Container;
 
 /**
  * Test the attachment data configuration item plugin.
- *
- * @group AttachmentData
  */
+#[Group('AttachmentData')]
 class AttachmentDataTest extends UnitTestCase {
 
   /**

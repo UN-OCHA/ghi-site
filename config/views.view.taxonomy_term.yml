@@ -335,12 +335,6 @@ display:
             multiple: false
             remember_roles:
               authenticated: authenticated
-              anonymous: '0'
-              administrator: '0'
-              editor: '0'
-              rpm_administrator: '0'
-              plan_lead: '0'
-              cluster_lead: '0'
             reduce: false
           is_grouped: false
           group_info:
@@ -398,6 +392,7 @@ display:
         options:
           row_class: ''
           default_row_class: true
+          class: ''
       row:
         type: 'entity:node'
         options:
@@ -462,7 +457,7 @@ display:
         type: node_rss
         options:
           relationship: none
-          view_mode: default
+          view_mode: rss
       query:
         type: views_query
         options: {  }

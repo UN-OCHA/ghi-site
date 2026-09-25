@@ -316,13 +316,13 @@ class Excel {
     }
 
     if (is_array($value) && (!empty($value['#theme']) || !empty($value['#type']) || !empty($value['#plain_text']))) {
-      $render_value = $has_render_context ? $renderer->render($value) : $renderer->renderPlain($value);
+      $render_value = $has_render_context ? $renderer->render($value) : $renderer->renderInIsolation($value);
       return trim(strip_tags(Html::decodeEntities((string) $render_value)));
     }
 
     if (is_array($value) && array_key_exists('data', $value)) {
       if (is_array($value['data']) && (!empty($value['data']['#theme']) || !empty($value['data']['#type']) || !empty($value['data']['#plain_text']))) {
-        $render_value = $has_render_context ? $renderer->render($value['data']) : $renderer->renderPlain($value['data']);
+        $render_value = $has_render_context ? $renderer->render($value['data']) : $renderer->renderInIsolation($value['data']);
         $value['data'] = trim(strip_tags(Html::decodeEntities((string) $render_value)));
       }
       elseif (is_object($value['data'])) {

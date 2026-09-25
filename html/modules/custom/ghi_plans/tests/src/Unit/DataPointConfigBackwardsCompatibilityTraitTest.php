@@ -5,19 +5,21 @@ namespace Drupal\Tests\ghi_plans\Unit;
 use Drupal\Tests\UnitTestCase;
 use Drupal\ghi_plans\Traits\DataPointConfigBackwardsCompatibilityTrait;
 use Drupal\ghi_plans\ApiObjects\Prototypes\AttachmentPrototype;
+use PHPUnit\Framework\Attributes\CoversTrait;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
- * @covers Drupal\ghi_plans\Traits\DataPointConfigBackwardsCompatibilityTrait
+ * Tests backwards compatibility for data point configuration.
  */
+#[CoversTrait(DataPointConfigBackwardsCompatibilityTrait::class)]
 class DataPointConfigBackwardsCompatibilityTraitTest extends UnitTestCase {
 
   use DataPointConfigBackwardsCompatibilityTrait;
 
   /**
    * Test getMetricTypeByIndex returns correct metric type.
-   *
-   * @group DataPointConfigBackwardsCompatibilityTrait
    */
+  #[Group('DataPointConfigBackwardsCompatibilityTrait')]
   public function testGetMetricTypeByIndex() {
     $prototype = $this->createMockPrototype(['type_a', 'type_b', 'type_c']);
 
@@ -27,9 +29,8 @@ class DataPointConfigBackwardsCompatibilityTraitTest extends UnitTestCase {
 
   /**
    * Test getMetricTypeByIndex prefers original legacy field positions.
-   *
-   * @group DataPointConfigBackwardsCompatibilityTrait
    */
+  #[Group('DataPointConfigBackwardsCompatibilityTrait')]
   public function testGetMetricTypeByIndexUsesOriginalIndexDefinitions() {
     $prototype = $this->createMockPrototype(['type_a', 'type_b']);
     $prototype->method('getMetricTypeByOriginalIndex')
@@ -42,9 +43,8 @@ class DataPointConfigBackwardsCompatibilityTraitTest extends UnitTestCase {
 
   /**
    * Test getMetricTypeByIndex returns null for out of bounds index.
-   *
-   * @group DataPointConfigBackwardsCompatibilityTrait
    */
+  #[Group('DataPointConfigBackwardsCompatibilityTrait')]
   public function testGetMetricTypeByIndexOutOfBounds() {
     $prototype = $this->createMockPrototype(['type_a', 'type_b']);
 
@@ -54,9 +54,8 @@ class DataPointConfigBackwardsCompatibilityTraitTest extends UnitTestCase {
 
   /**
    * Test updateDataPointConfiguration adds metric type.
-   *
-   * @group DataPointConfigBackwardsCompatibilityTrait
    */
+  #[Group('DataPointConfigBackwardsCompatibilityTrait')]
   public function testUpdateDataPointConfiguration() {
     $prototype = $this->createMockPrototype(['type_a', 'type_b']);
 
@@ -75,9 +74,8 @@ class DataPointConfigBackwardsCompatibilityTraitTest extends UnitTestCase {
 
   /**
    * Test updateDataPointConfiguration skips existing metric types.
-   *
-   * @group DataPointConfigBackwardsCompatibilityTrait
    */
+  #[Group('DataPointConfigBackwardsCompatibilityTrait')]
   public function testUpdateDataPointConfigurationSkipsExisting() {
     $prototype = $this->createMockPrototype(['type_a', 'type_b']);
 

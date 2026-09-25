@@ -12,14 +12,15 @@ use Drupal\hpc_api\Query\FabricClient;
 use Drupal\hpc_api\Query\FabricQuery;
 use Drupal\hpc_api\Query\FabricQueryManager;
 use Drupal\Tests\UnitTestCase;
+use PHPUnit\Framework\Attributes\CoversMethod;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
  * Tests the plan Fabric query plugin.
- *
- * @group ghi_plans
- *
- * @coversDefaultClass \Drupal\ghi_plans\Plugin\FabricQuery\PlanQuery
  */
+#[CoversMethod(PlanQuery::class, 'getPlansById')]
+#[CoversMethod(PlanQuery::class, 'getPlansByYear')]
+#[Group('ghi_plans')]
 class PlanQueryTest extends UnitTestCase {
 
   /**
@@ -76,9 +77,6 @@ class PlanQueryTest extends UnitTestCase {
 
   /**
    * Tests that year collections include plans already loaded by ID.
-   *
-   * @covers ::getPlansById
-   * @covers ::getPlansByYear
    */
   public function testGetPlansByYearIncludesCachedPlans(): void {
     $this->fabricClient->method('execute')

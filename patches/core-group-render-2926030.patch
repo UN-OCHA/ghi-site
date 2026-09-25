@@ -1,0 +1,100 @@
+diff --git a/core/lib/Drupal/Core/Render/Element/RenderElementBase.php b/core/lib/Drupal/Core/Render/Element/RenderElementBase.php
+index ec4ab6f89ae41ae09a7dd7023c8fc1f712a8308a..981f5032bad44931b88f1fca7464e71c09d4ef0f 100644
+--- a/core/lib/Drupal/Core/Render/Element/RenderElementBase.php
++++ b/core/lib/Drupal/Core/Render/Element/RenderElementBase.php
+@@ -170,7 +170,9 @@ public static function preRenderGroup($element) {
+ 
+     // Inject group member elements belonging to this group.
+     $parents = implode('][', $element['#parents']);
+-    $children = Element::children($element['#groups'][$parents]);
++    // When a theme renders this element's children, its group members have
++    // already been added by the initial render pass.
++    $children = isset($element['#render_children']) ? [] : Element::children($element['#groups'][$parents]);
+     if (!empty($children)) {
+       foreach ($children as $key) {
+         // Break references and indicate that the element should be rendered as
+diff --git a/core/tests/Drupal/KernelTests/Core/Form/FormElementGroupingTest.php b/core/tests/Drupal/KernelTests/Core/Form/FormElementGroupingTest.php
+new file mode 100644
+index 0000000000000000000000000000000000000000..de3a8bdc7710252443732d3b8ba4d8890df0ce2a
+--- /dev/null
++++ b/core/tests/Drupal/KernelTests/Core/Form/FormElementGroupingTest.php
+@@ -0,0 +1,79 @@
++<?php
++
++declare(strict_types=1);
++
++namespace Drupal\KernelTests\Core\Form;
++
++use Drupal\Core\Form\FormInterface;
++use Drupal\Core\Form\FormStateInterface;
++use Drupal\KernelTests\KernelTestBase;
++use PHPUnit\Framework\Attributes\Group;
++use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
++
++/**
++ * Tests rendering of grouped form elements.
++ */
++#[Group('Form')]
++#[RunTestsInSeparateProcesses]
++class FormElementGroupingTest extends KernelTestBase implements FormInterface {
++
++  /**
++   * {@inheritdoc}
++   */
++  protected static $modules = ['datetime', 'system'];
++
++  /**
++   * {@inheritdoc}
++   */
++  protected function setUp(): void {
++    parent::setUp();
++
++    $this->installConfig(['system']);
++  }
++
++  /**
++   * {@inheritdoc}
++   */
++  public function getFormId(): string {
++    return 'test_form_element_grouping';
++  }
++
++  /**
++   * {@inheritdoc}
++   */
++  public function buildForm(array $form, FormStateInterface $form_state): array {
++    $form['group'] = [
++      '#type' => 'datetime',
++    ];
++    $form['grouped_textfield'] = [
++      '#type' => 'textfield',
++      '#group' => 'group',
++    ];
++
++    return $form;
++  }
++
++  /**
++   * {@inheritdoc}
++   */
++  public function validateForm(array &$form, FormStateInterface $form_state): void {}
++
++  /**
++   * {@inheritdoc}
++   */
++  public function submitForm(array &$form, FormStateInterface $form_state): void {}
++
++  /**
++   * Tests that group members are rendered only once.
++   */
++  public function testGroupedElementRendering(): void {
++    $form = \Drupal::formBuilder()->getForm($this);
++    // The datetime template renders the element again to render its children.
++    // Group members must not be added again during that second rendering pass.
++    $this->render($form);
++
++    $this->assertCount(1, $this->cssSelect('input[name="grouped_textfield"]'));
++    $this->assertCount(1, $this->cssSelect('#edit-group input[name="grouped_textfield"]'));
++  }
++
++}

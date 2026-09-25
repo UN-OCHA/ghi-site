@@ -2,6 +2,7 @@
 
 namespace Drupal\ghi_content\Traits;
 
+use Drupal\Component\Utility\UrlHelper;
 use Drupal\Core\Url;
 use Drupal\ghi_content\Entity\Article;
 use Drupal\ghi_content\Entity\Document;
@@ -104,6 +105,8 @@ trait ContentPathTrait {
    *   The document node or NULL if not found.
    */
   protected function getDocumentNodeFromPath($path, $root = FALSE) {
+    // A destination query parameter can contain an unrelated document path.
+    $path = UrlHelper::parse($path)['path'];
     $document_path_pos = strpos($path, '/document/');
     if ($document_path_pos === FALSE) {
       return NULL;
@@ -158,8 +161,9 @@ trait ContentPathTrait {
       $loaded[$alias] = NULL;
       try {
         $params = Url::fromUri("internal:" . $path)->getRouteParameters();
-        $entity_type = key($params);
-        $loaded[$alias] = \Drupal::entityTypeManager()->getStorage($entity_type)->load($params[$entity_type]);
+        if (isset($params['node'])) {
+          $loaded[$alias] = \Drupal::entityTypeManager()->getStorage('node')->load($params['node']);
+        }
       }
       catch (\Exception $e) {
         // If this didn't work, see if there is a redirect by the given path

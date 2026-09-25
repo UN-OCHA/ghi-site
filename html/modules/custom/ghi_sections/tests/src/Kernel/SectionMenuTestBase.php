@@ -5,12 +5,12 @@ namespace Drupal\Tests\ghi_sections\Kernel;
 use Drupal\KernelTests\KernelTestBase;
 use Drupal\Tests\ghi_sections\Traits\SectionTestTrait;
 use Drupal\Tests\user\Traits\UserCreationTrait;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
  * Base class for section menu tests.
- *
- * @group ghi_sections
  */
+#[Group('ghi_sections')]
 abstract class SectionMenuTestBase extends KernelTestBase {
 
   use UserCreationTrait;

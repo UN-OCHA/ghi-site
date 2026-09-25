@@ -4,12 +4,12 @@ namespace Drupal\Tests\ghi_plans\Unit;
 
 use Drupal\ghi_plans\ApiObjects\Organization;
 use Drupal\ghi_plans\ApiObjects\Project;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
  * Tests the Project API object.
- *
- * @group ghi_plans
  */
+#[Group('ghi_plans')]
 class ProjectTest extends ApiObjectTestBase {
 
   /**

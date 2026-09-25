@@ -10,12 +10,13 @@ use Drupal\hpc_api\ApiObjects\ApiObjectBase;
 use Drupal\hpc_api\ConfigService;
 use Drupal\hpc_api\ObjectStore;
 use Drupal\Tests\UnitTestCase;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
  * Test for the object store.
- *
- * @covers Drupal\hpc_api\ObjectStore
  */
+#[CoversClass(ObjectStore::class)]
 class ObjectStoreTest extends UnitTestCase {
 
   /**
@@ -57,9 +58,8 @@ class ObjectStoreTest extends UnitTestCase {
 
   /**
    * Test the object store.
-   *
-   * @group ObjectStore
    */
+  #[Group('ObjectStore')]
   public function testObjectStore() {
     $object_store = new ObjectStore();
     $storage_key = CustomApiObject::getObjectStorageKey();
@@ -84,9 +84,8 @@ class ObjectStoreTest extends UnitTestCase {
 
   /**
    * Test the object store exceptions.
-   *
-   * @group ObjectStore
    */
+  #[Group('ObjectStore')]
   public function testObjectStoreException() {
     $object_store = new ObjectStore();
     $storage_key = CustomApiObject::getObjectStorageKey();
@@ -98,9 +97,8 @@ class ObjectStoreTest extends UnitTestCase {
 
   /**
    * Test the object collections.
-   *
-   * @group ObjectStore
    */
+  #[Group('ObjectStore')]
   public function testObjectCollection() {
     $object_store = new ObjectStore();
     $storage_key = CustomApiObject::getObjectStorageKey();
@@ -116,9 +114,8 @@ class ObjectStoreTest extends UnitTestCase {
 
   /**
    * Test that the object store does not use a persistent cache backend.
-   *
-   * @group ObjectStore
    */
+  #[Group('ObjectStore')]
   public function testObjectStoreDoesNotUsePersistentCache() {
     $cache = $this->createMock(CacheBackendInterface::class);
     $cache->expects($this->never())->method('get');

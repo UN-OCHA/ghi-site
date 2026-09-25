@@ -8,12 +8,12 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Messenger\MessengerInterface;
 use Drupal\ghi_blocks\Form\InlineOnlyFormErrorHandler;
 use Drupal\Tests\UnitTestCase;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
  * Tests the inline-only form error handler.
- *
- * @group ghi_blocks
  */
+#[Group('ghi_blocks')]
 class InlineOnlyFormErrorHandlerTest extends UnitTestCase {
 
   /**

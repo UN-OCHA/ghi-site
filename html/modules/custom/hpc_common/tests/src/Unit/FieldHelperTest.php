@@ -7,18 +7,20 @@ use Drupal\Core\Field\FieldDefinitionInterface;
 use Drupal\Core\Field\FieldStorageDefinitionInterface;
 use Drupal\Tests\UnitTestCase;
 use Drupal\hpc_common\Helpers\FieldHelper;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
- * @covers Drupal\hpc_common\Helpers\FieldHelper
+ * Tests the field helper.
  */
+#[CoversClass(FieldHelper::class)]
 class FieldHelperTest extends UnitTestCase {
 
   /**
    * Test getBooleanFieldOptions returns NULL for non-existent field.
-   *
-   * @group FieldHelper
    */
+  #[Group('FieldHelper')]
   public function testGetBooleanFieldOptionsNonExistentField() {
     $container = $this->createMockContainerWithEntityFieldManager([]);
     \Drupal::setContainer($container);
@@ -29,9 +31,8 @@ class FieldHelperTest extends UnitTestCase {
 
   /**
    * Test getBooleanFieldOptions returns NULL for non-boolean field.
-   *
-   * @group FieldHelper
    */
+  #[Group('FieldHelper')]
   public function testGetBooleanFieldOptionsNonBooleanField() {
     $field_definition = $this->createMockFieldDefinition('string');
 
@@ -46,9 +47,8 @@ class FieldHelperTest extends UnitTestCase {
 
   /**
    * Test getBooleanFieldOptions returns options for boolean field.
-   *
-   * @group FieldHelper
    */
+  #[Group('FieldHelper')]
   public function testGetBooleanFieldOptionsValidBooleanField() {
     $field_definition = $this->createMockFieldDefinition('boolean', [
       'on_label' => 'Yes',

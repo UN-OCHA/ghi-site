@@ -8,15 +8,15 @@ use Drupal\Core\Session\AccountProxyInterface;
 use Drupal\ghi_plans\Plugin\EndpointQuery\FlowSearchQuery;
 use Drupal\hpc_api\Query\EndpointQuery;
 use Drupal\Tests\UnitTestCase;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
 use Prophecy\PhpUnit\ProphecyTrait;
 
 /**
  * Tests the flow search endpoint query plugin.
- *
- * @covers \Drupal\ghi_plans\Plugin\EndpointQuery\FlowSearchQuery
- *
- * @group ghi_plans
  */
+#[CoversClass(FlowSearchQuery::class)]
+#[Group('ghi_plans')]
 class FlowSearchQueryTest extends UnitTestCase {
 
   use ProphecyTrait;

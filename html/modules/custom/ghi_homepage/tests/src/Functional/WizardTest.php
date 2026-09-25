@@ -12,13 +12,13 @@ use Drupal\ghi_homepage\Entity\Homepage;
 use Drupal\node\Entity\Node;
 use Drupal\taxonomy\Entity\Term;
 use Drupal\taxonomy\Entity\Vocabulary;
+use PHPUnit\Framework\Attributes\Group;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Tests the node wizard pages.
- *
- * @group ghi_homepage
  */
+#[Group('ghi_homepage')]
 class WizardTest extends BrowserTestBase {
 
   use BaseObjectTestTrait;
@@ -32,6 +32,7 @@ class WizardTest extends BrowserTestBase {
    * @var array
    */
   protected static $modules = [
+    'toolbar',
     'gin_lb',
     'ghi_homepage',
   ];

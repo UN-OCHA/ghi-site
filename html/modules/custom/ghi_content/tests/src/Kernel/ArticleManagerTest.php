@@ -12,12 +12,12 @@ use Drupal\ghi_sections\Entity\Section;
 use Drupal\node\Entity\Node;
 use Drupal\node\Entity\NodeType;
 use Drupal\node\NodeInterface;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
  * Tests the article manager.
- *
- * @group ghi_content
  */
+#[Group('ghi_content')]
 class ArticleManagerTest extends KernelTestBase {
 
   use TaxonomyTestTrait;

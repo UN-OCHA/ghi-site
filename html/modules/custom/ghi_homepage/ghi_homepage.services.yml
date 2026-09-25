@@ -3,3 +3,8 @@ services:
     class: Drupal\ghi_homepage\EventSubscriber\RouteSubscriber
     tags:
       - { name: event_subscriber }
+  ghi_homepage.overview_subscriber:
+    class: Drupal\ghi_homepage\EventSubscriber\OverviewSubscriber
+    arguments: ['@entity_type.manager']
+    tags:
+      - { name: event_subscriber }

@@ -6,12 +6,12 @@ use Drupal\ghi_base_objects\ApiObjects\BaseObject;
 use Drupal\Tests\UnitTestCase;
 use Drupal\Tests\ghi_base_objects\Traits\BaseObjectTestTrait;
 use Drupal\Tests\hpc_api\Traits\PrivateAccessorTrait;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
  * Base class for api object tests.
- *
- * @group ghi_base_objects
  */
+#[Group('ghi_base_objects')]
 abstract class ApiBaseObjectTestBase extends UnitTestCase {
 
   use BaseObjectTestTrait;

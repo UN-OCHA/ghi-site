@@ -3,12 +3,12 @@
 namespace Drupal\Tests\ghi_plans\Kernel\ApiObjects;
 
 use Drupal\Tests\ghi_base_objects\Kernel\BaseObjectKernelTestBase;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
  * Base class for ghi_plans ApiObject kernel tests.
- *
- * @group ghi_plans
  */
+#[Group('ghi_plans')]
 abstract class PlanApiObjectKernelTestBase extends BaseObjectKernelTestBase {
 
   /**
