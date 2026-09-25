@@ -3,7 +3,10 @@
 namespace Drupal\Tests\ghi_blocks\Kernel\Global;
 
 use Drupal\Core\Entity\Entity\EntityViewDisplay;
+use Drupal\Core\Entity\EntityStorageInterface;
+use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\FormState;
+use Drupal\Core\Link;
 use Drupal\Core\Plugin\Context\Context;
 use Drupal\Core\Plugin\Context\ContextDefinition;
 use Drupal\ghi_blocks\Plugin\Block\GlobalPage\HistoricalTrends;
@@ -14,6 +17,7 @@ use Drupal\hpc_downloads\DownloadMethods\Excel;
 use Drupal\layout_builder\Section;
 use Drupal\layout_builder\SectionComponent;
 use Drupal\node\Entity\NodeType;
+use Drupal\page_manager\PageInterface;
 use Drupal\Tests\ghi_blocks\Kernel\PlanBlockKernelTestBase;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 
@@ -76,8 +80,15 @@ class HistoricalTrendsTest extends PlanBlockKernelTestBase {
     $this->assertSame('Published adjustment', $rows[1]['funding_progress']['export_commentary']);
     $this->assertSame(25.0, $rows[1]['funding_progress']['data'][0]['#percent']);
     $this->assertSame('Published adjustment', $rows[1]['funding_progress']['data']['tooltips']['#tooltips']['#tooltip']['#plain_text']);
-    $this->assertSame($rows, $block->buildDownloadData()['rows']);
+    $this->assertEquals($rows, $block->buildDownloadData()['rows']);
     $this->assertEquals($build['#header'], $block->buildDownloadData()['header']);
+    foreach ($rows as $row) {
+      $year = $row['year']['export_value'];
+      $link = $row['year']['data'];
+      $this->assertInstanceOf(Link::class, $link);
+      $this->assertSame($year, $link->getText());
+      $this->assertSame('/overview/' . $year, $link->getUrl()->toString());
+    }
   }
 
   /**
@@ -279,9 +290,20 @@ class HistoricalTrendsTest extends PlanBlockKernelTestBase {
    *   The configured block.
    */
   private function createHistoricalTrendsBlock(array $configuration = []): HistoricalTrends {
-    return $this->createBlockPlugin('global_historical_trends', $configuration, [
+    $block = $this->createBlockPlugin('global_historical_trends', $configuration, [
       'year' => new Context(new ContextDefinition('integer'), 2026),
     ]);
+
+    // Mock Page Manager's configured path while retaining real node storage.
+    $page = $this->createMock(PageInterface::class);
+    $page->method('getPath')->willReturn('/overview/{year}');
+    $page_storage = $this->createMock(EntityStorageInterface::class);
+    $page_storage->method('load')->with('homepage')->willReturn($page);
+    $entity_type_manager = $this->createMock(EntityTypeManagerInterface::class);
+    $entity_type_manager->method('getStorage')->willReturnCallback(fn ($entity_type) => $entity_type === 'page' ? $page_storage : $this->container->get('entity_type.manager')->getStorage($entity_type));
+    $this->setPrivateProperty($block, 'entityTypeManager', $entity_type_manager);
+
+    return $block;
   }
 
   /**
