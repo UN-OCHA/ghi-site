@@ -7,6 +7,7 @@ use Drupal\Core\Block\BlockManagerInterface;
 use Drupal\Core\Cache\Cache;
 use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Link;
 use Drupal\Core\Plugin\Context\ContextDefinition;
 use Drupal\Core\Plugin\Context\EntityContextDefinition;
 use Drupal\Core\Session\AnonymousUserSession;
@@ -120,7 +121,7 @@ class HistoricalTrends extends GHIBlockBase implements OverrideDefaultTitleBlock
       $figures = $this->getHomepageFigures($homepage, array_keys($columns), $cacheability);
       $row = [
         'year' => [
-          'data' => $year,
+          'data' => Link::fromTextAndUrl($year, $this->getHomepageUrlForYear($year)),
           'data-raw-value' => $year,
           'data-column-type' => 'number',
           'export_value' => $year,
