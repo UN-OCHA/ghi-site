@@ -19,6 +19,7 @@
      */
     constructor (state) {
       this.state = state;
+      this.pending = 0;
 
       let $container = state.getCanvasContainer().parent().parent();
       if ($container.find('.map-throbber').length == 0) {
@@ -42,6 +43,7 @@
      * Show the throbber.
      */
     show = function () {
+      this.pending++;
       if (!this.isVisible()) {
         $(this.containerWrapper).show();
       }
@@ -51,7 +53,10 @@
      * Hide the throbber.
      */
     hide = function () {
-      $(this.containerWrapper).hide();
+      this.pending = Math.max(0, this.pending - 1);
+      if (!this.pending) {
+        $(this.containerWrapper).hide();
+      }
     }
 
     /**

@@ -33,6 +33,11 @@
       this.state = state;
       this.options = options;
       this.loaded = false;
+      this.renderVersion = 0;
+      this.renderFrame = null;
+      this.renderTimer = null;
+      this.finishRender = null;
+      this.locationsById = {};
       this.sourceId = state.getMapId();
       this.featureLayerId = this.sourceId + '-composite';
       this.labelLayerId = this.sourceId + '-label';
@@ -121,14 +126,13 @@
         // Add source and layer for the admin area outlines.
         map.addSource(this.adminAreaSourceId, this.state.buildGeoJsonSource(null));
         this.addAdminAreaLayers();
-        this.buildAdminAreaFeatures();
 
         // Add a layer for the labels, so that we can keep showing them on top
         // of colored admin area or country outlines.
         map.addLayer(this.state.buildLabelLayer(this.labelLayerId));
 
         // Initial drawing of the donuts.
-        map.addSource(self.sourceId, this.buildSource());
+        map.addSource(self.sourceId, this.state.buildGeoJsonSource(null));
 
         // Show the names of the admin areas as map labels.
         this.addAdminAreaLabels();
@@ -139,7 +143,8 @@
         this.addEventListeners(self.sourceId);
 
         // Preload all geojson files asynchronously.
-        state.getMapController().loadFeaturesAsync(this.getFullPieLocations(false, false), () => {}, state);
+        state.getMapController().loadFeaturesAsync(this.getFullPieLocations(false, false), () => {});
+        this.renderLocations();
       });
 
     }
@@ -155,15 +160,57 @@
         return;
       }
 
-      // Update the data.
-      let features = this.updateFeatures(duration);
-      this.updateMapData(this.sourceId, features);
-      this.updateMarkers(features, true);
+      const version = ++this.renderVersion;
+      cancelAnimationFrame(this.renderFrame);
+      clearTimeout(this.renderTimer);
+      this.finishRender?.();
+      const controller = this.state.getMapController();
+      const map = this.state.getMap();
+      controller.showThrobber(this.state);
+      const finish = () => {
+        map.off('idle', finish);
+        if (this.finishRender === finish) {
+          this.finishRender = null;
+          controller.hideThrobber(this.state);
+        }
+      };
+      this.finishRender = finish;
 
-      if (full_reload) {
-        this.addAdminAreaLayers();
-        this.updateMapData(this.adminAreaSourceId, this.buildAdminAreaFeatures());
-      }
+      // Let the browser paint the selected tab/level and spinner before
+      // preparing markers, even when all geometry is already cached.
+      this.renderFrame = requestAnimationFrame(() => {
+        this.renderTimer = setTimeout(() => {
+          if (version !== this.renderVersion || !this.loaded) {
+            return;
+          }
+          try {
+            this.locationsById = this.state.getLocationsKeyed();
+            let features = this.updateFeatures(duration);
+            this.updateMapData(this.sourceId, features);
+            this.updateMarkers(features, true);
+            this.addAdminAreaLayers();
+            this.buildAdminAreaFeatures(version, () => map.once('idle', finish));
+          }
+          catch (error) {
+            finish();
+            throw error;
+          }
+        }, 0);
+      });
+    }
+
+    /**
+     * Cancel pending rendering and release markers when the block is removed.
+     */
+    destroy = function () {
+      this.loaded = false;
+      this.renderVersion++;
+      cancelAnimationFrame(this.renderFrame);
+      clearTimeout(this.renderTimer);
+      this.finishRender?.();
+      Object.values(this.markers).forEach((marker) => marker.remove());
+      this.markers = {};
+      this.markersOnScreen = {};
     }
 
     /**
@@ -260,14 +307,15 @@
     /**
      * Build the features for the admin area layer.
      *
-     * @returns {Array}
-     *   Returns an empty array as the features will be loaded
-     *   asynchronously.
+     * @param {Number} version
+     *   The render request that owns these polygons.
+     * @param {Function} complete
+     *   Called after the current polygons have been applied.
      */
-    buildAdminAreaFeatures = function () {
+    buildAdminAreaFeatures = function (version = this.renderVersion, complete = () => {}) {
       let self = this;
       let state = this.state;
-      let polgon_data = this.getPolygonData();
+      let polygon_data = this.getPolygonData();
       let locations = this.getFullPieLocations(true, false);
       let locations_keyed = {};
       for (let location of locations) {
@@ -277,15 +325,20 @@
       // Build the admin area features and add them to the source, but do it
       // non-blocking.
       state.getMapController().loadFeaturesAsync(locations, (features) => {
-        if (polgon_data) {
+        // A slower request for a previous tab/level must not replace the
+        // current polygons. Cached requests can also complete synchronously.
+        if (version !== this.renderVersion || !this.loaded) {
+          return;
+        }
+        if (polygon_data) {
           for (let feature of features) {
             let feature_location_id = feature.properties.location_id;
-            feature.properties.value = locations_keyed[feature_location_id].metrics[polgon_data.attachment.id][polgon_data.metric_index] ?? 0;
+            feature.properties.value = locations_keyed[feature_location_id]?.metrics?.[polygon_data.attachment.id]?.[polygon_data.metric_index] ?? 0;
           }
         }
         self.updateMapData(self.adminAreaSourceId, features);
-      }, state);
-      return state.querySourceFeatures(self.adminAreaLayerId, self.adminAreaSourceId);
+        complete();
+      });
     }
 
     /**
@@ -380,9 +433,9 @@
      *  A DOM node object.
      */
     createDonutChartForFeature = function (feature) {
-      const object_id = feature.properties.object_id;
-      const object = this.state.getLocationById(object_id);
-      return this.createDonutChart(object, feature.properties.radius);
+      // The feature already carries the totals and metrics. Looking up every
+      // marker would repeatedly sort and copy the entire location collection.
+      return this.createDonutChart(feature.properties, feature.properties.radius);
     }
 
     /**
@@ -788,9 +841,6 @@
      */
     updateMapData = function(source_id, features) {
       this.state.updateMapData(source_id, features);
-      if (source_id == this.sourceId) {
-        this.buildAdminAreaFeatures();
-      }
     }
 
     /**
@@ -1388,7 +1438,7 @@
       }
       for (var object_id of offset_chain) {
         let factor = offset_chain.indexOf(object_id) == 0 || object_id == object.object_id ? 1 : 2;
-        offset += (this.getRadius(this.state.getLocationById(object_id)) * factor) + (1 * factor);
+        offset += (this.getRadius(this.locationsById[object_id] ?? this.state.getLocationById(object_id)) * factor) + (1 * factor);
       }
       return offset;
     }
