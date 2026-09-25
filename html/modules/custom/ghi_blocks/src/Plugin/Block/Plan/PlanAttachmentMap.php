@@ -129,7 +129,7 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
     $attachment_switcher = $this->getAttachmentSwitcher();
     $block_uuid = $this->getUuid();
     $data_url_query = array_filter([
-      'current_uri' => $this->getCurrentUri(),
+      'current_uri' => $this->getMapPageUri(),
       'map_id' => $chart_id,
       'attachment_id' => $attachment->id(),
     ], fn ($value) => $value !== NULL && $value !== '');
@@ -770,7 +770,7 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
       'block_uuid' => $block_uuid,
     ], [
       'query' => [
-        'current_uri' => $this->getCurrentUri(),
+        'current_uri' => $this->getMapPageUri(),
         'map_id' => $map_id,
         'attachment_id' => $attachment->id(),
       ],
@@ -1379,7 +1379,7 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
         '#wrapper_id' => Html::getId('block-' . $this->getUuid()),
         '#plugin_id' => $this->getPluginId(),
         '#block_uuid' => $this->getUuid(),
-        '#uri' => $this->getCurrentUri(),
+        '#uri' => $this->getMapPageUri(),
       ],
     ];
   }
@@ -1481,8 +1481,7 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
     /** @var \Drupal\ghi_plans\Plugin\FabricQuery\AttachmentQuery $query_handler */
     $query_handler = $this->getQueryHandler('attachment');
     return $query_handler->getAttachmentsForPlan($plan_object->getSourceId(), $this->getCurrentBaseObject(), [
-      'Caseload',
-      'Indicator',
+      'AttachmentType' => ['Caseload', 'Indicator'],
     ]);
   }
 

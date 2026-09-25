@@ -111,7 +111,7 @@ interface AttachmentInterface extends ApiObjectInterface {
    * See if the API says this attachment can have disaggregated data.
    *
    * @return bool
-   *   TRUE if disaggregated data can be fetched, FALSE otherwise.
+   *   TRUE if the attachment can have disaggregated data, FALSE otherwise.
    */
   public function canHaveDisaggregatedData(): bool;
 
