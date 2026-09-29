@@ -7,9 +7,11 @@ use Drupal\Core\Ajax\AjaxResponse;
 use Drupal\Core\Form\FormState;
 use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\ghi_blocks\Controller\BlockPreviewController;
+use Drupal\ghi_blocks\Form\AjaxSwitcherForm;
 use Drupal\ghi_blocks\Interfaces\OptionalTitleBlockInterface;
 use Drupal\ghi_blocks\Interfaces\OverrideDefaultTitleBlockInterface;
 use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
+use Drupal\layout_builder\Plugin\SectionStorage\SectionStorageBase;
 use Drupal\layout_builder\SectionStorageInterface;
 use PHPUnit\Framework\ExpectationFailedException;
 use Symfony\Component\HttpFoundation\Request;
@@ -340,17 +342,15 @@ class GHIBlockTest extends BlockKernelTestBase {
     $preview = $configuration_form['container']['preview'];
     $attributes = $preview['#attributes'];
     $this->assertSame('generic_datawrapper', $attributes['data-block-preview']);
-    $this->assertArrayHasKey('data-block-preview-token', $attributes);
+    $this->assertArrayHasKey('data-block-preview-state-token', $attributes);
     $this->assertArrayHasKey('data-block-preview-url', $attributes);
     $this->assertStringStartsWith('/block-preview/',
       $attributes['data-block-preview-url']);
     $this->assertArrayNotHasKey('content', $preview);
 
-    $store = $this->container->get('keyvalue.expirable')
-      ->get(GHIBlockBase::CONFIGURATION_PREVIEW_COLLECTION);
-    $stored_preview = $store->get($attributes['data-block-preview-token']);
-    $this->assertSame('generic_datawrapper', $stored_preview['plugin_id']);
-    $this->assertSame(self::EMBED_CODE_VALID, $stored_preview['configuration']['hpc']['embed']);
+    $restored = $this->container->get('ghi_blocks.preview_state_manager')->restore($attributes['data-block-preview-state-token']);
+    $this->assertSame('generic_datawrapper', $restored->getPluginId());
+    $this->assertSame(self::EMBED_CODE_VALID, $restored->getConfiguration()['hpc']['embed']);
   }
 
   /**
@@ -359,12 +359,11 @@ class GHIBlockTest extends BlockKernelTestBase {
   public function testBlockConfigurationPreviewEndpointSkipsUnknownContexts() {
     $plugin = $this->getDatawrapperBlockPlugin(self::EMBED_CODE_VALID);
     $configuration = $plugin->getConfiguration();
-    $configuration['is_preview'] = TRUE;
-    $token = $this->container->get('uuid')->generate();
+    $preview_state_token = $this->container->get('uuid')->generate();
 
-    $store = $this->container->get('keyvalue.expirable')
-      ->get(GHIBlockBase::CONFIGURATION_PREVIEW_COLLECTION);
-    $store->setWithExpire($token, [
+    $manager = $this->container->get('ghi_blocks.preview_state_manager');
+    $store = $this->callPrivateMethod($manager, 'getStore');
+    $store->setWithExpire($preview_state_token, [
       'uid' => (int) $this->container->get('current_user')->id(),
       'plugin_id' => $plugin->getPluginId(),
       'configuration' => $configuration,
@@ -378,7 +377,59 @@ class GHIBlockTest extends BlockKernelTestBase {
     ], 3600);
 
     $controller = BlockPreviewController::create($this->container);
-    $this->assertInstanceOf(AjaxResponse::class, $controller->preview($token));
+    $preview_block = $manager->restore($preview_state_token);
+    $this->assertTrue($this->callPrivateMethod($preview_block, 'isConfigurationPreview'));
+    $this->assertSame($preview_state_token, $this->callPrivateMethod($preview_block, 'getPreviewStateToken'));
+    $this->assertInstanceOf(AjaxResponse::class, $controller->preview($preview_state_token));
+  }
+
+  /**
+   * Tests that Ajax switchers reload from preview state when available.
+   */
+  public function testAjaxSwitcherUsesPreviewStateEndpoint(): void {
+    $switcher = new AjaxSwitcherForm();
+    $form = $switcher->buildForm([], new FormState(), 'view', 'test_plugin', 'test-block-uuid', [
+      'map' => 'Map',
+      'table' => 'Table',
+    ], 'map', '/plan/1', [], TRUE, 'preview-state-token');
+
+    $this->assertSame('ghi_blocks.block_preview_reload', $form['view']['#ajax']['url']->getRouteName());
+    $this->assertSame(['preview_state_token' => 'preview-state-token'], $form['view']['#ajax']['url']->getRouteParameters());
+
+    $form = $switcher->buildForm([], new FormState(), 'view', 'test_plugin', 'test-block-uuid', [
+      'map' => 'Map',
+      'table' => 'Table',
+    ], 'map', '/plan/1');
+
+    $this->assertSame('ghi_blocks.load_block', $form['view']['#ajax']['url']->getRouteName());
+    $this->assertSame([
+      'plugin_id' => 'test_plugin',
+      'block_uuid' => 'test-block-uuid',
+    ], $form['view']['#ajax']['url']->getRouteParameters());
+
+    $plugin = $this->getDatawrapperBlockPlugin();
+    $normal_switcher = $this->callPrivateMethod($plugin, 'buildAjaxSwitcher', ['view', ['map' => 'Map'], 'map']);
+    $this->assertArrayNotHasKey('#preview_state_token', $normal_switcher);
+
+    $configuration = $plugin->getConfiguration();
+    $configuration['is_preview'] = TRUE;
+    $plugin->setConfiguration($configuration);
+    $preview_switcher = $this->callPrivateMethod($plugin, 'buildAjaxSwitcher', ['view', ['map' => 'Map'], 'map']);
+    $this->assertArrayHasKey('#preview_state_token', $preview_switcher);
+    $client_switcher = $this->callPrivateMethod($plugin, 'buildAjaxSwitcher', ['object_id', ['' => 'All'], '', FALSE]);
+    $this->assertArrayNotHasKey('#preview_state_token', $client_switcher);
+
+    $route_match = $this->prophesize(RouteMatchInterface::class);
+    $route_match->getParameter('section_storage')->willReturn($this->prophesize(SectionStorageBase::class)->reveal());
+    $this->container->set('current_route_match', $route_match->reveal());
+    $layout_builder_plugin = $this->getDatawrapperBlockPlugin();
+    $layout_builder_switcher = $this->callPrivateMethod($layout_builder_plugin, 'buildAjaxSwitcher', [
+      'view',
+      ['map' => 'Map'],
+      'map',
+    ]);
+    $this->assertFalse($layout_builder_switcher['#ajax']);
+    $this->assertArrayNotHasKey('#preview_state_token', $layout_builder_switcher);
   }
 
   /**

@@ -24,11 +24,19 @@ class AjaxSwitcherForm extends FormBase {
   /**
    * {@inheritdoc}
    */
-  public function buildForm(array $form, FormStateInterface $form_state, $element_key = NULL, $plugin_id = NULL, $block_uuid = NULL, $options = NULL, $default_value = NULL, $uri = NULL, $query = [], $ajax = TRUE) {
-    $url = !empty($plugin_id) && !empty($block_uuid) ? Url::fromRoute('ghi_blocks.load_block', [
-      'plugin_id' => $plugin_id,
-      'block_uuid' => $block_uuid,
-    ]) : NULL;
+  public function buildForm(array $form, FormStateInterface $form_state, $element_key = NULL, $plugin_id = NULL, $block_uuid = NULL, $options = NULL, $default_value = NULL, $uri = NULL, $query = [], $ajax = TRUE, $preview_state_token = NULL) {
+    $url = NULL;
+    if (!empty($preview_state_token)) {
+      $url = Url::fromRoute('ghi_blocks.block_preview_reload', [
+        'preview_state_token' => $preview_state_token,
+      ]);
+    }
+    elseif (!empty($plugin_id) && !empty($block_uuid)) {
+      $url = Url::fromRoute('ghi_blocks.load_block', [
+        'plugin_id' => $plugin_id,
+        'block_uuid' => $block_uuid,
+      ]);
+    }
 
     // Sanity check.
     if (!is_array(reset($options))) {

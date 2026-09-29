@@ -244,7 +244,7 @@ class PlanEntityLogframe extends GHIBlockBase implements MultiStepFormBlockInter
     // See if we should use lazy loading for the tables.
     $lazy_load = $this->config('ghi_blocks.logframe_settings')->get('lazy_load');
 
-    $inline_tables = $this->isConfigurationPreview() || !$lazy_load;
+    $inline_tables = $this->isPreview() || !$lazy_load;
     if ($inline_tables) {
       // Preload the attachments to reduce the number of queries.
       $this->getAttachmentsForEntities($entities);

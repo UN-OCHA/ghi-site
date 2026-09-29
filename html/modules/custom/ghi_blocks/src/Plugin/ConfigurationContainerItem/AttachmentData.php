@@ -6,12 +6,12 @@ use Drupal\Core\Cache\Cache;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\Markup;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
-use Drupal\ghi_blocks\Helpers\AttachmentMatcher;
 use Drupal\ghi_blocks\Traits\PlanFootnoteTrait;
 use Drupal\ghi_form_elements\Attribute\ConfigurationContainerItem;
 use Drupal\ghi_form_elements\ConfigurationContainerItemPluginBase;
 use Drupal\ghi_plans\ApiObjects\Attachments\Attachment;
 use Drupal\ghi_plans\Entity\Plan;
+use Drupal\ghi_plans\Helpers\AttachmentMatcher;
 use Drupal\ghi_plans\Traits\AttachmentFilterTrait;
 use Drupal\hpc_api\Helpers\StringHelper;
 use Drupal\user\Entity\User;
@@ -408,9 +408,14 @@ class AttachmentData extends ConfigurationContainerItemPluginBase {
         $new_attachment = $filtered_attachments[$attachment_id];
         $data_point_conf = &$this->config['data_point'];
         $data_points = &$data_point_conf['data_points'];
-        $data_points[0]['index'] = AttachmentMatcher::matchDataPointOnAttachments($data_points[0]['index'], $original_attachment, $new_attachment);
-        if ($data_point_conf['processing'] != 'single') {
-          $data_points[1]['index'] = AttachmentMatcher::matchDataPointOnAttachments($data_points[1]['index'], $original_attachment, $new_attachment);
+        $metric_type = AttachmentMatcher::matchDataPointOnAttachments($data_points[0]['metric_type'] ?? $data_points[0]['index'] ?? NULL, $original_attachment, $new_attachment);
+        if ($metric_type !== NULL) {
+          $data_points[0]['metric_type'] = $metric_type;
+          unset($data_points[0]['index']);
+        }
+        if ($data_point_conf['processing'] != 'single' && ($metric_type = AttachmentMatcher::matchDataPointOnAttachments($data_points[1]['metric_type'] ?? $data_points[1]['index'] ?? NULL, $original_attachment, $new_attachment)) !== NULL) {
+          $data_points[1]['metric_type'] = $metric_type;
+          unset($data_points[1]['index']);
         }
 
         if ($plan && $original_attachment->getPlanId() != $plan->getSourceId()) {

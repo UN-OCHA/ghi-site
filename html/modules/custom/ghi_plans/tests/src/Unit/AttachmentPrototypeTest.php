@@ -195,6 +195,12 @@ class AttachmentPrototypeTest extends ApiObjectTestBase {
     $this->assertSame('cumulative_reach', $prototype->getMetricTypeByOriginalIndex(2));
     $this->assertSame('latest_reach', $prototype->getMetricTypeByOriginalIndex(3));
     $this->assertSame(3, $prototype->getOriginalIndexByMetricType('latest_reach'));
+    $this->assertSame('cumulative_reach', $prototype->resolveMetricType('cumulative_reach'));
+    $this->assertSame('cumulative_reach', $prototype->resolveMetricType(2));
+    $this->assertSame('latest_reach', $prototype->resolveMetricType('3'));
+    $this->assertNull($prototype->resolveMetricType('unknown_type'));
+    $this->assertNull($prototype->resolveMetricType(1.5));
+    $this->assertNull($prototype->resolveMetricType('1e2'));
   }
 
   /**
