@@ -60,7 +60,7 @@ services:
 
   # Solr
   solr:
-    image: arm64v8/solr:9
+    image: arm64v8/solr:${SOLR_VERSION:-9.9.0}
     extends:
       file: ${HOME}/.docksal/stacks/services.yml
       service: solr
