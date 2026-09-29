@@ -19,20 +19,21 @@ class DataPointConfigBackwardsCompatibilityTraitTest extends UnitTestCase {
    * @group DataPointConfigBackwardsCompatibilityTrait
    */
   public function testGetMetricTypeByIndex() {
-    $prototype = $this->createMockPrototype(['type_a', 'type_b', 'type_c']);
+    $prototype = $this->mockPrototype(['type_a', 'type_b', 'type_c']);
 
     $result = $this->getMetricTypeByIndex(1, $prototype);
     $this->assertSame('type_b', $result);
   }
 
   /**
-   * Test getMetricTypeByIndex prefers original legacy field positions.
+   * Test getMetricTypeByIndex delegates to the attachment prototype.
    *
    * @group DataPointConfigBackwardsCompatibilityTrait
    */
-  public function testGetMetricTypeByIndexUsesOriginalIndexDefinitions() {
-    $prototype = $this->createMockPrototype(['type_a', 'type_b']);
-    $prototype->method('getMetricTypeByOriginalIndex')
+  public function testGetMetricTypeByIndexUsesPrototypeResolver() {
+    $prototype = $this->createMock(AttachmentPrototype::class);
+    $prototype->expects($this->once())
+      ->method('resolveMetricType')
       ->with(8)
       ->willReturn('latest_reach');
 
@@ -46,7 +47,7 @@ class DataPointConfigBackwardsCompatibilityTraitTest extends UnitTestCase {
    * @group DataPointConfigBackwardsCompatibilityTrait
    */
   public function testGetMetricTypeByIndexOutOfBounds() {
-    $prototype = $this->createMockPrototype(['type_a', 'type_b']);
+    $prototype = $this->mockPrototype(['type_a', 'type_b']);
 
     $result = $this->getMetricTypeByIndex(10, $prototype);
     $this->assertNull($result);
@@ -58,12 +59,12 @@ class DataPointConfigBackwardsCompatibilityTraitTest extends UnitTestCase {
    * @group DataPointConfigBackwardsCompatibilityTrait
    */
   public function testUpdateDataPointConfiguration() {
-    $prototype = $this->createMockPrototype(['type_a', 'type_b']);
+    $prototype = $this->mockPrototype(['type_a', 'type_b']);
 
     $conf = [
       'data_points' => [
         ['index' => 0],
-        ['index' => 1],
+        ['index' => '1'],
       ],
     ];
 
@@ -79,7 +80,7 @@ class DataPointConfigBackwardsCompatibilityTraitTest extends UnitTestCase {
    * @group DataPointConfigBackwardsCompatibilityTrait
    */
   public function testUpdateDataPointConfigurationSkipsExisting() {
-    $prototype = $this->createMockPrototype(['type_a', 'type_b']);
+    $prototype = $this->mockPrototype(['type_a', 'type_b']);
 
     $conf = [
       'data_points' => [
@@ -95,11 +96,35 @@ class DataPointConfigBackwardsCompatibilityTraitTest extends UnitTestCase {
   }
 
   /**
+   * Tests recovery of a metric type stored under the legacy index key.
+   *
+   * @group DataPointConfigBackwardsCompatibilityTrait
+   */
+  public function testUpdateDataPointConfigurationRecoversMisplacedMetricType() {
+    $prototype = $this->mockPrototype(['type_a', 'type_b']);
+    $conf = [
+      'data_points' => [
+        ['index' => 'type_a'],
+      ],
+    ];
+
+    $this->updateDataPointConfiguration($conf, $prototype);
+
+    $this->assertSame('type_a', $conf['data_points'][0]['metric_type']);
+  }
+
+  /**
    * Create a mock AttachmentPrototype.
    */
-  private function createMockPrototype(array $field_types) {
+  private function mockPrototype(array $field_types) {
     $prototype = $this->createMock(AttachmentPrototype::class);
     $prototype->method('getFieldTypes')->willReturn($field_types);
+    $prototype->method('resolveMetricType')->willReturnCallback(function ($data_point) use ($field_types) {
+      if (is_int($data_point) || (is_string($data_point) && ctype_digit($data_point))) {
+        return $field_types[(int) $data_point] ?? NULL;
+      }
+      return is_string($data_point) && in_array($data_point, $field_types, TRUE) ? $data_point : NULL;
+    });
     return $prototype;
   }
 

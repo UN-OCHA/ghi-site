@@ -73,26 +73,48 @@ ghi_blocks.map_modal_data:
         block_uuid:
           type: string
 
-ghi_blocks.map_preview_modal_data:
-  path: '/map-preview-modal-data/{token}'
-  defaults:
-    _controller: '\Drupal\ghi_blocks\Controller\PreviewMapModalDataController::data'
-  requirements:
-    _permission: 'access content'
-  options:
-    parameters:
-      token:
-        type: string
-
 ghi_blocks.block_preview:
-  path: '/block-preview/{token}'
+  path: '/block-preview/{preview_state_token}'
   defaults:
     _controller: '\Drupal\ghi_blocks\Controller\BlockPreviewController::preview'
   requirements:
     _permission: 'access content'
   options:
     parameters:
-      token:
+      preview_state_token:
+        type: string
+
+ghi_blocks.block_preview_reload:
+  path: '/block-preview/{preview_state_token}/reload'
+  defaults:
+    _controller: '\Drupal\ghi_blocks\Controller\BlockPreviewController::reload'
+  requirements:
+    _permission: 'access content'
+  options:
+    parameters:
+      preview_state_token:
+        type: string
+
+ghi_blocks.block_preview_map_data_fragment:
+  path: '/block-preview/{preview_state_token}/map-data/fragment'
+  defaults:
+    _controller: '\Drupal\ghi_blocks\Controller\BlockPreviewController::mapDataFragment'
+  requirements:
+    _permission: 'access content'
+  options:
+    parameters:
+      preview_state_token:
+        type: string
+
+ghi_blocks.block_preview_map_modal_data:
+  path: '/block-preview/{preview_state_token}/map-data/modal'
+  defaults:
+    _controller: '\Drupal\ghi_blocks\Controller\BlockPreviewController::mapModalData'
+  requirements:
+    _permission: 'access content'
+  options:
+    parameters:
+      preview_state_token:
         type: string
 
 ghi_blocks.global_config:
