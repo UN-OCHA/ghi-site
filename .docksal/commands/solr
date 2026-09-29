@@ -26,17 +26,13 @@ CONTAINER_BACKUP_PATH="${CONTAINER_BASE_PATH}/backups/snapshot/snapshot.latest"
 
 while [ "$1" != "" ]; do
   case $1 in
-    create-core )         shift
-                          fin solr-commands/create-core
+    create-core )         fin solr-commands/create-core
                           ;;
-    cleanup )             shift
-                          fin solr-commands/cleanup
+    cleanup )             fin solr-commands/cleanup
                           ;;
-    index )               shift
-                          fin drush search-api:index solr --batch-size=1
+    index )               fin drush search-api:index solr --batch-size=1
                           ;;
-    dashboard )           shift
-                          fin utils/open-link "http://solr.ghi-site.docksal.site/solr/#/${SOLR_CORE}/core-overview"
+    dashboard )           fin utils/open-link "http://solr.ghi-site.docksal.site/solr/#/${SOLR_CORE}/core-overview"
                           ;;
 
     -h | --help )         echo "$usage"
