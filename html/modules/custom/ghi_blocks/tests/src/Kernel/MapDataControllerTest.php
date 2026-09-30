@@ -46,6 +46,8 @@ class MapDataControllerTest extends KernelTestBase {
     'layout_discovery',
     'migrate',
     'hpc_api',
+    'hpc_common',
+    'hpc_downloads',
     'ghi_form_elements',
     'ghi_sections',
     'ghi_blocks',
@@ -94,10 +96,16 @@ class MapDataControllerTest extends KernelTestBase {
       'current_uri' => $uri,
       '_wrapper_format' => 'drupal_ajax',
     ]);
-    $this->container->get('request_stack')->push($request);
+    $request_stack = $this->container->get('request_stack');
+    $request_stack->push($request);
 
-    $controller = AjaxBlockController::create($this->container);
-    $response = $controller->loadBlock('plan_attachment_map', 'unsaved-map');
+    try {
+      $controller = AjaxBlockController::create($this->container);
+      $response = $controller->loadBlock('plan_attachment_map', 'unsaved-map');
+    }
+    finally {
+      $request_stack->pop();
+    }
     $command = $response->getCommands()[0];
     $this->assertSame('html', $command['method']);
     $this->assertSame('.ghi-block-unsaved-map > .block-content', $command['selector']);
@@ -135,10 +143,16 @@ class MapDataControllerTest extends KernelTestBase {
     $access_manager->expects($this->once())->method('checkRequest')->with($this->isInstanceOf(Request::class), $this->container->get('current_user'), TRUE)->willReturn(AccessResult::forbidden());
     $this->container->set('router.no_access_checks', $router);
     $this->container->set('access_manager', $access_manager);
-    $this->container->get('request_stack')->push(Request::create('/map-data/test/uuid'));
+    $request_stack = $this->container->get('request_stack');
+    $request_stack->push(Request::create('/map-data/test/uuid'));
 
-    $controller = MapDataController::create($this->container);
-    $access = $this->callPrivateMethod($controller, 'checkUriAccess', ['/layout_builder/import/block/overrides/node.1/0/content']);
+    try {
+      $controller = MapDataController::create($this->container);
+      $access = $this->callPrivateMethod($controller, 'checkUriAccess', ['/layout_builder/import/block/overrides/node.1/0/content']);
+    }
+    finally {
+      $request_stack->pop();
+    }
     $this->assertTrue($access->isForbidden());
     $this->assertSame(0, $access->getCacheMaxAge());
   }

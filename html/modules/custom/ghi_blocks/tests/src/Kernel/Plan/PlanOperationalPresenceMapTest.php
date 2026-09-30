@@ -32,9 +32,14 @@ class PlanOperationalPresenceMapTest extends PlanBlockKernelTestBase {
     $route_match->method('getParameter')->with('section_storage')->willReturn($this->createMock(SectionStorageInterface::class));
     $this->setPrivateProperty($plugin, 'routeMatch', $route_match);
     $editor_uri = '/layout_builder/add/block/overrides/node.1/0/content/plan_operational_presence_map';
-    $this->container->get('request_stack')->push(Request::create($editor_uri));
-
-    $switcher = $this->callPrivateMethod($plugin, 'getViewSwitcher', ['organization']);
+    $request_stack = $this->container->get('request_stack');
+    $request_stack->push(Request::create($editor_uri));
+    try {
+      $switcher = $this->callPrivateMethod($plugin, 'getViewSwitcher', ['organization']);
+    }
+    finally {
+      $request_stack->pop();
+    }
 
     $this->assertSame($editor_uri, $switcher['#uri']);
   }
