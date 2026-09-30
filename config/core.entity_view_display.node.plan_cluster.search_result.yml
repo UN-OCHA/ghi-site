@@ -48,7 +48,9 @@ third_party_settings:
       - core
     entity_view_mode_restriction:
       allowed_layouts: {  }
-      denylisted_blocks: {  }
+      denylisted_blocks:
+        'Plan elements':
+          - plan_governing_entities_overview_table
       allowlisted_blocks:
         'Inline blocks':
           - 'inline_block:basic'

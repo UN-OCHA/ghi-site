@@ -84,3 +84,29 @@ html.snap--png {
     background-color: white;
   }
 }
+
+// Export complete tables, including columns outside the page view.
+html.snap--png #main-content .ghi-block.content-width:has(.table-wrapper) {
+  width: max-content;
+  max-width: none !important;
+
+  // Keep the branding and title aligned with the expanded table edges.
+  .snap-png-header {
+    max-width: none !important;
+  }
+
+  .caption-wrapper {
+    padding-inline-end: 2rem;
+  }
+
+  .table-wrapper {
+    overflow: visible;
+    max-width: none !important;
+    margin-right: 0;
+  }
+
+  .shadow-left,
+  .shadow-right {
+    display: none;
+  }
+}
