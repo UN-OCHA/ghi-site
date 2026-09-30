@@ -74,10 +74,10 @@ class SparkLineChartTest extends UnitTestCase {
   public function testLegacyBaselineIndexResolvesToMetricType(): void {
     $prototype = $this->getMockBuilder(AttachmentPrototype::class)
       ->disableOriginalConstructor()
-      ->onlyMethods(['getMetricTypeByOriginalIndex'])
+      ->onlyMethods(['resolveMetricType'])
       ->getMock();
     $prototype->expects($this->once())
-      ->method('getMetricTypeByOriginalIndex')
+      ->method('resolveMetricType')
       ->with(2)
       ->willReturn('cumulative_reach');
 
@@ -96,6 +96,31 @@ class SparkLineChartTest extends UnitTestCase {
     $method->setAccessible(TRUE);
 
     $this->assertSame('cumulative_reach', $method->invoke($chart, 'baseline'));
+  }
+
+  /**
+   * Tests that an invalid legacy baseline index is not used as a metric type.
+   */
+  public function testInvalidLegacyBaselineIndexDoesNotResolve(): void {
+    $prototype = $this->createMock(AttachmentPrototype::class);
+    $prototype->expects($this->once())
+      ->method('resolveMetricType')
+      ->with('99')
+      ->willReturn(NULL);
+
+    $attachment = $this->getMockBuilder(Attachment::class)
+      ->disableOriginalConstructor()
+      ->onlyMethods(['getPrototype'])
+      ->getMock();
+    $attachment->method('getPrototype')->willReturn($prototype);
+
+    $chart = new SparkLineChart([], 'spark_line_chart', []);
+    $chart->setConfig(['baseline' => '99']);
+    $chart->setContext(['attachment' => $attachment]);
+    $method = new \ReflectionMethod($chart, 'getConfiguredMetricType');
+    $method->setAccessible(TRUE);
+
+    $this->assertNull($method->invoke($chart, 'baseline'));
   }
 
   /**

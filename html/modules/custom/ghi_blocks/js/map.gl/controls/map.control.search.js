@@ -340,6 +340,9 @@
       item.className = 'search-result-item';
       item.setAttribute('object-id', record.object_id);
       item.addEventListener('mouseover', (e) => this.handleHover(e.target));
+      // Keep the input focused until click handles the result. Dialog focus
+      // management can otherwise trigger blur and remove the result first.
+      item.addEventListener('mousedown', (e) => e.preventDefault());
       item.addEventListener('click', (e) => this.handleSelection(e.target));
 
       let object_title = record.object_title.replace(regex, "<b>$&</b>");

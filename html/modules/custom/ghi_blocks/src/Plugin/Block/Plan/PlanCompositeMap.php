@@ -11,8 +11,6 @@ use Drupal\Core\Plugin\Context\EntityContextDefinition;
 use Drupal\Core\Render\BubbleableMetadata;
 use Drupal\Core\Render\Markup;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
-use Drupal\Core\Url;
-use Drupal\ghi_blocks\Helpers\AttachmentMatcher;
 use Drupal\ghi_blocks\Interfaces\ConfigValidationInterface;
 use Drupal\ghi_blocks\Interfaces\LazyMapBlockInterface;
 use Drupal\ghi_blocks\Interfaces\MultiStepFormBlockInterface;
@@ -22,11 +20,12 @@ use Drupal\ghi_blocks\Plugin\Block\BlockCommentInterface;
 use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
 use Drupal\ghi_blocks\Traits\BlockCommentTrait;
 use Drupal\ghi_blocks\Traits\ConfigValidationTrait;
-use Drupal\ghi_blocks\Traits\ConfigurationPreviewMapTrait;
+use Drupal\ghi_blocks\Traits\LazyMapTrait;
 use Drupal\ghi_blocks\Traits\GlobalMapTrait;
 use Drupal\ghi_form_elements\Traits\ConfigurationContainerTrait;
 use Drupal\ghi_plans\ApiObjects\Attachments\Attachment;
 use Drupal\ghi_plans\ApiObjects\Attachments\AttachmentInterface;
+use Drupal\ghi_plans\Helpers\AttachmentMatcher;
 use Drupal\ghi_plans\Traits\AttachmentFilterTrait;
 use Drupal\ghi_plans\Traits\PlanReportingPeriodTrait;
 use Drupal\ghi_sections\Entity\SectionNodeInterface;
@@ -54,7 +53,7 @@ class PlanCompositeMap extends GHIBlockBase implements MultiStepFormBlockInterfa
   use BlockCommentTrait;
   use ConfigValidationTrait;
   use ConfigurationContainerTrait;
-  use ConfigurationPreviewMapTrait;
+  use LazyMapTrait;
   use GlobalMapTrait;
   use PlanReportingPeriodTrait;
 
@@ -121,11 +120,6 @@ class PlanCompositeMap extends GHIBlockBase implements MultiStepFormBlockInterfa
     }
 
     $chart_id = Html::getUniqueId('plan-composite-map');
-    $block_uuid = $this->getUuid();
-    $data_url_query = array_filter([
-      'current_uri' => $this->getMapPageUri(),
-      'map_id' => $chart_id,
-    ], fn ($value) => $value !== NULL && $value !== '');
     $map_tabs = NULL;
     $attachments = [
       'library' => ['ghi_blocks/map.gl.plan_composite'],
@@ -133,18 +127,13 @@ class PlanCompositeMap extends GHIBlockBase implements MultiStepFormBlockInterfa
         'plan_composite_map' => [
           $chart_id => [
             'id' => $chart_id,
-            'data_url' => $block_uuid ? Url::fromRoute('ghi_blocks.map_data', [
-              'plugin_id' => $this->getPluginId(),
-              'block_uuid' => $block_uuid,
-            ], [
-              'query' => $data_url_query,
-            ])->toString() : NULL,
+            'data_url' => $this->getMapDataUrl($chart_id),
           ],
         ],
       ],
     ];
 
-    if ($this->isConfigurationPreview()) {
+    if ($this->isPreview()) {
       // Preview blocks are rebuilt from unsaved in-memory configuration, so the
       // map payload must be built from this block instance instead of the saved
       // layout block loaded by the lazy map endpoint.
@@ -152,7 +141,7 @@ class PlanCompositeMap extends GHIBlockBase implements MultiStepFormBlockInterfa
       if (!$payload->isEmpty()) {
         $map_tabs = $payload->getHtml()['.pane-' . $chart_id . ' .map-tabs--inner'] ?? NULL;
         $attachments = BubbleableMetadata::mergeAttachments($attachments, $payload->getAttachments());
-        $attachments['drupalSettings']['plan_composite_map'][$chart_id] = $this->getConfigurationPreviewMap($payload->getMap());
+        $attachments['drupalSettings']['plan_composite_map'][$chart_id] = $this->preparePreviewMap($payload->getMap(), $chart_id);
       }
     }
 
