@@ -16,10 +16,13 @@ use Drupal\Tests\UnitTestCase;
 use Drupal\hpc_common\Helpers\BlockHelper;
 use Drupal\hpc_common\Plugin\HPCBlockBase;
 use Drupal\hpc_downloads\Interfaces\HPCDownloadContainerInterface;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
- * @covers Drupal\hpc_common\Helpers\BlockHelper
+ * Tests the block helper.
  */
+#[CoversClass(BlockHelper::class)]
 class BlockHelperTest extends UnitTestCase {
 
   /**
@@ -111,9 +114,8 @@ class BlockHelperTest extends UnitTestCase {
 
   /**
    * Test getting the storage id.
-   *
-   * @group BlockHelper
    */
+  #[Group('BlockHelper')]
   public function testGetStorageId() {
     // Mock HPCBlockBase.
     $hpc_block = $this->prophesize(HPCBlockBase::class);
@@ -126,27 +128,24 @@ class BlockHelperTest extends UnitTestCase {
 
   /**
    * Test getting the plugin uuid from a storage id.
-   *
-   * @group BlockHelper
    */
+  #[Group('BlockHelper')]
   public function testGetPluginUuidFromStorageId() {
     $this->assertEquals('fedced4844-ref484', BlockHelper::getPluginUuidFromStorageId('plan_top_donors:fedced4844-ref484'));
   }
 
   /**
    * Test getting the plugin id from a storage id.
-   *
-   * @group BlockHelper
    */
+  #[Group('BlockHelper')]
   public function testGetPluginIdFromStorageId() {
     $this->assertEquals('plan_top_donors', BlockHelper::getPluginIdFromStorageId('plan_top_donors:fedced4844-ref484'));
   }
 
   /**
    * Test egtting the plugin definition from a storage id.
-   *
-   * @group BlockHelper
    */
+  #[Group('BlockHelper')]
   public function testGetPluginDefinitionFromStorageId() {
     $definition = [
       'plugin_id' => 'plan_snapshot',

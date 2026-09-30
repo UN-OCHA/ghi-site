@@ -37,8 +37,15 @@ class PlanCompositeMapTest extends PlanBlockKernelTestBase {
     $route_match->method('getParameter')->with('section_storage')->willReturn($this->createMock(SectionStorageInterface::class));
     $this->setPrivateProperty($plugin, 'routeMatch', $route_match);
     $editor_uri = '/layout_builder/add/block/overrides/node.17152/0/content/plan_composite_map';
-    $this->container->get('request_stack')->push(Request::create($editor_uri, 'POST', ['currentPath' => '/plan/1266']));
-    $this->assertSame($editor_uri, $this->callPrivateMethod($plugin, 'getMapPageUri'));
+    $request_stack = $this->container->get('request_stack');
+    $request_stack->push(Request::create($editor_uri, 'POST', ['currentPath' => '/plan/1266']));
+    try {
+      $map_page_uri = $this->callPrivateMethod($plugin, 'getMapPageUri');
+    }
+    finally {
+      $request_stack->pop();
+    }
+    $this->assertSame($editor_uri, $map_page_uri);
   }
 
   /**

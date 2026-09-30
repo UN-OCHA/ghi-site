@@ -5,12 +5,12 @@ namespace Drupal\Tests\ghi_base_objects\Kernel;
 use Drupal\ghi_base_objects\ApiObjects\BaseObject;
 use Drupal\KernelTests\KernelTestBase;
 use Drupal\Tests\ghi_base_objects\Traits\BaseObjectTestTrait;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
  * Base class for ApiObject kernel tests.
- *
- * @group ghi_base_objects
  */
+#[Group('ghi_base_objects')]
 abstract class BaseObjectKernelTestBase extends KernelTestBase {
 
   use BaseObjectTestTrait;

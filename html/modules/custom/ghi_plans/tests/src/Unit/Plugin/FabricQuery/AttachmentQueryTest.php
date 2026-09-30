@@ -14,12 +14,12 @@ use Drupal\hpc_api\Query\FabricQuery;
 use Drupal\hpc_api\ApiObjects\Types\MetricType;
 use Drupal\Tests\hpc_api\Traits\PrivateAccessorTrait;
 use Drupal\Tests\UnitTestCase;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
  * Tests the attachment Fabric query plugin.
- *
- * @group ghi_plans
  */
+#[Group('ghi_plans')]
 class AttachmentQueryTest extends UnitTestCase {
 
   use PrivateAccessorTrait;

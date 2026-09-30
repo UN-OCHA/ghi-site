@@ -17,8 +17,12 @@ usage="$(basename "$0") [-h]
 where:
     -h  show this help text"
 
-echo "Run solr create command"
-solr delete -c ${SOLR_CORE} -p 8983
+SOLR_URL="http://localhost:8983"
+
+if curl --silent --fail "${SOLR_URL}/solr/admin/cores?action=STATUS&core=${SOLR_CORE}&wt=json" | grep --quiet "\"${SOLR_CORE}\""; then
+  echo "Delete existing Solr core"
+  solr delete -c "${SOLR_CORE}" --solr-url "${SOLR_URL}"
+fi
 
 # Create the solr core if necessary.
 SOLR_SRC="/opt/solr"
@@ -29,5 +33,5 @@ SOLR_CORE_DIR="${SOLR_HOME}/${SOLR_CORE}"
 
 # Create core
 echo "Run solr create command"
-${SOLR_SRC}/bin/solr create -c ${SOLR_CORE} -p 8983 -d /opt/solr/server/solr/configsets/solr811
+${SOLR_SRC}/bin/solr create -c "${SOLR_CORE}" --solr-url "${SOLR_URL}" -d /opt/solr/server/solr/configsets/solr9
 echo "http://solr.ghi-site.docksal.site/solr/#/${SOLR_CORE}/core-overview"

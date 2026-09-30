@@ -11,6 +11,8 @@ use Drupal\ghi_blocks\Interfaces\OptionalTitleBlockInterface;
 use Drupal\ghi_blocks\Interfaces\OverrideDefaultTitleBlockInterface;
 use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
 use Drupal\layout_builder\SectionStorageInterface;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\ExpectationFailedException;
 use Symfony\Component\HttpFoundation\Request;
 
@@ -18,9 +20,8 @@ use Symfony\Component\HttpFoundation\Request;
  * Tests generic properties of block plugin.
  *
  * Testing against an instance of a datawrapper block.
- *
- * @group ghi_blocks
  */
+#[Group('ghi_blocks')]
 class GHIBlockTest extends BlockKernelTestBase {
 
   const EMBED_CODE_VALID = '<iframe src="https://datawrapper.dwcdn.net/CHART_ID"></iframe>';
@@ -198,9 +199,8 @@ class GHIBlockTest extends BlockKernelTestBase {
 
   /**
    * Tests that cached content keeps its heading without an outer block title.
-   *
-   * @dataProvider cachedContentTitleProvider
    */
+  #[DataProvider('cachedContentTitleProvider')]
   public function testCachedContentSuppressesOuterTitle(string $plugin_id, bool $title_processed) {
     $plugin = $this->createBlockPlugin($plugin_id, [], [], 'Operations', TRUE);
     $content = [

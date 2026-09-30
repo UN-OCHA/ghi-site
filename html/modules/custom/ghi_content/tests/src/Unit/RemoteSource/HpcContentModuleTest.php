@@ -13,14 +13,13 @@ use Drupal\hpc_remote_data_cache\RemoteDataCacheItem;
 use GuzzleHttp\Client;
 use GuzzleHttp\ClientInterface;
 use PHPUnit\Framework\Assert;
-use Psr\Http\Message\ResponseInterface;
+use PHPUnit\Framework\Attributes\Group;
 use Symfony\Component\HttpFoundation\RequestStack;
 
 /**
  * Tests the HPC content module remote source.
- *
- * @group ghi_content
  */
+#[Group('ghi_content')]
 class HpcContentModuleTest extends UnitTestCase {
 
   /**
@@ -170,17 +169,11 @@ class HpcContentModuleTest extends UnitTestCase {
    *   The HTTP client test double.
    */
   private function mockHttpClientThatFailsOnPost(): ClientInterface {
-    return new class extends Client {
-
-      /**
-       * {@inheritdoc}
-       */
-      public function post($uri, array $options = []): ResponseInterface {
+    return new Client([
+      'handler' => static function () {
         Assert::fail('HPC Content Module HTTP post must not be called on a remote data cache hit.');
-        throw new \LogicException('Unreachable.');
-      }
-
-    };
+      },
+    ]);
   }
 
   /**

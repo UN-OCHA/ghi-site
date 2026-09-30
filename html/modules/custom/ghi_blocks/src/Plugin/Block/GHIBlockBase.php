@@ -841,6 +841,8 @@ abstract class GHIBlockBase extends HPCBlockBase implements TrustedCallbackInter
   /**
    * Checks if this block uses multi step forms for configuration.
    *
+   * @phpstan-assert-if-true \Drupal\ghi_blocks\Interfaces\MultiStepFormBlockInterface $this
+   *
    * @return bool
    *   TRUE if the plugin implements MultiStepFormBlockInterface.
    */
@@ -2002,7 +2004,6 @@ abstract class GHIBlockBase extends HPCBlockBase implements TrustedCallbackInter
     }
 
     if ($this->isMultistepForm()) {
-      /** @var \Drupal\ghi_blocks\Interfaces\MultiStepFormBlockInterface $this */
       $subforms = $this->getSubforms();
       if (empty($subforms)) {
         return [];

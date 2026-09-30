@@ -10,10 +10,14 @@ use Drupal\Tests\UnitTestCase;
 use Drupal\hpc_common\Helpers\TaxonomyHelper;
 use Drupal\taxonomy\Entity\Term;
 use Drupal\taxonomy\TermStorageInterface;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
- * @covers Drupal\hpc_common\Helpers\TaxonomyHelper
+ * Tests the taxonomy helper.
  */
+#[CoversClass(TaxonomyHelper::class)]
 class TaxonomyHelperTest extends UnitTestCase {
 
   /**
@@ -53,7 +57,7 @@ class TaxonomyHelperTest extends UnitTestCase {
     $this->entityQuery = $this->prophesize(QueryInterface::class);
 
     // Get taxonomy tree mock.
-    $tree = $this->getMockTaxonomyTree();
+    $tree = self::createTaxonomyTree();
 
     // Mock loadTree.
     $this->taxonomyStorage->expects($this->any())
@@ -88,31 +92,31 @@ class TaxonomyHelperTest extends UnitTestCase {
   /**
    * Data provider for getParentTermFromChildTermName.
    */
-  public function getParentTermFromChildTermNameDataProvider() {
-    // Mock term.
-    $term1 = $this->prophesize(Term::class);
-    $term1->getName()->willReturn('Term 1');
-    // Mock term.
-    $term2 = $this->prophesize(Term::class);
-    $term2->getName()->willReturn('Term 2');
-
+  public static function getParentTermFromChildTermNameDataProvider() {
     return [
       [
         'Term 2',
         'test_vocabulary',
-        [$term1->reveal(), $term2->reveal()],
-        $term2->reveal(),
+        ['Term 1', 'Term 2'],
+        1,
       ],
     ];
   }
 
   /**
    * Test you get the parent term correctly from the child term.
-   *
-   * @group TaxonomyHelper
-   * @dataProvider getParentTermFromChildTermNameDataProvider
    */
-  public function testGetParentTermFromChildTermName($child_term_name, $vid, $terms, $result) {
+  #[Group('TaxonomyHelper')]
+  #[DataProvider('getParentTermFromChildTermNameDataProvider')]
+  public function testGetParentTermFromChildTermName($child_term_name, $vid, $term_names, $expected_index) {
+    $terms = [];
+    foreach ($term_names as $name) {
+      $term = $this->prophesize(Term::class);
+      $term->getName()->willReturn($name);
+      $terms[] = $term->reveal();
+    }
+    $result = $terms[$expected_index];
+
     // Mock loadByProperties.
     $this->taxonomyStorage->expects($this->any())
       ->method('loadByProperties')
@@ -140,8 +144,8 @@ class TaxonomyHelperTest extends UnitTestCase {
   /**
    * Data provider for loadMultipleTermsByName.
    */
-  public function loadMultipleTermsByNameDataProvider() {
-    $result_terms = array_slice($this->getMockTaxonomyTree(), 0, 2);
+  public static function loadMultipleTermsByNameDataProvider() {
+    $result_terms = array_slice(self::createTaxonomyTree(), 0, 2);
 
     return [
       [['Term 1', 'Term 2', 'Term 3'], 'test_vocabulary', $result_terms],
@@ -151,10 +155,9 @@ class TaxonomyHelperTest extends UnitTestCase {
 
   /**
    * Test you can load multiple taxonomy terms by name.
-   *
-   * @group TaxonomyHelper
-   * @dataProvider loadMultipleTermsByNameDataProvider
    */
+  #[Group('TaxonomyHelper')]
+  #[DataProvider('loadMultipleTermsByNameDataProvider')]
   public function testLoadMultipleTermsByName($names, $vid, $result) {
     // Mock loadByProperties.
     $this->taxonomyStorage->expects($this->any())
@@ -183,8 +186,8 @@ class TaxonomyHelperTest extends UnitTestCase {
   /**
    * Data provider for loadMultipleTermsByVocabulary.
    */
-  public function loadMultipleTermsByVocabularyDataProvider() {
-    $result_terms = array_slice($this->getMockTaxonomyTree(), 0, 3);
+  public static function loadMultipleTermsByVocabularyDataProvider() {
+    $result_terms = array_slice(self::createTaxonomyTree(), 0, 3);
 
     return [
       ['test_vocabulary', $result_terms],
@@ -194,10 +197,9 @@ class TaxonomyHelperTest extends UnitTestCase {
 
   /**
    * Test you can load multiple terms by vocabulary id.
-   *
-   * @group TaxonomyHelper
-   * @dataProvider loadMultipleTermsByVocabularyDataProvider
    */
+  #[Group('TaxonomyHelper')]
+  #[DataProvider('loadMultipleTermsByVocabularyDataProvider')]
   public function testLoadMultipleTermsByVocabulary($vid, $result) {
     // Mock loadByProperties.
     $this->taxonomyStorage->expects($this->any())
@@ -225,9 +227,19 @@ class TaxonomyHelperTest extends UnitTestCase {
   /**
    * Data provider for getTermIdFromOriginalId.
    */
-  public function getTermIdFromOriginalIdDataProvider() {
-    $original_id = '125';
+  public static function getTermIdFromOriginalIdDataProvider() {
+    return [
+      ['125', 'test_vid', '10'],
+      ['125', 'null_vid', NULL],
+    ];
+  }
 
+  /**
+   * Test getting term id from original id.
+   */
+  #[Group('TaxonomyHelper')]
+  #[DataProvider('getTermIdFromOriginalIdDataProvider')]
+  public function testGetTermIdFromOriginalId($original_id, $vid, $result) {
     // Mock field.
     $field = $this->prophesize(FieldItemListInterface::class);
     $field->getValue()->willReturn([['value' => $original_id]]);
@@ -237,19 +249,8 @@ class TaxonomyHelperTest extends UnitTestCase {
     $term->get('field_original_id')->willReturn($field->reveal());
     $term->id()->willReturn('10');
 
-    return [
-      [$original_id, 'test_vid', [$term->reveal()], '10'],
-      [$original_id, 'null_vid', [], NULL],
-    ];
-  }
+    $terms = $result !== NULL ? [$term->reveal()] : [];
 
-  /**
-   * Test getting term id from original id.
-   *
-   * @group TaxonomyHelper
-   * @dataProvider getTermIdFromOriginalIdDataProvider
-   */
-  public function testGetTermIdFromOriginalId($original_id, $vid, $terms, $result) {
     // Mock loadByProperties.
     $this->taxonomyStorage->expects($this->any())
       ->method('loadByProperties')
@@ -277,7 +278,7 @@ class TaxonomyHelperTest extends UnitTestCase {
   /**
    * Data provider for getTermIdsByFieldValue.
    */
-  public function getTermIdsByFieldValueDataProvider() {
+  public static function getTermIdsByFieldValueDataProvider() {
     return [
       ['field_name', 'Jon', 'test_vocab', ['1', '2', '3'], ['1', '2', '3']],
       ['field_name', 'Snow', 'test_vocab', [], NULL],
@@ -286,10 +287,9 @@ class TaxonomyHelperTest extends UnitTestCase {
 
   /**
    * Test getting term ids from value of a field.
-   *
-   * @group TaxonomyHelper
-   * @dataProvider getTermIdsByFieldValueDataProvider
    */
+  #[Group('TaxonomyHelper')]
+  #[DataProvider('getTermIdsByFieldValueDataProvider')]
   public function testGetTermIdsByFieldValue($field_name, $value, $vid, $query_result, $result) {
     // Mock entityQuery methods.
     $this->entityQuery->condition($field_name, $value)->willReturn($this->entityQuery);
@@ -322,9 +322,9 @@ class TaxonomyHelperTest extends UnitTestCase {
   }
 
   /**
-   * Get mock response for loadTree.
+   * Create a taxonomy tree response for loadTree.
    */
-  public function getMockTaxonomyTree() {
+  public static function createTaxonomyTree() {
     $terms = [];
     $terms[1] = (object) [
       'tid' => 1,

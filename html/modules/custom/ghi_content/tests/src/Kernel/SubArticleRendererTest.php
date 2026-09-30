@@ -19,12 +19,13 @@ use Drupal\layout_builder\Section;
 use Drupal\layout_builder\SectionComponent;
 use Drupal\Tests\ghi_base_objects\Traits\BaseObjectTestTrait;
 use Drupal\node\Entity\NodeType;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
  * Tests the sub-article renderer.
- *
- * @group ghi_content
  */
+#[Group('ghi_content')]
 class SubArticleRendererTest extends KernelTestBase {
 
   use BaseObjectTestTrait;
@@ -162,9 +163,8 @@ class SubArticleRendererTest extends KernelTestBase {
 
   /**
    * Tests that nested widgets are lazy loaded from their own article's layout.
-   *
-   * @dataProvider parentLayoutContextProvider
    */
+  #[DataProvider('parentLayoutContextProvider')]
   public function testBuildLazyWidgetWithOwningArticle(bool $has_parent_context) {
     $this->createBaseObjectType(['id' => 'plan']);
     $this->config('ghi_blocks.block_settings')->set('lazy_load', TRUE)->save();
@@ -221,7 +221,7 @@ class SubArticleRendererTest extends KernelTestBase {
   /**
    * Provides nested rendering contexts with and without a parent layout owner.
    */
-  public function parentLayoutContextProvider(): array {
+  public static function parentLayoutContextProvider(): array {
     return [
       'standalone sub-article' => [FALSE],
       'nested sub-article' => [TRUE],

@@ -35,7 +35,7 @@ class UniqueYear extends Constraint implements ConstraintValidatorInterface {
   /**
    * {@inheritdoc}
    */
-  public function validatedBy() {
+  public function validatedBy(): string {
     return get_class($this);
   }
 

@@ -105,7 +105,7 @@ class DownloadRecord {
     $record['updated'] = \Drupal::time()->getRequestTime();
     $record['options'] = serialize($options);
     self::getDatabase()->merge('hpc_download_processes')
-      ->key(['id' => $record['id']])
+      ->key('id', $record['id'])
       ->fields($record)
       ->execute();
 
@@ -123,7 +123,7 @@ class DownloadRecord {
     $record['status'] = $status;
     $record['options'] = serialize($options);
     self::getDatabase()->merge('hpc_download_processes')
-      ->key(['id' => $record['id']])
+      ->key('id', $record['id'])
       ->fields($record)
       ->execute();
     $record = self::loadRecordById($record['id']);

@@ -6,23 +6,22 @@ use Drupal\Core\DependencyInjection\ContainerBuilder;
 use Drupal\ghi_plans\Controller\ProjectModalController;
 use Drupal\Tests\UnitTestCase;
 use GuzzleHttp\Psr7\Response as Psr7Response;
+use PHPUnit\Framework\Attributes\CoversMethod;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
  * Tests the legacy project asset proxy.
- *
- * @group ghi_plans
- *
- * @coversDefaultClass \Drupal\ghi_plans\Controller\ProjectModalController
  */
+#[CoversMethod(ProjectModalController::class, 'buildLegacyProjectAsset')]
+#[Group('ghi_plans')]
 class ProjectModalControllerTest extends UnitTestCase {
 
   /**
    * Tests that the proxy serves validated image bytes with safe headers.
-   *
-   * @covers ::buildLegacyProjectAsset
    */
   public function testBuildLegacyProjectAssetServesValidatedImage(): void {
     $image = base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=', TRUE);
@@ -47,11 +46,8 @@ class ProjectModalControllerTest extends UnitTestCase {
    *
    * @param string $path
    *   The requested proxy path.
-   *
-   * @dataProvider disallowedAssetPathProvider
-   *
-   * @covers ::buildLegacyProjectAsset
    */
+  #[DataProvider('disallowedAssetPathProvider')]
   public function testBuildLegacyProjectAssetRejectsDisallowedPath(string $path): void {
     $http_client = $this->mockHttpClient(new Psr7Response(Response::HTTP_OK));
     $controller = $this->createController($path, $http_client);
@@ -68,7 +64,7 @@ class ProjectModalControllerTest extends UnitTestCase {
    * @return array<string, array{string}>
    *   The test cases.
    */
-  public function disallowedAssetPathProvider(): array {
+  public static function disallowedAssetPathProvider(): array {
     return [
       'project HTML' => ['projects/123.html'],
       'JavaScript' => ['_assets/project.js'],
@@ -78,8 +74,6 @@ class ProjectModalControllerTest extends UnitTestCase {
 
   /**
    * Tests that SVG assets are sanitized before being served.
-   *
-   * @covers ::buildLegacyProjectAsset
    */
   public function testBuildLegacyProjectAssetSanitizesSvg(): void {
     $svg = <<<'SVG'
@@ -111,8 +105,6 @@ SVG;
 
   /**
    * Tests that malformed SVG content is rejected.
-   *
-   * @covers ::buildLegacyProjectAsset
    */
   public function testBuildLegacyProjectAssetRejectsInvalidSvg(): void {
     $http_client = $this->mockHttpClient(new Psr7Response(Response::HTTP_OK, [
@@ -127,8 +119,6 @@ SVG;
 
   /**
    * Tests that an image extension cannot disguise active content.
-   *
-   * @covers ::buildLegacyProjectAsset
    */
   public function testBuildLegacyProjectAssetRejectsInvalidImageContent(): void {
     $http_client = $this->mockHttpClient(new Psr7Response(Response::HTTP_OK, [

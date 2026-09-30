@@ -79,16 +79,16 @@ interface ConfigurationContainerItemPluginInterface extends PluginInspectionInte
   /**
    * Get the label of an item.
    *
-   * @return string|\Drupal\Component\Render\MarkupInterface
-   *   Return the rendered value.
+   * @return string|\Drupal\Component\Render\MarkupInterface|null
+   *   The label, or NULL when no label is available.
    */
   public function getLabel();
 
   /**
    * Get the value of an item.
    *
-   * @return string|\Drupal\Component\Render\MarkupInterface
-   *   Return the rendered value.
+   * @return string|\Drupal\Component\Render\MarkupInterface|null
+   *   The value, or NULL when no value is available.
    */
   public function getValue();
 

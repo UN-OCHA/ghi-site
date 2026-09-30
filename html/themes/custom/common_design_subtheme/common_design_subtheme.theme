@@ -107,17 +107,6 @@ function common_design_subtheme_form_alter(&$form, FormStateInterface $form_stat
   // Replace $form['keys'] with the appropriate fulltext input eg.
   // $form['search_api_fulltext'].
   if (in_array($form['#id'], $includeView)) {
-    $form['#attributes']['class'][] = 'cd-search__form';
-    $form['#attributes']['aria-labelledby'][] = 'cd-search-form';
-    $form['#attributes']['data-cd-toggable'][] = 'Search';
-    $form['#attributes']['data-cd-icon'][] = '';
-    $form['#attributes']['data-cd-component'][] = 'cd-search';
-    $form['#attributes']['data-cd-logo'][] = 'search';
-    $form['#attributes']['role'][] = 'search';
-    // Focus the input when clicking on the toggler button.
-    $form['#attributes']['data-cd-focus-target'] = 'cd-search';
-    // Keep the form open.
-    $form['#attributes']['data-cd-toggable-keep'] = 'true';
     // The input field.
     $form['keywords']['#attributes']['placeholder'] = t('What are you looking for?');
     $form['keywords']['#attributes']['class'][] = 'cd-search__input';
@@ -192,6 +181,20 @@ function common_design_subtheme_preprocess_region(&$variables) {
  * Implements hook_preprocess_block().
  */
 function common_design_subtheme_preprocess_block(&$variables) {
+  if ($variables['plugin_id'] == 'views_exposed_filter_block:search_solr-page_search_results') {
+    // Common Design styles the dropdown wrapper and the form inside it
+    // separately. Keep the toggle on the block so contextual links stay inside
+    // the dropdown and the search-page behavior can find the block's toggle ID.
+    $variables['attributes']['class'][] = 'cd-search__form';
+    $variables['attributes']['aria-labelledby'] = 'cd-search-form';
+    $variables['attributes']['data-cd-toggable'] = t('Search');
+    $variables['attributes']['data-cd-component'] = 'cd-search';
+    $variables['attributes']['data-cd-logo'] = 'search';
+    $variables['attributes']['role'] = 'search';
+    $variables['attributes']['data-cd-focus-target'] = 'cd-search';
+    $variables['attributes']['data-cd-toggable-keep'] = 'true';
+  }
+
   $full_width_blocks = [
     'generic_link_carousel',
     'global_homepages',

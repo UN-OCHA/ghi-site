@@ -10,12 +10,12 @@ use Drupal\ghi_blocks\Interfaces\OverrideDefaultTitleBlockInterface;
 use Drupal\ghi_blocks\Plugin\Block\Plan\PlanGoverningEntitiesCaseloadsTable;
 use Drupal\ghi_subpages\SubpageManager;
 use Drupal\Tests\ghi_blocks\Kernel\PlanBlockKernelTestBase;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
  * Tests the plan governing entities caseloads table block plugin.
- *
- * @group ghi_blocks
  */
+#[Group('ghi_blocks')]
 class PlanGoverningEntitiesCaseloadsTableTest extends PlanBlockKernelTestBase {
 
   /**

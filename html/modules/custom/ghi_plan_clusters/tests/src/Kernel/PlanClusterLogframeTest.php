@@ -6,12 +6,12 @@ use Drupal\KernelTests\KernelTestBase;
 use Drupal\Tests\ghi_plan_clusters\Traits\PlanClusterTestTrait;
 use Drupal\ghi_sections\Entity\SectionNodeInterface;
 use Drupal\ghi_subpages\Entity\LogframeSubpage;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
  * Test class for section subpages tests.
- *
- * @group ghi_subpages
  */
+#[Group('ghi_subpages')]
 class PlanClusterLogframeTest extends KernelTestBase {
 
   use PlanClusterTestTrait;

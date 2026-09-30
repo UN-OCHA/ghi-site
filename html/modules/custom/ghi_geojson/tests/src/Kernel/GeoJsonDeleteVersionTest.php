@@ -5,13 +5,14 @@ namespace Drupal\Tests\ghi_geojson\Kernel;
 use Drupal\Core\File\FileSystemInterface;
 use Drupal\ghi_geojson\GeoJson;
 use Drupal\KernelTests\KernelTestBase;
+use PHPUnit\Framework\Attributes\CoversMethod;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
  * Kernel tests for the GeoJson::deleteVersion method.
- *
- * @coversDefaultClass \Drupal\ghi_geojson\GeoJson
- * @group ghi_geojson
  */
+#[CoversMethod(GeoJson::class, 'deleteVersion')]
+#[Group('ghi_geojson')]
 class GeoJsonDeleteVersionTest extends KernelTestBase {
 
   /**
@@ -99,8 +100,6 @@ class GeoJsonDeleteVersionTest extends KernelTestBase {
 
   /**
    * Tests successful version deletion.
-   *
-   * @covers ::deleteVersion
    */
   public function testDeleteVersionSuccess(): void {
     $iso3 = 'AFG';
@@ -142,8 +141,6 @@ class GeoJsonDeleteVersionTest extends KernelTestBase {
 
   /**
    * Tests deletion of non-existent version.
-   *
-   * @covers ::deleteVersion
    */
   public function testDeleteVersionNonExistent(): void {
     $iso3 = 'AFG';
@@ -162,8 +159,6 @@ class GeoJsonDeleteVersionTest extends KernelTestBase {
 
   /**
    * Tests deletion with invalid ISO3 code.
-   *
-   * @covers ::deleteVersion
    */
   public function testDeleteVersionInvalidIso3(): void {
     $invalid_iso3 = 'INVALID';
@@ -182,8 +177,6 @@ class GeoJsonDeleteVersionTest extends KernelTestBase {
 
   /**
    * Tests that trying to delete 'current' version throws exception.
-   *
-   * @covers ::deleteVersion
    */
   public function testDeleteCurrentVersionThrowsException(): void {
     $iso3 = 'AFG';
@@ -203,8 +196,6 @@ class GeoJsonDeleteVersionTest extends KernelTestBase {
 
   /**
    * Tests deletion preserves other countries' data.
-   *
-   * @covers ::deleteVersion
    */
   public function testDeleteVersionPreservesOtherCountries(): void {
     $target_iso3 = 'AFG';
@@ -232,8 +223,6 @@ class GeoJsonDeleteVersionTest extends KernelTestBase {
 
   /**
    * Tests deletion of version with complex directory structure.
-   *
-   * @covers ::deleteVersion
    */
   public function testDeleteVersionComplexStructure(): void {
     $iso3 = 'SYR';
@@ -282,8 +271,6 @@ class GeoJsonDeleteVersionTest extends KernelTestBase {
 
   /**
    * Tests deletion with empty version directory.
-   *
-   * @covers ::deleteVersion
    */
   public function testDeleteVersionEmptyDirectory(): void {
     $iso3 = 'AFG';
@@ -309,8 +296,6 @@ class GeoJsonDeleteVersionTest extends KernelTestBase {
 
   /**
    * Tests deletion with special characters in version name.
-   *
-   * @covers ::deleteVersion
    */
   public function testDeleteVersionSpecialCharacters(): void {
     $iso3 = 'IRQ';
@@ -335,23 +320,6 @@ class GeoJsonDeleteVersionTest extends KernelTestBase {
     // Verify deletion.
     $this->assertFalse(is_dir($special_path), 'Directory with special characters should be deleted.');
     $this->assertFalse(file_exists($test_file), 'Files should be deleted along with directory.');
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  protected function tearDown(): void {
-    // Clean up test directories if they exist.
-    try {
-      $base_path = 'public://geojson_sources';
-      if ($this->fileSystem) {
-        $this->fileSystem->deleteRecursive($base_path);
-      }
-    } catch (\Exception $e) {
-      // Ignore cleanup errors during tearDown.
-    }
-
-    parent::tearDown();
   }
 
 }

@@ -17,12 +17,12 @@ use Drupal\ghi_plans\ApiObjects\Plan;
 use Drupal\ghi_plans\ApiObjects\PlanEntityInterface;
 use Drupal\ghi_subpages\LogframeManager;
 use Drupal\Tests\ghi_blocks\Kernel\PlanBlockKernelTestBase;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
  * Tests the plan entity logframe block plugin.
- *
- * @group ghi_blocks
  */
+#[Group('ghi_blocks')]
 class PlanEntityLogframeTest extends PlanBlockKernelTestBase {
 
   /**
