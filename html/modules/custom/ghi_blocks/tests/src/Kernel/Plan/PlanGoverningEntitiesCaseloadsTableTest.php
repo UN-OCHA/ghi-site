@@ -8,7 +8,10 @@ use Drupal\ghi_blocks\Interfaces\ConfigurableTableBlockInterface;
 use Drupal\ghi_blocks\Interfaces\MultiStepFormBlockInterface;
 use Drupal\ghi_blocks\Interfaces\OverrideDefaultTitleBlockInterface;
 use Drupal\ghi_blocks\Plugin\Block\Plan\PlanGoverningEntitiesCaseloadsTable;
+use Drupal\ghi_plans\ApiObjects\Prototypes\AttachmentPrototype;
+use Drupal\ghi_plans\Plugin\FabricQuery\AttachmentPrototypeQuery;
 use Drupal\ghi_subpages\SubpageManager;
+use Drupal\hpc_api\Query\FabricQueryManager;
 use Drupal\Tests\ghi_blocks\Kernel\PlanBlockKernelTestBase;
 
 /**
@@ -108,6 +111,45 @@ class PlanGoverningEntitiesCaseloadsTableTest extends PlanBlockKernelTestBase {
   }
 
   /**
+   * Tests that configuration repair converts legacy data point indexes.
+   */
+  public function testFixConfigErrorsConvertsLegacyDataPoints(): void {
+    $original_prototype = $this->mockAttachmentPrototype(10, 'Old prototype', ['target', 'cumulative_reach']);
+    $new_prototype = $this->mockAttachmentPrototype(20, 'New prototype', ['cumulative_reach', 'target']);
+    $plugin = $this->mockRepairBlock($this->getLegacyRepairConfiguration(), $new_prototype, [
+      10 => $original_prototype,
+      20 => $new_prototype,
+    ]);
+
+    $plugin->fixConfigErrors();
+
+    $config = $plugin->getBlockConfig();
+    $this->assertSame(20, $config['base']['prototype_id']);
+    $this->assertSame('cumulative_reach', $config['table']['columns'][0]['config']['data_point']['data_points'][0]['metric_type']);
+    $this->assertArrayNotHasKey('index', $config['table']['columns'][0]['config']['data_point']['data_points'][0]);
+    $this->assertSame('target', $config['table']['columns'][0]['config']['data_point']['data_points'][1]['metric_type']);
+    $this->assertArrayNotHasKey('index', $config['table']['columns'][0]['config']['data_point']['data_points'][1]);
+    $this->assertSame('cumulative_reach', $config['table']['columns'][1]['config']['data_point']);
+    $this->assertSame('target', $config['table']['columns'][1]['config']['baseline']);
+  }
+
+  /**
+   * Tests that incomplete prototype data does not break configuration repair.
+   */
+  public function testFixConfigErrorsHandlesMissingPrototype(): void {
+    $new_prototype = $this->mockAttachmentPrototype(20, 'New prototype', ['cumulative_reach', 'target']);
+    $plugin = $this->mockRepairBlock($this->getLegacyRepairConfiguration(), $new_prototype, [
+      20 => $new_prototype,
+    ]);
+
+    $plugin->fixConfigErrors();
+
+    $config = $plugin->getBlockConfig();
+    $this->assertSame(10, $config['base']['prototype_id']);
+    $this->assertSame(1, $config['table']['columns'][0]['config']['data_point']['data_points'][0]['index']);
+  }
+
+  /**
    * Get a block plugin with default configuration.
    *
    * @return \Drupal\ghi_blocks\Plugin\Block\Plan\PlanGoverningEntitiesCaseloadsTable
@@ -134,6 +176,79 @@ class PlanGoverningEntitiesCaseloadsTableTest extends PlanBlockKernelTestBase {
     $container->set('ghi_subpages.manager', $subpage_manager->reveal());
 
     return $this->createBlockPlugin('plan_governing_entities_caseloads_table', $configuration, $contexts);
+  }
+
+  /**
+   * Mock a block configured for repair in a new prototype context.
+   */
+  private function mockRepairBlock(array $configuration, AttachmentPrototype $new_prototype, array $loaded_prototypes): PlanGoverningEntitiesCaseloadsTable {
+    $prototype_query = $this->prophesize(AttachmentPrototypeQuery::class);
+    $prototype_query->getPrototypes([10, 20])->willReturn($loaded_prototypes);
+    $fabric_query_manager = $this->prophesize(FabricQueryManager::class);
+    $fabric_query_manager->createInstance('attachment_prototype')->willReturn($prototype_query->reveal());
+
+    $plugin = $this->getMockBuilder(PlanGoverningEntitiesCaseloadsTable::class)
+      ->disableOriginalConstructor()
+      ->onlyMethods(['getUniquePrototypes'])
+      ->getMock();
+    $plugin->method('getUniquePrototypes')->willReturn([20 => $new_prototype]);
+
+    $reflection = new \ReflectionClass($plugin);
+    $configuration_property = $reflection->getParentClass()->getProperty('configuration');
+    $configuration_property->setValue($plugin, ['hpc' => $configuration]);
+    $fabric_query_manager_property = $reflection->getParentClass()->getParentClass()->getProperty('fabricQueryManager');
+    $fabric_query_manager_property->setValue($plugin, $fabric_query_manager->reveal());
+    return $plugin;
+  }
+
+  /**
+   * Get block configuration containing a legacy data point index.
+   */
+  private function getLegacyRepairConfiguration(): array {
+    return [
+      'base' => ['prototype_id' => 10],
+      'table' => [
+        'columns' => [
+          [
+            'item_type' => 'data_point',
+            'config' => [
+              'data_point' => [
+                'processing' => 'calculated',
+                'data_points' => [
+                  ['index' => 1],
+                  ['index' => 0],
+                ],
+              ],
+            ],
+          ],
+          [
+            'item_type' => 'spark_line_chart',
+            'config' => [
+              'data_point' => 1,
+              'show_baseline' => TRUE,
+              'baseline' => 0,
+            ],
+          ],
+        ],
+      ],
+    ];
+  }
+
+  /**
+   * Mock an attachment prototype used by block configuration repair.
+   */
+  private function mockAttachmentPrototype(int $id, string $name, array $field_types): AttachmentPrototype {
+    $prototype = $this->createMock(AttachmentPrototype::class);
+    $prototype->method('id')->willReturn($id);
+    $prototype->method('getName')->willReturn($name);
+    $prototype->method('getFieldTypes')->willReturn($field_types);
+    $prototype->method('resolveMetricType')->willReturnCallback(function ($data_point) use ($field_types): ?string {
+      if (is_int($data_point) || (is_string($data_point) && ctype_digit($data_point))) {
+        return $field_types[(int) $data_point] ?? NULL;
+      }
+      return is_string($data_point) && in_array($data_point, $field_types, TRUE) ? $data_point : NULL;
+    });
+    return $prototype;
   }
 
 }

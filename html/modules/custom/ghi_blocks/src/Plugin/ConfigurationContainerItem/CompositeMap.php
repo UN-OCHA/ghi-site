@@ -214,8 +214,7 @@ class CompositeMap extends ConfigurationContainerItemPluginBase implements Confi
       return NULL;
     }
     if (is_numeric($metric)) {
-      $field_types = array_values($attachment->getFieldTypes());
-      return $field_types[(int) $metric] ?? NULL;
+      return $attachment->getPrototype()?->resolveMetricType($metric);
     }
     return $metric;
   }

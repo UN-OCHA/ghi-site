@@ -8,14 +8,9 @@ namespace Drupal\ghi_blocks\Map;
 final class MapModalContent {
 
   /**
-   * The expirable key/value collection for lazy preview modal content.
+   * The preview resource namespace for lazy map modal content.
    */
-  public const CONFIGURATION_PREVIEW_COLLECTION = 'ghi_blocks.map_preview_modal';
-
-  /**
-   * The lifetime of stored lazy preview modal content.
-   */
-  public const CONFIGURATION_PREVIEW_TTL = 3600;
+  public const RESOURCE_NAMESPACE = 'map_modal';
 
   /**
    * The fallback data index for maps that do not have tabs.
@@ -63,20 +58,20 @@ final class MapModalContent {
   }
 
   /**
-   * Build a store key for a modal content entry.
+   * Build a resource key for a modal content entry.
    *
-   * @param string $token
-   *   The modal data token.
+   * @param string $map_id
+   *   The map id.
    * @param string $data_index
    *   The map data index.
    * @param string $variant_id
    *   The map variant id.
    *
    * @return string
-   *   The key/value store key.
+   *   The preview resource key.
    */
-  public static function buildStoreKey(string $token, string $data_index, string $variant_id): string {
-    return implode(':', [$token, $data_index, $variant_id]);
+  public static function buildResourceKey(string $map_id, string $data_index, string $variant_id): string {
+    return implode(':', [$map_id, $data_index, $variant_id]);
   }
 
   /**

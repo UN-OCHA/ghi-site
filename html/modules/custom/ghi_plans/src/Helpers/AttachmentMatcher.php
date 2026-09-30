@@ -1,10 +1,10 @@
 <?php
 
-namespace Drupal\ghi_blocks\Helpers;
+namespace Drupal\ghi_plans\Helpers;
 
-use Drupal\ghi_plans\ApiObjects\Prototypes\AttachmentPrototype;
 use Drupal\ghi_plans\ApiObjects\Attachments\AttachmentInterface;
 use Drupal\ghi_plans\ApiObjects\Attachments\Attachment;
+use Drupal\ghi_plans\ApiObjects\Prototypes\AttachmentPrototype;
 use Drupal\ghi_plans\Traits\PlanQueryTrait;
 
 /**
@@ -47,22 +47,22 @@ class AttachmentMatcher {
   }
 
   /**
-   * Match a data point index on the given attachments.
+   * Match a data point on the given attachments.
    *
    * Matching is done by type, such that a data point of attachment 2 is
    * returned that has the same type as the given data point in attachment 1.
    *
-   * @param int $data_point_index
-   *   The data point index to match.
+   * @param string|int|null $data_point
+   *   The metric type to match, or a numeric index from legacy configuration.
    * @param \Drupal\ghi_plans\ApiObjects\Attachments\Attachment $attachment_1
    *   The first or original attachment.
    * @param \Drupal\ghi_plans\ApiObjects\Attachments\Attachment $attachment_2
    *   The second or new attachment.
    *
-   * @return int
-   *   Either the original index if no match can be found or a new index.
+   * @return string|null
+   *   The matching metric type, or NULL if no match can be found.
    */
-  public static function matchDataPointOnAttachments($data_point_index, Attachment $attachment_1, Attachment $attachment_2) {
+  public static function matchDataPointOnAttachments($data_point, Attachment $attachment_1, Attachment $attachment_2): ?string {
     // Reload the prototypes, because depending on how the attachments have
     // been loaded, they might not have the full attachment prototype set up,
     // some are missing the calculated fields.
@@ -70,44 +70,28 @@ class AttachmentMatcher {
     $prototype_1 = $attachment_1->getPrototype()?->id() ? self::getPrototype($attachment_1->getPrototype()->id()) : NULL;
     $prototype_2 = $attachment_2->getPrototype()?->id() ? self::getPrototype($attachment_2->getPrototype()->id()) : NULL;
     if (!$prototype_1 || !$prototype_2) {
-      return $data_point_index;
+      return is_string($data_point) && !is_numeric($data_point) ? $data_point : NULL;
     }
-    return self::matchDataPointOnAttachmentPrototypes($data_point_index, $prototype_1, $prototype_2);
+    return self::matchDataPointOnAttachmentPrototypes($data_point, $prototype_1, $prototype_2);
   }
 
   /**
-   * Match a data point index on the given attachment prototypes.
+   * Match a data point on the given attachment prototypes.
    *
-   * @param int $data_point_index
-   *   The data point index to match.
+   * @param string|int|null $data_point
+   *   The metric type to match, or a numeric index from legacy configuration.
    * @param \Drupal\ghi_plans\ApiObjects\Prototypes\AttachmentPrototype $prototype_1
    *   The first or original attachment prototype.
    * @param \Drupal\ghi_plans\ApiObjects\Prototypes\AttachmentPrototype $prototype_2
    *   The second or new attachment prototype.
    *
-   * @return int
-   *   Either the original index if no match can be found or a new index.
+   * @return string|null
+   *   The matching metric type, or NULL if no match can be found.
    */
-  public static function matchDataPointOnAttachmentPrototypes($data_point_index, AttachmentPrototype $prototype_1, AttachmentPrototype $prototype_2) {
-    // First get the original and the new metric types for the same legacy
-    // field index.
-    $original_type = $prototype_1->getMetricTypeByOriginalIndex($data_point_index);
-    if (!$original_type) {
-      // This is fishy.
-      return $data_point_index;
-    }
+  public static function matchDataPointOnAttachmentPrototypes($data_point, AttachmentPrototype $prototype_1, AttachmentPrototype $prototype_2): ?string {
+    $metric_type = $prototype_1->resolveMetricType($data_point);
 
-    if ($original_type == $prototype_2->getMetricTypeByOriginalIndex($data_point_index)) {
-      // If they are the same, there is no need to go further.
-      return $data_point_index;
-    }
-    // It's referring to a different type now, let's see if we can find the
-    // same as the original type in the set of new fields.
-    $new_index = $prototype_2->getOriginalIndexByMetricType($original_type);
-
-    // We either found a new index and can return it, or we didn't and we
-    // return the original.
-    return $new_index ?? $data_point_index;
+    return is_string($metric_type) && in_array($metric_type, $prototype_2->getFieldTypes(), TRUE) ? $metric_type : NULL;
   }
 
   /**
