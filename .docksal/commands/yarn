@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 #: exec_target = cli
 
-## Run the code quality checks
+## Install Drupal dependencies
 ##
-## Usage: fin cs
+## Usage: fin yarn
 
 # Environment variables passed from fin:
 #
@@ -29,8 +29,5 @@ while [ "$1" != "" ]; do
   shift
 done
 
-echo "Running code linting on PHP code"
-./vendor/bin/phpcs -p --report=full ./html/modules/custom --extensions=module/php,php/php,inc/php
-
-echo "Checking for Drupal standards"
-./vendor/bin/phpcs --standard=DrupalPractice --extensions=php,module,inc,install,test,profile,theme,css,info,txt,md,yml ./html/modules/custom/
+echo "Install drupal dependencies"
+cd html/core && yarn
