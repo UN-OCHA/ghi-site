@@ -10,7 +10,9 @@
  * @requires popper.js
  * @requires tippy.js
  */
- (function () {
+(function (Drupal, once) {
+
+  'use strict';
 
   const hideOnEsc = {
     name: 'hideOnEsc',
@@ -33,22 +35,24 @@
     },
   };
 
-  document.addEventListener("DOMContentLoaded", function () {
-    [].slice.call(document.querySelectorAll('.popover')).forEach(function (el) {
-      if (el.nextElementSibling) {
-        tippy(el, {
-          content: el.nextElementSibling.innerHTML,
-          trigger: 'click',
-          allowHTML: true,
-          maxWidth: 'calc(100vw - 20%)',
-          interactive: true,
-          appendTo: document.body,
-          theme: 'light',
-          hideOnEsc: true,
-          role: 'popover',
-        });
-      }
-    });
-  });
+  Drupal.behaviors.popovers = {
+    attach: function (context) {
+      once('popover', '.popover', context).forEach(function (el) {
+        if (el.nextElementSibling) {
+          tippy(el, {
+            content: el.nextElementSibling.innerHTML,
+            trigger: 'click',
+            allowHTML: true,
+            maxWidth: 'calc(100vw - 20%)',
+            interactive: true,
+            appendTo: document.body,
+            theme: 'light',
+            hideOnEsc: true,
+            role: 'popover',
+          });
+        }
+      });
+    },
+  };
 
-})();
+})(Drupal, once);

@@ -31,6 +31,8 @@ popover:
   js:
     js/popover.js: {}
   dependencies:
+    - core/drupal
+    - core/once
     - hpc_common/tippy.js
 toggle:
   js:

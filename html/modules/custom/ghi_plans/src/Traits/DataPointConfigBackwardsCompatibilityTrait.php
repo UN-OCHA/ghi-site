@@ -20,11 +20,14 @@ trait DataPointConfigBackwardsCompatibilityTrait {
    *   An attachment prototype object.
    */
   public static function updateDataPointConfiguration(&$conf, AttachmentPrototype $prototype) {
-    if (!empty($conf['data_points'][0]) && !array_key_exists('metric_type', $conf['data_points'][0])) {
-      $conf['data_points'][0]['metric_type'] = self::getMetricTypeByIndex($conf['data_points'][0]['index'], $prototype);
-    }
-    if (!empty($conf['data_points'][1]) && !array_key_exists('metric_type', $conf['data_points'][1])) {
-      $conf['data_points'][1]['metric_type'] = self::getMetricTypeByIndex($conf['data_points'][1]['index'], $prototype);
+    foreach ($conf['data_points'] ?? [] as $data_point_index => $data_point) {
+      if (empty($data_point) || array_key_exists('metric_type', $data_point)) {
+        continue;
+      }
+      $metric_type = $prototype->resolveMetricType($data_point['index'] ?? NULL);
+      if ($metric_type !== NULL) {
+        $conf['data_points'][$data_point_index]['metric_type'] = $metric_type;
+      }
     }
   }
 
@@ -40,7 +43,7 @@ trait DataPointConfigBackwardsCompatibilityTrait {
    *   The metric type or NULL.
    */
   public static function getMetricTypeByIndex(int $index, AttachmentPrototype $prototype): ?string {
-    return $prototype->getMetricTypeByOriginalIndex($index) ?? $prototype->getFieldTypes()[$index] ?? NULL;
+    return $prototype->resolveMetricType($index);
   }
 
 }

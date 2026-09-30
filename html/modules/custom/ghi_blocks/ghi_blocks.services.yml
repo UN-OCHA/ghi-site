@@ -36,3 +36,6 @@ services:
   ghi_blocks.reliefweb_rss_feed:
     class: Drupal\ghi_blocks\ReliefWeb\ReliefWebRssFeed
     arguments: ['@http_client', '@logger.factory', '@?hpc_remote_data_cache.cache']
+  ghi_blocks.preview_state_manager:
+    class: Drupal\ghi_blocks\Preview\BlockPreviewStateManager
+    arguments: ['@keyvalue.expirable', '@uuid', '@current_user', '@entity_type.manager', '@plugin.manager.block']

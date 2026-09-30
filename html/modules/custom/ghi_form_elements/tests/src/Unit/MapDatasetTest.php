@@ -7,6 +7,7 @@ use Drupal\Core\Form\FormState;
 use Drupal\ghi_form_elements\Element\MapDataset;
 use Drupal\ghi_plans\ApiObjects\Attachments\Attachment;
 use Drupal\ghi_plans\Plugin\FabricQuery\AttachmentQuery;
+use Drupal\ghi_plans\ApiObjects\Prototypes\AttachmentPrototype;
 use Drupal\hpc_api\Query\FabricQueryManager;
 use Drupal\Tests\UnitTestCase;
 
@@ -18,10 +19,19 @@ use Drupal\Tests\UnitTestCase;
 class MapDatasetTest extends UnitTestCase {
 
   /**
-   * Tests feedback for a selected metric without location-level data.
+   * Tests feedback and legacy metric selection after field reordering.
+   *
+   * @dataProvider metricSelectionProvider
    */
-  public function testUnavailableMetricFeedback(): void {
+  public function testUnavailableMetricFeedback(string|int $selected_metric): void {
+    $prototype = $this->getMockBuilder(AttachmentPrototype::class)
+      ->disableOriginalConstructor()
+      ->onlyMethods(['getMetricTypeByOriginalIndex', 'getFieldTypes'])
+      ->getMock();
+    $prototype->method('getMetricTypeByOriginalIndex')->willReturnMap([[0, 'expected_reach']]);
+    $prototype->method('getFieldTypes')->willReturn(['in_need', 'expected_reach', 'affected']);
     $attachment = $this->createMock(Attachment::class);
+    $attachment->method('getPrototype')->willReturn($prototype);
     $attachment->method('id')->willReturn(51955);
     $attachment->method('getPlanningFields')->willReturn([
       'in_need' => 'People in need',
@@ -75,7 +85,7 @@ class MapDatasetTest extends UnitTestCase {
         'slices' => [
           [
             'attachment' => 51955,
-            'metric' => 'expected_reach',
+            'metric' => $selected_metric,
             'settings' => [],
           ],
         ],
@@ -87,6 +97,7 @@ class MapDatasetTest extends UnitTestCase {
 
     MapDataset::processMapDataset($element, new FormState());
 
+    $this->assertSame('expected_reach', $element['slices'][0]['metric']['#default_value']);
     $this->assertSame('People in need', $element['polygon']['metric']['#options']['in_need']);
     $this->assertSame('Expected reach', $element['polygon']['metric']['#options']['expected_reach']);
     $this->assertSame('Affected people — No location-level data', (string) $element['polygon']['metric']['#options']['affected']);
@@ -99,6 +110,17 @@ class MapDatasetTest extends UnitTestCase {
       (string) $element['slices'][0]['settings_summary']['availability_warning']['#markup'],
     );
     $this->assertArrayNotHasKey('availability_warning', $element['full_pie']['settings_summary']);
+  }
+
+  /**
+   * Provides canonical metrics and indexes from the original field order.
+   */
+  public static function metricSelectionProvider(): array {
+    return [
+      'canonical type' => ['expected_reach'],
+      'legacy integer' => [0],
+      'legacy string' => ['0'],
+    ];
   }
 
 }
