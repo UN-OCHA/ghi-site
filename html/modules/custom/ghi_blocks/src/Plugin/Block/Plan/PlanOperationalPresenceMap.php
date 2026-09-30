@@ -131,7 +131,7 @@ class PlanOperationalPresenceMap extends GHIBlockBase implements MultiStepFormBl
     $selected_view = $this->getSelectedView();
     $block_uuid = $this->getUuid();
     $data_url_query = array_filter([
-      'current_uri' => $this->getCurrentUri(),
+      'current_uri' => $this->getMapPageUri(),
       'map_id' => $chart_id,
       'view' => $selected_view,
     ], fn ($value) => $value !== NULL && $value !== '');
@@ -771,7 +771,7 @@ class PlanOperationalPresenceMap extends GHIBlockBase implements MultiStepFormBl
       '#wrapper_id' => Html::getId('block-' . $this->getUuid()),
       '#plugin_id' => $this->getPluginId(),
       '#block_uuid' => $this->getUuid(),
-      '#uri' => $this->getCurrentUri(),
+      '#uri' => $this->getMapPageUri(),
     ];
   }
 

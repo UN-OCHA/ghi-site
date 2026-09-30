@@ -4,11 +4,28 @@ namespace Drupal\ghi_blocks\Traits;
 
 use Drupal\Core\Url;
 use Drupal\ghi_blocks\Map\MapModalContent;
+use Drupal\layout_builder\SectionStorageInterface;
 
 /**
  * Helpers for lazy-loading modal contents in map configuration previews.
  */
 trait ConfigurationPreviewMapTrait {
+
+  /**
+   * Get the page URI used to resolve the current map configuration.
+   *
+   * @return string
+   *   The editor route for unsaved layouts, otherwise the current page URI.
+   */
+  protected function getMapPageUri(): string {
+    $section_storage = $this->routeMatch->getParameter('section_storage');
+    if ($section_storage instanceof SectionStorageInterface) {
+      // IPE can disable the core Layout tab, so preserve the actual editor
+      // route. getCurrentUri() may instead point to the saved public page.
+      return $this->requestStack->getCurrentRequest()->getPathInfo();
+    }
+    return $this->getCurrentUri();
+  }
 
   /**
    * Move map modal content behind a preview-only lazy endpoint.

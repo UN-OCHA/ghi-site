@@ -347,7 +347,7 @@ class AttachmentQuery extends FabricQueryBase {
    *   Measurement ids to include in the metric-period summary.
    *
    * @return array
-   *   Summary data keyed by base/measurements/max.
+   *   Summary data keyed by base/measurements/max/query_succeeded.
    */
   public function getMappableMapMetricSummary(int $attachment_id, array $measurement_ids = []): array {
     $attachment_id = (int) $attachment_id;
@@ -357,6 +357,7 @@ class AttachmentQuery extends FabricQueryBase {
         'base' => [],
         'measurements' => [],
         'max' => 0,
+        'query_succeeded' => FALSE,
       ];
     }
 
@@ -369,6 +370,33 @@ class AttachmentQuery extends FabricQueryBase {
     $result = $this->queryMappableMapMetricSummary($attachment_id, $measurement_ids);
     $summary[$cache_key] = $this->parseMappableMapMetricSummary($result);
     return $summary[$cache_key];
+  }
+
+  /**
+   * Get mappable metric types for an attachment and its measurements.
+   *
+   * @param \Drupal\ghi_plans\ApiObjects\Attachments\Attachment $attachment
+   *   The attachment to inspect.
+   *
+   * @return array|null
+   *   Mappable metric types keyed by base and measurement id, or NULL when
+   *   availability could not be determined.
+   */
+  public function getMappableMapMetricAvailability(Attachment $attachment): ?array {
+    $measurement_ids = array_values(array_map(fn ($measurement) => (int) $measurement->id(), $attachment->getMeasurements()));
+    $summary = $this->getMappableMapMetricSummary($attachment->id(), $measurement_ids);
+    if (empty($summary['query_succeeded'])) {
+      return NULL;
+    }
+
+    $availability = [
+      'base' => $this->getMappableMetricTypeNames($attachment, array_keys($summary['base'])),
+      'measurements' => [],
+    ];
+    foreach ($summary['measurements'] as $measurement_id => $metrics) {
+      $availability['measurements'][$measurement_id] = $this->getMappableMetricTypeNames($attachment, array_keys($metrics));
+    }
+    return $availability;
   }
 
   /**
@@ -695,6 +723,7 @@ class AttachmentQuery extends FabricQueryBase {
       'base' => [],
       'measurements' => [],
       'max' => 0,
+      'query_succeeded' => $result !== FALSE,
     ];
     if (!$result) {
       return $summary;
@@ -730,6 +759,38 @@ class AttachmentQuery extends FabricQueryBase {
     }
 
     return $summary;
+  }
+
+  /**
+   * Convert mappable metric type ids to attachment field names.
+   *
+   * @param \Drupal\ghi_plans\ApiObjects\Attachments\Attachment $attachment
+   *   The attachment whose fields are being inspected.
+   * @param int[] $metric_type_ids
+   *   The metric type ids.
+   *
+   * @return string[]
+   *   The corresponding metric type machine names.
+   */
+  private function getMappableMetricTypeNames(Attachment $attachment, array $metric_type_ids): array {
+    $metric_types = [];
+    foreach ($metric_type_ids as $metric_type_id) {
+      $metric_type = $this->getMetricType((int) $metric_type_id);
+      $machine_name = $metric_type?->getMachineName();
+      if (!$machine_name) {
+        continue;
+      }
+      if ($machine_name == 'custom') {
+        foreach (array_keys($attachment->getFields()) as $field_name) {
+          if ($field_name == 'custom' || str_starts_with($field_name, 'custom__')) {
+            $metric_types[] = $field_name;
+          }
+        }
+        continue;
+      }
+      $metric_types[] = $machine_name;
+    }
+    return array_values(array_unique($metric_types));
   }
 
   /**

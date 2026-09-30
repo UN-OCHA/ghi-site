@@ -2,12 +2,15 @@
 
 namespace Drupal\Tests\ghi_blocks\Kernel\Plan;
 
+use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\ghi_blocks\Interfaces\LazyMapBlockInterface;
 use Drupal\ghi_blocks\Interfaces\MultiStepFormBlockInterface;
 use Drupal\ghi_blocks\Interfaces\OverrideDefaultTitleBlockInterface;
 use Drupal\ghi_blocks\Map\MapModalContent;
 use Drupal\ghi_blocks\Plugin\Block\Plan\PlanOperationalPresenceMap;
+use Drupal\layout_builder\SectionStorageInterface;
 use Drupal\Tests\ghi_blocks\Kernel\PlanBlockKernelTestBase;
+use Symfony\Component\HttpFoundation\Request;
 
 /**
  * Tests the plan operational presence map block plugin.
@@ -15,6 +18,26 @@ use Drupal\Tests\ghi_blocks\Kernel\PlanBlockKernelTestBase;
  * @group ghi_blocks
  */
 class PlanOperationalPresenceMapTest extends PlanBlockKernelTestBase {
+
+  /**
+   * Tests that the view switcher targets the editor's unsaved layout.
+   */
+  public function testViewSwitcherUsesEditorUri(): void {
+    $plugin = $this->getBlockPlugin();
+    $configuration = $plugin->getConfiguration();
+    $configuration['hpc']['display']['available_views'] = ['organization', 'project'];
+    $plugin->setConfiguration($configuration);
+    $plugin->setCurrentUri('/plan/1266/presence');
+    $route_match = $this->createMock(RouteMatchInterface::class);
+    $route_match->method('getParameter')->with('section_storage')->willReturn($this->createMock(SectionStorageInterface::class));
+    $this->setPrivateProperty($plugin, 'routeMatch', $route_match);
+    $editor_uri = '/layout_builder/add/block/overrides/node.1/0/content/plan_operational_presence_map';
+    $this->container->get('request_stack')->push(Request::create($editor_uri));
+
+    $switcher = $this->callPrivateMethod($plugin, 'getViewSwitcher', ['organization']);
+
+    $this->assertSame($editor_uri, $switcher['#uri']);
+  }
 
   /**
    * Tests the block plugin instantiation.
