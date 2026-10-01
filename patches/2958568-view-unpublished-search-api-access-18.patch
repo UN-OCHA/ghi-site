@@ -1,27 +1,15 @@
 diff --git a/composer.json b/composer.json
-index 71d1c19..2ba3cec 100644
+index f11bdb0..397f2a9 100644
 --- a/composer.json
 +++ b/composer.json
-@@ -2,6 +2,7 @@
-     "name": "drupal/view_unpublished",
-     "type": "drupal-module",
-     "description": "Select which roles should be able to see unpublished nodes.",
-+    "homepage": "https://www.drupal.org/project/view_unpublished",
-     "license": "GPL-2.0-or-later",
-     "authors": [
-         {
-@@ -9,7 +10,11 @@
-             "email": "amaria@chisholmtech.com"
-         }
-     ],
-+    "require": {
-+        "drupal/core": "^9.4 || ^10"
-+    },
+@@ -8,6 +8,7 @@
+         "drupal/core": "^10.3 || ^11"
+     },
      "require-dev": {
 +        "drupal/search_api": "^1.26",
-         "phpcompatibility/php-compatibility": "10.x-dev@dev",
-         "drupal/coder": "^8.3.18"
+         "twig/twig": "^3.29.0, !=3.30.0"
      }
+ }
 diff --git a/src/Plugin/search_api/processor/ViewUnpublished.php b/src/Plugin/search_api/processor/ViewUnpublished.php
 new file mode 100644
 index 0000000..b6d12e3
