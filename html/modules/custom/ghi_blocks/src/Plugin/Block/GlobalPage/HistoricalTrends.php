@@ -269,7 +269,7 @@ class HistoricalTrends extends GHIBlockBase implements OverrideDefaultTitleBlock
     $form['end_year'] = [
       '#type' => 'select',
       '#title' => $this->t('End year'),
-      '#options' => ['' => $this->t('Page year, or latest available year')] + $years,
+      '#options' => ['' => $this->t('Latest available year (up to page year)')] + $years,
       '#default_value' => $this->getDefaultFormValueFromFormState($form_state, 'end_year'),
       '#element_validate' => [[$this, 'validateYearRange']],
     ];
