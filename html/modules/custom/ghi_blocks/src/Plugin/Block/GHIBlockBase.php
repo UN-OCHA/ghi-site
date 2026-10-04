@@ -7,7 +7,6 @@ use Drupal\Component\Plugin\Exception\PluginException;
 use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Component\Utility\Html;
 use Drupal\Component\Utility\NestedArray;
-use Drupal\Component\Uuid\UuidInterface;
 use Drupal\Core\Ajax\AjaxResponse;
 use Drupal\Core\Ajax\ReplaceCommand;
 use Drupal\Core\Cache\Cache;
@@ -17,7 +16,6 @@ use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Form\SubformState;
 use Drupal\Core\Form\SubformStateInterface;
-use Drupal\Core\KeyValueStore\KeyValueExpirableFactoryInterface;
 use Drupal\Core\Render\Element;
 use Drupal\Core\Security\TrustedCallbackInterface;
 use Drupal\Core\Url;
@@ -30,6 +28,7 @@ use Drupal\ghi_blocks\Interfaces\AutomaticTitleBlockInterface;
 use Drupal\ghi_blocks\Interfaces\MultiStepFormBlockInterface;
 use Drupal\ghi_blocks\Interfaces\OptionalTitleBlockInterface;
 use Drupal\ghi_blocks\Interfaces\OverrideDefaultTitleBlockInterface;
+use Drupal\ghi_blocks\Preview\BlockPreviewStateManager;
 use Drupal\ghi_blocks\Traits\BlockCommentTrait;
 use Drupal\ghi_blocks\Traits\VerticalTabsTrait;
 use Drupal\ghi_plan_clusters\Entity\PlanCluster;
@@ -73,16 +72,6 @@ abstract class GHIBlockBase extends HPCBlockBase implements TrustedCallbackInter
    * The form key for the base object form.
    */
   const CONTEXTS_FORM_KEY = 'contexts';
-
-  /**
-   * The expirable key/value collection for block configuration previews.
-   */
-  public const CONFIGURATION_PREVIEW_COLLECTION = 'ghi_blocks.block_configuration_preview';
-
-  /**
-   * The lifetime of stored block configuration preview state.
-   */
-  private const CONFIGURATION_PREVIEW_TTL = 3600;
 
   /**
    * Current form state object if in a configuration context.
@@ -176,18 +165,16 @@ abstract class GHIBlockBase extends HPCBlockBase implements TrustedCallbackInter
   protected $currentUser;
 
   /**
-   * The expirable key/value store factory.
-   *
-   * @var \Drupal\Core\KeyValueStore\KeyValueExpirableFactoryInterface
+   * The block preview state manager.
    */
-  protected KeyValueExpirableFactoryInterface $keyValueExpirableFactory;
+  protected BlockPreviewStateManager $previewStateManager;
 
   /**
-   * The UUID generator.
+   * The token used to restore this block from unsaved preview state.
    *
-   * @var \Drupal\Component\Uuid\UuidInterface
+   * @var string|null
    */
-  protected UuidInterface $uuid;
+  private ?string $previewStateToken = NULL;
 
   /**
    * {@inheritdoc}
@@ -209,8 +196,7 @@ abstract class GHIBlockBase extends HPCBlockBase implements TrustedCallbackInter
     $instance->pathMatcher = $container->get('path.matcher');
     $instance->formSubmitter = $container->get('form_submitter');
     $instance->currentUser = $container->get('current_user');
-    $instance->keyValueExpirableFactory = $container->get('keyvalue.expirable');
-    $instance->uuid = $container->get('uuid');
+    $instance->previewStateManager = $container->get('ghi_blocks.preview_state_manager');
 
     $instance->getContexts();
 
@@ -578,8 +564,9 @@ abstract class GHIBlockBase extends HPCBlockBase implements TrustedCallbackInter
       '#attributes' => [],
     ];
 
-    // See if there is a cached version available.
-    $build_content = $this->cache($cache_key);
+    // Preview output can contain a user-specific token and must never enter or
+    // be read from the persistent block content cache.
+    $build_content = $this->isPreview() ? NULL : $this->cache($cache_key);
     if (!$build_content) {
       // Build the full block. First get the actual block content.
       $profile_key = ProfileHelper::profileStart(static::class . ':buildContent');
@@ -587,7 +574,7 @@ abstract class GHIBlockBase extends HPCBlockBase implements TrustedCallbackInter
       ProfileHelper::profileEnd($profile_key);
       $cache_tags = is_array($build_content) ? Cache::mergeTags($this->getCacheTags(), $this->collectRenderArrayCacheTags($build_content)) : $this->getCacheTags();
       $cache_max_age = is_array($build_content) ? Cache::mergeMaxAges($this->getCacheMaxAge(), $build_content['#cache']['max-age'] ?? Cache::PERMANENT) : $this->getCacheMaxAge();
-      if ($cache_max_age !== 0) {
+      if (!$this->isPreview() && $cache_max_age !== 0) {
         $this->cache($cache_key, $build_content, FALSE, NULL, $cache_tags);
       }
     }
@@ -626,7 +613,7 @@ abstract class GHIBlockBase extends HPCBlockBase implements TrustedCallbackInter
     $build['#cache'] = [
       'contexts' => Cache::mergeContexts($this->getCacheContexts(), $build_content['#cache']['contexts'] ?? []),
       'tags' => Cache::mergeTags($this->getCacheTags(), $this->collectRenderArrayCacheTags($build_content)),
-      'max-age' => Cache::mergeMaxAges($this->getCacheMaxAge(), $build_content['#cache']['max-age'] ?? Cache::PERMANENT),
+      'max-age' => $this->isPreview() ? 0 : Cache::mergeMaxAges($this->getCacheMaxAge(), $build_content['#cache']['max-age'] ?? Cache::PERMANENT),
     ];
     return $build;
   }
@@ -1253,14 +1240,14 @@ abstract class GHIBlockBase extends HPCBlockBase implements TrustedCallbackInter
       $temporary_settings = $this->getTemporarySettings($form_state);
       $this->applyConfigurationPreviewSettings($temporary_settings);
       $this->configuration['is_preview'] = TRUE;
-      $preview_token = $this->storeConfigurationPreviewState();
+      $preview_state_token = $this->getPreviewStateToken();
       $form['container']['preview'] = [
         '#type' => 'container',
         '#attributes' => [
           'data-block-preview' => $this->getPluginId(),
-          'data-block-preview-token' => $preview_token,
+          'data-block-preview-state-token' => $preview_state_token,
           'data-block-preview-url' => Url::fromRoute('ghi_blocks.block_preview', [
-            'token' => $preview_token,
+            'preview_state_token' => $preview_state_token,
           ])->toString(),
         ],
         '#attached' => [
@@ -1292,61 +1279,54 @@ abstract class GHIBlockBase extends HPCBlockBase implements TrustedCallbackInter
   }
 
   /**
-   * Store the preview input state outside the rendered form.
+   * Build a switcher that targets saved or unsaved block state as needed.
    *
-   * The rendered preview can be large, so the form only carries a token. The
-   * preview endpoint uses the stored plugin state to render the output later,
-   * keeping that output out of the serialized form state.
+   * @param string $element_key
+   *   The switcher element key.
+   * @param array $options
+   *   The available switcher options.
+   * @param mixed $default_value
+   *   The selected option.
+   * @param bool $ajax
+   *   Whether Drupal Ajax should handle changes.
+   * @param array $query
+   *   Additional query parameters.
    *
-   * @return string
-   *   The token referencing the stored preview input state.
+   * @return array
+   *   The ajax switcher render array.
    */
-  private function storeConfigurationPreviewState(): string {
-    $token = $this->uuid->generate();
-    $store = $this->keyValueExpirableFactory->get(self::CONFIGURATION_PREVIEW_COLLECTION);
-    $store->setWithExpire($token, [
-      'uid' => (int) $this->currentUser->id(),
-      'plugin_id' => $this->getPluginId(),
-      'configuration' => $this->getConfiguration(),
-      'contexts' => $this->getConfigurationPreviewContextData(),
-      'current_uri' => $this->getCurrentUri(),
-    ], self::CONFIGURATION_PREVIEW_TTL);
-    return $token;
+  protected function buildAjaxSwitcher(string $element_key, array $options, mixed $default_value = NULL, bool $ajax = TRUE, array $query = []): array {
+    // Layout Builder canvas previews are deliberately non-interactive. Do not
+    // attach an Ajax handler even if an event is triggered without a pointer.
+    if ($this->isLayoutBuilder() && !$this->isConfigurationPreview()) {
+      $ajax = FALSE;
+    }
+    $build = [
+      '#theme' => 'ajax_switcher',
+      '#element_key' => $element_key,
+      '#options' => $options,
+      '#default_value' => $default_value,
+      '#wrapper_id' => Html::getId('block-' . $this->getUuid()),
+      '#plugin_id' => $this->getPluginId(),
+      '#block_uuid' => $this->getUuid(),
+      '#uri' => $this->getCurrentUri(),
+      '#query' => $query,
+      '#ajax' => $ajax,
+    ];
+    if ($ajax && $this->isConfigurationPreview()) {
+      $build['#preview_state_token'] = $this->getPreviewStateToken();
+    }
+    return $build;
   }
 
   /**
-   * Get context values in a compact serializable form.
+   * Get the existing preview token or store the current block state.
    *
-   * @return array
-   *   The context data keyed by context name.
+   * @return string
+   *   The preview state token.
    */
-  private function getConfigurationPreviewContextData(): array {
-    $contexts = [];
-    foreach ($this->getContexts() as $context_name => $context) {
-      if (!$context->hasContextValue()) {
-        continue;
-      }
-      $value = $context->getContextValue();
-      if ($value instanceof EntityInterface) {
-        // Only persisted entities can be restored from compact preview state.
-        if ($value->id() === NULL) {
-          continue;
-        }
-        $contexts[$context_name] = [
-          'type' => 'entity',
-          'entity_type_id' => $value->getEntityTypeId(),
-          'id' => $value->id(),
-        ];
-        continue;
-      }
-      if (is_scalar($value) || $value === NULL) {
-        $contexts[$context_name] = [
-          'type' => 'scalar',
-          'value' => $value,
-        ];
-      }
-    }
-    return $contexts;
+  protected function getPreviewStateToken(): string {
+    return $this->previewStateToken ??= $this->previewStateManager->store($this);
   }
 
   /**

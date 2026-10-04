@@ -6,6 +6,8 @@ use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\ghi_blocks\Plugin\ConfigurationContainerItem\CompositeMap;
 use Drupal\ghi_plans\ApiObjects\Attachments\Attachment;
 use Drupal\ghi_plans\Plugin\FabricQuery\AttachmentQuery;
+use Drupal\ghi_plans\ApiObjects\Prototypes\AttachmentPrototype;
+use Drupal\Tests\hpc_api\Traits\PrivateAccessorTrait;
 use Drupal\hpc_api\Query\EndpointQueryManager;
 use Drupal\hpc_api\Query\FabricQueryManager;
 use Drupal\Tests\UnitTestCase;
@@ -17,6 +19,26 @@ use Symfony\Component\DependencyInjection\Container;
  * @group ghi_blocks
  */
 class CompositeMapTest extends UnitTestCase {
+
+  use PrivateAccessorTrait;
+
+  /**
+   * Tests that imported indexes use the original prototype field order.
+   */
+  public function testLegacyMetricUsesOriginalIndex(): void {
+    $prototype = $this->getMockBuilder(AttachmentPrototype::class)
+      ->disableOriginalConstructor()
+      ->onlyMethods(['getMetricTypeByOriginalIndex', 'getFieldTypes'])
+      ->getMock();
+    $prototype->method('getMetricTypeByOriginalIndex')->with(0)->willReturn('target');
+    $prototype->method('getFieldTypes')->willReturn(['in_need', 'target']);
+    $attachment = $this->createMock(Attachment::class);
+    $attachment->method('getPrototype')->willReturn($prototype);
+    $attachment->method('getFieldTypes')->willReturn(['in_need', 'target']);
+    $plugin = $this->createCompositeMap([]);
+
+    $this->assertSame('target', $this->callPrivateMethod($plugin, 'normalizeMetricType', [$attachment, '0']));
+  }
 
   /**
    * Tests configuration feedback for an unavailable slice metric.

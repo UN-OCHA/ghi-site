@@ -198,6 +198,12 @@ class MapDataset extends FormElementBase {
   private static function sanitizeDatasetItem(array &$item): array {
     $item = array_intersect_key($item, array_flip(['attachment', 'metric', 'settings']));
     $item['metric'] = $item['metric'] ?? self::NONE;
+    if (is_numeric($item['metric']) && $item['metric'] != self::NONE && !empty($item['attachment'])) {
+      // Normalize before tracking used fields so imported indexes and new
+      // selections identify the same metric throughout the form rebuild.
+      $attachment = self::loadAttachment($item['attachment']);
+      $item['metric'] = $attachment?->getPrototype()?->resolveMetricType($item['metric']) ?? self::NONE;
+    }
     if ($item['metric'] == self::NONE) {
       $item['settings'] = [];
     }
@@ -387,8 +393,7 @@ class MapDataset extends FormElementBase {
 
     $attachment = !empty($attachment_id) ? self::loadAttachment($attachment_id) : NULL;
     if ($attachment && is_numeric($current_metric) && $current_metric != self::NONE) {
-      $field_types = array_values($attachment->getFieldTypes());
-      $current_metric = $field_types[(int) $current_metric] ?? self::NONE;
+      $current_metric = $attachment->getPrototype()?->resolveMetricType($current_metric) ?? self::NONE;
     }
     $plan_id = $attachment?->getPlanId() ?? NULL;
 
@@ -942,8 +947,7 @@ class MapDataset extends FormElementBase {
       return NULL;
     }
     if (is_numeric($metric)) {
-      $field_types = array_values($attachment->getFieldTypes());
-      $metric = $field_types[(int) $metric] ?? NULL;
+      $metric = $attachment->getPrototype()?->resolveMetricType($metric);
     }
     return $metric ? ($attachment->getFields()[$metric] ?? NULL) : NULL;
   }

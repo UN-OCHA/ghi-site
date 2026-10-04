@@ -4,6 +4,7 @@ namespace Drupal\Tests\ghi_blocks\Kernel\Plan;
 
 use Drupal\Core\Form\FormState;
 use Drupal\Core\Routing\RouteMatchInterface;
+use Drupal\ghi_blocks\Controller\BlockPreviewController;
 use Drupal\ghi_blocks\Map\MapModalContent;
 use Drupal\ghi_blocks\Plugin\Block\Plan\PlanCompositeMap;
 use Drupal\layout_builder\SectionStorageInterface;
@@ -87,7 +88,14 @@ class PlanCompositeMapTest extends PlanBlockKernelTestBase {
       'settings_key' => 'plan_composite_map',
     ];
 
-    $preview_map = $this->callPrivateMethod($plugin, 'getConfigurationPreviewMap', [$map]);
+    $canvas_map = $this->callPrivateMethod($plugin, 'preparePreviewMap', [$map, 'test-map']);
+    $this->assertArrayNotHasKey('modal_data_url', $canvas_map);
+    $this->assertArrayNotHasKey('modal_contents', $canvas_map['json'][0]['locations'][0]);
+
+    $configuration = $plugin->getConfiguration();
+    $configuration['is_preview'] = TRUE;
+    $plugin->setConfiguration($configuration);
+    $preview_map = $this->callPrivateMethod($plugin, 'preparePreviewMap', [$map, 'test-map']);
 
     $this->assertArrayHasKey('json', $preview_map);
     $this->assertArrayHasKey('modal_data_url', $preview_map);
@@ -96,17 +104,33 @@ class PlanCompositeMapTest extends PlanBlockKernelTestBase {
     $this->assertSame('test-map', $preview_map['id']);
     $this->assertSame('plan_composite_map', $preview_map['settings_key']);
 
-    $token = basename(parse_url($preview_map['modal_data_url'], PHP_URL_PATH));
-    $store = $this->container->get('keyvalue.expirable')
-      ->get(MapModalContent::CONFIGURATION_PREVIEW_COLLECTION);
-    $entry = $store->get(MapModalContent::buildStoreKey($token, '0', MapModalContent::DEFAULT_VARIANT_ID));
+    $token = $this->callPrivateMethod($plugin, 'getPreviewStateToken');
+    $manager = $this->container->get('ghi_blocks.preview_state_manager');
+    $resource_key = MapModalContent::buildResourceKey('test-map', '0', MapModalContent::DEFAULT_VARIANT_ID);
+    $modal_contents = $manager->getResource($token, MapModalContent::RESOURCE_NAMESPACE, $resource_key);
     $this->assertSame([
       '1' => [
         52191 => [
           'polygon' => '<p>Polygon modal</p>',
         ],
       ],
-    ], $entry['modal_contents']);
+    ], $modal_contents);
+
+    // Composite datasets start at zero, which is a valid modal resource key.
+    $request_stack = $this->container->get('request_stack');
+    $request_stack->push(Request::create($preview_map['modal_data_url'], 'GET', [
+      'map_id' => 'test-map',
+      'data_index' => '0',
+      'object_id' => '1',
+    ]));
+    try {
+      $response = BlockPreviewController::create($this->container)->mapModalData($token);
+    }
+    finally {
+      $request_stack->pop();
+    }
+    $this->assertSame($modal_contents['1'], json_decode($response->getContent(), TRUE));
+    $this->assertStringContainsString('no-store', $response->headers->get('Cache-Control'));
   }
 
   /**

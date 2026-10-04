@@ -448,22 +448,25 @@ class LogframeManager implements ContainerInjectionInterface {
       ],
       'id' => 0,
     ];
-    // Take the in need and target metrics and the first measurement.
+    // Take the in need and target metrics and the preferred measurement.
     $field_types = $attachment_prototype->getFieldTypes();
-    $in_need = array_search('in_need', $field_types);
-    $target = array_search('target', $field_types);
+    $in_need = in_array('in_need', $field_types, TRUE) ? 'in_need' : NULL;
+    $target = in_array('target', $field_types, TRUE) ? 'target' : NULL;
     $measure_fields = $attachment_prototype->getMeasurementFields();
-    $measure_keys = array_keys($measure_fields);
-    $measure = count($measure_keys) ? ($measure_keys[1] ?? end($measure_keys)) : NULL;
+    $measure_candidates = [
+      'cumulative_reach',
+      'latest_reach',
+      'periodical_reach',
+    ];
+    $available_measures = array_intersect($measure_candidates, array_keys($measure_fields));
+    $measure = $available_measures ? reset($available_measures) : array_key_first($measure_fields);
     $available_fields = [
       $in_need,
       $target,
       $measure,
     ];
-    $available_fields = array_filter($available_fields, function ($field) {
-      return $field !== NULL;
-    });
-    foreach ($available_fields as $index) {
+    $available_fields = array_filter($available_fields);
+    foreach ($available_fields as $metric_type) {
       $columns[] = [
         'id' => count($columns),
         'item_type' => 'data_point',
@@ -474,11 +477,11 @@ class LogframeManager implements ContainerInjectionInterface {
             'calculation' => 'addition',
             'data_points' => [
               0 => [
-                'index' => $index,
+                'metric_type' => $metric_type,
                 'monitoring_period' => 'latest',
               ],
               1 => [
-                'index' => '0',
+                'metric_type' => NULL,
                 'monitoring_period' => 'latest',
               ],
             ],
@@ -499,11 +502,11 @@ class LogframeManager implements ContainerInjectionInterface {
             'calculation' => 'percentage',
             'data_points' => [
               0 => [
-                'index' => $measure,
+                'metric_type' => $measure,
                 'monitoring_period' => 'latest',
               ],
               1 => [
-                'index' => $target,
+                'metric_type' => $target,
                 'monitoring_period' => 'latest',
               ],
             ],
@@ -548,26 +551,20 @@ class LogframeManager implements ContainerInjectionInterface {
 
     // Take the first metric of type target.
     $field_types = $attachment_prototype->getFieldTypes();
-    $target = array_search('target', $field_types);
+    $target = in_array('target', $field_types, TRUE) ? 'target' : NULL;
 
-    // Take the last measurement from a pool of valid candidates.
-    $field_types_reversed = array_reverse($field_types, TRUE);
+    // Take the first available measurement from a pool of valid candidates.
     $measure_candidates = [
       'periodical_measure',
       'measure',
       'cumulative_measure',
     ];
-    foreach ($measure_candidates as $measure_candidate) {
-      if ($measure = array_search($measure_candidate, $field_types_reversed)) {
-        break;
-      }
-    }
+    $available_measures = array_intersect($measure_candidates, $field_types);
+    $measure = $available_measures ? reset($available_measures) : NULL;
 
     // Collect the available fields.
-    $available_fields = array_filter([$target, $measure], function ($field) {
-      return is_int($field);
-    });
-    foreach ($available_fields as $index) {
+    $available_fields = array_filter([$target, $measure]);
+    foreach ($available_fields as $metric_type) {
       $columns[] = [
         'id' => count($columns),
         'item_type' => 'data_point',
@@ -578,11 +575,11 @@ class LogframeManager implements ContainerInjectionInterface {
             'calculation' => 'addition',
             'data_points' => [
               0 => [
-                'index' => $index,
+                'metric_type' => $metric_type,
                 'use_calculation_method' => '1',
               ],
               1 => [
-                'index' => '0',
+                'metric_type' => NULL,
                 'use_calculation_method' => '1',
               ],
             ],
