@@ -17,6 +17,7 @@ use Drupal\ghi_blocks\Ajax\MapInitCommand;
 use Drupal\ghi_blocks\Interfaces\LazyMapDataFragmentBlockInterface;
 use Drupal\ghi_blocks\Interfaces\LazyMapBlockInterface;
 use Drupal\hpc_common\Helpers\BlockHelper;
+use Drupal\layout_builder\SectionStorageInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
@@ -262,7 +263,12 @@ class MapDataController extends ControllerBase implements ContainerInjectionInte
       throw new NotFoundHttpException();
     }
 
-    return $this->accessManager->checkRequest($request, $this->currentAccount, TRUE);
+    $access = $this->accessManager->checkRequest($request, $this->currentAccount, TRUE);
+    if ($request->attributes->get('section_storage') instanceof SectionStorageInterface) {
+      // Unsaved layouts do not invalidate the saved page's cache tags.
+      $access->setCacheMaxAge(0);
+    }
+    return $access;
   }
 
 }

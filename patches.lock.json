@@ -1,5 +1,5 @@
 {
-    "_hash": "c0030d63c2e217e860607e6e805a5cea1f39fe5acccb19688bf2b1f75bebc854",
+    "_hash": "6731211504579396b7acbf3064da5b7351b70b53e69a407d099c4832892daa13",
     "patches": {
         "drupal/core": [
             {
@@ -284,7 +284,7 @@
                 "package": "drupal/view_unpublished",
                 "description": "Issue #2958568: Add a search api processor for view unpublished",
                 "url": "./patches/2958568-view-unpublished-search-api-access-18.patch",
-                "sha256": "5eeeb2d7fdc32f0d03287512faa81009f62aa621f2431894218ab8097b56a9a6",
+                "sha256": "a3bb5bfecc7230e4b1f819d0436046eb06da3459f86d606a1755a83d263c8bf0",
                 "depth": 1,
                 "extra": {
                     "provenance": "patches-file:composer.patches.json"

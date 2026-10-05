@@ -3,7 +3,6 @@
 namespace Drupal\ghi_blocks\Plugin\Block\Plan;
 
 use Drupal\Component\Render\FormattableMarkup;
-use Drupal\Component\Utility\Html;
 use Drupal\Core\Block\Attribute\Block;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Plugin\Context\EntityContextDefinition;
@@ -350,22 +349,13 @@ class PlanEntityAttachmentsTable extends GHIBlockBase implements ConfigurableTab
 
     $build = [
       '#type' => 'container',
-      [
-        '#theme' => 'ajax_switcher',
-        '#element_key' => 'entity_id',
-        '#options' => $entity_options,
-        '#default_value' => $current_entity?->id(),
-        '#wrapper_id' => Html::getId('block-' . $this->getUuid()),
-        '#plugin_id' => $this->getPluginId(),
-        '#block_uuid' => $this->getUuid(),
-        '#uri' => $this->getCurrentUri(),
-      ],
-      [
+      'entity_switcher' => $this->buildAjaxSwitcher('entity_id', $entity_options, $current_entity?->id()),
+      'entity_description' => [
         '#markup' => Markup::create((string) $entity_description),
       ],
     ];
     if ($current_entity instanceof PlanEntity && $contributes_to = $this->buildContributesToHeading($current_entity)) {
-      $build[] = $contributes_to;
+      $build['contributes_to'] = $contributes_to;
     }
     return $build;
   }
