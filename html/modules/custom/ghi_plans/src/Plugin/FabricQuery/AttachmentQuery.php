@@ -119,7 +119,19 @@ class AttachmentQuery extends FabricQueryBase {
       $query_filters['EntityId'] = $entity_ids;
       $items = $this->fabricClient->createQuery('attachments', Attachment::getGraphQlItems())
         ->setFilters($query_filters)
-        ->execute() ?: [];
+        ->execute();
+      if ($items === FALSE) {
+        // Retry failed bulk requests in smaller groups. Recording the IDs as
+        // requested here would turn the failure into a valid-looking empty
+        // result and defer recovery to much slower per-entity lookups.
+        if (count($entity_ids) > 1) {
+          $batch_size = (int) ceil(count($entity_ids) / 2);
+          foreach (array_chunk($entity_ids, $batch_size) as $entity_id_batch) {
+            $attachments += $this->getAttachmentsByObject($entity_types, $entity_id_batch, $attachment_types);
+          }
+        }
+        return $attachments;
+      }
       $new_attachments = $this->processAttachments($items);
       $this->objectStore->addObjects($new_attachments);
       $this->objectStore->addRequestedIds(Attachment::getObjectStorageKey(), $entity_ids, $requested_ids_key);

@@ -3,7 +3,10 @@
 namespace Drupal\ghi_blocks\Traits;
 
 use Drupal\ghi_plans\ApiObjects\Attachments\Attachment;
+use Drupal\ghi_blocks\Plugin\ConfigurationContainerItem\AttachmentTable;
 use Drupal\ghi_plans\ApiObjects\Entities\PlanEntity;
+use Drupal\ghi_plans\ApiObjects\Plan as ApiObjectsPlan;
+use Drupal\ghi_plans\ApiObjects\PlanEntityInterface;
 use Drupal\ghi_plans\ApiObjects\Prototypes\AttachmentPrototype;
 use Drupal\ghi_plans\Traits\PlanQueryTrait;
 
@@ -15,12 +18,97 @@ trait AttachmentTableTrait {
   use PlanQueryTrait;
 
   /**
-   * Get all attachment objects for the given entities.
+   * Get attachments for the given set of entities.
    *
-   * @return \Drupal\ghi_plans\ApiObjects\Attachments\AttachmentInterface[]
-   *   An array of attachment objects.
+   * @param \Drupal\ghi_plans\ApiObjects\PlanEntityInterface[] $entities
+   *   The plan entity objects.
+   * @param int $prototype_id
+   *   An optional prototype id to filter for.
+   *
+   * @return \Drupal\ghi_plans\ApiObjects\Attachments\Attachment[]
+   *   An array of data attachments.
    */
-  abstract public function getAttachmentsForEntities(array $entities, $prototype_id = NULL);
+  public function getAttachmentsForEntities(array $entities, $prototype_id = NULL) {
+    if (empty($entities)) {
+      return NULL;
+    }
+
+    /** @var \Drupal\ghi_plans\Plugin\FabricQuery\AttachmentQuery $query */
+    $query = $this->getQueryHandler('attachment');
+    $attachments = $query->getAttachmentsForEntities($entities);
+
+    // Filter out non-data attachments.
+    $attachments = array_filter($attachments, function ($attachment) use ($prototype_id) {
+      if (!$attachment instanceof Attachment) {
+        return FALSE;
+      }
+      if ($prototype_id && $prototype_id != $attachment->getPrototype()->id()) {
+        return FALSE;
+      }
+      return TRUE;
+    });
+    return $attachments;
+  }
+
+  /**
+   * Get the formatted plan entity id according to the configuration.
+   *
+   * @param \Drupal\ghi_plans\ApiObjects\PlanEntityInterface $entity
+   *   The plan entity.
+   * @param array $conf
+   *   The entity configuration.
+   *
+   * @return string
+   *   The formatted plan entity id.
+   */
+  private function getPlanEntityId(PlanEntityInterface $entity, array $conf) {
+    $id_type = $conf['id_type'] ?? 'custom_id';
+    return $entity instanceof ApiObjectsPlan ? $entity->getPlanTypeAbbreviation() : $entity->getCustomName($id_type);
+  }
+
+  /**
+   * Get the entity attachment tables according to the configuration.
+   *
+   * @param \Drupal\ghi_plans\ApiObjects\PlanEntityInterface $entity
+   *   The plan entity.
+   * @param array $conf
+   *   The entity configuration.
+   * @param array $context
+   *   The plan, entities and attachment prototypes used by the tables.
+   *
+   * @return array
+   *   An array of entity attachment tables.
+   */
+  protected function buildAttachmentTables(PlanEntityInterface $entity, array $conf, array $context) {
+    $tables = [];
+    if (empty($conf['attachment_tables'])) {
+      return $tables;
+    }
+
+    $attachments = $this->getAttachmentsForEntities([$entity]);
+    $attachment_prototypes = $context['attachment_prototypes'];
+
+    $context['attachments'] = $attachments;
+    $context['plan_entity'] = $entity;
+
+    foreach ($conf['attachment_tables'] as $table_configuration) {
+      /** @var \Drupal\ghi_form_elements\ConfigurationContainerItemPluginInterface $item_type */
+      $item_type = $this->getItemTypePluginForColumn($table_configuration, $context);
+      if (!$item_type instanceof AttachmentTable) {
+        continue;
+      }
+      if (!array_key_exists($item_type->get('attachment_prototype'), $attachment_prototypes)) {
+        continue;
+      }
+      $table = $item_type->getRenderArray();
+      if (!$table || empty($table['#rows'])) {
+        continue;
+      }
+      $attachment_prototype = $attachment_prototypes[$item_type->get('attachment_prototype')];
+      $tables[$attachment_prototype->id()] = $table;
+    }
+    return $tables;
+  }
 
   /**
    * Get all governing entity objects for the current block instance.
