@@ -10,6 +10,7 @@ use Drupal\ghi_plans\Entity\GoverningEntity;
 use Drupal\ghi_plans\Plugin\FabricQuery\AttachmentQuery;
 use Drupal\ghi_plans\Plugin\FabricQuery\EntityQuery;
 use Drupal\hpc_api\ObjectStore;
+use Drupal\hpc_api\Query\FabricClient;
 use Drupal\hpc_api\Query\FabricQuery;
 use Drupal\hpc_api\ApiObjects\Types\MetricType;
 use Drupal\Tests\hpc_api\Traits\PrivateAccessorTrait;
@@ -100,6 +101,65 @@ class AttachmentQueryTest extends UnitTestCase {
     $attachments = $attachment_query->getAttachmentsForPlan(1158, $context_object);
 
     $this->assertSame([1001], array_keys($attachments));
+  }
+
+  /**
+   * Tests that a failed attachment query remains retryable.
+   */
+  public function testFailedObjectAttachmentQueryIsNotCachedAsEmpty(): void {
+    $fabric_query = $this->getMockBuilder(FabricQuery::class)
+      ->disableOriginalConstructor()
+      ->onlyMethods(['setFilters', 'execute'])
+      ->getMock();
+    $fabric_query->expects($this->exactly(2))
+      ->method('setFilters')
+      ->willReturnSelf();
+    $fabric_query->expects($this->exactly(2))
+      ->method('execute')
+      ->willReturn(FALSE);
+    $fabric_client = $this->getMockBuilder(FabricClient::class)
+      ->disableOriginalConstructor()
+      ->onlyMethods(['createQuery'])
+      ->getMock();
+    $fabric_client->expects($this->exactly(2))
+      ->method('createQuery')
+      ->willReturn($fabric_query);
+    $attachment_query = new AttachmentQuery([], 'attachment', []);
+    $this->setPrivateProperty($attachment_query, 'fabricClient', $fabric_client);
+    $this->setPrivateProperty($attachment_query, 'objectStore', new ObjectStore());
+
+    $this->assertSame([], $attachment_query->getAttachmentsByObject(PlanEntityInterface::ENTITY_TYPE_PLAN_ENTITY, [1001]));
+    $this->assertSame([], $attachment_query->getAttachmentsByObject(PlanEntityInterface::ENTITY_TYPE_PLAN_ENTITY, [1001]));
+  }
+
+  /**
+   * Tests that a failed bulk attachment query retries smaller groups.
+   */
+  public function testFailedBulkObjectAttachmentQueryIsSplit(): void {
+    $fabric_query = $this->getMockBuilder(FabricQuery::class)
+      ->disableOriginalConstructor()
+      ->onlyMethods(['setFilters', 'execute'])
+      ->getMock();
+    $fabric_query->expects($this->exactly(3))
+      ->method('setFilters')
+      ->willReturnSelf();
+    $fabric_query->expects($this->exactly(3))
+      ->method('execute')
+      ->willReturnOnConsecutiveCalls(FALSE, [], []);
+    $fabric_client = $this->getMockBuilder(FabricClient::class)
+      ->disableOriginalConstructor()
+      ->onlyMethods(['createQuery'])
+      ->getMock();
+    $fabric_client->expects($this->exactly(3))
+      ->method('createQuery')
+      ->willReturn($fabric_query);
+    $attachment_query = new AttachmentQuery([], 'attachment', []);
+    $this->setPrivateProperty($attachment_query, 'fabricClient', $fabric_client);
+    $this->setPrivateProperty($attachment_query, 'objectStore', new ObjectStore());
+    $entity_ids = [1001, 1002];
+
+    $this->assertSame([], $attachment_query->getAttachmentsByObject(PlanEntityInterface::ENTITY_TYPE_PLAN_ENTITY, $entity_ids));
+    $this->assertSame([], $attachment_query->getAttachmentsByObject(PlanEntityInterface::ENTITY_TYPE_PLAN_ENTITY, $entity_ids));
   }
 
   /**

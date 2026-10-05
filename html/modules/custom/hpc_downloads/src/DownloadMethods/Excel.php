@@ -264,10 +264,9 @@ class Excel {
     $temp_name = self::getTempFileUri($options);
     $options['temp_name'] = $temp_name;
 
-    // Update the options in the database.
-    $record['options'] = $options;
-    DownloadRecord::updateRecord($record);
-
+    // Workbook-specific options are passed directly to the synchronous writer
+    // or carried between requests by the batch context. Persisting them is not
+    // needed and can exceed the download record's options column.
     return $options;
   }
 

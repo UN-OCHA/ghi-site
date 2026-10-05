@@ -33,6 +33,15 @@ class LogframeDownloadSource extends BlockSource {
   use ConfigurationContainerTrait;
 
   /**
+   * Maximum source entity IDs included in one attachment query.
+   *
+   * The attachment query subdivides a batch when its response fails, e.g. if
+   * fetching 200 entity IDs fails, it tries two follow-up requests with 100
+   * entity IDs each.
+   */
+  private const MAX_ENTITY_IDS_PER_ATTACHMENT_QUERY = 200;
+
+  /**
    * Query plugins shared by the worksheets in this download.
    *
    * @var \Drupal\hpc_api\Query\FabricQueryBase[]
@@ -388,8 +397,7 @@ class LogframeDownloadSource extends BlockSource {
       'attachment_prototypes' => $prototypes,
       'used_attachment_prototypes' => [],
     ];
-    // Prime the object store in bulk before building the per-entity tables.
-    $this->getAttachmentsForEntities($entities);
+    $this->preloadFullLogframeAttachments($entities);
     $tables = [];
     $table_names = [];
     foreach ($entities as $entity) {
@@ -431,6 +439,22 @@ class LogframeDownloadSource extends BlockSource {
       $data[$name] = $table;
     }
     return $data;
+  }
+
+  /**
+   * Preloads full-logframe attachments in bounded Fabric requests.
+   *
+   * Each attachment includes nested facts and measurements. A single request
+   * for a large plan can therefore exceed the Fabric HTTP timeout before the
+   * per-entity worksheet tables are built.
+   *
+   * @param \Drupal\ghi_plans\ApiObjects\PlanEntityInterface[] $entities
+   *   The entities whose attachments should be cached for this request.
+   */
+  private function preloadFullLogframeAttachments(array $entities): void {
+    foreach (array_chunk($entities, self::MAX_ENTITY_IDS_PER_ATTACHMENT_QUERY) as $_entities) {
+      $this->getAttachmentsForEntities($_entities);
+    }
   }
 
   /**

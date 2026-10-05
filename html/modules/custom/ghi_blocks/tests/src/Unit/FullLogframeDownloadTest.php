@@ -148,6 +148,28 @@ class FullLogframeDownloadTest extends UnitTestCase {
   }
 
   /**
+   * Tests that full-logframe attachment preloading uses bounded requests.
+   */
+  public function testFullLogframeAttachmentPreloadBatching(): void {
+    $source = $this->getMockBuilder(LogframeDownloadSource::class)
+      ->disableOriginalConstructor()
+      ->onlyMethods(['getAttachmentsForEntities'])
+      ->getMock();
+    $batch_sizes = [];
+    $source->expects($this->exactly(3))
+      ->method('getAttachmentsForEntities')
+      ->willReturnCallback(function (array $entities) use (&$batch_sizes): array {
+        $batch_sizes[] = count($entities);
+        return [];
+      });
+    $entity = $this->createMock(PlanEntityInterface::class);
+
+    $this->callPrivateMethod($source, 'preloadFullLogframeAttachments', [array_fill(0, 401, $entity)]);
+
+    $this->assertSame([200, 200, 1], $batch_sizes);
+  }
+
+  /**
    * Tests that download scope is preserved and regular exports stay separate.
    */
   public function testDownloadSource(): void {
