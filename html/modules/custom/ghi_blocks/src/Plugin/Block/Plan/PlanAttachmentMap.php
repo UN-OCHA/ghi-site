@@ -12,7 +12,6 @@ use Drupal\Core\Render\BubbleableMetadata;
 use Drupal\Core\Render\Markup;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\Url;
-use Drupal\ghi_blocks\Helpers\AttachmentMatcher;
 use Drupal\ghi_blocks\Interfaces\ConfigValidationInterface;
 use Drupal\ghi_blocks\Interfaces\LazyMapDataFragmentBlockInterface;
 use Drupal\ghi_blocks\Interfaces\LazyMapBlockInterface;
@@ -24,12 +23,13 @@ use Drupal\ghi_blocks\Plugin\Block\BlockCommentInterface;
 use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
 use Drupal\ghi_blocks\Traits\BlockCommentTrait;
 use Drupal\ghi_blocks\Traits\ConfigValidationTrait;
-use Drupal\ghi_blocks\Traits\ConfigurationPreviewMapTrait;
+use Drupal\ghi_blocks\Traits\LazyMapTrait;
 use Drupal\ghi_blocks\Traits\GlobalMapTrait;
 use Drupal\ghi_geojson\GeoJsonLocationInterface;
 use Drupal\ghi_plans\ApiObjects\Attachments\AttachmentInterface;
 use Drupal\ghi_plans\ApiObjects\Attachments\Attachment;
 use Drupal\ghi_plans\ApiObjects\PlanReportingPeriod;
+use Drupal\ghi_plans\Helpers\AttachmentMatcher;
 use Drupal\ghi_plans\Traits\AttachmentFilterTrait;
 use Drupal\ghi_plans\Traits\DataPointConfigBackwardsCompatibilityTrait;
 use Drupal\ghi_plans\Traits\PlanReportingPeriodTrait;
@@ -57,7 +57,7 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
   use AttachmentFilterTrait;
   use BlockCommentTrait;
   use ConfigValidationTrait;
-  use ConfigurationPreviewMapTrait;
+  use LazyMapTrait;
   use DataPointConfigBackwardsCompatibilityTrait;
   use GlobalMapTrait;
   use PlanReportingPeriodTrait;
@@ -127,20 +127,12 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
     $chart_id = Html::getUniqueId('plan-attachment-map--' . $style);
 
     $attachment_switcher = $this->getAttachmentSwitcher();
-    $block_uuid = $this->getUuid();
-    $data_url_query = array_filter([
-      'current_uri' => $this->getCurrentUri(),
-      'map_id' => $chart_id,
+    $data_url_query = [
       'attachment_id' => $attachment->id(),
-    ], fn ($value) => $value !== NULL && $value !== '');
+    ];
     $map_settings = [
       'id' => $chart_id,
-      'data_url' => $block_uuid ? Url::fromRoute('ghi_blocks.map_data', [
-        'plugin_id' => $this->getPluginId(),
-        'block_uuid' => $block_uuid,
-      ], [
-        'query' => $data_url_query,
-      ])->toString() : NULL,
+      'data_url' => $this->getMapDataUrl($chart_id, $data_url_query),
     ];
     $map_tabs = NULL;
     $attachments = [
@@ -152,17 +144,16 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
       ],
     ];
 
-    if ($this->isConfigurationPreview()) {
-      // Block configuration preview needs the map data from the in-memory
-      // block state. Reusing the lazy callback here would rebuild the saved
-      // block from the page instead of the previewed configuration.
+    if ($this->isPreview()) {
+      // Preview maps must keep using the unsaved block state for later tab and
+      // modal requests instead of rebuilding the block from the saved page.
       $payload = $this->buildLazyMapPayload($chart_id);
       if (!$payload->isEmpty()) {
         // The lazy response normally replaces the tab markup over Ajax, so in
         // preview we copy those replacements into the initial render instead.
         $map_tabs = $payload->getHtml()['.pane-' . $chart_id . ' .map-tabs--inner'] ?? NULL;
         $attachments = BubbleableMetadata::mergeAttachments($attachments, $payload->getAttachments());
-        $attachments['drupalSettings']['plan_attachment_map'][$chart_id] = $this->getConfigurationPreviewMap($payload->getMap());
+        $attachments['drupalSettings']['plan_attachment_map'][$chart_id] = $this->preparePreviewMap($payload->getMap(), $chart_id, TRUE);
       }
     }
 
@@ -770,7 +761,7 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
       'block_uuid' => $block_uuid,
     ], [
       'query' => [
-        'current_uri' => $this->getCurrentUri(),
+        'current_uri' => $this->getMapPageUri(),
         'map_id' => $map_id,
         'attachment_id' => $attachment->id(),
       ],
@@ -1369,18 +1360,11 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
       return $attachment->getDescription();
     }, $attachments);
     $current_attachment = $this->getDefaultAttachment();
+    $switcher = $this->buildAjaxSwitcher('attachment_id', $attachment_options, $current_attachment?->id());
+    $switcher['#uri'] = $this->getMapPageUri();
     return [
       '#type' => 'container',
-      [
-        '#theme' => 'ajax_switcher',
-        '#element_key' => 'attachment_id',
-        '#options' => $attachment_options,
-        '#default_value' => $current_attachment?->id(),
-        '#wrapper_id' => Html::getId('block-' . $this->getUuid()),
-        '#plugin_id' => $this->getPluginId(),
-        '#block_uuid' => $this->getUuid(),
-        '#uri' => $this->getCurrentUri(),
-      ],
+      'attachment_switcher' => $switcher,
     ];
   }
 
@@ -1481,8 +1465,7 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
     /** @var \Drupal\ghi_plans\Plugin\FabricQuery\AttachmentQuery $query_handler */
     $query_handler = $this->getQueryHandler('attachment');
     return $query_handler->getAttachmentsForPlan($plan_object->getSourceId(), $this->getCurrentBaseObject(), [
-      'Caseload',
-      'Indicator',
+      'AttachmentType' => ['Caseload', 'Indicator'],
     ]);
   }
 

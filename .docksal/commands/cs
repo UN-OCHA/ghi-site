@@ -15,10 +15,19 @@
 # Abort if anything fails
 set -e
 
-usage="$(basename "$0") [-h] [-i]
+usage="$(basename "$0") [-h]
 
 where:
     -h  show this help text"
+
+while [ "$1" != "" ]; do
+  case $1 in
+    -h | --help )         echo "$usage"
+                          exit
+                          ;;
+  esac
+  shift
+done
 
 echo "Running code linting on PHP code"
 ./vendor/bin/phpcs -p --report=full ./html/modules/custom --extensions=module/php,php/php,inc/php

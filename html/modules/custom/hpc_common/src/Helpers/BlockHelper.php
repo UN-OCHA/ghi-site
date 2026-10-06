@@ -8,8 +8,11 @@ use Drupal\hpc_downloads\Interfaces\HPCDownloadContainerInterface;
 use Drupal\layout_builder\LayoutEntityHelperTrait;
 use Drupal\layout_builder\Plugin\SectionStorage\OverridesSectionStorage;
 use Drupal\layout_builder\SectionComponent;
+use Drupal\layout_builder\SectionStorageInterface;
 use Drupal\node\Entity\Node;
+use Drupal\node\NodeInterface;
 use Drupal\page_manager\Entity\PageVariant;
+use Symfony\Component\HttpFoundation\Request;
 
 /**
  * Helper functions for block handling, especially for custom extentions.
@@ -105,11 +108,26 @@ class BlockHelper {
     }
 
     $block = NULL;
-    // We have 2 cases where we support our blocks:
+    // We support editor previews and saved page layouts:
     // 1. Page manager pages, which might also contain a content container with
     //    more elements defined in it.
     // 2. Node views that are build by layout_builder.
-    if (!empty($page_parameters['_page_manager_page']) && !empty($page_parameters['_page_manager_page_variant'])) {
+    if (($page_parameters['section_storage'] ?? NULL) instanceof SectionStorageInterface) {
+      // Other callers also use this helper, so require editor access before
+      // exposing configuration that has not been saved to the public page.
+      $request = Request::create($uri);
+      $request->attributes->add($page_parameters);
+      if (!\Drupal::service('access_manager')->checkRequest($request)) {
+        return NULL;
+      }
+      // The route enhancer loads the editor's unsaved layout from tempstore.
+      $section_storage = $page_parameters['section_storage'];
+      $block = self::getBlockInstanceFromSections($section_storage->getSections(), $plugin_id, $block_uuid);
+      if (isset($section_storage->getContexts()['entity']) && $section_storage->getContextValue('entity') instanceof NodeInterface) {
+        $page_parameters['node'] = $section_storage->getContextValue('entity');
+      }
+    }
+    elseif (!empty($page_parameters['_page_manager_page']) && !empty($page_parameters['_page_manager_page_variant'])) {
       // So this is a page manager page, so we get the page variant object and
       // extract the block from there.
       /** @var \Drupal\page_manager\Entity\PageVariant $page_variant */
@@ -181,6 +199,23 @@ class BlockHelper {
     }
     /** @var \Drupal\layout_builder\Section[] $sections */
     $sections = $plugin_configuration['sections'];
+    return self::getBlockInstanceFromSections($sections, $plugin_id, $block_uuid);
+  }
+
+  /**
+   * Resolve a block from sections, including blocks inside content containers.
+   *
+   * @param \Drupal\layout_builder\Section[] $sections
+   *   The saved or unsaved layout sections.
+   * @param string $plugin_id
+   *   The plugin ID of the block.
+   * @param string $block_uuid
+   *   The UUID of the block.
+   *
+   * @return \Drupal\Core\Block\BlockPluginInterface|null
+   *   The block plugin, retaining any contexts supplied by its container.
+   */
+  private static function getBlockInstanceFromSections(array $sections, $plugin_id, $block_uuid) {
     $component = self::getComponentFromLayoutBuilderSections($sections, $plugin_id, $block_uuid);
     if ($component) {
       return self::instantiateComponentPlugin($component);

@@ -677,6 +677,23 @@ class AttachmentPrototype extends ApiObjectBase {
   }
 
   /**
+   * Resolve a canonical metric type or legacy numeric index.
+   *
+   * @param mixed $data_point
+   *   A canonical metric type or legacy numeric index.
+   *
+   * @return string|null
+   *   The canonical metric type, or NULL if it cannot be resolved.
+   */
+  public function resolveMetricType($data_point): ?string {
+    if (is_int($data_point) || (is_string($data_point) && ctype_digit($data_point))) {
+      $index = (int) $data_point;
+      return $this->getMetricTypeByOriginalIndex($index) ?? $this->getFieldTypes()[$index] ?? NULL;
+    }
+    return is_string($data_point) && in_array($data_point, $this->getFieldTypes(), TRUE) ? $data_point : NULL;
+  }
+
+  /**
    * Get the metric type for a legacy field index.
    *
    * @param int $index

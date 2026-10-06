@@ -9,7 +9,6 @@ use Drupal\Core\Cache\Cache;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Plugin\Context\EntityContextDefinition;
 use Drupal\Core\Render\BubbleableMetadata;
-use Drupal\Core\Url;
 use Drupal\ghi_base_objects\ApiObjects\Location;
 use Drupal\ghi_blocks\Interfaces\LazyMapBlockInterface;
 use Drupal\ghi_blocks\Interfaces\MultiStepFormBlockInterface;
@@ -20,7 +19,7 @@ use Drupal\ghi_blocks\MapObjects\ClusterMapObject;
 use Drupal\ghi_blocks\MapObjects\OrganizationMapObject;
 use Drupal\ghi_blocks\MapObjects\ProjectMapObject;
 use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
-use Drupal\ghi_blocks\Traits\ConfigurationPreviewMapTrait;
+use Drupal\ghi_blocks\Traits\LazyMapTrait;
 use Drupal\ghi_blocks\Traits\GlobalMapTrait;
 use Drupal\ghi_blocks\Traits\OrganizationsBlockTrait;
 use Drupal\ghi_plans\ApiObjects\Organization;
@@ -50,7 +49,7 @@ use Drupal\hpc_common\Plugin\HPCBlockMetadata;
 class PlanOperationalPresenceMap extends GHIBlockBase implements MultiStepFormBlockInterface, OverrideDefaultTitleBlockInterface, HPCDownloadPNGInterface, LazyMapBlockInterface {
 
   use OrganizationsBlockTrait;
-  use ConfigurationPreviewMapTrait;
+  use LazyMapTrait;
   use FtsLinkTrait;
   use GlobalMapTrait;
 
@@ -129,20 +128,12 @@ class PlanOperationalPresenceMap extends GHIBlockBase implements MultiStepFormBl
     $chart_id = Html::getUniqueId('plan-operational-presence-map');
     $chart_class = Html::getClass('plan-operational-presence-map');
     $selected_view = $this->getSelectedView();
-    $block_uuid = $this->getUuid();
-    $data_url_query = array_filter([
-      'current_uri' => $this->getCurrentUri(),
-      'map_id' => $chart_id,
+    $data_url_query = [
       'view' => $selected_view,
-    ], fn ($value) => $value !== NULL && $value !== '');
+    ];
     $map_settings = [
       'id' => $chart_id,
-      'data_url' => $block_uuid ? Url::fromRoute('ghi_blocks.map_data', [
-        'plugin_id' => $this->getPluginId(),
-        'block_uuid' => $block_uuid,
-      ], [
-        'query' => $data_url_query,
-      ])->toString() : NULL,
+      'data_url' => $this->getMapDataUrl($chart_id, $data_url_query),
     ];
     $attachments = [
       'library' => ['ghi_blocks/map.gl.operational_presence'],
@@ -153,13 +144,13 @@ class PlanOperationalPresenceMap extends GHIBlockBase implements MultiStepFormBl
       ],
     ];
 
-    if ($this->isConfigurationPreview()) {
-      // Configuration preview must use the submitted block settings instead of
-      // rebuilding the saved block through the lazy map data route.
+    if ($this->isPreview()) {
+      // Preview must use the current block settings instead of rebuilding the
+      // saved block through the lazy map data route.
       $payload = $this->buildLazyMapPayload($chart_id);
       if (!$payload->isEmpty()) {
         $attachments = BubbleableMetadata::mergeAttachments($attachments, $payload->getAttachments());
-        $attachments['drupalSettings']['plan_operational_presence_map'][$chart_id] = $this->getConfigurationPreviewMap($payload->getMap());
+        $attachments['drupalSettings']['plan_operational_presence_map'][$chart_id] = $this->preparePreviewMap($payload->getMap(), $chart_id);
       }
     }
 
@@ -182,7 +173,9 @@ class PlanOperationalPresenceMap extends GHIBlockBase implements MultiStepFormBl
   public function buildLazyMapPayload(string $map_id): MapPayload {
     $conf = $this->getBlockConfig();
     $selected_view = $this->getSelectedView();
-    $map_data = $this->getMapData($selected_view, NULL, TRUE);
+    // Object switching is available in published and configuration previews,
+    // but the Layout Builder canvas is intentionally non-interactive.
+    $map_data = $this->getMapData($selected_view, NULL, !$this->isLayoutBuilder());
     if (empty($map_data)) {
       return MapPayload::forEmptyMap(
         [
@@ -761,18 +754,11 @@ class PlanOperationalPresenceMap extends GHIBlockBase implements MultiStepFormBl
       return NULL;
     }
     $view_options = $this->getViewOptions();
-    return [
-      '#theme' => 'ajax_switcher',
-      '#element_key' => 'view',
-      '#options' => array_map(function ($view) use ($view_options) {
-        return $view_options[$view];
-      }, $available_views),
-      '#default_value' => $selected_view,
-      '#wrapper_id' => Html::getId('block-' . $this->getUuid()),
-      '#plugin_id' => $this->getPluginId(),
-      '#block_uuid' => $this->getUuid(),
-      '#uri' => $this->getCurrentUri(),
-    ];
+    $switcher = $this->buildAjaxSwitcher('view', array_map(function ($view) use ($view_options) {
+      return $view_options[$view];
+    }, $available_views), $selected_view);
+    $switcher['#uri'] = $this->getMapPageUri();
+    return $switcher;
   }
 
   /**
@@ -813,20 +799,9 @@ class PlanOperationalPresenceMap extends GHIBlockBase implements MultiStepFormBl
       }, $objects);
       asort($object_options);
     }
-    return [
-      '#theme' => 'ajax_switcher',
-      '#element_key' => 'object_id',
-      '#options' => ['' => $type_map[$selected_view]] + $object_options,
-      '#default_value' => $object_id,
-      '#wrapper_id' => Html::getId('block-' . $this->getUuid()),
-      '#plugin_id' => $this->getPluginId(),
-      '#block_uuid' => $this->getUuid(),
-      '#uri' => $this->getCurrentUri(),
-      '#ajax' => FALSE,
-      '#query' => array_filter([
-        'view' => $selected_view ?? NULL,
-      ]),
-    ];
+    return $this->buildAjaxSwitcher('object_id', ['' => $type_map[$selected_view]] + $object_options, $object_id, FALSE, array_filter([
+      'view' => $selected_view ?? NULL,
+    ]));
   }
 
   /**

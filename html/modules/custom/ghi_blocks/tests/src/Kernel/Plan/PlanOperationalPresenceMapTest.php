@@ -2,12 +2,15 @@
 
 namespace Drupal\Tests\ghi_blocks\Kernel\Plan;
 
+use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\ghi_blocks\Interfaces\LazyMapBlockInterface;
 use Drupal\ghi_blocks\Interfaces\MultiStepFormBlockInterface;
 use Drupal\ghi_blocks\Interfaces\OverrideDefaultTitleBlockInterface;
 use Drupal\ghi_blocks\Map\MapModalContent;
 use Drupal\ghi_blocks\Plugin\Block\Plan\PlanOperationalPresenceMap;
+use Drupal\layout_builder\SectionStorageInterface;
 use Drupal\Tests\ghi_blocks\Kernel\PlanBlockKernelTestBase;
+use Symfony\Component\HttpFoundation\Request;
 
 /**
  * Tests the plan operational presence map block plugin.
@@ -15,6 +18,26 @@ use Drupal\Tests\ghi_blocks\Kernel\PlanBlockKernelTestBase;
  * @group ghi_blocks
  */
 class PlanOperationalPresenceMapTest extends PlanBlockKernelTestBase {
+
+  /**
+   * Tests that the view switcher targets the editor's unsaved layout.
+   */
+  public function testViewSwitcherUsesEditorUri(): void {
+    $plugin = $this->getBlockPlugin();
+    $configuration = $plugin->getConfiguration();
+    $configuration['hpc']['display']['available_views'] = ['organization', 'project'];
+    $plugin->setConfiguration($configuration);
+    $plugin->setCurrentUri('/plan/1266/presence');
+    $route_match = $this->createMock(RouteMatchInterface::class);
+    $route_match->method('getParameter')->with('section_storage')->willReturn($this->createMock(SectionStorageInterface::class));
+    $this->setPrivateProperty($plugin, 'routeMatch', $route_match);
+    $editor_uri = '/layout_builder/add/block/overrides/node.1/0/content/plan_operational_presence_map';
+    $this->container->get('request_stack')->push(Request::create($editor_uri));
+
+    $switcher = $this->callPrivateMethod($plugin, 'getViewSwitcher', ['organization']);
+
+    $this->assertSame($editor_uri, $switcher['#uri']);
+  }
 
   /**
    * Tests the block plugin instantiation.
@@ -111,7 +134,7 @@ class PlanOperationalPresenceMapTest extends PlanBlockKernelTestBase {
   /**
    * Tests that configuration preview removes root modal contents from map data.
    */
-  public function testConfigurationPreviewMapStripsModalContents(): void {
+  public function testPreviewMapStripsModalContents(): void {
     $plugin = $this->getBlockPlugin();
     $map = [
       'json' => [
@@ -129,17 +152,42 @@ class PlanOperationalPresenceMapTest extends PlanBlockKernelTestBase {
       'settings_key' => 'plan_operational_presence_map',
     ];
 
-    $preview_map = $this->callPrivateMethod($plugin, 'getConfigurationPreviewMap', [$map]);
+    $layout_builder_map = $this->callPrivateMethod($plugin, 'preparePreviewMap', [$map, 'test-map']);
+    $this->assertArrayNotHasKey('modal_data_url', $layout_builder_map);
+    $this->assertArrayNotHasKey('modal_contents', $layout_builder_map['json']);
+
+    $configuration = $plugin->getConfiguration();
+    $configuration['is_preview'] = TRUE;
+    $plugin->setConfiguration($configuration);
+    $preview_map = $this->callPrivateMethod($plugin, 'preparePreviewMap', [$map, 'test-map']);
 
     $this->assertArrayHasKey('modal_data_url', $preview_map);
     $this->assertArrayNotHasKey('modal_contents', $preview_map['json']);
     $this->assertSame('Location', $preview_map['json']['locations'][0]['name']);
 
-    $token = basename(parse_url($preview_map['modal_data_url'], PHP_URL_PATH));
-    $store = $this->container->get('keyvalue.expirable')
-      ->get(MapModalContent::CONFIGURATION_PREVIEW_COLLECTION);
-    $entry = $store->get(MapModalContent::buildStoreKey($token, MapModalContent::DEFAULT_DATA_INDEX, MapModalContent::DEFAULT_VARIANT_ID));
-    $this->assertSame(['10' => ['content' => '<p>Presence modal</p>']], $entry['modal_contents']);
+    $token = $this->callPrivateMethod($plugin, 'getPreviewStateToken');
+    $this->assertStringContainsString('/block-preview/' . $token . '/map-data/modal', $preview_map['modal_data_url']);
+    $resource_key = MapModalContent::buildResourceKey('test-map', MapModalContent::DEFAULT_DATA_INDEX, MapModalContent::DEFAULT_VARIANT_ID);
+    $modal_contents = $this->container->get('ghi_blocks.preview_state_manager')->getResource($token, MapModalContent::RESOURCE_NAMESPACE, $resource_key);
+    $this->assertSame(['10' => ['content' => '<p>Presence modal</p>']], $modal_contents);
+  }
+
+  /**
+   * Tests map data URL selection for saved and preview block state.
+   */
+  public function testMapDataUrlUsesCurrentBlockState(): void {
+    $plugin = $this->getBlockPlugin();
+    $configuration = $plugin->getConfiguration();
+    $configuration['uuid'] = 'test-block-uuid';
+    $plugin->setConfiguration($configuration);
+    $data_url = $this->callPrivateMethod($plugin, 'getMapDataUrl', ['test-map', ['view' => 'organization']]);
+    $this->assertStringContainsString('/map-data/plan_operational_presence_map/', $data_url);
+    $this->assertStringContainsString('view=organization', $data_url);
+
+    $configuration = $plugin->getConfiguration();
+    $configuration['is_preview'] = TRUE;
+    $plugin->setConfiguration($configuration);
+    $this->assertNull($this->callPrivateMethod($plugin, 'getMapDataUrl', ['test-map']));
   }
 
   /**

@@ -5,13 +5,13 @@ namespace Drupal\ghi_blocks\Plugin\ConfigurationContainerItem;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\Markup;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\ghi_blocks\Interfaces\AttachmentContextItemInterface;
 use Drupal\ghi_form_elements\Attribute\ConfigurationContainerItem;
 use Drupal\ghi_form_elements\ConfigurationContainerItemPluginBase;
 use Drupal\ghi_form_elements\Helpers\FormElementHelper;
 use Drupal\ghi_plans\ApiObjects\Prototypes\AttachmentPrototype;
 use Drupal\ghi_plans\ApiObjects\Attachments\Attachment;
 use Drupal\ghi_plans\ApiObjects\Attachments\IndicatorAttachment;
-use Drupal\ghi_plans\Traits\DataPointConfigBackwardsCompatibilityTrait;
 use Drupal\hpc_common\Helpers\ThemeHelper;
 
 /**
@@ -22,9 +22,7 @@ use Drupal\hpc_common\Helpers\ThemeHelper;
   label: new TranslatableMarkup('Spark line chart'),
   description: new TranslatableMarkup('This item displays a spark line chart for multiple periods of a measurement data point.'),
 )]
-class SparkLineChart extends ConfigurationContainerItemPluginBase {
-
-  use DataPointConfigBackwardsCompatibilityTrait;
+class SparkLineChart extends ConfigurationContainerItemPluginBase implements AttachmentContextItemInterface {
 
   const ITEM_TYPE = 'chart';
 
@@ -107,8 +105,8 @@ class SparkLineChart extends ConfigurationContainerItemPluginBase {
    *
    * Contains BC logic to update metric indexes to metric types on the fly.
    *
-   * @return string
-   *   The configured data point in the form of the selected metric type.
+   * @return string|null
+   *   The configured metric type, or NULL if it cannot be resolved.
    */
   private function getConfiguredDataPoint() {
     return $this->getConfiguredMetricType('data_point');
@@ -126,10 +124,10 @@ class SparkLineChart extends ConfigurationContainerItemPluginBase {
   private function getConfiguredMetricType(string $config_key): ?string {
     $data_point = $this->get($config_key);
     $prototype = $this->getAttachmentObject()?->getPrototype();
-    if (is_numeric($data_point) && $prototype) {
-      $data_point = $this->getMetricTypeByIndex($data_point, $prototype);
+    if ($prototype) {
+      return $prototype->resolveMetricType($data_point);
     }
-    return $data_point;
+    return is_string($data_point) && !is_numeric($data_point) ? $data_point : NULL;
   }
 
   /**

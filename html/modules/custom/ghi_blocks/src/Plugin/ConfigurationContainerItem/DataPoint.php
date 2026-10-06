@@ -9,6 +9,7 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Link;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\Url;
+use Drupal\ghi_blocks\Interfaces\AttachmentContextItemInterface;
 use Drupal\ghi_form_elements\Attribute\ConfigurationContainerItem;
 use Drupal\ghi_form_elements\ConfigurationContainerItemPluginBase;
 use Drupal\ghi_form_elements\Element\DataPoint as ElementDataPoint;
@@ -25,7 +26,7 @@ use Drupal\ghi_plans\Traits\PlanQueryTrait;
   label: new TranslatableMarkup('Data point'),
   description: new TranslatableMarkup('This item displays a single metric or measurement item.'),
 )]
-class DataPoint extends ConfigurationContainerItemPluginBase {
+class DataPoint extends ConfigurationContainerItemPluginBase implements AttachmentContextItemInterface {
 
   use DataPointConfigBackwardsCompatibilityTrait;
   use PlanQueryTrait;

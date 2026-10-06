@@ -8,10 +8,10 @@ use Drupal\Core\Plugin\Context\EntityContextDefinition;
 use Drupal\Core\Render\Markup;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\ghi_base_objects\Helpers\BaseObjectHelper;
-use Drupal\ghi_blocks\Helpers\AttachmentMatcher;
 use Drupal\ghi_blocks\Interfaces\AttachmentTableInterface;
 use Drupal\ghi_blocks\Interfaces\ConfigValidationInterface;
 use Drupal\ghi_blocks\Interfaces\ConfigurableTableBlockInterface;
+use Drupal\ghi_blocks\Interfaces\DeprecatedBlockInterface;
 use Drupal\ghi_blocks\Interfaces\MultiStepFormBlockInterface;
 use Drupal\ghi_blocks\Interfaces\OverrideDefaultTitleBlockInterface;
 use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
@@ -19,6 +19,7 @@ use Drupal\ghi_blocks\Traits\AttachmentTableTrait;
 use Drupal\ghi_blocks\Traits\ConfigValidationTrait;
 use Drupal\ghi_form_elements\Traits\ConfigurationContainerTrait;
 use Drupal\ghi_plans\ApiObjects\PlanEntityInterface;
+use Drupal\ghi_plans\Helpers\AttachmentMatcher;
 use Drupal\ghi_sections\Entity\SectionNodeInterface;
 use Drupal\ghi_subpages\Entity\SubpageNodeInterface;
 use Drupal\hpc_common\Plugin\HPCBlockMetadata;
@@ -38,7 +39,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
     'plan' => new EntityContextDefinition('entity:base_object', new TranslatableMarkup('Plan'), constraints: ['Bundle' => 'plan']),
   ],
 )]
-class PlanGoverningEntitiesCaseloadsTable extends GHIBlockBase implements ConfigurableTableBlockInterface, MultiStepFormBlockInterface, OverrideDefaultTitleBlockInterface, AttachmentTableInterface, ConfigValidationInterface, HPCDownloadExcelInterface, HPCDownloadPNGInterface {
+class PlanGoverningEntitiesCaseloadsTable extends GHIBlockBase implements ConfigurableTableBlockInterface, MultiStepFormBlockInterface, OverrideDefaultTitleBlockInterface, AttachmentTableInterface, ConfigValidationInterface, HPCDownloadExcelInterface, HPCDownloadPNGInterface, DeprecatedBlockInterface {
 
   use ConfigurationContainerTrait;
   use AttachmentTableTrait;
@@ -605,23 +606,42 @@ class PlanGoverningEntitiesCaseloadsTable extends GHIBlockBase implements Config
       $prototypes = $query->getPrototypes([$original_prototype_id, $new_prototype_id]);
       $original_prototype = $prototypes[$original_prototype_id] ?? NULL;
       $new_prototype = $prototypes[$new_prototype_id] ?? NULL;
+      if (!$original_prototype || !$new_prototype) {
+        return;
+      }
       foreach ($conf['table']['columns'] as &$column) {
         if ($column['item_type'] == 'data_point') {
           $data_points = &$column['config']['data_point']['data_points'];
-          $data_points[0]['index'] = AttachmentMatcher::matchDataPointOnAttachmentPrototypes($data_points[0]['index'], $original_prototype, $new_prototype);
-          if ($column['config']['data_point']['processing'] != 'single') {
-            $data_points[1]['index'] = AttachmentMatcher::matchDataPointOnAttachmentPrototypes($data_points[1]['index'], $original_prototype, $new_prototype);
+          $metric_type = AttachmentMatcher::matchDataPointOnAttachmentPrototypes($data_points[0]['metric_type'] ?? $data_points[0]['index'] ?? NULL, $original_prototype, $new_prototype);
+          if ($metric_type !== NULL) {
+            $data_points[0]['metric_type'] = $metric_type;
+            unset($data_points[0]['index']);
+          }
+          if ($column['config']['data_point']['processing'] != 'single' && ($metric_type = AttachmentMatcher::matchDataPointOnAttachmentPrototypes($data_points[1]['metric_type'] ?? $data_points[1]['index'] ?? NULL, $original_prototype, $new_prototype)) !== NULL) {
+            $data_points[1]['metric_type'] = $metric_type;
+            unset($data_points[1]['index']);
           }
         }
         if ($column['item_type'] == 'spark_line_chart') {
-          $column['config']['data_point'] = AttachmentMatcher::matchDataPointOnAttachmentPrototypes($column['config']['data_point'], $original_prototype, $new_prototype);
+          $metric_type = AttachmentMatcher::matchDataPointOnAttachmentPrototypes($column['config']['data_point'], $original_prototype, $new_prototype);
+          $column['config']['data_point'] = $metric_type ?? $column['config']['data_point'];
           if ($column['config']['show_baseline']) {
-            $column['config']['baseline'] = AttachmentMatcher::matchDataPointOnAttachmentPrototypes($column['config']['baseline'], $original_prototype, $new_prototype);
+            $metric_type = AttachmentMatcher::matchDataPointOnAttachmentPrototypes($column['config']['baseline'], $original_prototype, $new_prototype);
+            $column['config']['baseline'] = $metric_type ?? $column['config']['baseline'];
           }
         }
       }
     }
     $this->setBlockConfig($conf);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getBlockConfigForReplacement() {
+    // Keep saved layouts and templates intact while hiding this legacy type
+    // from the add-element picker.
+    return NULL;
   }
 
 }

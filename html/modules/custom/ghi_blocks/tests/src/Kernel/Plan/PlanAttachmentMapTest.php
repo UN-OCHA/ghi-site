@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\ghi_blocks\Kernel\Plan;
 
+use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\ghi_blocks\Interfaces\ConfigValidationInterface;
 use Drupal\ghi_blocks\Interfaces\LazyMapDataFragmentBlockInterface;
 use Drupal\ghi_blocks\Interfaces\LazyMapBlockInterface;
@@ -12,7 +13,9 @@ use Drupal\ghi_blocks\Map\MapPayload;
 use Drupal\ghi_blocks\Plugin\Block\Plan\PlanAttachmentMap;
 use Drupal\ghi_plans\ApiObjects\Attachments\Attachment;
 use Drupal\ghi_plans\Plugin\FabricQuery\AttachmentQuery;
+use Drupal\layout_builder\SectionStorageInterface;
 use Drupal\Tests\ghi_blocks\Kernel\PlanBlockKernelTestBase;
+use Symfony\Component\HttpFoundation\Request;
 
 /**
  * Tests the plan attachment map block plugin.
@@ -175,12 +178,23 @@ class PlanAttachmentMapTest extends PlanBlockKernelTestBase {
     $plugin->setQueryHandler('attachment', $query);
 
     $this->assertFalse($plugin->isEmpty());
+
+    // Import/add forms carry the public page URI, but switching attachments
+    // must resolve the same unsaved layout as the initial map request.
+    $plugin->setCurrentUri('/plan/1263');
+    $route_match = $this->createMock(RouteMatchInterface::class);
+    $route_match->method('getParameter')->with('section_storage')->willReturn($this->createMock(SectionStorageInterface::class));
+    $this->setPrivateProperty($plugin, 'routeMatch', $route_match);
+    $editor_uri = '/layout_builder/add/block/overrides/node.1/0/content/plan_attachment_map';
+    $this->container->get('request_stack')->push(Request::create($editor_uri));
+    $switcher = $this->callPrivateMethod($plugin, 'getAttachmentSwitcher');
+    $this->assertSame($editor_uri, $switcher['attachment_switcher']['#uri']);
   }
 
   /**
    * Tests that configuration preview removes modal contents from map data.
    */
-  public function testConfigurationPreviewMapStripsModalContents(): void {
+  public function testPreviewMapStripsModalContents(): void {
     $plugin = $this->getBlockPlugin();
     $map = [
       'json' => [
@@ -202,23 +216,31 @@ class PlanAttachmentMapTest extends PlanBlockKernelTestBase {
       'settings_key' => 'plan_attachment_map',
     ];
 
-    $preview_map = $this->callPrivateMethod($plugin, 'getConfigurationPreviewMap', [$map]);
+    $layout_builder_map = $this->callPrivateMethod($plugin, 'preparePreviewMap', [$map, 'test-map', TRUE]);
+    $this->assertArrayNotHasKey('modal_data_url', $layout_builder_map);
+    $this->assertArrayNotHasKey('slice_data_url', $layout_builder_map);
+    $this->assertArrayNotHasKey('modal_contents', $layout_builder_map['json']['people-targeted-0']);
+
+    $configuration = $plugin->getConfiguration();
+    $configuration['is_preview'] = TRUE;
+    $plugin->setConfiguration($configuration);
+    $preview_map = $this->callPrivateMethod($plugin, 'preparePreviewMap', [$map, 'test-map', TRUE]);
 
     $this->assertArrayHasKey('json', $preview_map);
-    $this->assertArrayHasKey('modal_data_url', $preview_map);
     $this->assertArrayNotHasKey('modal_contents', $preview_map['json']['people-targeted-0']);
     $this->assertArrayNotHasKey('modal_contents', $preview_map['json']['people-targeted-0']['variants']['f']);
     $this->assertSame('People targeted', $preview_map['json']['people-targeted-0']['label']);
     $this->assertSame('test-map', $preview_map['id']);
     $this->assertSame('plan_attachment_map', $preview_map['settings_key']);
+    $token = $this->callPrivateMethod($plugin, 'getPreviewStateToken');
+    $this->assertStringContainsString('/block-preview/' . $token . '/map-data/fragment', $preview_map['slice_data_url']);
+    $this->assertStringContainsString('/block-preview/' . $token . '/map-data/modal', $preview_map['modal_data_url']);
 
-    $token = basename(parse_url($preview_map['modal_data_url'], PHP_URL_PATH));
-    $store = $this->container->get('keyvalue.expirable')
-      ->get(MapModalContent::CONFIGURATION_PREVIEW_COLLECTION);
-    $base_entry = $store->get(MapModalContent::buildStoreKey($token, 'people-targeted-0', MapModalContent::DEFAULT_VARIANT_ID));
-    $variant_entry = $store->get(MapModalContent::buildStoreKey($token, 'people-targeted-0', 'f'));
-    $this->assertSame(['1' => ['html' => '<p>Modal</p>']], $base_entry['modal_contents']);
-    $this->assertSame(['1' => ['html' => '<p>Variant modal</p>']], $variant_entry['modal_contents']);
+    $manager = $this->container->get('ghi_blocks.preview_state_manager');
+    $base_key = MapModalContent::buildResourceKey('test-map', 'people-targeted-0', MapModalContent::DEFAULT_VARIANT_ID);
+    $variant_key = MapModalContent::buildResourceKey('test-map', 'people-targeted-0', 'f');
+    $this->assertSame(['1' => ['html' => '<p>Modal</p>']], $manager->getResource($token, MapModalContent::RESOURCE_NAMESPACE, $base_key));
+    $this->assertSame(['1' => ['html' => '<p>Variant modal</p>']], $manager->getResource($token, MapModalContent::RESOURCE_NAMESPACE, $variant_key));
   }
 
   /**

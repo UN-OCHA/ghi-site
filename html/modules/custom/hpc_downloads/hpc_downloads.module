@@ -80,7 +80,11 @@ function hpc_downloads_theme($existing, $type, $theme, $path) {
  * Implements hook_preprocess_block().
  */
 function hpc_downloads_preprocess_block(&$vars) {
-
+  // Layout Builder's content toggle unhides all direct block children,
+  // including export-only headers and their inline style elements.
+  if (!empty($vars['elements']['#in_preview'])) {
+    return;
+  }
   if (empty($vars['configuration'])) {
     return;
   }

@@ -1,0 +1,33 @@
+#!/usr/bin/env bash
+#: exec_target = cli
+
+## Install Drupal dependencies
+##
+## Usage: fin yarn
+
+# Environment variables passed from fin:
+#
+#   $PROJECT_ROOT - (string) absolute path to NEAREST .docksal folder
+#   $VIRTUAL_HOST - (string) ex. projectname.docksal
+#   $DOCROOT - name of the docroot folder
+#   $DOCKER_RUNNING - (string) "true" or "false"
+
+# Abort if anything fails
+set -e
+
+usage="$(basename "$0") [-h]
+
+where:
+    -h  show this help text"
+
+while [ "$1" != "" ]; do
+  case $1 in
+    -h | --help )         echo "$usage"
+                          exit
+                          ;;
+  esac
+  shift
+done
+
+echo "Install drupal dependencies"
+cd html/core && yarn

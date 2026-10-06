@@ -7,6 +7,24 @@
 .item-list--entity-logframe + .link-wrapper {
   margin-top: 1rem;
 }
+.item-list--entity-logframe + .link-wrapper {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+}
+.logframe-download-options {
+  position: relative;
+}
+.logframe-download-options .cd-dropdown {
+  z-index: 1;
+  min-width: 100%;
+}
+.logframe-download-options .cd-dropdown a.link--download-dialog {
+  padding: 0.75rem 2.5rem 0.75rem 0.75rem;
+  white-space: nowrap;
+  font-size: var(--cd-font-size--small);
+}
 .item-list--entity-logframe + .link-wrapper a.link--download-dialog {
   position: relative;
   padding-right: 2.5rem;
