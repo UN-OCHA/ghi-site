@@ -3,13 +3,16 @@
 namespace Drupal\ghi_blocks\Interfaces;
 
 /**
- * Interface for blocks that handle their own configuration updates.
+ * Defines a block plugin that can migrate its saved configuration.
  */
 interface ConfigurationUpdateInterface {
 
   /**
-   * Update the configuration.
+   * Updates the plugin configuration in memory.
+   *
+   * @return bool
+   *   TRUE when the configuration changed, otherwise FALSE.
    */
-  public function updateConfiguration();
+  public function updateConfiguration(): bool;
 
 }

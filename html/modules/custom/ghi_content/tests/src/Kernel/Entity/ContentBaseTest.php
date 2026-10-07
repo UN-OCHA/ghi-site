@@ -127,6 +127,37 @@ class ContentBaseTest extends KernelTestBase {
   }
 
   /**
+   * Tests that synchronized historical revisions are updated in place.
+   */
+  public function testSyncingHistoricalRevision(): void {
+    $article = Article::create([
+      'title' => 'Original title',
+      'status' => NodeInterface::NOT_PUBLISHED,
+    ]);
+    $article->save();
+    $original_revision_id = $article->getRevisionId();
+
+    $article->setPublished();
+    $article->setNewRevision();
+    $article->save();
+    $current_revision_id = $article->getRevisionId();
+
+    $storage = $this->container->get('entity_type.manager')->getStorage('node');
+    /** @var \Drupal\ghi_content\Entity\Article $historical_revision */
+    $historical_revision = $storage->loadRevision($original_revision_id);
+    $historical_revision->setTitle('Updated historical title');
+    $historical_revision->setNewRevision(FALSE);
+    $historical_revision->setSyncing(TRUE);
+    $historical_revision->save();
+
+    $this->assertSame($original_revision_id, $historical_revision->getRevisionId());
+    $this->assertSame([$original_revision_id, $current_revision_id], $storage->revisionIds($article));
+    $storage->resetCache();
+    $this->assertSame('Updated historical title', $storage->loadRevision($original_revision_id)->label());
+    $this->assertSame('Original title', $storage->load($article->id())->label());
+  }
+
+  /**
    * Test logic around the orphaned field.
    */
   public function testOrphanedField() {

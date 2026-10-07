@@ -121,7 +121,7 @@ abstract class ContentBase extends Node implements NodeInterface, ImageNodeInter
    * {@inheritdoc}
    */
   public function preSave(EntityStorageInterface $storage) {
-    if ($this->isNew()) {
+    if ($this->isNew() || $this->isSyncing()) {
       return;
     }
     // Make sure that we create new revisions whenever the status changes,

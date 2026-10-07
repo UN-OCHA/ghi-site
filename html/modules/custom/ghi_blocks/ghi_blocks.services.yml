@@ -25,10 +25,10 @@ services:
       - { name: event_subscriber }
   ghi_blocks.node_queue:
     class: Drupal\ghi_blocks\Services\NodeQueue
-    arguments: ['@entity_type.manager', '@database', '@queue']
+    arguments: ['@database', '@queue']
   ghi_blocks.page_template_queue:
     class: Drupal\ghi_blocks\Services\PageTemplateQueue
-    arguments: ['@entity_type.manager', '@database', '@queue']
+    arguments: ['@database', '@queue']
   ghi_blocks.form_error_handler:
     class: Drupal\ghi_blocks\Form\InlineOnlyFormErrorHandler
     decorates: form_error_handler

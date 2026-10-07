@@ -610,13 +610,4 @@ class PlanGoverningEntitiesTable extends GHIBlockBase implements ConfigurableTab
     ] : $table_data;
   }
 
-  /**
-   * {@inheritdoc}
-   */
-  public function getBlockConfigForReplacement() {
-    // Keep saved layouts and templates intact while hiding this legacy type
-    // from the add-element picker.
-    return NULL;
-  }
-
 }
