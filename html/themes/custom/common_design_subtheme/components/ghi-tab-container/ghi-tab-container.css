@@ -1,5 +1,7 @@
 .tab-navigation-wrapper {
   display: flex;
+  overflow-x: auto;
+  max-width: 100%;
   gap: 3rem;
   border-top: 1px solid var(--cd-grey--light);
   border-bottom: 1px solid var(--cd-grey--light);
@@ -9,6 +11,7 @@
   position: relative;
   padding: 1rem 0;
   cursor: pointer;
+  white-space: nowrap;
   font-size: var(--cd-font-size--base);
 }
 
