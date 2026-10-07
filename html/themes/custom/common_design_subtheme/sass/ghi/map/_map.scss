@@ -275,9 +275,13 @@
   }
 
   .map-tabs {
-    // overflow-x: auto;
     height: auto;
     background-color: var(--ghi-default-text-color);
+
+    .map-tabs--inner {
+      overflow-x: auto;
+      max-width: 100%;
+    }
 
     ul {
       display: flex;
@@ -307,6 +311,7 @@
         a {
           cursor: pointer;
           text-decoration: none;
+          white-space: nowrap;
           color: var(--cd-white) !important;
           font-size: inherit;
         }
