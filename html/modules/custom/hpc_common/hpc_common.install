@@ -2,14 +2,12 @@
 
 /**
  * @file
- * Contains the install hook for the GHI User module.
+ * Install and update hooks for the HPC Common module.
  */
 
 /**
- * Delete social auth entities so the social_auth module can be uninstalled.
+ * Implements hook_update_last_removed().
  */
-function hpc_common_update_10001() {
-  $storage = \Drupal::entityTypeManager()->getStorage('social_auth');
-  $entities = $storage->loadMultiple();
-  $storage->delete($entities);
+function hpc_common_update_last_removed(): int {
+  return 10001;
 }

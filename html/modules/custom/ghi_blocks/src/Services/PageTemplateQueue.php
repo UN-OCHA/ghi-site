@@ -2,30 +2,29 @@
 
 namespace Drupal\ghi_blocks\Services;
 
+use Drupal\Core\Queue\QueueInterface;
+
 /**
- * Service class for configuration updates of plugins.
+ * Queues page templates containing a specific Layout Builder block plugin.
  */
 class PageTemplateQueue extends BaseQueue {
 
   /**
-   * Queue page templates for updates to the plugin configuration.
-   *
-   * @param string $plugin_id
-   *   The id of the plugin to update.
-   * @param string $queue_id
-   *   The queue id the node should be added to.
-   *
-   * @return \Drupal\Core\Queue\QueueInterface
-   *   The queue.
+   * Queues page templates containing the plugin.
    */
-  public function queuePageTemplatesForPlugin($plugin_id, $queue_id) {
-    $result = $this->database->select('page_template__layout_builder__layout')
-      ->fields('page_template__layout_builder__layout', ['entity_id'])
-      ->condition('layout_builder__layout_section', '%' . $plugin_id . '%', 'LIKE')
+  public function queuePageTemplatesForPlugin(string $plugin_id, string $queue_id): QueueInterface {
+    $queue = $this->queueFactory->get($queue_id);
+    $table = 'page_template__layout_builder__layout';
+    if (!$this->database->schema()->tableExists($table)) {
+      return $queue;
+    }
+    $result = $this->database->select($table)
+      ->fields($table, ['entity_id'])
+      ->condition('layout_builder__layout_section', '%' . $this->database->escapeLike($plugin_id) . '%', 'LIKE')
       ->orderBy('entity_id')
+      ->distinct()
       ->execute();
 
-    $queue = $this->queueFactory->get($queue_id);
     foreach ($result->fetchAll() as $row) {
       $queue->createItem((object) [
         'entity_id' => $row->entity_id,

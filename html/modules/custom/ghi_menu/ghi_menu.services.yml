@@ -5,6 +5,9 @@ services:
   ghi_menu.menu_tree_storage_helper:
     class: Drupal\ghi_menu\GhiMenuStorageHelper
     arguments: ['@menu.link_tree', '@menu.tree_storage']
+  ghi_menu.backend_menu_manager:
+    class: Drupal\ghi_menu\BackendMenuManager
+    arguments: ['@entity_type.manager']
   ghi_menu.route_subscriber:
     class: Drupal\ghi_menu\EventSubscriber\RouteSubscriber
     tags:

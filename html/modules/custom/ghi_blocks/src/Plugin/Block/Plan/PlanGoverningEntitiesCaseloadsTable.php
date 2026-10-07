@@ -635,13 +635,4 @@ class PlanGoverningEntitiesCaseloadsTable extends GHIBlockBase implements Config
     $this->setBlockConfig($conf);
   }
 
-  /**
-   * {@inheritdoc}
-   */
-  public function getBlockConfigForReplacement() {
-    // Keep saved layouts and templates intact while hiding this legacy type
-    // from the add-element picker.
-    return NULL;
-  }
-
 }

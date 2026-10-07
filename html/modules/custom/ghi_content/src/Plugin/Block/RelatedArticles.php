@@ -164,16 +164,14 @@ class RelatedArticles extends ContentBlockBase implements MultiStepFormBlockInte
   /**
    * {@inheritdoc}
    */
-  public function updateConfiguration() {
+  public function updateConfiguration(): bool {
     $configuration = &$this->configuration;
-    if (!empty($configuration['hpc']['articles']['article_select']['entity_ids'])) {
+    $hpc_configuration = $configuration['hpc'] ?? [];
+    if (!array_key_exists('select', $hpc_configuration) && !array_key_exists('label', $hpc_configuration)) {
       return FALSE;
     }
-    $entity_ids = &$configuration['hpc']['articles']['article_select']['entity_ids'];
-    $selected = &$configuration['hpc']['select']['selected'];
-    foreach (($selected ?? []) as $entity_id) {
-      $entity_ids[] = 'node:' . $entity_id;
-    }
+    $selected = $configuration['hpc']['select']['selected'] ?? [];
+    $configuration['hpc']['articles']['article_select']['entity_ids'] = array_map(static fn ($entity_id) => 'node:' . $entity_id, $selected);
     $configuration['hpc']['display']['label'] = $configuration['hpc']['label'] ?? NULL;
     $configuration['hpc'] = array_intersect_key($configuration['hpc'], array_flip(['articles', 'display']));
     return TRUE;

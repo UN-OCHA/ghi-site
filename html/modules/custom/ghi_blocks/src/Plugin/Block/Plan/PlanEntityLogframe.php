@@ -13,7 +13,6 @@ use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\Url;
 use Drupal\ghi_blocks\Interfaces\ConfigValidationInterface;
 use Drupal\ghi_blocks\Interfaces\ConfigurableTableBlockInterface;
-use Drupal\ghi_blocks\Interfaces\ConfigurationUpdateInterface;
 use Drupal\ghi_blocks\Interfaces\CustomLinkBlockInterface;
 use Drupal\ghi_blocks\Interfaces\MultiStepFormBlockInterface;
 use Drupal\ghi_blocks\Interfaces\OverrideDefaultTitleBlockInterface;
@@ -51,7 +50,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
     'plan_cluster' => new EntityContextDefinition('entity:base_object', new TranslatableMarkup('Cluster'), required: FALSE, constraints: ['Bundle' => 'governing_entity']),
   ],
 )]
-class PlanEntityLogframe extends GHIBlockBase implements MultiStepFormBlockInterface, ConfigurableTableBlockInterface, OverrideDefaultTitleBlockInterface, CustomLinkBlockInterface, TrustedCallbackInterface, ConfigValidationInterface, ConfigurationUpdateInterface, HPCDownloadExcelMultipleInterface {
+class PlanEntityLogframe extends GHIBlockBase implements MultiStepFormBlockInterface, ConfigurableTableBlockInterface, OverrideDefaultTitleBlockInterface, CustomLinkBlockInterface, TrustedCallbackInterface, ConfigValidationInterface, HPCDownloadExcelMultipleInterface {
 
   use ConfigurationContainerTrait;
   use AttachmentTableTrait;
@@ -1285,21 +1284,6 @@ class PlanEntityLogframe extends GHIBlockBase implements MultiStepFormBlockInter
       }
     }
     $this->setBlockConfig($conf);
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function updateConfiguration() {
-    $configuration = &$this->configuration;
-    if (empty($configuration['hpc']) || empty($configuration['hpc']['entities']) || empty($configuration['hpc']['entities']['id_type'])) {
-      return FALSE;
-    }
-    if ($configuration['hpc']['entities']['id_type'] == 'custom_id_prefixed_refcode') {
-      return FALSE;
-    }
-    $configuration['hpc']['entities']['id_type'] = 'custom_id_prefixed_refcode';
-    return TRUE;
   }
 
 }

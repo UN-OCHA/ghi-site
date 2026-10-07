@@ -7,7 +7,6 @@ use Drupal\Core\Form\FormState;
 use Drupal\Core\Security\TrustedCallbackInterface;
 use Drupal\ghi_blocks\Interfaces\ConfigValidationInterface;
 use Drupal\ghi_blocks\Interfaces\ConfigurableTableBlockInterface;
-use Drupal\ghi_blocks\Interfaces\ConfigurationUpdateInterface;
 use Drupal\ghi_blocks\Interfaces\CustomLinkBlockInterface;
 use Drupal\ghi_blocks\Interfaces\MultiStepFormBlockInterface;
 use Drupal\ghi_blocks\Interfaces\OverrideDefaultTitleBlockInterface;
@@ -70,7 +69,6 @@ class PlanEntityLogframeTest extends PlanBlockKernelTestBase {
     $this->assertInstanceOf(CustomLinkBlockInterface::class, $plugin);
     $this->assertInstanceOf(TrustedCallbackInterface::class, $plugin);
     $this->assertInstanceOf(ConfigValidationInterface::class, $plugin);
-    $this->assertInstanceOf(ConfigurationUpdateInterface::class, $plugin);
   }
 
   /**

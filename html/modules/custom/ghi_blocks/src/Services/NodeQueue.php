@@ -2,69 +2,62 @@
 
 namespace Drupal\ghi_blocks\Services;
 
+use Drupal\Core\Queue\QueueInterface;
+
 /**
- * Service class for configuration updates of plugins.
+ * Queues nodes containing a specific Layout Builder block plugin.
  */
 class NodeQueue extends BaseQueue {
 
   /**
-   * Queue nodes for updates to the plugin configuration.
-   *
-   * @param string $plugin_id
-   *   The id of the plugin to update.
-   * @param string $queue_id
-   *   The queue id the node should be added to.
-   *
-   * @return \Drupal\Core\Queue\QueueInterface
-   *   The queue.
+   * Queues current node revisions containing the plugin.
    */
-  public function queueNodesForPlugin($plugin_id, $queue_id) {
-    $result = $this->database->select('node__layout_builder__layout')
-      ->fields('node__layout_builder__layout', ['entity_id'])
-      ->condition('layout_builder__layout_section', '%' . $plugin_id . '%', 'LIKE')
-      ->orderBy('entity_id')
-      ->execute();
-
-    $queue = $this->queueFactory->get($queue_id);
-    foreach ($result->fetchAll() as $row) {
-      $queue->createItem((object) [
-        'entity_id' => $row->entity_id,
-        'entity_type_id' => 'node',
-        'plugin_id' => $plugin_id,
-      ]);
-    }
-    return $queue;
+  public function queueNodesForPlugin(string $plugin_id, string $queue_id): QueueInterface {
+    return $this->queueEntitiesFromTables(['node__layout_builder__layout'], $plugin_id, $queue_id);
   }
 
   /**
-   * Queue node revisions for updates to the plugin configuration.
+   * Queues nodes with any revision containing the plugin.
    *
-   * @param string $plugin_id
-   *   The id of the plugin to update.
-   * @param string $queue_id
-   *   The queue id the node revision should be added to.
-   *
-   * @return \Drupal\Core\Queue\QueueInterface
-   *   The queue.
+   * The queue contains node IDs because the generic workers process all
+   * revisions for each queued node.
    */
-  public function queueNodeRevisionsForPlugin($plugin_id, $queue_id) {
-    $result = $this->database->select('node_revision__layout_builder__layout')
-      ->fields('node_revision__layout_builder__layout', ['entity_id'])
-      ->condition('layout_builder__layout_section', '%' . $plugin_id . '%', 'LIKE')
-      ->orderBy('entity_id')
-      ->distinct()
-      ->execute();
+  public function queueNodeRevisionsForPlugin(string $plugin_id, string $queue_id): QueueInterface {
+    return $this->queueEntitiesFromTables(['node_revision__layout_builder__layout'], $plugin_id, $queue_id);
+  }
 
-    // This actually queues the node ids and not the revision ids. That is
-    // intentional, assuming that the queue worker is based on processing
-    // entities, but also checks if revisions are supported and then processes
-    // these too.
-    // See \Drupal\ghi_blocks\Plugin\QueueWorker\PluginConfigurationUpdate for
-    // an example.
+  /**
+   * Queues nodes whose current layout or any revision contains the plugin.
+   */
+  public function queueNodesAndRevisionsForPlugin(string $plugin_id, string $queue_id): QueueInterface {
+    return $this->queueEntitiesFromTables([
+      'node__layout_builder__layout',
+      'node_revision__layout_builder__layout',
+    ], $plugin_id, $queue_id);
+  }
+
+  /**
+   * Queues unique entity IDs selected from Layout Builder field tables.
+   */
+  private function queueEntitiesFromTables(array $tables, string $plugin_id, string $queue_id): QueueInterface {
+    $entity_ids = [];
+    foreach ($tables as $table) {
+      $result = $this->database->select($table)
+        ->fields($table, ['entity_id'])
+        ->condition('layout_builder__layout_section', '%' . $this->database->escapeLike($plugin_id) . '%', 'LIKE')
+        ->orderBy('entity_id')
+        ->distinct()
+        ->execute();
+      foreach ($result->fetchAll() as $row) {
+        $entity_ids[$row->entity_id] = $row->entity_id;
+      }
+    }
+    ksort($entity_ids);
+
     $queue = $this->queueFactory->get($queue_id);
-    foreach ($result->fetchAll() as $row) {
+    foreach ($entity_ids as $entity_id) {
       $queue->createItem((object) [
-        'entity_id' => $row->entity_id,
+        'entity_id' => $entity_id,
         'entity_type_id' => 'node',
         'plugin_id' => $plugin_id,
       ]);
