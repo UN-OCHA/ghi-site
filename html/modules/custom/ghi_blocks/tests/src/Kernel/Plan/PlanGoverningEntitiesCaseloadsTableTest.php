@@ -13,12 +13,12 @@ use Drupal\ghi_plans\Plugin\FabricQuery\AttachmentPrototypeQuery;
 use Drupal\ghi_subpages\SubpageManager;
 use Drupal\hpc_api\Query\FabricQueryManager;
 use Drupal\Tests\ghi_blocks\Kernel\PlanBlockKernelTestBase;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
  * Tests the plan governing entities caseloads table block plugin.
- *
- * @group ghi_blocks
  */
+#[Group('ghi_blocks')]
 class PlanGoverningEntitiesCaseloadsTableTest extends PlanBlockKernelTestBase {
 
   /**

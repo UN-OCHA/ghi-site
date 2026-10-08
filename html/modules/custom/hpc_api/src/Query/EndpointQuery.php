@@ -555,9 +555,8 @@ class EndpointQuery {
 
     if (empty($response) || !$response instanceof ResponseInterface || $response->getStatusCode() != 200) {
       // If any of the API requests for the current page fails, prevent Drupal
-      // from caching the entire page. That way, panels will be called again on
-      // the next request, giving us a chance to fill in the missing
-      // information.
+      // from caching the entire page so the next request can retry loading
+      // the missing information.
       $this->killSwitch->trigger();
     }
 

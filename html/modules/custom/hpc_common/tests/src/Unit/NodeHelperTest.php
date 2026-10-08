@@ -12,11 +12,15 @@ use Drupal\Tests\UnitTestCase;
 use Drupal\hpc_common\Helpers\NodeHelper;
 use Drupal\node\Entity\Node;
 use Drupal\node\NodeStorageInterface;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
 use Prophecy\Argument;
 
 /**
- * @covers Drupal\hpc_common\Helpers\NodeHelper
+ * Tests the node helper.
  */
+#[CoversClass(NodeHelper::class)]
 class NodeHelperTest extends UnitTestCase {
 
   /**
@@ -98,7 +102,7 @@ class NodeHelperTest extends UnitTestCase {
   /**
    * Data provider for getNodeIdFromOriginalId.
    */
-  public function getNodeIdFromOriginalIdDataProvider() {
+  public static function getNodeIdFromOriginalIdDataProvider() {
     return [
       ['645', 'plan', '5987', TRUE],
       ['666', 'country', '7565', FALSE],
@@ -107,10 +111,9 @@ class NodeHelperTest extends UnitTestCase {
 
   /**
    * Test getting a node if from an original id.
-   *
-   * @group NodeHelper
-   * @dataProvider getNodeIdFromOriginalIdDataProvider
    */
+  #[Group('NodeHelper')]
+  #[DataProvider('getNodeIdFromOriginalIdDataProvider')]
   public function testGetNodeIdFromOriginalId($original_id, $bundle, $id, $return) {
     // Mock field.
     $field = $this->prophesize(FieldItemListInterface::class);
@@ -146,7 +149,7 @@ class NodeHelperTest extends UnitTestCase {
   /**
    * Data provider for getNodeFromOriginalId.
    */
-  public function getNodeFromOriginalIdDataProvider() {
+  public static function getNodeFromOriginalIdDataProvider() {
     return [
       ['642', 'plan', '1234', TRUE],
       ['4917', 'organization', '8454', FALSE],
@@ -155,10 +158,9 @@ class NodeHelperTest extends UnitTestCase {
 
   /**
    * Test getting a node from an original id.
-   *
-   * @group NodeHelper
-   * @dataProvider getNodeFromOriginalIdDataProvider
    */
+  #[Group('NodeHelper')]
+  #[DataProvider('getNodeFromOriginalIdDataProvider')]
   public function testGetNodeFromOriginalId($original_id, $bundle, $id, $return) {
     // Mock field.
     $field = $this->prophesize(FieldItemListInterface::class);
@@ -194,7 +196,7 @@ class NodeHelperTest extends UnitTestCase {
   /**
    * Data provider for getOriginalIdFromNodeId.
    */
-  public function getOriginalIdFromNodeIdDataProvider() {
+  public static function getOriginalIdFromNodeIdDataProvider() {
     return [
       ['714', '6987'],
     ];
@@ -202,10 +204,9 @@ class NodeHelperTest extends UnitTestCase {
 
   /**
    * Test getting an original id from a node id.
-   *
-   * @group NodeHelper
-   * @dataProvider getOriginalIdFromNodeIdDataProvider
    */
+  #[Group('NodeHelper')]
+  #[DataProvider('getOriginalIdFromNodeIdDataProvider')]
   public function testGetOriginalIdFromNodeId($original_id, $nid) {
     // Mock field.
     $field = $this->prophesize(FieldItemListInterface::class);
@@ -238,7 +239,7 @@ class NodeHelperTest extends UnitTestCase {
   /**
    * Data provider for getTitleFromOriginalId.
    */
-  public function getTitleFromOriginalIdDataProvider() {
+  public static function getTitleFromOriginalIdDataProvider() {
     return [
       ['1', 'plan', TRUE, 'Mumbai 2020'],
       ['2', 'organization', TRUE, 'India'],
@@ -248,10 +249,9 @@ class NodeHelperTest extends UnitTestCase {
 
   /**
    * Test getting a node title by it's original id.
-   *
-   * @group NodeHelper
-   * @dataProvider getTitleFromOriginalIdDataProvider
    */
+  #[Group('NodeHelper')]
+  #[DataProvider('getTitleFromOriginalIdDataProvider')]
   public function testGetTitleFromOriginalId($original_id, $bundle, $return, $title) {
     // Mock field.
     $field = $this->prophesize(FieldItemListInterface::class);
@@ -290,7 +290,7 @@ class NodeHelperTest extends UnitTestCase {
   /**
    * Data provider for getOriginalIdFromTitle.
    */
-  public function getOriginalIdFromTitleDataProvider() {
+  public static function getOriginalIdFromTitleDataProvider() {
     return [
       ['Nigeria 2019', 'plan', '645', '1', ['1', '5'], '645'],
       ['Sri Lanka', 'location', '666', '2', [], NULL],
@@ -299,10 +299,9 @@ class NodeHelperTest extends UnitTestCase {
 
   /**
    * Test getting the original id of a node by it's title.
-   *
-   * @group NodeHelper
-   * @dataProvider getOriginalIdFromTitleDataProvider
    */
+  #[Group('NodeHelper')]
+  #[DataProvider('getOriginalIdFromTitleDataProvider')]
   public function testGetOriginalIdFromTitle($title, $bundle, $original_id, $nid, $query_result, $result) {
     // Mock field.
     $field = $this->prophesize(FieldItemListInterface::class);

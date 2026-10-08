@@ -5,13 +5,14 @@ namespace Drupal\Tests\ghi_geojson\Kernel;
 use Drupal\Core\File\FileSystemInterface;
 use Drupal\ghi_geojson\GeoJson;
 use Drupal\KernelTests\KernelTestBase;
+use PHPUnit\Framework\Attributes\CoversMethod;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
  * Kernel tests for the GeoJson::getFileCount method.
- *
- * @coversDefaultClass \Drupal\ghi_geojson\GeoJson
- * @group ghi_geojson
  */
+#[CoversMethod(GeoJson::class, 'getFileCount')]
+#[Group('ghi_geojson')]
 class GeoJsonGetFileCountTest extends KernelTestBase {
 
   /**
@@ -112,8 +113,6 @@ class GeoJsonGetFileCountTest extends KernelTestBase {
 
   /**
    * Tests file count for non-existent directory.
-   *
-   * @covers ::getFileCount
    */
   public function testGetFileCountNonExistentDirectory(): void {
     $non_existent_dir = 'public://does_not_exist';
@@ -124,8 +123,6 @@ class GeoJsonGetFileCountTest extends KernelTestBase {
 
   /**
    * Tests file count for empty directory.
-   *
-   * @covers ::getFileCount
    */
   public function testGetFileCountEmptyDirectory(): void {
     $empty_dir = 'public://test_empty_directory';
@@ -136,8 +133,6 @@ class GeoJsonGetFileCountTest extends KernelTestBase {
 
   /**
    * Tests file count for directory with files and subdirectories.
-   *
-   * @covers ::getFileCount
    */
   public function testGetFileCountWithFiles(): void {
     $result = $this->geoJsonService->getFileCount($this->testDirectory);
@@ -148,8 +143,6 @@ class GeoJsonGetFileCountTest extends KernelTestBase {
 
   /**
    * Tests file count with exclude filter for specific strings.
-   *
-   * @covers ::getFileCount
    */
   public function testGetFileCountWithExcludeFilter(): void {
     // Exclude files containing 'temp'.
@@ -162,8 +155,6 @@ class GeoJsonGetFileCountTest extends KernelTestBase {
 
   /**
    * Tests file count with multiple exclude filters.
-   *
-   * @covers ::getFileCount
    */
   public function testGetFileCountWithMultipleExcludes(): void {
     // Exclude files containing 'temp' or 'backup'.
@@ -177,8 +168,6 @@ class GeoJsonGetFileCountTest extends KernelTestBase {
 
   /**
    * Tests file count with exclude filter that matches no files.
-   *
-   * @covers ::getFileCount
    */
   public function testGetFileCountWithNonMatchingExclude(): void {
     // Exclude files containing 'nonexistent'.
@@ -191,8 +180,6 @@ class GeoJsonGetFileCountTest extends KernelTestBase {
 
   /**
    * Tests file count with exclude filter that excludes all files.
-   *
-   * @covers ::getFileCount
    */
   public function testGetFileCountExcludeAll(): void {
     // Exclude files containing 'file' or 'dir' - should match most/all items.
@@ -206,8 +193,6 @@ class GeoJsonGetFileCountTest extends KernelTestBase {
 
   /**
    * Tests file count with empty exclude array.
-   *
-   * @covers ::getFileCount
    */
   public function testGetFileCountWithEmptyExclude(): void {
     $exclude = [];
@@ -219,8 +204,6 @@ class GeoJsonGetFileCountTest extends KernelTestBase {
 
   /**
    * Tests file count with null exclude parameter.
-   *
-   * @covers ::getFileCount
    */
   public function testGetFileCountWithNullExclude(): void {
     $result = $this->geoJsonService->getFileCount($this->testDirectory, NULL);
@@ -231,8 +214,6 @@ class GeoJsonGetFileCountTest extends KernelTestBase {
 
   /**
    * Tests file count with case sensitivity in exclude filter.
-   *
-   * @covers ::getFileCount
    */
   public function testGetFileCountExcludeCaseSensitive(): void {
     // Create a file with uppercase name for case sensitivity test.
@@ -246,29 +227,6 @@ class GeoJsonGetFileCountTest extends KernelTestBase {
     // Expected count: 11 total - 2 items with lowercase 'temp' = 9.
     // TEMP_FILE.txt should not be excluded because str_contains is case-sensitive.
     $this->assertEquals(9, $result, 'Exclude filter should be case-sensitive.');
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  protected function tearDown(): void {
-    // Clean up test directories if they exist.
-    try {
-      $paths_to_clean = [
-        $this->testDirectory,
-        'public://test_empty_directory',
-      ];
-
-      foreach ($paths_to_clean as $path) {
-        if ($this->fileSystem && is_dir($path)) {
-          $this->fileSystem->deleteRecursive($path);
-        }
-      }
-    } catch (\Exception $e) {
-      // Ignore cleanup errors during tearDown.
-    }
-
-    parent::tearDown();
   }
 
 }

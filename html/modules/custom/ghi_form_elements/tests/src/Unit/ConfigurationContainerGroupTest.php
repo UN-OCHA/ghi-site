@@ -4,17 +4,20 @@ namespace Drupal\Tests\ghi_form_elements\Unit;
 
 use Drupal\Tests\UnitTestCase;
 use Drupal\ghi_form_elements\Traits\ConfigurationContainerGroup;
+use PHPUnit\Framework\Attributes\CoversTrait;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
- * @covers Drupal\ghi_form_elements\Traits\ConfigurationContainerGroup
+ * Tests configuration container grouping.
  */
+#[CoversTrait(ConfigurationContainerGroup::class)]
 class ConfigurationContainerGroupTest extends UnitTestCase {
 
   /**
    * Test buildTree.
-   *
-   * @group ConfigurationContainerGroup
    */
+  #[Group('ConfigurationContainerGroup')]
   public function testGetGroups() {
 
     $items = [
@@ -30,14 +33,16 @@ class ConfigurationContainerGroupTest extends UnitTestCase {
     ];
 
     /** @var \Drupal\ghi_form_elements\Traits\ConfigurationContainerGroup $trait */
-    $trait = $this->getObjectForTrait(ConfigurationContainerGroup::class);
+    $trait = new class() {
+      use ConfigurationContainerGroup;
+    };
     $this->assertEquals($trait->getGroups($items), ['item_2' => $items['item_2']]);
   }
 
   /**
    * Data provider for testBuildTree.
    */
-  public function buildTreeDataProvider() {
+  public static function buildTreeDataProvider() {
     $items = [
       0 => [
         'id' => 4,
@@ -197,13 +202,14 @@ class ConfigurationContainerGroupTest extends UnitTestCase {
 
   /**
    * Test buildTree.
-   *
-   * @group ConfigurationContainerGroup
-   * @dataProvider buildTreeDataProvider
    */
+  #[Group('ConfigurationContainerGroup')]
+  #[DataProvider('buildTreeDataProvider')]
   public function testBuildTree($items, $result) {
     /** @var \Drupal\ghi_form_elements\Traits\ConfigurationContainerGroup $trait */
-    $trait = $this->getObjectForTrait(ConfigurationContainerGroup::class);
+    $trait = new class() {
+      use ConfigurationContainerGroup;
+    };
     $this->assertEquals($trait->buildTree($items), $result);
   }
 

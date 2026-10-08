@@ -36,7 +36,7 @@ class ReservedTitleConstraint extends Constraint implements ConstraintValidatorI
   /**
    * {@inheritdoc}
    */
-  public function validatedBy() {
+  public function validatedBy(): string {
     return get_class($this);
   }
 

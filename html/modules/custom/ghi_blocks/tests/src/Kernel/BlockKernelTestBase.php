@@ -5,12 +5,12 @@ namespace Drupal\Tests\ghi_blocks\Kernel;
 use Drupal\KernelTests\KernelTestBase;
 use Drupal\layout_builder\SectionComponent;
 use Drupal\Tests\hpc_api\Traits\PrivateAccessorTrait;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
  * Base class for block kernel tests.
- *
- * @group ghi_blocks
  */
+#[Group('ghi_blocks')]
 abstract class BlockKernelTestBase extends KernelTestBase {
 
   use PrivateAccessorTrait;
@@ -25,6 +25,8 @@ abstract class BlockKernelTestBase extends KernelTestBase {
     'layout_discovery',
     'migrate',
     'hpc_api',
+    'hpc_common',
+    'hpc_downloads',
     'ghi_form_elements',
     'ghi_sections',
     'ghi_blocks',

@@ -7,12 +7,12 @@ use Drupal\ghi_blocks\Interfaces\MultiStepFormBlockInterface;
 use Drupal\ghi_blocks\Interfaces\OverrideDefaultTitleBlockInterface;
 use Drupal\ghi_blocks\Plugin\Block\Plan\PlanOrganizationsTable;
 use Drupal\Tests\ghi_blocks\Kernel\PlanBlockKernelTestBase;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
  * Tests the plan organizations table block plugin.
- *
- * @group ghi_blocks
  */
+#[Group('ghi_blocks')]
 class PlanOrganizationsTableTest extends PlanBlockKernelTestBase {
 
   /**

@@ -8,7 +8,6 @@
     2 or 3.
 #}
 {% set label = 'Jump to reference @index'|t({'@index': index}) %}
-{% apply spaceless %}
 {#
   The following markup has the following purpose:
   - allow the display of `title` tooltip without having the text repeated
@@ -20,8 +19,4 @@
    the page in something other than a standard browser
   - have this text pronounced by screen readers without the letter/number
 #}
-<a class="gho-footnote-backlink" href="#{{ target }}">
-  <span class="visually-hidden">{{ label }}</span>
-  <span title="{{ label }}" aria-hidden="true"></span>
-</a>
-{% endapply %}
+<a class="gho-footnote-backlink" href="#{{ target }}"><span class="visually-hidden">{{ label }}</span><span title="{{ label }}" aria-hidden="true"></span></a>

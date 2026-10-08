@@ -15,11 +15,15 @@ use Drupal\hpc_common\Helpers\ContextHelper;
 use Drupal\node\NodeInterface;
 use Drupal\node\NodeStorageInterface;
 use Drupal\user\UserInterface;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
 use Prophecy\Argument;
 
 /**
- * @covers Drupal\hpc_common\Helpers\ContextHelper
+ * Tests the context helper.
  */
+#[CoversClass(ContextHelper::class)]
 class ContextHelperTest extends UnitTestCase {
 
   /**
@@ -50,7 +54,24 @@ class ContextHelperTest extends UnitTestCase {
   /**
    * Data provider for getNodeFromContexts.
    */
-  public function getNodeFromContextsDataProvider() {
+  public static function getNodeFromContextsDataProvider() {
+    return [
+      ['node', TRUE],
+      ['exception', FALSE],
+      ['unknown', FALSE],
+      ['user', FALSE],
+      ['entity', FALSE],
+      ['scalar', TRUE],
+    ];
+  }
+
+  /**
+   * Test getting node from contexts.
+   */
+  #[Group('ContextHelper')]
+  #[DataProvider('getNodeFromContextsDataProvider')]
+  public function testGetNodeFromContexts($case, $returns_node) {
+    // Build mocks here because data providers run before test setup.
     $entity_context_definition = $this->prophesize(EntityContextDefinition::class);
     $non_entity_context_definition = $this->prophesize(ContextDefinition::class);
 
@@ -87,24 +108,16 @@ class ContextHelperTest extends UnitTestCase {
     $node_context_scalar->getContextValue()->willReturn(1);
     $node_context_scalar->getContextDefinition()->willReturn($entity_context_definition->reveal());
 
-    return [
-      [['node' => $node_context->reveal(), 'appeals' => 'Not called'], $node_entity->reveal()],
-      [['node' => $node_context_with_exception->reveal()], NULL],
-      [['countries' => 'Should return NULL'], NULL],
-      [['user' => $user_context->reveal()], NULL],
-      [['entity' => $entity_context->reveal()], NULL],
-      [['node' => $node_context_scalar->reveal()], $node_entity->reveal()],
+    $contexts = [
+      'node' => ['node' => $node_context->reveal(), 'appeals' => 'Not called'],
+      'exception' => ['node' => $node_context_with_exception->reveal()],
+      'unknown' => ['countries' => 'Should return NULL'],
+      'user' => ['user' => $user_context->reveal()],
+      'entity' => ['entity' => $entity_context->reveal()],
+      'scalar' => ['node' => $node_context_scalar->reveal()],
     ];
-  }
-
-  /**
-   * Test getting node from contexts.
-   *
-   * @group ContextHelper
-   * @dataProvider getNodeFromContextsDataProvider
-   */
-  public function testGetNodeFromContexts($contexts, $result) {
-    $this->assertEquals($result, ContextHelper::getNodeFromContexts($contexts));
+    $result = $returns_node ? $node_entity->reveal() : NULL;
+    $this->assertEquals($result, ContextHelper::getNodeFromContexts($contexts[$case]));
   }
 
 }

@@ -5,12 +5,12 @@ namespace Drupal\Tests\ghi_blocks\Kernel\Global;
 use Drupal\Core\Form\FormState;
 use Drupal\ghi_blocks\Plugin\Block\GlobalPage\FeaturedOperations;
 use Drupal\Tests\ghi_blocks\Kernel\BlockKernelTestBase;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
  * Tests the featured operations block plugin.
- *
- * @group ghi_blocks
  */
+#[Group('ghi_blocks')]
 class FeaturedOperationsTest extends BlockKernelTestBase {
 
   /**

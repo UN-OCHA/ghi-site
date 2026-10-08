@@ -10,15 +10,18 @@ use Drupal\ghi_geojson\Controller\GeoJsonSourcesController;
 use Drupal\ghi_geojson\GeoJson;
 use Drupal\ghi_geojson\GeoJsonDirectoryList;
 use Drupal\Tests\UnitTestCase;
+use PHPUnit\Framework\Attributes\CoversMethod;
+use PHPUnit\Framework\Attributes\Group;
 use Prophecy\PhpUnit\ProphecyTrait;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
  * Unit tests for the GeoJsonSourcesController.
- *
- * @coversDefaultClass \Drupal\ghi_geojson\Controller\GeoJsonSourcesController
- * @group ghi_geojson
  */
+#[CoversMethod(GeoJsonSourcesController::class, 'create')]
+#[CoversMethod(GeoJsonSourcesController::class, 'directoryTitle')]
+#[CoversMethod(GeoJsonSourcesController::class, 'sourcesPage')]
+#[Group('ghi_geojson')]
 class GeoJsonSourcesControllerTest extends UnitTestCase {
 
   use ProphecyTrait;
@@ -92,8 +95,6 @@ class GeoJsonSourcesControllerTest extends UnitTestCase {
 
   /**
    * Tests controller instantiation with all required services.
-   *
-   * @covers ::create
    */
   public function testControllerConstruction(): void {
     $this->assertInstanceOf(GeoJsonSourcesController::class, $this->controller);
@@ -116,8 +117,6 @@ class GeoJsonSourcesControllerTest extends UnitTestCase {
 
   /**
    * Tests directoryTitle method with basic parameters.
-   *
-   * @covers ::directoryTitle
    */
   public function testDirectoryTitle(): void {
     // Test with normal version.
@@ -135,8 +134,6 @@ class GeoJsonSourcesControllerTest extends UnitTestCase {
 
   /**
    * Tests directoryTitle method with edge case parameters.
-   *
-   * @covers ::directoryTitle
    */
   public function testDirectoryTitleEdgeCases(): void {
     // Test with empty strings.
@@ -154,8 +151,6 @@ class GeoJsonSourcesControllerTest extends UnitTestCase {
 
   /**
    * Tests sourcesPage method with no data.
-   *
-   * @covers ::sourcesPage
    */
   public function testSourcesPageNoData(): void {
     $result = $this->controller->sourcesPage();

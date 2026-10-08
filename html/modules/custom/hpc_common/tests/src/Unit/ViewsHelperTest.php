@@ -4,17 +4,19 @@ namespace Drupal\Tests\hpc_common\Unit;
 
 use Drupal\Tests\UnitTestCase;
 use Drupal\hpc_common\Helpers\ViewsHelper;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
- * @covers Drupal\hpc_common\Helpers\ViewsHelper
+ * Tests the Views helper.
  */
+#[CoversClass(ViewsHelper::class)]
 class ViewsHelperTest extends UnitTestCase {
 
   /**
    * Test defaultFieldOptions returns expected structure.
-   *
-   * @group ViewsHelper
    */
+  #[Group('ViewsHelper')]
   public function testDefaultFieldOptionsStructure() {
     $options = ViewsHelper::defaultFieldOptions();
 
@@ -36,9 +38,8 @@ class ViewsHelperTest extends UnitTestCase {
 
   /**
    * Test defaultFieldOptions default values.
-   *
-   * @group ViewsHelper
    */
+  #[Group('ViewsHelper')]
   public function testDefaultFieldOptionsDefaultValues() {
     $options = ViewsHelper::defaultFieldOptions();
 
@@ -58,9 +59,8 @@ class ViewsHelperTest extends UnitTestCase {
 
   /**
    * Test defaultFieldOptions alter key structure.
-   *
-   * @group ViewsHelper
    */
+  #[Group('ViewsHelper')]
   public function testDefaultFieldOptionsAlterKeys() {
     $options = ViewsHelper::defaultFieldOptions();
     $alter = $options['alter'];
@@ -80,9 +80,8 @@ class ViewsHelperTest extends UnitTestCase {
 
   /**
    * Test defaultFieldOptions returns array.
-   *
-   * @group ViewsHelper
    */
+  #[Group('ViewsHelper')]
   public function testDefaultFieldOptionsReturnsArray() {
     $options = ViewsHelper::defaultFieldOptions();
     $this->assertIsArray($options);

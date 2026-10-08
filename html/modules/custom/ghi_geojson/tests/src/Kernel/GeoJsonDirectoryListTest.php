@@ -5,13 +5,17 @@ namespace Drupal\Tests\ghi_geojson\Kernel;
 use Drupal\Core\File\FileSystemInterface;
 use Drupal\ghi_geojson\GeoJsonDirectoryList;
 use Drupal\KernelTests\KernelTestBase;
+use PHPUnit\Framework\Attributes\CoversMethod;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
  * Kernel tests for the GeoJsonDirectoryList service.
- *
- * @coversDefaultClass \Drupal\ghi_geojson\GeoJsonDirectoryList
- * @group ghi_geojson
  */
+#[CoversMethod(GeoJsonDirectoryList::class, 'buildDirectoryListing')]
+#[CoversMethod(GeoJsonDirectoryList::class, 'buildFileItem')]
+#[CoversMethod(GeoJsonDirectoryList::class, 'buildFileItems')]
+#[CoversMethod(GeoJsonDirectoryList::class, 'buildFileLink')]
+#[Group('ghi_geojson')]
 class GeoJsonDirectoryListTest extends KernelTestBase {
 
   /**
@@ -113,10 +117,6 @@ class GeoJsonDirectoryListTest extends KernelTestBase {
 
   /**
    * Tests building directory listing with files.
-   *
-   * @covers ::buildDirectoryListing
-   * @covers ::buildFileItems
-   * @covers ::buildFileLink
    */
   public function testBuildDirectoryListingWithFiles(): void {
     $result = $this->geoJsonDirectoryList->buildDirectoryListing($this->testDirectory);
@@ -149,8 +149,6 @@ class GeoJsonDirectoryListTest extends KernelTestBase {
 
   /**
    * Tests building directory listing with subdirectories.
-   *
-   * @covers ::buildDirectoryListing
    */
   public function testBuildDirectoryListingWithSubdirectories(): void {
     $result = $this->geoJsonDirectoryList->buildDirectoryListing($this->testDirectory);
@@ -184,9 +182,6 @@ class GeoJsonDirectoryListTest extends KernelTestBase {
 
   /**
    * Tests building directory listing with minified files.
-   *
-   * @covers ::buildDirectoryListing
-   * @covers ::buildFileItems
    */
   public function testBuildDirectoryListingWithMinifiedFiles(): void {
     $result = $this->geoJsonDirectoryList->buildDirectoryListing($this->testDirectory);
@@ -212,10 +207,6 @@ class GeoJsonDirectoryListTest extends KernelTestBase {
 
   /**
    * Tests building listing without links.
-   *
-   * @covers ::buildDirectoryListing
-   * @covers ::buildFileItems
-   * @covers ::buildFileItem
    */
   public function testBuildListingWithoutLinks(): void {
     $result = $this->geoJsonDirectoryList->buildDirectoryListing($this->testDirectory, FALSE);
@@ -241,8 +232,6 @@ class GeoJsonDirectoryListTest extends KernelTestBase {
 
   /**
    * Tests empty directory listing.
-   *
-   * @covers ::buildDirectoryListing
    */
   public function testEmptyDirectoryListing(): void {
     $empty_dir = 'public://test_empty_directory';
@@ -258,8 +247,6 @@ class GeoJsonDirectoryListTest extends KernelTestBase {
 
   /**
    * Tests non-existent directory handling.
-   *
-   * @covers ::buildDirectoryListing
    */
   public function testNonExistentDirectoryHandling(): void {
     $non_existent_dir = 'public://does_not_exist';
@@ -273,8 +260,6 @@ class GeoJsonDirectoryListTest extends KernelTestBase {
 
   /**
    * Tests mixed files and directories.
-   *
-   * @covers ::buildDirectoryListing
    */
   public function testMixedFilesAndDirectories(): void {
     $result = $this->geoJsonDirectoryList->buildDirectoryListing($this->testDirectory);
@@ -300,10 +285,6 @@ class GeoJsonDirectoryListTest extends KernelTestBase {
 
   /**
    * Tests file items build correctly.
-   *
-   * @covers ::buildFileItems
-   * @covers ::buildFileLink
-   * @covers ::buildFileItem
    */
   public function testFileItemsBuildCorrectly(): void {
     $result = $this->geoJsonDirectoryList->buildDirectoryListing($this->testDirectory, TRUE);
@@ -334,29 +315,6 @@ class GeoJsonDirectoryListTest extends KernelTestBase {
       }
     }
     $this->assertTrue($admin1_markup_found, 'Should find file as markup when links disabled.');
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  protected function tearDown(): void {
-    // Clean up test directories if they exist.
-    try {
-      $paths_to_clean = [
-        $this->testDirectory,
-        'public://test_empty_directory',
-      ];
-
-      foreach ($paths_to_clean as $path) {
-        if ($this->fileSystem && is_dir($path)) {
-          $this->fileSystem->deleteRecursive($path);
-        }
-      }
-    } catch (\Exception $e) {
-      // Ignore cleanup errors during tearDown.
-    }
-
-    parent::tearDown();
   }
 
 }

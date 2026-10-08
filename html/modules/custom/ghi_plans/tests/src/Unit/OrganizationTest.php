@@ -5,12 +5,12 @@ namespace Drupal\Tests\ghi_plans\Unit;
 use Drupal\Core\Routing\UrlGeneratorInterface;
 use Drupal\Core\Url;
 use Drupal\ghi_plans\ApiObjects\Organization;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
  * Tests the Organization API object.
- *
- * @group ghi_plans
  */
+#[Group('ghi_plans')]
 class OrganizationTest extends ApiObjectTestBase {
 
   /**

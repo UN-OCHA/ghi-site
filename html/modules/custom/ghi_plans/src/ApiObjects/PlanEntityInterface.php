@@ -41,8 +41,8 @@ interface PlanEntityInterface extends ApiObjectInterface {
    * @param string $type
    *   The type for the name to be returned.
    *
-   * @return string
-   *   The name according to $type.
+   * @return string|null
+   *   The name according to $type, or NULL for an unsupported type.
    */
   public function getCustomName($type);
 

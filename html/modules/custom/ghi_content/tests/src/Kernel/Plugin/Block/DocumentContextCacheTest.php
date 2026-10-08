@@ -20,12 +20,12 @@ use Drupal\Tests\ghi_base_objects\Traits\FieldTestTrait;
 use Drupal\Tests\ghi_content\Traits\ContentTestTrait;
 use Drupal\Tests\taxonomy\Traits\TaxonomyTestTrait;
 use Drupal\Tests\user\Traits\UserCreationTrait;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
  * Tests document block cache metadata for rejected article contexts.
- *
- * @group ghi_content
  */
+#[Group('ghi_content')]
 class DocumentContextCacheTest extends KernelTestBase {
 
   use ContentTestTrait;

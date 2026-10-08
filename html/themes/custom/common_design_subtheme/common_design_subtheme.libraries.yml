@@ -8,6 +8,10 @@ global-styling:
   dependencies:
     - core/jquery
     - core/once
+    # The header search form appears on every page, so load its styles globally.
+    # This also keeps anonymous BigPipe responses from injecting <link> elements
+    # before the block and breaking Common Design dropdown setup.
+    - common_design/cd-form
     - common_design_subtheme/sorttable
     - common_design_subtheme/select2-styling
     - common_design_subtheme/icons

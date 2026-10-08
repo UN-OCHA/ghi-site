@@ -9,12 +9,12 @@ use Drupal\layout_builder\Plugin\SectionStorage\OverridesSectionStorage;
 use Drupal\layout_builder\Section;
 use Drupal\node\Entity\Node;
 use Drupal\node\Entity\NodeType;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
  * Tests blocks that can have with managed files uploaded.
- *
- * @group ghi_blocks
  */
+#[Group('ghi_blocks')]
 class BlocksWithManagedFilesTest extends BlockKernelTestBase {
 
   use UserCreationTrait;

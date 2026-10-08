@@ -21,13 +21,14 @@ use Drupal\Tests\field\Traits\EntityReferenceFieldCreationTrait;
 use Drupal\Tests\ghi_base_objects\Traits\FieldTestTrait;
 use Drupal\Tests\ghi_content\Traits\ContentTestTrait;
 use Drupal\Tests\hpc_api\Traits\PrivateAccessorTrait;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
 use Prophecy\Argument;
 
 /**
  * Tests the import manager.
- *
- * @group ghi_content
  */
+#[Group('ghi_content')]
 class ImportManagerTest extends KernelTestBase {
 
   use TaxonomyTestTrait;
@@ -54,6 +55,8 @@ class ImportManagerTest extends KernelTestBase {
     'file',
     'filter',
     'hpc_api',
+    'hpc_common',
+    'ghi_base_objects',
     'ghi_blocks',
     'ghi_content',
     'ghi_form_elements',
@@ -239,7 +242,7 @@ class ImportManagerTest extends KernelTestBase {
   /**
    * Tests that multiple new components are positioned correctly.
    */
-  public function dataProviderPositionNewComponents() {
+  public static function dataProviderPositionNewComponents() {
     // The 'existing_plugins' holds a list of to be created plugin types that
     // will be turned into section components during the test.
     // The 'expected_order' holds the keys of the section components in
@@ -354,9 +357,8 @@ class ImportManagerTest extends KernelTestBase {
 
   /**
    * Tests that multiple new paragraphs are positioned correctly.
-   *
-   * @dataProvider dataProviderPositionNewComponents
    */
+  #[DataProvider('dataProviderPositionNewComponents')]
   public function testPositionNewComponents($existing_plugins, $new_paragraphs, $remote_order, $expected_order) {
 
     /** @var \Drupal\ghi_content\Import\ImportManager $import_manager */

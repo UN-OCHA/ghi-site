@@ -19,6 +19,7 @@ use Drupal\layout_builder\Section;
 use Drupal\layout_builder\SectionComponent;
 use Drupal\Tests\hpc_api\Traits\PrivateAccessorTrait;
 use Drupal\Tests\user\Traits\UserCreationTrait;
+use PHPUnit\Framework\Attributes\Group;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
@@ -26,9 +27,8 @@ use Symfony\Component\Routing\Exception\RouteNotFoundException;
 
 /**
  * Tests the lazy map data and block preview controllers.
- *
- * @group ghi_blocks
  */
+#[Group('ghi_blocks')]
 class MapDataControllerTest extends KernelTestBase {
 
   use UserCreationTrait;
@@ -46,6 +46,8 @@ class MapDataControllerTest extends KernelTestBase {
     'layout_discovery',
     'migrate',
     'hpc_api',
+    'hpc_common',
+    'hpc_downloads',
     'ghi_form_elements',
     'ghi_sections',
     'ghi_blocks',
@@ -94,10 +96,16 @@ class MapDataControllerTest extends KernelTestBase {
       'current_uri' => $uri,
       '_wrapper_format' => 'drupal_ajax',
     ]);
-    $this->container->get('request_stack')->push($request);
+    $request_stack = $this->container->get('request_stack');
+    $request_stack->push($request);
 
-    $controller = AjaxBlockController::create($this->container);
-    $response = $controller->loadBlock('plan_attachment_map', 'unsaved-map');
+    try {
+      $controller = AjaxBlockController::create($this->container);
+      $response = $controller->loadBlock('plan_attachment_map', 'unsaved-map');
+    }
+    finally {
+      $request_stack->pop();
+    }
     $command = $response->getCommands()[0];
     $this->assertSame('html', $command['method']);
     $this->assertSame('.ghi-block-unsaved-map > .block-content', $command['selector']);
@@ -135,10 +143,16 @@ class MapDataControllerTest extends KernelTestBase {
     $access_manager->expects($this->once())->method('checkRequest')->with($this->isInstanceOf(Request::class), $this->container->get('current_user'), TRUE)->willReturn(AccessResult::forbidden());
     $this->container->set('router.no_access_checks', $router);
     $this->container->set('access_manager', $access_manager);
-    $this->container->get('request_stack')->push(Request::create('/map-data/test/uuid'));
+    $request_stack = $this->container->get('request_stack');
+    $request_stack->push(Request::create('/map-data/test/uuid'));
 
-    $controller = MapDataController::create($this->container);
-    $access = $this->callPrivateMethod($controller, 'checkUriAccess', ['/layout_builder/import/block/overrides/node.1/0/content']);
+    try {
+      $controller = MapDataController::create($this->container);
+      $access = $this->callPrivateMethod($controller, 'checkUriAccess', ['/layout_builder/import/block/overrides/node.1/0/content']);
+    }
+    finally {
+      $request_stack->pop();
+    }
     $this->assertTrue($access->isForbidden());
     $this->assertSame(0, $access->getCacheMaxAge());
   }
@@ -151,10 +165,16 @@ class MapDataControllerTest extends KernelTestBase {
       'current_uri' => '/admin',
       'map_id' => 'test-map',
     ]);
-    $this->container->get('request_stack')->push($request);
+    $request_stack = $this->container->get('request_stack');
+    $request_stack->push($request);
 
-    $controller = MapDataController::create($this->container);
-    $response = $controller->data('plan_attachment_map', 'block_uuid');
+    try {
+      $controller = MapDataController::create($this->container);
+      $response = $controller->data('plan_attachment_map', 'block_uuid');
+    }
+    finally {
+      $request_stack->pop();
+    }
 
     $this->assertSame(403, $response->getStatusCode());
     $this->assertSame([], $response->getCommands());
@@ -170,10 +190,16 @@ class MapDataControllerTest extends KernelTestBase {
       'map_id' => 'test-map',
       'data_index' => 'people-targeted-0',
     ]);
-    $this->container->get('request_stack')->push($request);
+    $request_stack = $this->container->get('request_stack');
+    $request_stack->push($request);
 
-    $controller = MapDataController::create($this->container);
-    $response = $controller->dataFragment('plan_attachment_map', 'block_uuid');
+    try {
+      $controller = MapDataController::create($this->container);
+      $response = $controller->dataFragment('plan_attachment_map', 'block_uuid');
+    }
+    finally {
+      $request_stack->pop();
+    }
 
     $this->assertSame(403, $response->getStatusCode());
     $this->assertContains('user.permissions', $response->getCacheableMetadata()->getCacheContexts());
@@ -189,10 +215,16 @@ class MapDataControllerTest extends KernelTestBase {
       'data_index' => 'people-targeted-0',
       'object_id' => '10',
     ]);
-    $this->container->get('request_stack')->push($request);
+    $request_stack = $this->container->get('request_stack');
+    $request_stack->push($request);
 
-    $controller = MapDataController::create($this->container);
-    $response = $controller->modalData('plan_attachment_map', 'block_uuid');
+    try {
+      $controller = MapDataController::create($this->container);
+      $response = $controller->modalData('plan_attachment_map', 'block_uuid');
+    }
+    finally {
+      $request_stack->pop();
+    }
 
     $this->assertSame(403, $response->getStatusCode());
     $this->assertContains('user.permissions', $response->getCacheableMetadata()->getCacheContexts());

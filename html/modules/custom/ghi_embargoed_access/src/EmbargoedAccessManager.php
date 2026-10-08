@@ -23,7 +23,7 @@ use Drupal\ghi_content\Traits\ContentPathTrait;
 use Drupal\ghi_sections\Entity\SectionNodeInterface;
 use Drupal\ghi_subpages\Entity\SubpageNodeInterface;
 use Drupal\node\Entity\NodeType;
-use Drupal\node\NodeForm;
+use Drupal\node\Form\NodeForm;
 use Drupal\node\NodeInterface;
 use Drupal\search_api\Plugin\search_api\datasource\ContentEntityTrackingManager;
 

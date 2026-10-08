@@ -4,12 +4,12 @@ namespace Drupal\Tests\ghi_plans\Kernel\Entities;
 
 use Drupal\ghi_plans\ApiObjects\Attachments\CaseloadAttachmentInterface;
 use Drupal\Tests\ghi_base_objects\Kernel\BaseObjectKernelTestBase;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
  * Tests the API entity objects.
- *
- * @group ghi_plans
  */
+#[Group('ghi_plans')]
 class PlanTest extends BaseObjectKernelTestBase {
 
   /**

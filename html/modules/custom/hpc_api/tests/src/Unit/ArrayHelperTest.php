@@ -4,16 +4,20 @@ namespace Drupal\Tests\hpc_api\Unit;
 
 use Drupal\hpc_api\Helpers\ArrayHelper;
 use Drupal\Tests\UnitTestCase;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
- * @covers Drupal\hpc_api\Helpers\ArrayHelper
+ * Tests the API array helper.
  */
+#[CoversClass(ArrayHelper::class)]
 class ArrayHelperTest extends UnitTestCase {
 
   /**
    * Data provider for filterArrayByProperties.
    */
-  public function filterArrayByPropertiesDataProvider() {
+  public static function filterArrayByPropertiesDataProvider() {
     $array = [];
     $outputWithPopulationFilter = [];
     $outputWithContinentFilter = [];
@@ -53,10 +57,9 @@ class ArrayHelperTest extends UnitTestCase {
 
   /**
    * Test filter array by property.
-   *
-   * @group ArrayHelper
-   * @dataProvider filterArrayByPropertiesDataProvider
    */
+  #[Group('ArrayHelper')]
+  #[DataProvider('filterArrayByPropertiesDataProvider')]
   public function testFilterArrayByProperties($array, $properties, $result) {
     $this->assertEquals($result, ArrayHelper::filterArrayByProperties($array, $properties));
   }
@@ -64,7 +67,7 @@ class ArrayHelperTest extends UnitTestCase {
   /**
    * Data provider for filterArrayBySearchArray.
    */
-  public function filterArrayBySearchArrayDataProvider() {
+  public static function filterArrayBySearchArrayDataProvider() {
     // Prepare a mock array.
     $array = [
       0 => [
@@ -104,10 +107,9 @@ class ArrayHelperTest extends UnitTestCase {
 
   /**
    * Test filter array by search array.
-   *
-   * @group ArrayHelper
-   * @dataProvider filterArrayBySearchArrayDataProvider
    */
+  #[Group('ArrayHelper')]
+  #[DataProvider('filterArrayBySearchArrayDataProvider')]
   public function testFilterArrayBySearchArray($data, $search_array, $result_order) {
     $result = ArrayHelper::filterArrayBySearchArray($data, $search_array);
     $expected = array_combine($result_order, array_map(function ($key) use ($data) {
@@ -119,7 +121,7 @@ class ArrayHelperTest extends UnitTestCase {
   /**
    * Data provider for sortArray.
    */
-  public function sortArrayDataProvider() {
+  public static function sortArrayDataProvider() {
     $array = [
       'apple' => [
         'total' => 200,
@@ -145,10 +147,9 @@ class ArrayHelperTest extends UnitTestCase {
 
   /**
    * Test sort array.
-   *
-   * @group ArrayHelper
-   * @dataProvider sortArrayDataProvider
    */
+  #[Group('ArrayHelper')]
+  #[DataProvider('sortArrayDataProvider')]
   public function testSortArray($data, $order, $sort, $sort_type, $result_order) {
     ArrayHelper::sortArray($data, $order, $sort, $sort_type);
     $expected = array_combine($result_order, array_map(function ($key) use ($data) {
@@ -160,7 +161,7 @@ class ArrayHelperTest extends UnitTestCase {
   /**
    * Data provider for sortArrayByProgress.
    */
-  public function sortArrayByProgressDataProvider() {
+  public static function sortArrayByProgressDataProvider() {
     $array = [
       0 => ['total' => 200, 'name' => 'Apple'],
       1 => ['total' => 500, 'name' => 'Strawberry'],
@@ -175,10 +176,9 @@ class ArrayHelperTest extends UnitTestCase {
 
   /**
    * Test sort array by progress.
-   *
-   * @group ArrayHelper
-   * @dataProvider sortArrayByProgressDataProvider
    */
+  #[Group('ArrayHelper')]
+  #[DataProvider('sortArrayByProgressDataProvider')]
   public function testSortArrayByProgress($data, $order, $sort, $total, $result_order) {
     ArrayHelper::sortArrayByProgress($data, $order, $sort, $total);
     $expected = array_combine($result_order, array_map(function ($key) use ($data) {
@@ -190,7 +190,7 @@ class ArrayHelperTest extends UnitTestCase {
   /**
    * Data provider for sortArrayByCompositeArrayKey.
    */
-  public function sortArrayByCompositeArrayKeyDataProvider() {
+  public static function sortArrayByCompositeArrayKeyDataProvider() {
     $array = [
       0 => [
         'name' => 'WASH Emergency Rapid Response to Conflict Affected Populations',
@@ -222,10 +222,9 @@ class ArrayHelperTest extends UnitTestCase {
 
   /**
    * Test sort array by composite array key.
-   *
-   * @group ArrayHelper
-   * @dataProvider sortArrayByCompositeArrayKeyDataProvider
    */
+  #[Group('ArrayHelper')]
+  #[DataProvider('sortArrayByCompositeArrayKeyDataProvider')]
   public function testSortArrayByCompositeArrayKey($data, $order, $sort, $result_order) {
     ArrayHelper::sortArrayByCompositeArrayKey($data, $order, $sort);
     $expected = array_combine($result_order, array_map(function ($key) use ($data) {
@@ -237,7 +236,7 @@ class ArrayHelperTest extends UnitTestCase {
   /**
    * Data provider for sortArrayByObjectListProperty.
    */
-  public function sortArrayByObjectListPropertyDataProvider() {
+  public static function sortArrayByObjectListPropertyDataProvider() {
     $array = [
       0 => [
         'name' => 'WASH Emergency Rapid Response to Conflict Affected Populations',
@@ -270,10 +269,9 @@ class ArrayHelperTest extends UnitTestCase {
 
   /**
    * Test sort array by object list property.
-   *
-   * @group ArrayHelper
-   * @dataProvider sortArrayByObjectListPropertyDataProvider
    */
+  #[Group('ArrayHelper')]
+  #[DataProvider('sortArrayByObjectListPropertyDataProvider')]
   public function testSortArrayByObjectListProperty($data, $order, $sort, $result_order) {
     ArrayHelper::sortArrayByObjectListProperty($data, $order, $sort);
     $expected = array_combine($result_order, array_map(function ($key) use ($data) {
@@ -285,7 +283,7 @@ class ArrayHelperTest extends UnitTestCase {
   /**
    * Data provider for findFirstItemByProperties.
    */
-  public function findFirstItemByPropertiesDataProvider() {
+  public static function findFirstItemByPropertiesDataProvider() {
     $array = [
       0 => ['name' => 'Bill', 'surname' => 'Gates', 'country' => 'USA'],
       1 => ['name' => 'Abdul', 'surname' => 'Kalam', 'country' => 'India'],
@@ -300,10 +298,9 @@ class ArrayHelperTest extends UnitTestCase {
 
   /**
    * Test find first by property.
-   *
-   * @group ArrayHelper
-   * @dataProvider findFirstItemByPropertiesDataProvider
    */
+  #[Group('ArrayHelper')]
+  #[DataProvider('findFirstItemByPropertiesDataProvider')]
   public function testFindFirstItemByProperties($data, $parameters, $result) {
     $this->assertEquals($result, ArrayHelper::findFirstItemByProperties($data, $parameters));
   }
@@ -311,7 +308,7 @@ class ArrayHelperTest extends UnitTestCase {
   /**
    * Data provider for extendAssociativeArray.
    */
-  public function extendAssociativeArrayDataProvider() {
+  public static function extendAssociativeArrayDataProvider() {
     $array = [
       'name' => 'Bill',
       'surname' => 'Gates',
@@ -342,10 +339,9 @@ class ArrayHelperTest extends UnitTestCase {
 
   /**
    * Test extending an associative array.
-   *
-   * @group ArrayHelper
-   * @dataProvider extendAssociativeArrayDataProvider
    */
+  #[Group('ArrayHelper')]
+  #[DataProvider('extendAssociativeArrayDataProvider')]
   public function testExtendAssociativeArray($data, $key, $value, $pos, $result) {
     ArrayHelper::extendAssociativeArray($data, $key, $value, $pos);
     $this->assertEquals($result, $data);
@@ -354,7 +350,7 @@ class ArrayHelperTest extends UnitTestCase {
   /**
    * Data provider for sumObjectsByProperty.
    */
-  public function sumObjectsByPropertyDataProvider() {
+  public static function sumObjectsByPropertyDataProvider() {
     $array = [
       (object) ['item' => 'mobile', 'cost' => 1500],
       (object) ['item' => 'tshirt', 'cost' => 200],
@@ -369,10 +365,9 @@ class ArrayHelperTest extends UnitTestCase {
 
   /**
    * Test sum objects by property.
-   *
-   * @group ArrayHelper
-   * @dataProvider sumObjectsByPropertyDataProvider
    */
+  #[Group('ArrayHelper')]
+  #[DataProvider('sumObjectsByPropertyDataProvider')]
   public function testSumObjectsByProperty($data, $property, $result) {
     $this->assertEquals($result, ArrayHelper::sumObjectsByProperty($data, $property));
   }
@@ -380,7 +375,7 @@ class ArrayHelperTest extends UnitTestCase {
   /**
    * Data provider for sortObjectsByProperty.
    */
-  public function sortObjectsByPropertyDataProvider() {
+  public static function sortObjectsByPropertyDataProvider() {
     $array = [
       0 => (object) ['item' => 'mobile', 'cost' => 1500],
       1 => (object) ['item' => 'tshirt', 'cost' => 200],
@@ -397,10 +392,9 @@ class ArrayHelperTest extends UnitTestCase {
 
   /**
    * Test sort objects by property.
-   *
-   * @group ArrayHelper
-   * @dataProvider sortObjectsByPropertyDataProvider
    */
+  #[Group('ArrayHelper')]
+  #[DataProvider('sortObjectsByPropertyDataProvider')]
   public function testSortObjectsByProperty($data, $property, $sort, $sort_type, $result_order) {
     ArrayHelper::sortObjectsByProperty($data, $property, $sort, $sort_type);
     $expected = array_combine($result_order, array_map(function ($key) use ($data) {
@@ -412,7 +406,7 @@ class ArrayHelperTest extends UnitTestCase {
   /**
    * Data provider for sortObjectsByMethod.
    */
-  public function sortObjectsByMethodDataProvider() {
+  public static function sortObjectsByMethodDataProvider() {
     $class = function ($item, $cost) {
       // phpcs:disable
       return new class ($item, $cost) {
@@ -444,10 +438,9 @@ class ArrayHelperTest extends UnitTestCase {
 
   /**
    * Test sort objects by property.
-   *
-   * @group ArrayHelper
-   * @dataProvider sortObjectsByMethodDataProvider
    */
+  #[Group('ArrayHelper')]
+  #[DataProvider('sortObjectsByMethodDataProvider')]
   public function testSortObjectsByMethod($data, $method, $sort, $sort_type, $result_order) {
     ArrayHelper::sortObjectsByMethod($data, $method, $sort, $sort_type);
     $expected = array_combine($result_order, array_map(function ($key) use ($data) {
@@ -458,9 +451,8 @@ class ArrayHelperTest extends UnitTestCase {
 
   /**
    * Test keyByProperty method.
-   *
-   * @group ArrayHelper
    */
+  #[Group('ArrayHelper')]
   public function testKeyByProperty() {
     $object1 = new \stdClass();
     $object1->id = 1;
@@ -482,7 +474,7 @@ class ArrayHelperTest extends UnitTestCase {
   /**
    * Data provider for filterArray.
    */
-  public function filterArrayDataProvider() {
+  public static function filterArrayDataProvider() {
     $array = [
       ['id' => 1, 'name' => 'One', 'category' => 'a'],
       ['id' => 2, 'name' => 'Two', 'category' => 'b'],
@@ -499,11 +491,11 @@ class ArrayHelperTest extends UnitTestCase {
   /**
    * Data provider for filterArray with object methods.
    */
-  public function filterArrayObjectMethodDataProvider() {
+  public static function filterArrayObjectMethodDataProvider() {
     $array = [
-      $this->createFilterableObject(1, 'caseload', [101, 102]),
-      $this->createFilterableObject(2, 'indicator', [102, 103]),
-      $this->createFilterableObject(3, 'caseload', [104]),
+      self::createFilterableObject(1, 'caseload', [101, 102]),
+      self::createFilterableObject(2, 'indicator', [102, 103]),
+      self::createFilterableObject(3, 'caseload', [104]),
     ];
 
     return [
@@ -517,7 +509,7 @@ class ArrayHelperTest extends UnitTestCase {
   /**
    * Data provider for filterArray with property paths.
    */
-  public function filterArrayPropertyPathDataProvider() {
+  public static function filterArrayPropertyPathDataProvider() {
     $array = [
       ['id' => 1, 'category' => 'a', 'parent' => (object) ['child' => (object) ['name' => 'alpha']]],
       ['id' => 2, 'category' => 'b', 'parent' => (object) ['child' => NULL]],
@@ -535,10 +527,9 @@ class ArrayHelperTest extends UnitTestCase {
 
   /**
    * Test filterArray method.
-   *
-   * @group ArrayHelper
-   * @dataProvider filterArrayDataProvider
    */
+  #[Group('ArrayHelper')]
+  #[DataProvider('filterArrayDataProvider')]
   public function testFilterArray($array, $filters, $expected_count) {
     $result = ArrayHelper::filterArray($array, $filters);
     $this->assertCount($expected_count, $result);
@@ -546,10 +537,9 @@ class ArrayHelperTest extends UnitTestCase {
 
   /**
    * Test filterArray method with object method filters.
-   *
-   * @group ArrayHelper
-   * @dataProvider filterArrayObjectMethodDataProvider
    */
+  #[Group('ArrayHelper')]
+  #[DataProvider('filterArrayObjectMethodDataProvider')]
   public function testFilterArrayWithObjectMethodFilters($array, $filters, $expected_ids) {
     $result = ArrayHelper::filterArray($array, $filters);
     $this->assertSame($expected_ids, array_map(fn($item) => $item->id, $result));
@@ -557,10 +547,9 @@ class ArrayHelperTest extends UnitTestCase {
 
   /**
    * Test filterArray method with property path filters.
-   *
-   * @group ArrayHelper
-   * @dataProvider filterArrayPropertyPathDataProvider
    */
+  #[Group('ArrayHelper')]
+  #[DataProvider('filterArrayPropertyPathDataProvider')]
   public function testFilterArrayWithPropertyPathFilters($array, $filters, $expected_ids) {
     $result = ArrayHelper::filterArray($array, $filters);
     $this->assertSame($expected_ids, array_column($result, 'id'));
@@ -569,7 +558,7 @@ class ArrayHelperTest extends UnitTestCase {
   /**
    * Data provider for sumArraysByKey.
    */
-  public function sumArraysByKeyDataProvider() {
+  public static function sumArraysByKeyDataProvider() {
     return [
       [[['value' => 10], ['value' => 20], ['value' => 30]], 'value', 60],
       [[], 'value', 0],
@@ -579,10 +568,9 @@ class ArrayHelperTest extends UnitTestCase {
 
   /**
    * Test sumArraysByKey method.
-   *
-   * @group ArrayHelper
-   * @dataProvider sumArraysByKeyDataProvider
    */
+  #[Group('ArrayHelper')]
+  #[DataProvider('sumArraysByKeyDataProvider')]
   public function testSumArraysByKey($array, $key, $expected) {
     $result = ArrayHelper::sumArraysByKey($array, $key);
     $this->assertSame($expected, $result);
@@ -591,7 +579,7 @@ class ArrayHelperTest extends UnitTestCase {
   /**
    * Create a filterable test object.
    */
-  private function createFilterableObject($id, $type, array $prototype_ids) {
+  private static function createFilterableObject($id, $type, array $prototype_ids) {
     return new class($id, $type, $prototype_ids) {
 
       /**
@@ -644,7 +632,7 @@ class ArrayHelperTest extends UnitTestCase {
   /**
    * Data provider for insertItem.
    */
-  public function insertItemDataProvider() {
+  public static function insertItemDataProvider() {
     return [
       [['a', 'b', 'c'], 1, 'x', ['a', 'x', 'b', 'c']],
       [['a', 'b', 'c'], 0, 'x', ['x', 'a', 'b', 'c']],
@@ -654,10 +642,9 @@ class ArrayHelperTest extends UnitTestCase {
 
   /**
    * Test insertItem method.
-   *
-   * @group ArrayHelper
-   * @dataProvider insertItemDataProvider
    */
+  #[Group('ArrayHelper')]
+  #[DataProvider('insertItemDataProvider')]
   public function testInsertItem($array, $pos, $value, $expected) {
     $result = ArrayHelper::insertItem($array, $pos, $value);
     $this->assertSame($expected, $result);
@@ -665,9 +652,8 @@ class ArrayHelperTest extends UnitTestCase {
 
   /**
    * Test sortObjectsByCallback method with numeric comparison.
-   *
-   * @group ArrayHelper
    */
+  #[Group('ArrayHelper')]
   public function testSortObjectsByCallbackNumeric() {
     $object1 = new \stdClass();
     $object1->value = 3;

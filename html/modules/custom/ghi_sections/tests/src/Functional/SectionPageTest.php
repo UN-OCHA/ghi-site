@@ -11,13 +11,13 @@ use Drupal\Tests\ghi_sections\Traits\SectionTestTrait;
 use Drupal\Tests\taxonomy\Traits\TaxonomyTestTrait;
 use Drupal\layout_builder\Entity\LayoutBuilderEntityViewDisplay;
 use Drupal\layout_builder\LayoutEntityHelperTrait;
+use PHPUnit\Framework\Attributes\Group;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Tests the node pages.
- *
- * @group ghi_sections
  */
+#[Group('ghi_sections')]
 class SectionPageTest extends BrowserTestBase {
 
   use BaseObjectTestTrait;

@@ -15,13 +15,13 @@ use Drupal\ghi_plans\ApiObjects\Attachments\Attachment;
 use Drupal\ghi_plans\Plugin\FabricQuery\AttachmentQuery;
 use Drupal\layout_builder\SectionStorageInterface;
 use Drupal\Tests\ghi_blocks\Kernel\PlanBlockKernelTestBase;
+use PHPUnit\Framework\Attributes\Group;
 use Symfony\Component\HttpFoundation\Request;
 
 /**
  * Tests the plan attachment map block plugin.
- *
- * @group ghi_blocks
  */
+#[Group('ghi_blocks')]
 class PlanAttachmentMapTest extends PlanBlockKernelTestBase {
 
   /**
@@ -186,8 +186,14 @@ class PlanAttachmentMapTest extends PlanBlockKernelTestBase {
     $route_match->method('getParameter')->with('section_storage')->willReturn($this->createMock(SectionStorageInterface::class));
     $this->setPrivateProperty($plugin, 'routeMatch', $route_match);
     $editor_uri = '/layout_builder/add/block/overrides/node.1/0/content/plan_attachment_map';
-    $this->container->get('request_stack')->push(Request::create($editor_uri));
-    $switcher = $this->callPrivateMethod($plugin, 'getAttachmentSwitcher');
+    $request_stack = $this->container->get('request_stack');
+    $request_stack->push(Request::create($editor_uri));
+    try {
+      $switcher = $this->callPrivateMethod($plugin, 'getAttachmentSwitcher');
+    }
+    finally {
+      $request_stack->pop();
+    }
     $this->assertSame($editor_uri, $switcher['attachment_switcher']['#uri']);
   }
 

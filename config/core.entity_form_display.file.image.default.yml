@@ -12,6 +12,11 @@ targetEntityType: file
 bundle: image
 mode: default
 content:
+  crop_preview_wrapper:
+    weight: 10
+    region: content
+    settings: {  }
+    third_party_settings: {  }
   field_file_image_alt_text:
     type: string_textfield
     weight: -4

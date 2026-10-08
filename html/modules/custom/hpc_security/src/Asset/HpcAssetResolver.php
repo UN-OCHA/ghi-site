@@ -39,6 +39,13 @@ class HpcAssetResolver implements AssetResolverInterface {
   /**
    * {@inheritdoc}
    */
+  public function getFontAssets(AttachedAssetsInterface $assets, ?LanguageInterface $language = NULL): array {
+    return $this->assetResolver->getFontAssets($assets, $language);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function getJsAssets(AttachedAssetsInterface $assets, $optimize, ?LanguageInterface $language = NULL) {
     [$js_assets_header, $js_assets_footer] = $this->assetResolver->getJsAssets($assets, $optimize);
     if (hpc_security_sends_csp_header()) {

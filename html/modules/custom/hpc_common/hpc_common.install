@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Contains the install hook for the GHI User module.
+ * Contains install and update hooks for the HPC Common module.
  */
 
 /**
@@ -12,4 +12,32 @@ function hpc_common_update_10001() {
   $storage = \Drupal::entityTypeManager()->getStorage('social_auth');
   $entities = $storage->loadMultiple();
   $storage->delete($entities);
+}
+
+/**
+ * Flush pre-Drupal 11 serialized entities from the dedicated Memcached pool.
+ */
+function hpc_common_update_11001(): string {
+  if (!\Drupal::hasService('memcache.factory')) {
+    return (string) t('Memcache is not available; no Memcached flush was needed.');
+  }
+
+  // Memcache checks bin invalidation only after unserializing cached objects.
+  // D10 objects can contain NULL properties that D11 types no longer accept.
+  // Flush at server level instead. This affects ALL keys in the pool used by
+  // the entity bin, so this environment must have a dedicated Memcached pool.
+  $error = t('The connection or flush was unsuccessful.');
+  try {
+    $memcache = \Drupal::service('memcache.factory')->get('entity');
+    if ($memcache && $memcache->flush()) {
+      return (string) t('Flushed the dedicated Memcached pool to remove pre-Drupal 11 serialized entities.');
+    }
+  }
+  catch (\Throwable $e) {
+    $error = $e->getMessage();
+  }
+
+  // Keep deployment running. This update is marked complete even on failure,
+  // so report that manual intervention is needed rather than promising a retry.
+  return (string) t('Warning: Could not flush the Memcached pool used by the entity cache. @error Deployment will continue; flush the pool manually if stale-cache errors persist.', ['@error' => $error]);
 }
