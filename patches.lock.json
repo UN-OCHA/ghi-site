@@ -1,5 +1,5 @@
 {
-    "_hash": "778c9c614508491f55973e0810051028f62b61060960707cf321bdc25d2067bf",
+    "_hash": "1286b4b40724ba6e4a34a6420cde4a6236e3e4a567790d9190e616ac4963357d",
     "patches": {
         "drupal/big_pipe_sessionless": [
             {
@@ -116,32 +116,10 @@
             },
             {
                 "package": "drupal/core",
-                "description": "Issue #3622419: Restore EntityQuery AND groups for unlimited-cardinality fields",
-                "url": "https://git.drupalcode.org/project/drupal/-/commit/802f07cf141d4332aa7edd261e8fd70abbd18329.patch",
-                "sha256": "5e6bc7c6d2a8b64796b87b14ed3e9a23b12187e8d4f0b4c76d5998d259ad5d9f",
-                "depth": 2,
-                "extra": {
-                    "provenance": "patches-file:composer.patches.json"
-                }
-            },
-            {
-                "package": "drupal/core",
                 "description": "Issue #3568380: Propagate OpenTelemetry context into fibers",
                 "url": "patches/core-opentelemetry-fibers-3568380.patch",
                 "sha256": "3b7ea0f523c377a8cb9f10f9d436572a57283d36aa0646678f27619e874d2834",
                 "depth": 2,
-                "extra": {
-                    "provenance": "patches-file:composer.patches.json"
-                }
-            }
-        ],
-        "drupal/file_mdm": [
-            {
-                "package": "drupal/file_mdm",
-                "description": "Issue #3570037: Deprecated Error",
-                "url": "https://www.drupal.org/files/issues/2026-03-20/file_mdm-nullable-3570037-8.patch",
-                "sha256": "e8594a1ac08db1c7298c350ea792e3a22d6eaf76cf8eb293f6186840410252e4",
-                "depth": 1,
                 "extra": {
                     "provenance": "patches-file:composer.patches.json"
                 }
