@@ -39,6 +39,7 @@
   </coverage>
   <testsuites>
     <testsuite name="unit">
+      <directory>./.github/tests/src/Unit</directory>
       <directory>./html/modules/custom/*/tests/src/Unit</directory>
     </testsuite>
     <testsuite name="functional">

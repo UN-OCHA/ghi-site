@@ -47,6 +47,7 @@ services:
       # Mount the folders needed for the tests.
       - "../../phpcs.xml:/srv/www/phpcs.xml:ro"
       - "../../phpunit.xml:/srv/www/phpunit.xml:ro"
+      - "../../.github/tests/src/Unit:/srv/www/.github/tests/src/Unit:ro"
       - "../../html/sites/simpletest:/srv/www/html/sites/simpletest:rw"
       # Mount local custom code.
       #- "../html/modules/custom:/srv/www/html/modules/custom:ro"
