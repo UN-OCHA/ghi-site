@@ -14,11 +14,7 @@
       "Issue #2926030: Prevent duplicate rendering of group members with #render_children": "patches/core-group-render-2926030.patch",
       "Issue #2230909: Simple decimals fail to pass validation": "https://www.drupal.org/files/issues/2026-09-19/2230909-11.4.7.patch",
       "Issue #2585169: Unable to alter local actions prior to rendering": "patches/core-local-actions-render-2585169.patch",
-      "Issue #3622419: Restore EntityQuery AND groups for unlimited-cardinality fields": "https://git.drupalcode.org/project/drupal/-/commit/802f07cf141d4332aa7edd261e8fd70abbd18329.patch",
       "Issue #3568380: Propagate OpenTelemetry context into fibers": "patches/core-opentelemetry-fibers-3568380.patch"
-    },
-    "drupal/file_mdm": {
-      "Issue #3570037: Deprecated Error": "https://www.drupal.org/files/issues/2026-03-20/file_mdm-nullable-3570037-8.patch"
     },
     "drupal/geofield_map": {
       "Issue #3479680: Hide marker button when the map position is reset": "https://git.drupalcode.org/project/geofield_map/-/merge_requests/22.patch"
