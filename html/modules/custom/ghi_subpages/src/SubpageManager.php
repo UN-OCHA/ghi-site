@@ -2,13 +2,22 @@
 
 namespace Drupal\ghi_subpages;
 
+use Drupal\Core\Entity\EntityTypeBundleInfoInterface;
+use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\Core\Extension\ModuleHandlerInterface;
+use Drupal\Core\Lock\LockBackendInterface;
+use Drupal\Core\Messenger\MessengerInterface;
+use Drupal\Core\Render\RendererInterface;
+use Drupal\Core\Session\AccountInterface;
 use Drupal\ghi_base_objects\Entity\BaseObjectInterface;
 use Drupal\ghi_sections\Entity\SectionNodeInterface;
+use Drupal\ghi_sections\SectionManager;
 use Drupal\ghi_sections\SectionTrait;
 use Drupal\ghi_subpages\Entity\SubpageManualInterface;
 use Drupal\ghi_subpages\Entity\SubpageNodeInterface;
 use Drupal\node\NodeInterface;
 use Drupal\node\NodeTypeInterface;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Subpage manager service class.
@@ -16,6 +25,37 @@ use Drupal\node\NodeTypeInterface;
 class SubpageManager extends BaseSubpageManager {
 
   use SectionTrait;
+
+  /**
+   * The lock backend for concurrent subpage creation.
+   *
+   * @var \Drupal\Core\Lock\LockBackendInterface
+   */
+  protected $lock;
+
+  /**
+   * Constructs the manager.
+   */
+  public function __construct(ModuleHandlerInterface $module_handler, EntityTypeManagerInterface $entity_type_manager, EntityTypeBundleInfoInterface $entity_type_bundle_info, SectionManager $section_manager, RendererInterface $renderer, AccountInterface $current_user, MessengerInterface $messenger, LockBackendInterface $lock) {
+    parent::__construct($module_handler, $entity_type_manager, $entity_type_bundle_info, $section_manager, $renderer, $current_user, $messenger);
+    $this->lock = $lock;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function create(ContainerInterface $container) {
+    return new static(
+      $container->get('module_handler'),
+      $container->get('entity_type.manager'),
+      $container->get('entity_type.bundle.info'),
+      $container->get('ghi_sections.manager'),
+      $container->get('renderer'),
+      $container->get('current_user'),
+      $container->get('messenger'),
+      $container->get('lock'),
+    );
+  }
 
   /**
    * A list of node bundles that are supported as subpages.
@@ -26,6 +66,8 @@ class SubpageManager extends BaseSubpageManager {
     'presence',
     'logframe',
     'progress',
+    'needs',
+    'response',
   ];
 
   /**
@@ -133,39 +175,140 @@ class SubpageManager extends BaseSubpageManager {
    *   The base node.
    */
   public function assureSubpagesForBaseNode(NodeInterface $node) {
-    if (!$this->isBaseTypeNode($node)) {
-      return;
+    // Keep full-catalog provisioning for callers that request it explicitly;
+    // ordinary saves must not recreate pages removed by editors.
+    $this->provisionStandardSubpages($node, $this->getStandardSubpageTypes());
+  }
+
+  /**
+   * Provisions configured pages without manual access checks.
+   *
+   * Initial structure is system-provisioned, so it must not depend on whether
+   * the section creator can later change its page structure manually.
+   */
+  public function provisionStandardSubpages(NodeInterface $section, array $bundles): array {
+    return $this->createStandardSubpages($section, $bundles, FALSE);
+  }
+
+  /**
+   * Loads the one standard subpage for a section and bundle.
+   */
+  public function loadStandardSubpage(NodeInterface $section, string $bundle): ?NodeInterface {
+    if (!in_array($bundle, self::SUPPORTED_SUBPAGE_TYPES, TRUE)) {
+      throw new \InvalidArgumentException("Unsupported standard subpage bundle: $bundle.");
     }
+    $matches = $this->entityTypeManager->getStorage('node')->loadByProperties([
+      'type' => $bundle,
+      'field_entity_reference' => $section->id(),
+    ]);
+    if (count($matches) > 1) {
+      throw new \UnexpectedValueException("Duplicate $bundle subpages for section {$section->id()}.");
+    }
+    return $matches ? reset($matches) : NULL;
+  }
 
-    /** @var \Drupal\node\NodeStorageInterface $node_storage */
-    $node_storage = $this->entityTypeManager->getStorage('node');
-    $node_type_storage = $this->entityTypeManager->getStorage('node_type');
-    $parent_node = $node_storage->load($node->id());
-
-    foreach ($this->getStandardSubpageTypes() as $subpage_type) {
-      if ($this->getSubpageForBaseNode($node, $subpage_type)) {
-        continue;
+  /**
+   * Creates one empty standard subpage, or returns the existing node.
+   */
+  public function createStandardSubpage(NodeInterface $section, string $bundle, bool $check_access = TRUE): NodeInterface {
+    if (!$section instanceof SectionNodeInterface) {
+      throw new \InvalidArgumentException('Standard subpages require a section parent.');
+    }
+    if (!in_array($bundle, self::SUPPORTED_SUBPAGE_TYPES, TRUE)) {
+      throw new \InvalidArgumentException("Unsupported standard subpage bundle: $bundle.");
+    }
+    if ($check_access) {
+      $this->assertManualStructureAccess($section, $bundle);
+    }
+    $lock = $this->lock;
+    $lock_name = "ghi_subpages.create.{$section->id()}.$bundle";
+    if (!$lock->acquire($lock_name)) {
+      // A competing request may be provisioning this same page; wait rather
+      // than fail immediately or proceed without exclusive creation access.
+      $lock->wait($lock_name);
+      if (!$lock->acquire($lock_name)) {
+        throw new \RuntimeException("Could not obtain the creation lock for $bundle.");
       }
-
-      /** @var \Drupal\node\NodeTypeInterface $node_type */
-      $node_type = $node_type_storage->load($subpage_type);
-      $subpage_name = $node_type->get('name');
-      /** @var \Drupal\node\NodeInterface $subpage */
-      $subpage = $node_storage->create([
-        'type' => $subpage_type,
-        'title' => $subpage_name,
-        'uid' => $parent_node->uid,
+    }
+    try {
+      // The page may have appeared while we waited, so check under the lock
+      // before saving another node for the same section and bundle.
+      if ($existing = $this->loadStandardSubpage($section, $bundle)) {
+        return $existing;
+      }
+      $node_type = $this->entityTypeManager->getStorage('node_type')->load($bundle);
+      if (!$node_type) {
+        throw new \UnexpectedValueException("Missing node type for $bundle.");
+      }
+      // Provision only the page structure: applying templates or default
+      // content here would expand creation beyond the intended workflow.
+      $subpage = $this->entityTypeManager->getStorage('node')->create([
+        'type' => $bundle,
+        'title' => $node_type->label(),
+        'uid' => $section->getOwnerId(),
+        'langcode' => $section->language()->getId(),
         'status' => NodeInterface::NOT_PUBLISHED,
-        'field_entity_reference' => [
-          'target_id' => $parent_node->id(),
-        ],
+        'field_entity_reference' => ['target_id' => $section->id()],
       ]);
       $subpage->save();
+      return $subpage;
+    }
+    finally {
+      $lock->release($lock_name);
+    }
+  }
 
-      $this->messenger->addStatus($this->t('Created @type subpage for @title', [
-        '@type' => $subpage_name,
-        '@title' => $parent_node->label(),
-      ]));
+  /**
+   * Creates selected standard subpages.
+   */
+  public function createStandardSubpages(NodeInterface $section, array $bundles, bool $check_access = TRUE): array {
+    $results = ['created' => [], 'existing' => [], 'failed' => []];
+    foreach (array_unique($bundles) as $bundle) {
+      try {
+        $existing = $this->loadStandardSubpage($section, $bundle);
+        $subpage = $this->createStandardSubpage($section, $bundle, $check_access);
+        $results[$existing ? 'existing' : 'created'][$bundle] = $subpage;
+      }
+      catch (\Throwable $exception) {
+        $results['failed'][$bundle] = $exception->getMessage();
+      }
+    }
+    return $results;
+  }
+
+  /**
+   * Deletes selected direct standard subpages after rechecking access.
+   */
+  public function deleteStandardSubpages(NodeInterface $section, array $nodes): void {
+    if (!$this->currentUser->hasPermission('manage operation page structure') || !$section->access('update', $this->currentUser)) {
+      throw new \LogicException('Not allowed to change the subpage structure.');
+    }
+    $storage = $this->entityTypeManager->getStorage('node');
+    $validated = [];
+    // Reject an invalid selection before the first deletion so a stale or
+    // foreign item cannot leave the section only partly changed.
+    foreach ($nodes as $node) {
+      $current = $storage->load($node->id());
+      if (!$current || !in_array($current->bundle(), self::SUPPORTED_SUBPAGE_TYPES, TRUE) || (int) $current->get('field_entity_reference')->target_id !== (int) $section->id() || !$current->access('delete', $this->currentUser)) {
+        throw new \LogicException('A selected subpage is missing or cannot be deleted.');
+      }
+      $validated[$current->id()] = $current;
+    }
+    foreach ($validated as $current) {
+      $current->delete();
+    }
+  }
+
+  /**
+   * Checks both structural and ordinary entity creation access.
+   *
+   * Permission to change the section structure must not bypass normal node
+   * creation access for the requested bundle.
+   */
+  protected function assertManualStructureAccess(NodeInterface $section, string $bundle): void {
+    $node_access = $this->entityTypeManager->getAccessControlHandler('node');
+    if (!$this->currentUser->hasPermission('manage operation page structure') || !$section->access('update', $this->currentUser) || !$node_access->createAccess($bundle, $this->currentUser)) {
+      throw new \LogicException("Not allowed to create the $bundle subpage.");
     }
   }
 

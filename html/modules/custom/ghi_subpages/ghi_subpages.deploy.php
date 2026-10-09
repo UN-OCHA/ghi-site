@@ -10,24 +10,6 @@ use Drupal\ghi_subpages\SubpageManager;
 use Drupal\layout_builder\Plugin\SectionStorage\OverridesSectionStorage;
 
 /**
- * Create new standard subpages.
- */
-function ghi_subpages_deploy_create_standard_subpages(&$sandbox) {
-  if (!isset($sandbox['sections'])) {
-    // Get existing content of type "section".
-    $sections = \Drupal::entityQuery('node')->condition('type', 'section')->accessCheck(FALSE)->execute();
-    $sandbox['sections'] = $sections;
-  }
-
-  $section_id = array_shift($sandbox['sections']);
-  $section = $section_id ? \Drupal::entityTypeManager()->getStorage('node')->load($section_id) : NULL;
-  if ($section) {
-    $section->save();
-  }
-  $sandbox['#finished'] = 1 / (count($sandbox['sections']) + 1);
-}
-
-/**
  * Queue logframe pages for rebuilding.
  */
 function ghi_subpages_deploy_queue_logframes(&$sandbox) {
@@ -43,6 +25,18 @@ function ghi_subpages_deploy_queue_logframes(&$sandbox) {
   return (string) t('Enqueued @total logframe nodes for rebuilding.', [
     '@total' => \Drupal::queue('ghi_subpages_logframe_rebuild_queue')->numberOfItems(),
   ]);
+}
+
+/**
+ * Schedule Solr reindexing after the new subpage bundles are configured.
+ */
+function ghi_subpages_deploy_reindex_operation_pages() {
+  $index = \Drupal::entityTypeManager()->getStorage('search_api_index')->load('solr');
+  if (!$index) {
+    return (string) t('Operation page search index was not available for reindexing.');
+  }
+  $index->reindex();
+  return (string) t('Scheduled operation page search index reindexing.');
 }
 
 /**

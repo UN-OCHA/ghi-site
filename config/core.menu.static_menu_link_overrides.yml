@@ -211,7 +211,19 @@ definitions:
     weight: 0
     expanded: false
     enabled: false
+  'admin_toolbar_tools__extra_links:node__add__needs':
+    menu_name: admin
+    parent: 'admin_toolbar_tools.extra_links:node.add'
+    weight: 0
+    expanded: false
+    enabled: false
   'admin_toolbar_tools__extra_links:node__add__progress':
+    menu_name: admin
+    parent: 'admin_toolbar_tools.extra_links:node.add'
+    weight: 0
+    expanded: false
+    enabled: false
+  'admin_toolbar_tools__extra_links:node__add__response':
     menu_name: admin
     parent: 'admin_toolbar_tools.extra_links:node.add'
     weight: 0

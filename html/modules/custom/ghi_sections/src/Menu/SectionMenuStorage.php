@@ -9,6 +9,7 @@ use Drupal\field\Entity\FieldConfig;
 use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\ghi_sections\Entity\SectionNodeInterface;
 use Drupal\ghi_sections\SectionManager;
+use Drupal\ghi_subpages\PageSetResolver;
 
 /**
  * A storage class for the section menu.
@@ -48,6 +49,13 @@ class SectionMenuStorage {
   protected $routeMatch;
 
   /**
+   * Resolves the year-dependent order of operation pages.
+   *
+   * @var \Drupal\ghi_subpages\PageSetResolver|null
+   */
+  protected $pageSetResolver;
+
+  /**
    * Construct a section menu storage object.
    *
    * @param \Drupal\ghi_sections\SectionManager $section_manager
@@ -60,12 +68,15 @@ class SectionMenuStorage {
    *   Optional: The section node to be used for the storage. If not set
    *   directly during construction, this class will try to retrieve the
    *   current section from the current route match.
+   * @param \Drupal\ghi_subpages\PageSetResolver|null $page_set_resolver
+   *   Optional resolver for year-dependent operation menu order.
    */
-  public function __construct(SectionManager $section_manager, SectionMenuPluginManager $section_menu_plugin_manager, RouteMatchInterface $route_match, ?SectionNodeInterface $section = NULL) {
+  public function __construct(SectionManager $section_manager, SectionMenuPluginManager $section_menu_plugin_manager, RouteMatchInterface $route_match, ?SectionNodeInterface $section = NULL, ?PageSetResolver $page_set_resolver = NULL) {
     $this->sectionManager = $section_manager;
     $this->sectionMenuPluginManager = $section_menu_plugin_manager;
     $this->routeMatch = $route_match;
     $this->section = $section;
+    $this->pageSetResolver = $page_set_resolver;
   }
 
   /**
@@ -114,12 +125,29 @@ class SectionMenuStorage {
       $menu_item_list->setMenuItems($default_items);
     }
     else {
-      // Make sure that each of the default items is still in the list.
-      foreach ($default_items as $item) {
+      $stored_items = array_values($menu_item_list->getAll());
+      $changed = FALSE;
+      foreach ($default_items as $position => $item) {
         if ($menu_item_list->has($item)) {
           continue;
         }
-        $menu_item_list->appendItem($item);
+        // Insert next to existing profile items without reordering a section's
+        // saved editorial navigation choices.
+        $insert_at = count($stored_items);
+        foreach (array_slice($default_items, $position + 1) as $following_item) {
+          foreach ($stored_items as $index => $stored_item) {
+            if ($stored_item->getPluginId() === $following_item->getPluginId()) {
+              $insert_at = $index;
+              break 2;
+            }
+          }
+        }
+        array_splice($stored_items, $insert_at, 0, [$item]);
+        $menu_item_list->setMenuItems($stored_items);
+        $changed = TRUE;
+      }
+      if ($changed) {
+        $this->save();
       }
     }
     return $menu_item_list;
@@ -136,6 +164,18 @@ class SectionMenuStorage {
     $menu_items = [];
     $definitions = $this->sectionMenuPluginManager->getDefinitions();
     uasort($definitions, [SortArray::class, 'sortByWeightElement']);
+    if ($this->pageSetResolver && $section instanceof SectionNodeInterface && $section->getBaseObject()?->bundle() === 'plan') {
+      $order = $this->pageSetResolver->resolve($section)->getNavigationOrder();
+      // Map bundle slots to derivative IDs so profile order applies to the
+      // actual menu plugins, including the separately managed cluster item.
+      $positions = array_flip(array_map(static fn (string $slot): string => $slot === 'clusters' ? 'cluster_subpages' : "standard_subpage:$slot", $order));
+      // Unlisted plugins retain their weight order to avoid changing unrelated
+      // section navigation when applying the operation page profile.
+      $original_positions = array_flip(array_keys($definitions));
+      uksort($definitions, static function (string $a, string $b) use ($positions, $original_positions): int {
+        return ($positions[$a] ?? count($positions) + $original_positions[$a]) <=> ($positions[$b] ?? count($positions) + $original_positions[$b]);
+      });
+    }
     foreach ($definitions as $plugin_id => $definition) {
       /** @var \Drupal\ghi_sections\Menu\SectionMenuPluginInterface $plugin */
       $plugin = $this->sectionMenuPluginManager->createInstance($plugin_id, [

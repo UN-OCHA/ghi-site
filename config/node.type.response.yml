@@ -1,0 +1,20 @@
+uuid: abddca52-9d3e-417b-ae92-8241713ca3e1
+langcode: en
+status: true
+dependencies:
+  module:
+    - ghi_subpages
+    - menu_ui
+third_party_settings:
+  menu_ui:
+    available_menus: {  }
+    parent: ''
+  ghi_subpages:
+    page_title: 'Response'
+name: Response
+type: response
+description: 'A standard response page for plan sections.'
+help: null
+new_revision: true
+preview_mode: 0
+display_submitted: false

@@ -1,0 +1,20 @@
+uuid: 89c44e4d-dbe4-47a3-aefa-204076f0a524
+langcode: en
+status: true
+dependencies:
+  module:
+    - ghi_subpages
+    - menu_ui
+third_party_settings:
+  menu_ui:
+    available_menus: {  }
+    parent: ''
+  ghi_subpages:
+    page_title: 'Needs'
+name: Needs
+type: needs
+description: 'A standard needs page for plan sections.'
+help: null
+new_revision: true
+preview_mode: 0
+display_submitted: false

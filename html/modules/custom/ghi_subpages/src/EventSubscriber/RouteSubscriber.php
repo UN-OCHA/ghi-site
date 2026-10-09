@@ -13,8 +13,8 @@ use Symfony\Component\Routing\RouteCollection;
  * modules publish route, so that it can be used even if the module is
  * configured to not show local tasks.
  *
- * It is also used for customized access checks on node creation to prevent the
- * manual creation of subpages.
+ * It also adds access checks to generic node creation and deletion routes so
+ * standard section-page structure is changed only through authorized actions.
  *
  * @see ghi_subpages_local_tasks_alter()
  * @see ghi_subpages_preprocess_node_add_list()
@@ -41,6 +41,16 @@ class RouteSubscriber extends RouteSubscriberBase {
     // @see ghi_subpages_preprocess_node_add_list().
     if ($route = $collection->get('node.add')) {
       $route->setRequirement('_custom_access', '\Drupal\ghi_subpages\Controller\SubpagesAdminController::nodeCreateAccess');
+    }
+    // Node access can be bypassed by editorial roles, so enforce the
+    // structural permission separately on the generic delete form.
+    if ($route = $collection->get('entity.node.delete_form')) {
+      $route->setRequirement('_custom_access', '\Drupal\ghi_subpages\Controller\SubpagesAdminController::nodeDeleteAccess');
+    }
+    foreach (['node.multiple_delete_confirm', 'entity.node.delete_multiple_form'] as $route_name) {
+      if ($route = $collection->get($route_name)) {
+        $route->setRequirement('_custom_access', '\Drupal\ghi_subpages\Controller\SubpagesAdminController::nodeBulkDeleteAccess');
+      }
     }
   }
 

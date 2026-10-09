@@ -35,7 +35,11 @@
       {%- for item in items -%}
         <li{{ item.attributes }}>{{ item.preview }}{{ item.value }}</li>
       {%- endfor -%}
-        <li class="overflow-item expandable second-level">
+        {#
+          Hide the complete overflow copy until JavaScript has measured the
+          available width and determined which navigation items belong here.
+        #}
+        <li class="overflow-item expandable second-level hidden">
           <div data-cd-component="cd-dropdown" data-cd-icon="arrow-down" class="cd-dropdown" aria-labelledby="dropdown-title" data-cd-toggable="{{ 'More'|t }}">
             <div class="second-level-wrapper-outer">
               <{{ list_type }}{{ attributes.addClass('overflow-navigation') }}>

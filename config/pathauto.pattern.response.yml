@@ -1,0 +1,22 @@
+uuid: c73eaa53-869c-4d39-be0c-e21ae49f45ea
+langcode: en
+status: true
+dependencies:
+  module:
+    - node
+id: response
+label: Response
+type: 'canonical_entities:node'
+pattern: '/[node:field_entity_reference:entity:url:path]/response'
+selection_criteria:
+  155bc00a-7d30-4e18-acbb-72ddb0552f43:
+    id: 'entity_bundle:node'
+    negate: false
+    uuid: 155bc00a-7d30-4e18-acbb-72ddb0552f43
+    context_mapping:
+      node: node
+    bundles:
+      response: response
+selection_logic: and
+weight: -5
+relationships: {  }
