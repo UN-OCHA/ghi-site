@@ -116,7 +116,7 @@ class PlanQuery extends FabricQueryBase {
         ],
         'IsLegacyCurrentVersion' => $current_version ? TRUE : NULL,
       ]))
-      ->execute();
+      ->execute() ?: [];
     $plan_ids = $this->extractIdsFromRawData($items);
     $plans = $this->getPlansById($plan_ids);
     if (count($plans) == count($plan_ids)) {
