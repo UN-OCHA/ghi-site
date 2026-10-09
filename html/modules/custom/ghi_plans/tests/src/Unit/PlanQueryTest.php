@@ -114,6 +114,18 @@ class PlanQueryTest extends UnitTestCase {
   }
 
   /**
+   * Tests that a failed Fabric request returns an empty plan collection.
+   *
+   * @covers ::getPlansByYear
+   */
+  public function testGetPlansByYearHandlesFabricFailure(): void {
+    $this->fabricClient->method('execute')->willReturn(FALSE);
+    $this->fabricClient->expects($this->never())->method('executeMultiple');
+
+    $this->assertSame([], $this->createPlanQuery()->getPlansByYear(2025));
+  }
+
+  /**
    * Create a plan query instance with mocked dependencies.
    *
    * @return \Drupal\ghi_plans\Plugin\FabricQuery\PlanQuery
