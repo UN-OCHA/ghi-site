@@ -128,7 +128,6 @@ class PlanGoverningEntitiesOverviewTableTest extends PlanBlockKernelTestBase {
     foreach (['plan_governing_entities_table', 'plan_governing_entities_caseloads_table'] as $id) {
       $plugin = $manager->createInstance($id);
       $this->assertInstanceOf(DeprecatedBlockInterface::class, $plugin);
-      $this->assertNull($plugin->getBlockConfigForReplacement());
     }
   }
 

@@ -23,8 +23,8 @@ function ghi_blocks_requirements($phase) {
 }
 
 /**
- * Enable ghi_image and maxlength to prevent issues during config import.
+ * Implements hook_update_last_removed().
  */
-function ghi_blocks_update_9001(&$sandbox) {
-  \Drupal::service("module_installer")->install(['ghi_image', 'maxlength']);
+function ghi_blocks_update_last_removed(): int {
+  return 9001;
 }

@@ -2,37 +2,12 @@
 
 /**
  * @file
- * Contains update hooks for the GHI Sections module.
+ * Install and update hooks for the GHI Sections module.
  */
 
 /**
- * Add the section_menu field (locked, no-ui) to content types.
+ * Implements hook_update_last_removed().
  */
-function ghi_sections_update_9000(&$sandbox) {
-  /** @var \Drupal\ghi_sections\Menu\SectionMenuStorage $section_menu_storage */
-  $section_menu_storage = \Drupal::service('ghi_sections.section_menu.storage');
-  $bundles = ['section', 'global_section'];
-  foreach ($bundles as $bundle) {
-    $section_menu_storage->addSectionMenuField($bundle);
-  }
-}
-
-/**
- * Delete content of type global section.
- */
-function ghi_sections_update_9001(&$sandbox) {
-  $entity_type_manager = \Drupal::entityTypeManager();
-  $global_sections = $entity_type_manager->getStorage('node')->loadByProperties([
-    'type' => 'global_section',
-  ]);
-  foreach ($global_sections as $global_section) {
-    $global_section->delete();
-  }
-}
-
-/**
- * Enable entity_access_password to prevent issues during config import.
- */
-function ghi_sections_update_9002(&$sandbox) {
-  \Drupal::service("module_installer")->install(['entity_access_password']);
+function ghi_sections_update_last_removed(): int {
+  return 9002;
 }

@@ -2,19 +2,19 @@
 
 /**
  * @file
- * Contains the install hook for the GHI Menu module.
- */
-
-/**
- * Implements hook_install().
+ * Install and update guidance for the GHI Menu module.
  *
- * Just make sure that the post update hook will get executed after the module
- * get's installed.
+ * Backend menu links are content entities and are not synchronized by config
+ * imports. Deploy hooks that run after configuration imports can synchronize
+ * the corresponding links. Place implementations in ghi_menu.deploy.php:
+ *
+ * @code
+ * function ghi_menu_deploy_sync_backend_menu(&$sandbox) {
+ *   $result = \Drupal::service('ghi_menu.backend_menu_manager')->syncContentViewLinks();
+ *   return t('Synchronized @saved backend menu links and deleted @deleted obsolete links.', [
+ *     '@saved' => $result['saved'],
+ *     '@deleted' => $result['deleted'],
+ *   ]);
+ * }
+ * @endcode
  */
-function ghi_menu_install($in_sync) {
-  $existing_update_functions = \Drupal::keyValue('post_update')->get('existing_updates', []);
-  $existing_update_functions = array_diff($existing_update_functions, [
-    'ghi_menu_post_update_adjust_admin_menu',
-  ]);
-  \Drupal::keyValue('post_update')->set('existing_updates', $existing_update_functions);
-}
