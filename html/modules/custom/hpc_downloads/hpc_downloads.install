@@ -162,11 +162,8 @@ function hpc_downloads_schema() {
 }
 
 /**
- * Set default value for new setting.
+ * Implements hook_update_last_removed().
  */
-function hpc_downloads_update_9001() {
-  $config_factory = \Drupal::configFactory();
-  $config = $config_factory->getEditable('hpc_downloads.settings');
-  $config->set('excel_footnotes_as_data_validation_message', FALSE);
-  $config->save(TRUE);
+function hpc_downloads_update_last_removed(): int {
+  return 9001;
 }

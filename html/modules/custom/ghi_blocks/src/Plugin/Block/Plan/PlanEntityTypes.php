@@ -15,7 +15,6 @@ use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
 use Drupal\ghi_plans\ApiObjects\Entities\PlanEntity;
 use Drupal\ghi_plans\Helpers\AttachmentHelper;
 use Drupal\hpc_common\Plugin\HPCBlockMetadata;
-use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Provides a 'PlanEntityTypes' block.
@@ -32,13 +31,6 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 class PlanEntityTypes extends GHIBlockBase implements AutomaticTitleBlockInterface, DeprecatedBlockInterface {
 
   /**
-   * The block plugin manager.
-   *
-   * @var \Drupal\Core\Block\BlockManagerInterface
-   */
-  protected $blockPluginManager;
-
-  /**
    * {@inheritdoc}
    */
   public static function metadata(): ?HPCBlockMetadata {
@@ -47,38 +39,6 @@ class PlanEntityTypes extends GHIBlockBase implements AutomaticTitleBlockInterfa
         'entities' => 'fabric_query:entity',
       ]
     );
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
-    /** @var \Drupal\ghi_blocks\Plugin\Block\Plan\PlanEntityTypes $instance */
-    $instance = parent::create($container, $configuration, $plugin_id, $plugin_definition);
-    $instance->blockPluginManager = $container->get('plugin.manager.block');
-    return $instance;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function getBlockConfigForReplacement() {
-    $entity_logframe_plugin_definition = $this->blockPluginManager->getDefinition('plan_entity_logframe', FALSE);
-    if (!$entity_logframe_plugin_definition) {
-      return NULL;
-    }
-    $config = array_filter([
-      'id' => $entity_logframe_plugin_definition['id'],
-      'provider' => $entity_logframe_plugin_definition['provider'],
-      'context_mapping' => $this->getContextMapping(),
-      'hpc' => [
-        'entities' => $this->getBlockConfig(),
-        'tables' => [
-          'attachment_tables' => [],
-        ],
-      ],
-    ]);
-    return $config;
   }
 
   /**

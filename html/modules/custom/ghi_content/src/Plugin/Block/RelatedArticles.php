@@ -6,7 +6,6 @@ use Drupal\Core\Block\Attribute\Block;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Plugin\Context\EntityContextDefinition;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
-use Drupal\ghi_blocks\Interfaces\ConfigurationUpdateInterface;
 use Drupal\ghi_blocks\Interfaces\MultiStepFormBlockInterface;
 use Drupal\ghi_blocks\Interfaces\OptionalTitleBlockInterface;
 use Drupal\ghi_content\Entity\Article;
@@ -25,7 +24,7 @@ use Drupal\hpc_common\Traits\EntityHelperTrait;
     'node' => new EntityContextDefinition('entity:node', new TranslatableMarkup('Node')),
   ],
 )]
-class RelatedArticles extends ContentBlockBase implements MultiStepFormBlockInterface, OptionalTitleBlockInterface, ConfigurationUpdateInterface {
+class RelatedArticles extends ContentBlockBase implements MultiStepFormBlockInterface, OptionalTitleBlockInterface {
 
   use EntityHelperTrait;
 
@@ -159,24 +158,6 @@ class RelatedArticles extends ContentBlockBase implements MultiStepFormBlockInte
       });
     }
     return $articles;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function updateConfiguration() {
-    $configuration = &$this->configuration;
-    if (!empty($configuration['hpc']['articles']['article_select']['entity_ids'])) {
-      return FALSE;
-    }
-    $entity_ids = &$configuration['hpc']['articles']['article_select']['entity_ids'];
-    $selected = &$configuration['hpc']['select']['selected'];
-    foreach (($selected ?? []) as $entity_id) {
-      $entity_ids[] = 'node:' . $entity_id;
-    }
-    $configuration['hpc']['display']['label'] = $configuration['hpc']['label'] ?? NULL;
-    $configuration['hpc'] = array_intersect_key($configuration['hpc'], array_flip(['articles', 'display']));
-    return TRUE;
   }
 
 }

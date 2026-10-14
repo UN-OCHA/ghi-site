@@ -2,23 +2,12 @@
 
 /**
  * @file
- * Contains ghi_templates.install.
- *
- * Update hooks for ghi_templates.
+ * Install and update hooks for the GHI Templates module.
  */
 
 /**
- * Install entity schema for the page template entity.
+ * Implements hook_update_last_removed().
  */
-function ghi_templates_update_10001(&$sandbox) {
-  $update_manager = \Drupal::entityDefinitionUpdateManager();
-  $entity_type_manager = \Drupal::entityTypeManager();
-  $entity_field_manager = \Drupal::service('entity_field.manager');
-
-  $entity_type_manager->clearCachedDefinitions();
-  $entity_type = $entity_type_manager->getDefinition('page_template');
-  $field_storage_definition = $entity_field_manager->getFieldStorageDefinitions($entity_type->id());
-
-  $update_manager->installEntityType($entity_type);
-  $update_manager->installFieldableEntityType($entity_type, $field_storage_definition);
+function ghi_templates_update_last_removed(): int {
+  return 10001;
 }

@@ -4,133 +4,108 @@ namespace Drupal\ghi_blocks\Plugin\QueueWorker;
 
 use Drupal\Component\Plugin\ConfigurableInterface;
 use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Entity\FieldableEntityInterface;
 use Drupal\Core\Entity\RevisionableInterface;
 use Drupal\Core\Entity\SynchronizableInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
+use Drupal\Core\Queue\Attribute\QueueWorker;
 use Drupal\Core\Queue\QueueWorkerBase;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\ghi_blocks\Interfaces\ConfigurationUpdateInterface;
 use Drupal\layout_builder\Plugin\SectionStorage\OverridesSectionStorage;
 use Drupal\node\NodeStorageInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
-* Queue Worker for updating plugin configuration.
-*
-* @QueueWorker(
-*   id = "ghi_blocks_plugin_configuration_update",
-*   title = @Translation("Update plugin configuration"),
-*   cron = {"time" = 60}
-* )
-*/
+ * Updates saved Layout Builder block plugin configuration.
+ */
+#[QueueWorker(
+  id: 'ghi_blocks_plugin_configuration_update',
+  title: new TranslatableMarkup('Update plugin configuration'),
+  cron: ['time' => 60]
+)]
 final class PluginConfigurationUpdate extends QueueWorkerBase implements ContainerFactoryPluginInterface {
 
   /**
-   * The entity type manager.
-   *
-   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
+   * Public constructor.
    */
-  protected $entityTypeManager;
-
-  /**
-   * Used to grab functionality from the container.
-   *
-   * @param \Symfony\Component\DependencyInjection\ContainerInterface $container
-   *   The container.
-   * @param array $configuration
-   *   Configuration array.
-   * @param mixed $plugin_id
-   *   The plugin id.
-   * @param mixed $plugin_definition
-   *   The plugin definition.
-   *
-   * @return static
-   */
-  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
-    $instance = new static($configuration, $plugin_id, $plugin_definition);
-    $instance->entityTypeManager = $container->get('entity_type.manager');
-    return $instance;
+  public function __construct(array $configuration, $plugin_id, $plugin_definition, private EntityTypeManagerInterface $entityTypeManager) {
+    parent::__construct($configuration, $plugin_id, $plugin_definition);
   }
 
   /**
-   * Processes an item in the queue.
-   *
-   * @param mixed $data
-   *   The queue item data.
+   * {@inheritdoc}
    */
-  public function processItem($data) {
-    $entity_type_id = $data->entity_type_id;
-    $entity_id = $data->entity_id;
-    $plugin_id = $data->plugin_id;
-
-    $entity_storage = $this->entityTypeManager->getStorage($entity_type_id);
-
-    /** @var \Drupal\Core\Entity\ContentEntityInterface $entity */
-    $entity = $entity_storage->loadUnchanged($entity_id);
-
-    $this->processEntity($entity, $plugin_id);
-
-    if ($entity_storage instanceof NodeStorageInterface) {
-      $revision_ids = $entity_storage->revisionIds($entity);
-      foreach ($revision_ids as $revision_id) {
-        $revision = $entity_storage->loadRevision($revision_id);
-        $this->processEntity($revision, $plugin_id);
-      }
-    }
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition): static {
+    return new static($configuration, $plugin_id, $plugin_definition, $container->get('entity_type.manager'));
   }
 
   /**
-   * Process the given entity and update plugins by plugin id.
-   *
-   * @param \Drupal\Core\Entity\EntityInterface $entity
-   *   The entity to update.
-   * @param string $plugin_id
-   *   The id of the plugin that should be updated.
+   * {@inheritdoc}
    */
-  private function processEntity(EntityInterface $entity, $plugin_id) {
-    if (!$entity instanceof FieldableEntityInterface) {
+  public function processItem($data): void {
+    $entity_storage = $this->entityTypeManager->getStorage($data->entity_type_id);
+    $entity = $entity_storage->loadUnchanged($data->entity_id);
+    if (!$entity) {
       return;
     }
-    if (!$entity->hasField(OverridesSectionStorage::FIELD_NAME)) {
+
+    $this->processEntity($entity, $data->plugin_id);
+
+    if ($entity_storage instanceof NodeStorageInterface) {
+      foreach ($entity_storage->revisionIds($entity) as $revision_id) {
+        $revision = $entity_storage->loadRevision($revision_id);
+        if ($revision) {
+          $this->processEntity($revision, $data->plugin_id);
+        }
+      }
+    }
+
+    // Long-running deploy batches can otherwise retain thousands of loaded
+    // entity objects and their Layout Builder component graphs.
+    $entity_storage->resetCache([$data->entity_id]);
+    gc_collect_cycles();
+  }
+
+  /**
+   * Updates matching block plugins on an entity revision.
+   */
+  private function processEntity(EntityInterface $entity, string $plugin_id): void {
+    if (!$entity instanceof FieldableEntityInterface || !$entity->hasField(OverridesSectionStorage::FIELD_NAME)) {
       return;
     }
     $sections = $entity->get(OverridesSectionStorage::FIELD_NAME)->getValue();
-    if (empty($sections)) {
-      return;
-    }
-    /** @var \Drupal\layout_builder\Section $section */
-    $section = &$sections[0]['section'];
-    $components = $section->getComponents();
-    if (empty($components)) {
-      return;
-    }
     $changed = FALSE;
-    foreach ($components as $component) {
-      if ($component->getPluginId() != $plugin_id) {
+
+    foreach ($sections as $section_item) {
+      if (empty($section_item['section'])) {
         continue;
       }
-      $plugin = $component->getPlugin();
-      if (!$plugin instanceof ConfigurationUpdateInterface || !$plugin instanceof ConfigurableInterface) {
-        continue;
-      }
-      $updated = $plugin->updateConfiguration();
-      if ($updated) {
+      foreach ($section_item['section']->getComponents() as $component) {
+        if ($component->getPluginId() !== $plugin_id) {
+          continue;
+        }
+        $plugin = $component->getPlugin();
+        if (!$plugin instanceof ConfigurationUpdateInterface || !$plugin instanceof ConfigurableInterface || !$plugin->updateConfiguration()) {
+          continue;
+        }
         $component->setConfiguration($plugin->getConfiguration());
+        $changed = TRUE;
       }
-      $changed = $changed || $updated;
-
     }
 
-    if ($changed) {
-      $entity->get(OverridesSectionStorage::FIELD_NAME)->setValue($sections);
-      if ($entity instanceof RevisionableInterface && $entity->getEntityType()->hasKey('revision')) {
-        $entity->setNewRevision(FALSE);
-      }
-      if ($entity instanceof SynchronizableInterface) {
-        $entity->setSyncing(TRUE);
-      }
-      $entity->save();
+    if (!$changed) {
+      return;
     }
+    $entity->get(OverridesSectionStorage::FIELD_NAME)->setValue($sections);
+    if ($entity instanceof RevisionableInterface && $entity->getEntityType()->hasKey('revision')) {
+      $entity->setNewRevision(FALSE);
+    }
+    if ($entity instanceof SynchronizableInterface) {
+      $entity->setSyncing(TRUE);
+    }
+    $entity->save();
   }
 
 }
