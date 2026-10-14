@@ -113,8 +113,6 @@ class PlanQueryTest extends UnitTestCase {
 
   /**
    * Tests that a failed Fabric request returns an empty plan collection.
-   *
-   * @covers ::getPlansByYear
    */
   public function testGetPlansByYearHandlesFabricFailure(): void {
     $this->fabricClient->method('execute')->willReturn(FALSE);
