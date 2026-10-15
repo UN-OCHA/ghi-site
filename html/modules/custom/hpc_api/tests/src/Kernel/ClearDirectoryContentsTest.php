@@ -3,13 +3,14 @@
 namespace Drupal\Tests\hpc_api\Kernel;
 
 use Drupal\KernelTests\Core\File\FileTestBase;
+use PHPUnit\Framework\Attributes\CoversFunction;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
  * Tests cleanup of disposable files without replacing their storage directory.
- *
- * @covers ::hpc_api_clear_directory_contents
- * @group hpc_api
  */
+#[CoversFunction('hpc_api_clear_directory_contents')]
+#[Group('hpc_api')]
 class ClearDirectoryContentsTest extends FileTestBase {
 
   /**

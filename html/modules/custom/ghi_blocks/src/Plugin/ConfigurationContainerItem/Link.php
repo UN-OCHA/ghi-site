@@ -164,7 +164,7 @@ class Link extends ConfigurationContainerItemPluginBase {
       '#type' => 'managed_file',
       '#upload_location' => self::THUMBNAIL_DIRECTORY,
       '#upload_validators' => [
-        'file_validate_extensions' => ['jpg jpeg png gif'],
+        'FileExtension' => ['extensions' => 'jpg jpeg png gif'],
       ],
       '#default_value' => $this->config['image']['image'] ?? NULL,
       // Add properties needed by value() and process() methods.

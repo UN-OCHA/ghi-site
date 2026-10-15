@@ -10,15 +10,15 @@ use Drupal\ghi_content\Controller\RemoteRefreshController;
 use Drupal\ghi_content\RemoteSource\RemoteRefreshSourceInterface;
 use Drupal\ghi_content\RemoteSource\RemoteSourceManager;
 use Drupal\Tests\UnitTestCase;
+use PHPUnit\Framework\Attributes\Group;
 use Psr\Log\NullLogger;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
  * Tests the remote refresh webhook controller.
- *
- * @group ghi_content
  */
+#[Group('ghi_content')]
 class RemoteRefreshControllerTest extends UnitTestCase {
 
   /**

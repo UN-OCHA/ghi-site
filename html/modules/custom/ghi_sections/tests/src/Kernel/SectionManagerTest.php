@@ -10,12 +10,12 @@ use Drupal\Tests\pathauto\Functional\PathautoTestHelperTrait;
 use Drupal\ghi_sections\Entity\Section;
 use Drupal\ghi_sections\Entity\SectionNodeInterface;
 use Drupal\node\NodeInterface;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
  * Test class for section manager tests.
- *
- * @group ghi_sections
  */
+#[Group('ghi_sections')]
 class SectionManagerTest extends KernelTestBase {
 
   use EntityReferenceFieldCreationTrait;

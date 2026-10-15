@@ -2,11 +2,12 @@
 
 namespace Drupal\Tests\ghi_blocks\FunctionalJavascript;
 
+use PHPUnit\Framework\Attributes\Group;
+
 /**
  * Tests the GHI specific block UI.
- *
- * @group ghi_blocks
  */
+#[Group('ghi_blocks')]
 class BlockUiTest extends BlockUiBase {
 
   /**

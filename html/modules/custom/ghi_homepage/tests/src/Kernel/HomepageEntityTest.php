@@ -7,12 +7,12 @@ use Drupal\Tests\ghi_base_objects\Traits\FieldTestTrait;
 use Drupal\ghi_homepage\Entity\Homepage;
 use Drupal\node\Entity\Node;
 use Drupal\node\Entity\NodeType;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
  * Tests the creation and validation of homepage nodes.
- *
- * @group ghi_homepage
  */
+#[Group('ghi_homepage')]
 class HomepageEntityTest extends KernelTestBase {
 
   use FieldTestTrait;

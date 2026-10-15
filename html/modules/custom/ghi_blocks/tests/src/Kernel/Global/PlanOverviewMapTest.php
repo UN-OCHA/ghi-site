@@ -12,13 +12,13 @@ use Drupal\ghi_blocks\Plugin\Block\GlobalPage\PlanOverviewMap;
 use Drupal\ghi_plans\ApiObjects\Partials\PlanOverviewPlan;
 use Drupal\ghi_plans\Entity\PlanType;
 use Drupal\Tests\ghi_blocks\Kernel\PlanBlockKernelTestBase;
+use PHPUnit\Framework\Attributes\Group;
 use Prophecy\PhpUnit\ProphecyTrait;
 
 /**
  * Tests the Plan Overview Map block plugin.
- *
- * @group ghi_blocks
  */
+#[Group('ghi_blocks')]
 class PlanOverviewMapTest extends PlanBlockKernelTestBase {
 
   use ProphecyTrait;

@@ -12,12 +12,12 @@ use Drupal\ghi_sections\Entity\SectionNodeInterface;
 use Drupal\ghi_subpages\Entity\SubpageNodeInterface;
 use Drupal\ghi_subpages\SubpageManager;
 use Drupal\ghi_templates\Entity\PageTemplate;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
  * Tests the creation and validation of page template entities.
- *
- * @group ghi_templates
  */
+#[Group('ghi_templates')]
 class PageTemplateCreateTest extends KernelTestBase {
 
   use FieldTestTrait;

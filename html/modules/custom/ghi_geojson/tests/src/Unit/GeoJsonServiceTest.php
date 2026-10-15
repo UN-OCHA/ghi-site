@@ -6,14 +6,22 @@ use Drupal\Core\File\FileSystemInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\ghi_geojson\GeoJson;
 use Drupal\Tests\UnitTestCase;
+use PHPUnit\Framework\Attributes\CoversMethod;
+use PHPUnit\Framework\Attributes\Group;
 use Prophecy\PhpUnit\ProphecyTrait;
 
 /**
  * Tests the GeoJson service (unit test version).
- *
- * @coversDefaultClass \Drupal\ghi_geojson\GeoJson
- * @group ghi_geojson
  */
+#[CoversMethod(GeoJson::class, '__construct')]
+#[CoversMethod(GeoJson::class, 'buildGeoJsonSourceFilePath')]
+#[CoversMethod(GeoJson::class, 'getCacheTags')]
+#[CoversMethod(GeoJson::class, 'getExpectedFilenamesForCountry')]
+#[CoversMethod(GeoJson::class, 'getFiles')]
+#[CoversMethod(GeoJson::class, 'getIsoCodes')]
+#[CoversMethod(GeoJson::class, 'getSourceDirectoryPath')]
+#[CoversMethod(GeoJson::class, 'getVersionsForIsoCode')]
+#[Group('ghi_geojson')]
 class GeoJsonServiceTest extends UnitTestCase {
 
   use ProphecyTrait;
@@ -48,8 +56,6 @@ class GeoJsonServiceTest extends UnitTestCase {
 
   /**
    * Tests the constructor.
-   *
-   * @covers ::__construct
    */
   public function testConstruct() {
     $this->assertInstanceOf(GeoJson::class, $this->geoJsonService);
@@ -58,8 +64,6 @@ class GeoJsonServiceTest extends UnitTestCase {
 
   /**
    * Tests getSourceDirectoryPath method.
-   *
-   * @covers ::getSourceDirectoryPath
    */
   public function testGetSourceDirectoryPath() {
     $result = $this->geoJsonService->getSourceDirectoryPath('AFG', '2022');
@@ -69,8 +73,6 @@ class GeoJsonServiceTest extends UnitTestCase {
 
   /**
    * Tests getSourceDirectoryPath method with NULL version.
-   *
-   * @covers ::getSourceDirectoryPath
    */
   public function testGetSourceDirectoryPathWithNullVersion() {
     $result = $this->geoJsonService->getSourceDirectoryPath('AFG', NULL);
@@ -80,8 +82,6 @@ class GeoJsonServiceTest extends UnitTestCase {
 
   /**
    * Tests getIsoCodes method with mocked file system.
-   *
-   * @covers ::getIsoCodes
    */
   public function testGetIsoCodesWithMockedFileSystem() {
     $directories = [
@@ -106,8 +106,6 @@ class GeoJsonServiceTest extends UnitTestCase {
 
   /**
    * Tests getVersionsForIsoCode method.
-   *
-   * @covers ::getVersionsForIsoCode
    */
   public function testGetVersionsForIsoCode() {
     $version_directories = [
@@ -129,8 +127,6 @@ class GeoJsonServiceTest extends UnitTestCase {
 
   /**
    * Tests getVersionsForIsoCode with empty result.
-   *
-   * @covers ::getVersionsForIsoCode
    */
   public function testGetVersionsForIsoCodeEmpty() {
     $this->fileSystem->scanDirectory(
@@ -145,8 +141,6 @@ class GeoJsonServiceTest extends UnitTestCase {
 
   /**
    * Tests getFiles method basic behavior.
-   *
-   * @covers ::getFiles
    */
   public function testGetFilesBasicBehavior() {
     // Mock scanDirectory to return files
@@ -168,8 +162,6 @@ class GeoJsonServiceTest extends UnitTestCase {
 
   /**
    * Tests getFiles method with pattern.
-   *
-   * @covers ::getFiles
    */
   public function testGetFilesWithPattern() {
     $files = [
@@ -189,8 +181,6 @@ class GeoJsonServiceTest extends UnitTestCase {
 
   /**
    * Tests getExpectedFilenamesForCountry method.
-   *
-   * @covers ::getExpectedFilenamesForCountry
    */
   public function testGetExpectedFilenamesForCountry() {
     $result = $this->geoJsonService->getExpectedFilenamesForCountry('AFG');
@@ -207,8 +197,6 @@ class GeoJsonServiceTest extends UnitTestCase {
 
   /**
    * Tests getCacheTags method.
-   *
-   * @covers ::getCacheTags
    */
   public function testGetCacheTags() {
     $result = $this->geoJsonService->getCacheTags('AFG', '2022');
@@ -219,8 +207,6 @@ class GeoJsonServiceTest extends UnitTestCase {
 
   /**
    * Tests getCacheTags method without version.
-   *
-   * @covers ::getCacheTags
    */
   public function testGetCacheTagsWithoutVersion() {
     $result = $this->geoJsonService->getCacheTags('AFG');
@@ -252,8 +238,6 @@ class GeoJsonServiceTest extends UnitTestCase {
 
   /**
    * Tests buildGeoJsonSourceFilePath method for admin level 0 (countries).
-   *
-   * @covers ::buildGeoJsonSourceFilePath
    */
   public function testBuildGeoJsonSourceFilePathCountryLevel() {
     // Create a mock location for admin level 0 (country)
@@ -278,8 +262,6 @@ class GeoJsonServiceTest extends UnitTestCase {
 
   /**
    * Tests buildGeoJsonSourceFilePath method for admin levels 1+.
-   *
-   * @covers ::buildGeoJsonSourceFilePath
    */
   public function testBuildGeoJsonSourceFilePathAdminLevel() {
     // Create a mock location for admin level 1
@@ -304,8 +286,6 @@ class GeoJsonServiceTest extends UnitTestCase {
 
   /**
    * Tests buildGeoJsonSourceFilePath method for admin level 2.
-   *
-   * @covers ::buildGeoJsonSourceFilePath
    */
   public function testBuildGeoJsonSourceFilePathAdminLevel2() {
     // Create a mock location for admin level 2
@@ -326,8 +306,6 @@ class GeoJsonServiceTest extends UnitTestCase {
 
   /**
    * Tests buildGeoJsonSourceFilePath method with invalid parameters.
-   *
-   * @covers ::buildGeoJsonSourceFilePath
    */
   public function testBuildGeoJsonSourceFilePathInvalidParameters() {
     // Test with empty ISO3
@@ -354,8 +332,6 @@ class GeoJsonServiceTest extends UnitTestCase {
 
   /**
    * Tests buildGeoJsonSourceFilePath method using location's default version.
-   *
-   * @covers ::buildGeoJsonSourceFilePath
    */
   public function testBuildGeoJsonSourceFilePathDefaultVersion() {
     // Create a mock location that provides its own version

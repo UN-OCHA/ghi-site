@@ -4,16 +4,21 @@ namespace Drupal\Tests\ghi_blocks\FunctionalJavascript;
 
 use Drupal\Component\Render\FormattableMarkup;
 use Drupal\FunctionalJavascriptTests\WebDriverTestBase;
+use Drupal\TestTools\Extension\HtmlLogging\HtmlOutputLogger;
+use Drupal\Tests\field\Traits\BodyFieldCreationTrait;
 use Drupal\block_content\Entity\BlockContentType;
 use Drupal\layout_builder\Entity\LayoutBuilderEntityViewDisplay;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\PostCondition;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Base class for testing the GHI specific block UI.
- *
- * @group ghi_blocks
  */
+#[Group('ghi_blocks')]
 abstract class BlockUiBase extends WebDriverTestBase {
+
+  use BodyFieldCreationTrait;
 
   const BUNDLE = 'page';
 
@@ -166,7 +171,7 @@ abstract class BlockUiBase extends WebDriverTestBase {
       'revision' => 1,
     ]);
     $bundle->save();
-    block_content_add_body_field($bundle->id());
+    $this->createBodyField('block_content', $bundle->id());
   }
 
   /**
@@ -302,9 +307,8 @@ JS);
 
   /**
    * {@inheritdoc}
-   *
-   * @postCondition
    */
+  #[PostCondition]
   protected function failOnJavaScriptErrors(): void {
     // Gin's sidebar and core's debounced dialog resizing can race AJAX element
     // replacement in these tests. Keep failing on all other JavaScript errors.
@@ -337,7 +341,7 @@ JS);
     // Do not use the file_url_generator service as the module_handler service
     // might not be available.
     $uri = $this->htmlOutputBaseUrl . '/sites/simpletest/browser_output/' . $html_output_filename;
-    file_put_contents($this->htmlOutputFile, $uri . "\n", FILE_APPEND);
+    HtmlOutputLogger::log($uri);
   }
 
 }

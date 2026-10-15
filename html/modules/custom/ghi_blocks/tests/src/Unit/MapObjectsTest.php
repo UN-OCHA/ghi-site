@@ -8,12 +8,12 @@ use Drupal\ghi_blocks\MapObjects\OrganizationMapObject;
 use Drupal\ghi_blocks\MapObjects\ProjectMapObject;
 use Drupal\ghi_plans\ApiObjects\Partials\PlanProjectCluster;
 use Drupal\ghi_plans\ApiObjects\Project;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
  * Test map objects.
- *
- * @group MapObjects
  */
+#[Group('MapObjects')]
 class MapObjectsTest extends UnitTestCase {
 
   /**

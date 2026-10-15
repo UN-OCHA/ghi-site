@@ -5,12 +5,12 @@ namespace Drupal\Tests\ghi_base_objects\Kernel;
 use Drupal\KernelTests\KernelTestBase;
 use Drupal\Tests\ghi_base_objects\Traits\BaseObjectTestTrait;
 use Drupal\Tests\ghi_geojson\Traits\GeoJsonTestTrait;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
  * Tests the country entity.
- *
- * @group ghi_base_objects
  */
+#[Group('ghi_base_objects')]
 class CountryTest extends KernelTestBase {
 
   use BaseObjectTestTrait;

@@ -5,12 +5,12 @@ namespace Drupal\Tests\ghi_content\Unit\Plugin\Block;
 use Drupal\ghi_content\Plugin\Block\ArticleCollection;
 use Drupal\ghi_form_elements\ConfigurationContainerItemPluginInterface;
 use Drupal\Tests\UnitTestCase;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
  * Tests that tab dependencies are retained by the block content cache.
- *
- * @group ghi_content
  */
+#[Group('ghi_content')]
 class ArticleCollectionTest extends UnitTestCase {
 
   /**

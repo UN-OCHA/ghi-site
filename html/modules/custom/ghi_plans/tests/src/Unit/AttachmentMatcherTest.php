@@ -5,16 +5,20 @@ namespace Drupal\Tests\ghi_plans\Unit;
 use Drupal\ghi_plans\ApiObjects\Prototypes\AttachmentPrototype;
 use Drupal\ghi_plans\Helpers\AttachmentMatcher;
 use Drupal\Tests\UnitTestCase;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
- * @covers Drupal\ghi_plans\Helpers\AttachmentMatcher
+ * Tests attachment matching.
  */
+#[CoversClass(AttachmentMatcher::class)]
 class AttachmentMatcherTest extends UnitTestCase {
 
   /**
    * Data provider for testMatchDataPointOnAttachmentPrototypes.
    */
-  public function matchDataPointOnAttachmentPrototypesDataProvider() {
+  public static function matchDataPointOnAttachmentPrototypesDataProvider() {
     return [
       'legacy index with changed field order' => [
         ['type_a', 'type_b', 'type_c'],
@@ -45,10 +49,9 @@ class AttachmentMatcherTest extends UnitTestCase {
 
   /**
    * Test matchDataPointOnAttachmentPrototypes.
-   *
-   * @dataProvider matchDataPointOnAttachmentPrototypesDataProvider
-   * @group AttachmentMatcher
    */
+  #[DataProvider('matchDataPointOnAttachmentPrototypesDataProvider')]
+  #[Group('AttachmentMatcher')]
   public function testMatchDataPointOnAttachmentPrototypes(array $original_fields, array $new_fields, $data_point, ?string $expected) {
     $prototype_1 = $this->mockAttachmentPrototype($original_fields);
     $prototype_2 = $this->mockAttachmentPrototype($new_fields);

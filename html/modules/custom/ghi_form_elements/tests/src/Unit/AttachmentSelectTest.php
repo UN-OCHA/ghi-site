@@ -8,12 +8,12 @@ use Drupal\ghi_plans\Entity\GoverningEntity;
 use Drupal\ghi_plans\Entity\Plan;
 use Drupal\Tests\hpc_api\Traits\PrivateAccessorTrait;
 use Drupal\Tests\UnitTestCase;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
  * Tests the attachment select form element.
- *
- * @group ghi_form_elements
  */
+#[Group('ghi_form_elements')]
 class AttachmentSelectTest extends UnitTestCase {
 
   use PrivateAccessorTrait;

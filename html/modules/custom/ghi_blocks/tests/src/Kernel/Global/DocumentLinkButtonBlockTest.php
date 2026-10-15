@@ -6,12 +6,12 @@ use Drupal\Core\Form\FormState;
 use Drupal\ghi_blocks\Element\DocumentLink;
 use Drupal\ghi_blocks\Plugin\Block\Generic\DocumentLinkButton;
 use Drupal\Tests\ghi_blocks\Kernel\BlockKernelTestBase;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
  * Tests the document link button block plugin.
- *
- * @group ghi_blocks
  */
+#[Group('ghi_blocks')]
 class DocumentLinkButtonBlockTest extends BlockKernelTestBase {
 
   /**

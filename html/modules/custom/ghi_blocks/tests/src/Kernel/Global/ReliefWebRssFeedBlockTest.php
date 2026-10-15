@@ -9,12 +9,12 @@ use Drupal\ghi_blocks\Interfaces\OverrideDefaultTitleBlockInterface;
 use Drupal\ghi_blocks\Plugin\Block\Generic\ReliefWebRssFeed;
 use Drupal\ghi_blocks\ReliefWeb\ReliefWebRssFeed as ReliefWebRssFeedService;
 use Drupal\Tests\ghi_blocks\Kernel\BlockKernelTestBase;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
  * Tests the ReliefWeb RSS feed block plugin.
- *
- * @group ghi_blocks
  */
+#[Group('ghi_blocks')]
 class ReliefWebRssFeedBlockTest extends BlockKernelTestBase {
 
   public const FEED_URL = 'https://reliefweb.int/country/ven/rss.xml?format=10';

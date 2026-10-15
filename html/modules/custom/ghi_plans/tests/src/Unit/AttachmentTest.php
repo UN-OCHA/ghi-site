@@ -19,6 +19,7 @@ use Drupal\ghi_plans\Entity\Plan;
 use Drupal\ghi_plans\Exceptions\InvalidAttachmentTypeException;
 use Drupal\ghi_plans\Helpers\AttachmentHelper;
 use Drupal\hpc_api\ApiObjects\Types\MetricType;
+use PHPUnit\Framework\Attributes\DataProvider;
 use Prophecy\Argument;
 
 /**
@@ -411,6 +412,7 @@ class AttachmentTest extends ApiObjectTestBase {
 
     foreach ($attachment->getMeasurements() as $measurement) {
       $values = $measurement->getValues();
+      $this->assertIsArray($values);
       unset($values['periodical_reach']);
       $this->setPrivateProperty($measurement, 'values', $values);
     }
@@ -446,7 +448,7 @@ class AttachmentTest extends ApiObjectTestBase {
   /**
    * Data provider for testAttachmentFormatDataValues.
    */
-  public function dataProviderAttachmentFormatDataValues() {
+  public static function dataProviderAttachmentFormatDataValues() {
     $test_cases = [];
     // Format as text.
     $test_cases['text_raw'] = [
@@ -616,9 +618,8 @@ class AttachmentTest extends ApiObjectTestBase {
 
   /**
    * Test value formatting from Attachments.
-   *
-   * @dataProvider dataProviderAttachmentFormatDataValues
    */
+  #[DataProvider('dataProviderAttachmentFormatDataValues')]
   public function testAttachmentFormatDataValues($conf, $expected) {
     /** @var \Drupal\ghi_plans\ApiObjects\Attachments\Attachment $attachment */
     $attachment = $this->getAttachmentFromFixture('caseload');

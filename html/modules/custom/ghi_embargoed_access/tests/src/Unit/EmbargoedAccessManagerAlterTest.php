@@ -4,6 +4,8 @@ namespace Drupal\Tests\ghi_embargoed_access\Unit;
 
 use Drupal\Core\Config\Config;
 use Drupal\Core\Config\ConfigFactoryInterface;
+use Drupal\Core\Entity\ContentEntityFormInterface;
+use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Entity\EntityFieldManagerInterface;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
@@ -17,18 +19,24 @@ use Drupal\Core\DependencyInjection\Container;
 use Drupal\entity_access_password\Service\PasswordAccessManagerInterface;
 use Drupal\entity_access_password\Service\RouteParserInterface;
 use Drupal\ghi_embargoed_access\EmbargoedAccessManager;
+use Drupal\node\Form\NodeForm;
 use Drupal\node\NodeInterface;
 use Drupal\ghi_subpages\Entity\SubpageNodeInterface;
-use Drupal\node\NodeForm;
+use PHPUnit\Framework\Attributes\CoversMethod;
+use PHPUnit\Framework\Attributes\Group;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\ParameterBag;
 
 /**
  * Unit tests for the EmbargoedAccessManager alter methods.
- *
- * @coversDefaultClass \Drupal\ghi_embargoed_access\EmbargoedAccessManager
- * @group ghi_embargoed_access
  */
+#[CoversMethod(EmbargoedAccessManager::class, 'alterHtml')]
+#[CoversMethod(EmbargoedAccessManager::class, 'alterLink')]
+#[CoversMethod(EmbargoedAccessManager::class, 'alterNode')]
+#[CoversMethod(EmbargoedAccessManager::class, 'alterNodeForm')]
+#[CoversMethod(EmbargoedAccessManager::class, 'alterNodeThemeSuggestions')]
+#[CoversMethod(EmbargoedAccessManager::class, 'alterViewMode')]
+#[Group('ghi_embargoed_access')]
 class EmbargoedAccessManagerAlterTest extends UnitTestCase {
 
   /**
@@ -160,8 +168,6 @@ class EmbargoedAccessManagerAlterTest extends UnitTestCase {
 
   /**
    * Tests alterViewMode when embargo is disabled.
-   *
-   * @covers ::alterViewMode
    */
   public function testAlterViewModeEmbargoDisabled(): void {
     $this->setupEmbargoDisabled();
@@ -180,8 +186,6 @@ class EmbargoedAccessManagerAlterTest extends UnitTestCase {
 
   /**
    * Tests alterViewMode with subpage that has protected parent.
-   *
-   * @covers ::alterViewMode
    */
   public function testAlterViewModeSubpageWithParent(): void {
     $this->setupEmbargoEnabled();
@@ -211,8 +215,6 @@ class EmbargoedAccessManagerAlterTest extends UnitTestCase {
 
   /**
    * Tests alterViewMode protected mode reset with cache context.
-   *
-   * @covers ::alterViewMode
    */
   public function testAlterViewModeProtectedModeReset(): void {
     $this->setupEmbargoDisabled();
@@ -231,8 +233,6 @@ class EmbargoedAccessManagerAlterTest extends UnitTestCase {
 
   /**
    * Tests alterNodeThemeSuggestions with password protected view mode.
-   *
-   * @covers ::alterNodeThemeSuggestions
    */
   public function testAlterNodeThemeSuggestionsPasswordProtected(): void {
     $node = $this->createMock(NodeInterface::class);
@@ -254,8 +254,6 @@ class EmbargoedAccessManagerAlterTest extends UnitTestCase {
 
   /**
    * Tests alterHtml adds protection library when embargo enabled.
-   *
-   * @covers ::alterHtml
    */
   public function testAlterHtmlAddsLibraryWhenEmbargoEnabled(): void {
     $this->setupEmbargoEnabled();
@@ -288,8 +286,6 @@ class EmbargoedAccessManagerAlterTest extends UnitTestCase {
 
   /**
    * Tests alterLink with routed URL and node parameter.
-   *
-   * @covers ::alterLink
    */
   public function testAlterLinkWithRoutedNode(): void {
     $node = $this->createMock(NodeInterface::class);
@@ -338,8 +334,6 @@ class EmbargoedAccessManagerAlterTest extends UnitTestCase {
 
   /**
    * Tests alterNode removes content when access denied.
-   *
-   * @covers ::alterNode
    */
   public function testAlterNodeRemovesContentWhenAccessDenied(): void {
     $node = $this->createMock(NodeInterface::class);
@@ -387,8 +381,6 @@ class EmbargoedAccessManagerAlterTest extends UnitTestCase {
 
   /**
    * Tests alterNodeForm modifies protected field form elements.
-   *
-   * @covers ::alterNodeForm
    */
   public function testAlterNodeFormModifiesProtectedField(): void {
     $node = $this->createMock(NodeInterface::class);
@@ -420,8 +412,6 @@ class EmbargoedAccessManagerAlterTest extends UnitTestCase {
 
   /**
    * Tests alterNodeForm with subpage node that has protected parent.
-   *
-   * @covers ::alterNodeForm
    */
   public function testAlterNodeFormSubpageWithProtectedParent(): void {
     $fieldItem = (object) ['is_protected' => TRUE];
@@ -458,6 +448,21 @@ class EmbargoedAccessManagerAlterTest extends UnitTestCase {
     $this->assertArrayHasKey('is_protected_parent', $form['field_protected']['widget'][0]);
     $this->assertTrue($form['field_protected']['widget'][0]['is_protected_parent']['#default_value']);
     $this->assertEquals('disabled', $form['field_protected']['widget'][0]['is_protected_parent']['#disabled']);
+  }
+
+  /**
+   * Tests that non-node entity forms are not altered.
+   */
+  public function testAlterNodeFormIgnoresOtherEntities(): void {
+    $entity_form = $this->createMock(ContentEntityFormInterface::class);
+    $entity_form->method('getEntity')->willReturn($this->createMock(ContentEntityInterface::class));
+    $form_state = $this->createMock(FormStateInterface::class);
+    $form_state->method('getFormObject')->willReturn($entity_form);
+
+    $form = ['field_protected' => ['#access' => TRUE]];
+    $expected = $form;
+    $this->embargoedAccessManager->alterNodeForm($form, $form_state);
+    $this->assertSame($expected, $form);
   }
 
 }

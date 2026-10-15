@@ -9,20 +9,18 @@ use Drupal\ghi_plans\Entity\Plan;
 use Drupal\ghi_plans\Plugin\FabricQuery\ProjectQuery;
 use Drupal\hpc_api\Plugin\FabricQuery\IconQuery;
 use Drupal\Tests\UnitTestCase;
+use PHPUnit\Framework\Attributes\CoversMethod;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
  * Tests the organization cluster list configuration item.
- *
- * @group ghi_blocks
- *
- * @coversDefaultClass \Drupal\ghi_blocks\Plugin\ConfigurationContainerItem\OrganizationClusterList
  */
+#[CoversMethod(OrganizationClusterList::class, 'getRenderArray')]
+#[Group('ghi_blocks')]
 class OrganizationClusterListTest extends UnitTestCase {
 
   /**
    * Tests icon output references the imported SVG file.
-   *
-   * @covers ::getRenderArray
    */
   public function testIconRenderUsesImportedSvgFile(): void {
     drupal_static_reset();

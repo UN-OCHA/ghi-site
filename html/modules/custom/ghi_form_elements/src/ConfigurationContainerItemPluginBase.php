@@ -171,6 +171,7 @@ abstract class ConfigurationContainerItemPluginBase extends PluginBase implement
     if (method_exists($this, 'getDefaultLabel')) {
       return $this->getDefaultLabel();
     }
+    return NULL;
   }
 
   /**
@@ -180,6 +181,7 @@ abstract class ConfigurationContainerItemPluginBase extends PluginBase implement
     if (array_key_exists('value', $this->config) && !empty($this->config['value'])) {
       return $this->config['value'];
     }
+    return NULL;
   }
 
   /**
@@ -503,8 +505,8 @@ abstract class ConfigurationContainerItemPluginBase extends PluginBase implement
   /**
    * Get the filter options.
    *
-   * @return array
-   *   An array of filter options.
+   * @return array|null
+   *   An array of filter options, or NULL for an unsupported data type.
    */
   private function getFilterOptions() {
     $ops_common = [
@@ -529,6 +531,7 @@ abstract class ConfigurationContainerItemPluginBase extends PluginBase implement
         return $ops_string;
 
     }
+    return NULL;
   }
 
   /**

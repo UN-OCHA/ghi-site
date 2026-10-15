@@ -6,12 +6,12 @@ namespace Drupal\Tests\ghi_teams\Kernel;
 
 use Drupal\KernelTests\KernelTestBase;
 use Drupal\Tests\ghi_teams\Traits\TeamTestTrait;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
  * Tests cache for teams.
- *
- * @group ghi_teams
  */
+#[Group('ghi_teams')]
 class TeamCacheTest extends KernelTestBase {
 
   use TeamTestTrait;
