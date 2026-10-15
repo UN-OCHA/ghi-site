@@ -9,12 +9,14 @@ use Drupal\Tests\ghi_base_objects\Traits\FieldTestTrait;
 use Drupal\Tests\ghi_teams\Traits\TeamTestTrait;
 use Drupal\Tests\taxonomy\Traits\TaxonomyTestTrait;
 use Drupal\ghi_teams\Entity\Team;
+use PHPUnit\Framework\Attributes\CoversFunction;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
  * Tests the team based access logic for nodes.
- *
- * @group ghi_teams
  */
+#[CoversFunction('ghi_teams_form_alter')]
+#[Group('ghi_teams')]
 class TeamNodeAccessTest extends BrowserTestBase {
 
   use EntityReferenceFieldCreationTrait;
@@ -51,8 +53,6 @@ class TeamNodeAccessTest extends BrowserTestBase {
 
   /**
    * Tests access for nodes based on team association.
-   *
-   * @covers ghi_teams_form_alter
    */
   public function testNodeAccessByTeam() {
     // Create a team term and assign it to user and content.

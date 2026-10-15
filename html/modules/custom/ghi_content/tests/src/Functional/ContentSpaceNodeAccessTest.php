@@ -10,12 +10,12 @@ use Drupal\Tests\ghi_teams\Traits\TeamTestTrait;
 use Drupal\Tests\taxonomy\Traits\TaxonomyTestTrait;
 use Drupal\ghi_teams\Entity\ContentSpace;
 use Drupal\ghi_teams\Entity\Team;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
  * Tests the content space based access logic for content.
- *
- * @group ghi_content
  */
+#[Group('ghi_content')]
 class ContentSpaceNodeAccessTest extends BrowserTestBase {
 
   use EntityReferenceFieldCreationTrait;
@@ -83,6 +83,8 @@ class ContentSpaceNodeAccessTest extends BrowserTestBase {
     // Edit the node and confirm the node edit form can be loaded.
     $this->drupalGet($node->toUrl('edit-form')->toString());
     $assert_session->statusCodeEquals(200);
+    // Nodes without a remote source must still have a usable edit form.
+    $assert_session->pageTextContains('The source of this article page has been removed on Content Management backend.');
 
     // Now try with a user who is not associated to the content space.
     $this->drupalLogin($this->drupalCreateUser($permissions, NULL, FALSE, [

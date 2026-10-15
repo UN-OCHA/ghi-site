@@ -5,6 +5,7 @@
 
 .cd-page-layout-container {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   grid-template-areas:
     "header"
     "highlighted"

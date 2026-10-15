@@ -6,13 +6,13 @@ use Drupal\Core\DependencyInjection\ContainerBuilder;
 use Drupal\Core\File\FileUrlGeneratorInterface;
 use Drupal\Core\Url;
 use Drupal\ghi_base_objects\ApiObjects\Location;
+use PHPUnit\Framework\Attributes\Group;
 use Prophecy\Argument;
 
 /**
  * Tests the Location API object.
- *
- * @group ghi_base_objects
  */
+#[Group('ghi_base_objects')]
 class LocationTest extends ApiBaseObjectTestBase {
 
   /**

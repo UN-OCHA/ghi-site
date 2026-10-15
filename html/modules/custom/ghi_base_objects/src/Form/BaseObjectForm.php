@@ -64,6 +64,7 @@ class BaseObjectForm extends ContentEntityForm {
         ]));
     }
     $form_state->setRedirect('entity.base_object.canonical', ['base_object' => $entity->id()]);
+    return $status;
   }
 
 }

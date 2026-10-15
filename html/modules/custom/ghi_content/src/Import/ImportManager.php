@@ -11,7 +11,7 @@ use Drupal\Core\DependencyInjection\DependencySerializationTrait;
 use Drupal\Core\Entity\EntityReferenceSelection\SelectionPluginManager;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\File\Event\FileUploadSanitizeNameEvent;
-use Drupal\Core\File\FileSystem;
+use Drupal\Core\File\FileExists;
 use Drupal\Core\Messenger\MessengerInterface;
 use Drupal\Core\Messenger\MessengerTrait;
 use Drupal\Core\Session\AccountInterface;
@@ -242,7 +242,7 @@ class ImportManager implements ContainerInjectionInterface {
 
       $data = $content->getSource()->getFileContent($image_url);
       if (!empty($data)) {
-        $file = $this->fileRepository->writeData($data, ArticleManager::IMAGE_DIRECTORY . '/' . $image_name, FileSystem::EXISTS_REPLACE);
+        $file = $this->fileRepository->writeData($data, ArticleManager::IMAGE_DIRECTORY . '/' . $image_name, FileExists::Replace);
         $update = !$file_field->isEmpty();
         $file_field->setValue([
           'target_id' => $file->id(),

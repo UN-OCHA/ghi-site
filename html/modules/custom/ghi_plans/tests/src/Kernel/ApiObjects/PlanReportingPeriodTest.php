@@ -3,12 +3,12 @@
 namespace Drupal\Tests\ghi_plans\Kernel\ApiObjects;
 
 use Drupal\ghi_plans\ApiObjects\PlanReportingPeriod;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
  * Tests the PlanReportingPeriod API object.
- *
- * @group ghi_plans
  */
+#[Group('ghi_plans')]
 class PlanReportingPeriodTest extends PlanApiObjectKernelTestBase {
 
   /**

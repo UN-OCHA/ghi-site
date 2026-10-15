@@ -6,12 +6,13 @@ use Drupal\ghi_content\ContentManager\ArticleManager;
 use Drupal\ghi_content\Entity\Article;
 use Drupal\ghi_content\Plugin\ConfigurationContainerItem\ArticleCollection;
 use Drupal\Tests\UnitTestCase;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
  * Tests article collection cache dependencies without unnecessary remote loads.
- *
- * @group ghi_content
  */
+#[Group('ghi_content')]
 class ArticleCollectionTest extends UnitTestCase {
 
   /**
@@ -27,9 +28,8 @@ class ArticleCollectionTest extends UnitTestCase {
 
   /**
    * Tests that only displayed articles contribute remote cache dependencies.
-   *
-   * @dataProvider displayedArticlesProvider
    */
+  #[DataProvider('displayedArticlesProvider')]
   public function testDisplayedArticleCacheTags(array $display, array $selected_ids): void {
     $articles = [];
     $expected_tags = ['node_list:article'];

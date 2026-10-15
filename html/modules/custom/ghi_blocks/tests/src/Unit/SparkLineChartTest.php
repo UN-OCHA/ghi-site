@@ -6,12 +6,12 @@ use Drupal\ghi_blocks\Plugin\ConfigurationContainerItem\SparkLineChart;
 use Drupal\ghi_plans\ApiObjects\Attachments\Attachment;
 use Drupal\ghi_plans\ApiObjects\Prototypes\AttachmentPrototype;
 use Drupal\Tests\UnitTestCase;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
  * Tests the sparkline chart configuration item plugin.
- *
- * @group ghi_blocks
  */
+#[Group('ghi_blocks')]
 class SparkLineChartTest extends UnitTestCase {
 
   /**

@@ -7,7 +7,6 @@ use Drupal\Core\Form\FormState;
 use Drupal\Core\Security\TrustedCallbackInterface;
 use Drupal\ghi_blocks\Interfaces\ConfigValidationInterface;
 use Drupal\ghi_blocks\Interfaces\ConfigurableTableBlockInterface;
-use Drupal\ghi_blocks\Interfaces\ConfigurationUpdateInterface;
 use Drupal\ghi_blocks\Interfaces\CustomLinkBlockInterface;
 use Drupal\ghi_blocks\Interfaces\MultiStepFormBlockInterface;
 use Drupal\ghi_blocks\Interfaces\OverrideDefaultTitleBlockInterface;
@@ -18,12 +17,12 @@ use Drupal\ghi_plans\ApiObjects\PlanEntityInterface;
 use Drupal\ghi_subpages\Logframe\LogframeTableConfigBuilder;
 use Drupal\ghi_subpages\LogframeManager;
 use Drupal\Tests\ghi_blocks\Kernel\PlanBlockKernelTestBase;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
  * Tests the plan entity logframe block plugin.
- *
- * @group ghi_blocks
  */
+#[Group('ghi_blocks')]
 class PlanEntityLogframeTest extends PlanBlockKernelTestBase {
 
   /**
@@ -70,7 +69,6 @@ class PlanEntityLogframeTest extends PlanBlockKernelTestBase {
     $this->assertInstanceOf(CustomLinkBlockInterface::class, $plugin);
     $this->assertInstanceOf(TrustedCallbackInterface::class, $plugin);
     $this->assertInstanceOf(ConfigValidationInterface::class, $plugin);
-    $this->assertInstanceOf(ConfigurationUpdateInterface::class, $plugin);
   }
 
   /**

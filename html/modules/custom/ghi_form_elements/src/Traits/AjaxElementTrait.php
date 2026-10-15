@@ -69,7 +69,10 @@ trait AjaxElementTrait {
   /**
    * Assuming inheritance from Drupal\Core\Render\Element\RenderElementBase.
    *
-   * @see RenderElementBase::processAjaxForm
+   * Only render elements register this callback. Forms and configuration items
+   * sharing this trait must use prepareAjaxForm() instead.
+   *
+   * @see \Drupal\Core\Render\Element\RenderElementBase::processAjaxForm()
    */
   public static function processAjaxForm(&$element, FormStateInterface $form_state, &$complete_form) {
     self::setElementParents($element);

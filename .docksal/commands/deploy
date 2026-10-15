@@ -71,9 +71,8 @@ fi
 echo "Set maintenance mode to on"
 drush sset system.maintenance_mode 1 -y
 
-echo "Clear cache"
-drush cr
-
+# Drush deploy updates the database before rebuilding caches. Rebuilding first
+# can fail when the new code requires schema changes, such as router aliases.
 echo "Run the deploy commands"
 drush deploy
 

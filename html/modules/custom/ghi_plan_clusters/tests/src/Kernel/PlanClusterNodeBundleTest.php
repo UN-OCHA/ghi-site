@@ -8,12 +8,12 @@ use Drupal\Tests\ghi_subpages\Traits\SubpageTestTrait;
 use Drupal\ghi_plan_clusters\Entity\PlanCluster;
 use Drupal\ghi_plan_clusters\Entity\PlanClusterInterface;
 use Drupal\ghi_plan_clusters\PlanClusterManager;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
  * Test class for plan cluster node bundles.
- *
- * @group ghi_plan_clusters
  */
+#[Group('ghi_plan_clusters')]
 class PlanClusterNodeBundleTest extends KernelTestBase {
 
   use SubpageTestTrait;

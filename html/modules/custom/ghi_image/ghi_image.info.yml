@@ -3,7 +3,7 @@ description: Provides additional support for images and cropping.
 package: GHI
 
 type: module
-core_version_requirement: ^9 || ^10
+core_version_requirement: ^10.3 || ^11
 
 dependencies:
   - config_default_image:config_default_image

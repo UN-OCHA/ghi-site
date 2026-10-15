@@ -7,21 +7,19 @@ use Drupal\ghi_plans\ApiObjects\Organization;
 use Drupal\ghi_plans\ApiObjects\Project;
 use Drupal\ghi_plans\Plugin\EndpointQuery\PlanProjectFundingQuery;
 use Drupal\Tests\UnitTestCase;
+use PHPUnit\Framework\Attributes\CoversMethod;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
  * Tests the project funding configuration item.
- *
- * @group ghi_blocks
- *
- * @coversDefaultClass \Drupal\ghi_blocks\Plugin\ConfigurationContainerItem\ProjectFunding
  */
+#[CoversMethod(ProjectFunding::class, 'getCurrentRequirementsForOrganization')]
+#[CoversMethod(ProjectFunding::class, 'getValue')]
+#[Group('ghi_blocks')]
 class ProjectFundingTest extends UnitTestCase {
 
   /**
    * Tests current requirements are summed from the loaded projects.
-   *
-   * @covers ::getValue
-   * @covers ::getCurrentRequirementsForOrganization
    */
   public function testCurrentRequirementsUseLoadedProjects(): void {
     $organization = $this->createOrganization(1, 'Organization one');

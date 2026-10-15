@@ -12,12 +12,12 @@ use Drupal\Tests\field\Traits\EntityReferenceFieldCreationTrait;
 use Drupal\Tests\ghi_blocks\Kernel\BlockKernelTestBase;
 use Drupal\Tests\ghi_sections\Traits\SectionTestTrait;
 use Drupal\Tests\user\Traits\UserCreationTrait;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
  * Tests the section collection block plugin.
- *
- * @group ghi_blocks
  */
+#[Group('ghi_blocks')]
 class SectionCollectionTest extends BlockKernelTestBase {
 
   use EntityReferenceFieldCreationTrait;

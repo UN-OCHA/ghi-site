@@ -5,17 +5,19 @@ namespace Drupal\Tests\hpc_downloads\Unit;
 use Drupal\Tests\UnitTestCase;
 use Drupal\hpc_downloads\Helpers\DownloadHelper;
 use Drupal\Core\Render\Markup;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
- * @covers Drupal\hpc_downloads\Helpers\DownloadHelper
+ * Tests the download helper.
  */
+#[CoversClass(DownloadHelper::class)]
 class DownloadHelperTest extends UnitTestCase {
 
   /**
    * Test getDownloadIconMarkup returns markup.
-   *
-   * @group DownloadHelper
    */
+  #[Group('DownloadHelper')]
   public function testGetDownloadIconMarkup() {
     $result = DownloadHelper::getDownloadIconMarkup();
     $this->assertInstanceOf(Markup::class, $result);
@@ -24,9 +26,8 @@ class DownloadHelperTest extends UnitTestCase {
 
   /**
    * Test getDownloadIconMarkup returns non-empty string.
-   *
-   * @group DownloadHelper
    */
+  #[Group('DownloadHelper')]
   public function testGetDownloadIconMarkupIsNotEmpty() {
     $result = DownloadHelper::getDownloadIconMarkup();
     $this->assertNotEmpty((string) $result);
@@ -34,9 +35,8 @@ class DownloadHelperTest extends UnitTestCase {
 
   /**
    * Test getDownloadIconMarkup contains download-icon class.
-   *
-   * @group DownloadHelper
    */
+  #[Group('DownloadHelper')]
   public function testGetDownloadIconMarkupContainsClass() {
     $result = DownloadHelper::getDownloadIconMarkup();
     $this->assertStringContainsString('download-icon', (string) $result);

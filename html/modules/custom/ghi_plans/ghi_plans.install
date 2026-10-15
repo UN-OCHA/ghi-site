@@ -25,6 +25,13 @@ function ghi_plans_uninstall() {
 }
 
 /**
+ * Implements hook_update_last_removed().
+ */
+function ghi_plans_update_last_removed(): int {
+  return 9001;
+}
+
+/**
  * Seed known attachment prototype field overrides.
  */
 function ghi_plans_update_10001(): string {

@@ -3,12 +3,12 @@
 namespace Drupal\Tests\ghi_plans\Unit;
 
 use Drupal\ghi_plans\ApiObjects\Contact;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
  * Tests the PlanEntity API object.
- *
- * @group ghi_plans
  */
+#[Group('ghi_plans')]
 class ContactTest extends ApiObjectTestBase {
 
   /**

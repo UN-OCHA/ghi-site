@@ -2,27 +2,14 @@
 
 /**
  * @file
- * Post update functions for GHI Teams.
+ * Post-update hooks for the GHI Teams module.
  */
-
-use Drupal\user\Entity\User;
 
 /**
- * Assign new roles.
+ * Implements hook_removed_post_updates().
  */
-function ghi_teams_post_update_set_new_roles() {
-  $uids_editor = \Drupal::entityTypeManager()
-    ->getStorage('user')
-    ->getQuery()
-    ->condition('roles', 'editor')
-    ->accessCheck(FALSE)
-    ->execute();
-  if (empty($uids_editor)) {
-    return;
-  }
-  foreach (User::loadMultiple($uids_editor) as $account) {
-    $account->removeRole('editor');
-    $account->addRole('global_editor');
-    $account->save();
-  }
+function ghi_teams_removed_post_updates(): array {
+  return [
+    'ghi_teams_post_update_set_new_roles' => 'GHI v1.21.0',
+  ];
 }

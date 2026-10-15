@@ -5,7 +5,6 @@
  * Contains hpc_common.module.
  */
 
-use Drupal\Component\Utility\Html;
 use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\hpc_common\Helpers\UserHelper;
 use Drupal\hpc_common\Plugin\HPCBlockBase;
@@ -178,27 +177,6 @@ function hpc_common_theme($existing, $type, $theme, $path) {
       ],
     ] + $common,
   ];
-}
-
-/**
- * Implements hook_panels_build_alter().
- *
- * This is used to replace page url arguments (as defined in the path of a
- * page manager page using panels) that are used as placeholders in page titles
- * with their actual values from the url.
- */
-function hpc_common_panels_build_alter(array &$build, $panels_display_variant) {
-  $title = (string) $build['#title'];
-  if (strpos($title, '{') === FALSE) {
-    return;
-  }
-  $valid_types = ['string', 'integer'];
-  foreach ($panels_display_variant->getContexts() as $context_key => $context) {
-    if (in_array($context->getContextDefinition()->getDataType(), $valid_types)) {
-      $title = str_replace('{' . $context_key . '}', Html::escape($context->getContextValue()), $title);
-    }
-  }
-  $build['#title'] = $title;
 }
 
 /**

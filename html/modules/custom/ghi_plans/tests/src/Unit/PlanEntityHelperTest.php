@@ -5,16 +5,20 @@ namespace Drupal\Tests\ghi_plans\Unit;
 use Drupal\Tests\UnitTestCase;
 use Drupal\ghi_plans\ApiObjects\PlanEntityInterface;
 use Drupal\ghi_plans\Helpers\PlanEntityHelper;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
- * @covers Drupal\ghi_plans\Helpers\PlanEntityHelper
+ * Tests the plan entity helper.
  */
+#[CoversClass(PlanEntityHelper::class)]
 class PlanEntityHelperTest extends UnitTestCase {
 
   /**
    * Data provider for testCheckObjectType.
    */
-  public function checkObjectTypeDataProvider() {
+  public static function checkObjectTypeDataProvider() {
     return [
       ['Plan', PlanEntityInterface::ENTITY_TYPE_PLAN],
       ['LogframeEntity', PlanEntityInterface::ENTITY_TYPE_PLAN_ENTITY],
@@ -26,10 +30,9 @@ class PlanEntityHelperTest extends UnitTestCase {
 
   /**
    * Test checkObjectType method.
-   *
-   * @dataProvider checkObjectTypeDataProvider
-   * @group PlanEntityHelper
    */
+  #[DataProvider('checkObjectTypeDataProvider')]
+  #[Group('PlanEntityHelper')]
   public function testCheckObjectType($input, $expected) {
     $result = PlanEntityHelper::checkObjectType($input);
     $this->assertSame($expected, $result);

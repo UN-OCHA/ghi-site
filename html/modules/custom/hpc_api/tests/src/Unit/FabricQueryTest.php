@@ -5,12 +5,16 @@ namespace Drupal\Tests\hpc_api\Unit;
 use Drupal\Tests\UnitTestCase;
 use Drupal\hpc_api\Query\FabricQuery;
 use Drupal\Tests\hpc_api\Traits\PrivateAccessorTrait;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
- * @covers Drupal\hpc_api\Query\FabricQuery
+ * Tests Fabric queries.
  *
  * phpcs:disable Squiz.Arrays.ArrayDeclaration.KeySpecified
  */
+#[CoversClass(FabricQuery::class)]
 class FabricQueryTest extends UnitTestCase {
 
   use PrivateAccessorTrait;
@@ -18,7 +22,7 @@ class FabricQueryTest extends UnitTestCase {
   /**
    * Data provider for testFilterValidation.
    */
-  public function dataProviderFilterValidation() {
+  public static function dataProviderFilterValidation() {
     return [
       [['Id' => []], TRUE],
       [['Id' => 1, 'plans' => ['Id' => []]], TRUE],
@@ -28,10 +32,9 @@ class FabricQueryTest extends UnitTestCase {
 
   /**
    * Test filter validation.
-   *
-   * @group FabricQuery
-   * @dataProvider dataProviderFilterValidation
    */
+  #[Group('FabricQuery')]
+  #[DataProvider('dataProviderFilterValidation')]
   public function testFilterValidation($filters, $expect_exception) {
     $fabric_query = new FabricQuery('test');
     if ($expect_exception) {
@@ -44,7 +47,7 @@ class FabricQueryTest extends UnitTestCase {
   /**
    * Data provider for testBuildFilterString.
    */
-  public function dataProviderBuildFilterString() {
+  public static function dataProviderBuildFilterString() {
     $cases = [];
     $one_to_hundred = range(1, 100);
     $cases[] = [
@@ -125,10 +128,9 @@ class FabricQueryTest extends UnitTestCase {
 
   /**
    * Test building of the item string.
-   *
-   * @group FabricQuery
-   * @dataProvider dataProviderBuildFilterString
    */
+  #[Group('FabricQuery')]
+  #[DataProvider('dataProviderBuildFilterString')]
   public function testBuildFilterString($filters, $expected) {
     $fabric_query = new FabricQuery('test');
     $fabric_query->setFilters($filters);
@@ -139,7 +141,7 @@ class FabricQueryTest extends UnitTestCase {
   /**
    * Data provider for testBuildItemString.
    */
-  public function dataProviderBuildItemString() {
+  public static function dataProviderBuildItemString() {
     $cases = [];
     $cases[] = [
       [
@@ -170,10 +172,9 @@ class FabricQueryTest extends UnitTestCase {
 
   /**
    * Test building of the item string.
-   *
-   * @group FabricQuery
-   * @dataProvider dataProviderBuildItemString
    */
+  #[Group('FabricQuery')]
+  #[DataProvider('dataProviderBuildItemString')]
   public function testBuildItemString($items, $expected) {
     $fabric_query = new FabricQuery('test');
     $fabric_query->setItems($items);
@@ -184,7 +185,7 @@ class FabricQueryTest extends UnitTestCase {
   /**
    * Data provider for testBuildItemString.
    */
-  public function dataProviderBuildQueryString() {
+  public static function dataProviderBuildQueryString() {
     $cases = [];
     $cases[] = [
       'plans',
@@ -236,10 +237,9 @@ class FabricQueryTest extends UnitTestCase {
 
   /**
    * Test building of the query string.
-   *
-   * @group FabricQuery
-   * @dataProvider dataProviderBuildQueryString
    */
+  #[Group('FabricQuery')]
+  #[DataProvider('dataProviderBuildQueryString')]
   public function testBuildQueryString($query_name, $items, $filters, $limit, $expected) {
     $fabric_query = new FabricQuery($query_name, $items, $filters, $limit);
     $actual = $fabric_query->buildQueryString();
@@ -249,7 +249,7 @@ class FabricQueryTest extends UnitTestCase {
   /**
    * Data provider for testBuildAggregationQueryString.
    */
-  public function dataProviderBuildAggregationQueryString() {
+  public static function dataProviderBuildAggregationQueryString() {
     return [
       [
         'Id',
@@ -266,10 +266,9 @@ class FabricQueryTest extends UnitTestCase {
 
   /**
    * Test building of aggregated query strings.
-   *
-   * @group FabricQuery
-   * @dataProvider dataProviderBuildAggregationQueryString
    */
+  #[Group('FabricQuery')]
+  #[DataProvider('dataProviderBuildAggregationQueryString')]
   public function testBuildAggregationQueryString(array|string $group_field, array $aggregations, string $expected) {
     $fabric_query = new FabricQuery('test');
     $fabric_query->setAggregation($group_field, $aggregations);

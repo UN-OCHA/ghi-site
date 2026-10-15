@@ -15,3 +15,5 @@ parameters:
     label: Year
     type: integer
     optional: true
+menu_type: none
+menu_settings: {  }

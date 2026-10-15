@@ -8,19 +8,17 @@ use Drupal\Core\Routing\AdminContext;
 use Drupal\Core\Session\AccountProxyInterface;
 use Drupal\Tests\UnitTestCase;
 use Drupal\hpc_common\GlobalGtmTag;
+use PHPUnit\Framework\Attributes\CoversMethod;
 
 /**
  * Tests the additional global GTM tag service.
- *
- * @coversDefaultClass \Drupal\hpc_common\GlobalGtmTag
  */
+#[CoversMethod(GlobalGtmTag::class, 'attachPageHead')]
+#[CoversMethod(GlobalGtmTag::class, 'attachPageTop')]
 class GlobalGtmTagTest extends UnitTestCase {
 
   /**
    * Tests attaching the configured GTM container.
-   *
-   * @covers ::attachPageHead
-   * @covers ::attachPageTop
    */
   public function testAttachesConfiguredContainer(): void {
     $global_gtm_tag = $this->createGlobalGtmTag(' GTM-SECOND<script> ');
@@ -45,9 +43,6 @@ class GlobalGtmTagTest extends UnitTestCase {
 
   /**
    * Tests that the service does not attach without a configured container.
-   *
-   * @covers ::attachPageHead
-   * @covers ::attachPageTop
    */
   public function testDoesNotAttachWithoutConfiguredContainer(): void {
     $global_gtm_tag = $this->createGlobalGtmTag('');
@@ -63,9 +58,6 @@ class GlobalGtmTagTest extends UnitTestCase {
 
   /**
    * Tests that the service follows the primary GTM enable setting.
-   *
-   * @covers ::attachPageHead
-   * @covers ::attachPageTop
    */
   public function testDoesNotAttachWhenGtmIsDisabled(): void {
     $global_gtm_tag = $this->createGlobalGtmTag('GTM-SECOND', ['enable' => FALSE]);
@@ -81,9 +73,6 @@ class GlobalGtmTagTest extends UnitTestCase {
 
   /**
    * Tests that the service follows the primary GTM admin page setting.
-   *
-   * @covers ::attachPageHead
-   * @covers ::attachPageTop
    */
   public function testDoesNotAttachOnAdminRoutesWhenAdminPagesAreDisabled(): void {
     $global_gtm_tag = $this->createGlobalGtmTag('GTM-SECOND', ['admin-pages' => FALSE], 2, TRUE);
@@ -99,9 +88,6 @@ class GlobalGtmTagTest extends UnitTestCase {
 
   /**
    * Tests that the service follows the primary GTM admin user setting.
-   *
-   * @covers ::attachPageHead
-   * @covers ::attachPageTop
    */
   public function testDoesNotAttachForAdminUserWhenDisabledForAdmin(): void {
     $global_gtm_tag = $this->createGlobalGtmTag('GTM-SECOND', ['admin-disable' => TRUE], 1);

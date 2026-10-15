@@ -4,12 +4,12 @@ namespace Drupal\Tests\ghi_base_objects\Unit;
 
 use Drupal\ghi_base_objects\ApiObjects\Country;
 use Drupal\Tests\ghi_geojson\Traits\GeoJsonTestTrait;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
  * Tests the Country API object.
- *
- * @group ghi_base_objects
  */
+#[Group('ghi_base_objects')]
 class CountryTest extends ApiBaseObjectTestBase {
 
   use GeoJsonTestTrait;

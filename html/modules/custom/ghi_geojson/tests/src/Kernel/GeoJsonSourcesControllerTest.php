@@ -6,15 +6,21 @@ use Drupal\Core\File\FileSystemInterface;
 use Drupal\ghi_geojson\Controller\GeoJsonSourcesController;
 use Drupal\ghi_geojson\GeoJson;
 use Drupal\KernelTests\KernelTestBase;
+use PHPUnit\Framework\Attributes\CoversMethod;
+use PHPUnit\Framework\Attributes\Group;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
  * Kernel tests for the GeoJsonSourcesController.
- *
- * @coversDefaultClass \Drupal\ghi_geojson\Controller\GeoJsonSourcesController
- * @group ghi_geojson
  */
+#[CoversMethod(GeoJsonSourcesController::class, 'buildRows')]
+#[CoversMethod(GeoJsonSourcesController::class, 'deleteVersion')]
+#[CoversMethod(GeoJsonSourcesController::class, 'directoryDownload')]
+#[CoversMethod(GeoJsonSourcesController::class, 'directoryListing')]
+#[CoversMethod(GeoJsonSourcesController::class, 'directoryTitle')]
+#[CoversMethod(GeoJsonSourcesController::class, 'sourcesPage')]
+#[Group('ghi_geojson')]
 class GeoJsonSourcesControllerTest extends KernelTestBase {
 
   /**
@@ -83,6 +89,9 @@ class GeoJsonSourcesControllerTest extends KernelTestBase {
     $this->installEntitySchema('user');
     $this->installEntitySchema('file');
     $this->installConfig(['layout_builder_modal']);
+
+    // Keep archives outside the virtual filesystem, but isolated per test.
+    $this->setSetting('file_temp_path', sys_get_temp_dir() . '/' . $this->databasePrefix);
 
     $this->fileSystem = $this->container->get('file_system');
     $this->geoJsonService = $this->container->get('geojson');
@@ -165,9 +174,6 @@ class GeoJsonSourcesControllerTest extends KernelTestBase {
 
   /**
    * Tests sources page basic functionality.
-   *
-   * @covers ::sourcesPage
-   * @covers ::buildRows
    */
   public function testSourcesPageBasicFunctionality(): void {
     $result = $this->controller->sourcesPage();
@@ -217,8 +223,6 @@ class GeoJsonSourcesControllerTest extends KernelTestBase {
 
   /**
    * Tests directory title generation.
-   *
-   * @covers ::directoryTitle
    */
   public function testDirectoryTitleGeneration(): void {
     $title = $this->controller->directoryTitle($this->testIso3, $this->testVersion);
@@ -238,8 +242,6 @@ class GeoJsonSourcesControllerTest extends KernelTestBase {
 
   /**
    * Tests directory listing with valid path.
-   *
-   * @covers ::directoryListing
    */
   public function testDirectoryListingValidPath(): void {
     $result = $this->controller->directoryListing($this->testIso3, $this->testVersion);
@@ -259,8 +261,6 @@ class GeoJsonSourcesControllerTest extends KernelTestBase {
 
   /**
    * Tests directory listing with invalid path.
-   *
-   * @covers ::directoryListing
    */
   public function testDirectoryListingInvalidPath(): void {
     $result = $this->controller->directoryListing('INVALID', 'nonexistent');
@@ -272,8 +272,6 @@ class GeoJsonSourcesControllerTest extends KernelTestBase {
 
   /**
    * Tests directory download method exists and has proper signature.
-   *
-   * @covers ::directoryDownload
    */
   public function testDirectoryDownloadMethodExists(): void {
     // Test method exists and is callable.
@@ -289,8 +287,6 @@ class GeoJsonSourcesControllerTest extends KernelTestBase {
 
   /**
    * Tests directory download with invalid parameters.
-   *
-   * @covers ::directoryDownload
    */
   public function testDirectoryDownloadError(): void {
     $result = $this->controller->directoryDownload('INVALID', 'nonexistent');
@@ -302,8 +298,6 @@ class GeoJsonSourcesControllerTest extends KernelTestBase {
 
   /**
    * Tests delete version protection for current version.
-   *
-   * @covers ::deleteVersion
    */
   public function testDeleteVersionProtectionCurrent(): void {
     $this->expectException(\Exception::class);
@@ -314,8 +308,6 @@ class GeoJsonSourcesControllerTest extends KernelTestBase {
 
   /**
    * Tests delete version success.
-   *
-   * @covers ::deleteVersion
    */
   public function testDeleteVersionSuccess(): void {
     // Verify directory exists before deletion.
@@ -332,8 +324,6 @@ class GeoJsonSourcesControllerTest extends KernelTestBase {
 
   /**
    * Tests build rows with data.
-   *
-   * @covers ::buildRows
    */
   public function testBuildRowsWithData(): void {
     $rows = $this->controller->buildRows();
@@ -396,24 +386,19 @@ class GeoJsonSourcesControllerTest extends KernelTestBase {
    * {@inheritdoc}
    */
   protected function tearDown(): void {
-    // Clean up test directories if they exist.
+    // Core cleans up public files. Temporary archives use a real directory;
+    // use its path because Drupal's stream wrappers are unregistered by now.
     try {
-      $paths_to_clean = [
-        GeoJson::GEOJSON_SOURCE_DIR,
-        GeoJson::ARCHIVE_TEMP_DIR,
-      ];
-
-      foreach ($paths_to_clean as $path) {
-        if ($this->fileSystem && is_dir($path)) {
+      if ($this->fileSystem) {
+        $path = $this->fileSystem->getTempDirectory();
+        if (is_dir($path)) {
           $this->fileSystem->deleteRecursive($path);
         }
       }
     }
-    catch (\Exception $e) {
-      // Ignore cleanup errors during tearDown.
+    finally {
+      parent::tearDown();
     }
-
-    parent::tearDown();
   }
 
 }

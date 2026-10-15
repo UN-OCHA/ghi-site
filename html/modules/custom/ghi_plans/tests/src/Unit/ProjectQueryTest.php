@@ -9,22 +9,20 @@ use Drupal\hpc_api\Query\FabricClient;
 use Drupal\hpc_api\Query\FabricQuery;
 use Drupal\Tests\hpc_api\Traits\PrivateAccessorTrait;
 use Drupal\Tests\UnitTestCase;
+use PHPUnit\Framework\Attributes\CoversMethod;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
  * Tests the project Fabric query plugin.
- *
- * @group ghi_plans
- *
- * @coversDefaultClass \Drupal\ghi_plans\Plugin\FabricQuery\ProjectQuery
  */
+#[CoversMethod(ProjectQuery::class, 'getProjectsForPlanId')]
+#[Group('ghi_plans')]
 class ProjectQueryTest extends UnitTestCase {
 
   use PrivateAccessorTrait;
 
   /**
    * Tests that a governing entity limits the Fabric project query.
-   *
-   * @covers ::getProjectsForPlanId
    */
   public function testGetProjectsForPlanIdFiltersByGoverningEntity(): void {
     $query_record = (object) ['filters' => []];
@@ -50,8 +48,6 @@ class ProjectQueryTest extends UnitTestCase {
 
   /**
    * Tests that an unscoped project query remains plan-wide.
-   *
-   * @covers ::getProjectsForPlanId
    */
   public function testGetProjectsForPlanIdWithoutContextRemainsPlanWide(): void {
     $query_record = (object) ['filters' => []];

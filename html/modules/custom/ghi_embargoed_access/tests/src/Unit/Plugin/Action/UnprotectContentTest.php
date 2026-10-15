@@ -8,14 +8,16 @@ use Drupal\ghi_embargoed_access\EmbargoedAccessManager;
 use Drupal\ghi_embargoed_access\Plugin\Action\UnprotectContent;
 use Drupal\node\NodeInterface;
 use Drupal\Tests\UnitTestCase;
+use PHPUnit\Framework\Attributes\CoversMethod;
+use PHPUnit\Framework\Attributes\Group;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Unit tests for UnprotectContent action plugin.
- *
- * @coversDefaultClass \Drupal\ghi_embargoed_access\Plugin\Action\UnprotectContent
- * @group ghi_embargoed_access
  */
+#[CoversMethod(UnprotectContent::class, 'access')]
+#[CoversMethod(UnprotectContent::class, 'execute')]
+#[Group('ghi_embargoed_access')]
 class UnprotectContentTest extends UnitTestCase {
 
   /**
@@ -55,8 +57,6 @@ class UnprotectContentTest extends UnitTestCase {
 
   /**
    * Tests execute with valid node.
-   *
-   * @covers ::execute
    */
   public function testExecuteWithValidNode(): void {
     $node = $this->createMock(NodeInterface::class);
@@ -70,8 +70,6 @@ class UnprotectContentTest extends UnitTestCase {
 
   /**
    * Tests execute with null node.
-   *
-   * @covers ::execute
    */
   public function testExecuteWithNullNode(): void {
     $this->embargoedAccessManager->expects($this->never())
@@ -82,8 +80,6 @@ class UnprotectContentTest extends UnitTestCase {
 
   /**
    * Tests execute with non-node object.
-   *
-   * @covers ::execute
    */
   public function testExecuteWithNonNode(): void {
     $not_a_node = new \stdClass();
@@ -96,8 +92,6 @@ class UnprotectContentTest extends UnitTestCase {
 
   /**
    * Tests access with valid permissions.
-   *
-   * @covers ::access
    */
   public function testAccessWithValidPermissions(): void {
     $node = $this->createMock(NodeInterface::class);
@@ -115,8 +109,6 @@ class UnprotectContentTest extends UnitTestCase {
 
   /**
    * Tests access without update permission.
-   *
-   * @covers ::access
    */
   public function testAccessWithoutUpdatePermission(): void {
     $node = $this->createMock(NodeInterface::class);
@@ -134,8 +126,6 @@ class UnprotectContentTest extends UnitTestCase {
 
   /**
    * Tests access returning boolean.
-   *
-   * @covers ::access
    */
   public function testAccessReturnBoolean(): void {
     $node = $this->createMock(NodeInterface::class);

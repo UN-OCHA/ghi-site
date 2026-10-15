@@ -6,12 +6,12 @@ use Drupal\ghi_plans\ApiObjects\Entities\EntityObjectInterface;
 use Drupal\ghi_plans\ApiObjects\Entities\GoverningEntity;
 use Drupal\ghi_plans\ApiObjects\Entities\PlanEntity;
 use Drupal\ghi_plans\ApiObjects\PlanEntityInterface;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
  * Tests the API entity objects.
- *
- * @group ghi_plans
  */
+#[Group('ghi_plans')]
 class EntityObjectTest extends ApiObjectTestBase {
 
   /**
