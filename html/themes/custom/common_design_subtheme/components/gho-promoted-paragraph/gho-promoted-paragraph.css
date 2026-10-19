@@ -3,7 +3,7 @@
   z-index: 1;
   padding-top: 1rem;
   padding-bottom: 1rem;
-  background-color: #f1f1f1;
+  background-color: var(--ghi-default-background-color);
 }
 .gho-paragraph-promoted::before {
   position: absolute;

@@ -146,13 +146,16 @@
       &.legend-icon-srp,
       &.legend-icon-hnarp,
       &.legend-icon-hrp {
-        background-color: var(--cd-primary-color) !important;
+        background-color: var(--ghi-plan-type-hrp) !important;
       }
       &.legend-icon-fa {
-        background-color: var(--ghi-widget-color--dark) !important;
+        background-color: var(--ghi-plan-type-fa) !important;
+      }
+      &.legend-icon-rrp {
+        background-color: var(--ghi-plan-type-rrp) !important;
       }
       &.legend-icon-other {
-        background-color: var(--ghi-grey--medium) !important;
+        background-color: var(--ghi-plan-type-other) !important;
       }
     }
 

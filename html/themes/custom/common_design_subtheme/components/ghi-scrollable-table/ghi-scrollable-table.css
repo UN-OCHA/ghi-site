@@ -1,8 +1,8 @@
 .scrollable-table--wrapper {
   --scrollable-table-shadow-size: 2.25rem;
   --scrollable-table-shadow-radius: 5rem;
-  --scrollable-table-shadow-color: rgba(0, 0, 0, 0.28);
-  --scrollable-table-shadow-transparent: rgba(0, 0, 0, 0);
+  --scrollable-table-shadow-color: rgb(0, 0, 0, 0.28);
+  --scrollable-table-shadow-transparent: rgb(0, 0, 0, 0);
 
   position: relative;
 }
@@ -71,7 +71,7 @@
 }
 
 .ghi-modal-dialog .scrollable-table--wrapper {
-  --scrollable-table-shadow-color: rgba(0, 0, 0, 0.34);
+  --scrollable-table-shadow-color: rgb(0, 0, 0, 0.34);
 }
 
 /* Project count modals can contain many rows and columns. Give the projects

@@ -178,7 +178,7 @@
                     width: 1rem;
                     height: 1rem;
                     content: "";
-                    color: var(--ghi-primary-button-color);
+                    color: var(--ghi-default-text-color);
                     background-color: currentColor;
                     mask: url("../img/icons/material-symbol-keyboard-arrow-down.svg") no-repeat center / contain;
                   }
@@ -239,7 +239,7 @@
 
               a:focus,
               a:hover {
-                color: var(--cd-primary-color);
+                color: var(--ghi-default-text-color);
               }
             }
 
@@ -324,7 +324,7 @@
                   a:focus,
                   &:hover a,
                   &:focus a {
-                    color: var(--cd-primary-color);
+                    color: var(--ghi-default-text-color);
                   }
                 }
 
@@ -340,13 +340,13 @@
                       background-color: var(--ghi-primary-background-color);
 
                       a {
-                        color: var(--cd-primary-color);
+                        color: var(--ghi-default-text-color);
                       }
                     }
 
                     a:hover,
                     a:focus {
-                      color: var(--cd-primary-color);
+                      color: var(--ghi-default-text-color);
                     }
 
                     &:first-child {

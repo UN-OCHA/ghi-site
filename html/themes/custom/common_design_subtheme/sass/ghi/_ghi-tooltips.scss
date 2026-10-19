@@ -49,7 +49,7 @@
   }
 
   svg {
-    fill: var(--cd-primary-color);
+    fill: var(--ghi-default-text-color);
   }
 
   .modal-link svg {
@@ -57,24 +57,32 @@
   }
 }
 
-.tippy-box .tippy-content {
-  & > .content {
-    padding: 0 1rem;
-  }
+.tippy-box {
+  background-color: var(--ghi-tooltip-background-color);
 
-  a.fts-link {
-    display: inline-block;
-    margin-bottom: 0.5rem;
+  .tippy-content {
+    & > .content {
+      padding: 0 1rem;
+    }
 
-    img {
-      height: 20px;
-      vertical-align: middle;
+    a.fts-link {
+      display: inline-block;
+      margin-bottom: 0.5rem;
+
+      img {
+        height: 20px;
+        vertical-align: middle;
+      }
+    }
+
+    td.project-counter & {
+      min-width: 20rem;
     }
   }
+}
 
-  td.project-counter & {
-    min-width: 20rem;
-  }
+.tippy-arrow {
+  color: var(--ghi-tooltip-background-color);
 }
 
 .tippy-box[data-theme="measurement-comment"] {
