@@ -8,6 +8,7 @@ use Drupal\Core\Entity\EntityTypeBundleInfoInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Field\EntityReferenceFieldItemListInterface;
+use Drupal\Core\Lock\LockBackendInterface;
 use Drupal\Core\Messenger\MessengerInterface;
 use Drupal\Core\Render\RendererInterface;
 use Drupal\Core\Session\AccountProxyInterface;
@@ -111,6 +112,7 @@ class SubpageManagerTest extends UnitTestCase {
     $renderer = $this->prophesize(RendererInterface::class);
     $current_user = $this->prophesize(AccountProxyInterface::class);
     $messenger = $this->prophesize(MessengerInterface::class);
+    $lock = $this->prophesize(LockBackendInterface::class);
 
     $container = new ContainerBuilder();
     $container->set('module_handler', $module_handler->reveal());
@@ -120,6 +122,7 @@ class SubpageManagerTest extends UnitTestCase {
     $container->set('renderer', $renderer->reveal());
     $container->set('current_user', $current_user->reveal());
     $container->set('messenger', $messenger->reveal());
+    $container->set('lock', $lock->reveal());
     \Drupal::setContainer($container);
 
     $this->subpageManager = SubpageManager::create($container);
