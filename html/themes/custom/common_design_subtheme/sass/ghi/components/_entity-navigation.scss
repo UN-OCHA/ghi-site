@@ -35,7 +35,7 @@ ul.links--entity-navigation {
 
     a {
       text-decoration: none;
-      color: var(--hpc-dark-brown);
+      color: var(--ghi-default-text-color);
 
       &.header-link {
         border-bottom: 1px solid var(--ghi-default-border-color-background);
@@ -84,7 +84,7 @@ ul.links--entity-navigation {
         background-color: transparent;
 
         svg.cd-dropdown__icon {
-          fill: var(--ghi-primary-button-color);
+          fill: var(--ghi-default-text-color);
         }
       }
 
@@ -127,7 +127,7 @@ ul.links--entity-navigation {
 
           & > div.megamenu-wrapper-outer,
           & > div.second-level-wrapper-outer {
-            max-width: calc(var(--content-width) + 24px);
+            max-width: var(--content-width);
             margin-right: auto;
             margin-left: auto;
             padding-right: var(--cd-container-padding);
@@ -219,7 +219,11 @@ ul.links--entity-navigation {
             }
 
             @include min-width("md") {
-              max-width: calc(var(--content-width) + 48px);
+              padding-right: var(--cd-container-padding-tablet);
+              padding-left: var(--cd-container-padding-tablet);
+            }
+
+            @include min-width("xl") {
               padding-right: var(--cd-container-padding-xlarge);
               padding-left: var(--cd-container-padding-xlarge);
             }
