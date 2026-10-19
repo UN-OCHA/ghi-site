@@ -2,34 +2,34 @@
 // Common Design: Search
 //——————————————————————————————————————————————————————————————————————————————
 .cd-search__btn {
-  color: $implementation-primary;
+  color: $cd-default-text-color;
 
   svg {
-    fill: $implementation-primary;
+    fill: currentColor;
   }
 
   &:hover,
   &:focus {
-    color: $implementation-primary-dark;
+    color: $cd-default-text-color;
 
     svg {
-      fill: $implementation-primary-dark;
+      fill: currentColor;
     }
   }
 
   &:focus {
-    color: $implementation-highlight;
+    color: $cd-default-text-color;
 
     svg {
-      fill: $implementation-highlight;
+      fill: currentColor;
     }
   }
 
   &[aria-expanded="true"] {
-    color: $implementation-highlight;
+    color: $cd-default-text-color;
 
     svg {
-      fill: $implementation-highlight;
+      fill: currentColor;
     }
   }
 }

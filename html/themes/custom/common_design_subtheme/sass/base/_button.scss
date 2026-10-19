@@ -2,14 +2,20 @@
 .cd-button,
 .btn--download,
 .ghi-download__btn {
-  align-items: baseline;
-  padding: 0.8rem 1.5rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  min-height: 2.75rem;
+  padding: var(--cd-spacing--2) var(--cd-spacing--6);
   text-decoration: none;
   text-transform: uppercase;
-  color: var(--ghi-default-text-color) !important;
+  color: var(--ghi-color-on-primary) !important;
+  border: 2px solid transparent;
   background-color: var(--ghi-primary-button-color);
   font-size: var(--cd-font-size--small);
   font-weight: bold;
+  line-height: 1.15;
 
   &.btn--centered {
     text-align: center;
@@ -20,8 +26,14 @@
 
   &:hover,
   &:focus {
-    color: var(--ghi-default-text-color);
+    color: var(--ghi-color-on-primary) !important;
     background-color: var(--ghi-primary-button-color-hover);
+  }
+
+  &:focus,
+  &:focus-visible {
+    border-color: var(--ghi-color-on-primary);
+    outline: none;
   }
 
   &.expand-table,
@@ -31,20 +43,22 @@
   &.external {
     position: relative;
     max-width: fit-content;
-    padding-right: 2.5rem;
-    color: var(--ghi-default-text-color);
+    gap: var(--cd-spacing--2);
+    padding-right: var(--cd-spacing--6);
+    color: var(--ghi-color-on-primary);
 
     &::after {
-      position: absolute;
-      top: calc(50% - 10px);
-      right: 1rem;
-      padding: 10px;
+      flex: 0 0 20px;
+      width: 20px;
+      height: 20px;
       content: "";
-      /* The icon is actually black, but we want to show it as grey #4d4d4d. Using
-        https://codepen.io/sosuke/pen/Pjoqqp to create a filter that makes the
-        icon appear in that color. */
-      filter: invert(22%) sepia(21%) saturate(0%) hue-rotate(165deg) brightness(112%) contrast(83%);
-      background-repeat: no-repeat;
+      background-color: currentColor;
+      -webkit-mask-repeat: no-repeat;
+      mask-repeat: no-repeat;
+      -webkit-mask-position: center;
+      mask-position: center;
+      -webkit-mask-size: contain;
+      mask-size: contain;
     }
   }
 
@@ -73,16 +87,34 @@
 
   &.expand-table::after,
   &.expand-collapsible::after {
-    background-image: url("../img/icons/material-symbol-arrow-downward.svg");
+    -webkit-mask-image: url("../img/icons/material-symbol-arrow-downward.svg");
+    mask-image: url("../img/icons/material-symbol-arrow-downward.svg");
   }
   &.collaps-collapsible::after {
-    background-image: url("../img/icons/material-symbol-arrow-upward.svg");
+    -webkit-mask-image: url("../img/icons/material-symbol-arrow-upward.svg");
+    mask-image: url("../img/icons/material-symbol-arrow-upward.svg");
   }
   &.read-more::after {
-    background-image: url("../img/icons/material-symbol-arrow-forward.svg");
+    -webkit-mask-image: url("../img/icons/material-symbol-arrow-forward.svg");
+    mask-image: url("../img/icons/material-symbol-arrow-forward.svg");
   }
   &.external::after {
-    background-image: url("../img/icons/material-symbol-open-in-new.svg");
+    -webkit-mask-image: url("../img/icons/material-symbol-open-in-new.svg");
+    mask-image: url("../img/icons/material-symbol-open-in-new.svg");
+  }
+}
+
+.cd-button.cd-button--outline {
+  color: var(--ghi-default-text-color) !important;
+  border-color: var(--ghi-default-text-color);
+  background-color: var(--cd-white);
+
+  &:hover,
+  &:focus,
+  &:focus-visible {
+    color: var(--ghi-default-text-color) !important;
+    border-color: var(--ghi-default-text-color);
+    background-color: var(--ghi-default-background-color);
   }
 }
 
@@ -116,15 +148,13 @@ button.btn--download {
     background-color 0.6s ease-out,
     color 0.6s ease-out;
   text-align: center;
-  border: 0;
-  border: 2px solid transparent;
   border-radius: 3px;
   box-shadow: none;
   line-height: 1.15;
   -webkit-appearance: none;
 
   svg.cd-icon {
-    fill: var(--ghi-default-text-color);
+    fill: var(--ghi-color-on-primary);
   }
 
   &::after {

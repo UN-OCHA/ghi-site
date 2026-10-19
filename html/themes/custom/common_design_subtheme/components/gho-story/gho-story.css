@@ -24,8 +24,8 @@
 .gho-story .media-caption {
   margin-bottom: 2rem;
   padding: 0.5rem 0;
-  border-bottom: 1px solid #d8d8d8;
-  font-size: 0.75rem;
+  border-bottom: 1px solid var(--ghi-default-border-color);
+  font-size: var(--cd-font-size--small);
 }
 @media (min-width: 768px) {
   .gho-story .media-caption {
@@ -52,8 +52,8 @@
 .gho-story__source {
   margin-top: 1rem;
   padding-top: 1rem;
-  border-top: 1px solid #d8d8d8;
-  font-size: 0.75rem;
+  border-top: 1px solid var(--ghi-default-border-color);
+  font-size: var(--cd-font-size--small);
   line-height: 1.25rem;
 }
 
@@ -115,7 +115,7 @@
 .gho-story--full .gho-aside__pre-title {
   display: block;
   max-width: var(--reading-width);
-  color: #707070;
+  color: var(--ghi-default-text-color);
   font-size: 0.875rem;
 }
 .gho-story--full .gho-aside__title {
@@ -124,15 +124,14 @@
 .gho-story--full .page-title {
   max-width: var(--reading-width);
   padding: 0;
-  color: #1f1f1f;
+  color: var(--ghi-default-text-color);
   border: none;
-  font-size: 1.625rem;
+  font-size: var(--cd-font-size--2xbase);
   font-weight: 700;
-  line-height: 1.75rem;
+  line-height: 1.2;
 }
 @media (min-width: 768px) {
   .gho-story--full .page-title {
-    font-size: 2.25rem;
-    line-height: 2.5rem;
+    font-size: var(--cd-font-size--2xmedium);
   }
 }

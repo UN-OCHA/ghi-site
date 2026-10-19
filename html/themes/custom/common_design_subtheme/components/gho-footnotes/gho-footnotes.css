@@ -1,20 +1,20 @@
 .gho-footnote-list {
-  margin: 6.75rem 0 0 0;
+  margin: var(--ghi-section-spacing) 0 0 0;
 }
 .gho-footnote-list__title {
   max-width: var(--reading-width);
-  margin: 0 0 1.5rem 0;
-  padding: 0 0 1.5rem 0;
-  color: #1f1f1f;
-  border-bottom: 1px solid #d8d8d8;
-  font-size: 1.25rem;
+  margin: 0 0 var(--ghi-heading-content-spacing) 0;
+  padding: 0 0 var(--ghi-heading-content-spacing) 0;
+  color: var(--ghi-default-text-color);
+  border-bottom: 1px solid var(--ghi-default-border-color);
+  font-size: var(--cd-font-size--large);
   font-weight: 700;
-  line-height: 1.875rem;
+  line-height: 1.2;
 }
 
-@media (min-width: 1024px) {
+@media (min-width: 768px) {
   .gho-footnote-list__title {
-    font-size: 1.5rem;
+    font-size: var(--cd-font-size--2xbase);
   }
 }
 .gho-footnote-list__list {
@@ -39,10 +39,10 @@
   word-wrap: break-word;
 }
 .gho-footnote a {
-  word-break: break-word;
+  overflow-wrap: anywhere;
 }
 .gho-footnote:target {
-  background-color: #eee;
+  background-color: var(--ghi-default-border-color);
 }
 .gho-footnote + .gho-footnote {
   margin-top: 0.375rem;
@@ -76,12 +76,12 @@
    * Oh yeah! Nothing better than some magical css soup.
    */
   width: calc(100% + 248px);
-  max-width: 1400px;
+  max-width: var(--cd-max-page-width);
   max-height: 50%;
   margin: 0;
   padding: 1rem 0 1rem 248px;
   transform: translateX(-248px);
-  border-top: 1px solid #d8d8d8;
+  border-top: 1px solid var(--ghi-default-border-color);
   background: #fff;
 }
 [dir="rtl"] .gho-footnote-list__wrapper[data-visible] {
