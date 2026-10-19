@@ -16,7 +16,7 @@ article.node--view-mode-grid {
     border-bottom-right-radius: 0;
     border-bottom-left-radius: 0;
     background-color: var(--cd-contrast-red);
-    font-size: 0.8rem;
+    font-size: var(--cd-font-size--small);
   }
 
   .cd-teaser__image {
@@ -35,8 +35,9 @@ article.node--view-mode-grid {
       text-decoration: none;
     }
 
-    .cd-teaser__title--wrapper {
-      font-size: var(--cd-font-size--default);
+    .cd-teaser__title,
+    .cd-teaser__title a {
+      font-size: var(--cd-font-size--medium);
     }
 
     .cd-teaser__description {
@@ -55,6 +56,17 @@ article.node--view-mode-grid {
 
       .cd-teaser__date {
         font-size: var(--cd-font-size--small);
+      }
+    }
+  }
+}
+
+@media (min-width: 768px) {
+  article.node--view-mode-grid {
+    .cd-teaser__container {
+      .cd-teaser__title,
+      .cd-teaser__title a {
+        font-size: var(--cd-font-size--large);
       }
     }
   }

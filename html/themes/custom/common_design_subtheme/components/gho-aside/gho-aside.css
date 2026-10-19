@@ -1,11 +1,11 @@
 .gho-aside {
-  margin-top: 4.5rem;
+  margin-top: var(--ghi-section-spacing);
 }
 .gho-aside * {
-  color: #707070;
+  color: var(--ghi-default-text-color);
 }
 .gho-aside--dark {
-  margin-top: 6.75rem;
+  margin-top: var(--ghi-section-spacing);
   padding-top: 2rem;
   padding-bottom: 3rem;
   background-color: #1f1f1f;
@@ -32,7 +32,7 @@
 }
 .gho-aside__title {
   margin-top: 0;
-  margin-bottom: 2rem;
+  margin-bottom: var(--ghi-heading-content-spacing);
   font-size: 1rem;
   font-weight: 700;
   line-height: 1.5rem;

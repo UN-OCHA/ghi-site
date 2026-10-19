@@ -20,7 +20,7 @@
   &.region-page-title .region-wrapper-inner,
   &.region-page-subtitle .region-wrapper-inner,
   &.region-page-navigation .block-wrapper__inner {
-    max-width: calc(var(--content-width) + 24px);
+    max-width: var(--content-width);
     margin-right: auto;
     margin-left: auto;
     padding-right: var(--cd-container-padding);
@@ -32,7 +32,11 @@
     }
 
     @include min-width("md") {
-      max-width: calc(var(--content-width) + 48px);
+      padding-right: var(--cd-container-padding-tablet);
+      padding-left: var(--cd-container-padding-tablet);
+    }
+
+    @include min-width("xl") {
       padding-right: var(--cd-container-padding-xlarge);
       padding-left: var(--cd-container-padding-xlarge);
     }

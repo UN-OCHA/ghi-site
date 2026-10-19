@@ -3,8 +3,8 @@
 
   .subpage-title-wrapper {
     margin: 0 auto;
-    padding-top: 3.6rem;
-    padding-bottom: 3.6rem;
+    padding-top: var(--cd-spacing--16);
+    padding-bottom: var(--cd-spacing--16);
 
     &.has-title-prefix {
       padding-top: 2.6rem;

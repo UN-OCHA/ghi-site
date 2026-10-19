@@ -103,7 +103,7 @@
       text-align: center;
       text-indent: 0;
       opacity: 1 !important;
-      color: var(--cd-primary-color);
+      color: var(--ghi-default-text-color);
       border-radius: 0;
       background: none;
       font-size: 24px;
@@ -168,7 +168,7 @@
               align-items: center;
               height: 24px;
               cursor: pointer;
-              color: var(--cd-primary-color);
+              color: var(--ghi-default-text-color);
               font-weight: bold;
               &.disabled {
                 cursor: default;
@@ -193,9 +193,8 @@
           div.admin-area {
             padding-bottom: 0.5rem;
             text-transform: uppercase;
-            border-bottom: 1px solid #e1e1e1;
+            border-bottom: 1px solid var(--ghi-default-border-color);
             font-size: var(--cd-font-size--extra-tiny);
-            font-size: 10px;
           }
         }
 
@@ -310,8 +309,8 @@
 
         a {
           cursor: pointer;
-          text-decoration: none;
           white-space: nowrap;
+          text-decoration: none;
           color: var(--cd-white) !important;
           font-size: inherit;
         }
@@ -339,6 +338,7 @@
 
               &:hover {
                 cursor: pointer;
+                color: var(--ghi-color-on-primary) !important;
                 background-color: var(--ghi-yellow);
               }
             }
@@ -605,7 +605,7 @@
       align-items: center;
       justify-content: center;
       box-sizing: border-box;
-      color: var(--ghi-yellow);
+      color: var(--ghi-default-text-color);
       border: 2px solid var(--cd-primary-color);
       border-radius: 4px;
       font-size: 24px;
@@ -638,7 +638,7 @@
     color: var(--cd-white);
     border-radius: 5px;
     background-color: var(--cd-black);
-    font-size: 12px;
+    font-size: var(--cd-font-size--small);
     line-height: 1.2rem;
 
     div {
@@ -653,8 +653,8 @@
     text-align: center;
     border: 1px solid var(--hpc-border-color);
     border-top: 0;
-    background: rgba(251, 251, 251, .9);
-    font-size: 11px;
+    background: rgb(251, 251, 251, .9);
+    font-size: var(--cd-font-size--small);
   }
 }
 
@@ -681,6 +681,6 @@
     width: 0.7rem;
     height: 0.7rem;
     border-radius: 50%;
-    box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.45);
+    box-shadow: 0 0 0 1px rgb(255, 255, 255, 0.45);
   }
 }

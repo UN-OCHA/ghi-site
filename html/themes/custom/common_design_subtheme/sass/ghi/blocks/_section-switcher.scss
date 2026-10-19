@@ -8,11 +8,14 @@
 
     .section-switcher-single,
     button {
-      display: inline-block;
-      padding: 0.5rem 1.2rem;
+      display: inline-flex;
+      align-items: center;
+      box-sizing: border-box;
+      min-height: 2.25rem;
+      padding: var(--cd-spacing--1) var(--cd-spacing--4);
       text-transform: uppercase;
-      color: var(--ghi-default-text-color);
-      border: 0;
+      color: var(--ghi-color-on-primary);
+      border: 2px solid transparent;
       background-color: var(--ghi-primary-button-color);
       font-size: var(--cd-font-size--small);
       font-weight: bold;
@@ -25,11 +28,13 @@
 
       &:hover,
       &:focus {
+        color: var(--ghi-color-on-primary);
+        outline: none;
         background-color: var(--ghi-primary-button-color-hover);
       }
 
       svg {
-        fill: var(--ghi-default-text-color);
+        fill: currentColor;
       }
     }
 
@@ -68,7 +73,8 @@
     }
 
     @include desktop {
-      top: 0.25rem;
+      // Center the compact control against the desktop title's 2.85rem line box.
+      top: 0.3rem;
     }
   }
 }
