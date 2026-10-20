@@ -74,12 +74,10 @@ class FileAssetQuery extends FabricQueryBase {
     switch ($object_type) {
       case 'plan':
         $filters = ['plan' => ['Id' => $object_id]];
-        // $request_items['plan'] = ['items' => ['Id']];
         break;
 
       case 'governing_entity':
         $filters = ['coordinationEntity' => ['Id' => $object_id]];
-        // $request_items['coordinationEntity'] = ['items' => ['Id']];
         break;
 
     }
