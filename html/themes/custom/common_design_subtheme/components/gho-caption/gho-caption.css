@@ -3,8 +3,8 @@
    * we let the components using them to set their margins. */
   margin-top: 0;
   margin-bottom: 0;
-  color: #707070;
-  font-size: 0.75rem;
+  color: var(--ghi-default-text-color);
+  font-size: var(--cd-font-size--small);
   line-height: 1.25rem;
 }
 
@@ -20,7 +20,7 @@
   display: block;
   padding-bottom: 2rem;
   content: "";
-  border-bottom: 1px solid #d8d8d8;
+  border-bottom: 1px solid var(--ghi-default-border-color);
 }
 
 /* We don't put the max-width on the container so we can more easily add

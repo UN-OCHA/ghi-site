@@ -14,7 +14,7 @@
       }
 
       &.soft-limit + a.expand-table {
-        display: block !important;
+        display: flex !important;
         margin-right: auto;
         margin-left: auto;
       }
@@ -101,7 +101,7 @@
           & > span {
             display: inline-block;
             width: 2rem;
-            color: var(--cd-primary-color);
+            color: var(--ghi-default-text-color);
           }
         }
 
@@ -124,13 +124,13 @@
             .sorttable-sorted-reverse,
             .sorttable-nosort
           )::after {
-          background-image: url("../img/table/ghi_sorting.svg");
+          background-image: url("../img/table/ghi_sorting_grey.svg");
         }
         &.sorttable-sorted::after {
-          background-image: url("../img/table/ghi_sorting_up.svg");
+          background-image: url("../img/table/ghi_sorting_grey_up.svg");
         }
         &.sorttable-sorted-reverse::after {
-          background-image: url("../img/table/ghi_sorting_down.svg");
+          background-image: url("../img/table/ghi_sorting_grey_down.svg");
         }
         #sorttable-sortfwdind,
         #sorttable-sortrevind {

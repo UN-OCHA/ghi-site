@@ -6,7 +6,7 @@
 .ghi-block.ui-state-drop,
 .block-layout-builder,
 .block-layout-builder.ui-state-drop {
-  margin-top: 4.5rem;
+  margin-top: var(--ghi-section-spacing);
   padding-top: 1rem;
   padding-bottom: 1rem;
   // Explicitly set the same default line height as for the full document to
@@ -15,7 +15,7 @@
   line-height: 1.5;
 
   &.ghi-block-paragraph {
-    margin-top: 2.5rem;
+    margin-top: var(--ghi-section-spacing);
   }
 
   &:not(.paragraph--gho-text) {
@@ -42,7 +42,8 @@
   }
 
   .cd-block-title {
-    font-size: var(--cd-font-size--medium-large);
+    margin-bottom: var(--ghi-heading-content-spacing);
+    font-size: var(--cd-font-size--large);
   }
   .cd-block-title a.anchor {
     position: relative;
@@ -89,13 +90,13 @@
   }
 
   body.page-node-type-article .layout__region--content > &.block:first-child {
-    margin-top: 2.5rem;
+    margin-top: var(--ghi-section-spacing);
   }
   .layout__region--content
     > &.block.block-highlighted:not(.content-width):first-child {
     &.block-highlighted:not(.content-width, .block-plan-entity-logframe) {
       margin-top: 0;
-      padding-top: 4.5rem;
+      padding-top: var(--ghi-section-spacing);
       background-color: var(--ghi-default-background-color);
     }
   }
@@ -164,6 +165,13 @@
       margin-top: 1rem;
       border-top: 0;
     }
+  }
+}
+
+@media (min-width: 768px) {
+  .ghi-block .cd-block-title,
+  .block-layout-builder .cd-block-title {
+    font-size: var(--cd-font-size--2xbase);
   }
 }
 

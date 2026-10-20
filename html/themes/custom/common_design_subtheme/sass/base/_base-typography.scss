@@ -12,6 +12,74 @@ a {
 }
 
 input::placeholder {
-  font-size: 80%;
+  font-size: var(--cd-font-size--small);
   font-style: italic;
+}
+
+h1,
+.cd-content--spacious h1 {
+  margin-bottom: var(--ghi-heading-content-spacing);
+  font-size: var(--cd-font-size--2xbase);
+}
+
+h2,
+.cd-content--spacious h2 {
+  margin-bottom: var(--ghi-heading-content-spacing);
+  font-size: var(--cd-font-size--large);
+}
+
+h3,
+.cd-content--spacious h3 {
+  margin-bottom: var(--ghi-heading-content-spacing);
+  font-size: var(--cd-font-size--medium);
+}
+
+h4,
+.cd-content--spacious h4 {
+  margin-bottom: var(--ghi-heading-content-spacing);
+  font-size: var(--cd-font-size--base);
+}
+
+h5,
+.cd-content--spacious h5 {
+  margin-bottom: var(--ghi-heading-content-spacing);
+  font-size: var(--cd-font-size--default);
+}
+
+h6,
+.cd-content--spacious h6 {
+  margin-bottom: var(--ghi-heading-content-spacing);
+  font-size: var(--cd-font-size--small);
+}
+
+@media (min-width: 768px) {
+  h1,
+  .cd-content--spacious h1 {
+    font-size: var(--cd-font-size--2xmedium);
+  }
+
+  h2,
+  .cd-content--spacious h2 {
+    font-size: var(--cd-font-size--2xbase);
+  }
+
+  h3,
+  .cd-content--spacious h3 {
+    font-size: var(--cd-font-size--large);
+  }
+
+  h4,
+  .cd-content--spacious h4 {
+    font-size: var(--cd-font-size--medium);
+  }
+
+  h5,
+  .cd-content--spacious h5 {
+    font-size: var(--cd-font-size--base);
+  }
+
+  h6,
+  .cd-content--spacious h6 {
+    font-size: var(--cd-font-size--default);
+  }
 }
