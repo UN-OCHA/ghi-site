@@ -2,13 +2,13 @@
   padding-bottom: 2rem;
 }
 .gho-top-figures .gho-figures--large {
-  border-bottom: 1px solid #d8d8d8;
+  border-bottom: 1px solid var(--ghi-default-border-color);
 }
 .gho-top-figures:not(.gho-top-figures--small) .gho-figures .gho-figure {
   padding: 2rem 0;
   border-width: 1px 0 0 0;
   border-style: solid;
-  border-color: #d8d8d8;
+  border-color: var(--ghi-default-border-color);
 }
 /* hide border-top when top figures immediately follows a Hero image caption */
 .gho-caption--article + .gho-top-figures .gho-figures .gho-figure:first-child {
@@ -56,12 +56,12 @@
     width: 100%;
     margin-left: 1.5rem;
     content: "";
-    border-top: 1px solid #d8d8d8;
+    border-top: 1px solid var(--ghi-default-border-color);
     border-bottom: 0;
   }
   .gho-top-figures .gho-figures--large::after {
     border-top: 0;
-    border-bottom: 1px solid #d8d8d8;
+    border-bottom: 1px solid var(--ghi-default-border-color);
   }
   .gho-top-figures .gho-figures {
     display: flex;

@@ -33,12 +33,12 @@
   // This shade of red has been selected based on WCAG AAA requirements for contrast.
   --cd-contrast-red: #e00000;
   --cd-white: #fff;
-  --cd-grey--lighter: #f5f5f5;
-  --cd-grey--light: #eee;
-  --cd-grey--mid: #595959;
+  --cd-grey--lighter: #f2f2f2;
+  --cd-grey--light: #e6e6e6;
+  --cd-grey--mid: #4d4d4d;
   --cd-grey--dark: #4d4d4d;
   --cd-default-text-color: var(--cd-grey--dark);
-  --cd-default-border-color: #dfdede;
+  --cd-default-border-color: var(--cd-grey--light);
   --cd-default-background-color: var(--cd-grey--lighter);
   --cd-black: #000;
   --cd-blue-grey: #e6ecf1;
@@ -48,19 +48,29 @@
   // Colours used with rgba().
   // https://stackoverflow.com/questions/40010597/how-do-i-apply-opacity-to-a-css-color-variable
   --cd-rgb-ocha-blue: 2, 108, 182;
-  --cd-rgb-grey--mid: 89, 89, 89;
-  --cd-rgb-grey--dark: 74, 74, 74;
+  --cd-rgb-grey--mid: 77, 77, 77;
+  --cd-rgb-grey--dark: 77, 77, 77;
   --cd-rgb-highlight-red: 229, 106, 84;
   --cd-rgb-blue-grey--dark: 211, 221, 229;
 
   /* Measurements */
   --cd-max-page-width: 1400px;
-  --cd-max-body-width: 1300px;
+  --cd-max-body-width: var(--cd-max-page-width);
   --cd-max-width: 1220px;
   --cd-max-content-width: 820px;
   --cd-container-padding: 0.75rem; /* 12px */
   --cd-container-padding-tablet: 1.5rem; /* 24px */
   --cd-container-padding-xlarge: 3rem; /* 48px */
+
+  /* Four-point spacing scale. */
+  --cd-spacing--1: 0.25rem; /* 4px */
+  --cd-spacing--2: 0.5rem; /* 8px */
+  --cd-spacing--3: 0.75rem; /* 12px */
+  --cd-spacing--4: 1rem; /* 16px */
+  --cd-spacing--6: 1.5rem; /* 24px */
+  --cd-spacing--8: 2rem; /* 32px */
+  --cd-spacing--12: 3rem; /* 48px */
+  --cd-spacing--16: 4rem; /* 64px */
 
   /* Vertical Rhythm */
   --cd-flow-space: 1rem;
@@ -81,7 +91,7 @@
   --cd-green--light: #e8f5d6;
 
   /* Fonts sizes in REMs */
-  --cd-font-size--tiny: 0.75rem; /* 12px */
+  --cd-font-size--tiny: 0.875rem; /* 14px */
   --cd-font-size--small: 0.875rem; /* 14px */
   --cd-font-size--default: 1rem; /* 16px */
   --cd-font-size--base: 1.125rem; /* 18px */
@@ -233,4 +243,4 @@ $zindex: (
 $implementation-primary: var(--ghi-yellow);
 $implementation-primary-dark: $cd-primary;
 $implementation-secondary: $cd-blue--bright;
-$implementation-highlight: #fed83d;
+$implementation-highlight: var(--ghi-yellow);

@@ -13,7 +13,12 @@
       padding: 0;
 
       &.featured {
+        color: var(--ghi-color-on-primary);
         background-color: var(--cd-primary-color);
+
+        a {
+          color: inherit;
+        }
       }
 
       .field--type-image {

@@ -134,8 +134,8 @@ div.ajax-switcher-wrapper {
       font-weight: normal;
 
       &.select2-results__option--highlighted {
-        color: var(--cd-primary-color);
-        background-color: transparent;
+        color: var(--ghi-default-text-color);
+        background-color: var(--ghi-primary-background-color);
       }
     }
 
