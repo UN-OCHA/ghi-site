@@ -28,6 +28,7 @@ function hpc_common_preprocess_hpc_autoformat_value(array &$vars) {
         '#theme' => 'hpc_percent',
         '#ratio' => $value / 100,
         '#decimal_format' => $decimal_format,
+        '#table_cell' => !empty($vars['table_cell']),
       ] + (!empty($unit_defaults['percentage']) ? $unit_defaults['percentage'] : []));
       break;
 
@@ -37,6 +38,7 @@ function hpc_common_preprocess_hpc_autoformat_value(array &$vars) {
         '#theme' => 'hpc_amount',
         '#amount' => $value,
         '#decimal_format' => $decimal_format,
+        '#table_cell' => !empty($vars['table_cell']),
       ] + (!empty($unit_defaults['amount']) ? $unit_defaults['amount'] : []));
       break;
   }
@@ -87,6 +89,7 @@ function hpc_common_preprocess_hpc_currency(array &$vars) {
     '#use_abbreviation' => $use_abbreviation,
     '#decimals' => $value > $billion ? 2 : ($value > $million / 2 ? 1 : 0),
     '#decimal_format' => $decimal_format,
+    '#table_cell' => !empty($vars['table_cell']),
   ], TRUE, FALSE));
 }
 
@@ -101,14 +104,15 @@ function hpc_common_preprocess_hpc_icon_symbol(array &$vars) {
 /**
  * Preprocess an amount, e.g. for people in need.
  *
- * For billions, the amounts will display as "x.x bn".
- * For millions, the amounts will display as "x.x m".
+ * Standard formatting uses translated scale names. Compact formatting uses
+ * k, M, and B with scale-specific precision.
  */
 function hpc_common_preprocess_hpc_amount(array &$vars) {
   $amount = $vars['amount'];
   $scale = $vars['scale'] != 'auto' ? $vars['scale'] : NULL;
   $suffix = $vars['suffix'];
   $use_abbreviation = $vars['use_abbreviation'];
+  $compact = !empty($vars['table_cell']) && ThemeHelper::isCompactDisplayStyle();
   $include_suffix = $vars['include_suffix'];
   $export = $vars['export'];
   $decimals = $vars['decimals'];
@@ -135,20 +139,41 @@ function hpc_common_preprocess_hpc_amount(array &$vars) {
   $million = pow(10, 6);
   $thousand = pow(10, 3);
 
-  if ((empty($scale) && ($amount / $billion) >= 1) || $scale == ThemeHelper::SCALE_BILLION) {
+  if ($compact) {
+    $absolute_amount = abs((float) $amount);
+    $scale = match (TRUE) {
+      $absolute_amount >= $billion => ThemeHelper::SCALE_BILLION,
+      $absolute_amount >= $million => ThemeHelper::SCALE_MILLION,
+      $absolute_amount >= $thousand => ThemeHelper::SCALE_THOUSAND,
+      default => NULL,
+    };
+    $decimals = in_array($scale, [ThemeHelper::SCALE_MILLION, ThemeHelper::SCALE_BILLION], TRUE) ? 1 : 0;
+
+    // Promote values when rounding would otherwise produce 1,000k or 1,000M.
+    if ($scale === ThemeHelper::SCALE_THOUSAND && round($absolute_amount / $thousand, $decimals) >= 1000) {
+      $scale = ThemeHelper::SCALE_MILLION;
+      $decimals = 1;
+    }
+    elseif ($scale === ThemeHelper::SCALE_MILLION && round($absolute_amount / $million, $decimals) >= 1000) {
+      $scale = ThemeHelper::SCALE_BILLION;
+      $decimals = 1;
+    }
+  }
+
+  if ((!$compact && empty($scale) && ($amount / $billion) >= 1) || $scale == ThemeHelper::SCALE_BILLION) {
     // If the amount is in the billions, give it the correct formatting.
     $scaled_amount = round($amount / $billion, $decimals);
-    $suffix = ThemeHelper::getNumberSuffix(ThemeHelper::SCALE_BILLION, $use_abbreviation);
+    $suffix = $compact ? ThemeHelper::getCompactNumberSuffix(ThemeHelper::SCALE_BILLION) : ThemeHelper::getNumberSuffix(ThemeHelper::SCALE_BILLION, $use_abbreviation);
   }
-  elseif ((empty($scale) && ($amount / $million) >= 0.5) || $scale == ThemeHelper::SCALE_MILLION) {
+  elseif ((!$compact && empty($scale) && ($amount / $million) >= 0.5) || $scale == ThemeHelper::SCALE_MILLION) {
     // If the amount is in the millions, give it the correct formatting.
     $scaled_amount = round($amount / $million, $decimals);
-    $suffix = ThemeHelper::getNumberSuffix(ThemeHelper::SCALE_MILLION, $use_abbreviation);
+    $suffix = $compact ? ThemeHelper::getCompactNumberSuffix(ThemeHelper::SCALE_MILLION) : ThemeHelper::getNumberSuffix(ThemeHelper::SCALE_MILLION, $use_abbreviation);
   }
-  elseif ((empty($scale) && ($amount / $thousand) >= 0.5) || $scale == ThemeHelper::SCALE_THOUSAND) {
+  elseif ((!$compact && empty($scale) && ($amount / $thousand) >= 0.5) || $scale == ThemeHelper::SCALE_THOUSAND) {
     // If the amount is in the thousands, give it the correct formatting.
     $scaled_amount = round($amount / $thousand, $decimals);
-    $suffix = ThemeHelper::getNumberSuffix(ThemeHelper::SCALE_THOUSAND, $use_abbreviation);
+    $suffix = $compact ? ThemeHelper::getCompactNumberSuffix(ThemeHelper::SCALE_THOUSAND) : ThemeHelper::getNumberSuffix(ThemeHelper::SCALE_THOUSAND, $use_abbreviation);
   }
   elseif (empty($scale) || $scale == 'full') {
     // The amount should be displayed in full, so no additional formatting
@@ -163,9 +188,10 @@ function hpc_common_preprocess_hpc_amount(array &$vars) {
   $thousands_sep = $decimal_format == ThemeHelper::DECIMALS_POINT ? ',' : ' ';
   $formatted_amount = number_format($scaled_amount, $decimals, $dec_point, $thousands_sep);
 
-  // If the value ends with ".0", then it is unnecessary
-  // precision, so we remove it.
-  if (strpos($formatted_amount, $dec_point . '0') && substr($formatted_amount, strlen($formatted_amount) - 2) == $dec_point . '0') {
+  // Compact millions and billions consistently show one decimal place. For
+  // other output, remove a trailing decimal zero as unnecessary precision.
+  $keep_compact_decimal = $compact && in_array($scale, [ThemeHelper::SCALE_MILLION, ThemeHelper::SCALE_BILLION], TRUE);
+  if (!$keep_compact_decimal && strpos($formatted_amount, $dec_point . '0') && substr($formatted_amount, strlen($formatted_amount) - 2) == $dec_point . '0') {
     $formatted_amount = rtrim($formatted_amount, '0');
     $formatted_amount = rtrim($formatted_amount, $dec_point);
   }
@@ -192,6 +218,7 @@ function hpc_common_preprocess_hpc_percent(array &$vars) {
   $decimal_format = !empty($vars['decimal_format']) ? $vars['decimal_format'] : ThemeHelper::DECIMALS_POINT;
   $precision = $vars['precision'];
   $compact_precision = !empty($vars['compact_precision']);
+  $compact = !$export && !empty($vars['table_cell']) && ThemeHelper::isCompactDisplayStyle();
   $percent = $vars['percent'] ?? ((float) ($vars['ratio'] ?? 0)) * 100;
 
   if ($percent !== NULL && !is_numeric($percent)) {
@@ -200,7 +227,10 @@ function hpc_common_preprocess_hpc_percent(array &$vars) {
   }
 
   $display_percent = round((float) $percent, 10);
-  if (empty($precision)) {
+  if ($compact) {
+    $precision = 0;
+  }
+  elseif ($precision === NULL) {
     // Compact precision keeps the default one-decimal behavior unless that
     // displayed one-decimal value would be a whole number, e.g. 29.97 -> 30%.
     $precision_percent = $compact_precision ? round($display_percent, 1) : $display_percent;

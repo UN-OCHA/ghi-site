@@ -45,6 +45,7 @@ function hpc_common_theme($existing, $type, $theme, $path) {
         'use_abbreviation' => TRUE,
         'decimals' => NULL,
         'decimal_format' => NULL,
+        'table_cell' => FALSE,
       ],
     ] + $common,
     'hpc_amount' => [
@@ -58,6 +59,7 @@ function hpc_common_theme($existing, $type, $theme, $path) {
         'use_abbreviation' => TRUE,
         'decimals' => 0,
         'decimal_format' => NULL,
+        'table_cell' => FALSE,
       ],
     ] + $common,
     'hpc_percent' => [
@@ -69,6 +71,7 @@ function hpc_common_theme($existing, $type, $theme, $path) {
         'precision' => NULL,
         'decimal_format' => NULL,
         'compact_precision' => FALSE,
+        'table_cell' => FALSE,
       ],
     ] + $common,
     'hpc_progress_bar' => [
@@ -79,6 +82,7 @@ function hpc_common_theme($existing, $type, $theme, $path) {
         'export' => FALSE,
         'hide_value' => FALSE,
         'tooltip' => NULL,
+        'table_cell' => FALSE,
       ],
       'template' => 'hpc-progress-bar',
     ] + $common,
@@ -89,6 +93,7 @@ function hpc_common_theme($existing, $type, $theme, $path) {
         'export' => FALSE,
         'hide_value' => FALSE,
         'decimal_format' => NULL,
+        'table_cell' => FALSE,
       ],
       'template' => 'hpc-pie-chart',
     ] + $common,
@@ -117,6 +122,7 @@ function hpc_common_theme($existing, $type, $theme, $path) {
         'markup_element' => NULL,
         'decimal_format' => NULL,
         'export' => FALSE,
+        'table_cell' => FALSE,
       ],
     ] + $common,
     'hpc_modal_link' => [

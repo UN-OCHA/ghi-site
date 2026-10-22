@@ -79,6 +79,7 @@ class HistoricalTrendsTest extends PlanBlockKernelTestBase {
     $this->assertSame(25.0, $rows[1]['funding_progress']['export_value']);
     $this->assertSame('Published adjustment', $rows[1]['funding_progress']['export_commentary']);
     $this->assertSame(25.0, $rows[1]['funding_progress']['data'][0]['#percent']);
+    $this->assertTrue($rows[1]['funding_progress']['data'][0]['#table_cell']);
     $this->assertSame('Published adjustment', $rows[1]['funding_progress']['data']['tooltips']['#tooltips']['#tooltip']['#plain_text']);
     $this->assertEquals($rows, $block->buildDownloadData()['rows']);
     $this->assertEquals($build['#header'], $block->buildDownloadData()['header']);
