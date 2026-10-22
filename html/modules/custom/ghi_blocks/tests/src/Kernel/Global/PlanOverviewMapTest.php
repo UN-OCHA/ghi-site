@@ -95,6 +95,9 @@ class PlanOverviewMapTest extends PlanBlockKernelTestBase {
     $data_settings = $plugin->buildMapDataSettings($build['#chart_id']);
     $this->assertNotEmpty($data_settings['map']['json']);
     $data = $data_settings['map']['json'];
+    $encoded_data = json_encode($data);
+    $this->assertStringContainsString('100,000', $encoded_data);
+    $this->assertStringNotContainsString('100k', $encoded_data);
     $tabs = array_keys($data);
     $this->assertCount(count($tabs), $build['#map_tabs']['#items']);
     foreach ($data as $tab_data) {

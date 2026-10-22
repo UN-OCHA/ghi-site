@@ -15,6 +15,7 @@ use Drupal\ghi_blocks\Traits\TableTrait;
 use Drupal\ghi_plans\Entity\Plan;
 use Drupal\hpc_common\Helpers\BlockHelper;
 use Drupal\hpc_common\Helpers\CommonHelper;
+use Drupal\hpc_common\Helpers\ThemeHelper;
 use Drupal\hpc_common\Plugin\HPCBlockMetadata;
 use Drupal\hpc_common\Traits\RenderArrayTrait;
 use Drupal\hpc_downloads\Interfaces\HPCDownloadExcelInterface;
@@ -403,7 +404,7 @@ class PlanCaseloadTrendsTable extends GHIBlockBase implements OverrideDefaultTit
 
     return [
       'header' => $header,
-      'rows' => $rows,
+      'rows' => ThemeHelper::applyTableNumberFormatting($rows),
     ];
   }
 

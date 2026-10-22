@@ -410,7 +410,7 @@ class PlanTable extends GHIBlockBase implements HPCDownloadExcelInterface, HPCDo
 
     return [
       'header' => $header,
-      'rows' => $rows,
+      'rows' => ThemeHelper::applyTableNumberFormatting($rows),
       'cache_tags' => $cache_tags,
     ];
   }
