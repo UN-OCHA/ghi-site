@@ -18,6 +18,7 @@ use Drupal\ghi_blocks\Traits\HomepageBlockTrait;
 use Drupal\ghi_blocks\Traits\TableSoftLimitTrait;
 use Drupal\ghi_blocks\Traits\TableTrait;
 use Drupal\ghi_homepage\Entity\Homepage;
+use Drupal\hpc_common\Helpers\ThemeHelper;
 use Drupal\hpc_common\Plugin\HPCBlockMetadata;
 use Drupal\hpc_downloads\Interfaces\HPCDownloadExcelInterface;
 use Drupal\hpc_downloads\Interfaces\HPCDownloadPNGInterface;
@@ -134,7 +135,7 @@ class HistoricalTrends extends GHIBlockBase implements OverrideDefaultTitleBlock
         $figure = count($matches) === 1 ? reset($matches) : NULL;
         $value = $figure['value'] ?? NULL;
         $row[$key] = [
-          'data' => $figure['render'] ?? ['#markup' => $this->t('No data')],
+          'data' => ThemeHelper::applyTableNumberFormatting($figure['render'] ?? ['#markup' => $this->t('No data')]),
           'data-raw-value' => $value ?? '',
           'data-column-type' => $column['type'],
           'export_value' => $value,
