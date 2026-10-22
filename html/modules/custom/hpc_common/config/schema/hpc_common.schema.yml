@@ -6,3 +6,6 @@ hpc_common.settings:
       type: string
       label: 'Additional GTM container ID'
       nullable: true
+    numeric_display_style:
+      type: string
+      label: 'Table numeric display style'
