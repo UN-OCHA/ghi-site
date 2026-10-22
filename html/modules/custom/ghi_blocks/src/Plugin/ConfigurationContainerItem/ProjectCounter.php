@@ -149,13 +149,18 @@ class ProjectCounter extends ConfigurationContainerItemPluginBase {
    * {@inheritdoc}
    */
   public function getRenderArray() {
+    $value = $this->applyCacheTags([
+      '#theme' => 'hpc_amount',
+      '#amount' => $this->getValue(),
+      '#scale' => 'full',
+    ]);
     $modal_link = $this->getModalLink();
     if (!$modal_link || empty($this->getValue())) {
-      return parent::getRenderArray();
+      return $value;
     }
     return [
       '#type' => 'container',
-      0 => parent::getRenderArray(),
+      0 => $value,
       'tooltips' => [
         '#theme' => 'hpc_tooltip_wrapper',
         '#tooltips' => [$modal_link],

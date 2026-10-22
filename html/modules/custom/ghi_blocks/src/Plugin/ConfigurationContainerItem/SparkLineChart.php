@@ -27,6 +27,11 @@ class SparkLineChart extends ConfigurationContainerItemPluginBase implements Att
   const ITEM_TYPE = 'chart';
 
   /**
+   * Whether the chart is currently being built for a table cell.
+   */
+  private bool $buildingTableCell = FALSE;
+
+  /**
    * {@inheritdoc}
    */
   public function buildForm($element, FormStateInterface $form_state) {
@@ -273,11 +278,15 @@ class SparkLineChart extends ConfigurationContainerItemPluginBase implements Att
       ];
 
       // And theme the tooltip.
-      $tooltips[$reporting_period->id()] = ThemeHelper::render([
+      $tooltip = [
         '#theme' => 'hpc_sparkline_tooltip',
         '#title' => Markup::create($reporting_period->format((string) $this->t('Monitoring period #@period_number<br />@date_range'))),
         '#items' => $tooltip_items,
-      ], FALSE);
+      ];
+      if ($this->buildingTableCell) {
+        $tooltip = ThemeHelper::applyTableNumberFormatting($tooltip);
+      }
+      $tooltips[$reporting_period->id()] = ThemeHelper::render($tooltip, FALSE);
     }
 
     // Render the chart.
@@ -291,6 +300,19 @@ class SparkLineChart extends ConfigurationContainerItemPluginBase implements Att
         'tags' => $attachment->getValueCacheTags(),
       ],
     ];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getTableCell() {
+    $this->buildingTableCell = TRUE;
+    try {
+      return parent::getTableCell();
+    }
+    finally {
+      $this->buildingTableCell = FALSE;
+    }
   }
 
   /**
