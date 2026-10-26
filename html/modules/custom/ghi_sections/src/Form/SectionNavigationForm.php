@@ -213,7 +213,7 @@ class SectionNavigationForm extends FormBase {
           ], ['attributes' => $this->getLinkAttributes(['button'])])->toRenderable(),
           'remove' => [
             '#type' => 'submit',
-            '#value' => 'remove',
+            '#value' => $this->t('Remove'),
             '#name' => 'operation-remove-' . $delta,
             '#access' => $plugin instanceof OptionalSectionMenuPluginInterface,
           ],

@@ -97,10 +97,12 @@ field_settings:
           document: full
           financials: full
           logframe: full
+          needs: full
           plan_cluster: full
           population: full
           presence: full
           progress: full
+          response: full
           section: full
   status:
     label: null
@@ -151,10 +153,12 @@ datasource_settings:
         - document
         - financials
         - logframe
+        - needs
         - plan_cluster
         - population
         - presence
         - progress
+        - response
         - section
     languages:
       default: true
@@ -182,11 +186,11 @@ processor_settings:
     title: true
     alt: true
     tags:
-      b: 2
-      h1: 5
-      h2: 3
-      h3: 2
-      strong: 2
+      b: 2.0
+      h1: 5.0
+      h2: 3.0
+      h3: 2.0
+      strong: 2.0
   ignore_character:
     weights:
       preprocess_index: -10

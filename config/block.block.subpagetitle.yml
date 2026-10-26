@@ -30,8 +30,10 @@ visibility:
       document: document
       financials: financials
       logframe: logframe
+      needs: needs
       plan_cluster: plan_cluster
       population: population
       presence: presence
       progress: progress
+      response: response
       section: section

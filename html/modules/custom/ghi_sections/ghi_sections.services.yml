@@ -14,7 +14,7 @@ services:
     parent: default_plugin_manager
   ghi_sections.section_menu.storage:
     class: Drupal\ghi_sections\Menu\SectionMenuStorage
-    arguments: ['@ghi_sections.manager', '@plugin.manager.section_menu', '@current_route_match']
+    arguments: ['@ghi_sections.manager', '@plugin.manager.section_menu', '@current_route_match', null, '@?ghi_subpages.page_set_resolver']
   ghi_sections.breadcrumb:
     class: Drupal\ghi_sections\Breadcrumb\SectionBreadcrumbBuilder
     arguments: ['@entity_type.manager', '@router']
