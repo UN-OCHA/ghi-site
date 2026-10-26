@@ -1,5 +1,5 @@
 .gho-text {
-  margin: 4.5rem 0 0 0;
+  margin: var(--ghi-section-spacing) 0 0 0;
   font-size: 1rem;
   line-height: 1.75rem;
 }
@@ -14,7 +14,7 @@
   max-width: var(--reading-width);
 }
 .gho-text p.highlight {
-  color: #1f1f1f;
+  color: var(--ghi-default-text-color);
   font-size: 1.25rem;
   font-weight: 700;
   line-height: 2rem;
@@ -29,8 +29,8 @@
 /* Same styling as caption. @see gho-caption */
 .gho-text blockquote {
   margin: 2rem 0;
-  color: #707070;
-  font-size: 0.75rem;
+  color: var(--ghi-default-text-color);
+  font-size: var(--cd-font-size--small);
   line-height: 1.25rem;
 }
 

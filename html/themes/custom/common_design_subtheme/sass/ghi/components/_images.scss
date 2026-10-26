@@ -57,6 +57,7 @@
 
         &:focus,
         &:hover {
+          color: var(--ghi-color-on-primary);
           background-color: var(--cd-primary-color);
 
           & + .image-caption {
@@ -95,6 +96,7 @@
 
         &:focus,
         &:hover {
+          color: var(--ghi-color-on-primary);
           background-color: var(--cd-primary-color);
 
           & + .image-caption {

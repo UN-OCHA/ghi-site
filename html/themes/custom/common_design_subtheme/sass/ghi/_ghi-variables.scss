@@ -3,7 +3,7 @@
   // GHI colors.
 
   // Primary colors.
-  --ghi-yellow: #fed83d;
+  --ghi-yellow: #ffc800;
   --ghi-grey--dark: #4d4d4d;
 
   // Filters from https://angel-rs.github.io/css-color-filter-generator/.
@@ -11,35 +11,34 @@
     brightness(90%) contrast(77%);
 
   // Dropdown menu background Hero background?
-  --ghi-yellow--light: #fffbec;
+  --ghi-yellow--light: #faf0bb;
 
   // Chart percentage background.
-  --ghi-yellow--light-chart: #f8ecb4;
+  --ghi-yellow--light-chart: var(--ghi-yellow--light);
 
   // Separator line with background.
-  --ghi-grey: #dfdede;
+  --ghi-grey: #e6e6e6;
 
   // Separator line.
-  --ghi-grey--light: #eee;
+  --ghi-grey--light: var(--ghi-grey);
 
   // Card/search button/map zoom tool/popup frame outlines.
-  --ghi-grey--medium: #ccc;
+  --ghi-grey--medium: var(--ghi-grey);
 
   // Background.
-  --ghi-grey--background: #f5f5f5;
+  --ghi-grey--background: #f2f2f2;
 
   // Button hover.
-  --ghi-orange-dark: #feba00;
-
-  // Work-in-progress-colors, to be replaced with the official colors above.
-  --cd-ocha-orange: #fecb00; // rgb(254, 203, 0)
+  --ghi-orange-dark: #cf9220;
+  --cd-ocha-orange: var(--ghi-yellow);
   --cd-ocha-orange--dark: var(--ghi-orange-dark);
   --cd-primary-color: var(--ghi-yellow);
   --cd-primary-color--dark: var(--cd-ocha-orange--dark);
-  --cd-tag--color: #9e9e9e;
+  --cd-tag--color: var(--ghi-grey--dark);
 
   // GHI Semantic color definitions.
   --ghi-default-text-color: var(--ghi-grey--dark);
+  --ghi-color-on-primary: #262626;
   --ghi-disabled-text-color: var(--ghi-grey);
   --ghi-default-border-color: var(--ghi-grey--light);
   --ghi-default-border-color-background: var(--ghi-grey);
@@ -55,12 +54,13 @@
   --ghi-primary-button-color-hover: var(--ghi-orange-dark);
 
   // Plan type colors.
-  --ghi-plan-type-hrp: var(--ghi-yellow);
+  --ghi-plan-type-hrp: #f58220;
   --ghi-plan-type-hnrp: var(--ghi-plan-type-hrp);
   --ghi-plan-type-srp: var(--ghi-plan-type-hrp);
-  --ghi-plan-type-fa: #f7941e;
+  --ghi-plan-type-fa: #ed1847;
   --ghi-plan-type-reg: var(--ghi-grey--dark);
-  --ghi-plan-type-other: #ccc;
+  --ghi-plan-type-rrp: var(--ghi-plan-type-reg);
+  --ghi-plan-type-other: var(--ghi-grey);
 
   // Legacy Hum Insight colors.
   --hpc-brown: #464646;
@@ -70,8 +70,12 @@
   --hpc-grey: #ebebeb;
   --hpc-blue-light: #e6ecf1;
   --green: #62b445;
-  --hpc-border-color: #e1e1e1;
-  --cd-font-size--extra-tiny: 0.625rem; /* 10px */
+  --hpc-border-color: var(--ghi-default-border-color);
+  --cd-font-size--extra-tiny: var(--cd-font-size--small);
+
+  // The section rhythm is tighter on phones and expands at tablet widths.
+  --ghi-section-spacing: var(--cd-spacing--8);
+  --ghi-heading-content-spacing: var(--cd-spacing--4);
 
   // Border styles for ui dialogs.
   --ghi-ui-dialog-border-radius: 1rem;
@@ -92,6 +96,12 @@
   --gin-bg-green: #145242;
 }
 
+@media (min-width: 768px) {
+  :root {
+    --ghi-section-spacing: var(--cd-spacing--12);
+  }
+}
+
 //——————————————————————————————————————————————————————————————————————————————
 // Implementation colours (for the common design).
 //——————————————————————————————————————————————————————————————————————————————
@@ -99,4 +109,4 @@
 $implementation-primary: var(--ghi-yellow);
 $implementation-primary-dark: $cd-primary;
 $implementation-secondary: $cd-blue--bright;
-$implementation-highlight: #fed83d;
+$implementation-highlight: var(--ghi-yellow);

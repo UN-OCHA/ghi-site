@@ -24,7 +24,7 @@
    * mechanism for pulling the image within Drupal. Using a background-color
    * with arbitrary dimensions as fallback for now.
    */
-  background-color: #999;
+  background-color: var(--ghi-default-background-color);
 }
 
 .ghi-section-teaser__title {

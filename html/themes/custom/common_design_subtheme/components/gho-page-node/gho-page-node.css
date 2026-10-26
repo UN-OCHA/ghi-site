@@ -2,6 +2,7 @@
  * full width allowing elements like hero images to also use the full width. */
 .path-frontpage .cd-page-layout-container main.cd-container,
 .path-node .cd-page-layout-container main.cd-container {
+  width: 100%;
   max-width: var(--cd-max-body-width);
   padding-right: 0;
   padding-left: 0;
@@ -16,6 +17,7 @@
  * those that were on the `<main>` element. There is no need to have the 1024px
  * media query with the 40px padding because 904px + 2 * 40px < 1024px. */
 .content-width {
+  box-sizing: border-box;
   width: 100%;
   max-width: calc(var(--content-width) + 24px);
   margin-right: auto;
@@ -47,7 +49,7 @@
   }
 }
 
-@media (min-width: 952px) {
+@media (min-width: 1024px) {
   .content-width--reading {
     max-width: calc(var(--content-width) + 48px);
     margin-right: auto;

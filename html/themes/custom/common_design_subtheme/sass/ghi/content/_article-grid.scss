@@ -16,7 +16,7 @@ article.node--view-mode-grid {
     border-bottom-right-radius: 0;
     border-bottom-left-radius: 0;
     background-color: var(--cd-contrast-red);
-    font-size: 0.8rem;
+    font-size: var(--cd-font-size--small);
   }
 
   .cd-teaser__image {

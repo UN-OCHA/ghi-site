@@ -12,15 +12,15 @@
   flex: 0 0 auto;
 }
 .gho-sub-article-paragraph--no-hero {
-  margin-top: 6.75rem;
-  padding-top: 4.5rem;
-  border-top: 1px solid #d8d8d8;
+  margin-top: var(--ghi-section-spacing);
+  padding-top: var(--ghi-heading-content-spacing);
+  border-top: 1px solid var(--ghi-default-border-color);
 }
 .gho-sub-article-paragraph--hero {
-  margin-top: 6.75rem;
+  margin-top: var(--ghi-section-spacing);
 }
 .gho-caption--article + .gho-sub-article-paragraph {
-  margin-top: 4.5rem;
+  margin-top: var(--ghi-section-spacing);
   padding-top: 0;
   border-top: none;
 }
@@ -31,22 +31,21 @@
   /* This is to be able to display the social links between the header and the
    * the content on small screens. */
   order: 0;
-  margin-bottom: 3rem;
+  margin-bottom: var(--ghi-heading-content-spacing);
 }
 .gho-sub-article__title {
   display: inline;
   padding: 0;
-  color: #1f1f1f;
-  font-size: 1.625rem;
+  color: var(--ghi-default-text-color);
+  font-size: var(--cd-font-size--large);
   font-weight: 700;
-  line-height: 1.75rem;
+  line-height: 1.2;
   scroll-margin-top: 5rem;
 }
 
 @media (min-width: 768px) {
   .gho-sub-article__title {
-    font-size: 2.25rem;
-    line-height: 2.5rem;
+    font-size: var(--cd-font-size--2xbase);
   }
 }
 
@@ -80,7 +79,7 @@
   height: 40%;
   margin: 0;
   content: "";
-  background: linear-gradient(rgba(0, 0, 0, 0), #fff);
+  background: linear-gradient(rgb(0, 0, 0, 0), #fff);
 }
 
 [data-article-collapsible="true"] .collapsible-control--outer {
@@ -93,11 +92,6 @@
   .collapsible-control {
   display: flex;
   white-space: nowrap;
-}
-@media (max-width: 576px) {
-  [data-article-collapsible="true"] .collapsible-control--outer {
-    zoom: 0.8;
-  }
 }
 [data-article-collapsible="true"]
   .collapsible-control--outer

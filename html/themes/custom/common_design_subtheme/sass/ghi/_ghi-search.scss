@@ -177,14 +177,14 @@ main#main-content {
 
     .cd-pager__item a:hover,
     .cd-pager__item a:focus {
-      color: var(--ghi-default-text-color);
+      color: var(--ghi-color-on-primary);
       border-color: var(--cd-primary-color);
       background-color: var(--cd-primary-color);
     }
 
     .cd-pager__item.is-active a,
     .cd-pager__item.is-active a:hover {
-      color: var(--ghi-default-text-color);
+      color: var(--ghi-color-on-primary);
       border-color: var(--cd-primary-color--dark);
       background-color: var(--cd-primary-color--dark);
       font-weight: 700;
