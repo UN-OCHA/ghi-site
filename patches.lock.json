@@ -1,5 +1,5 @@
 {
-    "_hash": "1286b4b40724ba6e4a34a6420cde4a6236e3e4a567790d9190e616ac4963357d",
+    "_hash": "981184fe75b0710b829d7b5acbeff25676be8fac495f92fc77aa3003ccdddad2",
     "patches": {
         "drupal/big_pipe_sessionless": [
             {
@@ -227,18 +227,6 @@
                 "description": "Issue #2820867: Bulk operations actions skip 'publishcontent' defined permissions",
                 "url": "https://www.drupal.org/files/issues/2026-03-31/permissions-for-bulk-operations-2820867-12.patch",
                 "sha256": "6bd3326561f450069c798d46175bdb8f889d8ea98ad06d7fc25de23420f46744",
-                "depth": 1,
-                "extra": {
-                    "provenance": "patches-file:composer.patches.json"
-                }
-            }
-        ],
-        "drupal/rabbit_hole": [
-            {
-                "package": "drupal/rabbit_hole",
-                "description": "Fix Multiple Implicit Nullable Parameters for PHP 8.4 Compatibility",
-                "url": "./patches/3516167-8-x-1.x-52.patch",
-                "sha256": "f886ca76de0d2a8d9307cb523f56fa54dfc1282b1d9086c415713dded5d9c057",
                 "depth": 1,
                 "extra": {
                     "provenance": "patches-file:composer.patches.json"
