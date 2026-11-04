@@ -1,0 +1,29 @@
+uuid: 9bcfa09c-d619-4915-894d-b5b191e88c3b
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_entity_reference
+    - node.type.response
+    - node.type.section
+id: node.response.field_entity_reference
+field_name: field_entity_reference
+entity_type: node
+bundle: response
+label: Section
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: 'default:node'
+  handler_settings:
+    target_bundles:
+      section: section
+    sort:
+      field: _none
+      direction: ASC
+    auto_create: false
+    auto_create_bundle: ''
+field_type: entity_reference

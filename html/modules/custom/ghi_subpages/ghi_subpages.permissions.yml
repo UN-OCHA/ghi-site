@@ -1,0 +1,4 @@
+manage operation page structure:
+  title: 'Manage operation page structure'
+  description: 'Create and delete standard operation subpages.'
+  restrict access: true

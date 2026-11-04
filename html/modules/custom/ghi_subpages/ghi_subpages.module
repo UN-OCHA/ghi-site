@@ -19,6 +19,7 @@ use Drupal\ghi_subpages\Entity\LogframeSubpage;
 use Drupal\ghi_subpages\Entity\SubpageNodeInterface;
 use Drupal\ghi_subpages\Helpers\SubpageHelper;
 use Drupal\ghi_subpages\SubpageManager;
+use Drupal\ghi_sections\Entity\SectionNodeInterface;
 use Drupal\hpc_api\Helpers\StringHelper;
 use Drupal\layout_builder\SectionStorageInterface;
 use Drupal\node\Form\NodeDeleteForm;
@@ -54,9 +55,6 @@ function ghi_subpages_section_post_save(NodeInterface $section_node) {
 
   $subpage_manager = SubpageHelper::getSubpageManager();
 
-  // Make sure all subpages exist.
-  $subpage_manager->assureSubpagesForBaseNode($section_node);
-
   // Load all subpages and save them again to make sure they have proper paths.
   $subpages = $subpage_manager->loadSubpagesForBaseNode($section_node) ?? [];
   foreach ($subpages as $subpage) {
@@ -91,6 +89,25 @@ function ghi_subpages_section_post_save(NodeInterface $section_node) {
  */
 function ghi_subpages_node_insert(NodeInterface $node) {
   $subpage_manager = SubpageHelper::getSubpageManager();
+  // Provision only on insert: a later section save must not undo an editor's
+  // deliberate removal of an operation subpage.
+  if ($node instanceof SectionNodeInterface && $node->getBaseObject()?->bundle() === 'plan') {
+    // Reduced installations, including kernel tests of dependent modules, can
+    // enable this module without installing its configuration. Do not require
+    // page-set configuration merely to save a section in that environment;
+    // once the config object exists, the resolver still validates it fully.
+    if (\Drupal::config('ghi_subpages.page_sets')->isNew()) {
+      return;
+    }
+    /** @var \Drupal\ghi_subpages\PageSetResolver $resolver */
+    $resolver = \Drupal::service('ghi_subpages.page_set_resolver');
+    $page_set = $resolver->resolve($node);
+    $results = $subpage_manager->provisionStandardSubpages($node, $page_set->getCreateOnInsert());
+    if ($results['failed']) {
+      throw new \RuntimeException('Could not create the configured operation subpages: ' . implode(', ', array_keys($results['failed'])));
+    }
+    return;
+  }
   if (!$subpage_manager->isSubpageTypeNode($node)) {
     // We act only on subpage nodes.
     return;
@@ -121,12 +138,16 @@ function ghi_subpages_entity_delete(EntityInterface $entity) {
 /**
  * Implements hook_entity_access().
  *
- * Check access for full page node views of subpages of the base entities.
- * Allow access only if the base entity is allowed to be viewed.
+ * Restrict standard section-page deletion and inherited subpage access.
  */
 function ghi_subpages_entity_access(EntityInterface $entity, $operation, AccountInterface $account) {
   if (!$entity instanceof NodeInterface) {
     return AccessResult::neutral();
+  }
+  // Generic node deletion also changes section structure, so it must not
+  // bypass the permission used by the Subpages task.
+  if ($operation === 'delete' && in_array($entity->bundle(), SubpageManager::SUPPORTED_SUBPAGE_TYPES, TRUE) && $entity->get('field_entity_reference')->entity instanceof SectionNodeInterface && !$account->hasPermission('manage operation page structure')) {
+    return AccessResult::forbidden()->cachePerPermissions()->addCacheableDependency($entity);
   }
   $node_types = SubpageManager::SUPPORTED_SUBPAGE_TYPES + [
     'plan_entity',
@@ -160,6 +181,18 @@ function ghi_subpages_entity_access(EntityInterface $entity, $operation, Account
 
   // No opinion.
   return AccessResult::neutral();
+}
+
+/**
+ * Implements hook_node_create_access().
+ */
+function ghi_subpages_node_create_access(AccountInterface $account, array $context, $entity_bundle) {
+  // Direct node-creation routes have no section context; require structural
+  // permission there too so they cannot bypass the controlled workflow.
+  if (in_array($entity_bundle, SubpageManager::SUPPORTED_SUBPAGE_TYPES, TRUE) && !$account->hasPermission('manage operation page structure')) {
+    return AccessResult::forbidden()->cachePerPermissions();
+  }
+  return AccessResult::neutral()->cachePerPermissions();
 }
 
 /**

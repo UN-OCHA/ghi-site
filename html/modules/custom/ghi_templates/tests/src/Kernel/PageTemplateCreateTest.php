@@ -73,7 +73,7 @@ class PageTemplateCreateTest extends KernelTestBase {
     $this->installEntitySchema('page_template');
     $this->installSchema('system', 'sequences');
     $this->installSchema('node', ['node_access']);
-    $this->installConfig(['system', 'node', 'field', 'pathauto']);
+    $this->installConfig(['system', 'node', 'field', 'pathauto', 'ghi_subpages']);
 
     $this->entityTypeManager = $this->container->get('entity_type.manager');
 
