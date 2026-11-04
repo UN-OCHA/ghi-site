@@ -2,6 +2,8 @@
 
 namespace Drupal\Tests\hpc_common\Unit;
 
+use Drupal\Core\Config\ConfigFactoryInterface;
+use Drupal\Core\Config\ImmutableConfig;
 use Drupal\Core\DependencyInjection\ContainerBuilder;
 use Drupal\Core\Extension\ExtensionPathResolver;
 use Drupal\Core\Render\RendererInterface;
@@ -155,6 +157,14 @@ class ThemeHelperTest extends UnitTestCase {
         '#decimal_format' => 'point',
         '#decimals' => 1,
       ]],
+      ['hpc_amount', 100, ['table_cell' => TRUE], [
+        '#theme' => 'hpc_amount',
+        '#amount' => 100,
+        '#scale' => 'auto',
+        '#decimal_format' => 'point',
+        '#decimals' => 0,
+        '#table_cell' => TRUE,
+      ]],
       // Currency.
       ['hpc_currency', 100, [], [
         '#theme' => 'hpc_currency',
@@ -245,6 +255,87 @@ class ThemeHelperTest extends UnitTestCase {
     $this->assertEquals(' billion', ThemeHelper::getNumberSuffix('billion', FALSE));
     $this->assertEquals('', ThemeHelper::getNumberSuffix('random_string'));
     $this->assertEquals('', ThemeHelper::getNumberSuffix('random_string', FALSE));
+  }
+
+  /**
+   * Tests compact number suffixes.
+   */
+  #[Group('ThemeHelper')]
+  public function testGetCompactNumberSuffix(): void {
+    $this->assertSame('k', ThemeHelper::getCompactNumberSuffix('thousand'));
+    $this->assertSame('M', ThemeHelper::getCompactNumberSuffix('million'));
+    $this->assertSame('B', ThemeHelper::getCompactNumberSuffix('billion'));
+    $this->assertSame('', ThemeHelper::getCompactNumberSuffix('random_string'));
+  }
+
+  /**
+   * Tests recursively marking numeric render arrays as table-cell output.
+   */
+  public function testApplyTableNumberFormatting(): void {
+    $build = [
+      '#type' => 'container',
+      'value' => [
+        '#theme' => 'hpc_currency',
+        '#value' => 1234567,
+      ],
+      'label' => [
+        '#markup' => 'Requirements',
+      ],
+      '#tooltips' => [
+        [
+          '#theme' => 'hpc_percent',
+          '#percent' => 31.5,
+        ],
+      ],
+    ];
+
+    $formatted = ThemeHelper::applyTableNumberFormatting($build);
+
+    $this->assertTrue($formatted['value']['#table_cell']);
+    $this->assertTrue($formatted['#tooltips'][0]['#table_cell']);
+    $this->assertArrayNotHasKey('#table_cell', $formatted);
+    $this->assertArrayNotHasKey('#table_cell', $formatted['label']);
+  }
+
+  /**
+   * Tests numeric display style options.
+   */
+  #[Group('ThemeHelper')]
+  public function testGetDisplayStyleOptions(): void {
+    $options = ThemeHelper::getDisplayStyleOptions();
+
+    $this->assertSame(ThemeHelper::DISPLAY_STYLE_COMPACT, ThemeHelper::DISPLAY_STYLE_DEFAULT);
+    $this->assertSame(['standard', 'compact'], array_keys($options));
+    $this->assertSame('Standard', (string) $options['standard']);
+    $this->assertSame('Compact', (string) $options['compact']);
+  }
+
+  /**
+   * Tests numeric display style resolution.
+   */
+  #[Group('ThemeHelper')]
+  public function testIsCompactDisplayStyle(): void {
+    $this->assertTrue(ThemeHelper::isCompactDisplayStyle());
+
+    $this->setNumericDisplayStyle(ThemeHelper::DISPLAY_STYLE_STANDARD);
+    $this->assertFalse(ThemeHelper::isCompactDisplayStyle());
+
+    $this->setNumericDisplayStyle(ThemeHelper::DISPLAY_STYLE_COMPACT);
+    $this->assertTrue(ThemeHelper::isCompactDisplayStyle());
+
+    $this->setNumericDisplayStyle('invalid');
+    $this->assertTrue(ThemeHelper::isCompactDisplayStyle());
+  }
+
+  /**
+   * Set the numeric display style exposed by the mocked configuration service.
+   */
+  private function setNumericDisplayStyle(string $display_style): void {
+    $config = $this->createMock(ImmutableConfig::class);
+    $config->method('get')->with('numeric_display_style')->willReturn($display_style);
+    $config_factory = $this->createMock(ConfigFactoryInterface::class);
+    $config_factory->method('get')->with('hpc_common.settings')->willReturn($config);
+    \Drupal::getContainer()->set('config.factory', $config_factory);
   }
 
   /**

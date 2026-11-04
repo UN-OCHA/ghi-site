@@ -120,6 +120,8 @@ class PlanTableTest extends PlanBlockKernelTestBase {
     $this->assertArrayHasKey('header', $table_data);
     $this->assertArrayHasKey('rows', $table_data);
     $this->assertArrayHasKey('cache_tags', $table_data);
+    $row = reset($table_data['rows']);
+    $this->assertTrue($row['inneed']['data'][0]['#table_cell']);
   }
 
   /**

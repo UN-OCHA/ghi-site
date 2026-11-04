@@ -12,6 +12,7 @@ use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\ghi_form_elements\Helpers\FormElementHelper;
 use Drupal\ghi_form_elements\Traits\AjaxElementTrait;
 use Drupal\hpc_api\Query\EndpointQueryPluginInterface;
+use Drupal\hpc_common\Helpers\ThemeHelper;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -217,8 +218,9 @@ abstract class ConfigurationContainerItemPluginBase extends PluginBase implement
    * {@inheritdoc}
    */
   public function getTableCell() {
+    $data = $this->getRenderArray() ?? ['#markup' => $this->t('n/a')];
     return [
-      'data' => $this->getRenderArray() ?? ['#markup' => $this->t('n/a')],
+      'data' => ThemeHelper::applyTableNumberFormatting($data),
       'data-value' => $this->getValue(),
       'data-raw-value' => $this->getSortableValue(),
       'data-sort-type' => $this::SORT_TYPE,
