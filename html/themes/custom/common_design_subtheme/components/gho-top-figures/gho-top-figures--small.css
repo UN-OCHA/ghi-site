@@ -12,7 +12,7 @@
   display: block;
   padding-bottom: 2rem;
   content: "";
-  border-top: 1px solid #d8d8d8;
+  border-top: 1px solid var(--ghi-default-border-color);
 }
 /* Hide the border when the figures follow another top figures paragraph. */
 .gho-caption--article + .gho-top-figures--small::before,
@@ -31,7 +31,7 @@
   padding-top: 0;
   padding-bottom: 2rem;
   border-top: 0;
-  border-bottom: 1px solid #d8d8d8;
+  border-bottom: 1px solid var(--ghi-default-border-color);
 }
 
 .gho-top-figures--small .gho-figures * {
@@ -54,7 +54,7 @@
   margin-left: calc(-1rem - 1px);
   padding: 0 2rem 0 1rem;
   border-right: none;
-  border-left: 1px solid #d8d8d8;
+  border-left: 1px solid var(--ghi-default-border-color);
 }
 [dir="rtl"] .gho-top-figures--small .gho-figures .gho-figure {
   margin-right: calc(-1rem - 1px);
@@ -63,7 +63,7 @@
    * row. */
   margin-left: 0;
   padding: 0 1rem 0 2rem;
-  border-right: 1px solid #d8d8d8;
+  border-right: 1px solid var(--ghi-default-border-color);
   border-left: none;
 }
 

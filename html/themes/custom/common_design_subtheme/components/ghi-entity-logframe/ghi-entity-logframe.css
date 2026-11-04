@@ -106,7 +106,7 @@
   transition-duration: 0.25s !important;
   transform: rotate(0deg);
   border-radius: 50%;
-  background-color: var(--brand-grey);
+  background-color: var(--ghi-default-background-color);
   will-change: transform;
 }
 .item-list--entity-logframe > .item-wrapper .entity-wrapper span.table-loading {
