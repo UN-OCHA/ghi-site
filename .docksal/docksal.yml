@@ -1,5 +1,10 @@
 services:
   cli:
+    image: ${COMPOSE_PROJECT_NAME_SAFE}_cli
+    build:
+      context: services/cli
+      args:
+        DOCKSAL_CLI_IMAGE: ${CLI_IMAGE}
     volumes:
       - ${PROJECT_ROOT}/html/sites/simpletest/:/var/www/html/sites/simpletest:rw
     environment:
