@@ -1,0 +1,108 @@
+table[data-link-carousel-placements] > caption {
+  margin-top: 0;
+  padding: 0 0 1rem 0 !important;
+  caption-side: top;
+}
+
+.generic-link-carousel table[data-link-carousel-placements] > caption,
+.link-carousel-editor__caption {
+  margin-top: 0;
+  padding: 0.75rem 1rem;
+  text-align: start;
+  color: var(--gin-color-text, #232429);
+  border-radius: 0.25rem;
+  background-color: var(--gin-bg-layer2, #f3f4f5);
+  font-size: 0.9375rem;
+  font-weight: 400;
+  font-style: normal;
+  line-height: 1.6;
+}
+
+.link-carousel-editor__caption {
+  margin-block-end: 1rem;
+}
+
+.link-carousel-editor__field--unavailable {
+  padding: 0.75rem 1rem;
+  border-inline-start: 0.25rem solid #b57900;
+  border-radius: 0.25rem;
+  background-color: #fff8df;
+}
+
+[data-link-carousel-donation-feedback] {
+  display: block;
+}
+
+table[data-link-carousel-placements] .link-carousel-editor__placement {
+  display: inline-block;
+  min-width: 7rem;
+  font-size: 0.875rem;
+  line-height: 1.4;
+}
+
+table[data-link-carousel-placements] [data-link-carousel-display-end] > td {
+  padding-block: 0.375rem;
+  color: var(--gin-color-text, #232429);
+  border-block-start: 2px solid var(--gin-color-primary, #1f69b3);
+  border-block-end: 1px solid var(--gin-border-color, #d4d4d8);
+  background: var(--gin-bg-layer2, #e9eaeb);
+  font-size: 0.875rem;
+  font-weight: 600;
+  font-style: normal;
+  line-height: 1.5;
+}
+
+table[data-link-carousel-placements] [data-link-carousel-display-end] .form-item,
+table[data-link-carousel-placements] [data-link-carousel-display-end] .glb-form-item {
+  margin-block: 0;
+}
+
+table[data-link-carousel-placements] [data-link-carousel-display-end] a.tabledrag-handle {
+  margin-inline-end: 0.5rem;
+}
+
+[data-link-carousel-placement-feedback]:not(:empty) {
+  margin-block: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  border-inline-start: 0.25rem solid #b57900;
+  background: #fff8df;
+  font-size: 0.875rem;
+  line-height: 1.4;
+}
+
+table[data-link-carousel-placements] .link-carousel-editor__row--main > td {
+  background-color: #fff8df;
+}
+
+table[data-link-carousel-placements] .link-carousel-editor__row--main .link-carousel-editor__placement {
+  color: #684b00;
+  font-weight: 700;
+}
+
+table[data-link-carousel-placements] .link-carousel-editor__row--featured .link-carousel-editor__placement {
+  color: #245a79;
+  font-weight: 600;
+}
+
+table[data-link-carousel-placements] .link-carousel-editor__row--hidden > td,
+table[data-link-carousel-placements] .link-carousel-editor__row--unavailable > td {
+  background-color: #f3f4f5;
+}
+
+table[data-link-carousel-placements] .link-carousel-editor__row--hidden .link-carousel-editor__placement,
+table[data-link-carousel-placements] .link-carousel-editor__row--unavailable .link-carousel-editor__placement {
+  color: #62676e;
+  font-style: italic;
+}
+
+table[data-link-carousel-placements] .link-carousel-editor__availability-tooltip {
+  margin-inline-start: 0.375rem;
+  cursor: help;
+  font-size: 1rem;
+  font-style: normal;
+}
+
+table[data-link-carousel-placements] .link-carousel-editor__availability-tooltip:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
+}

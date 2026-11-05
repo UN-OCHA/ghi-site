@@ -32,7 +32,7 @@ class LayoutBuilderRouteSubscriber extends RouteSubscriberBase {
   protected $selectionCriteriaArgument;
 
   /**
-   * Constructs a new RouteCacheContext class.
+   * Constructs the Layout Builder route subscriber.
    *
    * @param \Drupal\ghi_blocks\LayoutBuilder\SelectionCriteriaArgument $selection_criteria_argument
    *   The selection criteria argument service.
@@ -63,6 +63,7 @@ class LayoutBuilderRouteSubscriber extends RouteSubscriberBase {
 
     if ($route = $collection->get('layout_builder.add_block')) {
       $route->setDefault('_title_callback', $title_callback_add);
+      $route->setRequirement('_custom_access', '\Drupal\ghi_blocks\Access\BlockPlacementAccess::access');
     }
 
     if ($route = $collection->get('layout_builder.update_block')) {

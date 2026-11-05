@@ -877,8 +877,11 @@ class ConfigurationContainer extends FormElementBase {
           $row[$first_column_key]['#prefix'] = \Drupal::service('renderer')->render($indentation);
         }
       }
+      // Keep the structured reasons available to table decorators, which may
+      // present them elsewhere without repeating the item's validation work.
+      $row['#configuration_errors'] = $item_type->getConfigurationErrors();
       $row['issues'] = [
-        '#markup' => implode(', ', $item_type->getConfigurationErrors()),
+        '#markup' => implode(', ', $row['#configuration_errors']),
       ];
 
       $row['operations'] = [

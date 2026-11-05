@@ -10,6 +10,7 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Plugin\Context\EntityContext;
 use Drupal\Core\Url;
 use Drupal\ghi_blocks\Interfaces\ConfigValidationInterface;
+use Drupal\ghi_blocks\LayoutBuilder\AllowedBlockDefinitions;
 use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
 use Drupal\ghi_blocks\Traits\GinLbModalTrait;
 use Drupal\hpc_common\Helpers\ArrayHelper;
@@ -17,6 +18,7 @@ use Drupal\layout_builder\Form\ConfigureBlockFormBase;
 use Drupal\layout_builder\LayoutBuilderHighlightTrait;
 use Drupal\layout_builder\SectionComponent;
 use Drupal\layout_builder\SectionStorageInterface;
+use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 
 /**
  * Provides a form to import a block.
@@ -69,7 +71,7 @@ class ImportBlockForm extends ConfigureBlockFormBase {
    *   The form array.
    */
   public function buildForm(array $form, FormStateInterface $form_state, ?SectionStorageInterface $section_storage = NULL, $delta = NULL, $region = NULL) {
-
+    $this->sectionStorage = $section_storage;
     $steps = self::STEPS;
     $current_step = $form_state->get('current_import_step') ?? reset($steps);
 
@@ -80,6 +82,10 @@ class ImportBlockForm extends ConfigureBlockFormBase {
 
       case 'add_block':
         $plugin_config = $form_state->get('plugin_config');
+        $definitions = \Drupal::classResolver(AllowedBlockDefinitions::class)->getDefinitions($section_storage);
+        if (!isset($definitions[$plugin_config['id']])) {
+          throw new AccessDeniedHttpException();
+        }
         unset($plugin_config['uuid']);
         // Only generate a new component once per form submission.
         if (!$component = $form_state->get('layout_builder__component')) {
@@ -173,13 +179,13 @@ class ImportBlockForm extends ConfigureBlockFormBase {
   }
 
   /**
-   * Get a previously submitted plugin configuration from the form state.
+   * Gets the submitted or stored YAML configuration.
    *
    * @param \Drupal\Core\Form\FormStateInterface $form_state
    *   The current state of the form.
    *
-   * @return array|null
-   *   The submitted or stored value.
+   * @return string|null
+   *   The submitted YAML or the stored configuration encoded as YAML.
    */
   private function getSubmittedConfig(FormStateInterface $form_state) {
     return $form_state->getValue('config') ?? ($form_state->get('config') ? Yaml::encode($form_state->get('config')) : NULL);
@@ -222,6 +228,24 @@ class ImportBlockForm extends ConfigureBlockFormBase {
   public function validateForm(&$form, FormStateInterface $form_state) {
     $action = end($form_state->getTriggeringElement()['#parents']);
     if ($action == 'submit') {
+      // Cached final-step forms skip buildForm(), so check the current policy
+      // again before validating or saving the component prepared earlier.
+      $definitions = \Drupal::classResolver(AllowedBlockDefinitions::class)->getDefinitions($this->sectionStorage);
+      if (!isset($definitions[$this->block->getPluginId()])) {
+        // This is a layout-level error with no field to display it inline.
+        $form['#ghi_inline_errors_only'] = FALSE;
+        $form_state->setError($form, $this->t('This element is not allowed in this layout.'));
+        // Gin's full-page Layout Builder template omits its messages region.
+        // Display the summary within the form, as the AJAX response also does.
+        $form['status_messages'] = [
+          '#type' => 'status_messages',
+          '#weight' => -1000,
+          '#parents' => array_merge($form['#parents'], ['status_messages']),
+          '#array_parents' => array_merge($form['#array_parents'], ['status_messages']),
+        ];
+        $form['#sorted'] = FALSE;
+        return;
+      }
       return parent::validateForm($form, $form_state);
     }
     else {
@@ -230,6 +254,11 @@ class ImportBlockForm extends ConfigureBlockFormBase {
       $plugin_config = $import_config['conf'];
       $form_state->set('config', $import_config);
       $form_state->set('plugin_config', $plugin_config);
+
+      $definitions = \Drupal::classResolver(AllowedBlockDefinitions::class)->getDefinitions($this->sectionStorage);
+      if (!isset($definitions[$plugin_config['id']])) {
+        $form_state->setErrorByName('config', $this->t('This element is not allowed in this layout.'));
+      }
 
       // Do some very basic validation of the submitted element configuration.
       if ($import_config['element'] != $plugin_config['id']) {
