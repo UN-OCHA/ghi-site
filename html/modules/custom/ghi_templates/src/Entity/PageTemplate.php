@@ -14,7 +14,6 @@ use Drupal\Core\Render\Markup;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\ghi_base_objects\Entity\BaseObjectChildInterface;
-use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
 use Drupal\layout_builder\LayoutEntityHelperTrait;
 use Drupal\layout_builder\Plugin\SectionStorage\OverridesSectionStorage;
 use Drupal\layout_builder\Section;
@@ -82,6 +81,23 @@ class PageTemplate extends ContentEntityBase implements PageTemplateInterface {
   use StringTranslationTrait;
 
   /**
+   * A transient snapshot of the source layout, or NULL to use its saved layout.
+   *
+   * @var \Drupal\layout_builder\Section[]|null
+   */
+  protected ?array $sourceSections = NULL;
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setSourceSections(array $sections): static {
+    // Section's clone implementation also clones its components, so later edits
+    // to the source editor's pending layout cannot change this snapshot.
+    $this->sourceSections = array_map(static fn(Section $section) => clone $section, $sections);
+    return $this;
+  }
+
+  /**
    * {@inheritdoc}
    */
   public function setupTemplate() {
@@ -95,38 +111,45 @@ class PageTemplate extends ContentEntityBase implements PageTemplateInterface {
       $this->setBaseObjects($base_objects);
     }
 
-    $source_section_storage = $this->getSectionStorageForEntity($source_page);
-    $source_sections = $source_section_storage->getSections();
+    $source_sections = $this->sourceSections ?? $this->getSectionStorageForEntity($source_page)->getSections();
+    $source_context = EntityContext::fromEntity($source_page);
+    $block_manager = \Drupal::service('plugin.manager.block');
+    $context_handler = \Drupal::service('context.handler');
+    $sections = [];
     foreach ($source_sections as $source_section) {
       $section_config = $source_section->toArray();
       $components = [];
       foreach ($section_config['components'] as $component_config) {
         $component_config['uuid'] = \Drupal::service('uuid')->generate();
         $component = SectionComponent::fromArray($component_config);
-        $plugin = $component->getPlugin();
-        $definition = $plugin->getPluginDefinition();
-        $context_mapping = [
-          'context_mapping' => array_intersect_key([
-            'node' => 'layout_builder.entity',
-          ], $definition['context_definitions']),
-        ];
-        // And make sure that base objects are mapped too.
-        foreach (array_filter($base_objects) as $_base_object) {
-          $contexts = [
-            EntityContext::fromEntity($_base_object),
-          ];
-          foreach ($definition['context_definitions'] as $context_key => $context_definition) {
-            $matching_contexts = \Drupal::service('context.handler')->getMatchingContexts($contexts, $context_definition);
-            if (empty($matching_contexts)) {
-              continue;
+        $configuration = $component->get('configuration');
+        // GHI blocks also store their runtime UUID in plugin configuration.
+        if (isset($configuration['uuid'])) {
+          $configuration['uuid'] = $component->getUuid();
+        }
+        // Unknown plugins must survive the snapshot too. An optional definition
+        // avoids instantiating or replacing their saved configuration.
+        $definition = isset($configuration['id']) ? $block_manager->getDefinition($configuration['id'], FALSE) : NULL;
+        foreach ($definition['context_definitions'] ?? [] as $context_key => $context_definition) {
+          $mapping = $configuration['context_mapping'][$context_key] ?? NULL;
+          if ($mapping !== NULL && !in_array($mapping, ['layout_builder.entity', 'entity'], TRUE)) {
+            continue;
+          }
+          // The layout entity is now the template, but node field blocks and
+          // other node-dependent elements must still use the source page.
+          if ($context_handler->getMatchingContexts([$source_context], $context_definition)) {
+            $configuration['context_mapping'][$context_key] = 'node';
+            continue;
+          }
+          foreach (array_filter($base_objects) as $base_object) {
+            if ($context_handler->getMatchingContexts([EntityContext::fromEntity($base_object)], $context_definition)) {
+              $configuration['context_mapping'][$context_key] = $base_object->getUniqueIdentifier();
+              break;
             }
-            $context_mapping['context_mapping'][$context_key] = $_base_object->getUniqueIdentifier();
           }
         }
-        $configuration = $context_mapping + $component->get('configuration');
-        if ($plugin instanceof GHIBlockBase) {
-          $plugin->alterImportedConfiguration($configuration);
-        }
+        // Creating a template is a faithful snapshot, not an import. In
+        // particular, import hooks can remove paragraph locking/sync settings.
         $component->setConfiguration($configuration);
         $components[$component->getUuid()] = $component->toArray();
       }
@@ -137,6 +160,7 @@ class PageTemplate extends ContentEntityBase implements PageTemplateInterface {
     }
 
     $this->get(OverridesSectionStorage::FIELD_NAME)->setValue($sections);
+    $this->sourceSections = NULL;
     $this->save();
   }
 
@@ -201,6 +225,8 @@ class PageTemplate extends ContentEntityBase implements PageTemplateInterface {
       $source_template = 'Template based on <em>@source</em> @entity_type_lowercase page';
     }
 
+    $source = $this->getSourceEntity();
+    $source_type = $source?->type?->entity?->label() ?? '';
     $base_objects = $this->getBaseObjects();
 
     $base_object_summmaries = [];
@@ -215,9 +241,9 @@ class PageTemplate extends ContentEntityBase implements PageTemplateInterface {
     }
 
     $source_summary = new FormattableMarkup($source_template, [
-      '@source' => $this->getSourceEntity()?->label() ?? $this->t('deleted'),
-      '@entity_type_lowercase' => strtolower($this->getSourceEntity()?->type?->entity->label() ?? ''),
-      '@entity_type' => $this->getSourceEntity()?->type?->entity->label(),
+      '@source' => $source?->label() ?? $this->t('deleted'),
+      '@entity_type_lowercase' => strtolower($source_type),
+      '@entity_type' => $source_type,
     ]);
 
     if (count($base_object_summmaries) > 1) {

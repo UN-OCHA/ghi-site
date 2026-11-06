@@ -38,12 +38,13 @@ function ghi_blocks_theme($existing, $type, $theme, $path) {
       'file' => 'ghi_blocks.theme.inc',
       'template' => 'document-link-button',
     ],
-    'link_carousel' => [
+    'link_carousel_feature' => [
       'variables' => [
-        'items' => [],
+        'highlighted' => NULL,
+        'featured' => [],
+        'donation' => NULL,
       ],
-      'file' => 'ghi_blocks.theme.inc',
-      'template' => 'link-carousel',
+      'template' => 'link-carousel-feature',
     ],
     'reliefweb_rss_feed' => [
       'variables' => [
