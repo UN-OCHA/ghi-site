@@ -11,6 +11,7 @@ dependencies:
   - imagecache_external:imagecache_external
   - layout_builder_ipe:layout_builder_ipe
   - layout_builder_lock:layout_builder_lock
+  - layout_builder_restrictions:layout_builder_restrictions
   - hpc_common:hpc_common
   - hpc_downloads:hpc_downloads
   - hpc_remote_data_cache:hpc_remote_data_cache
