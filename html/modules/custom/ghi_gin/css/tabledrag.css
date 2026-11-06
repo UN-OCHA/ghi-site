@@ -1,0 +1,334 @@
+/* Preserve native table layout, column sizes, row groups and tree indentation. */
+table.ghi-tabledrag {
+  --ghi-tabledrag-handle-size: 2.75rem;
+  --ghi-tabledrag-group-offset: 0.5rem;
+  --ghi-tabledrag-tree-axis: calc(var(--ghi-tabledrag-handle-size) / 2 - var(--ghi-tabledrag-group-offset));
+  --ghi-tabledrag-row-spacing: min(0.625rem, var(--gin-spacing-density-m, 0.625rem));
+
+  color: var(--gin-color-text, #232429);
+  background-color: var(--gin-bg-layer, #fff);
+}
+
+/* Match Gin's quiet table headers, including the older frontend modal theme. */
+table.ghi-tabledrag > thead,
+form.ghi-glb-form[data-ghi-tabledrag] table.ghi-tabledrag > thead {
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+table.ghi-tabledrag > thead > tr > th,
+form.ghi-glb-form[data-ghi-tabledrag] table.ghi-tabledrag > thead > tr > th {
+  height: auto;
+  padding: 0.75rem;
+  color: var(--gin-color-text-light, #545560);
+  border-block-end: 2px solid var(--gin-border-color-table-header, #bdbfc9);
+  background: var(--gin-bg-layer, #fff);
+  font-size: var(--gin-font-size-s, 0.875rem);
+  font-weight: 500;
+}
+
+table.ghi-tabledrag > tbody > tr.draggable > td {
+  height: auto;
+  padding-block: var(--ghi-tabledrag-row-spacing);
+  transition: background-color var(--gin-transition, 150ms ease), box-shadow var(--gin-transition, 150ms ease);
+  vertical-align: middle;
+}
+
+table.ghi-tabledrag .tabledrag-cell-content {
+  align-items: center;
+  margin-block: 0;
+}
+
+table.ghi-tabledrag .tabledrag-cell-content__item {
+  min-width: 0;
+}
+
+table.ghi-tabledrag > tbody > tr.draggable > td > .form-item,
+table.ghi-tabledrag > tbody > tr.draggable > td > .glb-form-item {
+  /* Gin LB declares row-field margins important. */
+  margin-block: 0.25rem !important;
+}
+
+/* Restyle the existing focusable anchor; core owns all drag and keyboard events. */
+table.ghi-tabledrag a.tabledrag-handle {
+  position: relative;
+  display: inline-flex;
+  float: none;
+  overflow: visible;
+  flex: 0 0 var(--ghi-tabledrag-handle-size);
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  width: var(--ghi-tabledrag-handle-size);
+  height: var(--ghi-tabledrag-handle-size);
+  margin: 0;
+  margin-inline-end: 0.25rem;
+  cursor: grab;
+  transition: color var(--gin-transition, 150ms ease), background-color var(--gin-transition, 150ms ease);
+  vertical-align: middle;
+  color: var(--gin-color-text-light, #62676e);
+  border-radius: 0.375rem;
+}
+
+/* Gin wraps handles with the content. Plain core cells instead need a float
+   so their block-level preview wrappers flow beside, not below, the grip. */
+table.ghi-tabledrag > tbody > tr.draggable > td:first-child > a.tabledrag-handle {
+  float: inline-start;
+}
+
+table.ghi-tabledrag a.tabledrag-handle::after {
+  display: block;
+  width: 0.75rem;
+  height: 1.125rem;
+  margin: 0;
+  padding: 0;
+  content: "";
+  transform: none;
+  background: radial-gradient(circle, currentColor 1.5px, transparent 1.75px) 0 0 / 0.375rem 0.375rem;
+  mask-image: none;
+}
+
+table.ghi-tabledrag a.tabledrag-handle:hover::after,
+table.ghi-tabledrag a.tabledrag-handle:focus::after,
+table.ghi-tabledrag tr.draggable.drag a.tabledrag-handle::after {
+  transform: none;
+  background-color: transparent;
+}
+
+table.ghi-tabledrag a.tabledrag-handle .handle {
+  display: none;
+}
+
+table.ghi-tabledrag a.tabledrag-handle:hover,
+table.ghi-tabledrag a.tabledrag-handle:focus-visible {
+  color: var(--gin-color-primary, #1f69b3);
+  background-color: var(--gin-bg-item-hover, #e6eff8);
+}
+
+table.ghi-tabledrag a.tabledrag-handle:focus::before {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: auto;
+  height: auto;
+  margin: 0;
+  content: "";
+  border-radius: inherit;
+  box-shadow: 0 0 0 2px var(--gin-color-focus, #1f69b3);
+}
+
+table.ghi-tabledrag.tabledrag-disabled a.tabledrag-handle {
+  cursor: default;
+  opacity: 0.5;
+}
+
+/* Override the older modal-only absolute positioning without changing columns. */
+form.ghi-glb-form[data-ghi-tabledrag] table.ghi-tabledrag > tbody > tr.draggable > td,
+form.ghi-glb-form[data-ghi-tabledrag] table.ghi-tabledrag > tbody > tr.draggable > td:first-child {
+  height: auto;
+  padding: var(--ghi-tabledrag-row-spacing) 0.75rem;
+  vertical-align: middle;
+}
+
+form.ghi-glb-form[data-ghi-tabledrag] table.ghi-tabledrag > tbody > tr.draggable > td:first-child a.tabledrag-handle {
+  position: relative;
+  inset: auto;
+  height: var(--ghi-tabledrag-handle-size);
+}
+
+form.ghi-glb-form[data-ghi-tabledrag] table.ghi-tabledrag > tbody > tr.draggable > td:first-child > a.tabledrag-handle {
+  float: inline-start;
+}
+
+/* Older browsers ignore logical floats, leaving previews below the handle. */
+@supports not (float: inline-start) {
+  table.ghi-tabledrag > tbody > tr.draggable > td:first-child > a.tabledrag-handle,
+  form.ghi-glb-form[data-ghi-tabledrag] table.ghi-tabledrag > tbody > tr.draggable > td:first-child > a.tabledrag-handle {
+    float: left;
+  }
+
+  [dir="rtl"] table.ghi-tabledrag > tbody > tr.draggable > td:first-child > a.tabledrag-handle,
+  [dir="rtl"] form.ghi-glb-form[data-ghi-tabledrag] table.ghi-tabledrag > tbody > tr.draggable > td:first-child > a.tabledrag-handle {
+    float: right;
+  }
+}
+
+table.ghi-tabledrag > tbody > tr.draggable > td:first-child > .cell-wrapper-inner {
+  display: flex;
+  align-items: center;
+  min-height: var(--ghi-tabledrag-handle-size);
+}
+
+/* Keep core's indentation width: it measures that width for horizontal dragging.
+   Only normalize offsets and gaps that differ between Gin and modal wrappers. */
+table.ghi-tabledrag--hierarchy .ghi-tabledrag__indent,
+table.ghi-tabledrag--hierarchy .tabledrag-cell-content > .ghi-tabledrag__indent {
+  position: relative;
+  inset: auto;
+  overflow: visible;
+  flex-shrink: 0;
+  height: var(--ghi-tabledrag-handle-size);
+  margin: 0;
+  background: none !important;
+}
+
+table.ghi-tabledrag--hierarchy > tbody > tr > td:first-child .value-wrapper:has(> .ghi-tabledrag__indent) {
+  gap: 0;
+}
+
+/* Claro paints temporary SVG guides while moving a group. Keep its markup,
+   but show only our persistent guides so the two sets cannot overlap. */
+table.ghi-tabledrag--hierarchy .ghi-tabledrag__indent > .tree {
+  visibility: hidden;
+}
+
+table.ghi-tabledrag--hierarchy > tbody > tr.ghi-tabledrag__group > td {
+  background-color: var(--gin-bg-layer2, #edeff5);
+  font-weight: var(--gin-font-weight-semibold, 500);
+}
+
+/* Share the parent grip/child spine axis. Compensate the end margin to preserve
+   label positions while keeping the full target and focus ring inside the cell. */
+table.ghi-tabledrag--hierarchy > tbody > tr.ghi-tabledrag__group > td:first-child a.tabledrag-handle {
+  margin-inline-start: calc(-1 * var(--ghi-tabledrag-group-offset));
+  margin-inline-end: calc(0.25rem + var(--ghi-tabledrag-group-offset));
+}
+
+table.ghi-tabledrag--hierarchy .ghi-tabledrag__indent::before,
+table.ghi-tabledrag--hierarchy .ghi-tabledrag__indent::after {
+  position: absolute;
+  display: none;
+  content: "";
+  pointer-events: none;
+}
+
+table.ghi-tabledrag--hierarchy .ghi-tabledrag__indent--line::before {
+  inset-block-start: var(--ghi-tabledrag-guide-top, -0.625rem);
+  inset-inline-start: var(--ghi-tabledrag-tree-axis);
+  display: block;
+  height: var(--ghi-tabledrag-guide-height, calc(100% + 1.25rem));
+  border-inline-start: 1px solid var(--gin-border-color-layer2, #bdbfc9);
+}
+
+table.ghi-tabledrag--hierarchy .ghi-tabledrag__indent--branch::after {
+  inset-block-start: 50%;
+  inset-inline: var(--ghi-tabledrag-tree-axis) 0;
+  display: block;
+  border-block-start: 1px solid var(--gin-border-color-layer2, #bdbfc9);
+}
+
+table.ghi-tabledrag--hierarchy .ghi-tabledrag__indent--end::before {
+  height: calc(50% - var(--ghi-tabledrag-guide-top, -0.625rem));
+}
+
+/* Only existing inline row actions are compacted; keep dropbuttons and widgets. */
+table.ghi-tabledrag .operation-buttons {
+  display: flex;
+  flex-wrap: nowrap;
+  justify-content: flex-end;
+  gap: 0.25rem;
+  /* Summary tables use a shrink-to-fit action column. Keep its full width. */
+  width: max-content;
+  margin-inline-start: auto;
+}
+
+table.ghi-tabledrag .operation-buttons .button,
+table.ghi-tabledrag .operation-buttons .glb-button {
+  min-width: 0;
+  min-height: 2.75rem;
+  /* These properties are important in Gin LB, including its focus rules. */
+  margin: 0 !important;
+  padding: 0.5rem !important;
+  color: var(--gin-color-primary, #1f69b3) !important;
+  border: 0 !important;
+  border-radius: 0.25rem !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  font-weight: 500 !important;
+  line-height: 1.25 !important;
+}
+
+table.ghi-tabledrag .operation-buttons .button:hover,
+table.ghi-tabledrag .operation-buttons .glb-button:hover {
+  text-decoration: underline !important;
+  background-color: var(--gin-bg-item-hover, #e6eff8) !important;
+}
+
+table.ghi-tabledrag .operation-buttons .button:focus-visible,
+table.ghi-tabledrag .operation-buttons .glb-button:focus-visible {
+  outline: 2px solid var(--gin-color-focus, #1f69b3);
+  outline-offset: 1px;
+}
+
+table.ghi-tabledrag .operation-buttons .button:disabled,
+table.ghi-tabledrag .operation-buttons .glb-button:disabled {
+  cursor: not-allowed !important;
+  opacity: 0.6;
+  color: var(--gin-color-disabled, #767676) !important;
+}
+
+table.ghi-tabledrag > tbody > tr.draggable:hover > td {
+  background-color: var(--gin-bg-item, #f4f7fa);
+}
+
+table.ghi-tabledrag > tbody > tr.draggable:focus-within > td,
+table.ghi-tabledrag > tbody > tr.drag > td,
+table.ghi-tabledrag > tbody > tr.drag-previous > td {
+  background-color: var(--gin-bg-item-hover, #e6eff8);
+}
+
+table.ghi-tabledrag > tbody > tr.drag a.tabledrag-handle {
+  cursor: grabbing;
+}
+
+table.ghi-tabledrag > tbody > tr.drag > td {
+  box-shadow: inset 0 -2px var(--gin-color-primary, #1f69b3);
+}
+
+table.ghi-tabledrag > tbody > tr.drag-previous {
+  box-shadow: none;
+}
+
+table.ghi-tabledrag > tbody > tr.drag-previous > td:first-child {
+  box-shadow: inset 3px 0 var(--gin-color-primary, #1f69b3);
+}
+
+[dir="rtl"] table.ghi-tabledrag > tbody > tr.drag-previous > td:first-child {
+  box-shadow: inset -3px 0 var(--gin-color-primary, #1f69b3);
+}
+
+table.ghi-tabledrag > tbody > tr.drag-previous::after {
+  content: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  table.ghi-tabledrag > tbody > tr.draggable > td,
+  table.ghi-tabledrag a.tabledrag-handle {
+    transition: none;
+  }
+}
+
+@media (forced-colors: active) {
+  table.ghi-tabledrag--hierarchy .ghi-tabledrag__indent::before,
+  table.ghi-tabledrag--hierarchy .ghi-tabledrag__indent::after {
+    border-color: canvastext;
+  }
+
+  table.ghi-tabledrag a.tabledrag-handle::after {
+    color: linktext;
+    forced-color-adjust: none;
+  }
+
+  table.ghi-tabledrag a.tabledrag-handle:focus::before {
+    outline: 2px solid highlight;
+  }
+
+  table.ghi-tabledrag > tbody > tr.drag > td {
+    border-block-end: 2px solid highlight;
+  }
+
+  table.ghi-tabledrag > tbody > tr.drag-previous > td:first-child {
+    border-inline-start: 2px solid highlight;
+  }
+}

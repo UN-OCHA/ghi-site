@@ -9,7 +9,40 @@
  */
 
 use Drupal\Core\Asset\AttachedAssetsInterface;
+use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Language\LanguageInterface;
+
+/**
+ * Implements hook_form_alter().
+ */
+function ghi_gin_form_alter(array &$form, FormStateInterface $form_state, $form_id): void {
+  // Other form alters identify frontend editor modals. Check the finished form
+  // rather than relying on module execution order or the page's active theme.
+  $form['#after_build'][] = 'ghi_gin_tabledrag_after_build';
+}
+
+/**
+ * Attaches shared tabledrag styling only to backend forms.
+ *
+ * @param array $form
+ *   The built form.
+ * @param \Drupal\Core\Form\FormStateInterface $form_state
+ *   The form state.
+ *
+ * @return array
+ *   The form with backend tabledrag styling available to its native tables.
+ */
+function ghi_gin_tabledrag_after_build(array $form, FormStateInterface $form_state): array {
+  if (!\Drupal::service('router.admin_context')->isAdminRoute() && empty($form['#gin_lb_form']) && empty($form['#ghi_modal_form'])) {
+    return $form;
+  }
+  $form['#attributes']['data-ghi-tabledrag'] = '';
+  // Tables can be created during pre-render (field widgets and Views), after
+  // this callback. The behavior uses core's final tableDrag registry instead
+  // of attempting to find every possible render-array representation here.
+  $form['#attached']['library'][] = 'ghi_gin/tabledrag';
+  return $form;
+}
 
 /**
  * Implements hook_preprocess_page().

@@ -1,0 +1,18 @@
+ghi_gin_test.admin:
+  path: '/admin/ghi-gin/tabledrag-test'
+  defaults:
+    _form: '\Drupal\ghi_gin_test\Form\TableDragTestForm'
+    _title: 'Native tabledrag test'
+  requirements:
+    _permission: 'administer site configuration'
+  options:
+    _admin_route: TRUE
+
+ghi_gin_test.public:
+  path: '/ghi-gin/tabledrag-test'
+  defaults:
+    _form: '\Drupal\ghi_gin_test\Form\TableDragTestForm'
+    _title: 'Public tabledrag test'
+  requirements:
+    # Intentionally public to verify public forms do not get editor styling.
+    _access: 'TRUE'
