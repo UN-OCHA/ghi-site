@@ -1,0 +1,7 @@
+name: GHI Gin Test
+description: 'Provides native tabledrag fixtures for GHI Gin tests.'
+package: Testing
+type: module
+core_version_requirement: ^10.3 || ^11
+dependencies:
+  - ghi_gin:ghi_gin
