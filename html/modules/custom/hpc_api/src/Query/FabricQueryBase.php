@@ -17,15 +17,12 @@ use Drupal\hpc_api\ApiObjects\Categories\HealthInterventionCategory;
 use Drupal\hpc_api\ApiObjects\Categories\MaternalStatus;
 use Drupal\hpc_api\ApiObjects\Categories\PopulationStatus;
 use Drupal\hpc_api\ApiObjects\Categories\SettlementType;
-use Drupal\hpc_api\ApiObjects\PlanYear;
-use Drupal\hpc_api\ApiObjects\Relationship;
 use Drupal\hpc_api\ApiObjects\Types\CategoryType;
 use Drupal\hpc_api\ApiObjects\Types\EntityType;
 use Drupal\hpc_api\ApiObjects\Types\FileAssetType;
 use Drupal\hpc_api\ApiObjects\Types\MetricType;
 use Drupal\hpc_api\ApiObjects\Types\PlanCostingType;
 use Drupal\hpc_api\ApiObjects\Types\PlanType;
-use Drupal\hpc_api\ApiObjects\Types\RelationshipType;
 use Drupal\hpc_api\ApiObjects\Types\RevisionState;
 use Drupal\hpc_api\ApiObjects\Types\Sector;
 use Drupal\hpc_api\ApiObjects\Types\Unit;
@@ -41,13 +38,6 @@ abstract class FabricQueryBase extends PluginBase implements FabricQueryPluginIn
   use SimpleCacheTrait;
   use DependencySerializationTrait;
   use ObjectFilterTrait;
-
-  /**
-   * Entity types in Fabric.
-   */
-  const ENTITY_TYPE_NAME_CATEGORY = 'Category';
-  const ENTITY_TYPE_NAME_PERIOD = 'Period';
-  const ENTITY_TYPE_NAME_PLAN = 'Plan';
 
   /**
    * Category types in Fabric.
@@ -123,13 +113,6 @@ abstract class FabricQueryBase extends PluginBase implements FabricQueryPluginIn
    * @var array|null
    */
   protected $baseTypes = NULL;
-
-  /**
-   * The plan years.
-   *
-   * @var array|null
-   */
-  protected $planYears = NULL;
 
   /**
    * The plan types.
@@ -354,20 +337,6 @@ abstract class FabricQueryBase extends PluginBase implements FabricQueryPluginIn
   }
 
   /**
-   * Retrieve the plan years from the API.
-   */
-  protected function fetchPlanYears(): void {
-    if ($this->planYears !== NULL) {
-      return;
-    }
-    $items = $this->fabricClient->createQuery('periods')
-      ->setFilter('PeriodType', 'Year')
-      ->setItems(['Id', 'CalendarYear'])
-      ->execute();
-    $this->planYears = $this->buildResultObjects($items, PlanYear::class);
-  }
-
-  /**
    * Retrieve the plan types from the API.
    */
   protected function fetchPlanTypes(): void {
@@ -410,38 +379,6 @@ abstract class FabricQueryBase extends PluginBase implements FabricQueryPluginIn
   }
 
   /**
-   * Get relationship items.
-   *
-   * @param int $source_type_id
-   *   The id of the source entity type.
-   * @param int $target_type_id
-   *   The id of the target entity type.
-   * @param int|int[] $source_id
-   *   The id of the source entity.
-   * @param int|int[] $target_id
-   *   The id of the target entity.
-   *
-   * @return \Drupal\hpc_api\ApiObjects\Relationship[]
-   *   An array of objects.
-   */
-  public function getRelationshipItems(?int $source_type_id = NULL, ?int $target_type_id = NULL, $source_id = NULL, $target_id = NULL) {
-    $filters = array_filter([
-      'FromEntityTypeId' => $source_type_id ?? NULL,
-      'ToEntityTypeId' => $target_type_id ?? NULL,
-      'FromId' => $source_id ?? NULL,
-      'ToId' => $target_id ?? NULL,
-    ]);
-    if (empty($filters)) {
-      return [];
-    }
-    $items = $this->fabricClient->createQuery('relationships')
-      ->setFilters($filters)
-      ->setItems(Relationship::getGraphQlItems())
-      ->execute() ?? [];
-    return $items ? $this->buildResultObjects($items, Relationship::class) : [];
-  }
-
-  /**
    * Get the available category types.
    *
    * @return \Drupal\hpc_api\ApiObjects\Types\CategoryType[]
@@ -472,17 +409,6 @@ abstract class FabricQueryBase extends PluginBase implements FabricQueryPluginIn
   public function getEntityTypeById(int $id): ?EntityType {
     $this->fetchBaseTypes();
     return $this->baseTypes['entityTypes'][$id] ?? NULL;
-  }
-
-  /**
-   * Get the available relationship types.
-   *
-   * @return \Drupal\hpc_api\ApiObjects\Types\RelationshipType[]
-   *   The relationship types.
-   */
-  public function getRelationshipTypes(): array {
-    $this->fetchBaseTypes();
-    return $this->baseTypes['relationshipTypes'];
   }
 
   /**
@@ -649,24 +575,6 @@ abstract class FabricQueryBase extends PluginBase implements FabricQueryPluginIn
   }
 
   /**
-   * Get a relationship type by its name.
-   *
-   * @param string $name
-   *   The name of the relationship type.
-   *
-   * @return \Drupal\hpc_api\ApiObjects\Types\RelationshipType|null
-   *   The relationship type or NULL if not found.
-   */
-  public function getRelationshipTypeByName(string $name): ?RelationshipType {
-    foreach ($this->getRelationshipTypes() as $type) {
-      if ($type->getName() === $name) {
-        return $type;
-      }
-    }
-    return NULL;
-  }
-
-  /**
    * Get the plan types.
    *
    * @return \Drupal\hpc_api\ApiObjects\Types\PlanType[]
@@ -686,52 +594,6 @@ abstract class FabricQueryBase extends PluginBase implements FabricQueryPluginIn
   public function getPlanCostingTypes(): array {
     $this->fetchPlanCostingTypes();
     return $this->planCostingTypes ?? [];
-  }
-
-  /**
-   * Get the plan year.
-   *
-   * @param int $id
-   *   The internal id of the plan object.
-   *
-   * @return int|null
-   *   The plan year or NULL.
-   */
-  protected function getPlanYear(int $id): ?int {
-    $this->fetchPlanYears();
-    $plan_period_relationships = $this->getPlanPeriodRelationships($id);
-    $plan_years = array_filter(array_map(fn($item) => $this->planYears[$item->getTargetId()] ?? NULL, $plan_period_relationships));
-    return !empty($plan_years) ? reset($plan_years)->getYear() : NULL;
-  }
-
-  /**
-   * Get the plan cvategory relationship data for the given id.
-   *
-   * @param int $id
-   *   The internal id of the plan object.
-   *
-   * @return \Drupal\hpc_api\ApiObjects\Relationship[]
-   *   An array of objects.
-   */
-  protected function getPlanPeriodRelationships(int $id) {
-    $plan_entity_type = $this->getEntityTypeByName(self::ENTITY_TYPE_NAME_PLAN);
-    $period_entity_type = $this->getEntityTypeByName(self::ENTITY_TYPE_NAME_PERIOD);
-    return $this->getRelationshipItems($plan_entity_type->id(), $period_entity_type->id(), $id);
-  }
-
-  /**
-   * Get the plan cvategory relationship data for the given id.
-   *
-   * @param int $id
-   *   The internal id of the plan object.
-   *
-   * @return \Drupal\hpc_api\ApiObjects\Relationship[]
-   *   An array of objects.
-   */
-  protected function getPlanCategoryRelationships(int $id) {
-    $category_entity_type = $this->getEntityTypeByName(self::ENTITY_TYPE_NAME_CATEGORY);
-    $plan_entity_type = $this->getEntityTypeByName(self::ENTITY_TYPE_NAME_PLAN);
-    return $this->getRelationshipItems($category_entity_type->id(), $plan_entity_type->id(), NULL, $id);
   }
 
   /**
