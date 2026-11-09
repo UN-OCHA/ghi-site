@@ -61,7 +61,9 @@ third_party_settings:
     entity_view_mode_restriction:
       allowed_layouts:
         - layout_onecol
-      denylisted_blocks: {  }
+      denylisted_blocks:
+        'Generic elements':
+          - generic_link_carousel
       allowlisted_blocks:
         'Inline blocks':
           - 'inline_block:basic'

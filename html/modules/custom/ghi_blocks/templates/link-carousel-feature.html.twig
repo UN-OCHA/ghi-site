@@ -1,0 +1,86 @@
+{#
+/**
+ * @file
+ * Displays highlighted news, featured links, and a call to action.
+ */
+#}
+{{ attach_library('common_design_subtheme/ghi-link-carousel-feature') }}
+
+<div class="link-carousel-feature">
+  {% if highlighted %}
+    <div class="link-carousel-feature__hero">
+      <div class="link-carousel-feature__inner link-carousel-feature__hero-grid">
+        <div class="link-carousel-feature__intro">
+          <h2 class="link-carousel-feature__title">{{ highlighted.title }}</h2>
+          {% if highlighted.description %}
+            <p class="link-carousel-feature__description">{{ highlighted.description|nl2br }}</p>
+          {% endif %}
+          {% if highlighted.button %}
+            <div class="link-carousel-feature__action">{{ highlighted.button }}</div>
+          {% endif %}
+        </div>
+        {% if highlighted.image %}
+          <figure class="link-carousel-feature__image">
+            {{ highlighted.image }}
+            {% if highlighted.caption or highlighted.credit %}
+              {% set caption_id = 'link-carousel-feature-caption'|clean_unique_id %}
+              <figcaption class="link-carousel-feature__caption">
+                <button type="button" class="link-carousel-feature__caption-toggle" aria-label="{{ 'Image information'|t }}" aria-describedby="{{ caption_id }}">
+                  <span aria-hidden="true">i</span>
+                </button>
+                <div id="{{ caption_id }}" class="link-carousel-feature__caption-content" tabindex="0">
+                  {% if highlighted.caption %}
+                    <span>{{ highlighted.caption }}</span>
+                  {% endif %}
+                  {% if highlighted.credit %}
+                    <span class="link-carousel-feature__credit">{{ highlighted.credit }}</span>
+                  {% endif %}
+                </div>
+              </figcaption>
+            {% endif %}
+          </figure>
+        {% endif %}
+      </div>
+    </div>
+  {% endif %}
+
+  {% if featured or call_to_action %}
+    <div class="link-carousel-feature__inner link-carousel-feature__lower">
+      {% if featured %}
+        <section class="link-carousel-feature__featured">
+          <h2 class="link-carousel-feature__heading">{{ 'Featured'|t }}</h2>
+          <ul class="link-carousel-feature__items">
+            {% for item in featured %}
+              <li class="link-carousel-feature__item">
+                {% if item.thumbnail %}
+                  <div class="link-carousel-feature__thumbnail">{{ item.thumbnail }}</div>
+                {% endif %}
+                <div class="link-carousel-feature__item-content">
+                  {% if item.date %}
+                    {% if item.datetime %}
+                      <time class="link-carousel-feature__date" datetime="{{ item.datetime }}">{{ item.date }}</time>
+                    {% else %}
+                      <span class="link-carousel-feature__date">{{ item.date }}</span>
+                    {% endif %}
+                  {% endif %}
+                  <h3 class="link-carousel-feature__item-title">{{ item.button }}</h3>
+                </div>
+              </li>
+            {% endfor %}
+          </ul>
+        </section>
+      {% endif %}
+      {% if call_to_action %}
+        <section class="link-carousel-feature__cta">
+          <h2 class="link-carousel-feature__cta-title">{{ call_to_action.title }}</h2>
+          {% if call_to_action.description %}
+            <p class="link-carousel-feature__cta-description">{{ call_to_action.description|nl2br }}</p>
+          {% endif %}
+          {% if call_to_action.button %}
+            <div class="link-carousel-feature__cta-action">{{ call_to_action.button }}</div>
+          {% endif %}
+        </section>
+      {% endif %}
+    </div>
+  {% endif %}
+</div>
