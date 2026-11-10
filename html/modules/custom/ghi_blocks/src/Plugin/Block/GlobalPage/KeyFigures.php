@@ -156,9 +156,15 @@ class KeyFigures extends GHIBlockBase implements MultiStepFormBlockInterface {
     if (empty($tabs)) {
       return NULL;
     }
+    // Item render arrays live inside the theme's #tabs property, outside the
+    // element tree inspected by the block content cache. Expose the query
+    // dependencies at the cache boundary as well.
     $build = [
       '#theme' => 'tab_container',
       '#tabs' => $tabs,
+      '#cache' => [
+        'tags' => $context['cache_tags'],
+      ],
     ];
     return $build;
   }
@@ -227,8 +233,12 @@ class KeyFigures extends GHIBlockBase implements MultiStepFormBlockInterface {
    *   An array with context data or query handlers.
    */
   public function getBlockContext() {
+    // Resolve first so the query can collect local and remote cache
+    // dependencies before passing them to the item plugins.
+    $data = $this->getData();
     return [
-      'data' => $this->getData(),
+      'data' => $data,
+      'cache_tags' => $this->getPlanOverviewQuery()->getCacheTags(),
     ];
   }
 

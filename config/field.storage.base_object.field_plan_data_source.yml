@@ -1,0 +1,27 @@
+uuid: d4a6ad39-3f1f-444d-bc1b-8b076b3e1e4b
+langcode: en
+status: true
+dependencies:
+  module:
+    - ghi_base_objects
+    - options
+id: base_object.field_plan_data_source
+field_name: field_plan_data_source
+entity_type: base_object
+type: list_string
+settings:
+  allowed_values:
+    -
+      value: plan
+      label: 'Country Module data'
+    -
+      value: gho
+      label: 'GHO data'
+  allowed_values_function: ''
+module: options
+locked: false
+cardinality: 1
+translatable: true
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

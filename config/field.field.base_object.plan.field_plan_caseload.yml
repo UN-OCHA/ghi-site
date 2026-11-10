@@ -11,8 +11,8 @@ id: base_object.plan.field_plan_caseload
 field_name: field_plan_caseload
 entity_type: base_object
 bundle: plan
-label: 'Plan caseload'
-description: 'The plan level caseload attachment to use for PIN data retrieval on global pages, e.g. the homepage.'
+label: 'Country Module plan caseload'
+description: 'Select the plan-level caseload attachment used for population metrics when Country Module data is selected. Automatic selects the most suitable available attachment.'
 required: false
 translatable: false
 default_value:

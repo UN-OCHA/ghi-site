@@ -204,7 +204,14 @@ class PlanOverviewData extends ConfigurationContainerItemPluginBase {
       ];
     }
 
-    return $build;
+    return $this->applyCacheTags($build);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getCacheTags() {
+    return $this->getContextValue('cache_tags') ?? [];
   }
 
   /**

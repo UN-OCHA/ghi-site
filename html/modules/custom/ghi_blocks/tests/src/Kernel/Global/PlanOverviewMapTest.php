@@ -109,6 +109,27 @@ class PlanOverviewMapTest extends PlanBlockKernelTestBase {
   }
 
   /**
+   * Tests plans without metric values remain available on the map.
+   */
+  public function testBlockBuildWithPlanWithoutMetrics(): void {
+    $plugin = $this->getBlockPlugin();
+    $plan = $this->mockPlan();
+    $plan->getRequirements()->willReturn(NULL);
+    $plan->getFunding()->willReturn(NULL);
+    $plan->getCoverage()->willReturn(NULL);
+    $plan->getCaseloadValue('in_need')->willReturn(NULL);
+    $plan->getCaseloadValue('target')->willReturn(NULL);
+    $plan = $plan->reveal();
+    $this->mockPlanOverviewQuery($plugin, [$plan]);
+
+    $data_settings = $plugin->buildMapDataSettings('plan-overview-map-test');
+    foreach ($data_settings['map']['json'] as $tab_data) {
+      $this->assertCount(1, $tab_data['locations']);
+    }
+    $this->assertContains('plan:' . $plan->id(), $data_settings['cache_tags']);
+  }
+
+  /**
    * Tests the block build with empty plans.
    */
   public function testBlockBuildWithEmptyPlans() {

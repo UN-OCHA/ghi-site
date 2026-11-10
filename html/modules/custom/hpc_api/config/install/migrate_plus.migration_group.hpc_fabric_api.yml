@@ -8,10 +8,10 @@
 id: hpc_fabric_api
 
 # A human-friendly label for the group.
-label: 'HPC Fabric API'
+label: 'HPC data backend'
 
 # More information about the group.
-description: 'Data from the HPC Fabric API'
+description: 'Data from the HPC data backend'
 
 # Short description of the type of source, e.g. "Drupal 6" or "WordPress".
 source_type: 'Fabric GraphQL'

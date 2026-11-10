@@ -208,6 +208,7 @@ class HistoricalTrendsTest extends PlanBlockKernelTestBase {
     $build = $block->buildContent();
     $this->assertContains('node:' . $homepage->id(), $build['#cache']['tags']);
     $this->assertContains('node_list:homepage', $build['#cache']['tags']);
+    $this->assertContains('plan:source', $build['#cache']['tags']);
     $cache = $this->container->get('cache.default');
     $cache->set('historical_trends_test', $build, -1, $build['#cache']['tags']);
 
@@ -379,6 +380,7 @@ class HistoricalTrendsTest extends PlanBlockKernelTestBase {
     ]);
     $query->method('getNumberOfGhoCountries')->willReturn(0);
     $query->method('getGhoPlans')->willReturn([]);
+    $query->setCacheTags(['plan:source']);
     return $query;
   }
 
