@@ -5,6 +5,7 @@ namespace Drupal\Tests\ghi_blocks\Kernel\Global;
 use Drupal\Core\Plugin\Context\Context;
 use Drupal\Core\Plugin\Context\ContextDefinition;
 use Drupal\ghi_blocks\Plugin\Block\GlobalPage\KeyFigures;
+use Drupal\ghi_plans\Plugin\FabricQuery\PlanOverviewQuery;
 use Drupal\Tests\ghi_blocks\Kernel\PlanBlockKernelTestBase;
 use PHPUnit\Framework\Attributes\Group;
 
@@ -127,6 +128,77 @@ class KeyFiguresTest extends PlanBlockKernelTestBase {
     $this->assertEquals('plan_overview_data', $attributes['data-item-type']);
     $this->assertEquals(100, $attributes['data-raw-value']);
     $this->assertEquals('people_in_need', $attributes['data-value-type']);
+  }
+
+  /**
+   * Tests plan overview data preserves its source cache tags.
+   */
+  public function testPlanOverviewDataCacheTags(): void {
+    $plugin = $this->getBlockPlugin();
+    $item_type = $plugin->getItemTypePluginForColumn([
+      'item_type' => 'plan_overview_data',
+      'config' => [
+        'type' => 'people_in_need',
+      ],
+    ], [
+      'data' => [
+        'people_in_need' => 100,
+      ],
+      'cache_tags' => ['plan:1'],
+    ]);
+
+    $this->assertContains('plan:1', $item_type->getRenderArray()['#cache']['tags']);
+  }
+
+  /**
+   * Tests source tags are present at the block content cache boundary.
+   */
+  public function testBlockBuildCacheTags(): void {
+    $plugin = $this->getBlockPlugin([
+      'key_figures' => [
+        'items' => [
+          [
+            'id' => 0,
+            'pid' => NULL,
+            'item_type' => 'item_group',
+            'weight' => 0,
+            'config' => ['label' => 'Figures'],
+          ],
+          [
+            'id' => 1,
+            'pid' => 0,
+            'item_type' => 'plan_overview_data',
+            'weight' => 1,
+            'config' => ['type' => 'people_in_need'],
+          ],
+        ],
+      ],
+    ]);
+
+    $query = $this->prophesize(PlanOverviewQuery::class);
+    $query->getTotalRequirements()->willReturn(200.0);
+    $query->getTotalFunding()->willReturn(100.0);
+    $query->getCaseloadTotalValues([
+      'in_need' => 'In Need',
+      'target' => 'Target',
+      'latest_reach' => 'Latest reached',
+      'expected_reach' => 'Expected reach',
+    ])->willReturn([
+      'in_need' => 100,
+      'target' => 80,
+      'latest_reach' => 40,
+      'expected_reach' => 50,
+      'reached_custom' => 40,
+      'target_custom' => 80,
+    ]);
+    $query->getNumberOfGhoCountries()->willReturn(1);
+    $query->getGhoPlans()->willReturn([]);
+    $query->getCacheTags()->willReturn(['plan_id:1']);
+    $plugin->setQueryHandler('plans_overview', $query->reveal());
+
+    $build = $plugin->buildContent();
+
+    $this->assertContains('plan_id:1', $build['#cache']['tags']);
   }
 
   /**

@@ -6,12 +6,11 @@ use Drupal\Core\DependencyInjection\ContainerBuilder;
 use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\ghi_plans\ApiObjects\Plan;
-use Drupal\ghi_plans\ApiObjects\PlanEntityInterface;
 use Drupal\ghi_plans\Entity\Plan as PlanEntity;
-use Drupal\ghi_plans\Plugin\FabricQuery\AttachmentPrototypeQuery;
-use Drupal\ghi_plans\Plugin\FabricQuery\AttachmentQuery;
+use Drupal\ghi_plans\PlanMetricResolver;
 use Drupal\ghi_plans\Plugin\FabricQuery\PlanOverviewQuery;
 use Drupal\ghi_plans\Plugin\FabricQuery\PlanQuery;
+use Drupal\ghi_plans\ValueObject\PlanMetricValues;
 use Drupal\Tests\hpc_api\Traits\PrivateAccessorTrait;
 use Drupal\Tests\UnitTestCase;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -50,7 +49,7 @@ class PlanOverviewQueryTest extends UnitTestCase {
       $entity = $this->createMock(PlanEntity::class);
       $entity->method('bundle')->willReturn('plan');
       $entity->method('getSourceId')->willReturn($id);
-      $entity->expects($this->once())->method('getTotalFunding')->willReturn(123.0);
+      $entity->method('getCacheTags')->willReturn(['plan:' . $id]);
       $entities[] = $entity;
     }
 
@@ -70,22 +69,20 @@ class PlanOverviewQueryTest extends UnitTestCase {
 
     $plan_query = $this->createMock(PlanQuery::class);
     $plan_query->expects($this->once())->method('getPlansByYear')->with(2026)->willReturn($plans);
-    $expected_ids = array_combine($imported_ids, $imported_ids);
-    $prototype_query = $this->createMock(AttachmentPrototypeQuery::class);
-    $prototype_query->expects($imported_ids ? $this->once() : $this->never())
-      ->method('getDataPrototypesForPlans')
-      ->with($expected_ids, FALSE)
-      ->willReturn([]);
-    $attachment_query = $this->createMock(AttachmentQuery::class);
-    $attachment_query->expects($imported_ids ? $this->once() : $this->never())
-      ->method('getAttachmentsByObject')
-      ->with(PlanEntityInterface::ENTITY_TYPE_PLAN, $expected_ids, ['caseload', 'cost'])
-      ->willReturn([]);
+    $expected_entities = array_combine($imported_ids, $entities);
+    $metric_values = [];
+    foreach ($imported_ids as $imported_id) {
+      $metric_values[$imported_id] = new PlanMetricValues(PlanEntity::DATA_SOURCE_PLAN, ['funding' => 123], cacheTags: ['plan_id:' . $imported_id]);
+    }
+    $metric_resolver = $this->createMock(PlanMetricResolver::class);
+    $metric_resolver->expects($imported_ids ? $this->once() : $this->never())
+      ->method('resolve')
+      ->with($expected_entities)
+      ->willReturn($metric_values);
 
     $query = new PlanOverviewQuery([], 'plan_overview', ['id' => 'plan_overview']);
     $this->setPrivateProperty($query, 'planQuery', $plan_query);
-    $this->setPrivateProperty($query, 'attachmentPrototypeQuery', $prototype_query);
-    $this->setPrivateProperty($query, 'attachmentQuery', $attachment_query);
+    $this->setPrivateProperty($query, 'planMetricResolver', $metric_resolver);
     $query->setYear(2026);
 
     // Disable visibility filtering to verify the import guard independently.
@@ -94,6 +91,9 @@ class PlanOverviewQueryTest extends UnitTestCase {
     foreach ($result as $plan) {
       $this->assertSame(123, $plan->getFunding());
     }
+    $expected_cache_tags = array_map(fn (int $id): string => 'plan:' . $id, $imported_ids);
+    $expected_cache_tags = array_merge($expected_cache_tags, array_map(fn (int $id): string => 'plan_id:' . $id, $imported_ids));
+    $this->assertSame($expected_cache_tags, $query->getCacheTags());
     $this->assertSame($result, $query->getPlans(FALSE));
   }
 

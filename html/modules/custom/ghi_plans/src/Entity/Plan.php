@@ -32,6 +32,8 @@ class Plan extends BaseObject implements BaseObjectMetaDataInterface, BaseObject
   public const BUNDLE = 'plan';
   public const CLUSTER_TYPE_CLUSTER = 'cluster';
   public const CLUSTER_TYPE_SECTOR = 'sector';
+  public const DATA_SOURCE_PLAN = 'plan';
+  public const DATA_SOURCE_GHO = 'gho';
 
   /**
    * {@inheritdoc}
@@ -549,6 +551,38 @@ class Plan extends BaseObject implements BaseObjectMetaDataInterface, BaseObject
       return NULL;
     }
     return $this->get('field_plan_caseload')?->attachment_id ?: NULL;
+  }
+
+  /**
+   * Gets the authoritative source for plan-level metrics.
+   *
+   * @return string
+   *   The configured source, defaulting missing or invalid values to Country
+   *   Module data.
+   */
+  public function getPlanDataSource(): string {
+    if (!$this->hasField('field_plan_data_source')) {
+      return self::DATA_SOURCE_PLAN;
+    }
+    $source = $this->get('field_plan_data_source')->value;
+    return self::isValidDataSource($source) ? $source : self::DATA_SOURCE_PLAN;
+  }
+
+  /**
+   * Checks whether a value identifies a supported plan data source.
+   */
+  public static function isValidDataSource(?string $source): bool {
+    return in_array($source, [self::DATA_SOURCE_PLAN, self::DATA_SOURCE_GHO], TRUE);
+  }
+
+  /**
+   * Checks whether plan-level metrics should come from GHO Facts.
+   *
+   * @return bool
+   *   TRUE when GHO Facts are authoritative for the plan.
+   */
+  public function usesGhoData(): bool {
+    return $this->getPlanDataSource() === self::DATA_SOURCE_GHO;
   }
 
   /**

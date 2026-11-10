@@ -59,6 +59,8 @@ class AttachmentTest extends ApiObjectTestBase {
     $this->assertCount(2, $processing_options);
     $this->assertArrayHasKey('single', $processing_options);
     $this->assertArrayHasKey('calculated', $processing_options);
+    $this->assertSame('Single metric', (string) $processing_options['single']);
+    $this->assertSame('Calculated from two metrics', (string) $processing_options['calculated']);
 
     $calculation_options = Attachment::getCalculationOptions();
     $this->assertCount(4, $calculation_options);
@@ -66,6 +68,8 @@ class AttachmentTest extends ApiObjectTestBase {
     $this->assertArrayHasKey('substraction', $calculation_options);
     $this->assertArrayHasKey('division', $calculation_options);
     $this->assertArrayHasKey('percentage', $calculation_options);
+    $this->assertSame('Subtraction (metric 1 − metric 2)', (string) $calculation_options['substraction']);
+    $this->assertSame('Division (metric 1 ÷ metric 2)', (string) $calculation_options['division']);
 
     $formatting_options = Attachment::getFormattingOptions();
     $this->assertCount(6, $formatting_options);
@@ -175,7 +179,7 @@ class AttachmentTest extends ApiObjectTestBase {
     $conf['calculation'] = 'substraction';
     $this->assertEquals(4648210 - 3124881, $attachment->getValue($conf));
     $conf['calculation'] = 'division';
-    $this->assertEquals(3124881 / 4648210, $attachment->getValue($conf));
+    $this->assertEquals(4648210 / 3124881, $attachment->getValue($conf));
     $conf['calculation'] = 'percentage';
     $this->assertEquals(1 / 3124881 * 4648210, $attachment->getValue($conf));
     $conf['data_points'][1]['metric_type'] = NULL;

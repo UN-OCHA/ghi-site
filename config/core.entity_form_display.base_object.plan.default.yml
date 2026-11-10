@@ -20,6 +20,7 @@ dependencies:
     - field.field.base_object.plan.field_operations_category
     - field.field.base_object.plan.field_original_id
     - field.field.base_object.plan.field_plan_caseload
+    - field.field.base_object.plan.field_plan_data_source
     - field.field.base_object.plan.field_plan_cluster_type
     - field.field.base_object.plan.field_plan_coordinator
     - field.field.base_object.plan.field_plan_costing
@@ -67,7 +68,7 @@ third_party_settings:
       label: 'Plan Properties'
       region: content
       parent_name: group_tabs
-      weight: 3
+      weight: 4
       format_type: tab
       format_settings:
         classes: ''
@@ -86,7 +87,7 @@ third_party_settings:
       label: Locations
       region: content
       parent_name: group_tabs
-      weight: 5
+      weight: 6
       format_type: tab
       format_settings:
         classes: ''
@@ -100,7 +101,6 @@ third_party_settings:
     group_settings:
       children:
         - field_operations_category
-        - field_plan_caseload
         - field_plan_document_link
         - field_decimal_format
         - field_max_admin_level
@@ -120,9 +120,28 @@ third_party_settings:
         required_fields: true
         direction: vertical
         width_breakpoint: 640
+    group_plan_metrics:
+      children:
+        - field_plan_caseload
+        - field_plan_data_source
+      label: 'Plan metrics'
+      region: content
+      parent_name: group_tabs
+      weight: 3
+      format_type: tab
+      format_settings:
+        classes: ''
+        show_empty_fields: false
+        id: ''
+        formatter: closed
+        description: ''
+        required_fields: true
+        direction: vertical
+        width_breakpoint: 640
     group_tabs:
       children:
         - group_settings
+        - group_plan_metrics
         - group_plan_properties
         - group_financial_data
         - group_locations
@@ -147,7 +166,7 @@ third_party_settings:
       label: Footnotes
       region: content
       parent_name: group_tabs
-      weight: 6
+      weight: 7
       format_type: tab
       format_settings:
         classes: ''
@@ -167,7 +186,7 @@ third_party_settings:
       label: 'Financial data'
       region: content
       parent_name: group_tabs
-      weight: 4
+      weight: 5
       format_type: tab
       format_settings:
         classes: ''
@@ -335,6 +354,12 @@ content:
   field_plan_caseload:
     type: ghi_plans_plan_caseload
     weight: 9
+    region: content
+    settings: {  }
+    third_party_settings: {  }
+  field_plan_data_source:
+    type: options_select
+    weight: 10
     region: content
     settings: {  }
     third_party_settings: {  }
