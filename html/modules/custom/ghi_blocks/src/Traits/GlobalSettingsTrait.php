@@ -218,7 +218,7 @@ trait GlobalSettingsTrait {
       }, $rows);
     }
 
-    // Handle optional funding columns.
+    // Handle the optional funding column.
     if (empty($config['funding'])) {
       // Hide the funding column.
       unset($header['funding']);
@@ -228,7 +228,7 @@ trait GlobalSettingsTrait {
       }, $rows);
     }
 
-    // Handle optional requirements columns.
+    // Handle the optional requirements column.
     if (empty($config['requirements'])) {
       // Hide the requirements column.
       unset($header['requirements']);
@@ -238,7 +238,23 @@ trait GlobalSettingsTrait {
       }, $rows);
     }
 
-    // Handle optional coverage columns.
+    if (empty($config['prioritized_target'])) {
+      unset($header['prioritized_target']);
+      $rows = array_map(function ($row) {
+        unset($row['prioritized_target']);
+        return $row;
+      }, $rows);
+    }
+
+    if (empty($config['prioritized_requirements'])) {
+      unset($header['prioritized_requirements']);
+      $rows = array_map(function ($row) {
+        unset($row['prioritized_requirements']);
+        return $row;
+      }, $rows);
+    }
+
+    // Handle the optional coverage column.
     if (empty($config['coverage'])) {
       // Hide the coverage column.
       unset($header['coverage']);
@@ -248,7 +264,7 @@ trait GlobalSettingsTrait {
       }, $rows);
     }
 
-    // Handle optional caseload columns.
+    // Handle the optional expected reach column.
     if (empty($config['caseload_expected_reach'])) {
       // Hide the expected reach column.
       unset($header['expected_reach']);
@@ -258,9 +274,9 @@ trait GlobalSettingsTrait {
       }, $rows);
     }
 
-    // Handle optional caseload columns.
+    // Handle the optional expected reach percentage column.
     if (empty($config['caseload_expected_reached'])) {
-      // Hide the expected reach column.
+      // Hide the expected reach percentage column.
       unset($header['expected_reached']);
       $rows = array_map(function ($row) {
         unset($row['expected_reached']);
@@ -269,7 +285,7 @@ trait GlobalSettingsTrait {
     }
 
     if (empty($config['caseload_latest_reach'])) {
-      // Hide the reached column.
+      // Hide the latest reach value column.
       unset($header['latest_reach']);
       $rows = array_map(function ($row) {
         unset($row['latest_reach']);
@@ -278,7 +294,7 @@ trait GlobalSettingsTrait {
     }
 
     if (empty($config['caseload_reached'])) {
-      // Hide the reached column.
+      // Hide the latest reach percentage column.
       unset($header['reached']);
       $rows = array_map(function ($row) {
         unset($row['reached']);
@@ -351,6 +367,14 @@ trait GlobalSettingsTrait {
       'requirements' => [
         '#title' => $this->t('Show requirements values'),
         '#description' => $this->t('Check to show requirements values on global pages.'),
+      ],
+      'prioritized_target' => [
+        '#title' => $this->t('Show prioritized target values'),
+        '#description' => $this->t('Check to show prioritized target values on global pages.'),
+      ],
+      'prioritized_requirements' => [
+        '#title' => $this->t('Show prioritized requirements values'),
+        '#description' => $this->t('Check to show prioritized requirements values on global pages.'),
       ],
       'coverage' => [
         '#title' => $this->t('Show coverage values'),

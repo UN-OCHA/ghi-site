@@ -96,7 +96,6 @@ class FundingData extends ConfigurationContainerItemPluginBase {
 
     $data_type_options = $this->getDataTypeOptions();
     $data_type_key = $this->getSubmittedOptionsValue($element, $form_state, 'data_type', $data_type_options);
-    $scale = $this->getSubmittedValue($element, $form_state, 'scale', 'auto');
     $cluster_restrict = $this->getSubmittedValue($element, $form_state, 'cluster_restrict', [
       'type' => NULL,
       'tag' => NULL,
@@ -131,31 +130,9 @@ class FundingData extends ConfigurationContainerItemPluginBase {
       $element['cluster_restrict'] = $this->buildClusterRestrictFormElement($cluster_restrict);
     }
 
-    $element['scale'] = [
-      '#type' => 'select',
-      '#title' => $this->t('Scale'),
-      '#options' => [
-        'auto' => $this->t('Automatic'),
-        'full' => $this->t('Full value'),
-      ],
-      '#default_value' => $scale,
-      '#ajax' => [
-        'event' => 'change',
-        'callback' => [static::class, 'updateAjax'],
-        'wrapper' => $this->wrapperId,
-      ],
-      '#weight' => 2,
-    ];
-
-    if ($data_type && !empty($data_type['scale'])) {
-      $element['scale']['#type'] = 'hidden';
-      $element['scale']['#value'] = $data_type['scale'];
-      $element['scale']['#default_value'] = $data_type['scale'];
-    }
-
     // Add a preview.
     if ($this->shouldDisplayPreview()) {
-      $preview_value = $this->getRenderArray($data_type_key, $scale, $cluster_restrict);
+      $preview_value = $this->getRenderArray($data_type_key, $cluster_restrict);
       $element['value_preview'] = $this->buildValuePreviewFormElement($preview_value);
     }
 
@@ -479,12 +456,11 @@ class FundingData extends ConfigurationContainerItemPluginBase {
   /**
    * {@inheritdoc}
    */
-  public function getRenderArray($data_type_key = NULL, $scale = NULL, $cluster_restrict = NULL) {
+  public function getRenderArray($data_type_key = NULL, $cluster_restrict = NULL) {
     $data_type = $this->getDataType($data_type_key ?: $this->get('data_type'));
     if (!$data_type) {
       return NULL;
     }
-    $scale = ($scale ?: $this->get('scale')) ?: (!empty($data_type['scale']) ? $data_type['scale'] : 'auto');
     $cluster_restrict = $cluster_restrict ?: ($this->get('cluster_restrict') ?: NULL);
 
     $theme_function = !empty($data_type['theme']) ? $data_type['theme'] : 'hpc_currency';
@@ -497,7 +473,6 @@ class FundingData extends ConfigurationContainerItemPluginBase {
 
     $value = $this->getValue($data_type_key, $cluster_restrict);
     $rendered = $this->buildRenderArray($theme_function, $value ?? 0, [
-      'scale' => $scale,
       'decimal_format' => $plan_object->getDecimalFormat(),
     ] + $theme_options);
 
@@ -646,7 +621,6 @@ class FundingData extends ConfigurationContainerItemPluginBase {
         'cluster_restrict' => TRUE,
         'property' => 'total_funding',
         'footnote_property' => 'funding',
-        'scale' => 'auto',
         'fts_link_target' => 'flows',
       ],
       'outside_funding' => [
@@ -655,7 +629,6 @@ class FundingData extends ConfigurationContainerItemPluginBase {
         'valid_context' => ['plan'],
         'cluster_restrict' => FALSE,
         'property' => 'outside_funding',
-        'scale' => 'auto',
       ],
       'funding_coverage' => [
         'title' => $this->t('Coverage (%)'),
@@ -682,7 +655,6 @@ class FundingData extends ConfigurationContainerItemPluginBase {
         'valid_context' => ['plan', 'governing_entity'],
         'cluster_restrict' => TRUE,
         'property' => 'funding_gap',
-        'scale' => 'auto',
       ],
       'original_requirements' => [
         'title' => $this->t('Original requirements'),

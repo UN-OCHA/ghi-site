@@ -90,7 +90,7 @@ class MigratedEntityManager implements ContainerInjectionInterface {
     $t_args = [
       '@label' => $migration_group->label(),
     ];
-    $disabled_field_text = $this->t('This field is disabled because it is automatically populated from @label.', $t_args);
+    $disabled_field_text = $this->t('This field is disabled because it is automatically populated from the @label.', $t_args);
 
     $overwrite_properties = $migration_definition['destination']['overwrite_properties'] ?? [];
     foreach ($overwrite_properties as $field_key) {
@@ -120,7 +120,7 @@ class MigratedEntityManager implements ContainerInjectionInterface {
 
     if (empty($form_state->getUserInput())) {
       if ($migration_group) {
-        $this->messenger->addWarning($this->t('Some of the fields in this form have been disabled because their content is automatically synced from @label.', $t_args));
+        $this->messenger->addWarning($this->t('Some of the fields in this form have been disabled because their content is automatically synced from the @label.', $t_args));
       }
       else {
         $this->messenger->addWarning($this->t('Some of the fields in this form have been disabled because their content is automatically synced from an external source.'));

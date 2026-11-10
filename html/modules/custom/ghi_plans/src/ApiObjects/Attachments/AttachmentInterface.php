@@ -108,6 +108,14 @@ interface AttachmentInterface extends ApiObjectInterface {
   public function getPrototype(): ?AttachmentPrototype;
 
   /**
+   * Get cache tags for values derived from this attachment.
+   *
+   * @return string[]
+   *   The tags needed to invalidate derived attachment values.
+   */
+  public function getValueCacheTags(): array;
+
+  /**
    * See if the API says this attachment can have disaggregated data.
    *
    * @return bool
