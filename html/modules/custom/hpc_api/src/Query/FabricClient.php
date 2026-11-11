@@ -10,6 +10,7 @@ use Drupal\Core\DependencyInjection\DependencySerializationTrait;
 use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 use Drupal\Core\PageCache\ResponsePolicy\KillSwitch;
 use Drupal\hpc_api\Helpers\QueryHelper;
+use Drupal\hpc_api\Helpers\StringHelper;
 use Drupal\hpc_api\Traits\SimpleCacheTrait;
 use Drupal\hpc_remote_data_cache\RemoteDataCacheInterface;
 use Drupal\hpc_remote_data_cache\RemoteDataCacheItem;
@@ -620,8 +621,18 @@ class FabricClient {
    */
   private function prepareQuery(string|FabricQuery $query): string {
     $query = $query instanceof FabricQuery ? $query->toString() : $query;
-    $query = trim(str_replace(["\r\n", "\r", "\n"], ' ', trim($query)));
-    return str_starts_with($query, 'query {') ? $query : 'query { ' . $query . ' }';
+    $query = trim(StringHelper::normalizePastedText($query));
+
+    // Canonicalize anonymous operations pasted without whitespace before the
+    // selection set, both for readability and stable remote-cache keys.
+    $query = preg_replace('/^(query|mutation|subscription)\s*\{/i', '$1 {', $query) ?? $query;
+
+    // Preserve complete GraphQL documents and shorthand selection sets. Only
+    // field selections such as "plans { ... }" need an operation wrapper.
+    if (preg_match('/^(?:(?:#[^\r\n]*(?:\r\n|\r|\n))\s*)*(?:(?:query|mutation|subscription)\b|\{)/i', $query)) {
+      return $query;
+    }
+    return 'query { ' . $query . ' }';
   }
 
   /**

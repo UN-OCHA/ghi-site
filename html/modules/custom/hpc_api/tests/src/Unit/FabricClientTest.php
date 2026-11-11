@@ -94,6 +94,25 @@ class FabricClientTest extends UnitTestCase {
   }
 
   /**
+   * Test normalization of a complete query pasted from formatted text.
+   */
+  public function testPastedGraphQlQueryIsNormalized(): void {
+    $requests = [];
+    $handler = HandlerStack::create(new MockHandler([
+      new Response(200, [], '{"data":{"ghoFacts":{"items":[]}}}'),
+    ]));
+    $handler->push(Middleware::history($requests));
+    $http_client = new Client(['handler' => $handler]);
+
+    $client = $this->createFabricClientWithAccessToken($http_client);
+    $client->disableCache();
+    $client->query("query{\u{00A0}\n\u{00A0}\u{00A0}ghoFacts { items { Id } }\n}");
+
+    $body = Json::decode((string) $requests[0]['request']->getBody());
+    $this->assertSame("query { \n  ghoFacts { items { Id } }\n}", $body['query']);
+  }
+
+  /**
    * Test that failure on a later page fails the complete query.
    */
   public function testPaginatedQueryFailureReturnsFalse(): void {

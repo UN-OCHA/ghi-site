@@ -12,6 +12,7 @@ use Drupal\Core\Url;
 use Drupal\ghi_blocks\Interfaces\ConfigValidationInterface;
 use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
 use Drupal\ghi_blocks\Traits\GinLbModalTrait;
+use Drupal\hpc_api\Helpers\StringHelper;
 use Drupal\hpc_common\Helpers\ArrayHelper;
 use Drupal\layout_builder\Form\ConfigureBlockFormBase;
 use Drupal\layout_builder\LayoutBuilderHighlightTrait;
@@ -225,7 +226,7 @@ class ImportBlockForm extends ConfigureBlockFormBase {
       return parent::validateForm($form, $form_state);
     }
     else {
-      $config = $this->getSubmittedConfig($form_state);
+      $config = StringHelper::normalizePastedText((string) $this->getSubmittedConfig($form_state));
       $import_config = Yaml::decode($config);
       $plugin_config = $import_config['conf'];
       $form_state->set('config', $import_config);
