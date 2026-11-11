@@ -182,9 +182,17 @@ class PlanTableTest extends PlanBlockKernelTestBase {
     $configuration['uuid'] = 'block_uuid';
     $plugin->setConfiguration($configuration);
 
+    $plans = [
+      $this->mockPlan()->reveal(),
+    ];
+    $this->mockPlanOverviewQuery($plugin, $plans);
+
     $cache_tags = $plugin->getCacheTags();
     $this->assertIsArray($cache_tags);
     $this->assertContains('global_plan_table:block_uuid', $cache_tags);
+
+    $build = $plugin->buildContent();
+    $this->assertContains('plan-overview:test', $build['#cache']['tags']);
   }
 
   /**
@@ -282,6 +290,7 @@ class PlanTableTest extends PlanBlockKernelTestBase {
 
     $plans_query = $this->prophesize('\Drupal\ghi_plans\Plugin\FabricQuery\PlanOverviewQuery');
     $plans_query->getPlans()->willReturn(array_combine($plan_ids, $plans));
+    $plans_query->getCacheTags()->willReturn(['plan-overview:test']);
 
     $reflection = new \ReflectionClass($plugin);
     $property = $reflection->getProperty('queryHandlers');
