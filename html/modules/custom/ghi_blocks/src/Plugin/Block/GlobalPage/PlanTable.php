@@ -184,7 +184,9 @@ class PlanTable extends GHIBlockBase implements HPCDownloadExcelInterface, HPCDo
       $header['link_fts'] = $this->buildHeaderColumn($this->t('Link to FTS page'), 'document');
     }
 
-    $cache_tags = [];
+    // Preserve remote metric dependencies collected while resolving the plans
+    // so a background Fabric refresh invalidates the cached table.
+    $cache_tags = $this->getPlanOverviewQuery()->getCacheTags() ?? [];
     $rows = [];
 
     foreach ($plans as $plan) {
