@@ -122,8 +122,8 @@ third_party_settings:
         width_breakpoint: 640
     group_plan_metrics:
       children:
-        - field_plan_caseload
         - field_plan_data_source
+        - field_plan_caseload
       label: 'Plan metrics'
       region: content
       parent_name: group_tabs
@@ -353,13 +353,13 @@ content:
     third_party_settings: {  }
   field_plan_caseload:
     type: ghi_plans_plan_caseload
-    weight: 9
+    weight: 10
     region: content
     settings: {  }
     third_party_settings: {  }
   field_plan_data_source:
     type: options_select
-    weight: 10
+    weight: 9
     region: content
     settings: {  }
     third_party_settings: {  }
