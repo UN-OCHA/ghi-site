@@ -150,7 +150,9 @@ class PlanOverviewMap extends GHIBlockBase implements LazyMapBlockInterface {
       'data' => [],
       'tabs' => [],
       'settings' => [],
-      'cache_tags' => [],
+      // Preserve remote metric dependencies collected while resolving the
+      // plans so a background Fabric refresh invalidates the cached payload.
+      'cache_tags' => $this->getPlanOverviewQuery()->getCacheTags() ?? [],
     ];
 
     $common_theme_args = [

@@ -139,6 +139,7 @@ class PlanOverviewMapTest extends PlanBlockKernelTestBase {
     $plans_query = $this->prophesize('\Drupal\ghi_plans\Plugin\FabricQuery\PlanOverviewQuery');
     $plans_query->setYear(2024);
     $plans_query->getPlans()->willReturn([]);
+    $plans_query->getCacheTags()->willReturn([]);
 
     // Set the mocked query handler.
     $reflection = new \ReflectionClass($plugin);
@@ -233,6 +234,7 @@ class PlanOverviewMapTest extends PlanBlockKernelTestBase {
     }
 
     $data_settings = $plugin->buildMapDataSettings('plan-overview-map-test');
+    $this->assertContains('plan-overview:test', $data_settings['cache_tags']);
     $this->assertContains('plan:1', $data_settings['cache_tags']);
     $this->assertContains('plan:2', $data_settings['cache_tags']);
   }
@@ -422,6 +424,7 @@ class PlanOverviewMapTest extends PlanBlockKernelTestBase {
     // Mock the getPlans method to return empty array.
     $plans_query = $this->prophesize('\Drupal\ghi_plans\Plugin\FabricQuery\PlanOverviewQuery');
     $plans_query->getPlans()->willReturn(array_combine($plan_ids, $plans));
+    $plans_query->getCacheTags()->willReturn(['plan-overview:test']);
 
     // Set the mocked query handler.
     $reflection = new \ReflectionClass($plugin);
