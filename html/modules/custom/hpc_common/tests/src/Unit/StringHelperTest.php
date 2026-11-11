@@ -15,6 +15,14 @@ use PHPUnit\Framework\Attributes\Group;
 class StringHelperTest extends UnitTestCase {
 
   /**
+   * Tests normalization of formatting characters introduced by pasted text.
+   */
+  public function testNormalizePastedText(): void {
+    $input = "\u{FEFF}query{\u{00A0}\u{2007}items\n}";
+    $this->assertSame("query{  items\n}", StringHelper::normalizePastedText($input));
+  }
+
+  /**
    * Data provider for makeCamelCase.
    */
   public static function makeCamelCaseDataProvider() {
