@@ -5,6 +5,7 @@ namespace Drupal\ghi_templates\LayoutBuilder;
 use Drupal\Component\Serialization\Yaml;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\hpc_api\Helpers\StringHelper;
 use Drupal\hpc_common\Helpers\ArrayHelper;
 use Drupal\layout_builder\Controller\LayoutRebuildTrait;
 use Drupal\layout_builder\LayoutBuilderHighlightTrait;
@@ -203,7 +204,7 @@ class ImportPageConfigForm extends TemplateFormBase {
       return parent::validateForm($form, $form_state);
     }
     else {
-      $config = $this->getSubmittedConfig($form_state);
+      $config = StringHelper::normalizePastedText((string) $this->getSubmittedConfig($form_state));
       $import_config = Yaml::decode($config);
       $form_state->set('config', $import_config);
       $form_state->set('page_config', $import_config['page_config'] ?? NULL);
