@@ -16,3 +16,14 @@ gin_toolbar:
   dependencies:
     - core/drupal
     - core/once
+tabledrag:
+  version: VERSION
+  css:
+    component:
+      css/tabledrag.css: {}
+  js:
+    js/tabledrag.js: {}
+  dependencies:
+    - core/drupal
+    - core/drupalSettings
+    - core/once
