@@ -1,0 +1,4 @@
+manage operation page structure:
+  title: 'Manage operation page structure'
+  description: 'Without this permission, users cannot manually create or delete standard operation subpages, even when they otherwise have the required section and node access.'
+  restrict access: true
