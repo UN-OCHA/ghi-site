@@ -1,0 +1,340 @@
+.link-carousel-feature {
+  width: 100%;
+  max-width: var(--cd-max-page-width);
+  margin-inline: auto;
+  color: var(--ghi-default-text-color);
+}
+
+.link-carousel-feature__inner {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: calc(var(--content-width) + 24px);
+  margin-inline: auto;
+  padding-inline: var(--cd-container-padding);
+}
+
+.link-carousel-feature__hero {
+  padding-block: 2rem;
+  background-color: var(--ghi-primary-background-color);
+}
+
+.link-carousel-feature__hero-grid {
+  display: grid;
+  gap: 2rem;
+}
+
+.link-carousel-feature__intro {
+  align-self: center;
+  min-width: 0;
+}
+
+.link-carousel-feature__intro::before {
+  display: block;
+  width: 2.5rem;
+  height: 0.25rem;
+  margin-block-end: 1.5rem;
+  content: "";
+  background-color: var(--ghi-yellow);
+}
+
+.link-carousel-feature__title {
+  margin: 0;
+  overflow-wrap: anywhere;
+  font-size: var(--cd-font-size--2xbase);
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.link-carousel-feature__description {
+  margin: 1.5rem 0;
+  overflow-wrap: anywhere;
+  font-size: var(--cd-font-size--base);
+  line-height: 1.6;
+}
+
+.link-carousel-feature__action .cd-button {
+  max-width: 100%;
+  white-space: normal;
+}
+
+.link-carousel-feature__image {
+  position: relative;
+  /* Keep the overlay inside the image when the adjacent text is taller. */
+  align-self: start;
+  min-width: 0;
+  margin: 0;
+}
+
+.link-carousel-feature__image picture,
+.link-carousel-feature__image img {
+  display: block;
+  width: 100%;
+}
+
+.link-carousel-feature__image img {
+  height: auto;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+}
+
+.link-carousel-feature__caption {
+  position: absolute;
+  inset: 0;
+  opacity: 0.9;
+}
+
+.link-carousel-feature__caption-toggle {
+  position: absolute;
+  right: calc(1.9rem + 2px);
+  bottom: calc(2rem + 2px);
+  width: 1.5rem;
+  height: 1.5rem;
+  padding: 0;
+  cursor: help;
+  text-align: center;
+  color: var(--ghi-default-text-color);
+  border: 0;
+  background-color: var(--cd-white);
+  font-size: var(--cd-font-size--small);
+  font-weight: 700;
+  line-height: 1.5rem;
+}
+
+.link-carousel-feature__caption-toggle:hover,
+.link-carousel-feature__caption-toggle:focus-visible {
+  background-color: var(--ghi-primary-button-color);
+}
+
+.link-carousel-feature__caption-toggle:focus-visible,
+.link-carousel-feature__caption-content:focus-visible {
+  outline: 2px solid var(--ghi-default-text-color);
+  outline-offset: 2px;
+}
+
+.link-carousel-feature__caption-content {
+  position: absolute;
+  right: 1.9rem;
+  bottom: 2rem;
+  display: none;
+  overflow: auto;
+  box-sizing: border-box;
+  max-width: min(25rem, calc(100% - 3.8rem));
+  max-height: calc(100% - 4rem);
+  padding: 1rem 2rem;
+  overflow-wrap: anywhere;
+  color: var(--ghi-default-text-color);
+  background-color: var(--cd-white);
+  font-size: var(--cd-font-size--tiny);
+  line-height: 1.5;
+}
+
+/* Keep the panel open while moving or tabbing from the covered icon onto it. */
+.link-carousel-feature__caption-toggle:hover + .link-carousel-feature__caption-content,
+.link-carousel-feature__caption:focus-within .link-carousel-feature__caption-content,
+.link-carousel-feature__caption-content:hover {
+  display: block;
+}
+
+/* Mouse focus alone must not keep the panel open after the pointer leaves. */
+.link-carousel-feature__caption-toggle:focus:not(:focus-visible, :hover) + .link-carousel-feature__caption-content:not(:hover),
+.link-carousel-feature__caption-content:focus:not(:focus-visible, :hover) {
+  display: none;
+}
+
+.link-carousel-feature__credit {
+  font-style: italic;
+}
+
+.link-carousel-feature__lower {
+  display: grid;
+  gap: 2rem;
+  padding-block: 2rem;
+}
+
+.link-carousel-feature__featured {
+  min-width: 0;
+}
+
+.link-carousel-feature__heading {
+  margin: 0 0 1rem;
+  font-size: var(--cd-font-size--large);
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+.link-carousel-feature__items {
+  display: grid;
+  gap: 1.5rem 2rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.link-carousel-feature__item {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  min-width: 0;
+  margin: 0;
+}
+
+.link-carousel-feature__thumbnail {
+  flex: 0 0 8.75rem;
+}
+
+.link-carousel-feature__thumbnail img {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+}
+
+.link-carousel-feature__item-content {
+  min-width: 0;
+}
+
+.link-carousel-feature__date {
+  display: block;
+  margin-block-end: 0.25rem;
+  font-size: var(--cd-font-size--small);
+}
+
+.link-carousel-feature__item-title {
+  margin: 0;
+  overflow-wrap: anywhere;
+  font-size: var(--cd-font-size--default);
+  font-weight: 700;
+  line-height: 1.5;
+}
+
+.link-carousel-feature__item-title a {
+  text-decoration: none;
+  color: inherit;
+}
+
+.link-carousel-feature__item-title a:hover,
+.link-carousel-feature__item-title a:focus-visible {
+  text-decoration: underline;
+}
+
+.link-carousel-feature__item-title a.external::after {
+  display: inline-block;
+  width: 1em;
+  height: 1em;
+  margin-inline-start: 0.25em;
+  content: "";
+  vertical-align: -0.125em;
+  background-color: currentColor;
+  -webkit-mask: url("../../img/icons/material-symbol-open-in-new.svg") center / contain no-repeat;
+  mask: url("../../img/icons/material-symbol-open-in-new.svg") center / contain no-repeat;
+}
+
+.link-carousel-feature__cta {
+  align-self: start;
+  min-width: 0;
+  padding: 1.5rem;
+  background-color: var(--ghi-default-background-color);
+}
+
+.link-carousel-feature__cta-title {
+  margin: 0;
+  overflow-wrap: anywhere;
+  font-size: var(--cd-font-size--large);
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+.link-carousel-feature__cta-description {
+  margin: 1.25rem 0 1rem;
+  overflow-wrap: anywhere;
+}
+
+.link-carousel-feature__cta-action .cd-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  max-width: 100%;
+  padding: 0.625rem 1.5rem;
+  white-space: normal;
+  border: 2px solid var(--ghi-default-text-color);
+  background-color: var(--cd-white);
+}
+
+.link-carousel-feature__cta-action .cd-button.external,
+.link-carousel-feature__cta-action .cd-button.read-more {
+  /* Keep the trailing link icon clear of the label and optional heart. */
+  padding-right: 2.5rem;
+}
+
+.link-carousel-feature__cta-action .cd-button:hover,
+.link-carousel-feature__cta-action .cd-button:focus-visible {
+  background-color: var(--ghi-primary-button-color);
+}
+
+.link-carousel-feature__cta-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.4rem;
+  line-height: 1;
+}
+
+.link-carousel-feature a:focus-visible {
+  outline: 2px solid var(--ghi-default-text-color);
+  outline-offset: 3px;
+}
+
+@media screen and (min-width: 768px) {
+  .link-carousel-feature__inner {
+    max-width: calc(var(--content-width) + 48px);
+    padding-inline: var(--cd-container-padding-xlarge);
+  }
+
+  .link-carousel-feature__hero,
+  .link-carousel-feature__lower {
+    padding-block: 3rem;
+  }
+
+  .link-carousel-feature__items {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .link-carousel-feature__thumbnail {
+    flex-basis: 6.5rem;
+  }
+}
+
+@media screen and (min-width: 1024px) {
+  .link-carousel-feature__hero-grid {
+    grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+  }
+
+  .link-carousel-feature__title {
+    font-size: var(--cd-font-size--2xmedium);
+  }
+
+  .link-carousel-feature__heading {
+    font-size: var(--cd-font-size--2xbase);
+  }
+
+  .link-carousel-feature__lower {
+    grid-template-columns: minmax(0, 8fr) minmax(0, 4fr);
+  }
+
+  .link-carousel-feature__cta {
+    /* Keep the call to action in its column when no featured links are shown. */
+    grid-column: 2;
+  }
+
+  .link-carousel-feature__thumbnail {
+    flex-basis: 6rem;
+  }
+}
+
+@media screen and (min-width: 1200px) {
+  .link-carousel-feature__thumbnail {
+    flex-basis: 8.75rem;
+  }
+}

@@ -1,0 +1,50 @@
+$schema: https://git.drupalcode.org/project/drupal/-/raw/HEAD/core/assets/schemas/v1/metadata.schema.json
+name: Description length feedback
+description: Advisory character count and length guidance for a plain-text field.
+status: stable
+libraryOverrides:
+  dependencies:
+    - core/drupal
+    - core/once
+props:
+  type: object
+  required:
+    - feedback_id
+    - state
+    - count_label
+    - messages
+    - guidance
+  properties:
+    feedback_id:
+      type: string
+      title: Feedback ID
+    state:
+      type: string
+      title: Length state
+      enum:
+        - recommended
+        - long
+        - very-long
+    count_label:
+      type: string
+      title: Character count
+    messages:
+      type: object
+      title: Translated feedback by length state
+      required:
+        - recommended
+        - long
+        - very-long
+      properties:
+        recommended:
+          type: string
+        long:
+          type: string
+        very-long:
+          type: string
+    guidance:
+      type: string
+      title: Editorial guidance
+slots:
+  original_help:
+    title: Existing field help

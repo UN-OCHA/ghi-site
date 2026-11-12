@@ -1,0 +1,45 @@
+uuid: d1676beb-8525-4519-8432-163f6f50c40e
+langcode: en
+status: true
+dependencies:
+  config:
+    - image.style.16x9_1200
+    - image.style.16x9_1400
+    - image.style.16x9_720
+  theme:
+    - common_design
+id: link_carousel_feature
+label: 'Link carousel feature'
+image_style_mappings:
+  -
+    image_mapping_type: image_style
+    image_mapping: 16x9_720
+    breakpoint_id: common_design.lg
+    multiplier: 1x
+  -
+    image_mapping_type: image_style
+    image_mapping: 16x9_1400
+    breakpoint_id: common_design.lg
+    multiplier: 2x
+  -
+    image_mapping_type: image_style
+    image_mapping: 16x9_1200
+    breakpoint_id: common_design.md
+    multiplier: 1x
+  -
+    image_mapping_type: image_style
+    image_mapping: 16x9_1400
+    breakpoint_id: common_design.md
+    multiplier: 2x
+  -
+    image_mapping_type: image_style
+    image_mapping: 16x9_720
+    breakpoint_id: common_design.xs
+    multiplier: 1x
+  -
+    image_mapping_type: image_style
+    image_mapping: 16x9_1400
+    breakpoint_id: common_design.xs
+    multiplier: 2x
+breakpoint_group: common_design
+fallback_image_style: 16x9_720

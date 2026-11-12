@@ -1,0 +1,70 @@
+.description-length-feedback__guidance {
+  display: block;
+  margin-block-start: 0.25rem;
+}
+
+.description-length-feedback {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 0.75rem;
+  margin-block-start: 0.25rem;
+  font-weight: 500;
+  line-height: 1.5;
+}
+
+.gin--dark-mode textarea[data-description-length-state],
+.gin--dark-mode .description-length-feedback {
+  --description-length-feedback-warning-border: #ffb45b;
+  --description-length-feedback-warning-text: #ffb45b;
+  --description-length-feedback-error: #ff8f85;
+}
+
+textarea[data-description-length-state="long"],
+textarea[data-description-length-state="long"]:hover,
+textarea[data-description-length-state="long"]:focus {
+  --description-length-feedback-border: var(--description-length-feedback-warning-border, #e67700);
+
+  border-width: 2px;
+  border-color: var(--description-length-feedback-border);
+}
+
+textarea[data-description-length-state="very-long"],
+textarea[data-description-length-state="very-long"]:hover,
+textarea[data-description-length-state="very-long"]:focus {
+  --description-length-feedback-border: var(--description-length-feedback-error, #b42318);
+
+  border-width: 2px;
+  border-color: var(--description-length-feedback-border);
+}
+
+textarea[data-description-length-state="long"]:focus,
+textarea[data-description-length-state="very-long"]:focus {
+  --description-length-feedback-focus-shadow:
+    0 0 0 2px var(--gin-bg-layer, #fff),
+    0 0 0 4px var(--description-length-feedback-border);
+
+  outline-color: var(--description-length-feedback-border);
+  box-shadow: var(--description-length-feedback-focus-shadow);
+}
+
+/* Gin LB uses important borders and shadows; override only marked fields. */
+textarea.glb-form-element[data-description-length-state="long"],
+textarea.glb-form-element[data-description-length-state="very-long"] {
+  border-width: 2px !important;
+  border-color: var(--description-length-feedback-border) !important;
+}
+
+textarea.glb-form-element[data-description-length-state="long"]:focus,
+textarea.glb-form-element[data-description-length-state="very-long"]:focus {
+  box-shadow: var(--description-length-feedback-focus-shadow) !important;
+}
+
+.description-length-feedback[data-description-length-state="long"] {
+  color: var(--description-length-feedback-warning-text, #a55a00);
+  font-weight: 600;
+}
+
+.description-length-feedback[data-description-length-state="very-long"] {
+  color: var(--description-length-feedback-error, #b42318);
+  font-weight: 700;
+}
