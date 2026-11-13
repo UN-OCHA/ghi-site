@@ -70,7 +70,7 @@ class FabricHttp extends Http implements ContainerFactoryPluginInterface {
       $query = $this->configuration['fabric_query'];
       $query_handler = NULL;
       try {
-        $query_handler = $this->fabricQueryManager->createInstance($query['plugin']);
+        $query_handler = $this->fabricQueryManager->createInstance($query['plugin'], $this->configuration);
       }
       catch (\Exception $e) {
         throw new MigrateException('Error message: ' . $e->getMessage());

@@ -152,6 +152,9 @@ abstract class FabricQueryBase extends PluginBase implements FabricQueryPluginIn
     /** @var self $instance */
     $instance = new static($configuration, $plugin_id, $plugin_definition);
     $instance->fabricClient = $container->get('hpc_api.fabric_client');
+    if (array_key_exists('cache_base_time', $configuration)) {
+      $instance->fabricClient->setCacheBaseTime((int) $configuration['cache_base_time']);
+    }
     $instance->objectStore = $container->get('hpc_api.object_store');
     $instance->user = $container->get('current_user');
     $instance->cache = $container->get('cache.data');
