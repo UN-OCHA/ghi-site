@@ -1,0 +1,9 @@
+action.configuration.set_plan_data_source:
+  type: mapping
+  label: 'Set plan data source action configuration'
+  constraints:
+    FullyValidatable: ~
+  mapping:
+    source:
+      type: string
+      label: 'Plan data source'

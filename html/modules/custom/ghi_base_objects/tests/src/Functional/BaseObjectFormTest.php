@@ -64,7 +64,7 @@ class BaseObjectFormTest extends BrowserTestBase {
     $this->drupalGet($base_object->toUrl('edit-form')->toString());
     $assert_session = $this->assertSession();
     $assert_session->statusCodeEquals(200);
-    $assert_session->pageTextContains('Some of the fields in this form have been disabled because their content is automatically synced from HPC Fabric API.');
+    $assert_session->pageTextContains('Some of the fields in this form have been disabled because their content is automatically synced from the HPC data backend.');
 
     $form_object = $this->container->get('entity_type.manager')->getFormObject('base_object', 'edit');
     $this->assertInstanceOf(BaseObjectForm::class, $form_object);

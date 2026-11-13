@@ -1,0 +1,14 @@
+uuid: 0039a5b5-1407-4076-bf32-d26ccb0a7b48
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.field.base_object.plan.field_plan_data_source
+  module:
+    - ghi_plans
+id: plan_use_gho_data
+label: 'Use GHO data'
+type: base_object
+plugin: set_plan_data_source
+configuration:
+  source: gho

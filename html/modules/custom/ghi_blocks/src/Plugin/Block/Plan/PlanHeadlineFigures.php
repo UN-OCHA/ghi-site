@@ -283,7 +283,17 @@ class PlanHeadlineFigures extends GHIBlockBase implements MultiStepFormBlockInte
       'item_group' => [
         'link' => TRUE,
       ],
-      'line_break' => [],
+      'plan_metric_data' => [],
+      'attachment_data' => [
+        'label' => $this->t('Caseload/indicator value'),
+        'access' => [
+          'node_type' => ['plan', 'governing_entity'],
+        ],
+        'data_point' => [
+          'widget' => FALSE,
+          'select_monitoring_period' => TRUE,
+        ],
+      ],
       'funding_data' => [
         'item_types' => [
           'funding_totals',
@@ -300,20 +310,11 @@ class PlanHeadlineFigures extends GHIBlockBase implements MultiStepFormBlockInte
           'plan_costing' => [0, 1, 3],
         ],
       ],
-      'attachment_data' => [
-        'label' => $this->t('Caseload/indicator value'),
-        'access' => [
-          'node_type' => ['plan', 'governing_entity'],
-        ],
-        'data_point' => [
-          'widget' => FALSE,
-          'select_monitoring_period' => TRUE,
-        ],
-      ],
       'label_value' => [
         'footnote' => TRUE,
         'custom_logo' => TRUE,
       ],
+      'line_break' => [],
     ];
     return $item_types;
   }

@@ -3,11 +3,12 @@
 namespace Drupal\Tests\ghi_plans\Kernel\Entities;
 
 use Drupal\ghi_plans\ApiObjects\Attachments\CaseloadAttachmentInterface;
+use Drupal\ghi_plans\Entity\Plan;
 use Drupal\Tests\ghi_base_objects\Kernel\BaseObjectKernelTestBase;
 use PHPUnit\Framework\Attributes\Group;
 
 /**
- * Tests the API entity objects.
+ * Tests plan base objects.
  */
 #[Group('ghi_plans')]
 class PlanTest extends BaseObjectKernelTestBase {
@@ -16,16 +17,18 @@ class PlanTest extends BaseObjectKernelTestBase {
    * {@inheritdoc}
    */
   protected static $modules = [
+    'options',
     'ghi_plans',
   ];
 
   /**
-   * Test the getPlanCaseloadId and getPlanCaseload methods.
+   * Tests caseload selection and the plan-level data source.
    */
   public function testGetPlanCaseload() {
     $plan_type = $this->createBaseObjectType([
       'id' => 'plan',
-      'field_plan_caseload' => ['type' => 'ghi_plans_plan_caseload', 'label' => 'Plan caseload'],
+      'field_plan_caseload' => ['type' => 'ghi_plans_plan_caseload', 'label' => 'Country Module plan caseload'],
+      'field_plan_data_source' => ['type' => 'list_string', 'label' => 'Plan metric source'],
     ]);
     $plan = $this->createBaseObject([
       'type' => $plan_type->id(),
@@ -44,13 +47,18 @@ class PlanTest extends BaseObjectKernelTestBase {
 
     $this->assertNull($plan->getPlanCaseloadId());
     $this->assertEquals($caseload_1->reveal(), $plan->getPlanCaseload($caseloads));
+    $this->assertSame(Plan::DATA_SOURCE_PLAN, $plan->getPlanDataSource());
+    $this->assertFalse($plan->usesGhoData());
 
     $plan = $this->createBaseObject([
       'type' => $plan_type->id(),
       'field_plan_caseload' => 2,
+      'field_plan_data_source' => Plan::DATA_SOURCE_GHO,
     ]);
     $this->assertEquals(2, $plan->getPlanCaseloadId());
     $this->assertEquals($caseload_2->reveal(), $plan->getPlanCaseload($caseloads));
+    $this->assertSame(Plan::DATA_SOURCE_GHO, $plan->getPlanDataSource());
+    $this->assertTrue($plan->usesGhoData());
   }
 
 }

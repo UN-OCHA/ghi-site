@@ -11,6 +11,7 @@ use Drupal\ghi_form_elements\Helpers\FormElementHelper;
 use Drupal\ghi_form_elements\Traits\AjaxElementTrait;
 use Drupal\ghi_plans\ApiObjects\Attachments\Attachment;
 use Drupal\ghi_plans\ApiObjects\Attachments\IndicatorAttachment;
+use Drupal\ghi_plans\Helpers\DataPointHelper;
 use Drupal\ghi_plans\Traits\DataPointConfigBackwardsCompatibilityTrait;
 use Drupal\hpc_api\Helpers\StringHelper;
 use Drupal\hpc_common\Helpers\ThemeHelper;
@@ -166,7 +167,7 @@ class DataPoint extends FormElementBase {
       '#parents' => array_merge($element['#parents'], ['calculation']),
       '#states' => [
         'visible' => [
-          'select[name="' . $processing_selector . '"]' => ['value' => 'calculated'],
+          'select[name="' . $processing_selector . '"]' => ['value' => DataPointHelper::PROCESSING_CALCULATED],
         ],
       ],
       '#ajax' => [
@@ -192,13 +193,13 @@ class DataPoint extends FormElementBase {
       '#type' => 'container',
       '#states' => [
         'visible' => [
-          'select[name="' . $processing_selector . '"]' => ['value' => 'calculated'],
+          'select[name="' . $processing_selector . '"]' => ['value' => DataPointHelper::PROCESSING_CALCULATED],
         ],
       ],
     ];
     $element['data_points'][0]['metric_type'] = [
       '#type' => 'select',
-      '#title' => $defaults['processing'] == 'single' ? t('Data point') : t('Data point #1'),
+      '#title' => $defaults['processing'] == DataPointHelper::PROCESSING_SINGLE ? t('Metric') : t('Metric #1'),
       '#options' => $data_point_options,
       '#default_value' => $defaults['data_points'][0]['metric_type'] ?? NULL,
       '#ajax' => [
@@ -274,7 +275,7 @@ class DataPoint extends FormElementBase {
     }
     $element['data_points'][1]['metric_type'] = [
       '#type' => 'select',
-      '#title' => t('Data point #2'),
+      '#title' => t('Metric #2'),
       '#options' => $data_point_options,
       '#default_value' => $defaults['data_points'][1]['metric_type'] ?? NULL,
       '#ajax' => [
@@ -303,7 +304,7 @@ class DataPoint extends FormElementBase {
         ],
         '#states' => [
           'visible' => [
-            'select[name="' . $processing_selector . '"]' => ['value' => 'calculated'],
+            'select[name="' . $processing_selector . '"]' => ['value' => DataPointHelper::PROCESSING_CALCULATED],
             'select[name="' . $data_point_selector_1 . '"]' => array_map(function ($value) {
               return ['value' => $value];
             }, array_keys($measurement_fields)),
@@ -323,7 +324,7 @@ class DataPoint extends FormElementBase {
         ],
         '#states' => [
           'visible' => [
-            'select[name="' . $processing_selector . '"]' => ['value' => 'calculated'],
+            'select[name="' . $processing_selector . '"]' => ['value' => DataPointHelper::PROCESSING_CALCULATED],
             'select[name="' . $data_point_selector_1 . '"]' => array_map(function ($value) {
               return ['value' => $value];
             }, array_keys($measurement_fields)),
@@ -462,7 +463,7 @@ class DataPoint extends FormElementBase {
     foreach ([0, 1] as $index) {
       $metric_type = $defaults['data_points'][$index]['metric_type'] ?? NULL;
       if ($metric_type !== NULL && !array_key_exists($metric_type, $data_point_options)) {
-        $defaults['data_points'][$index]['metric_type'] = $index == 0 || $defaults['processing'] == 'calculated' ? $fallback_metric_type : NULL;
+        $defaults['data_points'][$index]['metric_type'] = $index == 0 || $defaults['processing'] == DataPointHelper::PROCESSING_CALCULATED ? $fallback_metric_type : NULL;
       }
     }
 

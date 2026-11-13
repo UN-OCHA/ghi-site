@@ -15,6 +15,11 @@ use Drupal\Core\Session\AccountInterface;
 class BaseObjectAccessControlHandler extends EntityAccessControlHandler {
 
   /**
+   * The permission required to delete base objects.
+   */
+  public const DELETE_PERMISSION = 'delete base object entities';
+
+  /**
    * Allow access to user label.
    *
    * @var bool
@@ -36,6 +41,14 @@ class BaseObjectAccessControlHandler extends EntityAccessControlHandler {
 
     if ($operation == 'view') {
       return AccessResult::forbidden();
+    }
+
+    if ($operation === 'delete') {
+      if ($entity->isNew()) {
+        return AccessResult::forbidden()->addCacheableDependency($entity);
+      }
+      return AccessResult::allowedIf($account->hasPermission(self::DELETE_PERMISSION))
+        ->addCacheContexts(['user.permissions']);
     }
 
     return parent::checkAccess($entity, $operation, $account);

@@ -20,6 +20,7 @@ dependencies:
     - field.field.base_object.plan.field_operations_category
     - field.field.base_object.plan.field_original_id
     - field.field.base_object.plan.field_plan_caseload
+    - field.field.base_object.plan.field_plan_data_source
     - field.field.base_object.plan.field_plan_cluster_type
     - field.field.base_object.plan.field_plan_coordinator
     - field.field.base_object.plan.field_plan_costing
@@ -198,6 +199,13 @@ content:
     settings: {  }
     third_party_settings: {  }
     weight: 11
+    region: content
+  field_plan_data_source:
+    type: list_default
+    label: above
+    settings: {  }
+    third_party_settings: {  }
+    weight: 12
     region: content
   field_plan_cluster_type:
     type: list_default

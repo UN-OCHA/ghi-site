@@ -1,0 +1,14 @@
+uuid: 473c83d3-adb0-4a79-9087-56dc17429a8c
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.field.base_object.plan.field_plan_data_source
+  module:
+    - ghi_plans
+id: plan_use_country_module_data
+label: 'Use Country Module data'
+type: base_object
+plugin: set_plan_data_source
+configuration:
+  source: plan

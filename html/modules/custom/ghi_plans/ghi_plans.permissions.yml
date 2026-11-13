@@ -1,0 +1,4 @@
+manage plan metric source:
+  title: 'Manage plan metric source'
+  description: 'Use bulk operations to select the metric source for plan base objects.'
+  restrict access: true

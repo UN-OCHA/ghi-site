@@ -8,6 +8,7 @@ use Drupal\Core\Url;
 use Drupal\ghi_form_elements\Attribute\ConfigurationContainerItem;
 use Drupal\ghi_form_elements\ConfigurationContainerItemPluginBase;
 use Drupal\ghi_plans\ApiObjects\Attachments\Attachment;
+use Drupal\ghi_plans\Helpers\DataPointHelper;
 
 /**
  * Provides a label/value item for configuration containers.
@@ -31,7 +32,7 @@ class LabelValue extends ConfigurationContainerItemPluginBase {
       '#default_value' => array_key_exists('value', $this->config) ? $this->config['value'] : NULL,
     ];
     $formatting_options = Attachment::getFormattingOptions();
-    unset($formatting_options['auto']);
+    unset($formatting_options[DataPointHelper::FORMATTING_AUTO]);
     $element['formatting'] = [
       '#type' => 'select',
       '#title' => $this->t('Formatting'),
@@ -67,16 +68,16 @@ class LabelValue extends ConfigurationContainerItemPluginBase {
    */
   public function getRenderArray() {
     $value = $this->getValue();
-    $formatting = $this->config['formatting'] ?? 'raw';
+    $formatting = $this->config['formatting'] ?? DataPointHelper::FORMATTING_RAW;
     $decimal_format = NULL;
     switch ($formatting) {
-      case 'raw':
+      case DataPointHelper::FORMATTING_RAW:
         $rendered_value = [
           '#markup' => $value,
         ];
         break;
 
-      case 'currency':
+      case DataPointHelper::FORMATTING_CURRENCY:
         $rendered_value = [
           '#theme' => 'hpc_currency',
           '#value' => $value,
@@ -84,7 +85,7 @@ class LabelValue extends ConfigurationContainerItemPluginBase {
         ];
         break;
 
-      case 'amount':
+      case DataPointHelper::FORMATTING_AMOUNT:
         $rendered_value = [
           '#theme' => 'hpc_amount',
           '#amount' => $value,
@@ -93,7 +94,7 @@ class LabelValue extends ConfigurationContainerItemPluginBase {
         ];
         break;
 
-      case 'amount_rounded':
+      case DataPointHelper::FORMATTING_AMOUNT_ROUNDED:
         $rendered_value = [
           '#theme' => 'hpc_amount',
           '#amount' => $value,
@@ -102,7 +103,7 @@ class LabelValue extends ConfigurationContainerItemPluginBase {
         ];
         break;
 
-      case 'percent':
+      case DataPointHelper::FORMATTING_PERCENT:
         $rendered_value = [
           '#theme' => 'hpc_percent',
           '#ratio' => $value,

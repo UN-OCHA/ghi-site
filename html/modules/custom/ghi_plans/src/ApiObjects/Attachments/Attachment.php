@@ -17,6 +17,7 @@ use Drupal\ghi_plans\ApiObjects\Prototypes\AttachmentPrototype;
 use Drupal\ghi_plans\Entity\GoverningEntity;
 use Drupal\ghi_plans\Entity\Plan;
 use Drupal\ghi_plans\Exceptions\InvalidAttachmentTypeException;
+use Drupal\ghi_plans\Helpers\DataPointHelper;
 use Drupal\ghi_plans\Helpers\PlanEntityHelper;
 use Drupal\ghi_plans\Traits\DataPointConfigBackwardsCompatibilityTrait;
 use Drupal\ghi_plans\Traits\DisaggregatedDataTrait;
@@ -1273,11 +1274,11 @@ class Attachment extends ApiObjectBase implements AttachmentInterface, Disaggreg
       return NULL;
     }
     switch ($conf['processing']) {
-      case 'single':
+      case DataPointHelper::PROCESSING_SINGLE:
         $value = $this->getSingleValue($conf['data_points'][0]['metric_type'], NULL, $conf['data_points'][0]);
         break;
 
-      case 'calculated':
+      case DataPointHelper::PROCESSING_CALCULATED:
         $value = $this->getCalculatedValue($conf);
         break;
 
@@ -1430,28 +1431,11 @@ class Attachment extends ApiObjectBase implements AttachmentInterface, Disaggreg
     $value_1 = (float) $value_1;
     $value_2 = (float) $value_2;
 
-    switch ($conf['calculation']) {
-      case 'addition':
-        $final_value = $value_1 + $value_2;
-        break;
-
-      case 'substraction':
-        $final_value = $value_1 - $value_2;
-        break;
-
-      case 'division':
-        $final_value = $value_1 != 0 ? $value_2 / $value_1 : NULL;
-        break;
-
-      case 'percentage':
-        $final_value = $value_2 != 0 ? 1 / $value_2 * $value_1 : NULL;
-        break;
-
-      default:
-        throw new InvalidAttachmentTypeException(sprintf('Unknown calculation type: %s', $conf['calculation']));
+    $calculation = $conf['calculation'] ?? NULL;
+    if ($calculation === NULL || !array_key_exists($calculation, DataPointHelper::getCalculationOptions())) {
+      throw new InvalidAttachmentTypeException(sprintf('Unknown calculation type: %s', $calculation));
     }
-
-    return $final_value;
+    return DataPointHelper::calculate($value_1, $value_2, $calculation);
   }
 
   /**
@@ -1645,10 +1629,10 @@ class Attachment extends ApiObjectBase implements AttachmentInterface, Disaggreg
     $data_point_1 = $data_points[0]['metric_type'] ?? NULL;
     $data_point_2 = $data_points[1]['metric_type'] ?? NULL;
     switch ($conf['processing']) {
-      case 'single':
+      case DataPointHelper::PROCESSING_SINGLE:
         return $this->isMeasurementField($data_point_1);
 
-      case 'calculated':
+      case DataPointHelper::PROCESSING_CALCULATED:
         return $this->isMeasurementField($data_point_1) || $this->isMeasurementField($data_point_2);
 
     }
@@ -1670,10 +1654,10 @@ class Attachment extends ApiObjectBase implements AttachmentInterface, Disaggreg
     $data_point_1 = $data_points[0]['metric_type'] ?? NULL;
     $data_point_2 = $data_points[1]['metric_type'] ?? NULL;
     switch ($conf['processing']) {
-      case 'single':
+      case DataPointHelper::PROCESSING_SINGLE:
         return $this->isCalculatedMeasurmentField($data_point_1);
 
-      case 'calculated':
+      case DataPointHelper::PROCESSING_CALCULATED:
         return $this->isCalculatedMeasurmentField($data_point_1) || $this->isCalculatedMeasurmentField($data_point_2);
 
     }
@@ -1708,13 +1692,13 @@ class Attachment extends ApiObjectBase implements AttachmentInterface, Disaggreg
     $decimal_format = $conf['decimal_format'] ?? NULL;
     $rendered_value = NULL;
     switch ($conf['formatting']) {
-      case 'raw':
+      case DataPointHelper::FORMATTING_RAW:
         return [
           '#markup' => $value,
         ];
 
-      case 'auto':
-        if ($conf['processing'] == 'calculated' && $conf['calculation'] == 'percentage') {
+      case DataPointHelper::FORMATTING_AUTO:
+        if ($conf['processing'] == DataPointHelper::PROCESSING_CALCULATED && $conf['calculation'] == DataPointHelper::CALCULATION_PERCENTAGE) {
           $rendered_value = [
             '#theme' => 'hpc_percent',
             '#ratio' => $value,
@@ -1737,7 +1721,7 @@ class Attachment extends ApiObjectBase implements AttachmentInterface, Disaggreg
         }
         break;
 
-      case 'currency':
+      case DataPointHelper::FORMATTING_CURRENCY:
         $rendered_value = [
           '#theme' => 'hpc_currency',
           '#value' => $value,
@@ -1745,7 +1729,7 @@ class Attachment extends ApiObjectBase implements AttachmentInterface, Disaggreg
         ];
         break;
 
-      case 'amount':
+      case DataPointHelper::FORMATTING_AMOUNT:
         $rendered_value = [
           '#theme' => 'hpc_amount',
           '#amount' => $value,
@@ -1754,7 +1738,7 @@ class Attachment extends ApiObjectBase implements AttachmentInterface, Disaggreg
         ];
         break;
 
-      case 'amount_rounded':
+      case DataPointHelper::FORMATTING_AMOUNT_ROUNDED:
         $rendered_value = [
           '#theme' => 'hpc_amount',
           '#amount' => $value,
@@ -1763,7 +1747,7 @@ class Attachment extends ApiObjectBase implements AttachmentInterface, Disaggreg
         ];
         break;
 
-      case 'percent':
+      case DataPointHelper::FORMATTING_PERCENT:
         $rendered_value = [
           '#theme' => 'hpc_percent',
           '#ratio' => $value,
@@ -1899,10 +1883,7 @@ class Attachment extends ApiObjectBase implements AttachmentInterface, Disaggreg
    *   The options array.
    */
   public static function getProcessingOptions() {
-    return [
-      'single' => t('Single data point'),
-      'calculated' => t('Calculated from 2 data points'),
-    ];
+    return DataPointHelper::getProcessingOptions();
   }
 
   /**
@@ -1912,12 +1893,7 @@ class Attachment extends ApiObjectBase implements AttachmentInterface, Disaggreg
    *   The options array.
    */
   public static function getCalculationOptions() {
-    return [
-      'percentage' => t('Percentage (data point 1 * (100 / data point 2))'),
-      'addition' => t('Sum (data point 1 + data point 2)'),
-      'substraction' => t('Substraction (data point 1 - data point 2)'),
-      'division' => t('Division (data point 1 / data point 2)'),
-    ];
+    return DataPointHelper::getCalculationOptions();
   }
 
   /**
@@ -1927,14 +1903,7 @@ class Attachment extends ApiObjectBase implements AttachmentInterface, Disaggreg
    *   The options array.
    */
   public static function getFormattingOptions() {
-    return [
-      'auto' => t('Automatic based on the unit (uses percentage for percentages, amount for all others)'),
-      'currency' => t('Currency value'),
-      'amount' => t('Amount value'),
-      'amount_rounded' => t('Amount value (rounded, 1 decimal)'),
-      'percent' => t('Percentage value'),
-      'raw' => t('Raw data (no formatting)'),
-    ];
+    return DataPointHelper::getFormattingOptions();
   }
 
   /**

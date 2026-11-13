@@ -23,6 +23,12 @@ ghi_blocks.global_settings:
       requirements:
         type: boolean
         label: 'Show requirements'
+      prioritized_target:
+        type: boolean
+        label: 'Show prioritized target'
+      prioritized_requirements:
+        type: boolean
+        label: 'Show prioritized requirements'
       coverage:
         type: boolean
         label: 'Show coverage'
