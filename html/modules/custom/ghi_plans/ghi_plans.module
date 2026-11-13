@@ -15,6 +15,7 @@ use Drupal\ghi_plans\Entity\Plan;
 use Drupal\ghi_plans\Entity\PlanCostingType;
 use Drupal\ghi_plans\Entity\PlanType;
 use Drupal\ghi_plans\Form\PlanFormAlter;
+use Drupal\hpc_api\Plugin\migrate\source\FabricGraphQl;
 use Drupal\migrate\MigrateSkipRowException;
 use Drupal\migrate\Plugin\MigrateSourceInterface;
 use Drupal\migrate\Plugin\MigrationInterface;
@@ -93,7 +94,10 @@ function ghi_plans_migrate_plan_prepare_row(Row $row, MigrateSourceInterface $so
   /** @var \Drupal\hpc_api\Query\FabricQueryManager $query_manager */
   $query_manager = \Drupal::service('plugin.manager.fabric_query_manager');
   /** @var \Drupal\ghi_plans\Plugin\FabricQuery\PlanQuery $plan_query */
-  $plan_query = $query_manager->createInstance('plan');
+  // Plan details come from a second bulk query. Reuse the source migration's
+  // freshness boundary so persistent cache entries cannot mix API snapshots.
+  $query_configuration = $source instanceof FabricGraphQl ? ['cache_base_time' => $source->getCacheBaseTime()] : [];
+  $plan_query = $query_manager->createInstance('plan', $query_configuration);
   $plan_query->getAllPlans();
 
   $plan = $plan_query->getPlan($plan_id);
