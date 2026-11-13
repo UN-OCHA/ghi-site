@@ -46,6 +46,7 @@ class GlobalSettingsFormTest extends UnitTestCase {
     $form->setStringTranslation($this->getStringTranslationStub());
 
     $build = $form->buildForm([], new FormState());
+    $this->assertArrayNotHasKey('numeric_display_style', $build);
     $this->assertFalse($build['years']['2026']['plan_type_icons']['#default_value']);
   }
 

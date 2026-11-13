@@ -155,13 +155,18 @@ class EntityCounter extends ConfigurationContainerItemPluginBase {
    * {@inheritdoc}
    */
   public function getRenderArray() {
+    $value = $this->applyCacheTags([
+      '#theme' => 'hpc_amount',
+      '#amount' => $this->getValue(),
+      '#scale' => 'full',
+    ]);
     $popover = $this->getPopover();
     if (!$popover) {
-      return parent::getRenderArray();
+      return $value;
     }
     return [
       '#type' => 'container',
-      0 => parent::getRenderArray(),
+      0 => $value,
       'tooltips' => [
         '#theme' => 'hpc_tooltip_wrapper',
         '#tooltips' => [$popover],
