@@ -26,7 +26,7 @@ body.path-frontpage #main-content {
 .ghi-block-global-homepages {
   & .title-wrapper > .cd-block-title {
     margin-bottom: 1rem;
-    font-size: var(--cd-font-size--2xbase);
+    font-size: var(--cd-font-size--large);
     font-weight: 700;
   }
 
@@ -44,8 +44,17 @@ body.path-frontpage #main-content {
     padding-top: 0;
 
     .cd-block-title {
-      font-size: var(--cd-font-size--2xbase);
+      font-size: var(--cd-font-size--large);
       font-weight: 400;
+    }
+  }
+}
+
+@media (min-width: 1024px) {
+  .ghi-block-global-homepages {
+    & .title-wrapper > .cd-block-title,
+    .ghi-block:first-child .cd-block-title {
+      font-size: var(--cd-font-size--2xbase);
     }
   }
 }

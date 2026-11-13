@@ -36,8 +36,27 @@
   }
 }
 
+/* Keep standard containers on the Common Design content width and gutter
+ * system. The main page body can opt into the wider page width below. */
+.cd-container {
+  max-width: var(--cd-max-width);
+  padding-right: var(--cd-container-padding);
+  padding-left: var(--cd-container-padding);
+
+  @media (min-width: 768px) {
+    padding-right: var(--cd-container-padding-tablet);
+    padding-left: var(--cd-container-padding-tablet);
+  }
+
+  @media (min-width: 1200px) {
+    padding-right: var(--cd-container-padding-xlarge);
+    padding-left: var(--cd-container-padding-xlarge);
+  }
+}
+
 #main-content {
   position: relative;
+  width: 100%;
   max-width: var(--cd-max-page-width);
   padding-top: 0;
 
@@ -47,11 +66,10 @@
       max-width: var(--cd-max-page-width);
     }
 
-    /* Contrain the element with the `content-width` class. The paddings reflect
-     * those that were on the `<main>` element. There is no need to have the 1024px
-     * media query with the 40px padding because 904px + 2 * 40px < 1024px. */
+    /* Constrain the element with the `content-width` class while keeping its
+     * maximum and responsive gutters aligned with the page container. */
     & > .content-width {
-      max-width: calc(var(--content-width) + 24px) !important;
+      max-width: var(--content-width) !important;
       margin-right: auto !important;
       margin-left: auto !important;
       padding-right: var(--cd-container-padding) !important;
@@ -67,7 +85,13 @@
 
     @media (min-width: 768px) {
       .content-width {
-        max-width: calc(var(--content-width) + 48px) !important;
+        padding-right: var(--cd-container-padding-tablet) !important;
+        padding-left: var(--cd-container-padding-tablet) !important;
+      }
+    }
+
+    @media (min-width: 1200px) {
+      .content-width {
         padding-right: var(--cd-container-padding-xlarge) !important;
         padding-left: var(--cd-container-padding-xlarge) !important;
       }
@@ -97,6 +121,6 @@
 
 // Maximum width on full screen for texts, photo galleries etc.
 :root {
-  --content-width: 1220px;
+  --content-width: var(--cd-max-width);
   --reading-width: 820px;
 }
