@@ -3,6 +3,7 @@
 namespace Drupal\ghi_plans\ApiObjects\Facts;
 
 use Drupal\hpc_api\ApiObjects\ApiObjectBase;
+use Drupal\hpc_api\ApiObjects\Types\AggregationType;
 use Drupal\hpc_api\ApiObjects\Types\MetricType;
 
 /**
@@ -99,6 +100,11 @@ class GhoFact extends ApiObjectBase {
   private ?MetricType $metricType;
 
   /**
+   * The aggregation type.
+   */
+  private ?AggregationType $aggregationType;
+
+  /**
    * The referenced sector, including its global entity classification.
    */
   private ?object $sector;
@@ -119,6 +125,7 @@ class GhoFact extends ApiObjectBase {
     $this->value = isset($data->ValueNum) ? (float) $data->ValueNum : NULL;
     $this->description = $data->Description ?? NULL;
     $this->metricType = isset($data->metricType) ? new MetricType($data->metricType) : NULL;
+    $this->aggregationType = isset($data->aggregationType) ? new AggregationType($data->aggregationType) : NULL;
     $this->sector = $data->sector ?? NULL;
   }
 
@@ -176,6 +183,27 @@ class GhoFact extends ApiObjectBase {
    */
   public function getAggregationTypeId(): ?int {
     return $this->aggregationTypeId;
+  }
+
+  /**
+   * Gets the aggregation type.
+   */
+  public function getAggregationType(): ?AggregationType {
+    return $this->aggregationType;
+  }
+
+  /**
+   * Checks whether this is an adjusted value for higher-level aggregation.
+   */
+  public function isAdjustedAggregation(): bool {
+    return $this->aggregationType?->isAdjusted() ?? FALSE;
+  }
+
+  /**
+   * Checks whether this is the full value of an individual plan.
+   */
+  public function isFullAggregation(): bool {
+    return $this->aggregationType?->isFull() ?? FALSE;
   }
 
   /**

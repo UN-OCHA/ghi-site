@@ -5,6 +5,7 @@ namespace Drupal\ghi_plans\Plugin\FabricQuery;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\ghi_base_objects\Helpers\BaseObjectHelper;
 use Drupal\ghi_plans\ApiObjects\Partials\PlanOverviewPlan;
+use Drupal\ghi_plans\Entity\Plan;
 use Drupal\ghi_plans\PlanMetricResolver;
 use Drupal\hpc_api\Attribute\FabricQuery;
 use Drupal\hpc_api\Query\FabricQueryBase;
@@ -25,6 +26,13 @@ class PlanOverviewQuery extends FabricQueryBase {
    * @var \Drupal\ghi_plans\ApiObjects\Partials\PlanOverviewPlan[]
    */
   private $plans = NULL;
+
+  /**
+   * Plans with metric values prepared for aggregation across plans.
+   *
+   * @var \Drupal\ghi_plans\ApiObjects\Partials\PlanOverviewPlan[]|null
+   */
+  private $aggregatePlans = NULL;
 
   /**
    * The year to use for the overview data.
@@ -86,6 +94,7 @@ class PlanOverviewQuery extends FabricQueryBase {
       return;
     }
     $this->plans = [];
+    $this->aggregatePlans = [];
     $year = $this->getYear();
     if ($year === NULL) {
       return;
@@ -110,21 +119,32 @@ class PlanOverviewQuery extends FabricQueryBase {
       return;
     }
 
-    // Resolve metrics according to each local plan's configured data source.
+    // Resolve Full values for displayed plan rows and map markers.
     $metrics_by_plan = $this->planMetricResolver->resolve($plan_objects);
-    // Preserve remote dependencies hidden behind the normalized values so a
-    // Fabric refresh invalidates every homepage consumer of this query.
-    foreach ($metrics_by_plan as $metrics) {
+
+    // Country Module values do not have a separate aggregation dimension.
+    // Only re-resolve GHO-backed plans for totals across multiple plans.
+    $aggregate_metrics_by_plan = $metrics_by_plan;
+    $gho_plan_objects = array_filter($plan_objects, fn ($plan, $plan_id): bool => ($metrics_by_plan[$plan_id] ?? NULL)?->getSource() === Plan::DATA_SOURCE_GHO, ARRAY_FILTER_USE_BOTH);
+    if ($gho_plan_objects) {
+      $aggregate_metrics_by_plan = array_replace($aggregate_metrics_by_plan, $this->planMetricResolver->resolveForAggregation($gho_plan_objects));
+    }
+
+    // Preserve remote dependencies hidden behind both normalized value sets.
+    foreach (array_merge($metrics_by_plan, $aggregate_metrics_by_plan) as $metrics) {
       $this->setCacheTags($metrics->getCacheTags());
     }
 
     foreach ($plans as $plan) {
       $plan_id = $plan->id();
-      $plan = new PlanOverviewPlan((object) [
+      $this->plans[$plan_id] = new PlanOverviewPlan((object) [
         'plan' => $plan,
         'metrics' => $metrics_by_plan[$plan_id],
       ]);
-      $this->plans[$plan->id()] = $plan;
+      $this->aggregatePlans[$plan_id] = new PlanOverviewPlan((object) [
+        'plan' => $plan,
+        'metrics' => $aggregate_metrics_by_plan[$plan_id],
+      ]);
     }
   }
 
@@ -180,15 +200,7 @@ class PlanOverviewQuery extends FabricQueryBase {
    *   The sum of requirements for globally visible, GHO-included plans.
    */
   public function getTotalRequirements(): float {
-    $plans = $this->getGhoPlans();
-    if (empty($plans)) {
-      return 0;
-    }
-    $requirements = 0;
-    foreach ($plans as $plan) {
-      $requirements += $plan->getRequirements();
-    }
-    return $requirements;
+    return $this->getGhoPlanValueTotal(fn (PlanOverviewPlan $plan) => $plan->getRequirements());
   }
 
   /**
@@ -198,15 +210,50 @@ class PlanOverviewQuery extends FabricQueryBase {
    *   The sum of funding for globally visible, GHO-included plans.
    */
   public function getTotalFunding(): float {
-    $plans = $this->getGhoPlans();
-    if (empty($plans)) {
-      return 0;
+    return $this->getGhoPlanValueTotal(fn (PlanOverviewPlan $plan) => $plan->getFunding());
+  }
+
+  /**
+   * Gets total prioritized requirements for visible, GHO-included plans.
+   *
+   * @return float
+   *   The sum of prioritized requirements available for those plans.
+   */
+  public function getTotalPrioritizedRequirements(): float {
+    return $this->getGhoPlanValueTotal(fn (PlanOverviewPlan $plan) => $plan->getPrioritizedRequirements());
+  }
+
+  /**
+   * Sums a plan value across globally visible, GHO-included plans.
+   *
+   * Missing values do not prevent other plans from contributing to the total.
+   *
+   * @param callable $value_callback
+   *   The callback that returns the value for one plan.
+   *
+   * @return float
+   *   The metric total.
+   */
+  private function getGhoPlanValueTotal(callable $value_callback): float {
+    $total = 0;
+    foreach ($this->getAggregateGhoPlans() as $plan) {
+      $total += $value_callback($plan) ?? 0;
     }
-    $funding = 0;
-    foreach ($plans as $plan) {
-      $funding += $plan->getFunding();
-    }
-    return $funding;
+    return $total;
+  }
+
+  /**
+   * Gets aggregate-ready values for the visible plans included in the GHO.
+   *
+   * Plan rows and map markers continue using getGhoPlans(), which exposes Full
+   * GHO values. This parallel set is reserved for cross-plan totals.
+   *
+   * @return \Drupal\ghi_plans\ApiObjects\Partials\PlanOverviewPlan[]
+   *   Aggregate-ready plans keyed by plan ID.
+   */
+  private function getAggregateGhoPlans(): array {
+    $gho_plans = $this->getGhoPlans();
+    return array_intersect_key($this->aggregatePlans ?? [], $gho_plans);
   }
 
   /**
@@ -253,7 +300,7 @@ class PlanOverviewQuery extends FabricQueryBase {
   public function getCaseloadTotalValues(array $types): array {
     // Use the same visibility-filtered plan set as the global plan table so
     // headline totals are the sum of the displayed plan rows.
-    $plans = $this->getGhoPlans();
+    $plans = $this->getAggregateGhoPlans();
 
     // Initialize all totals so missing source values contribute zero.
     $caseload_totals = array_fill_keys(array_keys($types), 0);

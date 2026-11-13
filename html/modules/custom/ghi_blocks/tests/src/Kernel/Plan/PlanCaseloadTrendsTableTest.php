@@ -69,6 +69,10 @@ class PlanCaseloadTrendsTableTest extends PlanBlockKernelTestBase {
     $form_state->set('block', $plugin);
     $form = $plugin->getConfigForm([], $form_state);
     $this->assertArrayHasKey('columns', $form);
+    $this->assertArrayHasKey('prioritized_target', $form['columns']['#options']);
+    $this->assertArrayHasKey('prioritized_requirements', $form['columns']['#options']);
+    $this->assertSame(0, $form['columns']['#default_value']['prioritized_target']);
+    $this->assertSame(0, $form['columns']['#default_value']['prioritized_requirements']);
     $this->assertEquals(3, $form['soft_limit']['#min']);
     $this->assertEquals(10, $form['soft_limit']['#max']);
   }
@@ -88,13 +92,13 @@ class PlanCaseloadTrendsTableTest extends PlanBlockKernelTestBase {
    * Tests the table data.
    */
   public function testBuildTableData() {
-    $plugin = $this->getBlockPlugin();
+    $plugin = $this->getBlockPlugin(TRUE);
     $this->injectMetricResolver($plugin);
     $table_data = $this->callPrivateMethod($plugin, 'buildTableData');
     $this->assertNotEmpty($table_data);
-    $this->assertCount(7, $table_data['header']);
+    $this->assertCount(9, $table_data['header']);
     $this->assertCount(1, $table_data['rows']);
-    $this->assertCount(7, $table_data['rows'][0]);
+    $this->assertCount(9, $table_data['rows'][0]);
     $this->assertInstanceOf(CacheableMetadata::class, $table_data['cacheability']);
     $this->assertContains('plan_id:' . self::PLAN_ID, $table_data['cacheability']->getCacheTags());
 
@@ -102,6 +106,16 @@ class PlanCaseloadTrendsTableTest extends PlanBlockKernelTestBase {
     $this->assertEquals(3000, $requirements_cell['data-raw-value']);
     $this->assertEquals('currency', $requirements_cell['data-column-type']);
     $this->assertEquals('financial', $requirements_cell['data-progress-group']);
+
+    $prioritized_target_cell = $table_data['rows'][0]['prioritized_target'];
+    $this->assertEquals(90, $prioritized_target_cell['data-raw-value']);
+    $this->assertEquals('amount', $prioritized_target_cell['data-column-type']);
+    $this->assertEquals('people', $prioritized_target_cell['data-progress-group']);
+
+    $prioritized_requirements_cell = $table_data['rows'][0]['prioritized_requirements'];
+    $this->assertEquals(2500, $prioritized_requirements_cell['data-raw-value']);
+    $this->assertEquals('currency', $prioritized_requirements_cell['data-column-type']);
+    $this->assertEquals('financial', $prioritized_requirements_cell['data-progress-group']);
 
     $funding_cell = $table_data['rows'][0]['funding'];
     $this->assertEquals(1000, $funding_cell['data-raw-value']);
@@ -118,10 +132,39 @@ class PlanCaseloadTrendsTableTest extends PlanBlockKernelTestBase {
   }
 
   /**
+   * Tests prioritized columns remain opt-in for existing configurations.
+   */
+  public function testPrioritizedColumnsAreOptIn(): void {
+    $plugin = $this->getBlockPlugin();
+    $this->injectMetricResolver($plugin);
+    $table_data = $this->callPrivateMethod($plugin, 'buildTableData');
+
+    $this->assertArrayNotHasKey('prioritized_target', $table_data['header']);
+    $this->assertArrayNotHasKey('prioritized_requirements', $table_data['header']);
+    $this->assertArrayNotHasKey('prioritized_target', $table_data['rows'][0]);
+    $this->assertArrayNotHasKey('prioritized_requirements', $table_data['rows'][0]);
+  }
+
+  /**
+   * Tests an empty column selection shows all available columns.
+   */
+  public function testEmptyColumnSelection(): void {
+    $plugin = $this->getBlockPlugin(FALSE, FALSE);
+    $this->injectMetricResolver($plugin);
+    $table_data = $this->callPrivateMethod($plugin, 'buildTableData');
+
+    $this->assertCount(12, $table_data['header']);
+    $this->assertArrayHasKey('target_percent', $table_data['header']);
+    $this->assertArrayHasKey('reached', $table_data['header']);
+    $this->assertArrayHasKey('prioritized_target', $table_data['header']);
+    $this->assertArrayHasKey('prioritized_requirements', $table_data['header']);
+  }
+
+  /**
    * Tests the download data.
    */
   public function testBuildDownloadData() {
-    $plugin = $this->getBlockPlugin();
+    $plugin = $this->getBlockPlugin(TRUE);
     $this->injectMetricResolver($plugin);
     $table_data = $this->callPrivateMethod($plugin, 'buildTableData');
     $this->assertEquals([
@@ -145,10 +188,12 @@ class PlanCaseloadTrendsTableTest extends PlanBlockKernelTestBase {
     $this->assertNotEmpty($source_data[0]['plan_type_tooltip']);
     $this->assertEquals(300, $source_data[0]['in_need']);
     $this->assertEquals(100, $source_data[0]['target']);
+    $this->assertEquals(90, $source_data[0]['prioritized_target']);
     $this->assertEquals(round(100 / 3, 1), round($source_data[0]['target_percent'], 1));
     $this->assertEquals(80, $source_data[0]['reached']);
     $this->assertEquals(80.0, $source_data[0]['reached_percent']);
     $this->assertEquals(3000, $source_data[0]['requirements']);
+    $this->assertEquals(2500, $source_data[0]['prioritized_requirements']);
     $this->assertEquals(1000, $source_data[0]['funding']);
     $this->assertEqualsWithDelta(33.3, $source_data[0]['coverage'], 0.1);
     $this->assertNull($source_data[0]['footnotes']);
@@ -218,7 +263,7 @@ class PlanCaseloadTrendsTableTest extends PlanBlockKernelTestBase {
    * Tests the block build.
    */
   public function testBlockBuild() {
-    $plugin = $this->getBlockPlugin();
+    $plugin = $this->getBlockPlugin(TRUE);
     $this->injectMetricResolver($plugin);
     $build = $plugin->buildContent();
     $this->assertNotEmpty($build);
@@ -228,7 +273,7 @@ class PlanCaseloadTrendsTableTest extends PlanBlockKernelTestBase {
     $this->assertEquals($build['#lazy_builder_preview']['#progress_groups'], TRUE);
     $this->assertEquals($build['#lazy_builder_preview']['#sortable'], TRUE);
     $this->assertEquals($build['#lazy_builder_preview']['#soft_limit'], 10);
-    $this->assertCount(7, $build['#lazy_builder_preview']['#header']);
+    $this->assertCount(9, $build['#lazy_builder_preview']['#header']);
     $this->assertCount(1, $build['#lazy_builder_preview']['#rows']);
     $this->assertContains('plan_id:' . self::PLAN_ID, $build['#lazy_builder_preview']['#cache']['tags']);
     $this->assertContains('plan_id:' . self::PLAN_ID, $build['#cache']['tags']);
@@ -237,10 +282,15 @@ class PlanCaseloadTrendsTableTest extends PlanBlockKernelTestBase {
   /**
    * Get a block plugin.
    *
+   * @param bool $prioritized_columns
+   *   Whether to enable the prioritized columns.
+   * @param bool $select_columns
+   *   Whether to select the configured columns.
+   *
    * @return \Drupal\ghi_blocks\Plugin\Block\Plan\PlanCaseloadTrendsTable
    *   The block plugin.
    */
-  private function getBlockPlugin() {
+  private function getBlockPlugin(bool $prioritized_columns = FALSE, bool $select_columns = TRUE) {
     $configuration = [
       'columns' => [
         'in_need' => 'in_need',
@@ -254,6 +304,13 @@ class PlanCaseloadTrendsTableTest extends PlanBlockKernelTestBase {
       ],
       'soft_limit' => 10,
     ];
+    if ($prioritized_columns) {
+      $configuration['columns']['prioritized_target'] = 'prioritized_target';
+      $configuration['columns']['prioritized_requirements'] = 'prioritized_requirements';
+    }
+    if (!$select_columns) {
+      $configuration['columns'] = array_fill_keys(array_keys($configuration['columns']), 0);
+    }
     $contexts = $this->getPlanSectionContexts([
       'field_original_id' => self::PLAN_ID,
       'field_year' => 2025,
@@ -278,8 +335,10 @@ class PlanCaseloadTrendsTableTest extends PlanBlockKernelTestBase {
         $values[$plan_id] = new PlanMetricValues(Plan::DATA_SOURCE_PLAN, $plan_id == self::PLAN_ID ? [
           'in_need' => 300,
           'target' => 100,
+          'prioritized_target' => 90,
           'latest_reach' => 80,
           'requirements' => 3000,
+          'prioritized_requirements' => 2500,
           'funding' => 1000,
         ] : [], cacheTags: ['plan_id:' . $plan_id]);
       }

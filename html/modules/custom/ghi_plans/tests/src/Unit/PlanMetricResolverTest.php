@@ -94,7 +94,7 @@ class PlanMetricResolverTest extends UnitTestCase {
   }
 
   /**
-   * Tests latest, plan-level GHO fact selection without source fallback.
+   * Tests GHO fact selection with canonical FTS funding.
    */
   public function testResolveGhoData(): void {
     $attachment_query = $this->createMock(AttachmentQuery::class);
@@ -106,22 +106,136 @@ class PlanMetricResolverTest extends UnitTestCase {
       $this->mockFact('in_need', 400, '2026-10-01'),
       $this->mockFact('in_need', 350, '2026-09-01'),
       $this->mockFact('requirements', 900000, '2026-10-01'),
+      $this->mockFact('prioritized_people_targeted', 150, '2026-10-01'),
+      $this->mockFact('prioritized_total_cost', 700000, '2026-10-01'),
       $this->mockFact('target', 200, '2026-10-01'),
       $this->mockFact('target', 250, '2026-10-01'),
-      $this->mockFact('funding', 100000, '2026-10-01', 5),
+      $this->mockFact('funding', 100000, '2026-10-01'),
     ];
     $gho_query->method('getFactsForPlans')->with([10])->willReturn([10 => $facts]);
 
     $plan = $this->createMock(Plan::class);
     $plan->method('getPlanDataSource')->willReturn(Plan::DATA_SOURCE_PLAN);
+    $plan->method('getTotalFunding')->willReturn(250000.0);
+    $plan->method('getOverallFunding')->willReturn(300000.0);
     $values = $resolver->resolve([10 => $plan], Plan::DATA_SOURCE_GHO)[10];
 
     $this->assertSame(Plan::DATA_SOURCE_GHO, $values->getSource());
     $this->assertSame(400.0, $values->get('in_need'));
     $this->assertSame(900000.0, $values->get('requirements'));
+    $this->assertSame(150.0, $values->get('prioritized_target'));
+    $this->assertSame(700000.0, $values->get('prioritized_requirements'));
     $this->assertFalse($values->has('target'));
-    $this->assertFalse($values->has('funding'));
+    $this->assertSame(250000.0, $values->get('funding'));
+    $this->assertSame(50000.0, $values->get('outside_funding'));
     $this->assertSame(['plan_id:10'], $values->getCacheTags());
+  }
+
+  /**
+   * Tests Full plan totals and location fallback handling.
+   */
+  public function testResolveGhoPlanTotals(): void {
+    $attachment_query = $this->createMock(AttachmentQuery::class);
+    $prototype_query = $this->createMock(AttachmentPrototypeQuery::class);
+    $gho_query = $this->createMock(GhoFactQuery::class);
+    $resolver = $this->createResolver($attachment_query, $prototype_query, $gho_query);
+
+    $facts = [
+      // Prefer the location-neutral Full total over its location breakdown.
+      $this->mockFact('target', 200, '2026-10-01'),
+      $this->mockFact('target', 80, '2026-10-01', location_id: 1),
+      $this->mockFact('target', 120, '2026-10-01', location_id: 2),
+      $this->mockFact('target', 0, '2026-10-01', adjusted: TRUE),
+      // Sum non-overlapping locations when no location-neutral total exists.
+      $this->mockFact('requirements', 300000, '2026-10-01', location_id: 1),
+      $this->mockFact('requirements', 600000, '2026-10-01', location_id: 2),
+    ];
+    $gho_query->method('getFactsForPlans')->with([10])->willReturn([10 => $facts]);
+
+    $plan = $this->createMock(Plan::class);
+    $plan->method('getPlanDataSource')->willReturn(Plan::DATA_SOURCE_GHO);
+    $values = $resolver->resolve([10 => $plan])[10];
+
+    $this->assertSame(200.0, $values->get('target'));
+    $this->assertSame(900000.0, $values->get('requirements'));
+  }
+
+  /**
+   * Tests Adjusted values and their Full fallback for aggregated totals.
+   */
+  public function testResolveGhoAggregationTotals(): void {
+    $attachment_query = $this->createMock(AttachmentQuery::class);
+    $prototype_query = $this->createMock(AttachmentPrototypeQuery::class);
+    $gho_query = $this->createMock(GhoFactQuery::class);
+    $resolver = $this->createResolver($attachment_query, $prototype_query, $gho_query);
+
+    $facts = [
+      // An explicit Adjusted zero must not fall back to the Full value.
+      $this->mockFact('target', 200, '2026-10-01'),
+      $this->mockFact('target', 0, '2026-10-01', adjusted: TRUE),
+      // Full remains the fallback when no Adjusted fact exists.
+      $this->mockFact('requirements', 900000, '2026-10-01'),
+      // Each location independently uses Adjusted with a Full fallback.
+      $this->mockFact('in_need', 120, '2026-10-01', location_id: 1),
+      $this->mockFact('in_need', 100, '2026-10-01', adjusted: TRUE, location_id: 1),
+      $this->mockFact('in_need', 150, '2026-10-01', location_id: 2),
+      // A Full plan total must not mask an available Adjusted breakdown.
+      $this->mockFact('prioritized_people_targeted', 400, '2026-10-01'),
+      $this->mockFact('prioritized_people_targeted', 100, '2026-10-01', adjusted: TRUE, location_id: 1),
+      $this->mockFact('prioritized_people_targeted', 200, '2026-10-01', location_id: 2),
+    ];
+    $gho_query->method('getFactsForPlans')->with([10])->willReturn([10 => $facts]);
+
+    $plan = $this->createMock(Plan::class);
+    $plan->method('getPlanDataSource')->willReturn(Plan::DATA_SOURCE_GHO);
+    $values = $resolver->resolveForAggregation([10 => $plan])[10];
+
+    $this->assertSame(0.0, $values->get('target'));
+    $this->assertSame(900000.0, $values->get('requirements'));
+    $this->assertSame(250.0, $values->get('in_need'));
+    $this->assertSame(300.0, $values->get('prioritized_target'));
+  }
+
+  /**
+   * Tests that conflicting values for one location remain ambiguous.
+   */
+  public function testResolveGhoConflictingLocationValues(): void {
+    $attachment_query = $this->createMock(AttachmentQuery::class);
+    $prototype_query = $this->createMock(AttachmentPrototypeQuery::class);
+    $gho_query = $this->createMock(GhoFactQuery::class);
+    $resolver = $this->createResolver($attachment_query, $prototype_query, $gho_query);
+
+    $facts = [
+      $this->mockFact('target', 100, '2026-10-01', location_id: 1),
+      $this->mockFact('target', 120, '2026-10-01', location_id: 1),
+    ];
+    $gho_query->method('getFactsForPlans')->with([10])->willReturn([10 => $facts]);
+
+    $plan = $this->createMock(Plan::class);
+    $plan->method('getPlanDataSource')->willReturn(Plan::DATA_SOURCE_GHO);
+    $values = $resolver->resolve([10 => $plan])[10];
+
+    $this->assertFalse($values->has('target'));
+  }
+
+  /**
+   * Tests that a GHO funding fact is never used as an FTS fallback.
+   */
+  public function testResolveGhoDataWithoutFtsFunding(): void {
+    $attachment_query = $this->createMock(AttachmentQuery::class);
+    $prototype_query = $this->createMock(AttachmentPrototypeQuery::class);
+    $gho_query = $this->createMock(GhoFactQuery::class);
+    $resolver = $this->createResolver($attachment_query, $prototype_query, $gho_query);
+
+    $facts = [$this->mockFact('funding', 100000, '2026-10-01')];
+    $gho_query->method('getFactsForPlans')->with([10])->willReturn([10 => $facts]);
+
+    $plan = $this->createMock(Plan::class);
+    $plan->method('getPlanDataSource')->willReturn(Plan::DATA_SOURCE_GHO);
+    $values = $resolver->resolve([10 => $plan])[10];
+
+    $this->assertFalse($values->has('funding'));
+    $this->assertFalse($values->has('outside_funding'));
   }
 
   /**
@@ -140,13 +254,16 @@ class PlanMetricResolverTest extends UnitTestCase {
   /**
    * Mocks a controlled GHO fact.
    */
-  private function mockFact(string $metric, float $value, string $as_of_date, ?int $sector_id = NULL): GhoFact {
+  private function mockFact(string $metric, float $value, string $as_of_date, ?int $sector_id = NULL, bool $adjusted = FALSE, ?int $location_id = NULL): GhoFact {
     $fact = $this->createMock(GhoFact::class);
     $fact->method('isGhoRevision')->willReturn(TRUE);
     $fact->method('getSectorId')->willReturn($sector_id);
     $fact->method('getMetricName')->willReturn($metric);
     $fact->method('getValue')->willReturn($value);
     $fact->method('getAsOfDate')->willReturn($as_of_date);
+    $fact->method('getLocationId')->willReturn($location_id);
+    $fact->method('isAdjustedAggregation')->willReturn($adjusted);
+    $fact->method('isFullAggregation')->willReturn(!$adjusted);
     return $fact;
   }
 

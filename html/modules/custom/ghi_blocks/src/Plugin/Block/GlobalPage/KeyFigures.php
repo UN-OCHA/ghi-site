@@ -62,6 +62,7 @@ class KeyFigures extends GHIBlockBase implements MultiStepFormBlockInterface {
   public function getData(string $source_key = 'data') {
     $plan_overview_query = $this->getPlanOverviewQuery();
     $requirements = $plan_overview_query->getTotalRequirements();
+    $prioritized_requirements = $plan_overview_query->getTotalPrioritizedRequirements();
     $funding = $plan_overview_query->getTotalFunding();
     $funding_progress = CommonHelper::calculateRatio($funding, $requirements);
 
@@ -69,6 +70,7 @@ class KeyFigures extends GHIBlockBase implements MultiStepFormBlockInterface {
     $types = [
       'in_need' => 'In Need',
       'target' => 'Target',
+      'prioritized_target' => 'People prioritized',
       'latest_reach' => 'Latest reached',
       'expected_reach' => 'Expected reach',
     ];
@@ -82,9 +84,11 @@ class KeyFigures extends GHIBlockBase implements MultiStepFormBlockInterface {
       'funding_progress' => $funding_progress,
       'people_in_need' => $caseload_values['in_need'],
       'people_target' => $caseload_values['target'],
+      'prioritized_target' => $caseload_values['prioritized_target'],
       'people_reached' => $caseload_values['latest_reach'],
       'people_reached_percent' => CommonHelper::calculateRatio($caseload_values['reached_custom'], $caseload_values['target_custom']),
       'people_expected_reach' => $caseload_values['expected_reach'],
+      'prioritized_requirements' => $prioritized_requirements,
       'countries_affected' => $affected_countries,
       'plans_inside_gho' => $gho_plans,
     ];
@@ -256,6 +260,9 @@ class KeyFigures extends GHIBlockBase implements MultiStepFormBlockInterface {
           'people_target' => [
             'label' => $this->t('People targeted'),
           ],
+          'prioritized_target' => [
+            'label' => $this->t('People prioritized'),
+          ],
           'people_expected_reach' => [
             'label' => $this->t('People estimated reach'),
             'default_label' => $this->t('People estimated reach'),
@@ -276,6 +283,11 @@ class KeyFigures extends GHIBlockBase implements MultiStepFormBlockInterface {
           'total_requirements' => [
             'label' => $this->t('Total requirements'),
             'default_label' => $this->t('Requirements (US$)'),
+            'global_plan_restrict' => TRUE,
+          ],
+          'prioritized_requirements' => [
+            'label' => $this->t('Prioritized requirements'),
+            'default_label' => $this->t('Prioritized requirements (US$)'),
             'global_plan_restrict' => TRUE,
           ],
           'funding_progress' => [

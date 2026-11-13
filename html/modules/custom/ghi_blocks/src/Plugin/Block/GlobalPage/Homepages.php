@@ -38,7 +38,6 @@ class Homepages extends GHIBlockBase implements OverrideDefaultTitleBlockInterfa
   public static function metadata(): ?HPCBlockMetadata {
     return new HPCBlockMetadata(
       defaultTitle: 'Operations',
-      usesTitle: FALSE,
     );
   }
 

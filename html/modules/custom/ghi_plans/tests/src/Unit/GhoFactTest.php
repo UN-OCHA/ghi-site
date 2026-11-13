@@ -3,6 +3,7 @@
 namespace Drupal\Tests\ghi_plans\Unit;
 
 use Drupal\ghi_plans\ApiObjects\Facts\GhoFact;
+use Drupal\hpc_api\ApiObjects\Types\AggregationType;
 use Drupal\Tests\UnitTestCase;
 use PHPUnit\Framework\Attributes\Group;
 
@@ -33,6 +34,10 @@ class GhoFactTest extends UnitTestCase {
         'Name' => 'People in need',
         'HPCType' => 'inNeed',
       ],
+      'aggregationType' => (object) [
+        'Id' => 2,
+        'Name' => 'Full',
+      ],
       'sector' => (object) [
         'Id' => 40,
         'Name' => 'Health',
@@ -47,6 +52,9 @@ class GhoFactTest extends UnitTestCase {
     $this->assertSame(40, $fact->getSectorId());
     $this->assertSame('in_need', $fact->getMetricName());
     $this->assertSame(2, $fact->getAggregationTypeId());
+    $this->assertInstanceOf(AggregationType::class, $fact->getAggregationType());
+    $this->assertTrue($fact->isFullAggregation());
+    $this->assertFalse($fact->isAdjustedAggregation());
     $this->assertTrue($fact->isGhoRevision());
     $this->assertSame(125000.0, $fact->getValue());
     $this->assertSame('Health', $fact->getSectorName());

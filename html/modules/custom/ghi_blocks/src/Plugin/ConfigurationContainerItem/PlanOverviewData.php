@@ -15,7 +15,7 @@ use Drupal\hpc_common\Traits\RenderArrayTrait;
  */
 #[ConfigurationContainerItem(
   id: 'plan_overview_data',
-  label: new TranslatableMarkup('Plan overview data'),
+  label: new TranslatableMarkup('Aggregated plan metric'),
   description: new TranslatableMarkup('This item displays data from the plan overview for a year.'),
 )]
 class PlanOverviewData extends ConfigurationContainerItemPluginBase {
@@ -322,6 +322,13 @@ class PlanOverviewData extends ConfigurationContainerItemPluginBase {
         'allow_sum' => TRUE,
         'theme' => 'hpc_amount',
       ],
+      'prioritized_target' => [
+        'label' => $this->t('People prioritized'),
+        'value_description' => $this->t('Enter amount as full integer to override the value from the API.'),
+        'data_type' => 'integer',
+        'allow_sum' => TRUE,
+        'theme' => 'hpc_amount',
+      ],
       'people_expected_reach' => [
         'label' => $this->t('People expected reach'),
         'value_description' => $this->t('Enter amount as full integer to override the value from the API.'),
@@ -351,6 +358,13 @@ class PlanOverviewData extends ConfigurationContainerItemPluginBase {
       ],
       'total_requirements' => [
         'label' => $this->t('Total requirements'),
+        'value_description' => $this->t('Enter a write-in value to override the value from the API. <b>Note that write-in values are ignored if you limit the data to include or exclude a global plan.</b>'),
+        'data_type' => 'integer',
+        'allow_sum' => TRUE,
+        'theme' => 'hpc_currency',
+      ],
+      'prioritized_requirements' => [
+        'label' => $this->t('Prioritized requirements'),
         'value_description' => $this->t('Enter a write-in value to override the value from the API. <b>Note that write-in values are ignored if you limit the data to include or exclude a global plan.</b>'),
         'data_type' => 'integer',
         'allow_sum' => TRUE,

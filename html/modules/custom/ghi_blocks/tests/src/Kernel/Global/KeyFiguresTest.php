@@ -102,9 +102,11 @@ class KeyFiguresTest extends PlanBlockKernelTestBase {
     $plan_overview_data = $item_types['plan_overview_data']['item_types'];
     $this->assertArrayHasKey('people_in_need', $plan_overview_data);
     $this->assertArrayHasKey('people_target', $plan_overview_data);
+    $this->assertArrayHasKey('prioritized_target', $plan_overview_data);
     $this->assertArrayHasKey('people_reached', $plan_overview_data);
     $this->assertArrayHasKey('total_funding', $plan_overview_data);
     $this->assertArrayHasKey('total_requirements', $plan_overview_data);
+    $this->assertArrayHasKey('prioritized_requirements', $plan_overview_data);
     $this->assertArrayHasKey('funding_progress', $plan_overview_data);
   }
 
@@ -179,15 +181,18 @@ class KeyFiguresTest extends PlanBlockKernelTestBase {
 
     $query = $this->prophesize(PlanOverviewQuery::class);
     $query->getTotalRequirements()->willReturn(200.0);
+    $query->getTotalPrioritizedRequirements()->willReturn(150.0);
     $query->getTotalFunding()->willReturn(100.0);
     $query->getCaseloadTotalValues([
       'in_need' => 'In Need',
       'target' => 'Target',
+      'prioritized_target' => 'People prioritized',
       'latest_reach' => 'Latest reached',
       'expected_reach' => 'Expected reach',
     ])->willReturn([
       'in_need' => 100,
       'target' => 80,
+      'prioritized_target' => 75,
       'latest_reach' => 40,
       'expected_reach' => 50,
       'reached_custom' => 40,

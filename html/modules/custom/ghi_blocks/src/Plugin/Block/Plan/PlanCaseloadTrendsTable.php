@@ -235,10 +235,12 @@ class PlanCaseloadTrendsTable extends GHIBlockBase implements OverrideDefaultTit
       ],
       'in_need' => $this->buildHeaderColumn($this->t('People in need', [], $t_options), 'amount'),
       'target' => $this->buildHeaderColumn($this->t('People targeted', [], $t_options), 'amount'),
+      'prioritized_target' => $this->buildHeaderColumn($this->t('People prioritized', [], $t_options), 'amount'),
       'target_percent' => $this->buildHeaderColumn($this->t('People targeted (%)', [], $t_options), 'amount'),
       'reached' => $this->buildHeaderColumn($this->t('People reached', [], $t_options), 'amount'),
       'reached_percent' => $this->buildHeaderColumn($this->t('People reached (%)', [], $t_options), 'amount'),
       'requirements' => $this->buildHeaderColumn($this->t('Requirements ($)', [], $t_options), 'currency'),
+      'prioritized_requirements' => $this->buildHeaderColumn($this->t('Prioritized requirements ($)', [], $t_options), 'currency'),
       'funding' => $this->buildHeaderColumn($this->t('Funding ($)', [], $t_options), 'currency'),
       'coverage' => $this->buildHeaderColumn($this->t('% Funded', [], $t_options), 'percentage'),
     ];
@@ -295,6 +297,13 @@ class PlanCaseloadTrendsTable extends GHIBlockBase implements OverrideDefaultTit
           'export_value' => $item['target'],
           'export_commentary' => $this->getFootnoteForProperty($item['footnotes'], 'target'),
         ],
+        'prioritized_target' => [
+          'data' => $this->buildRenderArray('hpc_amount', $item['prioritized_target'] ?? FALSE, $theme_options),
+          'data-raw-value' => $item['prioritized_target'] ?? 0,
+          'data-column-type' => 'amount',
+          'data-progress-group' => 'people',
+          'export_value' => $item['prioritized_target'],
+        ],
         'target_percent' => [
           'data' => $this->buildRenderArray('hpc_percent', $item['target_percent'] ?? FALSE, $theme_options),
           'data-raw-value' => $item['target_percent'] ?? 0,
@@ -327,6 +336,13 @@ class PlanCaseloadTrendsTable extends GHIBlockBase implements OverrideDefaultTit
           'export_value' => $item['requirements'],
           'export_commentary' => $this->getFootnoteForProperty($item['footnotes'], 'requirements'),
         ],
+        'prioritized_requirements' => [
+          'data' => $this->buildRenderArray('hpc_currency', $item['prioritized_requirements'] ?? FALSE, $theme_options),
+          'data-raw-value' => $item['prioritized_requirements'] ?? 0,
+          'data-column-type' => 'currency',
+          'data-progress-group' => 'financial',
+          'export_value' => $item['prioritized_requirements'],
+        ],
         'funding' => [
           'data' => [
             $this->buildRenderArray('hpc_currency', $item['funding'] ?? FALSE, $theme_options),
@@ -353,20 +369,17 @@ class PlanCaseloadTrendsTable extends GHIBlockBase implements OverrideDefaultTit
       return NULL;
     }
 
-    $columns = $this->getBlockConfig()['columns'];
-    if (!empty(array_filter($columns))) {
-      foreach ($columns as $key => $enabled) {
-        if ($enabled) {
-          continue;
+    $column_defaults = $this->getConfigurationDefaults()['columns'];
+    $columns = $this->getBlockConfig()['columns'] ?? $column_defaults;
+    $visible_columns = array_filter($columns) ?: array_fill_keys(array_keys($columns), TRUE);
+    foreach (array_keys(array_diff_key($column_defaults, $visible_columns)) as $key) {
+      unset($header[$key]);
+      foreach ($rows as &$row) {
+        if (!isset($row['data'])) {
+          unset($row[$key]);
         }
-        unset($header[$key]);
-        foreach ($rows as &$row) {
-          if (!isset($row['data'])) {
-            unset($row[$key]);
-          }
-          else {
-            unset($row['data'][$key]);
-          }
+        else {
+          unset($row['data'][$key]);
         }
       }
     }
@@ -403,7 +416,7 @@ class PlanCaseloadTrendsTable extends GHIBlockBase implements OverrideDefaultTit
               ],
               'data-raw-value' => (string) $this->t('There was no plan in this year.', [], $t_options),
               'data-sort-value' => -1,
-              'colspan' => count(array_filter($columns)) + 1,
+              'colspan' => count($visible_columns) + 1,
             ],
           ],
           'class' => 'empty no-plan',
@@ -480,8 +493,10 @@ class PlanCaseloadTrendsTable extends GHIBlockBase implements OverrideDefaultTit
 
       $in_need = $metrics->get('in_need');
       $target = $metrics->get('target');
+      $prioritized_target = $metrics->get('prioritized_target');
       $reached = $metrics->get('latest_reach');
       $requirements = $metrics->get('requirements');
+      $prioritized_requirements = $metrics->get('prioritized_requirements');
       $funding = $metrics->get('funding');
 
       // See if there is a section for this plan.
@@ -499,10 +514,12 @@ class PlanCaseloadTrendsTable extends GHIBlockBase implements OverrideDefaultTit
         'plan_type_tooltip' => !$plan->isPartOfGho(),
         'in_need' => $in_need,
         'target' => $target,
+        'prioritized_target' => $prioritized_target,
         'target_percent' => $target !== NULL && $in_need !== NULL ? CommonHelper::calculateRatio($target, $in_need) * 100 : NULL,
         'reached' => $reached,
         'reached_percent' => $reached !== NULL && $target !== NULL ? CommonHelper::calculateRatio($reached, $target) * 100 : NULL,
         'requirements' => $requirements,
+        'prioritized_requirements' => $prioritized_requirements,
         'funding' => $funding,
         'coverage' => $requirements !== NULL && $funding !== NULL ? CommonHelper::calculateRatio($funding, $requirements) * 100 : NULL,
         'footnotes' => $plan ? $this->getFootnotesForPlanBaseobject($plan) : NULL,
@@ -555,10 +572,12 @@ class PlanCaseloadTrendsTable extends GHIBlockBase implements OverrideDefaultTit
       'columns' => [
         'in_need' => 'in_need',
         'target' => 'target',
+        'prioritized_target' => 0,
         'target_percent' => 0,
         'reached' => 0,
         'reached_percent' => 0,
         'requirements' => 'requirements',
+        'prioritized_requirements' => 0,
         'funding' => 'funding',
         'coverage' => 'coverage',
       ],
@@ -578,10 +597,12 @@ class PlanCaseloadTrendsTable extends GHIBlockBase implements OverrideDefaultTit
       '#options' => [
         'in_need' => $this->t('People in need'),
         'target' => $this->t('People targeted'),
+        'prioritized_target' => $this->t('People prioritized'),
         'target_percent' => $this->t('People targeted (%)'),
         'reached' => $this->t('People reached'),
         'reached_percent' => $this->t('People reached (%)'),
         'requirements' => $this->t('Requirements ($)'),
+        'prioritized_requirements' => $this->t('Prioritized requirements ($)'),
         'funding' => $this->t('Funding ($)'),
         'coverage' => $this->t('% Funded'),
       ],
@@ -594,8 +615,8 @@ class PlanCaseloadTrendsTable extends GHIBlockBase implements OverrideDefaultTit
       '#title' => $this->t('Plan metric source'),
       '#options' => [
         'default' => $this->t("Use each plan's setting"),
-        Plan::DATA_SOURCE_PLAN => $this->t('Country Module data'),
-        Plan::DATA_SOURCE_GHO => $this->t('GHO data'),
+        Plan::DATA_SOURCE_PLAN => $this->t('Country Module'),
+        Plan::DATA_SOURCE_GHO => $this->t('GHO'),
       ],
       '#default_value' => $this->getDefaultFormValueFromFormState($form_state, 'data_source') ?? 'default',
       '#description' => $this->t('An override pins the component to the selected source while still using the currently valid values from that source.'),

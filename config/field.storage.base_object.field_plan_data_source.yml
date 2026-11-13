@@ -13,10 +13,10 @@ settings:
   allowed_values:
     -
       value: plan
-      label: 'Country Module data'
+      label: 'Country Module'
     -
       value: gho
-      label: 'GHO data'
+      label: 'GHO'
   allowed_values_function: ''
 module: options
 locked: false

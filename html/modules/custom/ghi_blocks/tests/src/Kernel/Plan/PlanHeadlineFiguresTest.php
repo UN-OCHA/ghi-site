@@ -229,14 +229,14 @@ class PlanHeadlineFiguresTest extends PlanBlockKernelTestBase {
     $this->assertSame('Original requirements ($)', (string) $form['metric']['#options']['Financial data']['original_requirements']);
     $this->assertSame('Funding gap ($)', (string) $form['metric']['#options']['Financial data']['funding_gap']);
     $this->assertSame('Funding coverage (%)', (string) $form['metric']['#options']['Financial data']['coverage']);
-    $this->assertStringContainsString("Available values depend on the plan's configured metric source. If the selected metric is not provided by that source, the item remains empty.", (string) $form['metric']['#title']);
+    $this->assertStringContainsString("Available values depend on the plan's configured metric source. Funding always uses imported FTS data; other metrics remain empty when the configured source does not provide them.", (string) $form['metric']['#title']);
     $this->assertStringContainsString('plan-metric-form-label', (string) $form['metric']['#title']);
     $this->assertStringContainsString('material-symbol-help', (string) $form['metric']['#title']);
     $this->assertStringContainsString('Current plan metric source', (string) $form['metric_source']['#title']);
     $this->assertStringContainsString('This is a plan-wide setting. Change it on the Plan metrics tab of the plan base object.', (string) $form['metric_source']['#title']);
     $this->assertStringContainsString('material-symbol-help', (string) $form['metric_source']['#title']);
-    $this->assertSame('Country Module data', (string) $form['metric_source']['#markup']);
-    $this->assertSame('No value is currently available for this metric from Country Module data.', (string) $form['value_preview']['#description']);
+    $this->assertSame('Country Module', (string) $form['metric_source']['#markup']);
+    $this->assertSame('No value is currently available for this metric from Country Module.', (string) $form['value_preview']['#description']);
     $this->assertSame('Original ($)', (string) $financial_metric->getDefaultLabel());
     $this->assertSame('Unmet ($)', (string) $financial_metric->getDefaultLabel('funding_gap'));
     $this->assertSame('% Funded', (string) $financial_metric->getDefaultLabel('coverage'));

@@ -6,6 +6,7 @@ use Drupal\Core\DependencyInjection\ContainerBuilder;
 use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\ghi_plans\ApiObjects\Plan;
+use Drupal\ghi_plans\ApiObjects\Partials\PlanOverviewPlan;
 use Drupal\ghi_plans\Entity\Plan as PlanEntity;
 use Drupal\ghi_plans\PlanMetricResolver;
 use Drupal\ghi_plans\Plugin\FabricQuery\PlanOverviewQuery;
@@ -23,6 +24,104 @@ use PHPUnit\Framework\Attributes\Group;
 class PlanOverviewQueryTest extends UnitTestCase {
 
   use PrivateAccessorTrait;
+
+  /**
+   * Tests aggregation of source-aware financial metrics.
+   */
+  public function testFinancialMetricTotals(): void {
+    $first_aggregate_plan = $this->createMock(PlanOverviewPlan::class);
+    $first_aggregate_plan->method('getRequirements')->willReturn(800);
+    $first_aggregate_plan->method('getFunding')->willReturn(400);
+    $first_aggregate_plan->method('getPrioritizedRequirements')->willReturn(450);
+    $second_aggregate_plan = $this->createMock(PlanOverviewPlan::class);
+    $second_aggregate_plan->method('getRequirements')->willReturn(200);
+    $second_aggregate_plan->method('getFunding')->willReturn(NULL);
+    $second_aggregate_plan->method('getPrioritizedRequirements')->willReturn(250);
+    $visible_plans = [
+      1 => $this->createMock(PlanOverviewPlan::class),
+      2 => $this->createMock(PlanOverviewPlan::class),
+    ];
+
+    $query = $this->getMockBuilder(PlanOverviewQuery::class)
+      ->disableOriginalConstructor()
+      ->onlyMethods(['getGhoPlans'])
+      ->getMock();
+    $query->method('getGhoPlans')->willReturn($visible_plans);
+    (new \ReflectionProperty(PlanOverviewQuery::class, 'aggregatePlans'))->setValue($query, [
+      1 => $first_aggregate_plan,
+      2 => $second_aggregate_plan,
+    ]);
+
+    $this->assertSame(1000.0, $query->getTotalRequirements());
+    $this->assertSame(400.0, $query->getTotalFunding());
+    $this->assertSame(700.0, $query->getTotalPrioritizedRequirements());
+  }
+
+  /**
+   * Tests population totals use the aggregate-ready plan values.
+   */
+  public function testCaseloadMetricTotals(): void {
+    $first_aggregate_plan = $this->createMock(PlanOverviewPlan::class);
+    $first_aggregate_plan->method('id')->willReturn(1);
+    $first_aggregate_plan->method('getPlanCaseloadFields')->willReturn([
+      'in_need' => 100,
+      'target' => 80,
+      'latest_reach' => 60,
+    ]);
+    $first_aggregate_plan->method('getCaseloadValue')->willReturnMap([
+      ['in_need', 'In Need', 100],
+      ['target', 'Target', 80],
+      ['latest_reach', 'Reached', 60],
+    ]);
+    $first_aggregate_plan->method('isRrp')->willReturn(FALSE);
+    $second_aggregate_plan = $this->createMock(PlanOverviewPlan::class);
+    $second_aggregate_plan->method('id')->willReturn(2);
+    $second_aggregate_plan->method('getPlanCaseloadFields')->willReturn([
+      'in_need' => 50,
+      'target' => 40,
+      'latest_reach' => 30,
+    ]);
+    $second_aggregate_plan->method('getCaseloadValue')->willReturnMap([
+      ['in_need', 'In Need', 50],
+      ['target', 'Target', 40],
+      ['latest_reach', 'Reached', 30],
+    ]);
+    $second_aggregate_plan->method('isRrp')->willReturn(FALSE);
+    $visible_plans = [
+      1 => $this->createMock(PlanOverviewPlan::class),
+      2 => $this->createMock(PlanOverviewPlan::class),
+    ];
+
+    $query = $this->getMockBuilder(PlanOverviewQuery::class)
+      ->disableOriginalConstructor()
+      ->onlyMethods(['getGhoPlans', 'getPlans'])
+      ->getMock();
+    $query->method('getGhoPlans')->willReturn($visible_plans);
+    $query->method('getPlans')->willReturn($visible_plans);
+    (new \ReflectionProperty(PlanOverviewQuery::class, 'aggregatePlans'))->setValue($query, [
+      1 => $first_aggregate_plan,
+      2 => $second_aggregate_plan,
+    ]);
+
+    $storage = $this->createMock(EntityStorageInterface::class);
+    $storage->method('loadByProperties')->willReturn([]);
+    $entity_type_manager = $this->createMock(EntityTypeManagerInterface::class);
+    $entity_type_manager->method('getStorage')->with('base_object')->willReturn($storage);
+    $container = new ContainerBuilder();
+    $container->set('entity_type.manager', $entity_type_manager);
+    \Drupal::setContainer($container);
+
+    $totals = $query->getCaseloadTotalValues([
+      'in_need' => 'In Need',
+      'target' => 'Target',
+      'latest_reach' => 'Reached',
+    ]);
+    $this->assertSame(150, $totals['in_need']);
+    $this->assertSame(120, $totals['target']);
+    $this->assertSame(90, $totals['latest_reach']);
+    $this->assertSame(120, $totals['target_custom']);
+    $this->assertSame(90, $totals['reached_custom']);
+  }
 
   /**
    * Tests that only imported plans are used for overview data.

@@ -34,8 +34,13 @@ class GhoFactQuery extends FabricQueryBase {
     $items = $this->fabricClient->createQuery('ghoFacts', GhoFact::getGraphQlItems())
       ->setFilter('PlanId', $plan_ids)
       ->execute() ?: [];
+    $aggregation_types = $this->getAggregationTypes();
     $facts = [];
     foreach ($items as $item) {
+      // GHO facts expose only the reference ID, so hydrate the type from the
+      // shared Fabric base-type lookup before constructing the API object.
+      $aggregation_type = $aggregation_types[$item->AggregationTypeId ?? 0] ?? NULL;
+      $item->aggregationType = $aggregation_type?->getRawData();
       $fact = new GhoFact($item);
       $facts[$fact->getPlanId()][$fact->id()] = $fact;
     }
