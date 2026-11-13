@@ -229,7 +229,7 @@ class PlanHeadlineFiguresTest extends PlanBlockKernelTestBase {
     $this->assertSame('Original requirements ($)', (string) $form['metric']['#options']['Financial data']['original_requirements']);
     $this->assertSame('Funding gap ($)', (string) $form['metric']['#options']['Financial data']['funding_gap']);
     $this->assertSame('Funding coverage (%)', (string) $form['metric']['#options']['Financial data']['coverage']);
-    $this->assertStringContainsString("Available values depend on the plan's configured metric source. If the selected metric is not provided by that source, the item remains empty.", (string) $form['metric']['#title']);
+    $this->assertStringContainsString("Available values depend on the plan's configured metric source. Funding always uses imported FTS data; other metrics remain empty when the configured source does not provide them.", (string) $form['metric']['#title']);
     $this->assertStringContainsString('plan-metric-form-label', (string) $form['metric']['#title']);
     $this->assertStringContainsString('material-symbol-help', (string) $form['metric']['#title']);
     $this->assertStringContainsString('Current plan metric source', (string) $form['metric_source']['#title']);

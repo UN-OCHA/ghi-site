@@ -16,8 +16,8 @@ use Drupal\hpc_api\Query\FabricQueryManager;
 /**
  * Resolves plan-level metrics without exposing source-specific storage.
  *
- * Each plan is read only from its selected source. A missing metric remains
- * missing instead of falling back to the other source.
+ * Source-selectable metrics are read only from the configured source. Funding
+ * always comes from the FTS-backed fields on the imported plan.
  */
 class PlanMetricResolver {
 
@@ -89,15 +89,13 @@ class PlanMetricResolver {
       $caseloads = $caseloads_by_plan[$plan_id] ?? [];
       $caseload = $plan->getPlanCaseload($caseloads);
       $requirements = $plan->getRequirements();
-      $funding = $plan->getTotalFunding();
-      $overall_funding = $plan->getOverallFunding();
       // The plan tag also covers an empty result so adding the first remote
       // caseload invalidates consumers that previously rendered no data.
       $cache_tags = ['plan_id:' . $plan_id];
       if ($caseload) {
         $cache_tags = Cache::mergeTags($cache_tags, $caseload->getValueCacheTags());
       }
-      $resolved[$plan_id] = new PlanMetricValues(Plan::DATA_SOURCE_PLAN, array_filter([
+      $values = array_filter([
         'total_population' => $caseload?->getCaseloadValue('total_population', 'Population'),
         'in_need' => $caseload?->getCaseloadValue('in_need'),
         'target' => $caseload?->getCaseloadValue('target'),
@@ -105,9 +103,9 @@ class PlanMetricResolver {
         'latest_reach' => $caseload?->getCaseloadValue('latest_reach') ?? $caseload?->getCaseloadValue('cumulative_reach'),
         'requirements' => $requirements,
         'original_requirements' => $plan->getOriginalRequirements(),
-        'funding' => $funding,
-        'outside_funding' => $overall_funding !== NULL && $funding !== NULL ? $overall_funding - $funding : NULL,
-      ], fn ($value) => $value !== NULL), $caseloads, $cache_tags);
+      ], fn ($value) => $value !== NULL);
+      $values += $this->getFtsFundingValues($plan);
+      $resolved[$plan_id] = new PlanMetricValues(Plan::DATA_SOURCE_PLAN, $values, $caseloads, $cache_tags);
     }
     return $resolved;
   }
@@ -121,13 +119,30 @@ class PlanMetricResolver {
     }
     $facts_by_plan = $this->ghoFactQuery->getFactsForPlans(array_keys($plans));
     $resolved = [];
-    foreach (array_keys($plans) as $plan_id) {
+    foreach ($plans as $plan_id => $plan) {
       // A plan-level value can retain period and location references, but it
       // must belong to the GHO revision and must not have a sector dimension.
       $facts = array_filter($facts_by_plan[$plan_id] ?? [], fn (GhoFact $fact): bool => $fact->isGhoRevision() && $fact->getSectorId() === NULL && $fact->getValue() !== NULL);
-      $resolved[$plan_id] = new PlanMetricValues(Plan::DATA_SOURCE_GHO, $this->selectCurrentFactValues($facts), cacheTags: ['plan_id:' . $plan_id]);
+      $values = $this->selectCurrentFactValues($facts);
+      // Funding is authoritative in FTS even if Fabric exposes a GHO fact with
+      // the same metric name. Never treat that fact as a fallback.
+      unset($values['funding'], $values['outside_funding']);
+      $values += $this->getFtsFundingValues($plan);
+      $resolved[$plan_id] = new PlanMetricValues(Plan::DATA_SOURCE_GHO, $values, cacheTags: ['plan_id:' . $plan_id]);
     }
     return $resolved;
+  }
+
+  /**
+   * Gets the canonical FTS-backed funding values stored on a plan.
+   */
+  private function getFtsFundingValues(Plan $plan): array {
+    $funding = $plan->getTotalFunding();
+    $overall_funding = $plan->getOverallFunding();
+    return array_filter([
+      'funding' => $funding,
+      'outside_funding' => $overall_funding !== NULL && $funding !== NULL ? $overall_funding - $funding : NULL,
+    ], fn ($value) => $value !== NULL);
   }
 
   /**

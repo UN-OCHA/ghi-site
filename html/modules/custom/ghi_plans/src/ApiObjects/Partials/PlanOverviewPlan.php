@@ -278,7 +278,7 @@ class PlanOverviewPlan extends BaseObject {
   }
 
   /**
-   * Gets coverage from the selected source's funding and requirements.
+   * Gets coverage from canonical funding and source-selected requirements.
    *
    * @param int $precision
    *   The precision to use (number of digits after the decimal point).
@@ -306,7 +306,7 @@ class PlanOverviewPlan extends BaseObject {
    * Get the funding for a plan.
    *
    * @return int|null
-   *   The plan funding, or NULL when the selected source has no value.
+   *   The canonical plan funding, or NULL when FTS has no value.
    */
   public function getFunding(): ?int {
     return $this->funding !== NULL ? (int) $this->funding : NULL;

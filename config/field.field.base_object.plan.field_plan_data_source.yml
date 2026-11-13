@@ -12,7 +12,7 @@ field_name: field_plan_data_source
 entity_type: base_object
 bundle: plan
 label: 'Plan metric source'
-description: 'Select the authoritative source for supported plan metrics. Country Module data uses the selected caseload for population metrics and imported FTS values for financial metrics. GHO data uses the currently valid GHO facts.'
+description: 'Select the authoritative source for supported plan metrics. Country Module data uses the selected caseload for population metrics; GHO data uses the currently valid GHO facts. Funding always uses imported FTS values.'
 required: true
 translatable: false
 default_value:

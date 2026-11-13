@@ -3,7 +3,10 @@
 namespace Drupal\ghi_plans\ValueObject;
 
 /**
- * Normalized plan-level metrics from one authoritative source.
+ * Normalized plan-level metrics for one configured source.
+ *
+ * The source controls selectable plan metrics. Canonical metrics such as FTS
+ * funding can be included independently of that setting.
  *
  * Cache tags travel with the values because normalization otherwise hides the
  * Fabric dependencies from render and aggregate consumers.
@@ -14,7 +17,7 @@ final class PlanMetricValues {
    * Constructs a normalized plan metric set.
    *
    * @param string $source
-   *   The source used to resolve these values.
+   *   The configured source used to resolve source-selectable values.
    * @param array $values
    *   Metric values keyed by stable metric name.
    * @param array $caseloads
@@ -27,7 +30,7 @@ final class PlanMetricValues {
   }
 
   /**
-   * Gets the source used for this metric set.
+   * Gets the source used for source-selectable values in this metric set.
    */
   public function getSource(): string {
     return $this->source;

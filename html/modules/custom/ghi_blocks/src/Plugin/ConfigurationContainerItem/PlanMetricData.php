@@ -22,14 +22,15 @@ use Drupal\hpc_common\Traits\RenderArrayTrait;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
- * Displays a normalized plan metric from the plan's configured source.
+ * Displays a normalized plan metric for the plan's configured source.
  *
- * Missing metrics remain empty; this item never falls back to the other source.
+ * Missing source-selectable metrics remain empty instead of falling back to
+ * the other source. Funding always comes from imported FTS data.
  */
 #[ConfigurationContainerItem(
   id: 'plan_metric_data',
   label: new TranslatableMarkup('Plan metric'),
-  description: new TranslatableMarkup("This item displays a plan-level metric from the plan's configured data source."),
+  description: new TranslatableMarkup("This item displays a plan-level metric using the plan's configured data source and imported FTS funding."),
 )]
 class PlanMetricData extends ConfigurationContainerItemPluginBase {
 
@@ -135,7 +136,7 @@ class PlanMetricData extends ConfigurationContainerItemPluginBase {
       '#type' => 'select',
       '#title' => $this->buildTitleWithTooltip(
         $processing === DataPointHelper::PROCESSING_CALCULATED ? $this->t('Metric #1') : $this->t('Metric'),
-        $this->t("Available values depend on the plan's configured metric source. If the selected metric is not provided by that source, the item remains empty."),
+        $this->t("Available values depend on the plan's configured metric source. Funding always uses imported FTS data; other metrics remain empty when the configured source does not provide them."),
       ),
       '#options' => $metric_options,
       '#default_value' => $metric,

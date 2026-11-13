@@ -94,7 +94,7 @@ class PlanMetricResolverTest extends UnitTestCase {
   }
 
   /**
-   * Tests latest, plan-level GHO fact selection without source fallback.
+   * Tests GHO fact selection with canonical FTS funding.
    */
   public function testResolveGhoData(): void {
     $attachment_query = $this->createMock(AttachmentQuery::class);
@@ -108,20 +108,43 @@ class PlanMetricResolverTest extends UnitTestCase {
       $this->mockFact('requirements', 900000, '2026-10-01'),
       $this->mockFact('target', 200, '2026-10-01'),
       $this->mockFact('target', 250, '2026-10-01'),
-      $this->mockFact('funding', 100000, '2026-10-01', 5),
+      $this->mockFact('funding', 100000, '2026-10-01'),
     ];
     $gho_query->method('getFactsForPlans')->with([10])->willReturn([10 => $facts]);
 
     $plan = $this->createMock(Plan::class);
     $plan->method('getPlanDataSource')->willReturn(Plan::DATA_SOURCE_PLAN);
+    $plan->method('getTotalFunding')->willReturn(250000.0);
+    $plan->method('getOverallFunding')->willReturn(300000.0);
     $values = $resolver->resolve([10 => $plan], Plan::DATA_SOURCE_GHO)[10];
 
     $this->assertSame(Plan::DATA_SOURCE_GHO, $values->getSource());
     $this->assertSame(400.0, $values->get('in_need'));
     $this->assertSame(900000.0, $values->get('requirements'));
     $this->assertFalse($values->has('target'));
-    $this->assertFalse($values->has('funding'));
+    $this->assertSame(250000.0, $values->get('funding'));
+    $this->assertSame(50000.0, $values->get('outside_funding'));
     $this->assertSame(['plan_id:10'], $values->getCacheTags());
+  }
+
+  /**
+   * Tests that a GHO funding fact is never used as an FTS fallback.
+   */
+  public function testResolveGhoDataWithoutFtsFunding(): void {
+    $attachment_query = $this->createMock(AttachmentQuery::class);
+    $prototype_query = $this->createMock(AttachmentPrototypeQuery::class);
+    $gho_query = $this->createMock(GhoFactQuery::class);
+    $resolver = $this->createResolver($attachment_query, $prototype_query, $gho_query);
+
+    $facts = [$this->mockFact('funding', 100000, '2026-10-01')];
+    $gho_query->method('getFactsForPlans')->with([10])->willReturn([10 => $facts]);
+
+    $plan = $this->createMock(Plan::class);
+    $plan->method('getPlanDataSource')->willReturn(Plan::DATA_SOURCE_GHO);
+    $values = $resolver->resolve([10 => $plan])[10];
+
+    $this->assertFalse($values->has('funding'));
+    $this->assertFalse($values->has('outside_funding'));
   }
 
   /**
