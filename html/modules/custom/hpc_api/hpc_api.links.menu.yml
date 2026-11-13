@@ -37,12 +37,6 @@ hpc_api.fabric_report.categories:
   route_name: hpc_api.reports.fabric.categories
   parent: hpc_api.fabric_report
   weight: 3
-hpc_api.fabric_report.relationships:
-  title: 'Relationships'
-  description: 'Lookup relationships.'
-  route_name: hpc_api.reports.fabric.relationships
-  parent: hpc_api.fabric_report
-  weight: 4
 hpc_api.fabric_report.entity_lookup:
   title: 'Entity lookup'
   description: 'Lookup plan entity data.'

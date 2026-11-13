@@ -61,15 +61,6 @@ hpc_api.reports.fabric.categories:
     _permission: 'access site reports'
   options:
     _admin_route: TRUE
-hpc_api.reports.fabric.relationships:
-  path: '/admin/reports/fabric/relationships'
-  defaults:
-    _form: '\Drupal\hpc_api\Form\RelationshipLookupForm'
-    _title: 'Relationships'
-  requirements:
-    _permission: 'access site reports'
-  options:
-    _admin_route: TRUE
 hpc_api.reports.fabric.entity_lookup:
   path: '/admin/reports/fabric/entity-lookup'
   defaults:
