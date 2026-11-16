@@ -25,10 +25,10 @@ use Drupal\ghi_plans\Traits\PlanReportingPeriodTrait;
 use Drupal\hpc_api\ApiObjects\ApiObjectBase;
 use Drupal\hpc_api\ApiObjects\Types\MetricType;
 use Drupal\hpc_api\ApiObjects\Types\Unit;
+use Drupal\hpc_api\Helpers\StringHelper;
 use Drupal\hpc_api\Traits\DateTimeTrait;
 use Drupal\hpc_api\Traits\SimpleCacheTrait;
 use Drupal\hpc_common\Helpers\ArrayHelper;
-use Drupal\hpc_api\Helpers\StringHelper;
 
 /**
  * Abstraction for API data attachment objects.

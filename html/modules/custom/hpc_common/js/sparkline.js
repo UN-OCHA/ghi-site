@@ -3,6 +3,11 @@
   // Attach behaviors.
   Drupal.behaviors.hpc_sparkline = {
     attach: function(context, settings) {
+      // Read the theme tokens so generated SVG strokes stay in sync with CSS.
+      const rootStyles = window.getComputedStyle(document.documentElement);
+      const color = rootStyles.getPropertyValue('--ghi-yellow').trim() || 'rgb(255, 200, 0)';
+      const colorBaseline = rootStyles.getPropertyValue('--ghi-yellow--light-chart').trim() || 'rgb(250, 240, 187)';
+
       once('sparkline', 'span.sparkline', context).forEach(element => {
         if (!$(element).data('values')) {
           return;
@@ -21,8 +26,8 @@
           size: 'parent',
           stroke_width: 3,
           stroke_width_baseline: 3,
-          color: 'rgb(254, 216, 61)',
-          color_baseline: 'rgb(248, 236, 180)',
+          color: color,
+          color_baseline: colorBaseline,
           dasharray_baseline: '5, 10',
           point_radius: 2,
           tooltip: function(i) {

@@ -59,6 +59,8 @@ class ConfigurationContainer extends FormElementBase {
       '#row_filter' => FALSE,
       '#parent_type_label' => NULL,
       '#groups' => FALSE,
+      // Only opt in when the parent form captures unfinished child edits.
+      '#allow_outer_submit' => FALSE,
     ];
   }
 
@@ -877,8 +879,11 @@ class ConfigurationContainer extends FormElementBase {
           $row[$first_column_key]['#prefix'] = \Drupal::service('renderer')->render($indentation);
         }
       }
+      // Keep the structured reasons available to table decorators, which may
+      // present them elsewhere without repeating the item's validation work.
+      $row['#configuration_errors'] = $item_type->getConfigurationErrors();
       $row['issues'] = [
-        '#markup' => implode(', ', $item_type->getConfigurationErrors()),
+        '#markup' => implode(', ', $row['#configuration_errors']),
       ];
 
       $row['operations'] = [
@@ -1628,7 +1633,7 @@ class ConfigurationContainer extends FormElementBase {
     $item_config = array_key_exists('item_config', $form_subset);
     $filter_config = array_key_exists('filter_config', $form_subset);
     $custom_config = array_key_exists('custom_config', $form_subset);
-    if ($item_config || $filter_config || $custom_config) {
+    if (($item_config || $filter_config || $custom_config) && empty($form_subset['#allow_outer_submit'])) {
       // Disable the main submit button on the block config form.
       $method = 'attr';
       $args = ['disabled', 'disabled'];

@@ -41,7 +41,7 @@
 
         .tooltip-wrapper {
           .gho-included-tooltip {
-            color: var(--cd-primary-color);
+            color: var(--ghi-default-text-color);
             font-size: var(--cd-font-size--medium);
           }
 
@@ -52,20 +52,23 @@
             height: auto !important;
             max-height: 1.5rem;
             text-align: center;
-            color: $cd-white;
-            // The default background color for plan type other and unknown
-            background-color: rgb(135, 207, 173);
+            color: var(--ghi-default-text-color);
+            // Use the neutral token for unknown plan types as well as "other".
+            background-color: var(--ghi-plan-type-other);
             font-size: var(--cd-font-size--small);
             font-weight: normal;
 
             &.plan-type-hrp {
-              background-color: rgb(80, 144, 205);
+              color: var(--ghi-color-on-primary);
+              background-color: var(--ghi-plan-type-hrp);
             }
             &.plan-type-fa {
-              background-color: rgb(136, 105, 174);
+              color: $cd-white;
+              background-color: var(--ghi-plan-type-fa);
             }
             &.plan-type-rrp {
-              background-color: rgb(230, 103, 81);
+              color: $cd-white;
+              background-color: var(--ghi-plan-type-rrp);
             }
           }
         }

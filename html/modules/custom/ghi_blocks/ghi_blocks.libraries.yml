@@ -30,10 +30,19 @@ message:
   css:
     component:
       css/message.css: {}
-link_carousel:
+link_carousel.editor:
   css:
     component:
-      css/link_carousel.css: {}
+      css/link_carousel.editor.css: {}
+  js:
+    js/link_carousel.editor.js: {}
+  dependencies:
+    - core/drupal
+    - core/drupal.ajax
+    - core/once
+    - core/tabledrag
+    - core/jquery
+    - hpc_common/tooltip
 block.settings:
   js:
     js/block.settings.js: { weight: -1 }

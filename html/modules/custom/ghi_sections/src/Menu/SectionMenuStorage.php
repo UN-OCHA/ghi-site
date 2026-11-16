@@ -114,12 +114,29 @@ class SectionMenuStorage {
       $menu_item_list->setMenuItems($default_items);
     }
     else {
-      // Make sure that each of the default items is still in the list.
-      foreach ($default_items as $item) {
+      $stored_items = array_values($menu_item_list->getAll());
+      $changed = FALSE;
+      foreach ($default_items as $position => $item) {
         if ($menu_item_list->has($item)) {
           continue;
         }
-        $menu_item_list->appendItem($item);
+        // Insert next to existing profile items without reordering a section's
+        // saved editorial navigation choices.
+        $insert_at = count($stored_items);
+        foreach (array_slice($default_items, $position + 1) as $following_item) {
+          foreach ($stored_items as $index => $stored_item) {
+            if ($stored_item->getPluginId() === $following_item->getPluginId()) {
+              $insert_at = $index;
+              break 2;
+            }
+          }
+        }
+        array_splice($stored_items, $insert_at, 0, [$item]);
+        $menu_item_list->setMenuItems($stored_items);
+        $changed = TRUE;
+      }
+      if ($changed) {
+        $this->save();
       }
     }
     return $menu_item_list;
@@ -136,6 +153,11 @@ class SectionMenuStorage {
     $menu_items = [];
     $definitions = $this->sectionMenuPluginManager->getDefinitions();
     uasort($definitions, [SortArray::class, 'sortByWeightElement']);
+    if ($section instanceof SectionNodeInterface) {
+      // Let feature modules adjust the defaults for this particular section
+      // without coupling the generic menu storage to their implementation.
+      $this->sectionMenuPluginManager->alterDefinitionsForSection($definitions, $section);
+    }
     foreach ($definitions as $plugin_id => $definition) {
       /** @var \Drupal\ghi_sections\Menu\SectionMenuPluginInterface $plugin */
       $plugin = $this->sectionMenuPluginManager->createInstance($plugin_id, [

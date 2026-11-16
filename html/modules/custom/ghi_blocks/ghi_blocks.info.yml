@@ -5,12 +5,16 @@ package: GHI
 type: module
 core_version_requirement: ^10.3 || ^11
 
+interface translation project: ghi_blocks
+interface translation server pattern: modules/custom/ghi_blocks/translations/%language.po
+
 dependencies:
   - drupal:layout_builder
   - page_manager:page_manager_ui
   - imagecache_external:imagecache_external
   - layout_builder_ipe:layout_builder_ipe
   - layout_builder_lock:layout_builder_lock
+  - layout_builder_restrictions:layout_builder_restrictions
   - hpc_common:hpc_common
   - hpc_downloads:hpc_downloads
   - hpc_remote_data_cache:hpc_remote_data_cache

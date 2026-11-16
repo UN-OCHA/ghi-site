@@ -36,5 +36,14 @@
     "scss/operator-no-unspaced": null,
     "prettier/prettier": null
   },
+  "overrides": [
+    {
+      "files": ["**/*.scss"],
+      "rules": {
+        "at-rule-prelude-no-invalid": null,
+        "declaration-property-value-no-unknown": null
+      }
+    }
+  ],
   "defaultSeverity": "error"
 }

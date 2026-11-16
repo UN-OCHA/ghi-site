@@ -13,35 +13,42 @@
  */
 .gho-appeals-tag {
   display: inline-block;
-  width: 2.5rem;
+  box-sizing: border-box;
+  min-width: 2.5rem;
+  padding-inline: var(--cd-spacing--1);
   margin: 0.25rem;
   text-align: center;
   vertical-align: top;
   letter-spacing: 0.05rem;
   text-transform: uppercase;
-  color: #fff;
-  background: #5090cd;
-  font-size: 0.625rem;
+  color: var(--ghi-default-text-color);
+  background: var(--ghi-plan-type-other);
+  font-size: var(--cd-font-size--small);
   font-weight: 700;
-  line-height: 0.9375rem; /* 1.5 of font-size */
+  line-height: 1.25rem;
 }
 
 .gho-appeals-tag--hrp {
-  background-color: #5090cd; /* default */
+  color: var(--ghi-color-on-primary);
+  background-color: var(--ghi-plan-type-hrp);
 }
 .gho-appeals-tag--fa {
-  background-color: #8869ae;
+  color: #fff;
+  background-color: var(--ghi-plan-type-fa);
 }
 .gho-appeals-tag--rrp,
 .gho-appeals-tag--3rp {
-  background-color: #d85f49;
+  color: #fff;
+  background-color: var(--ghi-plan-type-reg);
 }
 .gho-appeals-tag--rmrp,
 .gho-appeals-tag--mrp,
 .gho-appeals-tag--jrp {
-  background-color: #f9a456;
+  color: #fff;
+  background-color: var(--ghi-plan-type-reg);
 }
 .gho-appeals-tag--other,
 .gho-appeals-tag--covid {
-  background-color: #65c296;
+  color: var(--ghi-default-text-color);
+  background-color: var(--ghi-plan-type-other);
 }

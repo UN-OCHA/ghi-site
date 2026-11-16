@@ -9,6 +9,8 @@
  */
 
 use Drupal\Core\Asset\AttachedAssetsInterface;
+use Drupal\Core\Form\ConfirmFormInterface;
+use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Language\LanguageInterface;
 
 /**
@@ -22,6 +24,44 @@ function ghi_gin_preprocess_page(&$variables) {
   if (\Drupal::moduleHandler()->moduleExists('gin_toolbar') && _gin_toolbar_gin_is_active()) {
     $variables['page']['content']['#attached']['library'][] = 'ghi_gin/gin_toolbar';
   }
+}
+
+/**
+ * Implements hook_form_alter().
+ */
+function ghi_gin_form_alter(array &$form, FormStateInterface $form_state): void {
+  $form_object = $form_state->getFormObject();
+  if (!$form_object instanceof ConfirmFormInterface || !\Drupal::request()->isXmlHttpRequest() || !\Drupal::service('router.admin_context')->isAdminRoute()) {
+    return;
+  }
+
+  // Some dialog renderers leave link-based actions in the content area while
+  // placing submit controls in the footer. Use a no-op submit control for the
+  // standard cancel link so every backend confirmation keeps its actions
+  // together; core's dialog-cancel behavior closes the dialog client-side.
+  if (($form['actions']['cancel']['#type'] ?? NULL) === 'link') {
+    $form['actions']['cancel'] = [
+      '#type' => 'submit',
+      '#value' => $form_object->getCancelText(),
+      '#limit_validation_errors' => [],
+      '#submit' => ['ghi_gin_confirm_form_cancel_submit'],
+      '#attributes' => ['class' => ['dialog-cancel']],
+    ];
+  }
+
+  // Dialog buttons retain their rendered order. Keep the confirmation action
+  // nearest the outer edge and place Cancel further inward consistently,
+  // regardless of how the individual form originally assembled its actions.
+  if (isset($form['actions']['submit'])) {
+    $form['actions']['submit']['#weight'] = -10;
+  }
+  $form['actions']['cancel']['#weight'] = 10;
+}
+
+/**
+ * Prevents a confirmation form's primary submit handler from running.
+ */
+function ghi_gin_confirm_form_cancel_submit(array &$form, FormStateInterface $form_state): void {
 }
 
 /**

@@ -53,25 +53,8 @@ third_party_settings:
       allowed_layouts:
         - layout_onecol
       denylisted_blocks: {  }
-      allowlisted_blocks:
-        'Inline blocks':
-          - 'inline_block:basic'
-      restricted_categories:
-        - 'Chaos Tools'
-        - 'Content fields'
-        - 'Custom block types'
-        - Forms
-        - Global
-        - 'Lists (Views)'
-        - 'Mailing list'
-        - Menus
-        - Page
-        - Sections
-        - 'Social Auth'
-        - System
-        - User
-        - Views
-        - core
+      allowlisted_blocks: {  }
+      restricted_categories: {  }
 id: page_template.page_template.default
 targetEntityType: page_template
 bundle: page_template

@@ -1,0 +1,16 @@
+uuid: a32f6ebe-9e32-4ee9-829e-6b6717c8ea22
+langcode: en
+status: true
+dependencies:
+  config:
+    - node.type.response
+  module:
+    - content_translation
+third_party_settings:
+  content_translation:
+    enabled: true
+id: node.response
+target_entity_type_id: node
+target_bundle: response
+default_langcode: site_default
+language_alterable: true

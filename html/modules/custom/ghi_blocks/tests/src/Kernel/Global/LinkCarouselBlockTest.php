@@ -57,15 +57,16 @@ class LinkCarouselBlockTest extends BlockKernelTestBase {
    * Tests the block build.
    */
   public function testBlockBuild() {
-    $plugin = $this->getBlockPlugin(5);
+    $plugin = $this->getBlockPlugin(7);
     $build = $plugin->buildContent();
-    $this->assertEquals('link_carousel', $build['#theme']);
-    $this->assertCount(5, $build['#items']);
+    $this->assertEquals('link_carousel_feature', $build['#theme']);
+    $this->assertNotNull($build['#highlighted']);
+    $this->assertCount(4, $build['#featured']);
     $this->assertNotNull($plugin->provideImageUri());
 
     $files = $this->callPrivateMethod($plugin, 'getFiles');
     $this->assertIsArray($files);
-    $this->assertCount(5, $files);
+    $this->assertCount(7, $files);
   }
 
   /**
@@ -73,7 +74,11 @@ class LinkCarouselBlockTest extends BlockKernelTestBase {
    */
   public function testBlockBuildNoLinks() {
     $plugin = $this->getBlockPlugin(0);
-    $this->assertNull($plugin->buildContent());
+    $build = $plugin->buildContent();
+    $this->assertSame('link_carousel_feature', $build['#theme']);
+    $this->assertNull($build['#highlighted']);
+    $this->assertSame([], $build['#featured']);
+    $this->assertNotNull($build['#call_to_action']);
     $this->assertNull($plugin->provideImageUri());
 
     $files = $this->callPrivateMethod($plugin, 'getFiles');
@@ -89,7 +94,7 @@ class LinkCarouselBlockTest extends BlockKernelTestBase {
 
     $form_state = new FormState();
     $form_state->set('block', $plugin);
-    $form = $plugin->getConfigForm([], $form_state);
+    $form = $plugin->linksForm([], $form_state);
     $this->assertEquals('configuration_container', $form['items']['#type']);
   }
 
@@ -130,8 +135,8 @@ class LinkCarouselBlockTest extends BlockKernelTestBase {
           'description' => $this->randomString(),
           'image' => [$this->createFile()->id()],
           'image_caption' => '',
-          'url' => 'https://crisisrelief.un.org/donate',
-          'button_label' => 'Donate here',
+          'url' => 'https://example.com/article/' . $id,
+          'button_label' => 'Read more',
         ],
       ],
     ];

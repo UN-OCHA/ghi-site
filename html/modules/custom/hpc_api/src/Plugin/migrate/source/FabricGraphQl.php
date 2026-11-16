@@ -2,6 +2,7 @@
 
 namespace Drupal\hpc_api\Plugin\migrate\source;
 
+use Drupal\Component\Datetime\TimeInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\hpc_api\Query\FabricQueryManager;
 use Drupal\hpc_api\Query\ImportQueryInterface;
@@ -44,10 +45,10 @@ class FabricGraphQl extends SourcePluginExtension implements ContainerFactoryPlu
   /**
    * {@inheritdoc}
    */
-  public function __construct(array $configuration, $plugin_id, $plugin_definition, MigrationInterface $migration, FabricQueryManager $fabric_query_manager, protected DataParserPluginManager $parserPluginManager,) {
+  public function __construct(array $configuration, $plugin_id, $plugin_definition, MigrationInterface $migration, FabricQueryManager $fabric_query_manager, TimeInterface $time, protected DataParserPluginManager $parserPluginManager,) {
     $this->fabricQueryManager = $fabric_query_manager;
     $source_configuration = $migration->getSourceConfiguration();
-    $cache_base_time = $source_configuration['cache_base_time'] ?? NULL;
+    $cache_base_time = $source_configuration['cache_base_time'] ?? $time->getRequestTime();
     $configuration['cache_base_time'] = $cache_base_time;
     $configuration['cache_prefix'] = $migration->id();
 
@@ -71,8 +72,18 @@ class FabricGraphQl extends SourcePluginExtension implements ContainerFactoryPlu
    */
   public static function create($container, array $configuration, $plugin_id, $plugin_definition, ?MigrationInterface $migration = NULL) {
     /** @var self */
-    $instance = new static($configuration, $plugin_id, $plugin_definition, $migration, $container->get('plugin.manager.fabric_query_manager'), $container->get('plugin.manager.migrate_plus.data_parser'));
+    $instance = new static($configuration, $plugin_id, $plugin_definition, $migration, $container->get('plugin.manager.fabric_query_manager'), $container->get('datetime.time'), $container->get('plugin.manager.migrate_plus.data_parser'));
     return $instance;
+  }
+
+  /**
+   * Get the oldest remote data cache timestamp accepted by this import.
+   *
+   * @return int
+   *   The migration freshness boundary as a Unix timestamp.
+   */
+  public function getCacheBaseTime(): int {
+    return (int) $this->configuration['cache_base_time'];
   }
 
   /**

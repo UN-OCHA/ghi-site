@@ -41,6 +41,7 @@ services:
       - mysql
     volumes:
       - "./settings:/srv/www/shared/settings:ro"
+      - "./nginx/response-headers.conf:/etc/nginx/custom/99-test-response-headers.conf:ro"
       # Mount volumes for the private and public files.
       - "ghi-site-public:/srv/www/html/sites/default/files:rw"
       - "ghi-site-private:/srv/www/html/sites/default/private:rw"

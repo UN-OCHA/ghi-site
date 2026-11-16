@@ -7,6 +7,7 @@ use Drupal\Core\Ajax\RedirectCommand;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\layout_builder\LayoutEntityHelperTrait;
+use Drupal\layout_builder\LayoutTempstoreRepositoryInterface;
 use Drupal\layout_builder\SectionStorageInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -25,11 +26,17 @@ class StorePageTemplateForm extends TemplateFormBase {
   protected $entityTypeManager;
 
   /**
+   * The layout tempstore repository.
+   */
+  protected LayoutTempstoreRepositoryInterface $layoutTempstoreRepository;
+
+  /**
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container) {
     $instance = parent::create($container);
     $instance->entityTypeManager = $container->get('entity_type.manager');
+    $instance->layoutTempstoreRepository = $container->get('layout_builder.tempstore_repository');
     return $instance;
   }
 
@@ -101,10 +108,13 @@ class StorePageTemplateForm extends TemplateFormBase {
    * Submit callback for the form.
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
+    $section_storage = $this->layoutTempstoreRepository->get($form_state->get('section_storage'));
+    /** @var \Drupal\ghi_templates\Entity\PageTemplateInterface $page_template */
     $page_template = $this->entityTypeManager->getStorage('page_template')->create([
       'title' => $form_state->getValue('name'),
       'field_entity_reference' => $form_state->get('entity'),
     ]);
+    $page_template->setSourceSections($section_storage->getSections());
     if ($page_template->save()) {
       $this->messenger()->addStatus($this->t('The page template <a href=":url">@label</a> has been saved.', [
         '@label' => $page_template->label(),

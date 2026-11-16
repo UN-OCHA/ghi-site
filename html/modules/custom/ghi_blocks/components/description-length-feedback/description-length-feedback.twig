@@ -1,0 +1,7 @@
+{% block original_help %}{% endblock %}
+<span class="description-length-feedback__guidance">{{ guidance }}</span>
+<div id="{{ feedback_id }}" class="description-length-feedback" data-description-length-state="{{ state }}" data-description-length-messages="{{ messages|json_encode }}">
+  <span class="description-length-feedback__count" data-description-length-count>{{ count_label }}</span>
+  {# Announce threshold changes without reading every character count aloud. #}
+  <span class="description-length-feedback__status" data-description-length-status aria-live="polite" aria-atomic="true">{{ messages[state] }}</span>
+</div>

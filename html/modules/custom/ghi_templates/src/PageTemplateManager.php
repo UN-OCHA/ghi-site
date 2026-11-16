@@ -5,12 +5,14 @@ namespace Drupal\ghi_templates;
 use Drupal\Component\Serialization\Yaml;
 use Drupal\Component\Uuid\UuidInterface;
 use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
+use Drupal\Core\DependencyInjection\ClassResolverInterface;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Plugin\Context\ContextHandlerInterface;
 use Drupal\Core\Plugin\Context\EntityContext;
 use Drupal\ghi_base_objects\Helpers\BaseObjectHelper;
 use Drupal\ghi_blocks\Interfaces\ConfigValidationInterface;
+use Drupal\ghi_blocks\LayoutBuilder\AllowedBlockDefinitions;
 use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
 use Drupal\ghi_templates\Entity\PageTemplateInterface;
 use Drupal\hpc_common\Helpers\ArrayHelper;
@@ -49,12 +51,20 @@ class PageTemplateManager implements ContainerInjectionInterface {
   protected $uuid;
 
   /**
+   * The class resolver.
+   *
+   * @var \Drupal\Core\DependencyInjection\ClassResolverInterface
+   */
+  protected $classResolver;
+
+  /**
    * Public constructor.
    */
-  public function __construct(EntityTypeManagerInterface $entity_type_manager, ContextHandlerInterface $context_handler, UuidInterface $uuid) {
+  public function __construct(EntityTypeManagerInterface $entity_type_manager, ContextHandlerInterface $context_handler, UuidInterface $uuid, ClassResolverInterface $class_resolver) {
     $this->entityTypeManager = $entity_type_manager;
     $this->contextHandler = $context_handler;
     $this->uuid = $uuid;
+    $this->classResolver = $class_resolver;
   }
 
   /**
@@ -65,6 +75,7 @@ class PageTemplateManager implements ContainerInjectionInterface {
       $container->get('entity_type.manager'),
       $container->get('context.handler'),
       $container->get('uuid'),
+      $container->get('class_resolver'),
     );
   }
 
@@ -122,8 +133,8 @@ class PageTemplateManager implements ContainerInjectionInterface {
    * @param bool $overwrite
    *   Whether the section storage should be completely overwritten.
    * @param array $selected_elements
-   *   Optional: An array of selected elements. If given, then only the
-   *   elements specified will be added to the section storage.
+   *   The selected elements, keyed by their selection IDs. Elements with empty
+   *   selection values are skipped. An empty array imports nothing.
    * @param bool $fix_element_configuration
    *   Whether the element configuration should be fixed if necessary.
    *
@@ -131,6 +142,16 @@ class PageTemplateManager implements ContainerInjectionInterface {
    *   The update section storage.
    */
   public function buildSectionStorageFromPageConfig(SectionStorageInterface $section_storage, EntityInterface $entity, array $page_config, bool $overwrite, array $selected_elements = [], $fix_element_configuration = TRUE) {
+    // Validate before clearing the layout, including selections outside the UI.
+    // Existing components can still be edited and rendered.
+    $definitions = $this->classResolver->getInstanceFromDefinition(AllowedBlockDefinitions::class)->getDefinitions($section_storage, $entity);
+    foreach ($page_config as $section_key => $section_config) {
+      foreach ($section_config['components'] ?? [] as $component_key => $component_config) {
+        if (!empty($selected_elements[$section_key . '--' . $component_key]) && !isset($definitions[$component_config['configuration']['id']])) {
+          throw new \InvalidArgumentException('This element is not allowed in this layout.');
+        }
+      }
+    }
 
     $delta = 0;
     $section = $section_storage->getSection($delta);

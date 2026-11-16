@@ -10,6 +10,30 @@ ghi_subpages.node.pages:
     _admin_route: TRUE
   requirements:
     _custom_access: '\Drupal\ghi_subpages\Controller\SubpagesAdminController::access'
+ghi_subpages.node.pages.delete:
+  path: '/node/{node}/pages/delete/{subpages}'
+  defaults:
+    _form: '\Drupal\ghi_subpages\Form\StandardSubpagesDeleteConfirmForm'
+    _title: 'Delete standard subpages'
+  options:
+    parameters:
+      node:
+        type: entity:node
+    _admin_route: TRUE
+  requirements:
+    _custom_access: '\Drupal\ghi_subpages\Controller\SubpagesAdminController::deleteAccess'
+ghi_subpages.node.pages.create:
+  path: '/node/{node}/pages/create/{bundle}'
+  defaults:
+    _form: '\Drupal\ghi_subpages\Form\StandardSubpageCreateConfirmForm'
+    _title: 'Create standard subpage'
+  options:
+    parameters:
+      node:
+        type: entity:node
+    _admin_route: TRUE
+  requirements:
+    _custom_access: '\Drupal\ghi_subpages\Controller\SubpagesAdminController::createAccess'
 ghi_subpages.entity.logframe_rebuild:
   path: '/admin/logframe/rebuild/{entity_type}/{entity}/{section_storage_type}/{section_storage}'
   defaults:

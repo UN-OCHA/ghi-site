@@ -66,6 +66,8 @@ third_party_settings:
       allowed_layouts:
         - layout_onecol
       denylisted_blocks:
+        'Generic elements':
+          - generic_link_carousel
         'Plan elements':
           - plan_governing_entities_overview_table
       allowlisted_blocks:

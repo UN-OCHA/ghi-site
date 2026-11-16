@@ -5,9 +5,6 @@ namespace Drupal\ghi_templates\LayoutBuilder;
 use Drupal\Component\Serialization\Yaml;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\Core\Plugin\Context\EntityContext;
-use Drupal\Core\Render\Markup;
-use Drupal\ghi_blocks\Interfaces\ConfigValidationInterface;
 use Drupal\hpc_common\Helpers\ArrayHelper;
 use Drupal\layout_builder\Controller\LayoutRebuildTrait;
 use Drupal\layout_builder\LayoutBuilderHighlightTrait;
@@ -16,7 +13,7 @@ use Drupal\layout_builder\SectionStorageInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
- * Form for exporting page config.
+ * Form for importing page configuration.
  */
 class ImportPageConfigForm extends TemplateFormBase {
 
@@ -33,13 +30,6 @@ class ImportPageConfigForm extends TemplateFormBase {
   ];
 
   /**
-   * The block manager.
-   *
-   * @var \Drupal\Core\Block\BlockManagerInterface
-   */
-  protected $blockManager;
-
-  /**
    * Layout tempstore repository.
    *
    * @var \Drupal\layout_builder\LayoutTempstoreRepositoryInterface
@@ -51,7 +41,6 @@ class ImportPageConfigForm extends TemplateFormBase {
    */
   public static function create(ContainerInterface $container) {
     $instance = parent::create($container);
-    $instance->blockManager = $container->get('plugin.manager.block');
     $instance->layoutTempstoreRepository = $container->get('layout_builder.tempstore_repository');
     return $instance;
   }
@@ -64,7 +53,7 @@ class ImportPageConfigForm extends TemplateFormBase {
   }
 
   /**
-   * Builds the form for the block import.
+   * Builds the page configuration import form.
    *
    * @param array $form
    *   An associative array containing the structure of the form.
@@ -144,46 +133,11 @@ class ImportPageConfigForm extends TemplateFormBase {
   }
 
   /**
-   * Build the summary form where the code can be inserted.
+   * Builds the element selection and confirmation form.
    */
   private function confirmForm($form, FormStateInterface $form_state, ?EntityInterface $entity = NULL, ?SectionStorageInterface $section_storage = NULL) {
     $form_state->set('section_storage', $section_storage);
     $form_state->set('entity', $entity);
-    $page_config = $form_state->get('page_config');
-    $page_config = array_filter($page_config, function ($section) {
-      return !empty($section['components']);
-    });
-
-    $header = [
-      $this->t('Element type'),
-      $this->t('Label'),
-      $this->t('Configuration issues'),
-    ];
-
-    $rows = [];
-    foreach ($page_config as $section_key => $section) {
-      if (count($page_config) > 1) {
-        $rows[] = [
-          [
-            'data' => [
-              '#markup' => (string) Markup::create('<h2>' . $section['layout_settings']['label'] . '</h2>'),
-            ],
-            'colspan' => 2,
-          ],
-          '#disabled' => TRUE,
-        ];
-      }
-      foreach ($section['components'] as $component_key => $component) {
-        /** @var \Drupal\Core\Block\BlockBase $block */
-        $block = $this->blockManager->createInstance($component['configuration']['id'], $component['configuration']);
-        $block->setContext('entity', EntityContext::fromEntity($entity, $entity->type->entity->label()));
-        $rows[$section_key . '--' . $component_key] = [
-          $block->getPluginDefinition()['admin_label'],
-          $block->label() ?? $this->t('n/a'),
-          $block instanceof ConfigValidationInterface && !$block->validateConfiguration() ? Markup::create(implode('<br />', $block->getConfigErrors())) : '',
-        ];
-      }
-    }
 
     $form['settings']['explanation'] = [
       '#type' => 'markup',
@@ -194,19 +148,14 @@ class ImportPageConfigForm extends TemplateFormBase {
       '#type' => 'fieldset',
       '#title' => $this->t('Select the elements that you want to import.'),
     ];
-    $form['settings']['summary']['table'] = [
-      '#type' => 'tableselect',
-      '#header' => $header,
-      '#options' => $rows,
-      '#default_value' => array_map(function ($option) {
-        return TRUE;
-      }, $rows),
-      '#required' => TRUE,
-    ];
+    $form['settings']['summary']['table'] = $this->buildElementSelectionTable($form_state->get('page_config'), $entity, $section_storage);
 
     $form['actions']['back'] = [
       '#type' => 'submit',
       '#value' => $this->t('Back'),
+      // Core requires an explicit submit handler for limited validation.
+      '#limit_validation_errors' => [],
+      '#submit' => ['::submitForm'],
     ];
     $form['actions']['submit'] = [
       '#type' => 'submit',
@@ -229,13 +178,13 @@ class ImportPageConfigForm extends TemplateFormBase {
   }
 
   /**
-   * Get a previously submitted plugin configuration from the form state.
+   * Gets the submitted or stored YAML configuration.
    *
    * @param \Drupal\Core\Form\FormStateInterface $form_state
    *   The current state of the form.
    *
-   * @return array|null
-   *   The submitted or stored value.
+   * @return string|null
+   *   The submitted YAML or the stored configuration encoded as YAML.
    */
   private function getSubmittedConfig(FormStateInterface $form_state) {
     return $form_state->getValue('config') ?? ($form_state->get('config') ? Yaml::encode($form_state->get('config')) : NULL);
@@ -246,6 +195,10 @@ class ImportPageConfigForm extends TemplateFormBase {
    */
   public function validateForm(&$form, FormStateInterface $form_state) {
     $action = end($form_state->getTriggeringElement()['#parents']);
+    // Navigation must not re-parse input or validate an empty selection table.
+    if ($action === 'back') {
+      return;
+    }
     if ($action == 'submit') {
       return parent::validateForm($form, $form_state);
     }
@@ -274,8 +227,8 @@ class ImportPageConfigForm extends TemplateFormBase {
   public function submitForm(&$form, FormStateInterface $form_state) {
     $action = end($form_state->getTriggeringElement()['#parents']);
     if ($action == 'submit') {
-      // General idea: Setup the tempstore and redirect to the page in edit
-      // mode.
+      // Prepare the layout in tempstore. The AJAX callback refreshes the editor
+      // or redirects to the page when requested.
       $overwrite = (bool) $form_state->getValue('overwrite');
       $selected_elements = $form_state->getValue('table');
 

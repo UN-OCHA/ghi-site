@@ -2,8 +2,8 @@
  * Base component styles
  */
 .gho-further-reading {
-  margin: 6.75rem 0 0 0;
-  color: #1f1f1f;
+  margin: var(--ghi-section-spacing) 0 0 0;
+  color: var(--ghi-default-text-color);
 }
 
 /**
@@ -11,16 +11,16 @@
  */
 .gho-further-reading__title {
   max-width: var(--reading-width);
-  margin: 0 0 1.5rem 0;
-  color: #1f1f1f;
-  font-size: 1.25rem;
+  margin: 0 0 var(--ghi-heading-content-spacing) 0;
+  color: var(--ghi-default-text-color);
+  font-size: var(--cd-font-size--large);
   font-weight: 700;
-  line-height: 1.875rem;
+  line-height: 1.2;
 }
 
-@media (min-width: 1024px) {
+@media (min-width: 768px) {
   .gho-further-reading__title {
-    font-size: 1.5rem;
+    font-size: var(--cd-font-size--2xbase);
   }
 }
 
@@ -36,7 +36,7 @@
  */
 .gho-further-reading__link {
   position: relative; /* for SVG @see gho_fields/templates */
-  border-top: 1px solid #d8d8d8;
+  border-top: 1px solid var(--ghi-default-border-color);
   font-size: 0.875rem;
   line-height: 1.25rem;
 }
@@ -45,7 +45,7 @@
  * Style last link in list
  */
 .gho-further-reading__link:last-child {
-  border-bottom: 1px solid #d8d8d8;
+  border-bottom: 1px solid var(--ghi-default-border-color);
 }
 
 /**

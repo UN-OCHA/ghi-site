@@ -5,6 +5,7 @@
  * Contains hook implementations for the GHI Templates module.
  */
 
+use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Form\FormStateInterface;
@@ -56,6 +57,19 @@ function ghi_templates_preprocess_page(&$variables) {
     '#message' => t("This is a page template. It can be used to create new pages with a predefined set of page elements. You can edit it the same way as other pages and then apply it's structure to a destination page using the provided frontend controls. The page that you currently see will never be publicly available on it's own."),
   ];
   $variables['page']['help'] = ['message' => $message];
+  $source = $page_template->getSourceEntity();
+  if (!$source) {
+    $variables['page']['help']['source_missing'] = [
+      '#theme' => 'ghi_message',
+      '#message' => t('The source page no longer exists. You cannot add or import new elements into this template. Existing elements are retained and can still be edited, reordered or removed.'),
+    ];
+  }
+  $cacheability = CacheableMetadata::createFromObject($page_template);
+  if ($source) {
+    $cacheability->addCacheableDependency($source);
+  }
+  $cacheability->applyTo($variables['page']['help']);
+  $cacheability->applyTo($variables['page']['page_subtitle']);
 }
 
 /**
@@ -70,9 +84,8 @@ function ghi_templates_page_template_insert(PageTemplateInterface $entity) {
  */
 function ghi_templates_module_implements_alter(&$implementations, $hook) {
   if ($hook === 'layout_builder_view_context_alter') {
-    // Ensure that this module's implementation of hook_entity_view_alter() runs
-    // last so that other modules that use this hook to render extra fields will
-    // run before it.
+    // Run this context alter last so the template's source page and base-object
+    // contexts are added after other providers.
     $group = $implementations['ghi_templates'];
     unset($implementations['ghi_templates']);
     $implementations['ghi_templates'] = $group;

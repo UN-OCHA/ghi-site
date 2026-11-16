@@ -1,6 +1,6 @@
 .block-generic-document-link-button {
   button {
-    padding: 0.8rem 1.5rem 0.8rem 2.5rem;
+    padding: var(--cd-spacing--2) var(--cd-spacing--6) var(--cd-spacing--2) 2.5rem;
 
     &::before {
       left: 1rem;

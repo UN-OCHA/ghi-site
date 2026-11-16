@@ -1,12 +1,12 @@
 .gho-needs-and-requirements {
   padding-bottom: 2rem;
-  border-bottom: 1px solid #d8d8d8;
+  border-bottom: 1px solid var(--ghi-default-border-color);
 }
 .gho-needs-and-requirements-figure {
   padding: 2rem 0;
   border-width: 1px 0 0 0;
   border-style: solid;
-  border-color: #d8d8d8;
+  border-color: var(--ghi-default-border-color);
 }
 /* hide border-top when NaR immediately follows a Hero image caption */
 .gho-caption--article
@@ -36,7 +36,7 @@
     display: flex;
     justify-content: space-between;
     padding-top: 2rem;
-    border-top: 1px solid #d8d8d8;
+    border-top: 1px solid var(--ghi-default-border-color);
   }
   /* hide border-top when NaR immediately follows a Hero image caption */
   .gho-caption--article

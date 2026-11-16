@@ -4,6 +4,7 @@ namespace Drupal\ghi_blocks\Form;
 
 use Drupal\Core\Form\ConfigFormBase;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\hpc_common\Helpers\ThemeHelper;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -49,6 +50,7 @@ class TableSettingsForm extends ConfigFormBase {
   protected function getEditableConfigNames() {
     return [
       'ghi_blocks.table_settings',
+      'hpc_common.settings',
     ];
   }
 
@@ -59,6 +61,15 @@ class TableSettingsForm extends ConfigFormBase {
     $form = parent::buildForm($form, $form_state);
 
     $config = $this->config('ghi_blocks.table_settings');
+    $display_style = $this->config('hpc_common.settings')->get('numeric_display_style');
+    $display_style_options = ThemeHelper::getDisplayStyleOptions();
+    $form['numeric_display_style'] = [
+      '#type' => 'radios',
+      '#title' => $this->t('Numeric display style'),
+      '#description' => $this->t('Controls numeric formatting in custom page element tables.'),
+      '#options' => $display_style_options,
+      '#default_value' => array_key_exists($display_style, $display_style_options) ? $display_style : ThemeHelper::DISPLAY_STYLE_DEFAULT,
+    ];
     $form['scroll_indicator'] = [
       '#type' => 'checkbox',
       '#title' => $this->t('Use scroll indicator'),
@@ -72,6 +83,15 @@ class TableSettingsForm extends ConfigFormBase {
    * {@inheritdoc}
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
+    $display_style = $form_state->getValue('numeric_display_style');
+    $display_style_options = ThemeHelper::getDisplayStyleOptions();
+    if (!array_key_exists($display_style, $display_style_options)) {
+      $display_style = ThemeHelper::DISPLAY_STYLE_DEFAULT;
+    }
+    $this->config('hpc_common.settings')
+      ->set('numeric_display_style', $display_style)
+      ->save();
+
     $config = $this->config('ghi_blocks.table_settings');
     $config->set('scroll_indicator', $form_state->getValue('scroll_indicator'));
     $config->save();

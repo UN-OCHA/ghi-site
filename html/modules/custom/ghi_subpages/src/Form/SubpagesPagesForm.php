@@ -2,9 +2,11 @@
 
 namespace Drupal\ghi_subpages\Form;
 
+use Drupal\Component\Serialization\Json;
 use Drupal\Component\Utility\Html;
 use Drupal\Component\Utility\NestedArray;
 use Drupal\Core\Access\CsrfTokenGenerator;
+use Drupal\Core\Cache\Cache;
 use Drupal\Core\Datetime\DateFormatter;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
@@ -137,6 +139,7 @@ class SubpagesPagesForm extends FormBase {
   public function buildForm(array $form, FormStateInterface $form_state, ?NodeInterface $node = NULL) {
 
     $form['#attached']['library'][] = 'ghi_subpages/admin.subpages_form';
+    $form['#attached']['library'][] = 'core/drupal.dialog.ajax';
 
     /** @var \Drupal\ghi_sections\Entity\SectionNodeInterface $node */
     $node = $this->getBaseTypeNode($node);
@@ -173,38 +176,16 @@ class SubpagesPagesForm extends FormBase {
 
     // First create a table with the subpage types directly supported by this
     // module.
+    // Bulk creation selects missing bundles, while deletion selects node IDs;
+    // distinct prefixes prevent either action from interpreting the wrong row.
     foreach (SubpageManager::SUPPORTED_SUBPAGE_TYPES as $subpage_type) {
-      $subpages = $this->entityTypeManager->getStorage('node')->loadByProperties([
-        'type' => $subpage_type,
-        'field_entity_reference' => $node->id(),
-      ]);
-
-      $row = [];
-      $subpage_type_label = $this->entityTypeManager->getStorage('node_type')->load($subpage_type)->get('name');
-
-      if (count($subpages) && count($subpages) == 1) {
-        /** @var \Drupal\node\NodeInterface $subpage */
-        $subpage = reset($subpages);
-
-        /** @var \Drupal\taxonomy\Entity\Term $subpage_team */
-        $subpage_team = !$subpage->field_team->isEmpty() ? $subpage->field_team->entity : NULL;
-
-        $row[] = Link::createFromRoute($subpage_type_label, 'entity.node.canonical', ['node' => $subpage->id()]);
-        $row[] = $subpage->isPublished() ? $this->t('Published') : $this->t('Unpublished');
-        $row[] = $subpage_team ? $subpage_team->getName() : $section_team . ' (' . $this->t('Inherit from section') . ')';
-        $row[] = $this->dateFormatter->format($subpage->getCreatedTime(), 'custom', 'F j, Y h:ia');
-        $row[] = $this->dateFormatter->format($subpage->getChangedTime(), 'custom', 'F j, Y h:ia');
-        $row[] = $this->getOperationLinks($subpage, $node);
-        $rows[$subpage->id()] = $row;
+      $subpage_type_label = (string) $this->entityTypeManager->getStorage('node_type')->load($subpage_type)->get('name');
+      $subpage = $this->subpageManager->loadStandardSubpage($node, $subpage_type);
+      if ($subpage) {
+        $rows['node:' . $subpage->id()] = $this->buildExistingStandardSubpageRow($subpage, $node, $subpage_type_label, $section_team);
+        continue;
       }
-      elseif (empty($subpages)) {
-        $row[] = $subpage_type_label;
-        $row[] = $this->t('Missing');
-        $row[] = '';
-        $row[] = '';
-        $row[] = '';
-        $rows[] = $row;
-      }
+      $rows['bundle:' . $subpage_type] = $this->buildMissingStandardSubpageRow($node, $subpage_type, $subpage_type_label);
     }
 
     $form['subpages_header'] = [
@@ -323,41 +304,163 @@ class SubpagesPagesForm extends FormBase {
   }
 
   /**
+   * Builds the table row for an existing standard subpage.
+   */
+  private function buildExistingStandardSubpageRow(NodeInterface $subpage, NodeInterface $section, string $label, string $section_team): array {
+    /** @var \Drupal\taxonomy\Entity\Term|null $subpage_team */
+    $subpage_team = !$subpage->field_team->isEmpty() ? $subpage->field_team->entity : NULL;
+
+    return [
+      Link::createFromRoute($label, 'entity.node.canonical', ['node' => $subpage->id()]),
+      $subpage->isPublished() ? $this->t('Published') : $this->t('Unpublished'),
+      $subpage_team ? $subpage_team->getName() : $section_team . ' (' . $this->t('Inherit from section') . ')',
+      $this->dateFormatter->format($subpage->getCreatedTime(), 'custom', 'F j, Y h:ia'),
+      $this->dateFormatter->format($subpage->getChangedTime(), 'custom', 'F j, Y h:ia'),
+      $this->getOperationLinks($subpage, $section),
+    ];
+  }
+
+  /**
+   * Builds the table row for a standard subpage that has not been created.
+   */
+  private function buildMissingStandardSubpageRow(SectionNodeInterface $section, string $bundle, string $label): array {
+    $can_create = $this->subpageManager->getStandardSubpageCreateAccess($section, $bundle, $this->currentUser)->isAllowed();
+    $row = [
+      $label,
+      $this->t('Not yet created'),
+      '',
+      '',
+      '',
+      $can_create ? [
+        'data' => [
+          '#type' => 'dropbutton',
+          '#links' => [
+            'create' => [
+              'title' => $this->t('Create'),
+              'url' => Url::fromRoute('ghi_subpages.node.pages.create', [
+                'node' => $section->id(),
+                'bundle' => $bundle,
+              ], $this->getConfirmModalLinkOptions()),
+            ],
+          ],
+          '#attributes' => [
+            'class' => ['dropbutton--extrasmall'],
+          ],
+        ],
+      ] : '',
+    ];
+    if (!$can_create) {
+      $row['#disabled'] = TRUE;
+    }
+    return $row;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function validateForm(array &$form, FormStateInterface $form_state) {
+    $trigger = $form_state->getTriggeringElement()['#name'] ?? '';
+    if ($trigger !== 'bulk_submit') {
+      return;
+    }
+    $action = $form_state->getValue('action');
+    if (!in_array($action, ['create', 'delete'], TRUE)) {
+      return;
+    }
+    $section = $form['#node'];
+    if (!$this->subpageManager->getStructureAccess($section, $this->currentUser)->isAllowed()) {
+      $form_state->setErrorByName('subpages_standard', $this->t('You cannot change the page structure.'));
+      return;
+    }
+    $selected = $this->getSelectedRows($form_state);
+    if (!$selected) {
+      $form_state->setErrorByName('subpages_standard', $this->t('Select at least one page.'));
+      return;
+    }
+    // Submitted row IDs may be stale or tampered with, so verify every choice
+    // against this section before creating or deleting its pages.
+    foreach ($selected as $item) {
+      if ($action === 'create') {
+        $bundle = str_starts_with($item, 'bundle:') ? substr($item, 7) : NULL;
+        if (!$bundle || !$this->subpageManager->getStandardSubpageCreateAccess($section, $bundle, $this->currentUser)->isAllowed() || $this->subpageManager->loadStandardSubpage($section, $bundle)) {
+          $form_state->setErrorByName('subpages_standard', $this->t('A selected page cannot be created.'));
+          return;
+        }
+      }
+      else {
+        $id = str_starts_with($item, 'node:') ? substr($item, 5) : NULL;
+        $child = $id && ctype_digit($id) ? $this->entityTypeManager->getStorage('node')->load((int) $id) : NULL;
+        if (!$child || !$this->subpageManager->getStandardSubpageDeleteAccess($child, $section, $this->currentUser)->isAllowed()) {
+          $form_state->setErrorByName('subpages_standard', $this->t('A selected page cannot be deleted.'));
+          return;
+        }
+      }
+    }
+  }
+
+  /**
    * {@inheritdoc}
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
-    if ($form_state->getTriggeringElement()['#name'] != 'bulk_submit') {
+    $trigger = $form_state->getTriggeringElement()['#name'] ?? '';
+    if ($trigger !== 'bulk_submit') {
       return;
     }
     $action = $form_state->getValue('action');
     if (!array_key_exists($action, $this->getBulkFormActions())) {
       return;
     }
-    $values = $form_state->getValues();
-    $node_ids = [];
-    foreach ($values as $key => $subpages_values) {
-      if (strpos($key, 'subpages_') !== 0) {
-        continue;
-      }
-      $node_ids = $node_ids + array_filter($subpages_values);
-    }
-    if (empty($node_ids)) {
+    $selected = $this->getSelectedRows($form_state);
+    if (!$selected) {
       return;
     }
-    /** @var \Drupal\node\NodeInterface[] $nodes */
-    $nodes = $this->entityTypeManager->getStorage('node')->loadMultiple(array_keys($node_ids));
+    // Drupal may inherit a content-admin destination, which would override
+    // our redirects to this listing or its delete confirmation.
+    $section = $form['#node'];
+    if ($action === 'create') {
+      $bundles = array_map(static fn (string $item): string => substr($item, 7), $selected);
+      $results = $this->subpageManager->createStandardSubpages($section, $bundles);
+      foreach (array_keys($results['created']) as $bundle) {
+        $this->messenger()->addStatus($this->t('Created @type subpage.', ['@type' => $bundle]));
+      }
+      foreach (array_keys($results['failed']) as $bundle) {
+        $this->messenger()->addError($this->t('Could not create @type subpage.', ['@type' => $bundle]));
+      }
+      Cache::invalidateTags($section->getCacheTags());
+      $form_state->setIgnoreDestination();
+      $form_state->setRedirect('ghi_subpages.node.pages', ['node' => $section->id()]);
+      return;
+    }
+    if ($action === 'delete') {
+      $ids = array_map(static fn (string $item): string => substr($item, 5), $selected);
+      $form_state->setIgnoreDestination();
+      $form_state->setRedirect('ghi_subpages.node.pages.delete', [
+        'node' => $section->id(),
+        'subpages' => implode(',', $ids),
+      ]);
+      return;
+    }
+    $node_ids = array_map(static fn (string $item): int => (int) (str_starts_with($item, 'node:') ? substr($item, 5) : $item), $selected);
+    $nodes = $this->entityTypeManager->getStorage('node')->loadMultiple($node_ids);
     foreach ($nodes as $node) {
-      if ($action == 'publish') {
-        $node->setPublished();
-      }
-      if ($action == 'unpublish') {
-        $node->setUnpublished();
-      }
+      $action === 'publish' ? $node->setPublished() : $node->setUnpublished();
       $node->save();
     }
-
-    // Stay on the subpages form page.
+    Cache::invalidateTags($section->getCacheTags());
     $form_state->setIgnoreDestination();
+  }
+
+  /**
+   * Returns selected row identifiers from all subpage tables.
+   */
+  protected function getSelectedRows(FormStateInterface $form_state): array {
+    $selected = [];
+    foreach ($form_state->getValues() as $key => $values) {
+      if (str_starts_with($key, 'subpages_') && is_array($values)) {
+        $selected = array_merge($selected, array_values(array_filter($values)));
+      }
+    }
+    return array_map('strval', $selected);
   }
 
   /**
@@ -452,6 +555,7 @@ class SubpagesPagesForm extends FormBase {
     $token = $this->csrfToken->get('node/' . $subpage->id() . '/toggleStatus');
 
     $destination = $this->redirectDestination->getAsArray();
+    $pages_destination = Url::fromRoute('ghi_subpages.node.pages', ['node' => $section->id()])->toString();
 
     if ($subpage->access('view')) {
       $links['view'] = [
@@ -475,11 +579,22 @@ class SubpagesPagesForm extends FormBase {
       $options = [
         'query' => [
           'token' => $token,
-        ] + $destination,
+          'destination' => $pages_destination,
+        ],
       ];
       $links['toggle_status'] = [
         'title' => $subpage->isPublished() ? $this->t('Unpublish') : $this->t('Publish'),
         'url' => Url::fromRoute('entity.node.publish', $route_args, $options),
+      ];
+    }
+
+    if ($section instanceof SectionNodeInterface && $this->subpageManager->getStandardSubpageDeleteAccess($subpage, $section, $this->currentUser)->isAllowed()) {
+      $links['delete_structure'] = [
+        'title' => $this->t('Delete'),
+        'url' => Url::fromRoute('ghi_subpages.node.pages.delete', [
+          'node' => $section->id(),
+          'subpages' => $subpage->id(),
+        ], $this->getConfirmModalLinkOptions()),
       ];
     }
 
@@ -499,16 +614,34 @@ class SubpagesPagesForm extends FormBase {
   }
 
   /**
+   * Opens structural confirmation forms as accessible Drupal modals.
+   */
+  private function getConfirmModalLinkOptions(): array {
+    return [
+      'attributes' => [
+        'class' => ['use-ajax'],
+        'data-dialog-type' => 'modal',
+        'data-dialog-options' => Json::encode(['width' => 500]),
+      ],
+    ];
+  }
+
+  /**
    * Get the bulk form actions.
    *
    * @return array
    *   An array of action key - label pairs.
    */
   private function getBulkFormActions() {
-    return [
+    $actions = [
       'publish' => $this->t('Publish'),
       'unpublish' => $this->t('Unpublish'),
     ];
+    if ($this->currentUser->hasPermission(SubpageManager::MANAGE_STRUCTURE_PERMISSION)) {
+      $actions['create'] = $this->t('Create selected');
+      $actions['delete'] = $this->t('Delete selected');
+    }
+    return $actions;
   }
 
 }

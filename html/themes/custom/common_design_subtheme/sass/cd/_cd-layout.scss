@@ -5,13 +5,13 @@
 
 .cd-page-layout-container {
   display: grid;
-  grid-template-columns: minmax(0, 1fr);
   grid-template-areas:
     "header"
     "highlighted"
     "main"
     "soft-footer"
     "footer";
+  grid-template-columns: minmax(0, 1fr);
 
   @supports (display: grid) {
     @include tablet {

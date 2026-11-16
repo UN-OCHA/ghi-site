@@ -104,6 +104,7 @@ class PlanCaseloadTrendsTableTest extends PlanBlockKernelTestBase {
     // is not entirely mocked.
     $coverage_cell = $table_data['rows'][0]['coverage'];
     $this->assertEquals('hpc_percent', $coverage_cell['data']['#theme']);
+    $this->assertTrue($coverage_cell['data']['#table_cell']);
     $this->assertEquals(0.0, $coverage_cell['data']['#percent']);
     $this->assertEquals(0.0, $coverage_cell['data-raw-value']);
     $this->assertEquals('percentage', $coverage_cell['data-column-type']);

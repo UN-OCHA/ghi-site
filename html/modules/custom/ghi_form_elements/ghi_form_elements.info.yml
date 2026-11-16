@@ -10,5 +10,6 @@ dependencies:
   - entity_browser:entity_browser
   - entity_browser_table:entity_browser_table
   - hpc_api:hpc_api
+  - hpc_common:hpc_common
   - ghi_plans:ghi_plans
   - active_tags:active_tags

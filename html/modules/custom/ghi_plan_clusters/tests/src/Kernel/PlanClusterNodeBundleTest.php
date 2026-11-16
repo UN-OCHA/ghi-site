@@ -75,7 +75,7 @@ class PlanClusterNodeBundleTest extends KernelTestBase {
     $this->installEntitySchema('path_alias');
     $this->installSchema('system', 'sequences');
     $this->installSchema('node', ['node_access']);
-    $this->installConfig(['system', 'node', 'field', 'pathauto']);
+    $this->installConfig(['system', 'node', 'field', 'pathauto', 'ghi_subpages']);
 
     $this->entityTypeManager = $this->container->get('entity_type.manager');
     $this->planClusterManager = $this->container->get('ghi_plan_clusters.manager');

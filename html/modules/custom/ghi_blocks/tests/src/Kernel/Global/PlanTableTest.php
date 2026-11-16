@@ -92,6 +92,25 @@ class PlanTableTest extends PlanBlockKernelTestBase {
   }
 
   /**
+   * Tests the global numeric style is a render-cache dependency.
+   */
+  public function testBlockBuildIncludesNumericDisplayStyleCacheTag(): void {
+    $plugin = $this->getBlockPlugin();
+    $this->mockPlanOverviewQuery($plugin, [$this->mockPlan()->reveal()]);
+
+    $build = $plugin->doBuildContent([
+      '#attributes' => [],
+      '#theme_wrappers' => [
+        'container' => [
+          '#attributes' => [],
+        ],
+      ],
+    ]);
+
+    $this->assertContains('config:hpc_common.settings', $build['#cache']['tags']);
+  }
+
+  /**
    * Tests the buildTableData method with empty plans.
    */
   public function testBuildTableDataWithEmptyPlans() {
@@ -120,6 +139,8 @@ class PlanTableTest extends PlanBlockKernelTestBase {
     $this->assertArrayHasKey('header', $table_data);
     $this->assertArrayHasKey('rows', $table_data);
     $this->assertArrayHasKey('cache_tags', $table_data);
+    $row = reset($table_data['rows']);
+    $this->assertTrue($row['inneed']['data'][0]['#table_cell']);
   }
 
   /**

@@ -10,6 +10,11 @@ GHI is a Drupal 10+ site built on the OCHA Common Design base theme. It uses:
 - **Build System**: Docksal (Docker-based development environment)
 - **Package Management**: Composer (PHP), npm (Node.js)
 
+## Localization
+
+- Use English source strings for custom admin/backend-only actions. Do not add French or Spanish translations for those action strings in PO files or language-specific configuration unless explicitly requested. This exception does not apply to public-facing strings.
+- Do not assume the admin interface is technically English-only: `config/language.types.yml` enables URL-based interface-language negotiation, and `config/language.negotiation.yml` maps `/fr` and `/es` prefixes. Those prefixes can select another interface language on admin routes.
+
 ## Build / Lint / Test Commands
 
 ### Environment Setup

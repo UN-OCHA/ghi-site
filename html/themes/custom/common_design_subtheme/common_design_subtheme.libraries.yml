@@ -115,14 +115,10 @@ ghi-tab-container:
       components/ghi-tab-container/ghi-tab-container.css: {}
   js:
     components/ghi-tab-container/ghi-tab-container.js: {}
-ghi-link-carousel:
+ghi-link-carousel-feature:
   css:
     theme:
-      components/ghi-link-carousel/ghi-link-carousel.css: {}
-  js:
-    components/ghi-link-carousel/ghi-link-carousel.js: {}
-  dependencies:
-    - common_design_subtheme/swiper
+      components/ghi-link-carousel/ghi-link-carousel-feature.css: {}
 ghi-scrollable-table:
   css:
     theme:

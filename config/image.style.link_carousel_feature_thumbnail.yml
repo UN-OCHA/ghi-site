@@ -1,0 +1,27 @@
+uuid: 876e1814-e1c5-423e-95bc-23184553280d
+langcode: en
+status: true
+dependencies:
+  config:
+    - crop.type.16x9
+  module:
+    - crop
+name: link_carousel_feature_thumbnail
+label: 'Link carousel feature thumbnail'
+effects:
+  726ed6d3-2943-44cf-82c5-a68adb0333c2:
+    uuid: 726ed6d3-2943-44cf-82c5-a68adb0333c2
+    id: crop_crop
+    weight: -10
+    data:
+      crop_type: 16x9
+      automatic_crop_provider: null
+  e66179b0-15f1-41ec-bd2d-5ea11f92fb71:
+    uuid: e66179b0-15f1-41ec-bd2d-5ea11f92fb71
+    id: image_scale_and_crop
+    weight: 3
+    data:
+      width: 140
+      height: 79
+      anchor: center-center
+pipeline: __default__

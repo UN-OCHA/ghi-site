@@ -629,8 +629,12 @@ abstract class GHIBlockBase extends HPCBlockBase implements TrustedCallbackInter
    */
   private function collectRenderArrayCacheTags(array $build): array {
     $cache_tags = $build['#cache']['tags'] ?? [];
-    foreach (Element::children($build) as $child) {
-      $cache_tags = Cache::mergeTags($cache_tags, $this->collectRenderArrayCacheTags($build[$child]));
+    // Render arrays can be nested in properties such as table #rows, which
+    // are intentionally excluded by Element::children().
+    foreach ($build as $value) {
+      if (is_array($value)) {
+        $cache_tags = Cache::mergeTags($cache_tags, $this->collectRenderArrayCacheTags($value));
+      }
     }
     return $cache_tags;
   }

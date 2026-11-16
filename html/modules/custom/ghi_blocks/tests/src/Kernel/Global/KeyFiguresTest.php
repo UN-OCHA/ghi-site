@@ -124,9 +124,11 @@ class KeyFiguresTest extends PlanBlockKernelTestBase {
     ]);
 
     $attributes = $item_type->getDataAttributes();
+    $render = $item_type->getRenderArray();
     $this->assertEquals('plan_overview_data', $attributes['data-item-type']);
     $this->assertEquals(100, $attributes['data-raw-value']);
     $this->assertEquals('people_in_need', $attributes['data-value-type']);
+    $this->assertArrayNotHasKey('#table_cell', $render);
   }
 
   /**

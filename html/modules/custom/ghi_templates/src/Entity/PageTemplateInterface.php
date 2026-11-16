@@ -18,6 +18,20 @@ interface PageTemplateInterface extends ContentEntityInterface, EntityChangedInt
   public function setupTemplate();
 
   /**
+   * Supplies a transient source layout snapshot before the first entity save.
+   *
+   * Without a snapshot, creation uses the source page's saved layout. Sections
+   * and components are cloned so subsequent source edits cannot change it. The
+   * snapshot is consumed during creation and is not persisted as entity data.
+   *
+   * @param \Drupal\layout_builder\Section[] $sections
+   *   The source sections, including any unsaved Layout Builder changes.
+   *
+   * @return $this
+   */
+  public function setSourceSections(array $sections): static;
+
+  /**
    * Get the source entity.
    *
    * @return \Drupal\Core\Entity\ContentEntityInterface|null

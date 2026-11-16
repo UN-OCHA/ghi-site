@@ -1,0 +1,16 @@
+# Spanish translation of Humanitarian Action - GHI Blocks.
+
+msgid ""
+msgstr ""
+"Project-Id-Version: GHI Blocks\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: es\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+msgid "(opens in a new tab)"
+msgstr "(se abre en una pestaña nueva)"
+
+msgid "Image information"
+msgstr "Información de la imagen"

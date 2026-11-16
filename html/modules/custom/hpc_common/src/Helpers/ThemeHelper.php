@@ -3,6 +3,7 @@
 namespace Drupal\hpc_common\Helpers;
 
 use Drupal\Component\Utility\Xss;
+use Drupal\Core\Cache\Cache;
 
 /**
  * Helper class for theming.
@@ -22,6 +23,18 @@ class ThemeHelper {
    */
   const DECIMALS_POINT = 'point';
   const DECIMALS_COMMA = 'comma';
+
+  /**
+   * Define display styles for formatted numeric values.
+   */
+  const DISPLAY_STYLE_STANDARD = 'standard';
+  const DISPLAY_STYLE_COMPACT = 'compact';
+  const DISPLAY_STYLE_DEFAULT = self::DISPLAY_STYLE_COMPACT;
+
+  /**
+   * The cache tag for the global numeric display style configuration.
+   */
+  private const DISPLAY_STYLE_CACHE_TAG = 'config:hpc_common.settings';
 
   /**
    * Simple wrapper around the render layer.
@@ -77,7 +90,7 @@ class ThemeHelper {
   public static function getThemeOptions($theme_function, $value, array $options = []) {
     switch ($theme_function) {
       case 'hpc_amount':
-        return [
+        $theme_options = [
           '#theme' => $theme_function,
           '#amount' => $value,
           '#scale' => !empty($options['scale']) ? $options['scale'] : 'auto',
@@ -85,9 +98,10 @@ class ThemeHelper {
           // If not specified, use the defaults from hpc_common_theme().
           '#decimals' => !empty($options['decimals']) ? $options['decimals'] : 0,
         ];
+        break;
 
       case 'hpc_currency':
-        return [
+        $theme_options = [
           '#theme' => $theme_function,
           '#value' => $value,
           '#scale' => !empty($options['scale']) ? $options['scale'] : 'auto',
@@ -95,6 +109,7 @@ class ThemeHelper {
           // If not specified, use the defaults from hpc_common_theme().
           '#decimals' => !empty($options['decimals']) ? $options['decimals'] : NULL,
         ];
+        break;
 
       case 'hpc_percent':
         $theme_options = [
@@ -105,18 +120,72 @@ class ThemeHelper {
         if (!empty($options['compact_precision'])) {
           $theme_options['#compact_precision'] = TRUE;
         }
-        return $theme_options;
+        break;
 
       case 'hpc_progress_bar':
-        return [
+        $theme_options = [
           '#theme' => $theme_function,
           '#percent' => $value,
           '#hide_value' => !empty($options['hide_value']) ? $options['hide_value'] : FALSE,
         ];
+        break;
 
       default:
         throw new \InvalidArgumentException(sprintf('Unknown theme function "%s"', $theme_function));
     }
+
+    if (!empty($options['table_cell'])) {
+      $theme_options = self::markTableNumberFormatting($theme_options);
+    }
+    return $theme_options;
+  }
+
+  /**
+   * Apply table number formatting to nested numeric render arrays.
+   *
+   * Configuration items can wrap their numeric value in containers, links,
+   * and tooltips, so the marker must be applied recursively.
+   *
+   * @param array $build
+   *   A render array or nested table-cell structure.
+   *
+   * @return array
+   *   The structure with numeric render arrays marked as table-cell output.
+   */
+  public static function applyTableNumberFormatting(array $build): array {
+    $numeric_themes = [
+      'hpc_amount',
+      'hpc_autoformat_value',
+      'hpc_currency',
+      'hpc_percent',
+      'hpc_pie_chart',
+      'hpc_progress_bar',
+    ];
+    if (isset($build['#theme']) && in_array($build['#theme'], $numeric_themes, TRUE)) {
+      $build = self::markTableNumberFormatting($build);
+    }
+
+    foreach ($build as $key => $value) {
+      if (is_array($value)) {
+        $build[$key] = self::applyTableNumberFormatting($value);
+      }
+    }
+    return $build;
+  }
+
+  /**
+   * Mark a numeric render array as globally configured table output.
+   *
+   * @param array $build
+   *   The numeric render array.
+   *
+   * @return array
+   *   The render array with its table marker and configuration cache tag.
+   */
+  private static function markTableNumberFormatting(array $build): array {
+    $build['#table_cell'] = TRUE;
+    $build['#cache']['tags'] = Cache::mergeTags($build['#cache']['tags'] ?? [], [self::DISPLAY_STYLE_CACHE_TAG]);
+    return $build;
   }
 
   /**
@@ -142,6 +211,62 @@ class ThemeHelper {
     }
 
     return $suffix;
+  }
+
+  /**
+   * Get the available numeric display styles.
+   *
+   * @return array
+   *   The display style options.
+   */
+  public static function getDisplayStyleOptions(): array {
+    return [
+      self::DISPLAY_STYLE_STANDARD => t('Standard'),
+      self::DISPLAY_STYLE_COMPACT => t('Compact'),
+    ];
+  }
+
+  /**
+   * Get the globally configured numeric display style.
+   *
+   * @return string
+   *   The configured display style.
+   */
+  public static function getDisplayStyle(): string {
+    if (!\Drupal::hasService('config.factory')) {
+      return self::DISPLAY_STYLE_DEFAULT;
+    }
+
+    $display_style = \Drupal::config('hpc_common.settings')->get('numeric_display_style');
+    return in_array($display_style, [self::DISPLAY_STYLE_STANDARD, self::DISPLAY_STYLE_COMPACT], TRUE) ? $display_style : self::DISPLAY_STYLE_DEFAULT;
+  }
+
+  /**
+   * Check whether the global numeric display style is compact.
+   *
+   * @return bool
+   *   TRUE when compact formatting should be used.
+   */
+  public static function isCompactDisplayStyle(): bool {
+    return self::getDisplayStyle() === self::DISPLAY_STYLE_COMPACT;
+  }
+
+  /**
+   * Get the suffix used by the compact display style.
+   *
+   * @param string $scale
+   *   The numeric scale.
+   *
+   * @return string
+   *   The compact suffix.
+   */
+  public static function getCompactNumberSuffix(string $scale): string {
+    return match ($scale) {
+      self::SCALE_THOUSAND => 'k',
+      self::SCALE_MILLION => 'M',
+      self::SCALE_BILLION => 'B',
+      default => '',
+    };
   }
 
   /**

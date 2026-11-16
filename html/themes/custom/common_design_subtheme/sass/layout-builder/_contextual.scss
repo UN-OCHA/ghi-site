@@ -44,7 +44,7 @@
         padding-left: 20px;
         color: var(--gin-border-color-form-element) !important;
         background-color: transparent !important;
-        font-size: 0.75em !important;
+        font-size: var(--cd-font-size--small) !important;
         line-height: 19px;
 
         &:focus,

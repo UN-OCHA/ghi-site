@@ -7,6 +7,7 @@ use Drupal\Tests\ghi_base_objects\Traits\FieldTestTrait;
 use Drupal\Tests\ghi_sections\Traits\SectionTestTrait;
 use Drupal\Tests\ghi_teams\Traits\TeamTestTrait;
 use Drupal\Tests\node\Traits\ContentTypeCreationTrait;
+use Drupal\ghi_subpages\SubpageManager;
 
 /**
  * Provides methods to create subpages in tests.
@@ -21,13 +22,21 @@ trait SubpageTestTrait {
   use FieldTestTrait;
   use EntityReferenceFieldCreationTrait;
 
-  const SUBPAGE_BUNDLES = [
+  /**
+   * Subpage bundles provisioned for plans through 2026.
+   */
+  const LEGACY_SUBPAGE_BUNDLES = [
     'population',
     'financials',
     'presence',
     'logframe',
     'progress',
   ];
+
+  /**
+   * All standard subpage bundles supported by the module.
+   */
+  const SUBPAGE_BUNDLES = SubpageManager::SUPPORTED_SUBPAGE_TYPES;
 
   /**
    * Create the content types for testing subpages.

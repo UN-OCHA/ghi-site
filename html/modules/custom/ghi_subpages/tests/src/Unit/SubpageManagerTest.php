@@ -8,6 +8,7 @@ use Drupal\Core\Entity\EntityTypeBundleInfoInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Field\EntityReferenceFieldItemListInterface;
+use Drupal\Core\Lock\LockBackendInterface;
 use Drupal\Core\Messenger\MessengerInterface;
 use Drupal\Core\Render\RendererInterface;
 use Drupal\Core\Session\AccountProxyInterface;
@@ -111,6 +112,7 @@ class SubpageManagerTest extends UnitTestCase {
     $renderer = $this->prophesize(RendererInterface::class);
     $current_user = $this->prophesize(AccountProxyInterface::class);
     $messenger = $this->prophesize(MessengerInterface::class);
+    $lock = $this->prophesize(LockBackendInterface::class);
 
     $container = new ContainerBuilder();
     $container->set('module_handler', $module_handler->reveal());
@@ -120,6 +122,7 @@ class SubpageManagerTest extends UnitTestCase {
     $container->set('renderer', $renderer->reveal());
     $container->set('current_user', $current_user->reveal());
     $container->set('messenger', $messenger->reveal());
+    $container->set('lock', $lock->reveal());
     \Drupal::setContainer($container);
 
     $this->subpageManager = SubpageManager::create($container);
@@ -131,6 +134,60 @@ class SubpageManagerTest extends UnitTestCase {
   public function testGetStandardSubpageTypes() {
     $subpage_types = $this->subpageManager->getStandardSubpageTypes();
     $this->assertEquals(['population'], $subpage_types);
+  }
+
+  /**
+   * Tests that bulk creation skips subpages that already exist.
+   */
+  public function testCreateStandardSubpagesSkipsExistingSubpage(): void {
+    $section = $this->createMock(SectionNodeInterface::class);
+    $subpage = $this->createMock(NodeInterface::class);
+    $manager = $this->getMockBuilder(SubpageManager::class)
+      ->disableOriginalConstructor()
+      ->onlyMethods(['loadStandardSubpage', 'createStandardSubpage'])
+      ->getMock();
+    $manager->expects($this->once())
+      ->method('loadStandardSubpage')
+      ->with($section, 'needs')
+      ->willReturn($subpage);
+    $manager->expects($this->never())
+      ->method('createStandardSubpage');
+
+    $this->assertSame([
+      'created' => [],
+      'existing' => ['needs' => $subpage],
+      'failed' => [],
+    ], $manager->createStandardSubpages($section, ['needs']));
+  }
+
+  /**
+   * Tests identifying a direct standard subpage of a section.
+   */
+  public function testIsStandardSubpageForSection(): void {
+    $section = $this->prophesize(SectionNodeInterface::class);
+    $section->id()->willReturn(42);
+
+    $reference = $this->prophesize(EntityReferenceFieldItemListInterface::class);
+    $reference->addMethodProphecy((new MethodProphecy($reference, '__get', ['target_id']))->willReturn(42));
+    $subpage = $this->prophesize(NodeInterface::class);
+    $subpage->bundle()->willReturn('population');
+    $subpage->hasField('field_entity_reference')->willReturn(TRUE);
+    $subpage->get('field_entity_reference')->willReturn($reference->reveal());
+
+    $this->assertTrue($this->subpageManager->isStandardSubpageForSection($subpage->reveal(), $section->reveal()));
+
+    $other_section = $this->prophesize(SectionNodeInterface::class);
+    $other_section->id()->willReturn(43);
+    $this->assertFalse($this->subpageManager->isStandardSubpageForSection($subpage->reveal(), $other_section->reveal()));
+
+    $custom_subpage = $this->prophesize(NodeInterface::class);
+    $custom_subpage->bundle()->willReturn('custom_subpage');
+    $this->assertFalse($this->subpageManager->isStandardSubpageForSection($custom_subpage->reveal(), $section->reveal()));
+
+    $unlinked_subpage = $this->prophesize(NodeInterface::class);
+    $unlinked_subpage->bundle()->willReturn('population');
+    $unlinked_subpage->hasField('field_entity_reference')->willReturn(FALSE);
+    $this->assertFalse($this->subpageManager->isStandardSubpageForSection($unlinked_subpage->reveal(), $section->reveal()));
   }
 
   /**
