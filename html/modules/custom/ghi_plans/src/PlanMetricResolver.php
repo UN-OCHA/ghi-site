@@ -130,8 +130,9 @@ class PlanMetricResolver {
         'requirements' => $requirements,
         'original_requirements' => $plan->getOriginalRequirements(),
       ], fn ($value) => $value !== NULL);
+      $source_values_available = !empty($values);
       $values += $this->getFtsFundingValues($plan);
-      $resolved[$plan_id] = new PlanMetricValues(Plan::DATA_SOURCE_PLAN, $values, $caseloads, $cache_tags);
+      $resolved[$plan_id] = new PlanMetricValues(Plan::DATA_SOURCE_PLAN, $values, $caseloads, $cache_tags, $source_values_available);
     }
     return $resolved;
   }
@@ -154,8 +155,9 @@ class PlanMetricResolver {
       // Funding is authoritative in FTS even if Fabric exposes a GHO fact with
       // the same metric name. Never treat that fact as a fallback.
       unset($values['funding'], $values['outside_funding']);
+      $source_values_available = !empty($values);
       $values += $this->getFtsFundingValues($plan);
-      $resolved[$plan_id] = new PlanMetricValues(Plan::DATA_SOURCE_GHO, $values, cacheTags: ['plan_id:' . $plan_id]);
+      $resolved[$plan_id] = new PlanMetricValues(Plan::DATA_SOURCE_GHO, $values, cacheTags: ['plan_id:' . $plan_id], sourceValuesAvailable: $source_values_available);
     }
     return $resolved;
   }

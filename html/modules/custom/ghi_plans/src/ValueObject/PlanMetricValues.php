@@ -25,8 +25,11 @@ final class PlanMetricValues {
    *   configured caseload overrides.
    * @param string[] $cacheTags
    *   Cache tags for the source data used to build these values.
+   * @param bool|null $sourceValuesAvailable
+   *   Whether the selected source supplied values before source-independent
+   *   metrics were added. NULL infers availability from the complete set.
    */
-  public function __construct(private readonly string $source, private readonly array $values = [], private readonly array $caseloads = [], private readonly array $cacheTags = []) {
+  public function __construct(private readonly string $source, private readonly array $values = [], private readonly array $caseloads = [], private readonly array $cacheTags = [], private readonly ?bool $sourceValuesAvailable = NULL) {
   }
 
   /**
@@ -55,6 +58,16 @@ final class PlanMetricValues {
    */
   public function getValues(): array {
     return $this->values;
+  }
+
+  /**
+   * Checks whether the selected plan metric source supplied any values.
+   *
+   * This excludes source-independent values such as canonical FTS funding
+   * when the resolver explicitly records availability.
+   */
+  public function hasSourceValues(): bool {
+    return $this->sourceValuesAvailable ?? !empty($this->values);
   }
 
   /**

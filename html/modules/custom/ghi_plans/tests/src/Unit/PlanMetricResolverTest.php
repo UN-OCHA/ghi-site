@@ -61,6 +61,7 @@ class PlanMetricResolverTest extends UnitTestCase {
     $this->assertSame(550000.0, $values->get('original_requirements'));
     $this->assertSame(250000.0, $values->get('funding'));
     $this->assertSame(50000.0, $values->get('outside_funding'));
+    $this->assertTrue($values->hasSourceValues());
     $this->assertSame([100 => $caseload], $values->getCaseloads());
     $this->assertSame(['plan_id:10', 'attachment_id:100'], $values->getCacheTags());
   }
@@ -128,6 +129,7 @@ class PlanMetricResolverTest extends UnitTestCase {
     $this->assertFalse($values->has('target'));
     $this->assertSame(250000.0, $values->get('funding'));
     $this->assertSame(50000.0, $values->get('outside_funding'));
+    $this->assertTrue($values->hasSourceValues());
     $this->assertSame(['plan_id:10'], $values->getCacheTags());
   }
 
@@ -236,6 +238,27 @@ class PlanMetricResolverTest extends UnitTestCase {
 
     $this->assertFalse($values->has('funding'));
     $this->assertFalse($values->has('outside_funding'));
+    $this->assertFalse($values->hasSourceValues());
+  }
+
+  /**
+   * Tests that canonical FTS funding is not treated as GHO source data.
+   */
+  public function testGhoSourceAvailabilityExcludesFtsFunding(): void {
+    $attachment_query = $this->createMock(AttachmentQuery::class);
+    $prototype_query = $this->createMock(AttachmentPrototypeQuery::class);
+    $gho_query = $this->createMock(GhoFactQuery::class);
+    $resolver = $this->createResolver($attachment_query, $prototype_query, $gho_query);
+
+    $gho_query->method('getFactsForPlans')->with([10])->willReturn([]);
+
+    $plan = $this->createMock(Plan::class);
+    $plan->method('getPlanDataSource')->willReturn(Plan::DATA_SOURCE_GHO);
+    $plan->method('getTotalFunding')->willReturn(250000.0);
+    $values = $resolver->resolve([10 => $plan])[10];
+
+    $this->assertSame(250000.0, $values->get('funding'));
+    $this->assertFalse($values->hasSourceValues());
   }
 
   /**

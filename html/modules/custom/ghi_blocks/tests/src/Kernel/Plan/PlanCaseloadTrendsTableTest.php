@@ -27,6 +27,8 @@ class PlanCaseloadTrendsTableTest extends PlanBlockKernelTestBase {
    */
   protected function setUp(): void {
     parent::setUp();
+    $this->createField('base_object', 'plan', 'string', 'field_plan_data_source', 'Plan metric source');
+    $this->createField('base_object', 'plan', 'boolean', 'field_restricted', 'Is restricted');
     $container = \Drupal::getContainer();
     $container->set('ghi_plans.plan_metric_resolver', $this->createMock(PlanMetricResolver::class));
     \Drupal::setContainer($container);
@@ -86,6 +88,82 @@ class PlanCaseloadTrendsTableTest extends PlanBlockKernelTestBase {
     $this->assertNotEmpty($related_plans);
     $this->assertCount(1, $related_plans);
     $this->assertSame([self::PLAN_ID], array_keys($related_plans));
+  }
+
+  /**
+   * Tests source-aware publication rules for related plans.
+   */
+  public function testRelatedPlanPublicationRules(): void {
+    $plugin = $this->getBlockPlugin();
+    /** @var \Drupal\ghi_plans\Entity\Plan $current_plan */
+    $current_plan = $plugin->getContextValue('plan');
+    $focus_country_id = $current_plan->getFocusCountry()->id();
+
+    $this->createPlanBaseObject([
+      'field_original_id' => 11,
+      'field_year' => 2026,
+      'field_focus_country' => ['target_id' => $focus_country_id],
+      'field_released' => ['value' => 0],
+      'field_plan_data_source' => Plan::DATA_SOURCE_PLAN,
+    ]);
+    $this->createPlanBaseObject([
+      'field_original_id' => 12,
+      'field_year' => 2027,
+      'field_focus_country' => ['target_id' => $focus_country_id],
+      'field_released' => ['value' => 0],
+      'field_plan_data_source' => Plan::DATA_SOURCE_GHO,
+    ]);
+    $this->createPlanBaseObject([
+      'field_original_id' => 13,
+      'field_year' => 2028,
+      'field_focus_country' => ['target_id' => $focus_country_id],
+      'field_released' => ['value' => 0],
+      'field_restricted' => ['value' => 1],
+      'field_plan_data_source' => Plan::DATA_SOURCE_GHO,
+    ]);
+    $this->createPlanBaseObject([
+      'field_original_id' => 14,
+      'field_year' => 2029,
+      'field_focus_country' => ['target_id' => $focus_country_id],
+      'field_released' => ['value' => 0],
+      'field_plan_data_source' => Plan::DATA_SOURCE_GHO,
+    ]);
+
+    $related_plans = $this->callPrivateMethod($plugin, 'getRelatedPlans');
+    $this->assertSame([14, 12, self::PLAN_ID], array_keys($related_plans));
+
+    $this->injectMetricResolver($plugin, [
+      12 => ['target' => 50],
+    ]);
+    $source_data = $this->callPrivateMethod($plugin, 'buildSourceData');
+    $this->assertSame([2027, 2025], array_column($source_data, 'year'));
+  }
+
+  /**
+   * Tests that a component override controls the effective source.
+   */
+  public function testSourceOverrideControlsReleaseCheck(): void {
+    $gho_plugin = $this->getBlockPlugin(data_source: Plan::DATA_SOURCE_GHO);
+    /** @var \Drupal\ghi_plans\Entity\Plan $gho_current_plan */
+    $gho_current_plan = $gho_plugin->getContextValue('plan');
+    $gho_candidate = $this->createPlanBaseObject([
+      'field_original_id' => 11,
+      'field_focus_country' => ['target_id' => $gho_current_plan->getFocusCountry()->id()],
+      'field_released' => ['value' => 0],
+      'field_plan_data_source' => Plan::DATA_SOURCE_PLAN,
+    ]);
+    $this->assertArrayHasKey($gho_candidate->getSourceId(), $this->callPrivateMethod($gho_plugin, 'getRelatedPlans'));
+
+    $plan_plugin = $this->getBlockPlugin(data_source: Plan::DATA_SOURCE_PLAN);
+    /** @var \Drupal\ghi_plans\Entity\Plan $plan_current_plan */
+    $plan_current_plan = $plan_plugin->getContextValue('plan');
+    $gho_candidate = $this->createPlanBaseObject([
+      'field_original_id' => 12,
+      'field_focus_country' => ['target_id' => $plan_current_plan->getFocusCountry()->id()],
+      'field_released' => ['value' => 0],
+      'field_plan_data_source' => Plan::DATA_SOURCE_GHO,
+    ]);
+    $this->assertArrayNotHasKey($gho_candidate->getSourceId(), $this->callPrivateMethod($plan_plugin, 'getRelatedPlans'));
   }
 
   /**
@@ -286,11 +364,13 @@ class PlanCaseloadTrendsTableTest extends PlanBlockKernelTestBase {
    *   Whether to enable the prioritized columns.
    * @param bool $select_columns
    *   Whether to select the configured columns.
+   * @param string $data_source
+   *   The configured plan metric source.
    *
    * @return \Drupal\ghi_blocks\Plugin\Block\Plan\PlanCaseloadTrendsTable
    *   The block plugin.
    */
-  private function getBlockPlugin(bool $prioritized_columns = FALSE, bool $select_columns = TRUE) {
+  private function getBlockPlugin(bool $prioritized_columns = FALSE, bool $select_columns = TRUE, string $data_source = 'default') {
     $configuration = [
       'columns' => [
         'in_need' => 'in_need',
@@ -303,6 +383,7 @@ class PlanCaseloadTrendsTableTest extends PlanBlockKernelTestBase {
         'coverage' => 'coverage',
       ],
       'soft_limit' => 10,
+      'data_source' => $data_source,
     ];
     if ($prioritized_columns) {
       $configuration['columns']['prioritized_target'] = 'prioritized_target';
@@ -326,21 +407,27 @@ class PlanCaseloadTrendsTableTest extends PlanBlockKernelTestBase {
    *
    * @param \Drupal\ghi_blocks\Plugin\Block\GHIBlockBase $plugin
    *   The plugin.
+   * @param array $values_by_plan
+   *   Metric values keyed by Fabric plan ID.
    */
-  private function injectMetricResolver($plugin) {
+  private function injectMetricResolver($plugin, array $values_by_plan = []) {
+    $values_by_plan += [
+      self::PLAN_ID => [
+        'in_need' => 300,
+        'target' => 100,
+        'prioritized_target' => 90,
+        'latest_reach' => 80,
+        'requirements' => 3000,
+        'prioritized_requirements' => 2500,
+        'funding' => 1000,
+      ],
+    ];
     $resolver = $this->createMock(PlanMetricResolver::class);
-    $resolver->method('resolve')->willReturnCallback(function (array $plans): array {
+    $resolver->method('resolve')->willReturnCallback(function (array $plans, ?string $source_override = NULL) use ($values_by_plan): array {
       $values = [];
       foreach ($plans as $plan_id => $plan) {
-        $values[$plan_id] = new PlanMetricValues(Plan::DATA_SOURCE_PLAN, $plan_id == self::PLAN_ID ? [
-          'in_need' => 300,
-          'target' => 100,
-          'prioritized_target' => 90,
-          'latest_reach' => 80,
-          'requirements' => 3000,
-          'prioritized_requirements' => 2500,
-          'funding' => 1000,
-        ] : [], cacheTags: ['plan_id:' . $plan_id]);
+        $source = $source_override ?? $plan->getPlanDataSource();
+        $values[$plan_id] = new PlanMetricValues($source, $values_by_plan[$plan_id] ?? [], cacheTags: ['plan_id:' . $plan_id]);
       }
       return $values;
     });

@@ -455,6 +455,27 @@ class PlanCaseloadTrendsTable extends GHIBlockBase implements OverrideDefaultTit
       $cacheability->addCacheableDependency($plan);
     }
 
+    // Resolve all values in bulk. Unless explicitly overridden, every plan
+    // keeps its own source setting so a historical series can mix sources.
+    $metrics_by_plan = $this->planMetricResolver->resolve($related_plans, $this->getSourceOverride());
+    // Retain tags even for empty metric sets so a later remote value can
+    // invalidate a table that currently displays no data for that plan.
+    foreach ($metrics_by_plan as $metrics) {
+      $cacheability->addCacheTags($metrics->getCacheTags());
+    }
+
+    // The GHO source is allowed to precede the plan's release, but only when
+    // Fabric already provides GHO metrics for the row. This preserves the
+    // original publication gate for Country Module data without introducing
+    // empty rows for unrelated unpublished plans.
+    $related_plans = array_filter($related_plans, function (Plan $plan) use ($metrics_by_plan): bool {
+      $metrics = $metrics_by_plan[$plan->getSourceId()] ?? NULL;
+      return $metrics && ($plan->isReleased() || ($metrics->getSource() === Plan::DATA_SOURCE_GHO && $metrics->hasSourceValues()));
+    });
+    if (empty($related_plans)) {
+      return NULL;
+    }
+
     if ($limit !== NULL) {
       $related_plans = array_slice($related_plans, 0, $limit, TRUE);
     }
@@ -467,15 +488,6 @@ class PlanCaseloadTrendsTable extends GHIBlockBase implements OverrideDefaultTit
       $plan_year = $plan->getYear();
       $plan_type = $plan->getPlanType()->getAbbreviation();
       $plan_types[$plan_year][$plan_type] = !empty($plan_types[$plan_year][$plan_type]) ? $plan_types[$plan_year][$plan_type] + 1 : 1;
-    }
-
-    // Resolve all values in bulk. Unless explicitly overridden, every plan
-    // keeps its own source setting so a historical series can mix sources.
-    $metrics_by_plan = $this->planMetricResolver->resolve($related_plans, $this->getSourceOverride());
-    // Retain tags even for empty metric sets so a later remote value can
-    // invalidate a table that currently displays no data for that plan.
-    foreach ($metrics_by_plan as $metrics) {
-      $cacheability->addCacheTags($metrics->getCacheTags());
     }
 
     foreach ($related_plans as $plan) {
@@ -546,9 +558,13 @@ class PlanCaseloadTrendsTable extends GHIBlockBase implements OverrideDefaultTit
     $related_plans = array_filter($related_plans, function (Plan $plan) {
       return $plan->getPlanType() !== NULL;
     });
-    // Filter out restricted plans.
-    $related_plans = array_filter($related_plans, function (Plan $plan) {
-      return $plan->isReleased() && !$plan->isRestricted();
+    // Released remains the publication gate for Country Module data. An
+    // explicitly selected GHO source can precede it because GHO data is
+    // published independently from the plan data.
+    $source_override = $this->getSourceOverride();
+    $related_plans = array_filter($related_plans, function (Plan $plan) use ($source_override): bool {
+      $source = $source_override ?? $plan->getPlanDataSource();
+      return !$plan->isRestricted() && ($plan->isReleased() || $source === Plan::DATA_SOURCE_GHO);
     });
     // Initially sort by descending year.
     uasort($related_plans, function ($a, $b) {
