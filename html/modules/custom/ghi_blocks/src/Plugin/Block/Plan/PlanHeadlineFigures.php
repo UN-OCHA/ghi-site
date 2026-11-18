@@ -66,9 +66,10 @@ class PlanHeadlineFigures extends GHIBlockBase implements MultiStepFormBlockInte
    * {@inheritdoc}
    */
   public function label() {
-    // We just want to hide the label always.
+    // Keep the label available to administrative workflows such as Layout
+    // Builder confirmation forms, while suppressing it from public display.
     $this->configuration['label_display'] = FALSE;
-    return NULL;
+    return (string) $this->getPluginDefinition()['admin_label'];
   }
 
   /**

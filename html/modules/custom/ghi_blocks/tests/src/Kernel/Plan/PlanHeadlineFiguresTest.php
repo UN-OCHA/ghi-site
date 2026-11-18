@@ -42,7 +42,7 @@ class PlanHeadlineFiguresTest extends PlanBlockKernelTestBase {
     $this->assertArrayHasKey('attachment_data', $allowed_item_types);
     $this->assertArrayHasKey('label_value', $allowed_item_types);
 
-    $this->assertNull($plugin->label());
+    $this->assertSame('Headline Figures', $plugin->label());
 
     $config_forms = $plugin->metadata()->configForms;
     $this->assertIsArray($config_forms);
