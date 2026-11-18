@@ -1,5 +1,5 @@
 {
-    "_hash": "974cb3c32c15951107f00768ecc594f1570e5d4de0795919dfcbfbfae41b826f",
+    "_hash": "c3ee65482afb4d2e72761ced549662e73101a53a0f3001394fc30c2130621f56",
     "patches": {
         "drupal/big_pipe_sessionless": [
             {
@@ -155,18 +155,6 @@
                 "description": "Issue #3121440: Add option for node local tasks in toolbar",
                 "url": "https://www.drupal.org/files/issues/2023-10-20/3121440-49.patch",
                 "sha256": "ad3a241722de6676511c2d1dcacae0bd3ece5912392e02c7cd0010b5ed1fb7da",
-                "depth": 1,
-                "extra": {
-                    "provenance": "patches-file:composer.patches.json"
-                }
-            }
-        ],
-        "drupal/google_tag": [
-            {
-                "package": "drupal/google_tag",
-                "description": "Issue #3388487: GoogleTagUpgradeManager may fail upgrade for some configurations",
-                "url": "https://www.drupal.org/files/issues/2024-01-30/google_tag-db_update_unset_values-3388487-6.patch",
-                "sha256": "d5b42acd4ca7a9fe694c38c7b18b8308c8c8e2413791d7068a58ae87169a92b7",
                 "depth": 1,
                 "extra": {
                     "provenance": "patches-file:composer.patches.json"

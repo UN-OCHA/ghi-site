@@ -113,7 +113,8 @@ class MegaMenuBlock extends BlockBase implements ContainerFactoryPluginInterface
 
     $tab_items = [];
     foreach ($menu_tree as $plugin_id => $item) {
-      if (!$item->count()) {
+      // A mega-menu tab without visible child links has no content.
+      if (empty($item->subtree)) {
         continue;
       }
 
@@ -121,6 +122,9 @@ class MegaMenuBlock extends BlockBase implements ContainerFactoryPluginInterface
       $cache_contexts = Cache::mergeContexts($cache_contexts, $_tree['#cache']['contexts']);
       $cache_tags = Cache::mergeTags($cache_tags, $_tree['#cache']['tags']);
       unset($_tree['#cache']);
+      if (empty($_tree['#items'])) {
+        continue;
+      }
 
       $tab_items[$plugin_id] = $_tree;
       $tab_items[$plugin_id]['#title'] = $item->link->getTitle();
@@ -270,6 +274,9 @@ class MegaMenuBlock extends BlockBase implements ContainerFactoryPluginInterface
     }
     $parameters = $this->menuTree->getCurrentRouteMenuTreeParameters('main');
     $parameters->expandedParents = [];
+    // Top-level tabs are rendered manually, so exclude disabled links before
+    // they can bypass the visibility check in the standard menu tree builder.
+    $parameters->onlyEnabledLinks();
     $menu_tree = $this->menuTree->load($menu->id(), $parameters);
     $this->filterBrokenItems($menu_tree);
 
