@@ -129,14 +129,20 @@
         gap: 0;
 
         li.legend-item {
+          align-items: center;
           margin: 0 !important;
           padding: 0.2rem 0.4rem !important;
           gap: 0.5rem;
 
           .legend-icon {
+            flex: 0 0 1rem;
             width: 1rem !important;
             height: 1rem !important;
             margin: 0 !important;
+          }
+
+          .legend-label {
+            transform: translateY(1px);
           }
         }
       }
@@ -155,11 +161,13 @@
         background-color: var(--ghi-plan-type-rrp) !important;
       }
       &.legend-icon-other {
-        background-color: var(--ghi-plan-type-other) !important;
+        box-sizing: border-box;
+        border: 1px solid var(--ghi-plan-type-other-map-border);
+        background-color: var(--cd-white) !important;
       }
     }
 
-    & > .circle .legend-item {
+    & > .circle .legend-icon {
       &.legend-icon-srp,
       &.legend-icon-hnarp,
       &.legend-icon-hrp {
@@ -172,7 +180,9 @@
         background-color: var(--ghi-plan-type-rrp) !important;
       }
       &.legend-icon-other {
-        background-color: var(--ghi-plan-type-other) !important;
+        box-sizing: border-box;
+        border: 1px solid var(--ghi-plan-type-other-map-border);
+        background-color: var(--cd-white) !important;
       }
     }
 
