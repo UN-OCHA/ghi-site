@@ -1,0 +1,14 @@
+uuid: 4f81423f-99c2-4438-9328-75278128d4b8
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.field.base_object.plan.field_plan_prioritized_source
+  module:
+    - ghi_plans
+id: plan_prioritized_use_country_module_data
+label: 'Prioritized metric source: Use Country Module data'
+type: base_object
+plugin: set_plan_prioritized_data_source
+configuration:
+  source: plan

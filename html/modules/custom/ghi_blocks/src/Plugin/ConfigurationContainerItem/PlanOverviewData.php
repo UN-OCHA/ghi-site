@@ -166,7 +166,10 @@ class PlanOverviewData extends ConfigurationContainerItemPluginBase {
 
     $api_value = $this->getApiValue($type);
     $custom_value = $this->getCustomValue($type, $use_custom_value, $custom_value);
-    return $sum ? $api_value + $custom_value : ($custom_value ?? $api_value);
+    if (!$sum) {
+      return $custom_value ?? $api_value;
+    }
+    return $api_value === NULL && $custom_value === NULL ? NULL : ($api_value ?? 0) + ($custom_value ?? 0);
   }
 
   /**
@@ -181,7 +184,7 @@ class PlanOverviewData extends ConfigurationContainerItemPluginBase {
 
     $theme = $type['theme'] ?? 'hpc_amount';
     $value = $this->getValue($type, $use_custom_value, $custom_value, $sum);
-    if ($theme == 'hpc_percent') {
+    if ($theme == 'hpc_percent' && $value !== NULL) {
       $value = $value * 100;
     }
     $build = $this->buildRenderArray($theme, $value, [
@@ -229,8 +232,11 @@ class PlanOverviewData extends ConfigurationContainerItemPluginBase {
   public function getApiValue($type = NULL) {
     $type = $type ?? $this->getType();
     $data = $this->getContextValue('data');
-    $value = $data[$type['id']] ?? 0;
-    return $value;
+    $type_id = $type['id'];
+    if (!empty($type['preserve_missing'])) {
+      return $data[$type_id] ?? NULL;
+    }
+    return $data[$type_id] ?? 0;
   }
 
   /**
@@ -327,6 +333,7 @@ class PlanOverviewData extends ConfigurationContainerItemPluginBase {
         'value_description' => $this->t('Enter amount as full integer to override the value from the API.'),
         'data_type' => 'integer',
         'allow_sum' => TRUE,
+        'preserve_missing' => TRUE,
         'theme' => 'hpc_amount',
       ],
       'people_expected_reach' => [
@@ -368,6 +375,7 @@ class PlanOverviewData extends ConfigurationContainerItemPluginBase {
         'value_description' => $this->t('Enter a write-in value to override the value from the API. <b>Note that write-in values are ignored if you limit the data to include or exclude a global plan.</b>'),
         'data_type' => 'integer',
         'allow_sum' => TRUE,
+        'preserve_missing' => TRUE,
         'theme' => 'hpc_currency',
       ],
       'funding_progress' => [

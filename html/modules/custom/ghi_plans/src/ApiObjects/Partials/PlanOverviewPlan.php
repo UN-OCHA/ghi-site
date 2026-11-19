@@ -324,12 +324,13 @@ class PlanOverviewPlan extends BaseObject {
    *   The caseload value if found.
    */
   public function getCaseloadValue(string $metric_type, ?string $metric_name = NULL): int|float|null {
-    // GHO-backed plans have no caseload objects, so a missing normalized value
-    // remains missing instead of falling back to Country Module data. The
-    // attachment fallback only supports legacy Country Module metric types not
-    // included in the normalized set.
     if ($this->metrics->has($metric_type)) {
       return (int) $this->metrics->get($metric_type);
+    }
+    // Mixed-source sets can retain Country Module caseloads for other metrics.
+    // Only the source selected for this metric may use an attachment fallback.
+    if ($this->metrics->getSourceForMetric($metric_type) !== Plan::DATA_SOURCE_PLAN) {
+      return NULL;
     }
     $plan_caseload = $this->getPlanCaseload();
     if (!$plan_caseload) {
@@ -338,26 +339,6 @@ class PlanOverviewPlan extends BaseObject {
 
     $value = $plan_caseload->getCaseloadValue($metric_type, $metric_name);
     return $value !== NULL ? (int) $value : NULL;
-  }
-
-  /**
-   * Gets the fields available for plan-level population aggregation.
-   *
-   * GHO-backed plans expose normalized values directly. Country Module plans
-   * expose fields from their selected caseload attachment.
-   *
-   * @param int|null $attachment_id
-   *   Optional argument to retrieve a specific caseload.
-   *
-   * @return array
-   *   An array of caseload fields.
-   */
-  public function getPlanCaseloadFields($attachment_id = NULL): array {
-    if ($this->metrics->getSource() === Plan::DATA_SOURCE_GHO) {
-      return $this->metrics->getValues();
-    }
-    $caseload = $this->getPlanCaseload($attachment_id);
-    return $caseload?->getFields() ?? [];
   }
 
   /**
@@ -371,7 +352,7 @@ class PlanOverviewPlan extends BaseObject {
   }
 
   /**
-   * Gets the prioritized target when supplied by the selected source.
+   * Gets the prioritized target when supplied by its configured source.
    *
    * @return int|null
    *   The prioritized target.
@@ -382,7 +363,7 @@ class PlanOverviewPlan extends BaseObject {
   }
 
   /**
-   * Gets prioritized requirements when supplied by the selected source.
+   * Gets prioritized requirements when supplied by their configured source.
    *
    * @return int|null
    *   The prioritized requirements.

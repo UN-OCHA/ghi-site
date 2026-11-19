@@ -1,0 +1,14 @@
+uuid: 424084f5-fa88-4ff4-abc3-08eb67f02360
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.field.base_object.plan.field_plan_prioritized_source
+  module:
+    - ghi_plans
+id: plan_prioritized_use_gho_data
+label: 'Prioritized metric source: Use GHO data'
+type: base_object
+plugin: set_plan_prioritized_data_source
+configuration:
+  source: gho

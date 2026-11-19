@@ -16,8 +16,9 @@ use Drupal\hpc_api\Query\FabricQueryManager;
 /**
  * Resolves plan-level metrics without exposing source-specific storage.
  *
- * Source-selectable metrics are read only from the configured source. Funding
- * always comes from the FTS-backed fields on the imported plan.
+ * Source-selectable metrics are read only from their configured source.
+ * Prioritized metrics can explicitly override the general plan source, while
+ * funding always comes from the FTS-backed fields on the imported plan.
  */
 class PlanMetricResolver {
 
@@ -88,7 +89,27 @@ class PlanMetricResolver {
       $source = $source_override ?? $plan->getPlanDataSource();
       $plans_by_source[$source][$plan_id] = $plan;
     }
-    return $this->resolvePlanData($plans_by_source[Plan::DATA_SOURCE_PLAN] ?? []) + $this->resolveGhoData($plans_by_source[Plan::DATA_SOURCE_GHO] ?? [], $for_aggregation);
+    $resolved = $this->resolvePlanData($plans_by_source[Plan::DATA_SOURCE_PLAN] ?? []) + $this->resolveGhoData($plans_by_source[Plan::DATA_SOURCE_GHO] ?? [], $for_aggregation);
+    if ($source_override !== NULL) {
+      // A component-level override intentionally pins every metric to one
+      // source and therefore takes precedence over plan-level exceptions.
+      return $resolved;
+    }
+
+    $prioritized_plans_by_source = [];
+    foreach ($plans as $plan_id => $plan) {
+      $source = $plan->getEffectivePrioritizedDataSource();
+      if ($source !== $plan->getPlanDataSource()) {
+        $prioritized_plans_by_source[$source][$plan_id] = $plan;
+      }
+    }
+    $prioritized = $this->resolvePlanData($prioritized_plans_by_source[Plan::DATA_SOURCE_PLAN] ?? []) + $this->resolveGhoData($prioritized_plans_by_source[Plan::DATA_SOURCE_GHO] ?? [], $for_aggregation);
+    foreach ($prioritized as $plan_id => $prioritized_values) {
+      if (isset($resolved[$plan_id])) {
+        $resolved[$plan_id] = $this->mergePrioritizedMetrics($resolved[$plan_id], $prioritized_values);
+      }
+    }
+    return $resolved;
   }
 
   /**
@@ -125,9 +146,11 @@ class PlanMetricResolver {
         'total_population' => $caseload?->getCaseloadValue('total_population', 'Population'),
         'in_need' => $caseload?->getCaseloadValue('in_need'),
         'target' => $caseload?->getCaseloadValue('target'),
+        'prioritized_target' => $caseload?->getCaseloadValue('prioritized_target'),
         'expected_reach' => $caseload?->getCaseloadValue('expected_reach', 'Expected Reach'),
         'latest_reach' => $caseload?->getCaseloadValue('latest_reach') ?? $caseload?->getCaseloadValue('cumulative_reach'),
         'requirements' => $requirements,
+        'prioritized_requirements' => $caseload?->getCaseloadValue('prioritized_requirements'),
         'original_requirements' => $plan->getOriginalRequirements(),
       ], fn ($value) => $value !== NULL);
       $source_values_available = !empty($values);
@@ -135,6 +158,13 @@ class PlanMetricResolver {
       $resolved[$plan_id] = new PlanMetricValues(Plan::DATA_SOURCE_PLAN, $values, $caseloads, $cache_tags, $source_values_available);
     }
     return $resolved;
+  }
+
+  /**
+   * Replaces prioritized values without falling back to the general source.
+   */
+  private function mergePrioritizedMetrics(PlanMetricValues $base, PlanMetricValues $prioritized): PlanMetricValues {
+    return $base->withMetricOverrides($prioritized, Plan::PRIORITIZED_METRICS);
   }
 
   /**

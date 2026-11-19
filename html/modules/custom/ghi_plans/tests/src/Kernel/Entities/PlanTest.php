@@ -22,13 +22,14 @@ class PlanTest extends BaseObjectKernelTestBase {
   ];
 
   /**
-   * Tests caseload selection and the plan-level data source.
+   * Tests caseload selection and plan-level metric sources.
    */
   public function testGetPlanCaseload() {
     $plan_type = $this->createBaseObjectType([
       'id' => 'plan',
       'field_plan_caseload' => ['type' => 'ghi_plans_plan_caseload', 'label' => 'Country Module plan caseload'],
       'field_plan_data_source' => ['type' => 'list_string', 'label' => 'Plan metric source'],
+      'field_plan_prioritized_source' => ['type' => 'list_string', 'label' => 'Prioritized metric source'],
     ]);
     $plan = $this->createBaseObject([
       'type' => $plan_type->id(),
@@ -48,16 +49,20 @@ class PlanTest extends BaseObjectKernelTestBase {
     $this->assertNull($plan->getPlanCaseloadId());
     $this->assertEquals($caseload_1->reveal(), $plan->getPlanCaseload($caseloads));
     $this->assertSame(Plan::DATA_SOURCE_PLAN, $plan->getPlanDataSource());
+    $this->assertNull($plan->getPrioritizedDataSourceOverride());
+    $this->assertSame(Plan::DATA_SOURCE_PLAN, $plan->getEffectivePrioritizedDataSource());
     $this->assertFalse($plan->usesGhoData());
 
     $plan = $this->createBaseObject([
       'type' => $plan_type->id(),
       'field_plan_caseload' => 2,
       'field_plan_data_source' => Plan::DATA_SOURCE_GHO,
+      'field_plan_prioritized_source' => Plan::DATA_SOURCE_PLAN,
     ]);
     $this->assertEquals(2, $plan->getPlanCaseloadId());
     $this->assertEquals($caseload_2->reveal(), $plan->getPlanCaseload($caseloads));
     $this->assertSame(Plan::DATA_SOURCE_GHO, $plan->getPlanDataSource());
+    $this->assertSame(Plan::DATA_SOURCE_PLAN, $plan->getEffectivePrioritizedDataSource());
     $this->assertTrue($plan->usesGhoData());
   }
 

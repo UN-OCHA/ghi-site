@@ -2,11 +2,14 @@
 
 namespace Drupal\ghi_plans\ValueObject;
 
+use Drupal\Core\Cache\Cache;
+
 /**
- * Normalized plan-level metrics for one configured source.
+ * Normalized plan-level metrics for one plan.
  *
- * The source controls selectable plan metrics. Canonical metrics such as FTS
- * funding can be included independently of that setting.
+ * The primary source controls standard selectable metrics. Prioritized values
+ * may come from the plan's explicit prioritized source override, and canonical
+ * metrics such as FTS funding can be included independently of either setting.
  *
  * Cache tags travel with the values because normalization otherwise hides the
  * Fabric dependencies from render and aggregate consumers.
@@ -17,7 +20,7 @@ final class PlanMetricValues {
    * Constructs a normalized plan metric set.
    *
    * @param string $source
-   *   The configured source used to resolve source-selectable values.
+   *   The primary configured source used to resolve standard metric values.
    * @param array $values
    *   Metric values keyed by stable metric name.
    * @param array $caseloads
@@ -28,15 +31,59 @@ final class PlanMetricValues {
    * @param bool|null $sourceValuesAvailable
    *   Whether the selected source supplied values before source-independent
    *   metrics were added. NULL infers availability from the complete set.
+   * @param string[] $metricSources
+   *   Optional source overrides keyed by normalized metric name.
    */
-  public function __construct(private readonly string $source, private readonly array $values = [], private readonly array $caseloads = [], private readonly array $cacheTags = [], private readonly ?bool $sourceValuesAvailable = NULL) {
+  public function __construct(private readonly string $source, private readonly array $values = [], private readonly array $caseloads = [], private readonly array $cacheTags = [], private readonly ?bool $sourceValuesAvailable = NULL, private readonly array $metricSources = []) {
   }
 
   /**
-   * Gets the source used for source-selectable values in this metric set.
+   * Gets the primary source used for standard metrics in this metric set.
    */
   public function getSource(): string {
     return $this->source;
+  }
+
+  /**
+   * Gets the source used for one normalized metric.
+   */
+  public function getSourceForMetric(string $metric): string {
+    return $this->metricSources[$metric] ?? $this->source;
+  }
+
+  /**
+   * Replaces selected metrics with values from another resolved metric set.
+   *
+   * The selected source is recorded even when it did not supply a value. This
+   * lets consumers distinguish missing data from permission to use another
+   * retained source object as a fallback.
+   *
+   * @param self $overrides
+   *   The resolved values from the overriding source.
+   * @param string[] $metrics
+   *   The normalized metrics controlled by that source.
+   *
+   * @return self
+   *   A new metric set containing the replacements.
+   */
+  public function withMetricOverrides(self $overrides, array $metrics): self {
+    $values = $this->values;
+    $metric_sources = $this->metricSources;
+    foreach ($metrics as $metric) {
+      unset($values[$metric]);
+      if ($overrides->has($metric)) {
+        $values[$metric] = $overrides->get($metric);
+      }
+      $metric_sources[$metric] = $overrides->getSourceForMetric($metric);
+    }
+    return new self(
+      $this->source,
+      $values,
+      $this->caseloads + $overrides->getCaseloads(),
+      Cache::mergeTags($this->cacheTags, $overrides->getCacheTags()),
+      $this->sourceValuesAvailable,
+      $metric_sources,
+    );
   }
 
   /**
@@ -61,7 +108,7 @@ final class PlanMetricValues {
   }
 
   /**
-   * Checks whether the selected plan metric source supplied any values.
+   * Checks whether the primary plan metric source supplied any values.
    *
    * This excludes source-independent values such as canonical FTS funding
    * when the resolver explicitly records availability.

@@ -34,6 +34,23 @@ class Plan extends BaseObject implements BaseObjectMetaDataInterface, BaseObject
   public const CLUSTER_TYPE_SECTOR = 'sector';
   public const DATA_SOURCE_PLAN = 'plan';
   public const DATA_SOURCE_GHO = 'gho';
+  public const PRIORITIZED_METRICS = [
+    'prioritized_target',
+    'prioritized_requirements',
+  ];
+
+  /**
+   * Gets the available plan metric sources.
+   *
+   * @return \Drupal\Core\StringTranslation\TranslatableMarkup[]
+   *   Labels keyed by source identifier.
+   */
+  public static function getDataSourceOptions(): array {
+    return [
+      self::DATA_SOURCE_PLAN => new TranslatableMarkup('Country Module'),
+      self::DATA_SOURCE_GHO => new TranslatableMarkup('GHO'),
+    ];
+  }
 
   /**
    * {@inheritdoc}
@@ -566,6 +583,27 @@ class Plan extends BaseObject implements BaseObjectMetaDataInterface, BaseObject
     }
     $source = $this->get('field_plan_data_source')->value;
     return self::isValidDataSource($source) ? $source : self::DATA_SOURCE_PLAN;
+  }
+
+  /**
+   * Gets the explicit source override for prioritized metrics.
+   *
+   * Missing values inherit the general plan metric source so existing plans
+   * retain their behavior until an editor explicitly chooses an override.
+   */
+  public function getPrioritizedDataSourceOverride(): ?string {
+    if (!$this->hasField('field_plan_prioritized_source')) {
+      return NULL;
+    }
+    $source = $this->get('field_plan_prioritized_source')->value;
+    return self::isValidDataSource($source) ? $source : NULL;
+  }
+
+  /**
+   * Gets the effective source for prioritized metrics.
+   */
+  public function getEffectivePrioritizedDataSource(): string {
+    return $this->getPrioritizedDataSourceOverride() ?? $this->getPlanDataSource();
   }
 
   /**

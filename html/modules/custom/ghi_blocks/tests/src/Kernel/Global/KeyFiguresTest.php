@@ -135,6 +135,24 @@ class KeyFiguresTest extends PlanBlockKernelTestBase {
   }
 
   /**
+   * Tests that missing prioritized data is not converted to zero.
+   */
+  public function testMissingPrioritizedPlanOverviewData(): void {
+    $plugin = $this->getBlockPlugin();
+    $configuration = [
+      'item_type' => 'plan_overview_data',
+      'config' => ['type' => 'prioritized_target'],
+    ];
+    $missing = $plugin->getItemTypePluginForColumn($configuration, ['data' => []]);
+    $this->assertNull($missing->getValue());
+
+    $zero = $plugin->getItemTypePluginForColumn($configuration, [
+      'data' => ['prioritized_target' => 0],
+    ]);
+    $this->assertSame(0, $zero->getValue());
+  }
+
+  /**
    * Tests plan overview data preserves its source cache tags.
    */
   public function testPlanOverviewDataCacheTags(): void {

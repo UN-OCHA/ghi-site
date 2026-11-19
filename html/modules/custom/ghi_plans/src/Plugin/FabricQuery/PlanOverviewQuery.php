@@ -123,9 +123,10 @@ class PlanOverviewQuery extends FabricQueryBase {
     $metrics_by_plan = $this->planMetricResolver->resolve($plan_objects);
 
     // Country Module values do not have a separate aggregation dimension.
-    // Only re-resolve GHO-backed plans for totals across multiple plans.
+    // Re-resolve plans whose general or prioritized source uses GHO so every
+    // GHO contribution follows the Adjusted aggregation rules.
     $aggregate_metrics_by_plan = $metrics_by_plan;
-    $gho_plan_objects = array_filter($plan_objects, fn ($plan, $plan_id): bool => ($metrics_by_plan[$plan_id] ?? NULL)?->getSource() === Plan::DATA_SOURCE_GHO, ARRAY_FILTER_USE_BOTH);
+    $gho_plan_objects = array_filter($plan_objects, fn (Plan $plan): bool => $plan->getPlanDataSource() === Plan::DATA_SOURCE_GHO || $plan->getEffectivePrioritizedDataSource() === Plan::DATA_SOURCE_GHO);
     if ($gho_plan_objects) {
       $aggregate_metrics_by_plan = array_replace($aggregate_metrics_by_plan, $this->planMetricResolver->resolveForAggregation($gho_plan_objects));
     }
@@ -216,11 +217,11 @@ class PlanOverviewQuery extends FabricQueryBase {
   /**
    * Gets total prioritized requirements for visible, GHO-included plans.
    *
-   * @return float
-   *   The sum of prioritized requirements available for those plans.
+   * @return float|null
+   *   The sum of prioritized requirements, or NULL when no plan supplies one.
    */
-  public function getTotalPrioritizedRequirements(): float {
-    return $this->getGhoPlanValueTotal(fn (PlanOverviewPlan $plan) => $plan->getPrioritizedRequirements());
+  public function getTotalPrioritizedRequirements(): ?float {
+    return $this->getOptionalGhoPlanValueTotal(fn (PlanOverviewPlan $plan) => $plan->getPrioritizedRequirements());
   }
 
   /**
@@ -240,6 +241,23 @@ class PlanOverviewQuery extends FabricQueryBase {
       $total += $value_callback($plan) ?? 0;
     }
     return $total;
+  }
+
+  /**
+   * Sums an optional plan value while distinguishing missing data from zero.
+   */
+  private function getOptionalGhoPlanValueTotal(callable $value_callback): ?float {
+    $total = 0;
+    $has_value = FALSE;
+    foreach ($this->getAggregateGhoPlans() as $plan) {
+      $value = $value_callback($plan);
+      if ($value === NULL) {
+        continue;
+      }
+      $total += $value;
+      $has_value = TRUE;
+    }
+    return $has_value ? $total : NULL;
   }
 
   /**
@@ -302,28 +320,31 @@ class PlanOverviewQuery extends FabricQueryBase {
     // headline totals are the sum of the displayed plan rows.
     $plans = $this->getAggregateGhoPlans();
 
-    // Initialize all totals so missing source values contribute zero.
+    // Initialize all totals so missing values on individual plans do not
+    // prevent available values from contributing to the aggregate.
     $caseload_totals = array_fill_keys(array_keys($types), 0);
+    $caseload_value_available = array_fill_keys(array_keys($types), FALSE);
     $plan_caseloads = [];
     $caseload_totals['target_custom'] = 0;
     $caseload_totals['reached_custom'] = 0;
 
-    // Load Country Module caseload overrides. GHO-backed plans ignore them and
-    // expose their normalized metric set directly.
-    $attachment_overrides = $this->getPlanCaseloadOverridesByPlanId();
-
     foreach ($plans as $plan) {
-      $caseload_items = $plan->getPlanCaseloadFields($attachment_overrides[$plan->id()] ?? NULL);
-      if (empty($caseload_items)) {
-        continue;
-      }
-
       $plan_caseloads[$plan->id()] = [];
 
       foreach ($types as $type => $label) {
         $value = $plan->getCaseloadValue($type, $label);
         $caseload_totals[$type] += $value ?? 0;
+        $caseload_value_available[$type] = $caseload_value_available[$type] || $value !== NULL;
         $plan_caseloads[$plan->id()][$type] = $value;
+      }
+    }
+
+    // Prioritized metrics are a recent addition and are not available for all
+    // years. Preserve an actual zero, but do not present complete absence as
+    // a misleading numeric value.
+    foreach (Plan::PRIORITIZED_METRICS as $type) {
+      if (array_key_exists($type, $caseload_totals) && !$caseload_value_available[$type]) {
+        $caseload_totals[$type] = NULL;
       }
     }
 
@@ -347,38 +368,6 @@ class PlanOverviewQuery extends FabricQueryBase {
     }
 
     return $caseload_totals;
-  }
-
-  /**
-   * Gets selected Country Module caseload IDs keyed by plan ID.
-   *
-   * A plan base object can select the Country Module caseload to use. Load all
-   * selections in one query; GHO-backed plans do not consume these overrides.
-   *
-   * @return array
-   *   Selected attachment IDs keyed by plan ID.
-   */
-  private function getPlanCaseloadOverridesByPlanId(): array {
-    $plans = $this->getPlans();
-    $caseload_overrides = [];
-    if (empty($plans)) {
-      return $caseload_overrides;
-    }
-    $result = \Drupal::entityTypeManager()
-      ->getStorage('base_object')
-      ->loadByProperties([
-        'type' => 'plan',
-        'field_original_id' => array_keys($plans),
-      ]);
-    if (empty($result)) {
-      return $caseload_overrides;
-    }
-    foreach ($result as $plan) {
-      /** @var \Drupal\ghi_plans\Entity\Plan $plan */
-      $attachment_id = $plan->field_plan_caseload->attachment_id;
-      $caseload_overrides[$plan->getSourceId()] = $attachment_id !== NULL ? (int) $attachment_id : NULL;
-    }
-    return array_filter($caseload_overrides);
   }
 
   /**
