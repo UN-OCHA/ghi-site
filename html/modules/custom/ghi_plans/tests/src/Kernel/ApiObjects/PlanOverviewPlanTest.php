@@ -2,9 +2,12 @@
 
 namespace Drupal\Tests\ghi_plans\Kernel\ApiObjects;
 
+use Drupal\ghi_plans\ApiObjects\Attachments\CaseloadAttachmentInterface;
 use Drupal\ghi_plans\ApiObjects\Partials\PlanOverviewPlan;
 use Drupal\ghi_plans\ApiObjects\Plan;
+use Drupal\ghi_plans\Entity\Plan as PlanEntity;
 use Drupal\ghi_plans\Plugin\FabricQuery\PlanQuery;
+use Drupal\ghi_plans\ValueObject\PlanMetricValues;
 use Drupal\hpc_api\ApiObjects\Types\PlanType;
 use Drupal\hpc_api\Query\FabricQueryManager;
 use PHPUnit\Framework\Attributes\Group;
@@ -71,6 +74,47 @@ class PlanOverviewPlanTest extends PlanApiObjectKernelTestBase {
     $this->assertFalse($plan_overview->isFlashAppeal());
     $this->assertTrue($plan_overview->isOther());
     $this->assertFalse($plan_overview->isPartOfGho());
+  }
+
+  /**
+   * Tests that attachment fallback follows the source selected per metric.
+   */
+  public function testMixedSourceCaseloadFallback(): void {
+    $caseload = $this->createMock(CaseloadAttachmentInterface::class);
+    $caseload->method('getFieldTypes')->willReturn(['inNeed']);
+    $caseload->method('getCaseloadValue')->willReturnMap([
+      ['target', NULL, 300],
+      ['prioritized_target', NULL, 250],
+    ]);
+    $plan = new Plan((object) [
+      'Id' => 123,
+      'Name' => 'Test Plan Overview',
+      'Year' => 2025,
+    ]);
+
+    $country_module_plan = new PlanOverviewPlan($this->createMockRawData([
+      'plan' => $plan,
+      'metrics' => new PlanMetricValues(
+        PlanEntity::DATA_SOURCE_PLAN,
+        [],
+        [100 => $caseload],
+        metricSources: ['prioritized_target' => PlanEntity::DATA_SOURCE_GHO],
+      ),
+    ]));
+    $this->assertSame(300, $country_module_plan->getCaseloadValue('target'));
+    $this->assertNull($country_module_plan->getCaseloadValue('prioritized_target'));
+
+    $gho_plan = new PlanOverviewPlan($this->createMockRawData([
+      'plan' => $plan,
+      'metrics' => new PlanMetricValues(
+        PlanEntity::DATA_SOURCE_GHO,
+        [],
+        [100 => $caseload],
+        metricSources: ['prioritized_target' => PlanEntity::DATA_SOURCE_PLAN],
+      ),
+    ]));
+    $this->assertNull($gho_plan->getCaseloadValue('target'));
+    $this->assertSame(250, $gho_plan->getCaseloadValue('prioritized_target'));
   }
 
   /**

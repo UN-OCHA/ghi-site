@@ -55,6 +55,8 @@ class PlanMetricResolverTest extends UnitTestCase {
 
     $values = $resolver->resolve([10 => $plan])[10];
     $this->assertSame(Plan::DATA_SOURCE_PLAN, $values->getSource());
+    $this->assertSame(Plan::DATA_SOURCE_PLAN, $values->getSourceForMetric('target'));
+    $this->assertSame(Plan::DATA_SOURCE_PLAN, $values->getSourceForMetric('prioritized_target'));
     $this->assertSame(500.0, $values->get('in_need'));
     $this->assertSame(300.0, $values->get('target'));
     $this->assertSame(500000.0, $values->get('requirements'));
@@ -64,6 +66,78 @@ class PlanMetricResolverTest extends UnitTestCase {
     $this->assertTrue($values->hasSourceValues());
     $this->assertSame([100 => $caseload], $values->getCaseloads());
     $this->assertSame(['plan_id:10', 'attachment_id:100'], $values->getCacheTags());
+  }
+
+  /**
+   * Tests that prioritized metrics can use a different plan-level source.
+   */
+  public function testResolvePrioritizedSourceOverride(): void {
+    $attachment_query = $this->createMock(AttachmentQuery::class);
+    $prototype_query = $this->createMock(AttachmentPrototypeQuery::class);
+    $gho_query = $this->createMock(GhoFactQuery::class);
+    $resolver = $this->createResolver($attachment_query, $prototype_query, $gho_query);
+
+    $caseload = $this->createMock(CaseloadAttachmentInterface::class);
+    $caseload->method('getPlanId')->willReturn(10);
+    $caseload->method('id')->willReturn(100);
+    $caseload->method('getValueCacheTags')->willReturn(['attachment_id:100', 'plan_id:10']);
+    $caseload->method('getCaseloadValue')->willReturnMap([
+      ['target', NULL, 300],
+      ['prioritized_target', NULL, 250],
+    ]);
+    $attachment_query->method('getAttachmentsByObject')->willReturn([$caseload]);
+
+    $facts = [
+      $this->mockFact('target', 999, '2026-10-01'),
+      $this->mockFact('prioritized_people_targeted', 200, '2026-10-01'),
+      $this->mockFact('prioritized_people_targeted', 150, '2026-10-01', adjusted: TRUE),
+      $this->mockFact('prioritized_total_cost', 700000, '2026-10-01'),
+      $this->mockFact('prioritized_total_cost', 600000, '2026-10-01', adjusted: TRUE),
+    ];
+    $gho_query->method('getFactsForPlans')->with([10])->willReturn([10 => $facts]);
+
+    $plan = $this->createMock(Plan::class);
+    $plan->method('getPlanDataSource')->willReturn(Plan::DATA_SOURCE_PLAN);
+    $plan->method('getEffectivePrioritizedDataSource')->willReturn(Plan::DATA_SOURCE_GHO);
+    $plan->method('getPlanCaseload')->willReturn($caseload);
+    $plan->method('getRequirements')->willReturn(800000.0);
+
+    $values = $resolver->resolveForAggregation([10 => $plan])[10];
+    $this->assertSame(Plan::DATA_SOURCE_PLAN, $values->getSource());
+    $this->assertSame(Plan::DATA_SOURCE_PLAN, $values->getSourceForMetric('target'));
+    $this->assertSame(Plan::DATA_SOURCE_GHO, $values->getSourceForMetric('prioritized_target'));
+    $this->assertSame(300.0, $values->get('target'));
+    $this->assertSame(150.0, $values->get('prioritized_target'));
+    $this->assertSame(800000.0, $values->get('requirements'));
+    $this->assertSame(600000.0, $values->get('prioritized_requirements'));
+    $this->assertSame(['plan_id:10', 'attachment_id:100'], $values->getCacheTags());
+  }
+
+  /**
+   * Tests that a component source override also controls prioritized metrics.
+   */
+  public function testComponentSourceOverridePinsAllMetrics(): void {
+    $attachment_query = $this->createMock(AttachmentQuery::class);
+    $prototype_query = $this->createMock(AttachmentPrototypeQuery::class);
+    $gho_query = $this->createMock(GhoFactQuery::class);
+    $gho_query->expects($this->never())->method('getFactsForPlans');
+    $resolver = $this->createResolver($attachment_query, $prototype_query, $gho_query);
+
+    $caseload = $this->createMock(CaseloadAttachmentInterface::class);
+    $caseload->method('getPlanId')->willReturn(10);
+    $caseload->method('id')->willReturn(100);
+    $caseload->method('getCaseloadValue')->willReturnMap([
+      ['prioritized_target', NULL, 250],
+    ]);
+    $attachment_query->method('getAttachmentsByObject')->willReturn([$caseload]);
+
+    $plan = $this->createMock(Plan::class);
+    $plan->method('getPlanDataSource')->willReturn(Plan::DATA_SOURCE_PLAN);
+    $plan->method('getEffectivePrioritizedDataSource')->willReturn(Plan::DATA_SOURCE_GHO);
+    $plan->method('getPlanCaseload')->willReturn($caseload);
+
+    $values = $resolver->resolve([10 => $plan], Plan::DATA_SOURCE_PLAN)[10];
+    $this->assertSame(250.0, $values->get('prioritized_target'));
   }
 
   /**

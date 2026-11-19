@@ -1,0 +1,21 @@
+uuid: 61f89052-047f-48cb-baa6-5783ea2f6d80
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.base_object.field_plan_prioritized_source
+    - ghi_base_objects.base_object_type.plan
+  module:
+    - options
+id: base_object.plan.field_plan_prioritized_source
+field_name: field_plan_prioritized_source
+entity_type: base_object
+bundle: plan
+label: 'Prioritized metric source'
+description: 'Select a separate source for People prioritized and Prioritized requirements, or use the general plan metric source.'
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: list_string

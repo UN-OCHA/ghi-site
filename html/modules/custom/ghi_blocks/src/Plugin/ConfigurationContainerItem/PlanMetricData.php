@@ -22,15 +22,15 @@ use Drupal\hpc_common\Traits\RenderArrayTrait;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
- * Displays a normalized plan metric for the plan's configured source.
+ * Displays a normalized plan metric for its configured plan-level source.
  *
- * Missing source-selectable metrics remain empty instead of falling back to
- * the other source. Funding always comes from imported FTS data.
+ * Prioritized metrics can use their plan-level source override. Missing values
+ * remain empty instead of falling back, and funding uses imported FTS data.
  */
 #[ConfigurationContainerItem(
   id: 'plan_metric_data',
   label: new TranslatableMarkup('Plan metric'),
-  description: new TranslatableMarkup("This item displays a plan-level metric using the plan's configured data source and imported FTS funding."),
+  description: new TranslatableMarkup("This item displays a plan-level metric using the plan's configured metric sources and imported FTS funding."),
 )]
 class PlanMetricData extends ConfigurationContainerItemPluginBase {
 
@@ -113,13 +113,24 @@ class PlanMetricData extends ConfigurationContainerItemPluginBase {
       'wrapper' => $this->wrapperId,
     ];
     $processing_selector = FormElementHelper::getStateSelector($element, ['processing']);
-    $source_label = $this->getPlanDataSourceLabel();
     $element['#attached']['library'][] = 'hpc_common/icon';
     $element['#attached']['library'][] = 'hpc_common/tooltip';
-    if ($source_label) {
+    $plan = $this->getPlan();
+    if ($plan) {
+      $source_options = Plan::getDataSourceOptions();
+      $source_title = $this->t('Plan metric source');
+      $source_label = $source_options[$plan->getPlanDataSource()];
+      $prioritized_source = $plan->getPrioritizedDataSourceOverride();
+      if ($prioritized_source !== NULL) {
+        $source_title = $this->t('Plan metric source / Prioritized metric source override');
+        $source_label = $this->t('@plan_source / @prioritized_source', [
+          '@plan_source' => $source_label,
+          '@prioritized_source' => $source_options[$prioritized_source],
+        ]);
+      }
       $element['metric_source'] = [
         '#type' => 'item',
-        '#title' => $this->buildTitleWithTooltip($this->t('Current plan metric source'), $this->t('This is a plan-wide setting. Change it on the Plan metrics tab of the plan base object.')),
+        '#title' => $this->buildTitleWithTooltip($source_title, $this->t('Metric sources are plan-wide settings. Change them on the Plan metrics tab of the plan base object.')),
         '#markup' => $source_label,
         '#weight' => -6,
       ];
@@ -191,10 +202,8 @@ class PlanMetricData extends ConfigurationContainerItemPluginBase {
       ];
       $preview_configuration = $this->getMetricConfiguration($preview_configuration);
       $element['value_preview'] = $this->buildValuePreviewFormElement($this->getRenderArrayForConfiguration($preview_configuration));
-      if ($source_label && $this->getValueForConfiguration($preview_configuration) === NULL) {
-        $element['value_preview']['#description'] = $this->t('No value is currently available for this metric from @source.', [
-          '@source' => $source_label,
-        ]);
+      if ($this->getValueForConfiguration($preview_configuration) === NULL) {
+        $element['value_preview']['#description'] = $this->t('No value is currently available for this metric.');
       }
     }
     return $element;
@@ -315,12 +324,16 @@ class PlanMetricData extends ConfigurationContainerItemPluginBase {
    */
   public function getDataAttributes() {
     $attributes = parent::getDataAttributes();
-    $attributes['data-metric-type'] = $this->get('metric');
+    $metric = $this->get('metric');
+    $attributes['data-metric-type'] = $metric;
+    $values = $this->getMetricValues();
+    $attributes['data-plan-data-source'] = $values && $metric ? $values->getSourceForMetric($metric) : NULL;
     if ($this->getProcessing() === DataPointHelper::PROCESSING_CALCULATED) {
-      $attributes['data-secondary-metric-type'] = $this->get('metric_2');
+      $metric_2 = $this->get('metric_2');
+      $attributes['data-secondary-metric-type'] = $metric_2;
+      $attributes['data-secondary-plan-data-source'] = $values && $metric_2 ? $values->getSourceForMetric($metric_2) : NULL;
       $attributes['data-calculation'] = $this->get('calculation');
     }
-    $attributes['data-plan-data-source'] = $this->getMetricValues()?->getSource();
     return $attributes;
   }
 
@@ -415,17 +428,6 @@ class PlanMetricData extends ConfigurationContainerItemPluginBase {
   private function getPlan(): ?Plan {
     $plan = $this->getContextValue('plan_object');
     return $plan instanceof Plan ? $plan : NULL;
-  }
-
-  /**
-   * Gets the human-readable source configured on the current plan.
-   */
-  private function getPlanDataSourceLabel(): ?TranslatableMarkup {
-    return match ($this->getPlan()?->getPlanDataSource()) {
-      Plan::DATA_SOURCE_PLAN => $this->t('Country Module'),
-      Plan::DATA_SOURCE_GHO => $this->t('GHO'),
-      default => NULL,
-    };
   }
 
   /**

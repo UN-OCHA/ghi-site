@@ -232,14 +232,36 @@ class PlanHeadlineFiguresTest extends PlanBlockKernelTestBase {
     $this->assertStringContainsString("Available values depend on the plan's configured metric source. Funding always uses imported FTS data; other metrics remain empty when the configured source does not provide them.", (string) $form['metric']['#title']);
     $this->assertStringContainsString('plan-metric-form-label', (string) $form['metric']['#title']);
     $this->assertStringContainsString('material-symbol-help', (string) $form['metric']['#title']);
-    $this->assertStringContainsString('Current plan metric source', (string) $form['metric_source']['#title']);
-    $this->assertStringContainsString('This is a plan-wide setting. Change it on the Plan metrics tab of the plan base object.', (string) $form['metric_source']['#title']);
+    $this->assertStringContainsString('Plan metric source', (string) $form['metric_source']['#title']);
+    $this->assertStringNotContainsString('Prioritized metric source override', (string) $form['metric_source']['#title']);
+    $this->assertStringContainsString('Metric sources are plan-wide settings. Change them on the Plan metrics tab of the plan base object.', (string) $form['metric_source']['#title']);
     $this->assertStringContainsString('material-symbol-help', (string) $form['metric_source']['#title']);
     $this->assertSame('Country Module', (string) $form['metric_source']['#markup']);
-    $this->assertSame('No value is currently available for this metric from Country Module.', (string) $form['value_preview']['#description']);
+    $this->assertSame('No value is currently available for this metric.', (string) $form['value_preview']['#description']);
     $this->assertSame('Original ($)', (string) $financial_metric->getDefaultLabel());
     $this->assertSame('Unmet ($)', (string) $financial_metric->getDefaultLabel('funding_gap'));
     $this->assertSame('% Funded', (string) $financial_metric->getDefaultLabel('coverage'));
+
+    $override_plan = $this->createMock(Plan::class);
+    $override_plan->method('getSourceId')->willReturn(123);
+    $override_plan->method('getPlanDataSource')->willReturn(Plan::DATA_SOURCE_PLAN);
+    $override_plan->method('getPrioritizedDataSourceOverride')->willReturn(Plan::DATA_SOURCE_GHO);
+    $calculated_metric = $plugin->getItemTypePluginForColumn([
+      'item_type' => 'plan_metric_data',
+      'config' => [
+        'metric' => 'target',
+        'processing' => 'calculated',
+        'metric_2' => 'prioritized_target',
+        'calculation' => 'percentage',
+      ],
+    ]);
+    $calculated_metric->setContextValue('plan_object', $override_plan);
+    $form = $calculated_metric->buildForm([
+      '#parents' => ['config'],
+      '#array_parents' => ['config'],
+    ], new FormState());
+    $this->assertStringContainsString('Plan metric source / Prioritized metric source override', (string) $form['metric_source']['#title']);
+    $this->assertSame('Country Module / GHO', (string) $form['metric_source']['#markup']);
 
   }
 

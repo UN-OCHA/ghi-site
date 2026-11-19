@@ -7,7 +7,7 @@ dependencies:
   module:
     - ghi_plans
 id: plan_use_country_module_data
-label: 'Use Country Module data'
+label: 'Plan metric source: Use Country Module data'
 type: base_object
 plugin: set_plan_data_source
 configuration:

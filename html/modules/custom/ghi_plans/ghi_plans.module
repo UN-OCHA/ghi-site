@@ -85,6 +85,19 @@ function ghi_plans_form_base_object_plan_edit_form_alter(&$form, FormStateInterf
 }
 
 /**
+ * Implements hook_views_data_alter().
+ */
+function ghi_plans_views_data_alter(array &$data): void {
+  $data['base_object']['effective_plan_prioritized_source'] = [
+    'title' => t('Prioritized metric source'),
+    'help' => t('Shows the effective prioritized metric source, including inherited plan metric sources.'),
+    'field' => [
+      'id' => 'plan_prioritized_source',
+    ],
+  ];
+}
+
+/**
  * Implements hook_migrate_MIGRATE_ID_prepare_row().
  */
 function ghi_plans_migrate_plan_prepare_row(Row $row, MigrateSourceInterface $source, MigrationInterface $migration) {

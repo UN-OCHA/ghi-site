@@ -58,16 +58,33 @@ class PlanOverviewQueryTest extends UnitTestCase {
   }
 
   /**
+   * Tests that missing and zero prioritized requirements remain distinct.
+   */
+  public function testOptionalPrioritizedRequirementTotal(): void {
+    $visible_plan = $this->createMock(PlanOverviewPlan::class);
+    $query = $this->getMockBuilder(PlanOverviewQuery::class)
+      ->disableOriginalConstructor()
+      ->onlyMethods(['getGhoPlans'])
+      ->getMock();
+    $query->method('getGhoPlans')->willReturn([1 => $visible_plan]);
+
+    $missing = $this->createMock(PlanOverviewPlan::class);
+    $missing->method('getPrioritizedRequirements')->willReturn(NULL);
+    (new \ReflectionProperty(PlanOverviewQuery::class, 'aggregatePlans'))->setValue($query, [1 => $missing]);
+    $this->assertNull($query->getTotalPrioritizedRequirements());
+
+    $zero = $this->createMock(PlanOverviewPlan::class);
+    $zero->method('getPrioritizedRequirements')->willReturn(0);
+    (new \ReflectionProperty(PlanOverviewQuery::class, 'aggregatePlans'))->setValue($query, [1 => $zero]);
+    $this->assertSame(0.0, $query->getTotalPrioritizedRequirements());
+  }
+
+  /**
    * Tests population totals use the aggregate-ready plan values.
    */
   public function testCaseloadMetricTotals(): void {
     $first_aggregate_plan = $this->createMock(PlanOverviewPlan::class);
     $first_aggregate_plan->method('id')->willReturn(1);
-    $first_aggregate_plan->method('getPlanCaseloadFields')->willReturn([
-      'in_need' => 100,
-      'target' => 80,
-      'latest_reach' => 60,
-    ]);
     $first_aggregate_plan->method('getCaseloadValue')->willReturnMap([
       ['in_need', 'In Need', 100],
       ['target', 'Target', 80],
@@ -76,11 +93,6 @@ class PlanOverviewQueryTest extends UnitTestCase {
     $first_aggregate_plan->method('isRrp')->willReturn(FALSE);
     $second_aggregate_plan = $this->createMock(PlanOverviewPlan::class);
     $second_aggregate_plan->method('id')->willReturn(2);
-    $second_aggregate_plan->method('getPlanCaseloadFields')->willReturn([
-      'in_need' => 50,
-      'target' => 40,
-      'latest_reach' => 30,
-    ]);
     $second_aggregate_plan->method('getCaseloadValue')->willReturnMap([
       ['in_need', 'In Need', 50],
       ['target', 'Target', 40],
@@ -94,33 +106,45 @@ class PlanOverviewQueryTest extends UnitTestCase {
 
     $query = $this->getMockBuilder(PlanOverviewQuery::class)
       ->disableOriginalConstructor()
-      ->onlyMethods(['getGhoPlans', 'getPlans'])
+      ->onlyMethods(['getGhoPlans'])
       ->getMock();
     $query->method('getGhoPlans')->willReturn($visible_plans);
-    $query->method('getPlans')->willReturn($visible_plans);
     (new \ReflectionProperty(PlanOverviewQuery::class, 'aggregatePlans'))->setValue($query, [
       1 => $first_aggregate_plan,
       2 => $second_aggregate_plan,
     ]);
 
-    $storage = $this->createMock(EntityStorageInterface::class);
-    $storage->method('loadByProperties')->willReturn([]);
-    $entity_type_manager = $this->createMock(EntityTypeManagerInterface::class);
-    $entity_type_manager->method('getStorage')->with('base_object')->willReturn($storage);
-    $container = new ContainerBuilder();
-    $container->set('entity_type.manager', $entity_type_manager);
-    \Drupal::setContainer($container);
-
     $totals = $query->getCaseloadTotalValues([
       'in_need' => 'In Need',
       'target' => 'Target',
+      'prioritized_target' => 'People prioritized',
       'latest_reach' => 'Reached',
     ]);
     $this->assertSame(150, $totals['in_need']);
     $this->assertSame(120, $totals['target']);
+    $this->assertNull($totals['prioritized_target']);
     $this->assertSame(90, $totals['latest_reach']);
     $this->assertSame(120, $totals['target_custom']);
     $this->assertSame(90, $totals['reached_custom']);
+  }
+
+  /**
+   * Tests that normalized metrics do not require primary-source caseload data.
+   */
+  public function testCaseloadTotalsWithoutPrimaryCaseloadFields(): void {
+    $aggregate_plan = $this->createMock(PlanOverviewPlan::class);
+    $aggregate_plan->method('id')->willReturn(1);
+    $aggregate_plan->method('getCaseloadValue')->with('prioritized_target', 'People prioritized')->willReturn(25);
+
+    $query = $this->getMockBuilder(PlanOverviewQuery::class)
+      ->disableOriginalConstructor()
+      ->onlyMethods(['getGhoPlans'])
+      ->getMock();
+    $query->method('getGhoPlans')->willReturn([1 => $this->createMock(PlanOverviewPlan::class)]);
+    (new \ReflectionProperty(PlanOverviewQuery::class, 'aggregatePlans'))->setValue($query, [1 => $aggregate_plan]);
+
+    $totals = $query->getCaseloadTotalValues(['prioritized_target' => 'People prioritized']);
+    $this->assertSame(25, $totals['prioritized_target']);
   }
 
   /**

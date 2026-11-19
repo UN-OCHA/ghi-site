@@ -35,6 +35,7 @@ class PlanFormAlter {
       'field_operations_category',
       'field_plan_caseload',
       'field_plan_data_source',
+      'field_plan_prioritized_source',
       'field_plan_document_link',
       'field_plan_type_label_override',
       'field_plan_version_argument',
@@ -46,6 +47,10 @@ class PlanFormAlter {
         continue;
       }
       unset($form[$element_key]['#disabled']);
+    }
+
+    if (isset($form['field_plan_prioritized_source']['widget'])) {
+      $form['field_plan_prioritized_source']['widget']['#empty_option'] = t('Use plan metric source');
     }
 
     // Check for required fields with unset values, extract the default value

@@ -1,0 +1,14 @@
+uuid: 7f797ae5-e2c1-4b0c-8710-6cef8b728224
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.field.base_object.plan.field_plan_prioritized_source
+  module:
+    - ghi_plans
+id: plan_prioritized_use_plan_metric_source
+label: 'Prioritized metric source: Use plan metric source'
+type: base_object
+plugin: set_plan_prioritized_data_source
+configuration:
+  source: ''
