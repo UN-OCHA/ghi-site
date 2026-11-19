@@ -3,8 +3,8 @@ langcode: en
 status: false
 dependencies: {  }
 id: hpc_api_data
-label: 'HPC API Data'
-description: 'Import data from the HPC API (Fabric).'
+label: 'HPC data backend'
+description: 'Import data from the HPC data backend.'
 source_type: 'HPC API'
 module: null
 shared_configuration:

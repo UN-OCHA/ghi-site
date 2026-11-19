@@ -34,6 +34,7 @@ class PlanFormAlter {
       'field_max_admin_level',
       'field_operations_category',
       'field_plan_caseload',
+      'field_plan_data_source',
       'field_plan_document_link',
       'field_plan_type_label_override',
       'field_plan_version_argument',

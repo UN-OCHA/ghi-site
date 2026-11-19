@@ -17,6 +17,7 @@ use Drupal\hpc_api\ApiObjects\Categories\HealthInterventionCategory;
 use Drupal\hpc_api\ApiObjects\Categories\MaternalStatus;
 use Drupal\hpc_api\ApiObjects\Categories\PopulationStatus;
 use Drupal\hpc_api\ApiObjects\Categories\SettlementType;
+use Drupal\hpc_api\ApiObjects\Types\AggregationType;
 use Drupal\hpc_api\ApiObjects\Types\CategoryType;
 use Drupal\hpc_api\ApiObjects\Types\EntityType;
 use Drupal\hpc_api\ApiObjects\Types\FileAssetType;
@@ -51,6 +52,7 @@ abstract class FabricQueryBase extends PluginBase implements FabricQueryPluginIn
    */
   protected const BASE_TYPES = [
     // 'calcMethods' => CalculationMethod::class,
+    'aggregationTypes' => AggregationType::class,
     'categoryTypes' => CategoryType::class,
     'entityTypes' => EntityType::class,
     'metricTypes' => MetricType::class,
@@ -390,6 +392,30 @@ abstract class FabricQueryBase extends PluginBase implements FabricQueryPluginIn
   public function getCategoryTypes(): array {
     $this->fetchBaseTypes();
     return $this->baseTypes['categoryTypes'];
+  }
+
+  /**
+   * Get the available aggregation types.
+   *
+   * @return \Drupal\hpc_api\ApiObjects\Types\AggregationType[]
+   *   The aggregation types keyed by their Fabric ID.
+   */
+  public function getAggregationTypes(): array {
+    $this->fetchBaseTypes();
+    return $this->baseTypes['aggregationTypes'];
+  }
+
+  /**
+   * Get an aggregation type by ID.
+   *
+   * @param int $id
+   *   The Fabric aggregation type ID.
+   *
+   * @return \Drupal\hpc_api\ApiObjects\Types\AggregationType|null
+   *   The aggregation type, or NULL if it is unknown.
+   */
+  public function getAggregationType(int $id): ?AggregationType {
+    return $this->getAggregationTypes()[$id] ?? NULL;
   }
 
   /**

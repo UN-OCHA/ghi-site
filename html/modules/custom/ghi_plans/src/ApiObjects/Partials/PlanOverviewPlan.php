@@ -5,12 +5,12 @@ namespace Drupal\ghi_plans\ApiObjects\Partials;
 use Drupal\ghi_base_objects\ApiObjects\BaseObject;
 use Drupal\ghi_base_objects\ApiObjects\Country;
 use Drupal\ghi_plans\ApiObjects\Attachments\CaseloadAttachmentInterface;
-use Drupal\ghi_plans\ApiObjects\Mocks\PlanOverviewPlanMock;
 use Drupal\ghi_plans\ApiObjects\PlanReportingPeriod;
 use Drupal\ghi_plans\Entity\Plan;
 use Drupal\ghi_plans\Traits\AttachmentFilterTrait;
 use Drupal\ghi_plans\Traits\PlanReportingPeriodTrait;
 use Drupal\ghi_plans\Traits\PlanTypeTrait;
+use Drupal\ghi_plans\ValueObject\PlanMetricValues;
 use Drupal\hpc_common\Helpers\CommonHelper;
 use Drupal\hpc_api\Helpers\StringHelper;
 
@@ -37,16 +37,16 @@ class PlanOverviewPlan extends BaseObject {
   /**
    * The requirements.
    *
-   * @var float
+   * @var float|null
    */
-  protected float $requirements;
+  protected ?float $requirements;
 
   /**
    * The funding.
    *
-   * @var float
+   * @var float|null
    */
-  protected float $funding;
+  protected ?float $funding;
 
   /**
    * Whether the plan is part of the GHO.
@@ -72,9 +72,14 @@ class PlanOverviewPlan extends BaseObject {
   /**
    * The caseloads.
    *
-   * @var \Drupal\ghi_plans\ApiObjects\Attachments\CaseloadAttachment[]
+   * @var \Drupal\ghi_plans\ApiObjects\Attachments\CaseloadAttachmentInterface[]
    */
   private $caseloads;
+
+  /**
+   * Normalized source-aware plan metrics.
+   */
+  private PlanMetricValues $metrics;
 
   /**
    * {@inheritdoc}
@@ -86,12 +91,18 @@ class PlanOverviewPlan extends BaseObject {
     $this->id = $plan->id();
     $this->name = $plan->getName();
     $this->planType = $plan->getPlanType()?->getName() ?? NULL;
-    $this->requirements = ($data->requirements ?? NULL) ?: 0;
-    $this->funding = ($data->funding ?? NULL) ?: 0;
+    // Keep direct construction compatible with callers that still supply the
+    // former caseload and financial properties instead of normalized metrics.
+    $this->metrics = $data->metrics ?? new PlanMetricValues(Plan::DATA_SOURCE_PLAN, array_filter([
+      'requirements' => $data->requirements ?? NULL,
+      'funding' => $data->funding ?? NULL,
+    ], fn ($value) => $value !== NULL), $data->caseloads ?? []);
+    $this->requirements = $this->metrics->get('requirements');
+    $this->funding = $this->metrics->get('funding');
     $this->isPartOfGHO = $plan->isPartOfGho();
     $this->lastPublishedReportingPeriodId = $plan->getLastPublishedReportingPeriodId();
     $this->countries = $plan->getCountries();
-    $this->caseloads = $data->caseloads ?? [];
+    $this->caseloads = $this->metrics->getCaseloads();
     usort($this->caseloads, fn($a, $b) => strcmp($a->getCustomId(), $b->getCustomId()));
   }
 
@@ -135,8 +146,8 @@ class PlanOverviewPlan extends BaseObject {
   /**
    * Get the base object entity corresponding to this API object.
    *
-   * @return \Drupal\ghi_plans\Entity\Plan
-   *   The plan entity.
+   * @return \Drupal\ghi_plans\Entity\Plan|null
+   *   The plan entity, or NULL when no imported plan matches.
    */
   public function getEntity() {
     $entity = parent::getEntity();
@@ -156,8 +167,8 @@ class PlanOverviewPlan extends BaseObject {
   /**
    * Get the type of a plan.
    *
-   * @return string
-   *   The plan type name.
+   * @return string|null
+   *   The plan type name, or NULL when unavailable.
    */
   public function getTypeName($fetch_from_entity = FALSE) {
     if ($fetch_from_entity && $plan_type = $this->getPlanType()) {
@@ -169,8 +180,8 @@ class PlanOverviewPlan extends BaseObject {
   /**
    * Get the shortname type of a plan.
    *
-   * @return string
-   *   The plan type name.
+   * @return string|null
+   *   The abbreviated plan type name, or NULL when unavailable.
    */
   public function getTypeShortName() {
     if ($plan_type = $this->getPlanType()) {
@@ -257,46 +268,48 @@ class PlanOverviewPlan extends BaseObject {
   }
 
   /**
-   * Check if the plan is part of the GHO.
+   * Checks whether the plan is part of the GHO.
    *
    * @return bool
-   *   TRUE if the plan is partof the GHO, FALSE otherwise.
+   *   TRUE if the plan is part of the GHO, FALSE otherwise.
    */
   public function isPartOfGho() {
     return $this->isPartOfGHO;
   }
 
   /**
-   * Get the coverage for a plan based on the given funding.
+   * Gets coverage from canonical funding and source-selected requirements.
    *
    * @param int $precision
    *   The precision to use (number of digits after the decimal point).
    *
-   * @return float
-   *   The coverage for a plan.
+   * @return float|null
+   *   The coverage, or NULL when either source value is unavailable.
    */
-  public function getCoverage(int $precision = 1): float {
-    return (float) CommonHelper::calculateRatio($this->getFunding() ?: 0, $this->getRequirements(), $precision + 2) * 100;
+  public function getCoverage(int $precision = 1): ?float {
+    $funding = $this->getFunding();
+    $requirements = $this->getRequirements();
+    return $funding !== NULL && $requirements !== NULL ? (float) CommonHelper::calculateRatio($funding, $requirements, $precision + 2) * 100 : NULL;
   }
 
   /**
    * Get the requirements for a plan.
    *
-   * @return int
-   *   The plan requirements.
+   * @return int|null
+   *   The plan requirements, or NULL when the selected source has no value.
    */
-  public function getRequirements(): int {
-    return (int) $this->requirements;
+  public function getRequirements(): ?int {
+    return $this->requirements !== NULL ? (int) $this->requirements : NULL;
   }
 
   /**
    * Get the funding for a plan.
    *
-   * @return int
-   *   The plan funding.
+   * @return int|null
+   *   The canonical plan funding, or NULL when FTS has no value.
    */
-  public function getFunding(): int {
-    return (int) $this->funding;
+  public function getFunding(): ?int {
+    return $this->funding !== NULL ? (int) $this->funding : NULL;
   }
 
   /**
@@ -304,44 +317,85 @@ class PlanOverviewPlan extends BaseObject {
    *
    * @param string $metric_type
    *   The metric type.
-   * @param string $metric_name
-   *   The english metric name.
+   * @param string|null $metric_name
+   *   The English metric name when an attachment lookup needs it.
    *
    * @return int|float|null
    *   The caseload value if found.
    */
   public function getCaseloadValue(string $metric_type, ?string $metric_name = NULL): int|float|null {
+    // GHO-backed plans have no caseload objects, so a missing normalized value
+    // remains missing instead of falling back to Country Module data. The
+    // attachment fallback only supports legacy Country Module metric types not
+    // included in the normalized set.
+    if ($this->metrics->has($metric_type)) {
+      return (int) $this->metrics->get($metric_type);
+    }
     $plan_caseload = $this->getPlanCaseload();
     if (!$plan_caseload) {
       return NULL;
     }
 
     $value = $plan_caseload->getCaseloadValue($metric_type, $metric_name);
-    // In general, we want to return int values for the caseload values.
-    // Only if this is invoked from a PlanOverviewPlanMock object, we want
-    // to support returning float-like values, as these are entered
-    // manually for the custom rows.
-    return $value !== NULL ? ((self::class instanceof PlanOverviewPlanMock) ? $value : (int) $value) : NULL;
+    return $value !== NULL ? (int) $value : NULL;
   }
 
   /**
-   * Get the fields of the plan caseload attachment.
+   * Gets the fields available for plan-level population aggregation.
    *
-   * @param int $attachment_id
+   * GHO-backed plans expose normalized values directly. Country Module plans
+   * expose fields from their selected caseload attachment.
+   *
+   * @param int|null $attachment_id
    *   Optional argument to retrieve a specific caseload.
    *
    * @return array
    *   An array of caseload fields.
    */
   public function getPlanCaseloadFields($attachment_id = NULL): array {
+    if ($this->metrics->getSource() === Plan::DATA_SOURCE_GHO) {
+      return $this->metrics->getValues();
+    }
     $caseload = $this->getPlanCaseload($attachment_id);
     return $caseload?->getFields() ?? [];
   }
 
   /**
+   * Gets the source used for plan-level metrics.
+   *
+   * @return string
+   *   The resolved source.
+   */
+  public function getMetricSource(): string {
+    return $this->metrics->getSource();
+  }
+
+  /**
+   * Gets the prioritized target when supplied by the selected source.
+   *
+   * @return int|null
+   *   The prioritized target.
+   */
+  public function getPrioritizedTarget(): ?int {
+    $value = $this->metrics->get('prioritized_target');
+    return $value !== NULL ? (int) $value : NULL;
+  }
+
+  /**
+   * Gets prioritized requirements when supplied by the selected source.
+   *
+   * @return int|null
+   *   The prioritized requirements.
+   */
+  public function getPrioritizedRequirements(): ?int {
+    $value = $this->metrics->get('prioritized_requirements');
+    return $value !== NULL ? (int) $value : NULL;
+  }
+
+  /**
    * Get the plan caseload attachment.
    *
-   * @param int $attachment_id
+   * @param int|null $attachment_id
    *   Optional argument to retrieve a specific caseload.
    *
    * @return \Drupal\ghi_plans\ApiObjects\Attachments\CaseloadAttachmentInterface|null

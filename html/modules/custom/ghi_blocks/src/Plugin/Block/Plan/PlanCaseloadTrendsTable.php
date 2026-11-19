@@ -3,6 +3,7 @@
 namespace Drupal\ghi_blocks\Plugin\Block\Plan;
 
 use Drupal\Core\Block\Attribute\Block;
+use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Plugin\Context\EntityContextDefinition;
 use Drupal\Core\Security\TrustedCallbackInterface;
@@ -13,6 +14,7 @@ use Drupal\ghi_blocks\Traits\PlanFootnoteTrait;
 use Drupal\ghi_blocks\Traits\TableSoftLimitTrait;
 use Drupal\ghi_blocks\Traits\TableTrait;
 use Drupal\ghi_plans\Entity\Plan;
+use Drupal\ghi_plans\PlanMetricResolver;
 use Drupal\hpc_common\Helpers\BlockHelper;
 use Drupal\hpc_common\Helpers\CommonHelper;
 use Drupal\hpc_common\Helpers\ThemeHelper;
@@ -58,16 +60,16 @@ class PlanCaseloadTrendsTable extends GHIBlockBase implements OverrideDefaultTit
   protected $sectionManager;
 
   /**
+   * The source-aware plan metric resolver.
+   */
+  protected PlanMetricResolver $planMetricResolver;
+
+  /**
    * {@inheritdoc}
    */
   public static function metadata(): ?HPCBlockMetadata {
     return new HPCBlockMetadata(
       defaultTitle: 'Evolution of the humanitarian response',
-      dataSources: [
-        'attachment' => 'fabric_query:attachment',
-        'entity' => 'fabric_query:entity',
-        'plan' => 'fabric_query:plan',
-      ]
     );
   }
 
@@ -79,7 +81,7 @@ class PlanCaseloadTrendsTable extends GHIBlockBase implements OverrideDefaultTit
     $instance = parent::create($container, $configuration, $plugin_id, $plugin_definition);
     $instance->planManager = $container->get('ghi_plans.manager');
     $instance->sectionManager = $container->get('ghi_sections.manager');
-
+    $instance->planMetricResolver = $container->get('ghi_plans.plan_metric_resolver');
     return $instance;
   }
 
@@ -103,7 +105,7 @@ class PlanCaseloadTrendsTable extends GHIBlockBase implements OverrideDefaultTit
       return $this->buildTable();
     }
 
-    // Otherwise be a bit more sophisticated.
+    // Public rendering starts with a limited preview and lazy-loads all rows.
     $table = $this->buildTable($this->getBlockConfig()['soft_limit']);
     if (empty($table)) {
       return NULL;
@@ -115,7 +117,7 @@ class PlanCaseloadTrendsTable extends GHIBlockBase implements OverrideDefaultTit
     // themes/custom/common_design_subtheme/js/common.js to add the expand
     // button in a disabled state if the table will eventually be bigger than
     // what is defined as the soft limit.
-    return [
+    $build = [
       '#lazy_builder' => [
         static::class . '::lazyBuildTable',
         [
@@ -138,10 +140,14 @@ class PlanCaseloadTrendsTable extends GHIBlockBase implements OverrideDefaultTit
       ],
       '#lazy_builder_preview' => $table,
     ];
+    // The preview is stored in a render property rather than as an element
+    // child, so propagate its dependencies to the surrounding placeholder.
+    CacheableMetadata::createFromRenderArray($table)->applyTo($build);
+    return $build;
   }
 
   /**
-   * Lazy builder callback for attachment tables.
+   * Lazy builder callback for the complete trends table.
    *
    * @param string $plugin_id
    *   The plugin id of this block plugin.
@@ -165,7 +171,7 @@ class PlanCaseloadTrendsTable extends GHIBlockBase implements OverrideDefaultTit
     // are part of the same main thread that renders the page. Given that there
     // can be an arbitrarily high number of these calls, especially on logframe
     // pages, we need to account for that by keeping memory under control. So
-    // better to loose a bit of performance when it comes to lazy loading the
+    // better to lose a bit of performance when it comes to lazy loading the
     // tables, than running into a memory issue and not showing some of the
     // tables at all.
     drupal_static_reset();
@@ -179,15 +185,15 @@ class PlanCaseloadTrendsTable extends GHIBlockBase implements OverrideDefaultTit
    * @param int|null $limit
    *   An optional limit for the number of table rows.
    *
-   * @return array
-   *   A render array for the table.
+   * @return array|null
+   *   A render array for the table, or NULL when no source data is available.
    */
   public function buildTable(?int $limit = NULL) {
     $table = $this->buildTableData($limit);
     if (empty($table)) {
       return NULL;
     }
-    return [
+    $build = [
       '#theme' => 'table',
       '#header' => $table['header'],
       '#rows' => $table['rows'],
@@ -197,6 +203,8 @@ class PlanCaseloadTrendsTable extends GHIBlockBase implements OverrideDefaultTit
       '#soft_limit_show_disabled' => count($this->getRelatedPlans()) > $this->getBlockConfig()['soft_limit'],
       '#block_id' => $this->getBlockId(),
     ];
+    $table['cacheability']->applyTo($build);
+    return $build;
   }
 
   /**
@@ -206,10 +214,11 @@ class PlanCaseloadTrendsTable extends GHIBlockBase implements OverrideDefaultTit
    *   An optional limit for the table rows.
    *
    * @return array|null
-   *   An array with the keys "header" and "rows".
+   *   The table header, rows and their cacheability metadata.
    */
   private function buildTableData(?int $limit = NULL) {
-    $data = $this->buildSourceData($limit);
+    $cacheability = new CacheableMetadata();
+    $data = $this->buildSourceData($limit, $cacheability);
     if (empty($data)) {
       return NULL;
     }
@@ -226,10 +235,12 @@ class PlanCaseloadTrendsTable extends GHIBlockBase implements OverrideDefaultTit
       ],
       'in_need' => $this->buildHeaderColumn($this->t('People in need', [], $t_options), 'amount'),
       'target' => $this->buildHeaderColumn($this->t('People targeted', [], $t_options), 'amount'),
+      'prioritized_target' => $this->buildHeaderColumn($this->t('People prioritized', [], $t_options), 'amount'),
       'target_percent' => $this->buildHeaderColumn($this->t('People targeted (%)', [], $t_options), 'amount'),
       'reached' => $this->buildHeaderColumn($this->t('People reached', [], $t_options), 'amount'),
       'reached_percent' => $this->buildHeaderColumn($this->t('People reached (%)', [], $t_options), 'amount'),
       'requirements' => $this->buildHeaderColumn($this->t('Requirements ($)', [], $t_options), 'currency'),
+      'prioritized_requirements' => $this->buildHeaderColumn($this->t('Prioritized requirements ($)', [], $t_options), 'currency'),
       'funding' => $this->buildHeaderColumn($this->t('Funding ($)', [], $t_options), 'currency'),
       'coverage' => $this->buildHeaderColumn($this->t('% Funded', [], $t_options), 'percentage'),
     ];
@@ -286,6 +297,13 @@ class PlanCaseloadTrendsTable extends GHIBlockBase implements OverrideDefaultTit
           'export_value' => $item['target'],
           'export_commentary' => $this->getFootnoteForProperty($item['footnotes'], 'target'),
         ],
+        'prioritized_target' => [
+          'data' => $this->buildRenderArray('hpc_amount', $item['prioritized_target'] ?? FALSE, $theme_options),
+          'data-raw-value' => $item['prioritized_target'] ?? 0,
+          'data-column-type' => 'amount',
+          'data-progress-group' => 'people',
+          'export_value' => $item['prioritized_target'],
+        ],
         'target_percent' => [
           'data' => $this->buildRenderArray('hpc_percent', $item['target_percent'] ?? FALSE, $theme_options),
           'data-raw-value' => $item['target_percent'] ?? 0,
@@ -318,6 +336,13 @@ class PlanCaseloadTrendsTable extends GHIBlockBase implements OverrideDefaultTit
           'export_value' => $item['requirements'],
           'export_commentary' => $this->getFootnoteForProperty($item['footnotes'], 'requirements'),
         ],
+        'prioritized_requirements' => [
+          'data' => $this->buildRenderArray('hpc_currency', $item['prioritized_requirements'] ?? FALSE, $theme_options),
+          'data-raw-value' => $item['prioritized_requirements'] ?? 0,
+          'data-column-type' => 'currency',
+          'data-progress-group' => 'financial',
+          'export_value' => $item['prioritized_requirements'],
+        ],
         'funding' => [
           'data' => [
             $this->buildRenderArray('hpc_currency', $item['funding'] ?? FALSE, $theme_options),
@@ -344,20 +369,17 @@ class PlanCaseloadTrendsTable extends GHIBlockBase implements OverrideDefaultTit
       return NULL;
     }
 
-    $columns = $this->getBlockConfig()['columns'];
-    if (!empty(array_filter($columns))) {
-      foreach ($columns as $key => $enabled) {
-        if ($enabled) {
-          continue;
+    $column_defaults = $this->getConfigurationDefaults()['columns'];
+    $columns = $this->getBlockConfig()['columns'] ?? $column_defaults;
+    $visible_columns = array_filter($columns) ?: array_fill_keys(array_keys($columns), TRUE);
+    foreach (array_keys(array_diff_key($column_defaults, $visible_columns)) as $key) {
+      unset($header[$key]);
+      foreach ($rows as &$row) {
+        if (!isset($row['data'])) {
+          unset($row[$key]);
         }
-        unset($header[$key]);
-        foreach ($rows as &$row) {
-          if (!isset($row['data'])) {
-            unset($row[$key]);
-          }
-          else {
-            unset($row['data'][$key]);
-          }
+        else {
+          unset($row['data'][$key]);
         }
       }
     }
@@ -394,7 +416,7 @@ class PlanCaseloadTrendsTable extends GHIBlockBase implements OverrideDefaultTit
               ],
               'data-raw-value' => (string) $this->t('There was no plan in this year.', [], $t_options),
               'data-sort-value' => -1,
-              'colspan' => count(array_filter($columns)) + 1,
+              'colspan' => count($visible_columns) + 1,
             ],
           ],
           'class' => 'empty no-plan',
@@ -405,6 +427,7 @@ class PlanCaseloadTrendsTable extends GHIBlockBase implements OverrideDefaultTit
     return [
       'header' => $header,
       'rows' => ThemeHelper::applyTableNumberFormatting($rows),
+      'cacheability' => $cacheability,
     ];
   }
 
@@ -413,12 +436,42 @@ class PlanCaseloadTrendsTable extends GHIBlockBase implements OverrideDefaultTit
    *
    * @param int|null $limit
    *   An optional limit for the number of plans to retrieve.
+   * @param \Drupal\Core\Cache\CacheableMetadata|null $cacheability
+   *   Cacheability metadata to update with source dependencies.
    *
    * @return array|null
    *   An array with data or NULL.
    */
-  private function buildSourceData(?int $limit = NULL) {
+  private function buildSourceData(?int $limit = NULL, ?CacheableMetadata $cacheability = NULL) {
+    $cacheability ??= new CacheableMetadata();
     $related_plans = $this->getRelatedPlans();
+    if (empty($related_plans)) {
+      return NULL;
+    }
+
+    // All related plans affect row availability and the soft-limit state, even
+    // when this build renders only the limited preview.
+    foreach ($related_plans as $plan) {
+      $cacheability->addCacheableDependency($plan);
+    }
+
+    // Resolve all values in bulk. Unless explicitly overridden, every plan
+    // keeps its own source setting so a historical series can mix sources.
+    $metrics_by_plan = $this->planMetricResolver->resolve($related_plans, $this->getSourceOverride());
+    // Retain tags even for empty metric sets so a later remote value can
+    // invalidate a table that currently displays no data for that plan.
+    foreach ($metrics_by_plan as $metrics) {
+      $cacheability->addCacheTags($metrics->getCacheTags());
+    }
+
+    // The GHO source is allowed to precede the plan's release, but only when
+    // Fabric already provides GHO metrics for the row. This preserves the
+    // original publication gate for Country Module data without introducing
+    // empty rows for unrelated unpublished plans.
+    $related_plans = array_filter($related_plans, function (Plan $plan) use ($metrics_by_plan): bool {
+      $metrics = $metrics_by_plan[$plan->getSourceId()] ?? NULL;
+      return $metrics && ($plan->isReleased() || ($metrics->getSource() === Plan::DATA_SOURCE_GHO && $metrics->hasSourceValues()));
+    });
     if (empty($related_plans)) {
       return NULL;
     }
@@ -426,12 +479,6 @@ class PlanCaseloadTrendsTable extends GHIBlockBase implements OverrideDefaultTit
     if ($limit !== NULL) {
       $related_plans = array_slice($related_plans, 0, $limit, TRUE);
     }
-
-    /** @var \Drupal\ghi_plans\Plugin\FabricQuery\AttachmentQuery $attachments_query */
-    $attachments_query = $this->getQueryHandler('attachment');
-
-    /** @var \Drupal\ghi_plans\Plugin\FabricQuery\PlanQuery $plan_query */
-    $plan_query = $this->getQueryHandler('plan');
 
     // Collect the plan types per year to see if we need to add information to
     // distinguish different plans in the same year.
@@ -443,50 +490,50 @@ class PlanCaseloadTrendsTable extends GHIBlockBase implements OverrideDefaultTit
       $plan_types[$plan_year][$plan_type] = !empty($plan_types[$plan_year][$plan_type]) ? $plan_types[$plan_year][$plan_type] + 1 : 1;
     }
 
-    // Extract plan ids and preload the caseload data.
-    $plan_ids = array_filter(array_map(fn (Plan $plan): ?int => $plan->getSourceId(), $related_plans));
-    $caseloads_by_plan = $attachments_query?->getAttachmentsByPlan($plan_ids, 'caseload') ?? [];
-
-    // Prefetch all plan objects from the API, because the
-    // PlanReportingPeriodTrait::getLatestPublishedReportingPeriod() will load
-    // these to fetch the last published reporting period.
-    // @todo See if it makes sense to import the last published reporting
-    // period and store it in the plan base objects.
-    $plan_query->getPlansById($plan_ids);
-
     foreach ($related_plans as $plan) {
       $plan_id = $plan->getSourceId();
+      $metrics = $metrics_by_plan[$plan_id] ?? NULL;
+      if (!$metrics) {
+        continue;
+      }
       $plan_year = $plan->getYear();
       $plan_type = $plan->getPlanType()->getAbbreviation();
 
-      $caseloads = $caseloads_by_plan[$plan_id] ?? [];
-      /** @var \Drupal\ghi_plans\ApiObjects\Attachments\CaseloadAttachment $caseload */
-      $caseload = count($caseloads) > 1 ? $plan->getPlanCaseload($caseloads) : (!empty($caseloads) ? reset($caseloads) : NULL);
-
-      // Setup the plan type label to distinguish years with multiple plans of
+      // Set up the plan type label to distinguish years with multiple plans of
       // the same type.
       $plan_type_label = $plan_types[$plan_year][$plan_type] > 1 ? $plan_type . ' - ' . $plan->getShortName() : $plan_type;
 
-      $in_need = $caseload?->getCaseloadValue('in_need');
-      $target = $caseload?->getCaseloadValue('target');
-      $reached = $caseload?->getCaseloadValue('latest_reach') ?? $caseload?->getCaseloadValue('cumulative_reach');
+      $in_need = $metrics->get('in_need');
+      $target = $metrics->get('target');
+      $prioritized_target = $metrics->get('prioritized_target');
+      $reached = $metrics->get('latest_reach');
+      $requirements = $metrics->get('requirements');
+      $prioritized_requirements = $metrics->get('prioritized_requirements');
+      $funding = $metrics->get('funding');
 
       // See if there is a section for this plan.
       $section = $this->sectionManager->loadSectionForBaseObject($plan);
+      $section_access = $section?->access('view', NULL, TRUE);
+      if ($section) {
+        $cacheability->addCacheableDependency($section);
+        $cacheability->addCacheableDependency($section_access);
+      }
 
       $plan_data[] = [
         'year' => $plan_year,
         'plan_type' => $plan_type_label,
-        'plan_type_link' => $section && $section->access('view') ? $section->toLink($plan_type_label)->toRenderable() : ['#markup' => $plan_type_label],
+        'plan_type_link' => $section_access?->isAllowed() ? $section->toLink($plan_type_label)->toRenderable() : ['#markup' => $plan_type_label],
         'plan_type_tooltip' => !$plan->isPartOfGho(),
         'in_need' => $in_need,
         'target' => $target,
-        'target_percent' => $target ? CommonHelper::calculateRatio($target, $in_need) * 100 : NULL,
+        'prioritized_target' => $prioritized_target,
+        'target_percent' => $target !== NULL && $in_need !== NULL ? CommonHelper::calculateRatio($target, $in_need) * 100 : NULL,
         'reached' => $reached,
-        'reached_percent' => $reached ? CommonHelper::calculateRatio($reached, $target) * 100 : NULL,
-        'requirements' => (int) $plan->getRequirements(),
-        'funding' => $plan->getTotalFunding(),
-        'coverage' => $plan->getCoverage(),
+        'reached_percent' => $reached !== NULL && $target !== NULL ? CommonHelper::calculateRatio($reached, $target) * 100 : NULL,
+        'requirements' => $requirements,
+        'prioritized_requirements' => $prioritized_requirements,
+        'funding' => $funding,
+        'coverage' => $requirements !== NULL && $funding !== NULL ? CommonHelper::calculateRatio($funding, $requirements) * 100 : NULL,
         'footnotes' => $plan ? $this->getFootnotesForPlanBaseobject($plan) : NULL,
       ];
     }
@@ -497,7 +544,7 @@ class PlanCaseloadTrendsTable extends GHIBlockBase implements OverrideDefaultTit
    * Get the related plans for this element.
    *
    * @return \Drupal\ghi_plans\Entity\Plan[]
-   *   An array of plan base objects.
+   *   An array of plan base objects keyed by Fabric source ID.
    */
   private function getRelatedPlans() {
     $section = $this->getCurrentSectionNode();
@@ -511,15 +558,26 @@ class PlanCaseloadTrendsTable extends GHIBlockBase implements OverrideDefaultTit
     $related_plans = array_filter($related_plans, function (Plan $plan) {
       return $plan->getPlanType() !== NULL;
     });
-    // Filter out restricted plans.
-    $related_plans = array_filter($related_plans, function (Plan $plan) {
-      return $plan->isReleased() && !$plan->isRestricted();
+    // Released remains the publication gate for Country Module data. An
+    // explicitly selected GHO source can precede it because GHO data is
+    // published independently from the plan data.
+    $source_override = $this->getSourceOverride();
+    $related_plans = array_filter($related_plans, function (Plan $plan) use ($source_override): bool {
+      $source = $source_override ?? $plan->getPlanDataSource();
+      return !$plan->isRestricted() && ($plan->isReleased() || $source === Plan::DATA_SOURCE_GHO);
     });
     // Initially sort by descending year.
     uasort($related_plans, function ($a, $b) {
       return strnatcasecmp($b->getYear(), $a->getYear());
     });
-    return $related_plans;
+
+    $plans_by_source_id = [];
+    foreach ($related_plans as $related_plan) {
+      if ($related_plan->getSourceId()) {
+        $plans_by_source_id[$related_plan->getSourceId()] = $related_plan;
+      }
+    }
+    return $plans_by_source_id;
   }
 
   /**
@@ -530,14 +588,17 @@ class PlanCaseloadTrendsTable extends GHIBlockBase implements OverrideDefaultTit
       'columns' => [
         'in_need' => 'in_need',
         'target' => 'target',
+        'prioritized_target' => 0,
         'target_percent' => 0,
         'reached' => 0,
         'reached_percent' => 0,
         'requirements' => 'requirements',
+        'prioritized_requirements' => 0,
         'funding' => 'funding',
         'coverage' => 'coverage',
       ],
       'soft_limit' => NULL,
+      'data_source' => 'default',
     ];
   }
 
@@ -552,10 +613,12 @@ class PlanCaseloadTrendsTable extends GHIBlockBase implements OverrideDefaultTit
       '#options' => [
         'in_need' => $this->t('People in need'),
         'target' => $this->t('People targeted'),
+        'prioritized_target' => $this->t('People prioritized'),
         'target_percent' => $this->t('People targeted (%)'),
         'reached' => $this->t('People reached'),
         'reached_percent' => $this->t('People reached (%)'),
         'requirements' => $this->t('Requirements ($)'),
+        'prioritized_requirements' => $this->t('Prioritized requirements ($)'),
         'funding' => $this->t('Funding ($)'),
         'coverage' => $this->t('% Funded'),
       ],
@@ -563,14 +626,39 @@ class PlanCaseloadTrendsTable extends GHIBlockBase implements OverrideDefaultTit
     ];
     $form['soft_limit'] = $this->buildSoftLimitFormElement($this->getDefaultFormValueFromFormState($form_state, 'soft_limit') ?? self::DEFAULT_MAX_YEARS, 3, 10);
     $form['soft_limit']['#description'] = $this->t('Choose how many lines will be shown initially. If there is more data, the table can be expanded by the user.') . ' ' . $form['soft_limit']['#description'];
+    $form['data_source'] = [
+      '#type' => 'select',
+      '#title' => $this->t('Plan metric source'),
+      '#options' => [
+        'default' => $this->t("Use each plan's setting"),
+        Plan::DATA_SOURCE_PLAN => $this->t('Country Module'),
+        Plan::DATA_SOURCE_GHO => $this->t('GHO'),
+      ],
+      '#default_value' => $this->getDefaultFormValueFromFormState($form_state, 'data_source') ?? 'default',
+      '#description' => $this->t('An override pins the component to the selected source while still using the currently valid values from that source.'),
+    ];
     return $form;
+  }
+
+  /**
+   * Gets the optional component-level source pin.
+   *
+   * NULL keeps the source configured on each historical plan.
+   */
+  private function getSourceOverride(): ?string {
+    $source = $this->getBlockConfig()['data_source'] ?? '';
+    return Plan::isValidDataSource($source) ? $source : NULL;
   }
 
   /**
    * {@inheritdoc}
    */
   public function buildDownloadData() {
-    return $this->buildTableData();
+    $table_data = $this->buildTableData();
+    return $table_data ? [
+      'header' => $table_data['header'],
+      'rows' => $table_data['rows'],
+    ] : $table_data;
   }
 
   /**

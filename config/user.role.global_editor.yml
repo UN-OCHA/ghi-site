@@ -40,7 +40,9 @@ dependencies:
     - contextual
     - entity_browser
     - filter
+    - ghi_base_objects
     - ghi_content
+    - ghi_plans
     - ghi_subpages
     - ghi_templates
     - layout_builder
@@ -58,6 +60,7 @@ is_admin: null
 permissions:
   - 'access administration pages'
   - 'access articles entity browser pages'
+  - 'access base object overview'
   - 'access contextual links'
   - 'access remote content'
   - 'access site in maintenance mode'
@@ -127,6 +130,7 @@ permissions:
   - 'edit terms in operations_category'
   - 'edit terms in team'
   - 'manage operation page structure'
+  - 'manage plan metric source'
   - 'publish any content'
   - 'publish any node type article'
   - 'publish any node type custom_subpage'

@@ -145,7 +145,7 @@ class PlanTable extends GHIBlockBase implements HPCDownloadExcelInterface, HPCDo
    * Build a table representation of the plan data.
    *
    * @param bool $export
-   *   Whether the table should be build for export or for display.
+   *   Whether the table should be built for export or for display.
    *
    * @return array
    *   A render array for a table.
@@ -166,11 +166,13 @@ class PlanTable extends GHIBlockBase implements HPCDownloadExcelInterface, HPCDo
       'type' => $this->t('Plan type'),
       'inneed' => $this->buildHeaderColumn($this->t('People in need'), 'amount'),
       'targeted' => $this->buildHeaderColumn($this->t('People targeted'), 'amount'),
+      'prioritized_target' => $this->buildHeaderColumn($this->t('People prioritized'), 'amount'),
       'expected_reach' => $this->buildHeaderColumn($this->t('Estimated Reach'), 'amount'),
       'expected_reached' => $this->buildHeaderColumn($this->t('% Reached'), 'percentage'),
       'latest_reach' => $this->buildHeaderColumn($this->t('People reached'), 'percentage'),
       'reached' => $this->buildHeaderColumn($this->t('% Reached'), 'percentage'),
       'requirements' => $this->buildHeaderColumn($this->t('Requirements'), 'currency'),
+      'prioritized_requirements' => $this->buildHeaderColumn($this->t('Prioritized requirements'), 'currency'),
       'funding' => $this->buildHeaderColumn($this->t('Funding'), 'currency'),
       'coverage' => $this->buildHeaderColumn($this->t('% Funded'), 'percentage'),
       'status' => $this->buildHeaderColumn($this->t('Status'), 'status'),
@@ -182,7 +184,9 @@ class PlanTable extends GHIBlockBase implements HPCDownloadExcelInterface, HPCDo
       $header['link_fts'] = $this->buildHeaderColumn($this->t('Link to FTS page'), 'document');
     }
 
-    $cache_tags = [];
+    // Preserve remote metric dependencies collected while resolving the plans
+    // so a background Fabric refresh invalidates the cached table.
+    $cache_tags = $this->getPlanOverviewQuery()->getCacheTags() ?? [];
     $rows = [];
 
     foreach ($plans as $plan) {
@@ -191,9 +195,10 @@ class PlanTable extends GHIBlockBase implements HPCDownloadExcelInterface, HPCDo
         $cache_tags = Cache::mergeTags($cache_tags, $plan_entity->getCacheTags());
       }
 
-      // Setup the PiN values.
+      // Set up the population metrics.
       $in_need = $plan->getCaseloadValue('in_need');
       $target = $plan->getCaseloadValue('target');
+      $prioritized_target = $plan->getPrioritizedTarget();
       $latest_reached = $plan->getCaseloadValue('latest_reach');
 
       $reached_percent = !empty($latest_reached) && !empty($target) ? 100 / $target * $latest_reached : NULL;
@@ -203,15 +208,16 @@ class PlanTable extends GHIBlockBase implements HPCDownloadExcelInterface, HPCDo
       $expected_reach = $plan->getCaseloadValue('expected_reach', 'Expected Reach');
       $expected_reached = CommonHelper::calculateRatio($expected_reach, $target) * 100;
 
-      // Setup the financial values.
+      // Set up the financial metrics.
       $requirements = $plan->getRequirements();
+      $prioritized_requirements = $plan->getPrioritizedRequirements();
       $funding = $plan->getFunding();
       $coverage = $plan->getCoverage(2);
 
-      // Setup number formatting.
+      // Set up number formatting.
       $decimals = 1;
 
-      // Setup footnotes and document links.
+      // Set up footnotes and document links.
       $footnotes = $plan_entity ? $this->getFootnotesForPlanBaseobject($plan_entity) : NULL;
       if ($footnotes === NULL && $plan instanceof PlanOverviewPlanMock) {
         $footnotes = (object) [
@@ -222,7 +228,7 @@ class PlanTable extends GHIBlockBase implements HPCDownloadExcelInterface, HPCDo
       $link_to_fts = $plan_entity ? $plan_entity->canLinkToFts() : FALSE;
       $document_uri = $plan->getPlanDocumentUri();
 
-      // Setup the column values.
+      // Set up the column values.
       $value_in_need = [
         '#theme' => 'hpc_amount',
         '#amount' => $in_need ?: '-',
@@ -231,6 +237,11 @@ class PlanTable extends GHIBlockBase implements HPCDownloadExcelInterface, HPCDo
       $value_targeted = [
         '#theme' => 'hpc_amount',
         '#amount' => $target ?: '-',
+        '#decimals' => $decimals,
+      ];
+      $value_prioritized_target = [
+        '#theme' => 'hpc_amount',
+        '#amount' => $prioritized_target,
         '#decimals' => $decimals,
       ];
       $value_expected_reach = [
@@ -257,13 +268,17 @@ class PlanTable extends GHIBlockBase implements HPCDownloadExcelInterface, HPCDo
         '#theme' => 'hpc_currency',
         '#value' => $requirements,
       ];
+      $value_prioritized_requirements = [
+        '#theme' => 'hpc_currency',
+        '#value' => $prioritized_requirements,
+      ];
       $value_funding = [
         '#theme' => 'hpc_currency',
         '#value' => $funding,
       ];
       $value_coverage = [
         '#theme' => 'hpc_percent',
-        '#ratio' => $coverage / 100,
+        '#ratio' => $coverage !== NULL ? $coverage / 100 : NULL,
       ];
 
       $rows[$plan->id()] = [];
@@ -310,6 +325,12 @@ class PlanTable extends GHIBlockBase implements HPCDownloadExcelInterface, HPCDo
           'data-progress-group' => 'people',
           'export_commentary' => $this->getFootnoteForProperty($footnotes, 'target'),
         ],
+        'prioritized_target' => [
+          'data' => $value_prioritized_target,
+          'data-raw-value' => $prioritized_target,
+          'data-column-type' => 'amount',
+          'data-progress-group' => 'people',
+        ],
         'expected_reach' => [
           'data' => [
             $value_expected_reach,
@@ -347,6 +368,12 @@ class PlanTable extends GHIBlockBase implements HPCDownloadExcelInterface, HPCDo
           'data-column-type' => 'currency',
           'data-progress-group' => 'financial',
           'export_commentary' => $this->getFootnoteForProperty($footnotes, 'requirements'),
+        ],
+        'prioritized_requirements' => [
+          'data' => $value_prioritized_requirements,
+          'data-raw-value' => $prioritized_requirements,
+          'data-column-type' => 'currency',
+          'data-progress-group' => 'financial',
         ],
         'funding' => [
           'data' => [
