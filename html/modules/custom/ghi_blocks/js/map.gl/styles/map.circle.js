@@ -43,7 +43,12 @@
           'srp': root_styles.getPropertyValue('--ghi-plan-type-srp'),
           'fa': root_styles.getPropertyValue('--ghi-plan-type-fa'),
           'reg': root_styles.getPropertyValue('--ghi-plan-type-reg'),
-          'other': root_styles.getPropertyValue('--ghi-plan-type-other'),
+          'other': root_styles.getPropertyValue('--cd-white'),
+        },
+        plan_type_stroke_colors: {
+          'default': root_styles.getPropertyValue('--cd-white'),
+          // White "Other" markers need a visible outline on light map styles.
+          'other': root_styles.getPropertyValue('--ghi-plan-type-other-map-border'),
         },
         attrs: {
           'stroke': '#fff',
@@ -286,6 +291,7 @@
           // Paint properties.
           'radius': radius,
           'color': this.getColor(object),
+          'stroke_color': this.getStrokeColor(object),
           'opacity': this.getOpacity(object),
           // Label properties.
           'sort_order': Math.round((1 / radius) * 100),
@@ -322,7 +328,7 @@
           'circle-color': ['get', 'color'],
           'circle-opacity': opacity_circle,
           'circle-stroke-width': 1,
-          'circle-stroke-color': root_styles.getPropertyValue('--cd-white'),
+          'circle-stroke-color': ['get', 'stroke_color'],
           'circle-stroke-opacity': opacity_circle,
         },
         'filter': ['==', '$type', 'Point'],
@@ -349,7 +355,7 @@
           'circle-color': ['get', 'color'],
           'circle-opacity': 1,
           'circle-stroke-width': 1,
-          'circle-stroke-color': root_styles.getPropertyValue('--cd-white'),
+          'circle-stroke-color': ['get', 'stroke_color'],
           'circle-stroke-opacity': 1,
         },
       }
@@ -997,6 +1003,28 @@
         return color[1];
       }
       return color[0];
+    }
+
+    /**
+     * Get the stroke color for the given data point.
+     *
+     * @param {Object} object
+     *   A data object.
+     *
+     * @returns {String}
+     *   The stroke color.
+     */
+    getStrokeColor = function (object) {
+      let state = this.state;
+      if (state.isOverviewMap() && object.hasOwnProperty('plan_type')) {
+        let colors = this.config.plan_type_stroke_colors;
+        let color_key = object.plan_type.toLowerCase();
+        if (!this.config.plan_type_colors.hasOwnProperty(color_key)) {
+          color_key = 'other';
+        }
+        return colors[color_key] ?? colors['default'];
+      }
+      return this.config.plan_type_stroke_colors['default'];
     }
 
     /**
