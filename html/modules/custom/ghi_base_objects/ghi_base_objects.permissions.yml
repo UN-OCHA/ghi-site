@@ -1,7 +1,17 @@
+access base object overview:
+  title: 'Access Base object overview'
+  description: 'Allow to access the imported Base object administration pages.'
+
 administer base object entities:
   title: 'Administer Base object entities'
-  description: 'Allow to view and edit imported Base object entities.'
+  description: 'Allow to create and edit imported Base object entities.'
   restrict access: true
+
+delete base object entities:
+  title: 'Delete Base object entities'
+  description: 'Allow to delete imported Base object entities.'
+  restrict access: true
+
 administer base object types:
   title: 'Administer Base object types'
   description: 'Allow to view, edit and create Base object types.'

@@ -10,6 +10,21 @@ use Drupal\Component\Utility\Html;
 class StringHelper {
 
   /**
+   * Normalizes formatting characters commonly introduced by pasted text.
+   *
+   * @param string $string
+   *   The pasted text.
+   *
+   * @return string
+   *   The text with a leading byte-order mark removed and Unicode separator
+   *   characters replaced by regular spaces.
+   */
+  public static function normalizePastedText(string $string): string {
+    $string = preg_replace('/^\x{FEFF}/u', '', $string) ?? $string;
+    return preg_replace('/\p{Z}/u', ' ', $string) ?? $string;
+  }
+
+  /**
    * Make a string camel case.
    */
   public static function makeCamelCase($string, $initial_lower_case) {

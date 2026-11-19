@@ -24,9 +24,9 @@ class PlanOverviewPlanMock extends PlanOverviewPlan {
   /**
    * The funding.
    *
-   * @var float
+   * @var float|null
    */
-  protected float $funding;
+  protected ?float $funding;
 
   /**
    * The coverage.
@@ -182,6 +182,20 @@ class PlanOverviewPlanMock extends PlanOverviewPlan {
       return NULL;
     }
     return (int) $this->caseloadValues[$map[$metric_type]] ?? NULL;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getPrioritizedTarget(): ?int {
+    return NULL;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getPrioritizedRequirements(): ?int {
+    return NULL;
   }
 
   /**

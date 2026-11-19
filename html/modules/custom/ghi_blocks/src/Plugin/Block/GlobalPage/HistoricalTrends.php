@@ -26,7 +26,7 @@ use Drupal\layout_builder\LayoutEntityHelperTrait;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
- * Compares the figures displayed on published homepages across years.
+ * Compares source-aware plan overview figures across published homepage years.
  */
 #[Block(
   id: 'global_historical_trends',
@@ -95,7 +95,7 @@ class HistoricalTrends extends GHIBlockBase implements OverrideDefaultTitleBlock
   }
 
   /**
-   * Builds table cells from the final configured homepage figures.
+   * Builds table cells from source-aware totals and homepage overrides.
    *
    * @return array
    *   The table header, rows and cacheability metadata.
@@ -155,7 +155,7 @@ class HistoricalTrends extends GHIBlockBase implements OverrideDefaultTitleBlock
   }
 
   /**
-   * Reads visible, typed key figures from a saved homepage layout.
+   * Builds baseline figures and applies visible homepage key-figure overrides.
    *
    * @param \Drupal\ghi_homepage\Entity\Homepage $homepage
    *   The published homepage in its default revision.
@@ -169,12 +169,34 @@ class HistoricalTrends extends GHIBlockBase implements OverrideDefaultTitleBlock
    */
   private function getHomepageFigures(Homepage $homepage, array $types, CacheableMetadata $cacheability): array {
     $cacheability->addCacheableDependency($homepage);
+
+    // Every supported column has a source-aware aggregate independent of how
+    // the homepage headline figures are configured. A uniquely configured
+    // figure below can still replace this baseline with its final value,
+    // including a write-in adjustment and footnote.
+    $fallbacks = [];
+    $fallback_block = $this->createKeyFiguresBlock($homepage);
+    $fallback_context = $fallback_block->getBlockContext();
+    foreach ($types as $type) {
+      $plugin = $fallback_block->getItemTypePluginForColumn([
+        'item_type' => 'plan_overview_data',
+        'config' => ['type' => $type],
+      ], $fallback_context);
+      $render = $plugin->getRenderArray();
+      $cacheability->addCacheableDependency(CacheableMetadata::createFromRenderArray($render));
+      $fallbacks[$type][] = [
+        'value' => $type === 'funding_progress' ? $plugin->getValue() * 100 : $plugin->getValue(),
+        'render' => $render,
+        'footnote' => '',
+      ];
+    }
+
     // Homepages are publicly embedded but their canonical nodes deliberately
     // deny anonymous access. Use their published layouts, not node access or
     // the editor's Layout Builder tempstore.
     $storage = $this->getSectionStorageForEntity($homepage, 'embed');
     if (!$storage) {
-      return [];
+      return $fallbacks;
     }
     $cacheability->addCacheableDependency($storage);
     $figures = [];
@@ -187,10 +209,7 @@ class HistoricalTrends extends GHIBlockBase implements OverrideDefaultTitleBlock
         // when several homepages were copied from the same layout.
         $configuration = $component->get('configuration');
         $configuration['uuid'] = $component->getUuid();
-        /** @var \Drupal\ghi_blocks\Plugin\Block\GlobalPage\KeyFigures $block */
-        $block = $this->blockManager->createInstance($component->getPluginId(), $configuration);
-        $block->setContextValue('node', $homepage);
-        $block->setContextValue('year', (int) $homepage->getYear());
+        $block = $this->createKeyFiguresBlock($homepage, $configuration);
         $access = $block->access(new AnonymousUserSession(), TRUE);
         $cacheability->addCacheableDependency($block)->addCacheableDependency($access);
         if ($block->isHidden() || !$access->isAllowed()) {
@@ -198,7 +217,6 @@ class HistoricalTrends extends GHIBlockBase implements OverrideDefaultTitleBlock
         }
 
         $items = $block->getConfiguredItems($block->getBlockConfig()['key_figures']['items']);
-        $context = NULL;
         // Match the grouping rules used by KeyFigures::buildContent(): items
         // outside a group are not displayed and must not enter the history.
         foreach ($block->buildTree($items ?? []) as $group) {
@@ -207,8 +225,7 @@ class HistoricalTrends extends GHIBlockBase implements OverrideDefaultTitleBlock
             if ($item['item_type'] !== 'plan_overview_data' || !in_array($type, $types, TRUE)) {
               continue;
             }
-            $context = $context ?? $block->getBlockContext();
-            $plugin = $block->getItemTypePluginForColumn($item, $context);
+            $plugin = $block->getItemTypePluginForColumn($item, $fallback_context);
             $value = $plugin->getValue();
             $render = $plugin->getRenderArray();
             $cacheability->addCacheableDependency(CacheableMetadata::createFromRenderArray($render));
@@ -221,7 +238,28 @@ class HistoricalTrends extends GHIBlockBase implements OverrideDefaultTitleBlock
         }
       }
     }
-    return $figures;
+    // Configured figures take precedence. Keeping all configured matches lets
+    // the caller reject ambiguous duplicates instead of choosing silently.
+    return $figures + $fallbacks;
+  }
+
+  /**
+   * Creates a fresh key-figures block for one homepage year.
+   *
+   * @param \Drupal\ghi_homepage\Entity\Homepage $homepage
+   *   The homepage supplying the block contexts.
+   * @param array $configuration
+   *   Optional saved block configuration.
+   *
+   * @return \Drupal\ghi_blocks\Plugin\Block\GlobalPage\KeyFigures
+   *   The initialized key-figures block.
+   */
+  private function createKeyFiguresBlock(Homepage $homepage, array $configuration = []): KeyFigures {
+    /** @var \Drupal\ghi_blocks\Plugin\Block\GlobalPage\KeyFigures $block */
+    $block = $this->blockManager->createInstance('global_key_figures', $configuration);
+    $block->setContextValue('node', $homepage);
+    $block->setContextValue('year', (int) $homepage->getYear());
+    return $block;
   }
 
   /**
@@ -234,7 +272,13 @@ class HistoricalTrends extends GHIBlockBase implements OverrideDefaultTitleBlock
     return [
       'people_in_need' => ['label' => $this->t('People in need'), 'type' => 'amount', 'group' => 'people'],
       'people_target' => ['label' => $this->t('People targeted'), 'type' => 'amount', 'group' => 'people'],
+      'prioritized_target' => ['label' => $this->t('People prioritized'), 'type' => 'amount', 'group' => 'people'],
       'total_requirements' => ['label' => $this->t('Requirements ($)'), 'type' => 'currency', 'group' => 'financial'],
+      'prioritized_requirements' => [
+        'label' => $this->t('Prioritized requirements ($)'),
+        'type' => 'currency',
+        'group' => 'financial',
+      ],
       'total_funding' => ['label' => $this->t('Funding ($)'), 'type' => 'currency', 'group' => 'financial'],
       'funding_progress' => ['label' => $this->t('% Funded'), 'type' => 'percentage', 'group' => 'coverage'],
     ];
@@ -258,7 +302,7 @@ class HistoricalTrends extends GHIBlockBase implements OverrideDefaultTitleBlock
   public function getConfigForm(array $form, FormStateInterface $form_state) {
     $form['source'] = [
       '#type' => 'item',
-      '#description' => $this->t('Figures come from the published homepage for each year, including write-in values and footnotes. Changes to those homepages also change this table. Missing or repeated data types are shown as "No data"; free-text figures cannot be matched.'),
+      '#description' => $this->t('Each column uses the source-aware plan overview total for that year. A uniquely configured, visible homepage key figure replaces the underlying total with its final value, including write-in adjustments and footnotes. Repeated configured data types are shown as "No data"; free-text figures cannot be matched.'),
     ];
     $years = $this->getHomepageSwitcherOptions();
     $form['start_year'] = [

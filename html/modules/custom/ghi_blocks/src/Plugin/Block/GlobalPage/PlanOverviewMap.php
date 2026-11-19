@@ -150,7 +150,9 @@ class PlanOverviewMap extends GHIBlockBase implements LazyMapBlockInterface {
       'data' => [],
       'tabs' => [],
       'settings' => [],
-      'cache_tags' => [],
+      // Preserve remote metric dependencies collected while resolving the
+      // plans so a background Fabric refresh invalidates the cached payload.
+      'cache_tags' => $this->getPlanOverviewQuery()->getCacheTags() ?? [],
     ];
 
     $common_theme_args = [
@@ -170,7 +172,7 @@ class PlanOverviewMap extends GHIBlockBase implements LazyMapBlockInterface {
     $this->sortPlansByPlanType($plans, $config['plan_short_names'] ?? FALSE);
 
     foreach ($plans as $plan) {
-      $funding = $plan->getFunding() ?: 0;
+      $funding = $plan->getFunding();
       $requirements = $plan->getRequirements();
       $coverage = $plan->getCoverage();
 
@@ -179,20 +181,21 @@ class PlanOverviewMap extends GHIBlockBase implements LazyMapBlockInterface {
       $reached = $plan->getCaseloadValue('latest_reach');
       $expected_reach = $plan->getCaseloadValue('expected_reach');
 
-      if (empty($funding) && empty($requirements) && empty($in_need) && empty($target)) {
-        continue;
+      $plan_entity = $plan->getEntity();
+      if ($plan_entity) {
+        // Collect the dependency before checking the location so edits can make
+        // a previously unmappable plan appear without waiting for cache expiry.
+        $map['cache_tags'] = Cache::mergeTags($map['cache_tags'], $plan_entity->getCacheTags());
+        $footnotes[$plan->id()] = $this->getFootnotesForPlanBaseobject($plan_entity);
       }
 
+      // A marker is location-based. Keep it even when the selected metric
+      // source currently has no values; the modal will show the empty fields.
       $location = $this->getPlanLocation($plan);
       if (!$location) {
         continue;
       }
 
-      $plan_entity = $plan->getEntity();
-      if ($plan_entity) {
-        $map['cache_tags'] = Cache::mergeTags($map['cache_tags'], $plan_entity->getCacheTags());
-        $footnotes[$plan->id()] = $this->getFootnotesForPlanBaseobject($plan_entity);
-      }
       $section = $plan_entity ? $this->sectionManager->loadSectionForBaseObject($plan_entity) : NULL;
       if ($section) {
         $map['cache_tags'] = Cache::mergeTags($map['cache_tags'], $section->getCacheTags());

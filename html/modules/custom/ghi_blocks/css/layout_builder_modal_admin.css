@@ -4,6 +4,23 @@
   line-height: 1.5rem;
 }
 
+.plan-metric-form-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+}
+
+.plan-metric-form-label .tooltip {
+  display: inline-flex;
+  align-items: center;
+  flex: 0 0 auto;
+  line-height: 1;
+}
+
+.plan-metric-form-label .material-icon {
+  font-size: 1.25em;
+}
+
 #form-wrapper-ghi-block-config.hpc-form-wrapper {
   padding: 0;
 }

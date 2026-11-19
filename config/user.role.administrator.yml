@@ -50,6 +50,7 @@ dependencies:
     - ghi_content
     - ghi_embargoed_access
     - ghi_geojson
+    - ghi_plans
     - ghi_sections
     - ghi_subpages
     - ghi_teams
@@ -74,6 +75,7 @@ is_admin: null
 permissions:
   - 'access administration pages'
   - 'access articles entity browser pages'
+  - 'access base object overview'
   - 'access content'
   - 'access content overview'
   - 'access contextual links'
@@ -195,6 +197,7 @@ permissions:
   - 'import block from configuration code'
   - 'import page layout configuration code'
   - 'manage operation page structure'
+  - 'manage plan metric source'
   - 'publish any content'
   - 'publish any node type article'
   - 'publish any node type custom_subpage'

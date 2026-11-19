@@ -22,7 +22,7 @@ use Drupal\Tests\ghi_blocks\Kernel\PlanBlockKernelTestBase;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 
 /**
- * Tests historical figures sourced from published homepage layouts.
+ * Tests historical plan totals with published homepage overrides.
  *
  * @group ghi_blocks
  */
@@ -69,13 +69,15 @@ class HistoricalTrendsTest extends PlanBlockKernelTestBase {
 
     $block = $this->createHistoricalTrendsBlock();
     $build = $block->buildContent();
-    $this->assertCount(6, $build['#header']);
+    $this->assertCount(8, $build['#header']);
     $this->assertSame([2026, 2024], array_column(array_column($build['#rows'], 'year'), 'export_value'));
     $rows = $build['#rows'];
     $this->assertSame(3026, $rows[0]['people_in_need']['export_value']);
     $this->assertSame(12345, $rows[1]['people_in_need']['export_value']);
     $this->assertSame(4224, $rows[1]['people_target']['export_value']);
+    $this->assertSame(2124, $rows[1]['prioritized_target']['export_value']);
     $this->assertSame(0, $rows[1]['total_requirements']['export_value']);
+    $this->assertSame(122024.0, $rows[1]['prioritized_requirements']['export_value']);
     $this->assertSame(25.0, $rows[1]['funding_progress']['export_value']);
     $this->assertSame('Published adjustment', $rows[1]['funding_progress']['export_commentary']);
     $this->assertSame(25.0, $rows[1]['funding_progress']['data'][0]['#percent']);
@@ -93,9 +95,9 @@ class HistoricalTrendsTest extends PlanBlockKernelTestBase {
   }
 
   /**
-   * Tests ambiguous, ungrouped and free-text figures do not become data.
+   * Tests baseline values fill absent items while duplicates remain ambiguous.
    */
-  public function testMissingAndAmbiguousFigures(): void {
+  public function testFallbackAndAmbiguousFigures(): void {
     $homepage = $this->createHomepage(2026);
     $section = $homepage->get('layout_builder__layout')->getSection(0);
     $components = $section->getComponents();
@@ -110,10 +112,12 @@ class HistoricalTrendsTest extends PlanBlockKernelTestBase {
       'weight' => 20,
       'config' => ['type' => 'people_in_need', 'label' => 'Different scope'],
     ];
-    // The ungrouped target is not rendered by the source block.
+    // The ungrouped target is not rendered by the source block, so the
+    // source-aware baseline supplies it instead.
     $items[2]['pid'] = NULL;
-    // An arbitrary label/value item cannot safely supply a typed column.
-    $items[3] = [
+    // An arbitrary label/value item cannot supply a typed column, so the
+    // source-aware baseline supplies the requirements value instead.
+    $items[4] = [
       'id' => 3,
       'pid' => 0,
       'item_type' => 'label_value',
@@ -124,17 +128,17 @@ class HistoricalTrendsTest extends PlanBlockKernelTestBase {
     $homepage->save();
 
     $row = $this->createHistoricalTrendsBlock()->buildDownloadData()['rows'][0];
-    foreach (['people_in_need', 'people_target', 'total_requirements'] as $key) {
-      $this->assertNull($row[$key]['export_value']);
-      $this->assertSame('', $row[$key]['data-raw-value']);
-      $this->assertSame('No data', (string) $row[$key]['data']['#markup']);
-      $this->assertArrayNotHasKey('data-progress-group', $row[$key]);
-    }
+    $this->assertNull($row['people_in_need']['export_value']);
+    $this->assertSame('', $row['people_in_need']['data-raw-value']);
+    $this->assertSame('No data', (string) $row['people_in_need']['data']['#markup']);
+    $this->assertArrayNotHasKey('data-progress-group', $row['people_in_need']);
+    $this->assertSame(4026, $row['people_target']['export_value']);
+    $this->assertSame(10000.0, $row['total_requirements']['export_value']);
     $this->assertNotNull($row['total_funding']['export_value']);
   }
 
   /**
-   * Tests Excel keeps missing coverage blank and preserves numeric percentages.
+   * Tests Excel keeps ambiguous coverage blank and uses baseline percentages.
    */
   public function testExcelFundingCoverage(): void {
     $this->createHomepage(2026)->set('layout_builder__layout', [])->save();
@@ -142,8 +146,8 @@ class HistoricalTrendsTest extends PlanBlockKernelTestBase {
     $components = $homepage->get('layout_builder__layout')->getSection(0)->getComponents();
     $component = reset($components);
     $configuration = $component->get('configuration');
-    $duplicate = $configuration['hpc']['key_figures']['items'][5];
-    $duplicate['id'] = 6;
+    $duplicate = $configuration['hpc']['key_figures']['items'][7];
+    $duplicate['id'] = 8;
     $configuration['hpc']['key_figures']['items'][] = $duplicate;
     $component->setConfiguration($configuration);
     $homepage->save();
@@ -168,14 +172,13 @@ class HistoricalTrendsTest extends PlanBlockKernelTestBase {
     $sheet = $spreadsheet->getSheetByName('Export data');
 
     // The exporter puts two logo rows and the column headers above the data.
-    foreach (['F4', 'F5'] as $coordinate) {
-      $this->assertSame('', $sheet->getCell($coordinate)->getFormattedValue());
-      $this->assertSame('No data', $sheet->getComment($coordinate)->getText()->getPlainText());
-    }
-    $this->assertEquals(0, $sheet->getCell('F6')->getValue());
-    $this->assertSame('0.00%', $sheet->getCell('F6')->getFormattedValue());
-    $this->assertSame(0.25, $sheet->getCell('F7')->getValue());
-    $this->assertSame('25.00%', $sheet->getCell('F7')->getFormattedValue());
+    $this->assertSame('25.00%', $sheet->getCell('H4')->getFormattedValue());
+    $this->assertSame('', $sheet->getCell('H5')->getFormattedValue());
+    $this->assertSame('No data', $sheet->getComment('H5')->getText()->getPlainText());
+    $this->assertEquals(0, $sheet->getCell('H6')->getValue());
+    $this->assertSame('0.00%', $sheet->getCell('H6')->getFormattedValue());
+    $this->assertSame(0.25, $sheet->getCell('H7')->getValue());
+    $this->assertSame('25.00%', $sheet->getCell('H7')->getFormattedValue());
     $spreadsheet->disconnectWorksheets();
   }
 
@@ -208,6 +211,7 @@ class HistoricalTrendsTest extends PlanBlockKernelTestBase {
     $build = $block->buildContent();
     $this->assertContains('node:' . $homepage->id(), $build['#cache']['tags']);
     $this->assertContains('node_list:homepage', $build['#cache']['tags']);
+    $this->assertContains('plan:source', $build['#cache']['tags']);
     $cache = $this->container->get('cache.default');
     $cache->set('historical_trends_test', $build, -1, $build['#cache']['tags']);
 
@@ -247,7 +251,9 @@ class HistoricalTrendsTest extends PlanBlockKernelTestBase {
       'columns' => [
         'people_in_need' => 'people_in_need',
         'people_target' => 0,
+        'prioritized_target' => 0,
         'total_requirements' => 0,
+        'prioritized_requirements' => 0,
         'total_funding' => 0,
         'funding_progress' => 0,
       ],
@@ -263,7 +269,7 @@ class HistoricalTrendsTest extends PlanBlockKernelTestBase {
     $form_state = new FormState();
     $form = $block->getConfigForm([], $form_state);
     $this->assertSame(['', 2026, 2025, 2024], array_keys($form['start_year']['#options']));
-    $this->assertSame(5, count($form['columns']['#options']));
+    $this->assertSame(7, count($form['columns']['#options']));
     $element = ['#parents' => ['settings', 'end_year']];
     $form_state->setValue(['settings', 'start_year'], 2026);
     $form_state->setValue(['settings', 'end_year'], 2024);
@@ -324,7 +330,16 @@ class HistoricalTrendsTest extends PlanBlockKernelTestBase {
     $items = [
       ['id' => 0, 'pid' => NULL, 'item_type' => 'item_group', 'weight' => 0, 'config' => ['label' => 'Figures']],
     ];
-    foreach (['people_in_need', 'people_target', 'total_requirements', 'total_funding', 'funding_progress'] as $type) {
+    $types = [
+      'people_in_need',
+      'people_target',
+      'prioritized_target',
+      'total_requirements',
+      'prioritized_requirements',
+      'total_funding',
+      'funding_progress',
+    ];
+    foreach ($types as $type) {
       $id = count($items);
       $items[] = [
         'id' => $id,
@@ -361,6 +376,7 @@ class HistoricalTrendsTest extends PlanBlockKernelTestBase {
       ->disableOriginalConstructor()
       ->onlyMethods([
         'getTotalRequirements',
+        'getTotalPrioritizedRequirements',
         'getTotalFunding',
         'getCaseloadTotalValues',
         'getNumberOfGhoCountries',
@@ -368,10 +384,12 @@ class HistoricalTrendsTest extends PlanBlockKernelTestBase {
       ])
       ->getMock();
     $query->method('getTotalRequirements')->willReturn(10000.0);
+    $query->method('getTotalPrioritizedRequirements')->willReturnCallback(fn () => 120000.0 + $query->getYear());
     $query->method('getTotalFunding')->willReturn(2500.0);
     $query->method('getCaseloadTotalValues')->willReturnCallback(fn () => [
       'in_need' => 1000 + $query->getYear(),
       'target' => 2000 + $query->getYear(),
+      'prioritized_target' => 100 + $query->getYear(),
       'latest_reach' => 0,
       'expected_reach' => 0,
       'reached_custom' => 0,
@@ -379,6 +397,7 @@ class HistoricalTrendsTest extends PlanBlockKernelTestBase {
     ]);
     $query->method('getNumberOfGhoCountries')->willReturn(0);
     $query->method('getGhoPlans')->willReturn([]);
+    $query->setCacheTags(['plan:source']);
     return $query;
   }
 
