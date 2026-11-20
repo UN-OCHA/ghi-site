@@ -59,6 +59,7 @@ class FileAsset extends ApiObjectBase {
     'Name',
     'MimeType',
     'url',
+    'AzureFileURL',
     'Credit',
   ];
 
@@ -69,7 +70,7 @@ class FileAsset extends ApiObjectBase {
     parent::__construct($data);
     $this->name = $data->Name;
     $this->mimetype = $data->MimeType;
-    $this->url = $data->url;
+    $this->url = $data->AzureFileURL;
     $this->credit = $data->Credit ?? NULL;
     $this->planId = $data->PlanId ?? NULL;
     $this->fieldClusterId = $data->FieldClusterId ?? NULL;

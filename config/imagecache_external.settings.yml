@@ -3,7 +3,7 @@ _core:
 imagecache_directory: externals
 imagecache_default_extension: .jpg
 imagecache_external_batch_flush_limit: 1000
-imagecache_external_hosts: "api.hpc.tools\r\nsmugmug.com"
+imagecache_external_hosts: "api.hpc.tools\r\nhpcblobstorage.blob.core.windows.net\r\nsmugmug.com"
 imagecache_external_management: unmanaged
 imagecache_external_use_whitelist: true
 imagecache_fallback_image: {  }
