@@ -79,17 +79,17 @@ trait GlobalMapTrait {
   /**
    * Get the default Map disclaimer.
    *
-   * @param string|null $langcode
-   *   The language code of the plan.
+   * @param array $translation_options
+   *   Translation options for the frontend context.
    *
    * @return \Drupal\Core\StringTranslation\TranslatableMarkup
    *   Return the translated disclaimer.
    */
-  public function getDefaultMapDisclaimer(?string $langcode = NULL): string {
+  public function getDefaultMapDisclaimer(array $translation_options = ['langcode' => 'en']): string {
     return $this->t(
       'The boundaries and names shown and the designations used on this map do not imply official endorsement or acceptance by the United Nations.',
       [],
-      ['langcode' => $langcode ?? 'en']
+      $translation_options
     );
   }
 

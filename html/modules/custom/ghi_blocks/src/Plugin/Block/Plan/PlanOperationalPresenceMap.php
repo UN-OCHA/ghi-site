@@ -200,7 +200,7 @@ class PlanOperationalPresenceMap extends GHIBlockBase implements MultiStepFormBl
         'json' => $map_data,
         'id' => $map_id,
         'settings_key' => 'plan_operational_presence_map',
-        'disclaimer' => $conf['display']['disclaimer'] ?: $this->getDefaultMapDisclaimer($this->getCurrentPlanObject()->getPlanLanguage()),
+        'disclaimer' => $conf['display']['disclaimer'] ?: $this->getDefaultMapDisclaimer($this->buildPlanTranslationOptions($this->getCurrentPlanObject())),
         'pcodes_enabled' => $conf['display']['pcodes_enabled'] ?? TRUE,
         'outline_country' => $outline_country,
       ],
@@ -374,9 +374,7 @@ class PlanOperationalPresenceMap extends GHIBlockBase implements MultiStepFormBl
     $data_page = $selected_view == 'project' ? 'projects' : 'recipients';
     $link_title = $this->t('For more details, view on <img src="@logo_url" />', [
       '@logo_url' => ThemeHelper::getUriToFtsIcon(),
-    ], [
-      'langcode' => $plan_object?->getPlanLanguage(),
-    ]);
+    ], $this->buildPlanTranslationOptions($plan_object));
     $fts_link_build = self::buildFtsLink($link_title, $plan_object, $data_page, $this->getCurrentBaseObject());
     return ThemeHelper::render($fts_link_build, FALSE);
   }
@@ -1007,7 +1005,7 @@ class PlanOperationalPresenceMap extends GHIBlockBase implements MultiStepFormBl
     if (!array_key_exists($key, $group_labels)) {
       $plan_object = $this->getCurrentPlanObject();
 
-      $t_options = ['langcode' => $plan_object->getPlanLanguage()];
+      $t_options = $this->buildPlanTranslationOptions($plan_object);
       $cluster_label_map = [
         Plan::CLUSTER_TYPE_CLUSTER => [
           'label_singular' => $this->t('Cluster', [], $t_options),

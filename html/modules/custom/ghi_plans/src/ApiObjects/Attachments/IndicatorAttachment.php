@@ -98,7 +98,7 @@ class IndicatorAttachment extends Attachment {
     if ($this->isMeasurement($conf)) {
       // Otherwise see if this is a measurement and if we can get a formatted
       // monitoring period for this data point.
-      $tooltip['monitoring_period'] = $this->formatMonitoringPeriod('icon', $last_reporting_period->id(), 'as of date @end_date', ['langcode' => $this->getPlanLanguage()]);
+      $tooltip['monitoring_period'] = $this->formatMonitoringPeriod('icon', $last_reporting_period->id(), 'as of date @end_date', $this->buildPlanTranslationOptions($this->getPlanObject()));
     }
 
     if ($this->isApiCalculated($metric_type, $conf['data_points'][0]) && $conf['processing'] != 'calculated') {
@@ -124,7 +124,7 @@ class IndicatorAttachment extends Attachment {
     $tooltip_text = NULL;
     $reporting_period_text = $monitoring_period->format(', as of date @end_date');
     $calculation_method = $this->getCalculationMethod();
-    $t_options = ['langcode' => $this->getPlanLanguage()];
+    $t_options = $this->buildPlanTranslationOptions($this->getPlanObject());
     switch ($calculation_method) {
       case self::CALCULATION_METHOD_SUM:
         $tooltip_text = $this->t('This value is the sum of all monitoring periods values', [], $t_options);

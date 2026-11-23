@@ -194,6 +194,9 @@ class PlanCaseloadTrendsTableTest extends PlanBlockKernelTestBase {
     $this->assertInstanceOf(CacheableMetadata::class, $table_data['cacheability']);
     $this->assertContains('plan_id:' . self::PLAN_ID, $table_data['cacheability']->getCacheTags());
     $this->assertContains('config:ghi_blocks.block_settings', $table_data['cacheability']->getCacheTags());
+    $this->assertSame('Requirements', (string) $table_data['header']['requirements']['data']);
+    $this->assertSame('Prioritized requirements', (string) $table_data['header']['prioritized_requirements']['data']);
+    $this->assertSame('Funding', (string) $table_data['header']['funding']['data']);
 
     $requirements_cell = $table_data['rows'][0]['requirements'];
     $this->assertEquals(3000, $requirements_cell['data-raw-value']);

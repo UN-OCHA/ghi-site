@@ -11,6 +11,7 @@ use Drupal\Core\Form\SubformStateInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\ghi_form_elements\Helpers\FormElementHelper;
 use Drupal\ghi_form_elements\Traits\AjaxElementTrait;
+use Drupal\ghi_plans\Traits\PlanTranslationOptionsTrait;
 use Drupal\hpc_api\Query\EndpointQueryPluginInterface;
 use Drupal\hpc_common\Helpers\ThemeHelper;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -22,6 +23,7 @@ abstract class ConfigurationContainerItemPluginBase extends PluginBase implement
 
   use StringTranslationTrait;
   use AjaxElementTrait;
+  use PlanTranslationOptionsTrait;
 
   const SORT_TYPE = 'numeric';
   const DATA_TYPE = 'numeric';

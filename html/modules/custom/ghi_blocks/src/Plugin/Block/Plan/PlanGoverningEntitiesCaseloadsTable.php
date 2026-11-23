@@ -12,6 +12,7 @@ use Drupal\ghi_blocks\Interfaces\AttachmentTableInterface;
 use Drupal\ghi_blocks\Interfaces\ConfigValidationInterface;
 use Drupal\ghi_blocks\Interfaces\ConfigurableTableBlockInterface;
 use Drupal\ghi_blocks\Interfaces\DeprecatedBlockInterface;
+use Drupal\ghi_blocks\Interfaces\FrontendTableBlockInterface;
 use Drupal\ghi_blocks\Interfaces\MultiStepFormBlockInterface;
 use Drupal\ghi_blocks\Interfaces\OverrideDefaultTitleBlockInterface;
 use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
@@ -39,7 +40,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
     'plan' => new EntityContextDefinition('entity:base_object', new TranslatableMarkup('Plan'), constraints: ['Bundle' => 'plan']),
   ],
 )]
-class PlanGoverningEntitiesCaseloadsTable extends GHIBlockBase implements ConfigurableTableBlockInterface, MultiStepFormBlockInterface, OverrideDefaultTitleBlockInterface, AttachmentTableInterface, ConfigValidationInterface, HPCDownloadExcelInterface, HPCDownloadPNGInterface, DeprecatedBlockInterface {
+class PlanGoverningEntitiesCaseloadsTable extends GHIBlockBase implements ConfigurableTableBlockInterface, FrontendTableBlockInterface, MultiStepFormBlockInterface, OverrideDefaultTitleBlockInterface, AttachmentTableInterface, ConfigValidationInterface, HPCDownloadExcelInterface, HPCDownloadPNGInterface, DeprecatedBlockInterface {
 
   use ConfigurationContainerTrait;
   use AttachmentTableTrait;

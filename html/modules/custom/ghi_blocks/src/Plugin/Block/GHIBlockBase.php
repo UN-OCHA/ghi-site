@@ -25,6 +25,7 @@ use Drupal\ghi_base_objects\Entity\BaseObjectInterface;
 use Drupal\ghi_base_objects\Helpers\BaseObjectHelper;
 use Drupal\ghi_blocks\Form\ImportBlockForm;
 use Drupal\ghi_blocks\Interfaces\AutomaticTitleBlockInterface;
+use Drupal\ghi_blocks\Interfaces\FrontendTableBlockInterface;
 use Drupal\ghi_blocks\Interfaces\MultiStepFormBlockInterface;
 use Drupal\ghi_blocks\Interfaces\OptionalTitleBlockInterface;
 use Drupal\ghi_blocks\Interfaces\OverrideDefaultTitleBlockInterface;
@@ -33,6 +34,7 @@ use Drupal\ghi_blocks\Traits\BlockCommentTrait;
 use Drupal\ghi_blocks\Traits\VerticalTabsTrait;
 use Drupal\ghi_plan_clusters\Entity\PlanCluster;
 use Drupal\ghi_plans\Entity\Plan;
+use Drupal\ghi_plans\Traits\PlanTranslationOptionsTrait;
 use Drupal\ghi_sections\Entity\SectionNodeInterface;
 use Drupal\ghi_subpages\Entity\SubpageNodeInterface;
 use Drupal\hpc_api\Helpers\ProfileHelper;
@@ -62,6 +64,7 @@ abstract class GHIBlockBase extends HPCBlockBase implements TrustedCallbackInter
   use VerticalTabsTrait;
   use SimpleCacheTrait;
   use BlockCommentTrait;
+  use PlanTranslationOptionsTrait;
 
   /**
    * The default form key for the configuration form.
@@ -451,8 +454,9 @@ abstract class GHIBlockBase extends HPCBlockBase implements TrustedCallbackInter
     $download_links = !empty($build['#download_links']) ? $build['#download_links'] : [];
     if ($this instanceof HPCDownloadPluginInterface && !empty($plugin_configuration['uuid'])) {
       $download_types = $this->getAvailableDownloadTypes();
-      $langcode = $this->getCurrentPlanObject()?->getPlanLanguage() ?? 'en';
-      $t_args = ['langcode' => $langcode];
+      $plan = $this->getCurrentPlanObject();
+      $langcode = $plan?->getPlanLanguage() ?? 'en';
+      $t_args = $this->buildPlanTranslationOptions($plan);
       if (!empty($download_types) && $this->getDownloadSource()) {
         /** @var \Drupal\hpc_downloads\DownloadDialog\DownloadDialogPlugin $download_dialog */
         $download_dialog = \Drupal::service('hpc_downloads.download_dialog_plugin');
@@ -581,6 +585,8 @@ abstract class GHIBlockBase extends HPCBlockBase implements TrustedCallbackInter
     if (!$build_content) {
       return [];
     }
+
+    $this->applyFrontendTableConfiguration($build_content);
 
     $this->applyTitleDisplay($build, $build_content);
 
@@ -1524,6 +1530,29 @@ abstract class GHIBlockBase extends HPCBlockBase implements TrustedCallbackInter
 
     // Make sure that we have a UUID.
     $this->configuration['uuid'] = $this->getUuid();
+  }
+
+  /**
+   * Enables distributed columns on nested frontend tables.
+   */
+  protected function applyFrontendTableConfiguration(array &$build): void {
+    if (!$this instanceof FrontendTableBlockInterface) {
+      return;
+    }
+    if (($build['#theme'] ?? NULL) === 'table') {
+      // The marker interface is the opt-in; individual instances cannot
+      // disable the shared table layout.
+      $build['#distributed_columns'] = TRUE;
+      return;
+    }
+    // Blocks may wrap their table in containers or lazy-build structures, so
+    // apply the setting to every nested table render element.
+    foreach ($build as &$child) {
+      if (is_array($child)) {
+        $this->applyFrontendTableConfiguration($child);
+      }
+    }
+    unset($child);
   }
 
   /**

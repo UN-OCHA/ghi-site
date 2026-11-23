@@ -95,9 +95,11 @@ class LogframeDownloadSource extends BlockSource {
     $data = parent::getMetaData();
     if ($this->scope !== NULL) {
       $object = $this->scope == 'plan' ? $this->context['plan_object'] : $this->context['base_object'];
+      /** @var \Drupal\ghi_plans\Entity\Plan|null $plan */
+      $plan = $this->context['plan_object'] ?? NULL;
       $data[1][1] = $object->label();
       $data[] = [
-        (string) $this->t('Download scope'),
+        (string) $this->t('Download scope', [], Plan::buildTranslationOptions($plan)),
         (string) $this->getAvailableScopes()[$this->scope],
       ];
     }
@@ -127,7 +129,7 @@ class LogframeDownloadSource extends BlockSource {
     if (!$plan) {
       return [];
     }
-    $options = ['langcode' => $plan->getPlanLanguage()];
+    $options = $plan->getTranslationOptions();
     $scopes = ['plan' => new TranslatableMarkup('Download full logframe', [], $options)];
     if ($cluster !== NULL) {
       $scopes['cluster'] = $plan->getPlanClusterType() == Plan::CLUSTER_TYPE_SECTOR ?
@@ -246,16 +248,17 @@ class LogframeDownloadSource extends BlockSource {
     // Get the config.
     $conf = $this->configuration;
 
+    $plan = $this->context['plan_object'];
+    $t_options = $plan->getTranslationOptions();
+
     // Prepare the sheet for the logical framework.
-    $logframe_sheet_label = (string) $this->t('Logical framework');
+    $logframe_sheet_label = (string) $this->t('Logical framework', [], $t_options);
     $data[$logframe_sheet_label] = [];
     $logical_framework = [
       'header' => [],
       'rows' => [],
     ];
 
-    $plan = $this->context['plan_object'];
-    $t_options = ['langcode' => $plan->getPlanLanguage()];
     $cluster_label_map = [
       Plan::CLUSTER_TYPE_CLUSTER => $this->t('Cluster', [], $t_options),
       Plan::CLUSTER_TYPE_SECTOR => $this->t('Sector', [], $t_options),
@@ -369,7 +372,7 @@ class LogframeDownloadSource extends BlockSource {
     $scope = $this->scope;
     $plan = $this->context['plan_object'];
     $plan_id = $plan->getSourceId();
-    $t_options = ['langcode' => $plan->getPlanLanguage()];
+    $t_options = $plan->getTranslationOptions();
     $this->getQueryHandler('entity_prototype')->getPlanPrototype($plan_id);
     $query = $this->getQueryHandler('entities');
     // IDs belong to separate source namespaces and must not overwrite each
@@ -434,7 +437,7 @@ class LogframeDownloadSource extends BlockSource {
         $this->addCalculationMethodColumnToExcelData($table, $t_options);
       }
       $this->processSparklineChartInExcelData($table, $t_options);
-      $name = $this->getFullLogframeSheetName($table_names[$prototype_id], $used_names);
+      $name = $this->getFullLogframeSheetName($table_names[$prototype_id], $used_names, $t_options);
       $used_names[] = mb_strtolower($name);
       $data[$name] = $table;
     }
@@ -503,7 +506,7 @@ class LogframeDownloadSource extends BlockSource {
    *   The translated column headers.
    */
   private function getFullLogframeContextHeader(Plan $plan): array {
-    $options = ['langcode' => $plan->getPlanLanguage()];
+    $options = $plan->getTranslationOptions();
     return [
       (string) $this->t('Entity type', [], $options),
       (string) $this->t('Entity reference', [], $options),
@@ -573,7 +576,7 @@ class LogframeDownloadSource extends BlockSource {
    *   Header and rows, including ancestors explaining cluster alignments.
    */
   private function buildFullLogicalFramework(array $entities, ?ApiObjectsPlan $api_plan, Plan $plan): array {
-    $options = ['langcode' => $plan->getPlanLanguage()];
+    $options = $plan->getTranslationOptions();
     $table = [
       'header' => array_merge($this->getFullLogframeContextHeader($plan), [
         (string) $this->t('Parent type', [], $options),
@@ -614,12 +617,14 @@ class LogframeDownloadSource extends BlockSource {
    *   The prototype's download label.
    * @param string[] $used_names
    *   Lowercase worksheet names already reserved in this workbook.
+   * @param array $translation_options
+   *   Translation options for the plan frontend language.
    *
    * @return string
    *   A valid, unique Excel worksheet name.
    */
-  private function getFullLogframeSheetName(string $label, array $used_names): string {
-    $base = trim(Excel::sanitizeSheetTitle($label), "'") ?: (string) $this->t('Data');
+  private function getFullLogframeSheetName(string $label, array $used_names, array $translation_options): string {
+    $base = trim(Excel::sanitizeSheetTitle($label), "'") ?: (string) $this->t('Data', [], $translation_options);
     $name = $base;
     $index = 2;
     while (in_array(mb_strtolower($name), $used_names, TRUE)) {

@@ -192,7 +192,7 @@ class PlanCompositeMap extends GHIBlockBase implements MultiStepFormBlockInterfa
       'json' => $map['data'],
       'id' => $map_id,
       'settings_key' => 'plan_composite_map',
-      'disclaimer' => $conf['common']['disclaimer'] ?: $this->getDefaultMapDisclaimer($this->getCurrentPlanObject()->getPlanLanguage()),
+      'disclaimer' => $conf['common']['disclaimer'] ?: $this->getDefaultMapDisclaimer($this->buildPlanTranslationOptions($this->getCurrentPlanObject())),
       'pcodes_enabled' => $conf['common']['pcodes_enabled'] ?? TRUE,
       'label_min_zoom' => (int) ($conf['common']['label_min_zoom'] ?? 6),
       'compact_polygon_legend' => (bool) ($conf['common']['compact_polygon_legend'] ?? TRUE),

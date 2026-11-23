@@ -23,6 +23,7 @@ use Drupal\ghi_plans\Traits\DataPointConfigBackwardsCompatibilityTrait;
 use Drupal\ghi_plans\Traits\DisaggregatedDataTrait;
 use Drupal\ghi_plans\Traits\PlanQueryTrait;
 use Drupal\ghi_plans\Traits\PlanReportingPeriodTrait;
+use Drupal\ghi_plans\Traits\PlanTranslationOptionsTrait;
 use Drupal\hpc_api\ApiObjects\ApiObjectBase;
 use Drupal\hpc_api\ApiObjects\Types\MetricType;
 use Drupal\hpc_api\ApiObjects\Types\Unit;
@@ -41,6 +42,7 @@ class Attachment extends ApiObjectBase implements AttachmentInterface, Disaggreg
   use DisaggregatedDataTrait;
   use PlanQueryTrait;
   use PlanReportingPeriodTrait;
+  use PlanTranslationOptionsTrait;
   use SimpleCacheTrait;
   use StringTranslationTrait;
 
@@ -1682,7 +1684,7 @@ class Attachment extends ApiObjectBase implements AttachmentInterface, Disaggreg
     // Handle unavailable data before rendering so missing percentages are not
     // indistinguishable from real zero values.
     if ($this->isNullValue($value)) {
-      $t_options = ['langcode' => $this->getPlanLanguage()];
+      $t_options = $this->buildPlanTranslationOptions($this->getPlanObject());
       $value = $this->isPendingDataEntry() ? $this->t('Pending', [], $t_options) : $this->t('No data', [], $t_options);
       return [
         '#markup' => (string) $value,

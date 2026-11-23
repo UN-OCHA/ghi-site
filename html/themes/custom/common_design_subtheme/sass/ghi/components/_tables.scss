@@ -92,44 +92,57 @@
       &.sortable th {
         cursor: pointer;
 
-        &:not(.sorttable-nosort),
-        &.sorttable-sorted,
-        &.sorttable-sorted-reverse {
-          // Make room for the sortable icon.
-          padding-right: 1rem;
+        &:not(.sorttable-nosort) {
+          // The icon follows the text inline and needs no extra inset.
+          padding-right: 0;
 
-          & > span {
+          > .ghi-table__header-content {
+            // Rich render arrays keep their markup and the flex fallback.
+            display: inline-flex;
+            align-items: flex-end;
+            max-width: 100%;
+
+            &--inline {
+              display: inline;
+            }
+          }
+
+          .ghi-table__header-label {
+            min-width: min-content;
+          }
+
+          .ghi-table__header-end {
+            // Wrap before the final word, never between that word and its icon.
             display: inline-block;
-            width: 2rem;
-            color: var(--ghi-default-text-color);
+            white-space: nowrap;
+          }
+
+          .ghi-table__sort-icon {
+            display: inline-block;
+            flex: 0 0 11px;
+            width: 11px;
+            height: 19px;
+            margin-inline-start: 5px;
+            vertical-align: text-bottom;
+            background-repeat: no-repeat;
+            background-position: center;
+            background-size: contain;
           }
         }
 
         // Customize display of the sort indicators of sorttable.js
-        &:not(.sorttable-nosort)::after,
-        &.sorttable-sorted::after,
-        &.sorttable-sorted-reverse::after {
-          position: relative;
-          top: 4px;
-          left: 5px;
-          display: inline-block;
-          width: 11px;
-          height: 19px;
-          content: " ";
-          background-size: contain;
-        }
-
         &:not(
             .sorttable-sorted,
             .sorttable-sorted-reverse,
             .sorttable-nosort
-          )::after {
+          )
+          .ghi-table__sort-icon {
           background-image: url("../img/table/ghi_sorting_grey.svg");
         }
-        &.sorttable-sorted::after {
+        &.sorttable-sorted .ghi-table__sort-icon {
           background-image: url("../img/table/ghi_sorting_grey_up.svg");
         }
-        &.sorttable-sorted-reverse::after {
+        &.sorttable-sorted-reverse .ghi-table__sort-icon {
           background-image: url("../img/table/ghi_sorting_grey_down.svg");
         }
         #sorttable-sortfwdind,
@@ -352,6 +365,38 @@
         overflow-wrap: anywhere;
         color: inherit;
         font-size: inherit;
+      }
+    }
+  }
+}
+
+:is(
+  #main-content,
+  .layout-builder-configure-block div[data-block-preview],
+  .ghi-modal-dialog
+) {
+  .table-wrapper table.ghi-table.ghi-table--distributed-columns {
+    thead th {
+      white-space: normal;
+      overflow-wrap: normal;
+    }
+
+    @media (min-width: 1024px) {
+      width: 100%;
+      // Let content sizing distribute the indicator columns so longer headers
+      // can use space left by shorter ones before wrapping.
+      table-layout: auto;
+
+      th:not(:first-child),
+      td:not(:first-child) {
+        padding-left: 1rem;
+      }
+
+      th:first-child,
+      td:first-child {
+        width: var(--ghi-table-first-column-width, auto);
+        white-space: normal;
+        overflow-wrap: anywhere;
       }
     }
   }
