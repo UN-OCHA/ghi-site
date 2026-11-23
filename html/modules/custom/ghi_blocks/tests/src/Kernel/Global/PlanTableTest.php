@@ -108,6 +108,7 @@ class PlanTableTest extends PlanBlockKernelTestBase {
     ]);
 
     $this->assertContains('config:hpc_common.settings', $build['#cache']['tags']);
+    $this->assertTrue($build[0]['#distributed_columns']);
   }
 
   /**

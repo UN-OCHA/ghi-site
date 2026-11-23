@@ -7,4 +7,5 @@ core_version_requirement: ^10.3 || ^11
 
 dependencies:
   - ghi_sections:ghi_sections
+  - ghi_plans:ghi_plans
   - publishcontent:publishcontent

@@ -62,7 +62,7 @@
         <tr>
           {% for cell in header %}
             <{{ cell.tag }}{{ glb_classes(cell.attributes) }}>
-              {{- cell.content -}}
+              {% include '@common_design_subtheme/dataset/table-header-content.html.twig' with {cell: cell} only %}
             </{{ cell.tag }}>
           {% endfor %}
         </tr>

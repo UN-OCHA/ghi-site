@@ -72,6 +72,7 @@ class ImportManagerTest extends KernelTestBase {
     'ghi_base_objects',
     'ghi_blocks',
     'ghi_content',
+    'ghi_plans',
     'ghi_form_elements',
     'ghi_sections',
     'ghi_subpages',

@@ -9,6 +9,7 @@ use Drupal\ghi_form_elements\ConfigurationContainerItemPluginBase;
 use Drupal\ghi_form_elements\Helpers\FormElementHelper;
 use Drupal\ghi_plans\ApiObjects\Attachments\AttachmentInterface;
 use Drupal\ghi_plans\ApiObjects\Attachments\Attachment;
+use Drupal\ghi_plans\Entity\Plan;
 use Drupal\ghi_plans\Helpers\AttachmentHelper;
 
 /**
@@ -64,7 +65,8 @@ class AttachmentLabel extends ConfigurationContainerItemPluginBase {
     }
     if (!$label) {
       $configuration = $this->getPluginConfiguration();
-      $label = $configuration['default_label'] ?? $this->t('Attachment');
+      $plan = $attachment instanceof Attachment ? $attachment->getPlanObject() : $this->getContextValue('plan_object');
+      $label = $configuration['default_label'] ?? $this->t('Attachment', [], $this->buildPlanTranslationOptions($plan instanceof Plan ? $plan : NULL));
     }
     return $label;
   }

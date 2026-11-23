@@ -7,9 +7,12 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\ghi_blocks\Traits\ConfigurationItemClusterRestrictTrait;
 use Drupal\ghi_blocks\Traits\ConfigurationItemValuePreviewTrait;
+use Drupal\ghi_blocks\Traits\FinancialTableItemTrait;
 use Drupal\ghi_form_elements\Attribute\ConfigurationContainerItem;
 use Drupal\ghi_form_elements\ConfigurationContainerItemPluginBase;
 use Drupal\ghi_plans\ApiObjects\Organization;
+use Drupal\ghi_plans\Entity\Plan;
+use Drupal\ghi_plans\Helpers\FinancialLabel;
 use Drupal\hpc_common\Traits\RenderArrayTrait;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -25,6 +28,7 @@ class ProjectFunding extends ConfigurationContainerItemPluginBase {
 
   use ConfigurationItemClusterRestrictTrait;
   use ConfigurationItemValuePreviewTrait;
+  use FinancialTableItemTrait;
   use RenderArrayTrait;
 
   /**
@@ -79,7 +83,7 @@ class ProjectFunding extends ConfigurationContainerItemPluginBase {
       $element['value_preview'] = $this->buildValuePreviewFormElement($preview_value);
     }
 
-    return $element;
+    return $this->addFinancialTableLabelHint($element, $type_key !== 'coverage');
   }
 
   /**
@@ -190,6 +194,13 @@ class ProjectFunding extends ConfigurationContainerItemPluginBase {
   /**
    * {@inheritdoc}
    */
+  public function getColumnType() {
+    return $this->get('data_type') === 'coverage' ? 'percentage' : 'currency';
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function getClasses() {
     $classes = parent::getClasses();
     $classes[] = Html::getClass($this->getPluginId() . '--' . $this->get('data_type'));
@@ -216,22 +227,31 @@ class ProjectFunding extends ConfigurationContainerItemPluginBase {
    *   An array of data types, keyed by their machine name, value is the label.
    */
   private function getDataTypes() {
+    $context = $this->getContext() ?? [];
+    $plan = $context['plan_object'] ?? NULL;
+    $plan = $plan instanceof Plan ? $plan : NULL;
+    $plan_translation_options = $this->buildPlanTranslationOptions($plan);
+    $financial_label_options = $this->buildPlanTranslationOptions($plan, FinancialLabel::TRANSLATION_CONTEXT);
     return [
       'original_requirements' => [
         'label' => $this->t('Original requirements'),
+        'default_label' => $this->t('Original requirements', [], $financial_label_options),
       ],
       'current_requirements' => [
         'label' => $this->t('Current requirements'),
+        'default_label' => $this->t('Requirements', [], $financial_label_options),
       ],
       'total_funding' => [
         'label' => $this->t('Current funding'),
+        'default_label' => $this->t('Funding', [], $plan_translation_options),
       ],
       'coverage' => [
         'label' => $this->t('Current coverage'),
-        'default_label' => $this->t('% Funded'),
+        'default_label' => $this->t('% Funded', [], $plan_translation_options),
       ],
       'requirements_changes' => [
         'label' => $this->t('Requirements changes'),
+        'default_label' => $this->t('Requirements changes', [], $plan_translation_options),
       ],
     ];
   }

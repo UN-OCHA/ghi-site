@@ -12,12 +12,14 @@ use Drupal\Core\Plugin\Context\ContextDefinition;
 use Drupal\Core\Plugin\Context\EntityContextDefinition;
 use Drupal\Core\Session\AnonymousUserSession;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\ghi_blocks\Interfaces\FrontendTableBlockInterface;
 use Drupal\ghi_blocks\Interfaces\OverrideDefaultTitleBlockInterface;
 use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
 use Drupal\ghi_blocks\Traits\HomepageBlockTrait;
 use Drupal\ghi_blocks\Traits\TableSoftLimitTrait;
 use Drupal\ghi_blocks\Traits\TableTrait;
 use Drupal\ghi_homepage\Entity\Homepage;
+use Drupal\ghi_plans\Helpers\FinancialLabel;
 use Drupal\hpc_common\Helpers\ThemeHelper;
 use Drupal\hpc_common\Plugin\HPCBlockMetadata;
 use Drupal\hpc_downloads\Interfaces\HPCDownloadExcelInterface;
@@ -37,7 +39,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
     'year' => new ContextDefinition(data_type: 'integer', label: new TranslatableMarkup('Year'), required: FALSE),
   ],
 )]
-class HistoricalTrends extends GHIBlockBase implements OverrideDefaultTitleBlockInterface, HPCDownloadExcelInterface, HPCDownloadPNGInterface {
+class HistoricalTrends extends GHIBlockBase implements FrontendTableBlockInterface, OverrideDefaultTitleBlockInterface, HPCDownloadExcelInterface, HPCDownloadPNGInterface {
 
   use HomepageBlockTrait;
   use LayoutEntityHelperTrait;
@@ -281,17 +283,22 @@ class HistoricalTrends extends GHIBlockBase implements OverrideDefaultTitleBlock
    *   Column labels, formatting types and progress groups.
    */
   private function getColumns(): array {
+    $financial_options = ['context' => FinancialLabel::TRANSLATION_CONTEXT];
     return [
       'people_in_need' => ['label' => $this->t('People in need'), 'type' => 'amount', 'group' => 'people'],
       'people_target' => ['label' => $this->t('People targeted'), 'type' => 'amount', 'group' => 'people'],
       'prioritized_target' => ['label' => $this->t('People prioritized'), 'type' => 'amount', 'group' => 'people'],
-      'total_requirements' => ['label' => $this->t('Requirements ($)'), 'type' => 'currency', 'group' => 'financial'],
-      'prioritized_requirements' => [
-        'label' => $this->t('Prioritized requirements ($)'),
+      'total_requirements' => [
+        'label' => $this->t('Requirements', [], $financial_options),
         'type' => 'currency',
         'group' => 'financial',
       ],
-      'total_funding' => ['label' => $this->t('Funding ($)'), 'type' => 'currency', 'group' => 'financial'],
+      'prioritized_requirements' => [
+        'label' => $this->t('Prioritized requirements', [], $financial_options),
+        'type' => 'currency',
+        'group' => 'financial',
+      ],
+      'total_funding' => ['label' => $this->t('Funding'), 'type' => 'currency', 'group' => 'financial'],
       'funding_progress' => ['label' => $this->t('% Funded'), 'type' => 'percentage', 'group' => 'coverage'],
     ];
   }

@@ -6,6 +6,7 @@ use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\ghi_form_elements\Attribute\ConfigurationContainerItem;
 use Drupal\ghi_form_elements\ConfigurationContainerItemPluginBase;
 use Drupal\ghi_plans\ApiObjects\Attachments\Attachment;
+use Drupal\ghi_plans\Entity\Plan;
 
 /**
  * Provides an attachment unit item for configuration containers.
@@ -28,7 +29,9 @@ class AttachmentUnit extends ConfigurationContainerItemPluginBase {
    *   A default label.
    */
   public function getDefaultLabel() {
-    return $this->t('Unit');
+    $attachment = $this->getContextValue('attachment');
+    $plan = $attachment instanceof Attachment ? $attachment->getPlanObject() : $this->getContextValue('plan_object');
+    return $this->t('Unit', [], $this->buildPlanTranslationOptions($plan instanceof Plan ? $plan : NULL));
   }
 
   /**

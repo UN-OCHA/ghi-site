@@ -157,6 +157,7 @@ class LogframeTableConfigBuilder {
    */
   private function buildIndicatorColumns(AttachmentPrototype $attachment_prototype, Plan $plan) {
     // Setup the columns.
+    $translation_options = $plan->getTranslationOptions();
     $columns = [];
     $columns[] = [
       'item_type' => 'attachment_label',
@@ -168,7 +169,7 @@ class LogframeTableConfigBuilder {
     $columns[] = [
       'item_type' => 'attachment_unit',
       'config' => [
-        'label' => $this->t('Unit', [], ['langcode' => $plan->getPlanLanguage()]),
+        'label' => $this->t('Unit', [], $translation_options),
       ],
       'id' => count($columns),
     ];
@@ -218,7 +219,7 @@ class LogframeTableConfigBuilder {
         'id' => count($columns),
         'item_type' => 'spark_line_chart',
         'config' => [
-          'label' => $this->t('Progress', [], ['langcode' => $plan->getPlanLanguage()]),
+          'label' => $this->t('Progress', [], $translation_options),
           'data_point' => $measure,
           'baseline' => $target,
           'use_calculation_method' => FALSE,

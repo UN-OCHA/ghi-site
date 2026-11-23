@@ -17,6 +17,7 @@ use Drupal\ghi_plans\ApiObjects\Prototypes\AttachmentPrototype;
 use Drupal\ghi_plans\ApiObjects\Attachments\Attachment;
 use Drupal\ghi_plans\ApiObjects\Attachments\IndicatorAttachment;
 use Drupal\ghi_plans\ApiObjects\PlanEntityInterface;
+use Drupal\ghi_plans\Entity\Plan;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -350,7 +351,7 @@ class AttachmentTable extends ConfigurationContainerItemPluginBase implements Co
     $prototype = $this->getAttachmentPrototype();
     $default_label = $prototype?->getName() ?? NULL;
     if ($prototype?->getType() == 'caseload' && $plan_object = $this->getBlockContext()['plan_object']) {
-      $default_label = $this->t('Population data', [], ['langcode' => $plan_object->getPlanLanguage() ?? 'en']);
+      $default_label = $this->t('Population data', [], $this->buildPlanTranslationOptions($plan_object instanceof Plan ? $plan_object : NULL));
     }
     $item_types = [
       'attachment_label' => [

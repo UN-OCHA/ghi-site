@@ -14,6 +14,7 @@ use Drupal\ghi_form_elements\ConfigurationContainerItemPluginBase;
 use Drupal\ghi_form_elements\Helpers\FormElementHelper;
 use Drupal\ghi_plans\Entity\Plan;
 use Drupal\ghi_plans\Helpers\DataPointHelper;
+use Drupal\ghi_plans\Helpers\FinancialLabel;
 use Drupal\ghi_plans\PlanMetricResolver;
 use Drupal\ghi_plans\ValueObject\PlanMetricValues;
 use Drupal\hpc_common\Helpers\CommonHelper;
@@ -453,6 +454,9 @@ class PlanMetricData extends ConfigurationContainerItemPluginBase {
    * Gets the supported normalized plan metrics.
    */
   private function getMetricOptions(): array {
+    // Keep editor-facing options in the interface language. Plan-language
+    // translation is applied separately to public default labels below.
+    $financial_options = ['context' => FinancialLabel::TRANSLATION_CONTEXT];
     return [
       (string) $this->t('Population data') => [
         'total_population' => $this->t('Total population'),
@@ -463,12 +467,12 @@ class PlanMetricData extends ConfigurationContainerItemPluginBase {
         'latest_reach' => $this->t('People reached'),
       ],
       (string) $this->t('Financial data') => [
-        'requirements' => $this->t('Requirements ($)'),
-        'prioritized_requirements' => $this->t('Prioritized requirements ($)'),
-        'original_requirements' => $this->t('Original requirements ($)'),
-        'funding' => $this->t('Current funding ($)'),
-        'outside_funding' => $this->t('Funded outside HRP ($)'),
-        'funding_gap' => $this->t('Funding gap ($)'),
+        'requirements' => FinancialLabel::withCurrencyUnit($this->t('Requirements', [], $financial_options)),
+        'prioritized_requirements' => FinancialLabel::withCurrencyUnit($this->t('Prioritized requirements', [], $financial_options)),
+        'original_requirements' => FinancialLabel::withCurrencyUnit($this->t('Original requirements', [], $financial_options)),
+        'funding' => FinancialLabel::withCurrencyUnit($this->t('Current funding')),
+        'outside_funding' => FinancialLabel::withCurrencyUnit($this->t('Funded outside HRP')),
+        'funding_gap' => FinancialLabel::withCurrencyUnit($this->t('Funding gap')),
         'coverage' => $this->t('Funding coverage (%)'),
       ],
     ];
@@ -485,11 +489,26 @@ class PlanMetricData extends ConfigurationContainerItemPluginBase {
    * Gets default display labels, preserving the legacy financial labels.
    */
   private function getMetricDefaultLabels(): array {
-    return array_replace($this->getFlatMetricOptions(), [
-      'original_requirements' => $this->t('Original ($)'),
-      'funding_gap' => $this->t('Unmet ($)'),
-      'coverage' => $this->t('% Funded'),
-    ]);
+    // These defaults render on the frontend, so translate them explicitly in
+    // the plan language without changing Drupal's interface language.
+    $plan = $this->getPlan();
+    $options = $this->buildPlanTranslationOptions($plan);
+    $financial_options = $this->buildPlanTranslationOptions($plan, FinancialLabel::TRANSLATION_CONTEXT);
+    return [
+      'total_population' => $this->t('Total population', [], $options),
+      'in_need' => $this->t('People in need', [], $options),
+      'target' => $this->t('People targeted', [], $options),
+      'prioritized_target' => $this->t('People prioritized', [], $options),
+      'expected_reach' => $this->t('People expected to be reached', [], $options),
+      'latest_reach' => $this->t('People reached', [], $options),
+      'requirements' => $this->t('Requirements', [], $financial_options),
+      'prioritized_requirements' => $this->t('Prioritized requirements', [], $financial_options),
+      'original_requirements' => $this->t('Original requirements', [], $financial_options),
+      'funding' => $this->t('Funding', [], $options),
+      'outside_funding' => $this->t('Funded outside HRP', [], $options),
+      'funding_gap' => $this->t('Unmet', [], $options),
+      'coverage' => $this->t('% Funded', [], $options),
+    ];
   }
 
   /**

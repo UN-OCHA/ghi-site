@@ -6,6 +6,7 @@ use Drupal\Core\Form\FormState;
 use Drupal\ghi_base_objects\Entity\BaseObjectInterface;
 use Drupal\ghi_blocks\Interfaces\MultiStepFormBlockInterface;
 use Drupal\ghi_blocks\Interfaces\OverrideDefaultTitleBlockInterface;
+use Drupal\ghi_blocks\Interfaces\FrontendTableBlockInterface;
 use Drupal\ghi_blocks\Plugin\Block\Plan\PlanGoverningEntitiesTable;
 use Drupal\ghi_blocks\Plugin\ConfigurationContainerItem\FundingData;
 use Drupal\ghi_plans\ApiObjects\Entities\GoverningEntity;
@@ -62,6 +63,7 @@ class PlanGoverningEntitiesTableTest extends PlanBlockKernelTestBase {
   public function testBlockProperties() {
     $plugin = $this->getBlockPlugin(FALSE);
     $this->assertInstanceOf(PlanGoverningEntitiesTable::class, $plugin);
+    $this->assertInstanceOf(FrontendTableBlockInterface::class, $plugin);
     $this->assertInstanceOf(MultiStepFormBlockInterface::class, $plugin);
     $this->assertInstanceOf(OverrideDefaultTitleBlockInterface::class, $plugin);
     $this->assertInstanceOf(HPCDownloadExcelInterface::class, $plugin);
@@ -105,6 +107,9 @@ class PlanGoverningEntitiesTableTest extends PlanBlockKernelTestBase {
     $this->assertEquals(0, $build['#soft_limit']);
     $this->assertCount(1, $build['#header']);
     $this->assertCount(1, $build['#rows']);
+
+    $render_build = $plugin->doBuildContent();
+    $this->assertTrue($render_build[0]['#distributed_columns']);
   }
 
   /**
@@ -465,6 +470,13 @@ class PlanGoverningEntitiesTableTest extends PlanBlockKernelTestBase {
 
     $display_form = $plugin->displayForm([], $form_state);
     $this->assertArrayHasKey('soft_limit', $display_form);
+
+    foreach (['base', 'table', 'display'] as $subform) {
+      $form_state = new FormState();
+      $form_state->set('current_subform', $subform);
+      $configuration_form = $plugin->buildConfigurationForm([], $form_state);
+      $this->assertArrayNotHasKey('distributed_columns', $configuration_form['container']);
+    }
   }
 
   /**

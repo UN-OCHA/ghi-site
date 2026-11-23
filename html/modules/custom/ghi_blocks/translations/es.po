@@ -14,3 +14,4 @@ msgstr "(se abre en una pestaña nueva)"
 
 msgid "Image information"
 msgstr "Información de la imagen"
+

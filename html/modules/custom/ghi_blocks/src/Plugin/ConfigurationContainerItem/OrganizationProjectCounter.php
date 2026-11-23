@@ -59,7 +59,8 @@ class OrganizationProjectCounter extends ConfigurationContainerItemPluginBase {
    *   A default label or NULL.
    */
   public function getDefaultLabel() {
-    return $this->t('Projects');
+    $plan = $this->getContextValue('plan_object');
+    return $this->t('Projects', [], $this->buildPlanTranslationOptions($plan instanceof Plan ? $plan : NULL));
   }
 
   /**
@@ -163,9 +164,7 @@ class OrganizationProjectCounter extends ConfigurationContainerItemPluginBase {
     $base_object = $this->getContextValue('base_object');
     $organization = $this->getContextValue('organization');
     $plan_object = $this->getContextValue('plan_object');
-    $t_options = [
-      'langcode' => $plan_object instanceof Plan ? $plan_object->getPlanLanguage() : NULL,
-    ];
+    $t_options = $this->buildPlanTranslationOptions($plan_object instanceof Plan ? $plan_object : NULL);
 
     $route_name = 'ghi_plans.modal_content.organization_projects';
     $width = '80%';

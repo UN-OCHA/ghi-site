@@ -141,10 +141,13 @@ class FullLogframeDownloadTest extends UnitTestCase {
   public function testWorksheetNames(): void {
     $block = (new \ReflectionClass(LogframeDownloadSource::class))->newInstanceWithoutConstructor();
     $block->setStringTranslation($this->getStringTranslationStub());
-    $arguments = ['Meta data', ['meta data']];
+    $translation_options = Plan::buildTranslationOptions(NULL);
+    $arguments = ['Meta data', ['meta data'], $translation_options];
     $this->assertSame('Meta data (2)', $this->callPrivateMethod($block, 'getFullLogframeSheetName', $arguments));
-    $this->assertSame('A B (2)', $this->callPrivateMethod($block, 'getFullLogframeSheetName', ['A/B', ['a b']]));
-    $this->assertSame('Data', $this->callPrivateMethod($block, 'getFullLogframeSheetName', ['', []]));
+    $arguments = ['A/B', ['a b'], $translation_options];
+    $this->assertSame('A B (2)', $this->callPrivateMethod($block, 'getFullLogframeSheetName', $arguments));
+    $arguments = ['', [], $translation_options];
+    $this->assertSame('Data', $this->callPrivateMethod($block, 'getFullLogframeSheetName', $arguments));
   }
 
   /**

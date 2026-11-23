@@ -10,6 +10,7 @@ use Drupal\Core\Render\Markup;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\ghi_blocks\Interfaces\AttachmentTableInterface;
 use Drupal\ghi_blocks\Interfaces\ConfigurableTableBlockInterface;
+use Drupal\ghi_blocks\Interfaces\FrontendTableBlockInterface;
 use Drupal\ghi_blocks\Interfaces\MultiStepFormBlockInterface;
 use Drupal\ghi_blocks\Interfaces\OverrideDefaultTitleBlockInterface;
 use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
@@ -38,7 +39,7 @@ use Drupal\hpc_downloads\Interfaces\HPCDownloadPNGInterface;
     'plan_cluster' => new EntityContextDefinition('entity:base_object', new TranslatableMarkup('Cluster'), required: FALSE, constraints: ['Bundle' => 'governing_entity']),
   ],
 )]
-class PlanEntityAttachmentsTable extends GHIBlockBase implements ConfigurableTableBlockInterface, MultiStepFormBlockInterface, OverrideDefaultTitleBlockInterface, AttachmentTableInterface, HPCDownloadExcelInterface, HPCDownloadPNGInterface {
+class PlanEntityAttachmentsTable extends GHIBlockBase implements ConfigurableTableBlockInterface, FrontendTableBlockInterface, MultiStepFormBlockInterface, OverrideDefaultTitleBlockInterface, AttachmentTableInterface, HPCDownloadExcelInterface, HPCDownloadPNGInterface {
 
   use ConfigurationContainerTrait;
   use AttachmentTableTrait;

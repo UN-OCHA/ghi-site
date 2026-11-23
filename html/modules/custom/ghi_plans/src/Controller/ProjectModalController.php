@@ -16,6 +16,7 @@ use Drupal\ghi_plans\Entity\GoverningEntity;
 use Drupal\ghi_plans\Entity\Plan;
 use Drupal\ghi_plans\Traits\FtsLinkTrait;
 use Drupal\ghi_plans\Traits\PlanQueryTrait;
+use Drupal\ghi_plans\Traits\PlanTranslationOptionsTrait;
 use Drupal\hpc_common\Helpers\ThemeHelper;
 use enshrined\svgSanitize\Sanitizer as SvgSanitizer;
 use GuzzleHttp\Exception\GuzzleException;
@@ -29,6 +30,7 @@ class ProjectModalController extends ControllerBase {
 
   use FtsLinkTrait;
   use PlanQueryTrait;
+  use PlanTranslationOptionsTrait;
 
   /**
    * Config object for legacy project source URLs.
@@ -325,7 +327,7 @@ class ProjectModalController extends ControllerBase {
     $project_query = $this->getProjectQuery();
     $projects = $project_query->getProjectsForPlanId($plan_object->getSourceId(), $cluster_context);
     $build = $this->getProjectTable($projects, $plan_object);
-    return $this->returnBuild($build, $this->modalTitleBaseObject($base_object, $this->t('Projects', [], ['langcode' => $plan_object?->getPlanLanguage()])));
+    return $this->returnBuild($build, $this->modalTitleBaseObject($base_object, $this->t('Projects', [], $this->buildPlanTranslationOptions($plan_object))));
   }
 
   /**
@@ -343,9 +345,7 @@ class ProjectModalController extends ControllerBase {
     $project_query = $this->getProjectQuery();
     $organizations = $project_query->getProjectOrganizationsForPlan($plan_object, $cluster_context);
 
-    $t_options = [
-      'langcode' => $plan_object?->getPlanLanguage(),
-    ];
+    $t_options = $this->buildPlanTranslationOptions($plan_object);
     $build = $this->getOrganizationList($organizations);
     $fts_link = NULL;
     if ($base_object instanceof GoverningEntity) {
@@ -371,9 +371,7 @@ class ProjectModalController extends ControllerBase {
   public function buildOrganizationProjectTable(BaseObjectInterface $base_object, $organization_id) {
     $plan_object = $this->getPlanObject($base_object);
     $organization = $this->getOrganizationQuery()->getOrganization($organization_id);
-    $t_options = [
-      'langcode' => $plan_object?->getPlanLanguage(),
-    ];
+    $t_options = $this->buildPlanTranslationOptions($plan_object);
     if (!$organization) {
       $build = [
         '#markup' => $this->t('An error occured. The requested ressource is not available.', [], $t_options),
@@ -871,9 +869,7 @@ class ProjectModalController extends ControllerBase {
    */
   private function getProjectTable(array $projects, ?Plan $plan_object = NULL) {
     $decimal_format = $plan_object?->getDecimalFormat();
-    $t_options = [
-      'langcode' => $plan_object?->getPlanLanguage(),
-    ];
+    $t_options = $this->buildPlanTranslationOptions($plan_object);
     $header = [
       [
         'data' => $this->t('Project code', [], $t_options),
@@ -1017,9 +1013,7 @@ class ProjectModalController extends ControllerBase {
    */
   private function getOrganizationProjectTable(array $projects, ?Plan $plan_object = NULL) {
     $decimal_format = $plan_object?->getDecimalFormat();
-    $t_options = [
-      'langcode' => $plan_object?->getPlanLanguage(),
-    ];
+    $t_options = $this->buildPlanTranslationOptions($plan_object);
     $header = [
       $this->t('Project code', [], $t_options),
       $this->t('Project name', [], $t_options),
@@ -1162,9 +1156,7 @@ class ProjectModalController extends ControllerBase {
       ];
     }
 
-    $t_options = [
-      'langcode' => $plan_object?->getPlanLanguage(),
-    ];
+    $t_options = $this->buildPlanTranslationOptions($plan_object);
     $projects_label = $this->t('Projects', [], $t_options);
     $modal_title = $plan_object ? $this->t(
       '@plan_title | @projects_label | @project_code',

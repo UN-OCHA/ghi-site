@@ -63,9 +63,8 @@ class Plan extends BaseObject implements BaseObjectMetaDataInterface, BaseObject
    * {@inheritdoc}
    */
   public function getPageTitleMetaData() {
-    $langcode = $this->getPlanLanguage() ?? 'en';
     $document_published = $this->getPlanDocumentPublishedDate();
-    $t_options = ['langcode' => $langcode];
+    $t_options = $this->getTranslationOptions();
     return array_filter([
       $this->getPlanSubtitle() ? new FormattableMarkup('<span class="icon-wrapper"><span class="icon plan-subtitle"></span>@subtitle</span>', [
         '@subtitle' => $this->getPlanSubtitle(),
@@ -180,6 +179,41 @@ class Plan extends BaseObject implements BaseObjectMetaDataInterface, BaseObject
       return NULL;
     }
     return $this->get('field_language')?->value ?? NULL;
+  }
+
+  /**
+   * Builds translation options for frontend strings belonging to this plan.
+   *
+   * Translation context disambiguates a source string; the plan language
+   * selects the translated output without changing Drupal's interface language.
+   *
+   * @param string|null $context
+   *   An optional translation context.
+   *
+   * @return array
+   *   Translation options containing the plan language and optional context.
+   */
+  public function getTranslationOptions(?string $context = NULL): array {
+    return self::buildTranslationOptions($this, $context);
+  }
+
+  /**
+   * Builds translation options from nullable plan context.
+   *
+   * @param self|null $plan
+   *   The plan supplying the frontend language, or NULL for English.
+   * @param string|null $context
+   *   An optional translation context.
+   *
+   * @return array
+   *   Translation options containing the resolved language and context.
+   */
+  public static function buildTranslationOptions(?self $plan, ?string $context = NULL): array {
+    $options = ['langcode' => $plan?->getPlanLanguage() ?? 'en'];
+    if ($context !== NULL) {
+      $options['context'] = $context;
+    }
+    return $options;
   }
 
   /**

@@ -14,6 +14,7 @@ use Drupal\ghi_blocks\Traits\ConfigurationItemClusterRestrictTrait;
 use Drupal\ghi_blocks\Traits\ConfigurationItemValuePreviewTrait;
 use Drupal\ghi_form_elements\Attribute\ConfigurationContainerItem;
 use Drupal\ghi_form_elements\ConfigurationContainerItemPluginBase;
+use Drupal\ghi_plans\Entity\Plan;
 use Drupal\ghi_plans\Traits\FtsLinkTrait;
 use Drupal\hpc_common\Helpers\TaxonomyHelper;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -130,9 +131,11 @@ class ProjectCounter extends ConfigurationContainerItemPluginBase {
    */
   public function getDefaultLabel($data_type = NULL) {
     $data_type = $data_type ?: $this->get('data_type');
+    $plan = $this->getContextValue('plan_object');
+    $options = $this->buildPlanTranslationOptions($plan instanceof Plan ? $plan : NULL);
     $default_map = [
-      'projects_count' => $this->t('Projects'),
-      'organizations_count' => $this->t('Partners'),
+      'projects_count' => $this->t('Projects', [], $options),
+      'organizations_count' => $this->t('Partners', [], $options),
     ];
     return $data_type ? $default_map[$data_type] : NULL;
   }
@@ -213,6 +216,8 @@ class ProjectCounter extends ConfigurationContainerItemPluginBase {
     /** @var \Drupal\ghi_base_objects\Entity\BaseObjectInterface $base_object */
     $base_object = $this->getContextValue('base_object');
     $context_node = $this->getContextValue('context_node');
+    $plan = $this->getContextValue('plan_object');
+    $options = $this->buildPlanTranslationOptions($plan instanceof Plan ? $plan : NULL);
 
     $route_name = NULL;
     $dialog_classes = ['project-count-modal', 'ghi-modal-dialog'];
@@ -244,7 +249,7 @@ class ProjectCounter extends ConfigurationContainerItemPluginBase {
           'title' => $this->t('@entity_label: @column_label', [
             '@entity_label' => $context_node ? $context_node->label() : $base_object->getName(),
             '@column_label' => $this->getLabel(),
-          ]),
+          ], $options),
           'classes' => [
             'ui-dialog' => implode(' ', $dialog_classes),
           ],
@@ -264,7 +269,7 @@ class ProjectCounter extends ConfigurationContainerItemPluginBase {
       '#link' => $link->toRenderable(),
       '#tooltip' => $this->t('Click to see detailed data for <em>@column_label</em>.', [
         '@column_label' => $this->getLabel(),
-      ]),
+      ], $options),
     ];
     return $modal_link;
   }

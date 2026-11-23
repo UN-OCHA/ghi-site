@@ -124,14 +124,14 @@ class PlanClusterLogframeLinks extends GHIBlockBase implements OverrideDefaultTi
       ];
       /** @var \Drupal\ghi_plans\Entity\Plan $plan */
       $plan = $cluster->getParentNode()?->getBaseObject() ?? NULL;
-      $langcode = $plan->getPlanLanguage();
+      $t_options = $this->buildPlanTranslationOptions($plan);
       $title_map = [
-        Plan::CLUSTER_TYPE_CLUSTER => $this->t('@cluster_name cluster logical framework', $title_args, ['langcode' => $langcode]),
-        Plan::CLUSTER_TYPE_SECTOR => $this->t('@cluster_name sector logical framework', $title_args, ['langcode' => $langcode]),
+        Plan::CLUSTER_TYPE_CLUSTER => $this->t('@cluster_name cluster logical framework', $title_args, $t_options),
+        Plan::CLUSTER_TYPE_SECTOR => $this->t('@cluster_name sector logical framework', $title_args, $t_options),
       ];
       $description_map = [
-        Plan::CLUSTER_TYPE_CLUSTER => $this->t('See cluster framework', [], ['langcode' => $langcode]),
-        Plan::CLUSTER_TYPE_SECTOR => $this->t('See sector framework', [], ['langcode' => $langcode]),
+        Plan::CLUSTER_TYPE_CLUSTER => $this->t('See cluster framework', [], $t_options),
+        Plan::CLUSTER_TYPE_SECTOR => $this->t('See sector framework', [], $t_options),
       ];
       $rendered_items[] = [
         '#theme' => 'link_box',

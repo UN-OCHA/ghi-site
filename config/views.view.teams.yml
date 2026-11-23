@@ -6186,6 +6186,11 @@ display:
           empty_zero: false
           hide_alter_empty: true
           destination: false
+      pager:
+        type: none
+        options:
+          offset: 0
+          items_per_page: 0
       empty:
         area:
           id: area
@@ -6242,6 +6247,7 @@ display:
       defaults:
         empty: false
         query: false
+        pager: false
         group_by: false
         style: true
         row: true
@@ -6255,8 +6261,7 @@ display:
       relationships: {  }
       group_by: false
       display_description: ''
-      header: {  }
-      footer:
+      header:
         area:
           id: area
           table: views
@@ -6270,6 +6275,7 @@ display:
             value: 'Note: The responsible team is set directly for sections and subpages. The available articles and documents for a team depend on the "Content space(s)" assigned to the team. A team member can edit any content belonging to a content space that is set for her team.'
             format: wysiwyg_text
           tokenize: false
+      footer: {  }
       display_extenders: {  }
       path: admin/people/teams
       menu:
@@ -6286,7 +6292,6 @@ display:
       contexts:
         - 'languages:language_content'
         - 'languages:language_interface'
-        - url.query_args
         - user.permissions
       tags:
         - 'config:field.storage.taxonomy_term.field_content_spaces'

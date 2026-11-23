@@ -10,6 +10,7 @@ use Drupal\ghi_base_objects\Entity\BaseObjectChildInterface;
 use Drupal\ghi_blocks\Traits\ConfigurationItemValuePreviewTrait;
 use Drupal\ghi_form_elements\Attribute\ConfigurationContainerItem;
 use Drupal\ghi_form_elements\ConfigurationContainerItemPluginBase;
+use Drupal\ghi_plans\Entity\Plan;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -74,7 +75,8 @@ class OrganizationClusterList extends ConfigurationContainerItemPluginBase {
    *   A default label.
    */
   public function getDefaultLabel() {
-    return $this->t('Clusters');
+    $plan = $this->getContextValue('plan_object');
+    return $this->t('Clusters', [], $this->buildPlanTranslationOptions($plan instanceof Plan ? $plan : NULL));
   }
 
   /**
