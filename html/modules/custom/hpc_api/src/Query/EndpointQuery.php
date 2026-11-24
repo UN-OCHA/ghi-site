@@ -613,13 +613,16 @@ class EndpointQuery {
    *
    * @param string[] $endpoint_urls
    *   An array of fully qualified endpoint urls.
+   * @param array<string, string[]> $cache_tags_by_url
+   *   Cache tags keyed by endpoint URL.
    */
-  public function queryPool($endpoint_urls) {
+  public function queryPool(array $endpoint_urls, array $cache_tags_by_url = []): void {
     $promises = [];
     foreach ($endpoint_urls as $endpoint_url) {
       $cache_key = $this->getEndpointResponseCacheKey($endpoint_url, 'query');
       $use_remote_cache = $this->canUseRemoteDataCache();
       $remote_cache_cid = $use_remote_cache ? $this->getRemoteDataCacheCid($endpoint_url) : NULL;
+      $cache_tags = $cache_tags_by_url[$endpoint_url] ?? $this->getCacheTags();
 
       // First check if statically cached data is available. Might come from
       // previous requests.
@@ -647,7 +650,7 @@ class EndpointQuery {
       $query_options = $this->getRequestOptions($endpoint_url);
       $promise = $this->httpClient->getAsync($endpoint_url, $query_options);
       $promise->then(
-        function ($response) use ($cache_key, $endpoint_url, $remote_cache_cid, $use_remote_cache, $start) {
+        function ($response) use ($cache_key, $endpoint_url, $remote_cache_cid, $use_remote_cache, $cache_tags, $start) {
           QueryHelper::endpointCallTimeStorage($endpoint_url . ' (pooled query)', microtime(TRUE) - $start);
 
           if (empty($response) || !$response instanceof ResponseInterface) {
@@ -671,12 +674,12 @@ class EndpointQuery {
               'context' => [
                 'auth_method' => $this->getAuthMethod(),
               ],
-              'cache_tags' => $this->getCacheTags(),
+              'cache_tags' => $cache_tags,
               'fresh_ttl' => (int) $this->configService->get('cache_lifetime'),
             ]);
           }
           else {
-            $this->cache($cache_key, $response_data, FALSE, NULL, $this->getCacheTags());
+            $this->cache($cache_key, $response_data, FALSE, NULL, $cache_tags);
           }
         },
       );

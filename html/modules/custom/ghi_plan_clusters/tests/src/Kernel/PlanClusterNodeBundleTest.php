@@ -42,6 +42,7 @@ class PlanClusterNodeBundleTest extends KernelTestBase {
     'hpc_api',
     'hpc_common',
     'ghi_base_objects',
+    'ghi_base_objects_test',
     'ghi_sections',
     'ghi_subpages',
     'ghi_plans',
@@ -127,6 +128,11 @@ class PlanClusterNodeBundleTest extends KernelTestBase {
     $this->assertInstanceOf(PlanClusterInterface::class, $plan_cluster);
     $this->assertEquals($plan_cluster->label(), 'Initial title');
 
+    // Saving an unchanged governing entity must not save the cluster page.
+    \Drupal::state()->set('ghi_base_objects_test.node_update_count.plan_cluster', 0);
+    $governing_entity->save();
+    $this->assertSame(0, \Drupal::state()->get('ghi_base_objects_test.node_update_count.plan_cluster'));
+
     // Confirm we can access the base objects.
     $governing_entities = $this->planClusterManager->loadGoverningEntityBaseObjectsForSection($section);
     $this->assertNotEmpty($governing_entities);
@@ -142,6 +148,7 @@ class PlanClusterNodeBundleTest extends KernelTestBase {
     $governing_entity->save();
     $plan_cluster = $this->planClusterManager->loadClusterSubpageForBaseObject($governing_entity);
     $this->assertEquals($plan_cluster->label(), 'New title');
+    $this->assertSame(1, \Drupal::state()->get('ghi_base_objects_test.node_update_count.plan_cluster'));
 
     // Delete the section and confirm that the cluster subpage is deleted too.
     $section->delete();

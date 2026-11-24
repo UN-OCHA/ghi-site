@@ -13,9 +13,7 @@ use Drupal\ghi_base_objects\Entity\Country as EntityCountry;
 use Drupal\ghi_plans\ApiObjects\Attachments\CaseloadAttachmentInterface;
 use Drupal\ghi_plans\Traits\AttachmentFilterTrait;
 use Drupal\ghi_plans\Traits\FtsLinkTrait;
-use Drupal\ghi_plans\Traits\PlanQueryTrait;
 use Drupal\ghi_plans\Traits\PlanTypeTrait;
-use Drupal\hpc_api\Traits\DateTimeTrait;
 use Drupal\hpc_common\Helpers\CommonHelper;
 
 /**
@@ -26,8 +24,6 @@ class Plan extends BaseObject implements BaseObjectMetaDataInterface, BaseObject
   use PlanTypeTrait;
   use FtsLinkTrait;
   use AttachmentFilterTrait;
-  use PlanQueryTrait;
-  use DateTimeTrait;
 
   public const BUNDLE = 'plan';
   public const CLUSTER_TYPE_CLUSTER = 'cluster';
@@ -270,10 +266,16 @@ class Plan extends BaseObject implements BaseObjectMetaDataInterface, BaseObject
   }
 
   /**
-   * Update the financial data for a plan.
+   * Apply financial data to a plan.
+   *
+   * @param array $financial_data
+   *   Financial data keyed by API property name.
+   *
+   * @return bool
+   *   TRUE when any stored financial value changed, FALSE otherwise.
    */
-  public function updateFinancialData(): void {
-    $financial_data = $this->getPlanQuery()->fetchFinancialData($this->getSourceId());
+  public function applyFinancialData(array $financial_data): bool {
+    $changed = $this->hasFinancialDataChanges($financial_data);
     if ($this->hasField('field_funding_total')) {
       $this->get('field_funding_total')?->setValue($financial_data['total_funding']);
     }
@@ -288,9 +290,41 @@ class Plan extends BaseObject implements BaseObjectMetaDataInterface, BaseObject
       $this->get('field_requirements_original')->setValue($financial_data['original_requirements']);
     }
 
-    if ($this->hasField('field_requirements_updated')) {
-      $this->get('field_requirements_updated')->setValue(self::getRequestTime());
+    return $changed;
+  }
+
+  /**
+   * Check whether financial data differs from the stored values.
+   *
+   * @param array $financial_data
+   *   Financial data keyed by API property name.
+   *
+   * @return bool
+   *   TRUE when any stored financial value differs, FALSE otherwise.
+   */
+  public function hasFinancialDataChanges(array $financial_data): bool {
+    $field_values = [
+      'field_funding_total' => ['total_funding', $this->getTotalFunding()],
+      'field_funding_overall' => ['overall_funding', $this->getOverallFunding()],
+      'field_requirements' => ['current_requirements', $this->getRequirements()],
+      'field_requirements_original' => ['original_requirements', $this->getOriginalRequirements()],
+    ];
+    foreach ($field_values as $field_name => [$data_key, $current_value]) {
+      if (!$this->hasField($field_name)) {
+        continue;
+      }
+      $new_value = $financial_data[$data_key] ?? NULL;
+      $new_value = $new_value !== NULL ? (float) $new_value : NULL;
+      $scale = $this->getFieldDefinition($field_name)->getSetting('scale');
+      if ($scale !== NULL) {
+        $current_value = $current_value !== NULL ? round($current_value, (int) $scale) : NULL;
+        $new_value = $new_value !== NULL ? round($new_value, (int) $scale) : NULL;
+      }
+      if ($current_value !== $new_value) {
+        return TRUE;
+      }
     }
+    return FALSE;
   }
 
   /**

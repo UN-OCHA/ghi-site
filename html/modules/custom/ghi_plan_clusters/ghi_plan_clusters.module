@@ -127,9 +127,12 @@ function ghi_plan_clusters_base_object_insert(BaseObject $base_object) {
  * Implements hook_ENTITY_TYPE_update().
  */
 function ghi_plan_clusters_base_object_update(BaseObjectInterface $base_object) {
+  if (!$base_object instanceof GoverningEntity) {
+    return;
+  }
   $plan_cluster_manager = ghi_plan_clusters_get_manager_service();
   $entity = $plan_cluster_manager->loadClusterSubpageForBaseObject($base_object);
-  if (!$entity) {
+  if (!$entity || $entity->get('title')->value === $base_object->label()) {
     return;
   }
   $entity->setTitle($base_object->label());
@@ -200,7 +203,14 @@ function ghi_plan_clusters_node_presave(EntityInterface $node) {
 function ghi_plan_clusters_node_update(EntityInterface $node) {
   // Synchronise the published status for plan clusters and their logframe
   // pages.
-  if ($node instanceof PlanCluster && $logframe_node = $node->getLogframeNode()) {
+  if (!$node instanceof PlanCluster) {
+    return;
+  }
+  $original = $node->getOriginal();
+  if ($original && $original->isPublished() === $node->isPublished()) {
+    return;
+  }
+  if ($logframe_node = $node->getLogframeNode()) {
     $logframe_node->status = $node->isPublished();
     $logframe_node->setNewRevision(FALSE);
     $logframe_node->isSyncing(TRUE);

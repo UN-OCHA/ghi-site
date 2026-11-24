@@ -8,6 +8,7 @@ use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Messenger\MessengerInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
+use Drupal\ghi_base_objects\Plugin\migrate\destination\BaseObjectSkipUnchanged;
 use Drupal\migrate\Plugin\MigrateSourcePluginManager;
 use Drupal\migrate\Plugin\MigrationPluginManagerInterface;
 use Drupal\migrate_plus\Entity\MigrationGroup;
@@ -147,7 +148,11 @@ class MigratedEntityManager implements ContainerInjectionInterface {
       if (!$bundle) {
         $bundle = $definition['process']['type']['default_value'] ?? NULL;
       }
-      return $plugin_id === 'entity:' . $entity_type_id && $bundle == $entity_bundle;
+      $entity_destination_plugins = ['entity:' . $entity_type_id];
+      if ($entity_type_id === 'base_object') {
+        $entity_destination_plugins[] = BaseObjectSkipUnchanged::PLUGIN_ID;
+      }
+      return in_array($plugin_id, $entity_destination_plugins, TRUE) && $bundle == $entity_bundle;
     });
     return count($definitions) == 1 ? reset($definitions) : NULL;
   }

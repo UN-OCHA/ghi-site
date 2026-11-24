@@ -2,6 +2,9 @@ services:
   ghi_plans.plan_metric_resolver:
     class: Drupal\ghi_plans\PlanMetricResolver
     arguments: ['@plugin.manager.fabric_query_manager']
+  ghi_plans.plan_financial_data_manager:
+    class: Drupal\ghi_plans\PlanFinancialDataManager
+    arguments: ['@entity_type.manager', '@state', '@plugin.manager.fabric_query_manager']
   ghi_plans.manager:
     class: Drupal\ghi_plans\PlanManager
     arguments: ['@entity_type.manager', '@entity_field.manager', '@module_handler', '@current_user']

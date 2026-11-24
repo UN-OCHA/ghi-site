@@ -42,7 +42,7 @@ process:
   field_plan: plan_entity_id
   field_prototype_id: prototype_id
 destination:
-  plugin: 'entity:base_object'
+  plugin: base_object_skip_unchanged
   overwrite_properties:
     - name
     - field_prototype_id
