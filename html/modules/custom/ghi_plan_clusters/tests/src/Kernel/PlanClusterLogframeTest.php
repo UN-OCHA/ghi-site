@@ -39,6 +39,7 @@ class PlanClusterLogframeTest extends KernelTestBase {
     'hpc_api',
     'hpc_common',
     'ghi_base_objects',
+    'ghi_base_objects_test',
     'ghi_sections',
     'ghi_subpages',
     'ghi_plans',
@@ -107,12 +108,18 @@ class PlanClusterLogframeTest extends KernelTestBase {
     $this->assertFalse($plan_cluster->isPublished());
     $this->assertFalse($logframe_node->isPublished());
 
+    // Saving a cluster without changing its status must not save its logframe.
+    \Drupal::state()->set('ghi_base_objects_test.node_update_count.logframe', 0);
+    $plan_cluster->save();
+    $this->assertSame(0, \Drupal::state()->get('ghi_base_objects_test.node_update_count.logframe'));
+
     // Publish the cluster and confirm that this also publishes the logframe.
     $plan_cluster->setPublished();
     $plan_cluster->save();
     $logframe_node = $plan_cluster->getLogframeNode();
     $this->assertTRUE($plan_cluster->isPublished());
     $this->assertTRUE($logframe_node->isPublished());
+    $this->assertSame(1, \Drupal::state()->get('ghi_base_objects_test.node_update_count.logframe'));
 
     // Unpublish the cluster and confirm that this also unpublishes the
     // logframe.
@@ -121,6 +128,7 @@ class PlanClusterLogframeTest extends KernelTestBase {
     $logframe_node = $plan_cluster->getLogframeNode();
     $this->assertFalse($plan_cluster->isPublished());
     $this->assertFalse($logframe_node->isPublished());
+    $this->assertSame(2, \Drupal::state()->get('ghi_base_objects_test.node_update_count.logframe'));
 
     // Create another cluster in the same section.
     $plan_cluster_2 = $this->createPlanCluster($section);

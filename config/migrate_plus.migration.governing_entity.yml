@@ -44,7 +44,7 @@ process:
   field_prototype_id: prototype_id
   field_icon: icon_name
 destination:
-  plugin: 'entity:base_object'
+  plugin: base_object_skip_unchanged
   overwrite_properties:
     - name
     - field_prototype_id

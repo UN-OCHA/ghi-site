@@ -34,8 +34,6 @@ source:
   ids:
     original_id:
       type: integer
-  constants:
-    now: now
 process:
   type:
     plugin: default_value
@@ -93,12 +91,8 @@ process:
   field_funding_overall: overall_funding
   field_requirements: current_requirements
   field_requirements_original: original_requirements
-  field_requirements_updated:
-    plugin: callback
-    callable: strtotime
-    source: constants/now
 destination:
-  plugin: 'entity:base_object'
+  plugin: base_object_skip_unchanged
   overwrite_properties:
     - name
     - created
@@ -125,7 +119,6 @@ destination:
     - field_funding_overall
     - field_requirements
     - field_requirements_original
-    - field_requirements_updated
 idMap: {  }
 migration_dependencies:
   required:

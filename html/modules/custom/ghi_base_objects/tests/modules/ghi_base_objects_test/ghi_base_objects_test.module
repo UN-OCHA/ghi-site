@@ -1,0 +1,26 @@
+<?php
+
+/**
+ * @file
+ * Hook implementations for GHI Base Objects tests.
+ */
+
+use Drupal\ghi_base_objects\Entity\BaseObjectInterface;
+use Drupal\node\NodeInterface;
+
+/**
+ * Implements hook_ENTITY_TYPE_update().
+ */
+function ghi_base_objects_test_base_object_update(BaseObjectInterface $base_object): void {
+  $state = \Drupal::state();
+  $state->set('ghi_base_objects_test.base_object_update_count', $state->get('ghi_base_objects_test.base_object_update_count', 0) + 1);
+}
+
+/**
+ * Implements hook_ENTITY_TYPE_update().
+ */
+function ghi_base_objects_test_node_update(NodeInterface $node): void {
+  $state = \Drupal::state();
+  $key = 'ghi_base_objects_test.node_update_count.' . $node->bundle();
+  $state->set($key, $state->get($key, 0) + 1);
+}

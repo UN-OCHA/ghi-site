@@ -19,11 +19,39 @@ use Drupal\hpc_api\Query\EndpointQueryBase;
 class PlanFundingSummaryQuery extends EndpointQueryBase {
 
   /**
-   * This holds the processed data.
-   *
-   * @var array
+   * Maximum number of simultaneous summary requests.
    */
-  private $data = NULL;
+  private const PREFETCH_BATCH_SIZE = 50;
+
+  /**
+   * Get funding summaries for multiple plans.
+   *
+   * @param int[] $plan_ids
+   *   The plan IDs to fetch.
+   *
+   * @return array<int, array<string, float>>
+   *   Funding summaries keyed by plan ID.
+   */
+  public function getDataForPlans(array $plan_ids): array {
+    $plan_ids = array_values(array_filter(array_unique(array_map('intval', $plan_ids))));
+    $endpoint_urls = [];
+    $cache_tags_by_url = [];
+    foreach ($plan_ids as $plan_id) {
+      $this->setPlaceholder('plan_id', $plan_id);
+      $endpoint_url = $this->getFullEndpointUrl();
+      $endpoint_urls[] = $endpoint_url;
+      $cache_tags_by_url[$endpoint_url] = $this->getCacheTags();
+    }
+    foreach (array_chunk($endpoint_urls, self::PREFETCH_BATCH_SIZE) as $endpoint_url_batch) {
+      $this->endpointQuery->queryPool($endpoint_url_batch, array_intersect_key($cache_tags_by_url, array_flip($endpoint_url_batch)));
+    }
+
+    $data = [];
+    foreach ($plan_ids as $plan_id) {
+      $data[$plan_id] = $this->getData(['plan_id' => $plan_id]);
+    }
+    return $data;
+  }
 
   /**
    * {@inheritdoc}
@@ -37,50 +65,6 @@ class PlanFundingSummaryQuery extends EndpointQueryBase {
       'total_funding' => $data['total_funding'],
       'overall_funding' => $data['overall_funding'],
     ];
-  }
-
-  /**
-   * Get a specific property from the current result set.
-   *
-   * @param string $property
-   *   The property to retrieve.
-   * @param mixed $default
-   *   A default value.
-   *
-   * @return mixed
-   *   The retrieved property or a default value.
-   */
-  public function get($property, $default) {
-    if (empty($this->data)) {
-      $this->data = $this->getData();
-    }
-    return !empty($this->data[$property]) ? $this->data[$property] : $default;
-  }
-
-  /**
-   * Get the total funding.
-   *
-   * @param int $default
-   *   Optional default value.
-   *
-   * @return float
-   *   The total funding value.
-   */
-  public function getTotalFunding($default = 0): float {
-    return (float) $this->get('total_funding', $default);
-  }
-
-  /**
-   * Get the overall funding.
-   *
-   * @param int $default
-   *   Optional default value.
-   *
-   * @return float
-   *   The overall funding value.
-   */
-  public function getOverallFunding($default = 0): float {
-    return (float) $this->get('overall_funding', $default);
   }
 
 }

@@ -169,10 +169,10 @@ class PlanFormAlter {
     /** @var \Drupal\ghi_plans\Entity\Plan $plan */
     $plan = $form['#entity'];
 
-    // Fetch the data and save the plan.
-    $plan->updateFinancialData();
-    $plan->setSyncing(TRUE);
-    $plan->save();
+    // Fetch the data and save the plan when the values changed.
+    /** @var \Drupal\ghi_plans\PlanFinancialDataManager $financial_data_manager */
+    $financial_data_manager = \Drupal::service('ghi_plans.plan_financial_data_manager');
+    $financial_data_manager->updatePlan($plan);
 
     // Prepare a response that updates the form fields.
     $response = new AjaxResponse();

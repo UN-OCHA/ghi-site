@@ -57,7 +57,7 @@ process:
   field_country_code: iso3
   field_place_code: pcode
 destination:
-  plugin: 'entity:base_object'
+  plugin: base_object_skip_unchanged
   overwrite_properties:
     - name
     - field_latitude

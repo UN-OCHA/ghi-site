@@ -6,7 +6,6 @@ use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\ghi_base_objects\ApiObjects\Country;
 use Drupal\ghi_plans\ApiObjects\Attachments\CostAttachment;
 use Drupal\ghi_plans\ApiObjects\Plan;
-use Drupal\ghi_plans\ApiObjects\PlanEntityInterface;
 use Drupal\ghi_plans\ApiObjects\PlanReportingPeriod;
 use Drupal\ghi_plans\Traits\PlanQueryTrait;
 use Drupal\hpc_api\ApiObjects\Types\PlanCostingType;
@@ -238,26 +237,63 @@ class PlanQuery extends FabricQueryBase {
   }
 
   /**
+   * Get financial data for multiple plans.
+   *
+   * @param int[] $plan_ids
+   *   The plan IDs to fetch.
+   *
+   * @return array<int, array<string, float|null>>
+   *   Financial data keyed by plan ID.
+   */
+  public function getFinancialDataForPlans(array $plan_ids): array {
+    $financial_data_cache = &$this->getFinancialDataCache();
+    $plan_ids = array_values(array_filter(array_unique(array_map('intval', $plan_ids))));
+    $missing_plan_ids = array_values(array_diff($plan_ids, array_keys($financial_data_cache)));
+
+    if ($missing_plan_ids) {
+      $funding_by_plan = $this->getPlanFundingSummaryQuery()->getDataForPlans($missing_plan_ids);
+      $attachments_by_plan = $this->getAttachmentQuery()->getAttachmentsByPlan($missing_plan_ids, 'cost');
+
+      foreach ($missing_plan_ids as $plan_id) {
+        $attachments = $attachments_by_plan[$plan_id] ?? [];
+        $attachment = count($attachments) == 1 ? reset($attachments) : NULL;
+        assert($attachment instanceof CostAttachment || $attachment === NULL);
+
+        $financial_data_cache[$plan_id] = $funding_by_plan[$plan_id] + [
+          'current_requirements' => $attachment?->getRequirements() ?? NULL,
+          'original_requirements' => $attachment?->getOriginalRequirements() ?? NULL,
+        ];
+      }
+    }
+
+    $financial_data = [];
+    foreach ($plan_ids as $plan_id) {
+      $financial_data[$plan_id] = $financial_data_cache[$plan_id];
+    }
+    return $financial_data;
+  }
+
+  /**
    * Fetch the financial data for the plan.
    *
    * @return array
    *   An array with financial data for the plan.
    */
   public function fetchFinancialData(int $plan_id): array {
-    $funding_query = clone $this->getPlanFundingSummaryQuery();
-    $funding_query->getData(['plan_id' => $plan_id]);
+    return $this->getFinancialDataForPlans([$plan_id])[$plan_id];
+  }
 
-    $attachments_query = $this->getAttachmentQuery();
-    $attachments = $attachments_query->getAttachmentsByObject(PlanEntityInterface::ENTITY_TYPE_PLAN, [$plan_id], 'cost');
-    $attachment = count($attachments) == 1 ? reset($attachments) : NULL;
-    assert($attachment instanceof CostAttachment || $attachment === NULL);
-
-    return [
-      'total_funding' => $funding_query->getTotalFunding(),
-      'overall_funding' => $funding_query->getOverallFunding(),
-      'current_requirements' => $attachment?->getRequirements() ?? NULL,
-      'original_requirements' => $attachment?->getOriginalRequirements() ?? NULL,
-    ];
+  /**
+   * Get the request-wide financial data cache shared by plugin instances.
+   *
+   * @return array<int, array<string, float|null>>
+   *   Financial data keyed by plan ID.
+   */
+  private function &getFinancialDataCache(): array {
+    $financial_data_caches = &drupal_static(__METHOD__, []);
+    $cache_base_time = (int) ($this->configuration['cache_base_time'] ?? 0);
+    $financial_data_caches[$cache_base_time] = $financial_data_caches[$cache_base_time] ?? [];
+    return $financial_data_caches[$cache_base_time];
   }
 
 }

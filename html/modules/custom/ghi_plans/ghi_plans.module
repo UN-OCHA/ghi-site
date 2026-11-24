@@ -38,25 +38,12 @@ function ghi_plans_entity_bundle_info_alter(array &$bundles) {
 /**
  * Implements hook_cron().
  *
- * Update the requirements for the plan.
+ * Update financial data for plans.
  */
 function ghi_plans_cron() {
-  $storage = \Drupal::entityTypeManager()->getStorage('base_object');
-  $query = $storage->getQuery();
-  $query->accessCheck(FALSE);
-  $query->condition('type', 'plan');
-  $query->sort('field_requirements_updated');
-  $query->pager(100);
-  $results = $query->execute();
-  $plans = $storage->loadMultiple($results);
-  foreach ($plans as $plan) {
-    if (!$plan instanceof Plan) {
-      continue;
-    }
-    $plan->updateFinancialData();
-    $plan->setSyncing(TRUE);
-    $plan->save();
-  }
+  /** @var \Drupal\ghi_plans\PlanFinancialDataManager $financial_data_manager */
+  $financial_data_manager = \Drupal::service('ghi_plans.plan_financial_data_manager');
+  $financial_data_manager->updateNextBatch();
 }
 
 /**
@@ -106,14 +93,13 @@ function ghi_plans_migrate_plan_prepare_row(Row $row, MigrateSourceInterface $so
 
   /** @var \Drupal\hpc_api\Query\FabricQueryManager $query_manager */
   $query_manager = \Drupal::service('plugin.manager.fabric_query_manager');
-  /** @var \Drupal\ghi_plans\Plugin\FabricQuery\PlanQuery $plan_query */
   // Plan details come from a second bulk query. Reuse the source migration's
   // freshness boundary so persistent cache entries cannot mix API snapshots.
   $query_configuration = $source instanceof FabricGraphQl ? ['cache_base_time' => $source->getCacheBaseTime()] : [];
+  /** @var \Drupal\ghi_plans\Plugin\FabricQuery\PlanQuery $plan_query */
   $plan_query = $query_manager->createInstance('plan', $query_configuration);
-  $plan_query->getAllPlans();
-
-  $plan = $plan_query->getPlan($plan_id);
+  $plans = $plan_query->getAllPlans();
+  $plan = $plans[$plan_id] ?? NULL;
   if (!$plan) {
     throw new MigrateSkipRowException();
   }
@@ -142,7 +128,9 @@ function ghi_plans_migrate_plan_prepare_row(Row $row, MigrateSourceInterface $so
   $row->setSourceProperty('focus_country_id', $plan->getFocusCountry()?->id());
   $row->setSourceProperty('latest_published_period_id', $plan->getLastPublishedReportingPeriodId());
 
-  $financial_data = $plan_query->fetchFinancialData($plan_id);
+  /** @var \Drupal\ghi_plans\PlanFinancialDataManager $financial_data_manager */
+  $financial_data_manager = \Drupal::service('ghi_plans.plan_financial_data_manager');
+  $financial_data = $financial_data_manager->getFinancialData(array_keys($plans), $query_configuration)[$plan_id];
   $row->setSourceProperty('total_funding', $financial_data['total_funding']);
   $row->setSourceProperty('overall_funding', $financial_data['overall_funding']);
   $row->setSourceProperty('current_requirements', $financial_data['current_requirements']);
