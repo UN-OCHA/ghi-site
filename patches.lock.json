@@ -1,5 +1,5 @@
 {
-    "_hash": "c3ee65482afb4d2e72761ced549662e73101a53a0f3001394fc30c2130621f56",
+    "_hash": "5db451f078b489ab56f97e6b76d5fe115ebc34e3f9fad901599770db97d1d097",
     "patches": {
         "drupal/big_pipe_sessionless": [
             {
@@ -233,36 +233,12 @@
                 }
             }
         ],
-        "drupal/openid_connect": [
-            {
-                "package": "drupal/openid_connect",
-                "description": "Handle case if user is in blocked state after SSO Authorization",
-                "url": "./patches/openid_connect-3390668-6.patch",
-                "sha256": "3dfdaf6593f62c629db9d4a8701ebb7bf8a6ae9f479c4d5d89e1799d37a5a422",
-                "depth": 1,
-                "extra": {
-                    "provenance": "patches-file:composer.patches.json"
-                }
-            }
-        ],
         "drupal/openid_connect_windows_aad": [
             {
                 "package": "drupal/openid_connect_windows_aad",
                 "description": "Failed to get authentication tokens for Windows Azure AD",
                 "url": "./patches/openid_connect_windows_aad-3346603-5.patch",
                 "sha256": "58e490a3bc1eaf6449ae204b3cdb0dd3e589b1209c124f4cac929da2d448472f",
-                "depth": 1,
-                "extra": {
-                    "provenance": "patches-file:composer.patches.json"
-                }
-            }
-        ],
-        "drupal/view_unpublished": [
-            {
-                "package": "drupal/view_unpublished",
-                "description": "Issue #2958568: Add a search api processor for view unpublished",
-                "url": "./patches/2958568-view-unpublished-search-api-access-18.patch",
-                "sha256": "a3bb5bfecc7230e4b1f819d0436046eb06da3459f86d606a1755a83d263c8bf0",
                 "depth": 1,
                 "extra": {
                     "provenance": "patches-file:composer.patches.json"
