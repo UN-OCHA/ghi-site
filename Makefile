@@ -1,4 +1,7 @@
 # Variables. Yes.
+SHELL=/bin/bash
+.SHELLFLAGS=-o pipefail -c
+
 DOCKER=docker
 DOCKER_BUILDKIT=0
 REGISTRY=unocha

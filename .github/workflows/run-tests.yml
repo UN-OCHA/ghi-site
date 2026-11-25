@@ -87,6 +87,7 @@ jobs:
       - name: Save Image Artifact
         id: image
         run: |
+          set -o pipefail
           docker save unocha/ghi-site:local | gzip -1 > /tmp/ghi-site-local.tar.gz
 
       - name: Upload Image Artifact
