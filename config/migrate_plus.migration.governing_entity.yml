@@ -39,6 +39,7 @@ process:
     plugin: default_value
     default_value: governing_entity
   name: name
+  changed: changed
   field_original_id: original_id
   field_plan: plan_entity_id
   field_prototype_id: prototype_id
@@ -47,6 +48,7 @@ destination:
   plugin: base_object_skip_unchanged
   overwrite_properties:
     - name
+    - changed
     - field_prototype_id
     - field_icon
 idMap: {  }
