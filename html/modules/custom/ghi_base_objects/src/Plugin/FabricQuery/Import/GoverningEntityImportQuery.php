@@ -23,6 +23,8 @@ class GoverningEntityImportQuery extends FabricQueryBase implements ImportQueryI
     $items = [
       'Id',
       'Name',
+      'CreatedAt',
+      'UpdatedAt',
       'PlanId',
       'HpcEntityPrototypeId',
       // phpcs:disable Squiz.Arrays.ArrayDeclaration.KeySpecified

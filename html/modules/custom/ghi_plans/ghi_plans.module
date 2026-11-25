@@ -154,6 +154,11 @@ function ghi_plans_migrate_governing_entity_prepare_row(Row $row, MigrateSourceI
   // original id.
   $row->setSourceProperty('plan_entity_id', $plan_object->id());
 
+  // Leave missing dates empty so the destination applies import time only
+  // when saving a new or changed entity.
+  $changed_date = ($raw_data->UpdatedAt ?? NULL) ?: ($raw_data->CreatedAt ?? NULL);
+  $row->setSourceProperty('changed', $changed_date ? strtotime($changed_date) : NULL);
+
   // Set the icon name.
   $row->setSourceProperty('icon_name', $raw_data->icon?->Name ?? NULL);
 

@@ -37,8 +37,19 @@ class BaseObjectSkipUnchanged extends EntityContentBase {
    * {@inheritdoc}
    */
   protected function save(ContentEntityInterface $entity, array $old_destination_id_values = []) {
-    if (!$entity->isNew() && !$entity->hasTranslationChanges()) {
+    $changed = $entity->get('changed');
+    $original_changed = $entity->getOriginal()?->get('changed');
+    $use_import_time = $changed->isEmpty();
+    // Keep the stored date for comparison; apply the fallback only if saving.
+    if ($use_import_time && $original_changed) {
+      $changed->setValue($original_changed->getValue());
+    }
+    // Core excludes changed from hasTranslationChanges(), so compare it too.
+    if (!$entity->isNew() && $changed->equals($original_changed) && !$entity->hasTranslationChanges()) {
       return [$entity->id()];
+    }
+    if ($use_import_time) {
+      $changed->setValue(\Drupal::time()->getRequestTime());
     }
     return parent::save($entity, $old_destination_id_values);
   }
