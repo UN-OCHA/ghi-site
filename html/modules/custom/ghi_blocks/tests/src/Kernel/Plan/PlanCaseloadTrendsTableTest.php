@@ -27,6 +27,9 @@ class PlanCaseloadTrendsTableTest extends PlanBlockKernelTestBase {
    */
   protected function setUp(): void {
     parent::setUp();
+    $this->config('ghi_blocks.block_settings')
+      ->set('caseload_trends_include_unreleased_gho', FALSE)
+      ->save();
     $this->createField('base_object', 'plan', 'string', 'field_plan_data_source', 'Plan metric source');
     $this->createField('base_object', 'plan', 'boolean', 'field_restricted', 'Is restricted');
     $container = \Drupal::getContainer();
@@ -130,6 +133,12 @@ class PlanCaseloadTrendsTableTest extends PlanBlockKernelTestBase {
     ]);
 
     $related_plans = $this->callPrivateMethod($plugin, 'getRelatedPlans');
+    $this->assertSame([self::PLAN_ID], array_keys($related_plans));
+
+    $this->config('ghi_blocks.block_settings')
+      ->set('caseload_trends_include_unreleased_gho', TRUE)
+      ->save();
+    $related_plans = $this->callPrivateMethod($plugin, 'getRelatedPlans');
     $this->assertSame([14, 12, self::PLAN_ID], array_keys($related_plans));
 
     $this->injectMetricResolver($plugin, [
@@ -152,6 +161,11 @@ class PlanCaseloadTrendsTableTest extends PlanBlockKernelTestBase {
       'field_released' => ['value' => 0],
       'field_plan_data_source' => Plan::DATA_SOURCE_PLAN,
     ]);
+    $this->assertArrayNotHasKey($gho_candidate->getSourceId(), $this->callPrivateMethod($gho_plugin, 'getRelatedPlans'));
+
+    $this->config('ghi_blocks.block_settings')
+      ->set('caseload_trends_include_unreleased_gho', TRUE)
+      ->save();
     $this->assertArrayHasKey($gho_candidate->getSourceId(), $this->callPrivateMethod($gho_plugin, 'getRelatedPlans'));
 
     $plan_plugin = $this->getBlockPlugin(data_source: Plan::DATA_SOURCE_PLAN);
@@ -179,6 +193,7 @@ class PlanCaseloadTrendsTableTest extends PlanBlockKernelTestBase {
     $this->assertCount(9, $table_data['rows'][0]);
     $this->assertInstanceOf(CacheableMetadata::class, $table_data['cacheability']);
     $this->assertContains('plan_id:' . self::PLAN_ID, $table_data['cacheability']->getCacheTags());
+    $this->assertContains('config:ghi_blocks.block_settings', $table_data['cacheability']->getCacheTags());
 
     $requirements_cell = $table_data['rows'][0]['requirements'];
     $this->assertEquals(3000, $requirements_cell['data-raw-value']);
@@ -354,7 +369,9 @@ class PlanCaseloadTrendsTableTest extends PlanBlockKernelTestBase {
     $this->assertCount(9, $build['#lazy_builder_preview']['#header']);
     $this->assertCount(1, $build['#lazy_builder_preview']['#rows']);
     $this->assertContains('plan_id:' . self::PLAN_ID, $build['#lazy_builder_preview']['#cache']['tags']);
+    $this->assertContains('config:ghi_blocks.block_settings', $build['#lazy_builder_preview']['#cache']['tags']);
     $this->assertContains('plan_id:' . self::PLAN_ID, $build['#cache']['tags']);
+    $this->assertContains('config:ghi_blocks.block_settings', $build['#cache']['tags']);
   }
 
   /**
