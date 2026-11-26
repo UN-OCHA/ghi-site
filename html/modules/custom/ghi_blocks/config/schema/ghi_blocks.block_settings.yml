@@ -5,3 +5,6 @@ ghi_blocks.block_settings:
     lazy_load:
       type: boolean
       label: 'Lazy load blocks'
+    caseload_trends_include_unreleased_gho:
+      type: boolean
+      label: 'Include unreleased GHO plans in Caseload Trends tables'
