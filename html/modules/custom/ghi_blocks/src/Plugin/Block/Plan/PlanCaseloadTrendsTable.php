@@ -3,6 +3,7 @@
 namespace Drupal\ghi_blocks\Plugin\Block\Plan;
 
 use Drupal\Core\Block\Attribute\Block;
+use Drupal\Core\Cache\Cache;
 use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Plugin\Context\EntityContextDefinition;
@@ -44,6 +45,16 @@ class PlanCaseloadTrendsTable extends GHIBlockBase implements OverrideDefaultTit
   use TableSoftLimitTrait;
 
   const DEFAULT_MAX_YEARS = 10;
+
+  /**
+   * Configuration containing global block settings.
+   */
+  private const BLOCK_SETTINGS_CONFIG = 'ghi_blocks.block_settings';
+
+  /**
+   * Configuration controlling whether unreleased GHO plans may be displayed.
+   */
+  private const INCLUDE_UNRELEASED_GHO_SETTING = 'caseload_trends_include_unreleased_gho';
 
   /**
    * The plan manager.
@@ -144,6 +155,14 @@ class PlanCaseloadTrendsTable extends GHIBlockBase implements OverrideDefaultTit
     // child, so propagate its dependencies to the surrounding placeholder.
     CacheableMetadata::createFromRenderArray($table)->applyTo($build);
     return $build;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getCacheTags() {
+    $settings = CacheableMetadata::createFromObject($this->config(self::BLOCK_SETTINGS_CONFIG));
+    return Cache::mergeTags(parent::getCacheTags(), $settings->getCacheTags());
   }
 
   /**
@@ -444,6 +463,7 @@ class PlanCaseloadTrendsTable extends GHIBlockBase implements OverrideDefaultTit
    */
   private function buildSourceData(?int $limit = NULL, ?CacheableMetadata $cacheability = NULL) {
     $cacheability ??= new CacheableMetadata();
+    $cacheability->addCacheableDependency($this->config(self::BLOCK_SETTINGS_CONFIG));
     $related_plans = $this->getRelatedPlans();
     if (empty($related_plans)) {
       return NULL;
@@ -464,13 +484,12 @@ class PlanCaseloadTrendsTable extends GHIBlockBase implements OverrideDefaultTit
       $cacheability->addCacheTags($metrics->getCacheTags());
     }
 
-    // The GHO source is allowed to precede the plan's release, but only when
-    // Fabric already provides GHO metrics for the row. This preserves the
-    // original publication gate for Country Module data without introducing
-    // empty rows for unrelated unpublished plans.
-    $related_plans = array_filter($related_plans, function (Plan $plan) use ($metrics_by_plan): bool {
+    // When explicitly enabled, GHO data may precede the plan's release, but
+    // only when Fabric provides actual source values for the row.
+    $include_unreleased_gho = $this->includeUnreleasedGhoPlans();
+    $related_plans = array_filter($related_plans, function (Plan $plan) use ($metrics_by_plan, $include_unreleased_gho): bool {
       $metrics = $metrics_by_plan[$plan->getSourceId()] ?? NULL;
-      return $metrics && ($plan->isReleased() || ($metrics->getSource() === Plan::DATA_SOURCE_GHO && $metrics->hasSourceValues()));
+      return $metrics && ($plan->isReleased() || ($include_unreleased_gho && $metrics->getSource() === Plan::DATA_SOURCE_GHO && $metrics->hasSourceValues()));
     });
     if (empty($related_plans)) {
       return NULL;
@@ -558,13 +577,13 @@ class PlanCaseloadTrendsTable extends GHIBlockBase implements OverrideDefaultTit
     $related_plans = array_filter($related_plans, function (Plan $plan) {
       return $plan->getPlanType() !== NULL;
     });
-    // Released remains the publication gate for Country Module data. An
-    // explicitly selected GHO source can precede it because GHO data is
-    // published independently from the plan data.
+    // Unreleased plans are hidden unless the global safety switch explicitly
+    // permits plans whose effective source is GHO.
     $source_override = $this->getSourceOverride();
-    $related_plans = array_filter($related_plans, function (Plan $plan) use ($source_override): bool {
+    $include_unreleased_gho = $this->includeUnreleasedGhoPlans();
+    $related_plans = array_filter($related_plans, function (Plan $plan) use ($source_override, $include_unreleased_gho): bool {
       $source = $source_override ?? $plan->getPlanDataSource();
-      return !$plan->isRestricted() && ($plan->isReleased() || $source === Plan::DATA_SOURCE_GHO);
+      return !$plan->isRestricted() && ($plan->isReleased() || ($include_unreleased_gho && $source === Plan::DATA_SOURCE_GHO));
     });
     // Initially sort by descending year.
     uasort($related_plans, function ($a, $b) {
@@ -648,6 +667,13 @@ class PlanCaseloadTrendsTable extends GHIBlockBase implements OverrideDefaultTit
   private function getSourceOverride(): ?string {
     $source = $this->getBlockConfig()['data_source'] ?? '';
     return Plan::isValidDataSource($source) ? $source : NULL;
+  }
+
+  /**
+   * Whether the global safety switch permits unreleased GHO plans.
+   */
+  private function includeUnreleasedGhoPlans(): bool {
+    return (bool) $this->config(self::BLOCK_SETTINGS_CONFIG)->get(self::INCLUDE_UNRELEASED_GHO_SETTING);
   }
 
   /**
