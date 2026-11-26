@@ -187,11 +187,30 @@ class ArticleManager extends BaseContentManager {
    * {@inheritdoc}
    */
   public function updateNodeFromRemote(ContentBase $node, $dry_run = FALSE, $reset = FALSE): bool {
-    $article = $this->loadRemoteContentForNode($node, TRUE, FALSE);
+    // Fetch the complete article before changing fields or layout. Paragraph
+    // processing must use this response even when it cannot be cached.
+    $article = $this->loadRemoteContentForNode($node, TRUE);
     if (!$article) {
       return FALSE;
     }
 
+    $this->applyRemoteArticle($node, $article, $dry_run, $reset);
+    return TRUE;
+  }
+
+  /**
+   * Apply an already fetched article to a local node.
+   *
+   * @param \Drupal\ghi_content\Entity\ContentBase $node
+   *   The local article node.
+   * @param \Drupal\ghi_content\RemoteContent\RemoteArticleInterface $article
+   *   The complete article snapshot to apply.
+   * @param bool $dry_run
+   *   Whether this is a freshness check without discarding pending edits.
+   * @param bool $reset
+   *   Whether to reset the existing layout.
+   */
+  private function applyRemoteArticle(ContentBase $node, RemoteArticleInterface $article, bool $dry_run = FALSE, bool $reset = FALSE): void {
     // See if the article needs a cleanup.
     $remote_source = $node->getSourceType();
     $article_id = $node->getSourceId();
@@ -231,7 +250,6 @@ class ArticleManager extends BaseContentManager {
       $this->importManager->layoutManagerDiscardChanges($node, NULL);
       $node->setSyncing(TRUE);
     }
-    return TRUE;
   }
 
   /**
@@ -249,14 +267,18 @@ class ArticleManager extends BaseContentManager {
     // it's currently stored in the database.
     $original_node = $this->entityTypeManager->getStorage('node')->loadUnchanged($node->id());
 
+    $article = $this->loadRemoteContentForNode($original_node, TRUE);
+    if (!$article) {
+      return NULL;
+    }
+
     // First get the local data.
     $local_data = $this->normalizeContentNodeData($original_node);
     $local_data['paragraphs'] = $this->importManager->getLocalArticleParagraphUuids($original_node);
 
     // Then get the remote data by pretending to do an update on the node.
     $updated_node = clone $original_node;
-    $this->updateNodeFromRemote($updated_node, TRUE);
-    $article = $this->loadRemoteContentForNode($original_node, TRUE);
+    $this->applyRemoteArticle($updated_node, $article, TRUE);
 
     $remote_data = $this->normalizeContentNodeData($updated_node);
     $remote_data['paragraphs'] = $this->importManager->getRemoteArticleParagraphUuids($article);

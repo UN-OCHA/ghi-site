@@ -649,6 +649,16 @@ abstract class GHIBlockBase extends HPCBlockBase implements TrustedCallbackInter
     $page_node = $this->getPageNode();
     $base_object = $this->getCurrentBaseObject();
 
+    // AJAX switchers change the rendered content without changing block config.
+    // Exclude request bookkeeping that does not affect the output.
+    $post_data = $this->requestStack->getCurrentRequest()?->request->all() ?? [];
+    $post_data = array_filter($post_data, fn ($key) => !in_array($key, [
+      'ajax_page_state',
+      '_drupal_ajax',
+      '_triggering_element_name',
+      'form_build_id',
+    ]), ARRAY_FILTER_USE_KEY);
+
     return [
       'plugin_id' => $this->getPluginId(),
       'block_uuid' => $this->getUuid(),
@@ -657,6 +667,8 @@ abstract class GHIBlockBase extends HPCBlockBase implements TrustedCallbackInter
       'current_uri' => $this->getCurrentUri(),
       'page_node' => $page_node?->id(),
       'base_object' => $base_object?->getUniqueIdentifier(),
+      // Keep submitted fields separate from trusted subclass context.
+      'post_data' => $post_data,
     ] + $this->getPageArguments();
   }
 

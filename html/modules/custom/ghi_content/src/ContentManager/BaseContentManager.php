@@ -950,7 +950,11 @@ abstract class BaseContentManager implements ContainerInjectionInterface {
     $node = $form_object->getEntity();
 
     // Update based on what's new on the remote.
-    $this->updateNodeFromRemote($node);
+    if (!$this->updateNodeFromRemote($node)) {
+      $this->messenger->addError($this->t('Remote content could not be loaded. No changes were saved.'));
+      $form_state->setRebuild(TRUE);
+      return;
+    }
 
     // Save the content node, making sure that common logic is applied.
     $this->saveContentNode($node);
@@ -982,7 +986,11 @@ abstract class BaseContentManager implements ContainerInjectionInterface {
     $node = $form_object->getEntity();
 
     // Reset the article to it's exact version in the remote system.
-    $this->updateNodeFromRemote($node, FALSE, TRUE);
+    if (!$this->updateNodeFromRemote($node, FALSE, TRUE)) {
+      $this->messenger->addError($this->t('Remote content could not be loaded. No changes were saved.'));
+      $form_state->setRebuild(TRUE);
+      return;
+    }
 
     // Save the content node, making sure that common logic is applied.
     $this->saveContentNode($node);

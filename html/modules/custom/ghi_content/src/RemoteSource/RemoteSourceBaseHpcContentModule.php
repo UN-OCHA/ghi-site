@@ -357,10 +357,9 @@ abstract class RemoteSourceBaseHpcContentModule extends RemoteSourceBase impleme
         }
       }
 
-      if (empty($response_data) && !empty($response_errors)) {
-        // This is an error that resulted in the response data to be completely
-        // empty. There are also errors that still serve data. We handle these
-        // differently to limit impact for the frontend.
+      if (!empty($response_errors)) {
+        // GraphQL errors can accompany partial data. Treat that as a failure so
+        // incomplete responses cannot replace a complete cached response.
         $response->setCode(Response::HTTP_BAD_REQUEST);
         return $response;
       }

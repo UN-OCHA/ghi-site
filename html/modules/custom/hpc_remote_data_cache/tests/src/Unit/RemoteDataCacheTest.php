@@ -8,6 +8,7 @@ use Drupal\Core\Cache\CacheBackendInterface;
 use Drupal\Core\Cache\CacheTagsInvalidatorInterface;
 use Drupal\Core\Lock\LockBackendInterface;
 use Drupal\Core\Logger\LoggerChannelFactoryInterface;
+use Drupal\Core\Logger\LoggerChannelInterface;
 use Drupal\Core\Queue\QueueFactory;
 use Drupal\Core\Queue\QueueInterface;
 use Drupal\Tests\UnitTestCase;
@@ -85,6 +86,26 @@ class RemoteDataCacheTest extends UnitTestCase {
     $this->assertSame($payload, $item->getPayload());
     $this->assertSame(['remote:article:1'], $item->getCacheTags());
     $this->assertSame(RemoteDataCacheItem::STATE_STALE, $item->getState());
+  }
+
+  /**
+   * Tests rejected replacements keep old data only as expired error fallback.
+   */
+  public function testOversizedReplacementExpiresPreviousPayload(): void {
+    $payload = (object) ['value' => 'cached'];
+    $data = $this->createItemData($payload);
+    $cache_backend = $this->prophesize(CacheBackendInterface::class);
+    $cache_backend->get('fabric:test')->willReturn((object) ['data' => $data]);
+    $expired = Argument::that(fn (array $stored) => $stored['payload'] === $payload && $stored['fetched'] === 1000 && $stored['fresh_until'] === 999 && $stored['stale_until'] === 999);
+    $cache_backend->set('fabric:test', $expired, Cache::PERMANENT, [
+      'hpc_remote_data_cache',
+      'hpc_remote_data_cache:fabric_graphql',
+    ])->shouldBeCalledOnce();
+    $index = $this->prophesize(RemoteDataCacheIndexInterface::class);
+    $index->upsert('fabric:test', $expired)->shouldBeCalledOnce();
+
+    $cache = $this->createRemoteDataCache($cache_backend->reveal(), 1000, index: $index->reveal(), settings: ['max_payload_size' => 1]);
+    $cache->set('fabric:test', (object) ['value' => 'replacement'], []);
   }
 
   /**
@@ -258,6 +279,9 @@ class RemoteDataCacheTest extends UnitTestCase {
       'prune_excluded_sources' => ['hpc_api_endpoint'],
     ];
 
+    $logger_factory = $this->prophesize(LoggerChannelFactoryInterface::class);
+    $logger_factory->get('hpc_remote_data_cache')->willReturn($this->prophesize(LoggerChannelInterface::class)->reveal());
+
     return new RemoteDataCache(
       $cache_backend,
       $index ?? $this->prophesize(RemoteDataCacheIndexInterface::class)->reveal(),
@@ -267,7 +291,7 @@ class RemoteDataCacheTest extends UnitTestCase {
       $this->getConfigFactoryStub([
         'hpc_remote_data_cache.settings' => $settings,
       ]),
-      $this->prophesize(LoggerChannelFactoryInterface::class)->reveal(),
+      $logger_factory->reveal(),
       $refresher_manager ?? $this->prophesize(RemoteDataCacheRefresherManager::class)->reveal(),
       $cache_tags_invalidator ?? $this->prophesize(CacheTagsInvalidatorInterface::class)->reveal(),
     );

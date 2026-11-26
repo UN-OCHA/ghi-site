@@ -11,6 +11,8 @@ use Drupal\ghi_blocks\Interfaces\MultiStepFormBlockInterface;
 use Drupal\ghi_blocks\Interfaces\OverrideDefaultTitleBlockInterface;
 use Drupal\ghi_content\Entity\Document as DocumentNode;
 use Drupal\ghi_content\RemoteContent\RemoteChapterInterface;
+use Drupal\ghi_content\RemoteContent\RemoteContentInterface;
+use Drupal\ghi_content\RemoteContent\RemoteContentItemBaseInterface;
 use Drupal\ghi_content\RemoteContent\RemoteDocumentInterface;
 use Drupal\hpc_common\Plugin\HPCBlockMetadata;
 
@@ -25,7 +27,7 @@ use Drupal\hpc_common\Plugin\HPCBlockMetadata;
     'node' => new EntityContextDefinition('entity:node', new TranslatableMarkup('Node'), required: FALSE),
   ]
 )]
-class DocumentChapter extends ContentBlockBase implements MultiStepFormBlockInterface, OverrideDefaultTitleBlockInterface {
+class DocumentChapter extends ContentBlockBase implements MultiStepFormBlockInterface, OverrideDefaultTitleBlockInterface, RemoteContentItemBlockInterface {
 
   /**
    * {@inheritdoc}
@@ -308,6 +310,27 @@ class DocumentChapter extends ContentBlockBase implements MultiStepFormBlockInte
       return NULL;
     }
     return $remote_source->getDocument($document_id);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function referencesRemoteContent(RemoteContentInterface $content): bool {
+    $reference = $this->getBlockConfig()['document_select']['document'] ?? [];
+    return $content instanceof RemoteDocumentInterface
+      && ($reference['remote_source'] ?? NULL) == $content->getSource()->getPluginId()
+      && ($reference['document_id'] ?? NULL) == $content->getId();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getRemoteContentItem(RemoteContentInterface $content): ?RemoteContentItemBaseInterface {
+    if (!$content instanceof RemoteDocumentInterface || !$this->referencesRemoteContent($content)) {
+      return NULL;
+    }
+    $chapter_id = $this->getBlockConfig()['chapter']['chapter_id'] ?? NULL;
+    return $chapter_id ? $content->getChapter($chapter_id) : NULL;
   }
 
   /**
