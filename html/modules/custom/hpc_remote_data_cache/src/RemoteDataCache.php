@@ -75,6 +75,15 @@ class RemoteDataCache implements RemoteDataCacheInterface {
     $payload_size = strlen(serialize($payload));
     $max_payload_size = (int) $this->getSettings()->get('max_payload_size');
     if ($max_payload_size > 0 && $payload_size > $max_payload_size) {
+      // A successful oversized replacement must not leave an older response
+      // marked fresh. Retain that response only for the expired-on-error path.
+      $existing = $this->getItemData($cid);
+      if ($existing !== NULL) {
+        $expired = $this->time->getRequestTime() - 1;
+        $existing['fresh_until'] = min((int) $existing['fresh_until'], $expired);
+        $existing['stale_until'] = min((int) $existing['stale_until'], $expired);
+        $this->writeItemData($cid, $existing);
+      }
       $this->loggerFactory->get('hpc_remote_data_cache')->warning('Skipped remote data cache item @cid because payload size @size exceeds limit @limit.', [
         '@cid' => $cid,
         '@size' => $payload_size,

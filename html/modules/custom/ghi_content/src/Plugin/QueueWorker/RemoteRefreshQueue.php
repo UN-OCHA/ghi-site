@@ -9,7 +9,6 @@ use Drupal\Core\Queue\DelayedRequeueException;
 use Drupal\Core\Queue\QueueWorkerBase;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\ghi_content\ContentManager\BaseContentManager;
-use Drupal\ghi_content\Entity\Article;
 use Drupal\ghi_content\Entity\ContentBase;
 use Drupal\migrate\Plugin\MigrationInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -125,12 +124,6 @@ final class RemoteRefreshQueue extends QueueWorkerBase implements ContainerFacto
 
     try {
       $remote_item_is_published = !in_array($event, ['deleted', 'trashed'], TRUE);
-      // Invalidate before loading remote data so saved events clear both the
-      // rendered and non-rendered persistent GraphQL variants for this item.
-      $this->cacheTagsInvalidator->invalidateTags([
-        $source . ':' . $type . ':' . $remote_id,
-      ]);
-
       $node = $this->getOrImportLocalNode($source, $type, $remote_id, $event, $remote_item_is_published, $received);
       if (!$node instanceof ContentBase) {
         return;
@@ -139,6 +132,11 @@ final class RemoteRefreshQueue extends QueueWorkerBase implements ContainerFacto
       if (!$this->applyRemoteRefresh($node, $remote_item_is_published)) {
         return;
       }
+
+      // Keep rendered pages usable if fetching or applying the update fails.
+      $this->cacheTagsInvalidator->invalidateTags([
+        $source . ':' . $type . ':' . $remote_id,
+      ]);
 
       $this->logger->info('Processed @event event for local @type node @nid from remote source @source with remote id @remote_id.', [
         '@event' => $event,
@@ -255,11 +253,6 @@ final class RemoteRefreshQueue extends QueueWorkerBase implements ContainerFacto
     // Let the scheduled migration reconcile the id map; doing it here would
     // fetch the full remote export for every single webhook item.
     $content_manager->saveContentNode($node, FALSE);
-    if ($remote_item_is_published && $node instanceof Article) {
-      // Paragraph blocks render individual paragraphs from the rendered
-      // article payload, so warm that variant while handling the webhook.
-      $content_manager->loadRemoteContentForNode($node, TRUE);
-    }
     return TRUE;
   }
 

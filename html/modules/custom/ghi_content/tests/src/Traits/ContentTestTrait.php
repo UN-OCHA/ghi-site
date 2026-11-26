@@ -15,6 +15,7 @@ use Drupal\ghi_content\Plugin\RemoteSource\HpcContentModule;
 use Drupal\ghi_content\RemoteContent\HpcContentModule\RemoteArticle;
 use Drupal\ghi_content\RemoteContent\HpcContentModule\RemoteDocument;
 use Drupal\ghi_content\RemoteContent\RemoteParagraphInterface;
+use Drupal\ghi_content\RemoteContent\RemoteArticleInterface;
 use Drupal\layout_builder\Section;
 use Drupal\layout_builder\SectionComponent;
 use Drupal\node\Entity\NodeType;
@@ -215,6 +216,7 @@ trait ContentTestTrait {
     $paragraph = $this->prophesize(Paragraph::class);
     $paragraph->getPluginId()->willReturn('paragraph');
     $paragraph->getParagraph()->willReturn($remote_paragraph);
+    $paragraph->getRemoteContentItem(Argument::type(RemoteArticleInterface::class))->willReturn($remote_paragraph);
     return $paragraph->reveal();
   }
 

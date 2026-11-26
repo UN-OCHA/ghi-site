@@ -79,6 +79,11 @@ Consumers can also pass their own cache tags. For example, `ghi_content` stores
 tags such as `hpc_content_module:article:123` and
 `hpc_content_module:document:456`.
 
+Caller tags remain in the response metadata and are invalidated after a
+successful background refresh to expire dependent pages. They are not attached
+to the stored response rows, so ordinary page invalidation does not evict remote
+payloads.
+
 Unlike stale entries, tag-invalidated entries are treated as cache misses. This
 keeps caller invalidation authoritative even though the bin survives cache
 rebuilds.
@@ -96,7 +101,8 @@ The default settings are in `hpc_remote_data_cache.settings`:
 - `serve_expired_on_error`: allow expired data as a fallback after remote
   errors.
 - `max_payload_size`: optional maximum serialized payload size. `0` means no
-  limit.
+  limit. A rejected replacement expires the previous response, retaining it
+  only for error fallback rather than continuing to serve it as fresh data.
 - `expired_retention_ttl`: seconds to keep expired items available for
   `serve_expired_on_error` before pruning can delete them.
 - `max_items`: maximum number of indexed items to retain. `0` disables this cap.

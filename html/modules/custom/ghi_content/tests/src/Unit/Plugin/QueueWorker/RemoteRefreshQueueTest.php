@@ -100,9 +100,7 @@ class RemoteRefreshQueueTest extends UnitTestCase {
     $lock->expects($this->once())->method('release')->with('ghi_content_remote_refresh:hpc_content_module:article:123');
 
     $cache_tags_invalidator = $this->createMock(CacheTagsInvalidatorInterface::class);
-    $cache_tags_invalidator->expects($this->once())
-      ->method('invalidateTags')
-      ->with(['hpc_content_module:article:123']);
+    $cache_tags_invalidator->expects($this->never())->method('invalidateTags');
 
     $logger = $this->createMock(LoggerInterface::class);
     $logger->expects($this->once())
@@ -140,6 +138,7 @@ class RemoteRefreshQueueTest extends UnitTestCase {
     $node->method('id')->willReturn(789);
 
     $lookups = [];
+    $operations = [];
     $content_manager = $this->createMock(BaseContentManager::class);
     $content_manager->expects($this->exactly(2))
       ->method('loadNodesForRemoteIds')
@@ -147,9 +146,14 @@ class RemoteRefreshQueueTest extends UnitTestCase {
         $lookups[] = [$source, $remote_ids, $reset];
         return $reset ? [$node] : [];
       });
-    $content_manager->expects($this->once())->method('updateNodeFromRemote')->with($node)->willReturn(TRUE);
-    $content_manager->expects($this->once())->method('saveContentNode')->with($node, FALSE);
-    $content_manager->expects($this->once())->method('loadRemoteContentForNode')->with($node, TRUE);
+    $content_manager->expects($this->once())->method('updateNodeFromRemote')->with($node)->willReturnCallback(function () use (&$operations): bool {
+      $operations[] = 'fetch';
+      return TRUE;
+    });
+    $content_manager->expects($this->once())->method('saveContentNode')->with($node, FALSE)->willReturnCallback(function () use (&$operations): void {
+      $operations[] = 'save';
+    });
+    $content_manager->expects($this->never())->method('loadRemoteContentForNode');
 
     $manager_factory = $this->createMock(ManagerFactory::class);
     $manager_factory->method('getContentManagerForRemoteType')->with('article')->willReturn($content_manager);
@@ -185,7 +189,10 @@ class RemoteRefreshQueueTest extends UnitTestCase {
     $cache_tags_invalidator = $this->createMock(CacheTagsInvalidatorInterface::class);
     $cache_tags_invalidator->expects($this->once())
       ->method('invalidateTags')
-      ->with(['hpc_content_module:article:123']);
+      ->with(['hpc_content_module:article:123'])
+      ->willReturnCallback(function () use (&$operations): void {
+        $operations[] = 'invalidate';
+      });
 
     $info_messages = [];
     $logger = $this->createMock(LoggerInterface::class);
@@ -216,9 +223,47 @@ class RemoteRefreshQueueTest extends UnitTestCase {
       ['hpc_content_module', [123], TRUE],
     ], $lookups);
     $this->assertCount(2, $info_messages);
+    $this->assertSame(['fetch', 'save', 'invalidate'], $operations);
     $this->assertSame('Created local @type node @nid from @event event from remote source @source with remote id @remote_id.', $info_messages[0][0]);
     $this->assertSame('Processed @event event for local @type node @nid from remote source @source with remote id @remote_id.', $info_messages[1][0]);
     $this->assertSame(789, $info_messages[1][1]['@nid']);
+  }
+
+  /**
+   * Tests a failed fetch keeps cached pages and the stored layout intact.
+   */
+  public function testFailedRefreshDoesNotSaveOrInvalidate(): void {
+    $node = $this->createMock(Article::class);
+    $node->method('id')->willReturn(789);
+    $content_manager = $this->createMock(BaseContentManager::class);
+    $content_manager->method('loadNodesForRemoteIds')->willReturn([$node]);
+    $content_manager->expects($this->once())->method('updateNodeFromRemote')->with($node)->willReturn(FALSE);
+    $content_manager->expects($this->never())->method('saveContentNode');
+    $content_manager->expects($this->never())->method('loadRemoteContentForNode');
+
+    $manager_factory = $this->createMock(ManagerFactory::class);
+    $manager_factory->method('getContentManagerForRemoteType')->willReturn($content_manager);
+    $manager_factory->method('getContentManager')->willReturn($content_manager);
+    $lock = $this->createMock(LockBackendInterface::class);
+    $lock->method('acquire')->willReturn(TRUE);
+    $lock->expects($this->once())->method('release');
+    $invalidator = $this->createMock(CacheTagsInvalidatorInterface::class);
+    $invalidator->expects($this->never())->method('invalidateTags');
+    $logger = $this->createMock(LoggerInterface::class);
+    $logger->expects($this->once())->method('warning');
+    $logger->expects($this->never())->method('info');
+
+    $worker = new RemoteRefreshQueue([], 'ghi_content_remote_refresh', []);
+    $this->setProtectedProperty($worker, 'managerFactory', $manager_factory);
+    $this->setProtectedProperty($worker, 'lock', $lock);
+    $this->setProtectedProperty($worker, 'cacheTagsInvalidator', $invalidator);
+    $this->setProtectedProperty($worker, 'logger', $logger);
+    $worker->processItem((object) [
+      'source' => 'hpc_content_module',
+      'type' => 'article',
+      'id' => 123,
+      'event' => 'saved',
+    ]);
   }
 
   /**
@@ -257,9 +302,7 @@ class RemoteRefreshQueueTest extends UnitTestCase {
     $lock->expects($this->once())->method('release')->with('ghi_content_remote_refresh:hpc_content_module:article:123');
 
     $cache_tags_invalidator = $this->createMock(CacheTagsInvalidatorInterface::class);
-    $cache_tags_invalidator->expects($this->once())
-      ->method('invalidateTags')
-      ->with(['hpc_content_module:article:123']);
+    $cache_tags_invalidator->expects($this->never())->method('invalidateTags');
 
     $logger = $this->createMock(LoggerInterface::class);
     $logger->expects($this->once())
@@ -331,9 +374,7 @@ class RemoteRefreshQueueTest extends UnitTestCase {
     $lock->expects($this->once())->method('release')->with('ghi_content_remote_refresh:hpc_content_module:article:123');
 
     $cache_tags_invalidator = $this->createMock(CacheTagsInvalidatorInterface::class);
-    $cache_tags_invalidator->expects($this->once())
-      ->method('invalidateTags')
-      ->with(['hpc_content_module:article:123']);
+    $cache_tags_invalidator->expects($this->never())->method('invalidateTags');
 
     $logger = $this->createMock(LoggerInterface::class);
     $logger->expects($this->once())

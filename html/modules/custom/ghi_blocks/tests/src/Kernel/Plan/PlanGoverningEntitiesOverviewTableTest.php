@@ -5,6 +5,7 @@ namespace Drupal\Tests\ghi_blocks\Kernel\Plan;
 use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Cache\Cache;
 use Drupal\Core\Form\FormState;
+use Drupal\Core\Session\UserSession;
 use Drupal\Core\Url;
 use Drupal\ghi_blocks\Interfaces\DeprecatedBlockInterface;
 use Drupal\ghi_blocks\Plugin\Block\Plan\PlanGoverningEntitiesOverviewTable;
@@ -19,6 +20,7 @@ use Drupal\node\NodeInterface;
 use Drupal\Tests\ghi_blocks\Kernel\PlanBlockKernelTestBase;
 use Drupal\Tests\ghi_subpages\Traits\SubpageTestTrait;
 use Prophecy\Argument;
+use Symfony\Component\HttpFoundation\Request;
 
 /**
  * Tests discovery, configuration and rendering of the combined overview table.
@@ -286,6 +288,31 @@ class PlanGoverningEntitiesOverviewTableTest extends PlanBlockKernelTestBase {
       if ($expected && !$allowed) {
         $this->assertArrayNotHasKey('#type', $build['#rows'][0]['data'][0]['data']);
       }
+    }
+  }
+
+  /**
+   * Tests submitted fields cannot impersonate another user's cache context.
+   */
+  public function testPostCannotOverrideAccountCacheContext(): void {
+    $request = Request::create('/overview-cache-test');
+    $request_stack = $this->container->get('request_stack');
+    $request_stack->push($request);
+    try {
+      $plugin = $this->createOverviewTable();
+      $current_user = $this->container->get('current_user');
+      $keys = [];
+      foreach ([123, 456] as $uid) {
+        $current_user->setAccount(new UserSession(['uid' => $uid, 'roles' => ['authenticated']]));
+        $request->setMethod($uid === 123 ? 'GET' : 'POST');
+        $request->request->replace($uid === 123 ? [] : ['account' => '123']);
+        $parts = $this->callPrivateMethod($plugin, 'getContentCacheKeyParts');
+        $keys[] = $plugin->getCacheKey($parts, NULL, 'doBuildContent');
+      }
+      $this->assertNotSame($keys[0], $keys[1], 'A submitted account ID must not reuse another user\'s cached content.');
+    }
+    finally {
+      $request_stack->pop();
     }
   }
 

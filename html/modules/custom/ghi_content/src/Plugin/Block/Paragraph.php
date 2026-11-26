@@ -16,6 +16,8 @@ use Drupal\ghi_blocks\Interfaces\MultiStepFormBlockInterface;
 use Drupal\ghi_blocks\Interfaces\OptionalTitleBlockInterface;
 use Drupal\ghi_content\Entity\Article;
 use Drupal\ghi_content\RemoteContent\RemoteArticleInterface;
+use Drupal\ghi_content\RemoteContent\RemoteContentInterface;
+use Drupal\ghi_content\RemoteContent\RemoteContentItemBaseInterface;
 use Drupal\ghi_content\RemoteContent\RemoteParagraphInterface;
 use Drupal\ghi_form_elements\Traits\CustomLinkTrait;
 use Drupal\gho_footnotes\GhoFootnotes;
@@ -31,7 +33,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
   admin_label: new TranslatableMarkup('Paragraph'),
   category: new TranslatableMarkup('Narrative Content'),
 )]
-class Paragraph extends ContentBlockBase implements OptionalTitleBlockInterface, MultiStepFormBlockInterface, TrustedCallbackInterface {
+class Paragraph extends ContentBlockBase implements OptionalTitleBlockInterface, MultiStepFormBlockInterface, TrustedCallbackInterface, RemoteContentItemBlockInterface {
 
   use CustomLinkTrait;
 
@@ -537,6 +539,27 @@ class Paragraph extends ContentBlockBase implements OptionalTitleBlockInterface,
       return NULL;
     }
     return $remote_source->getArticle($article_id);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function referencesRemoteContent(RemoteContentInterface $content): bool {
+    $reference = $this->getBlockConfig()['article_select']['article'] ?? [];
+    return $content instanceof RemoteArticleInterface
+      && ($reference['remote_source'] ?? NULL) == $content->getSource()->getPluginId()
+      && ($reference['article_id'] ?? NULL) == $content->getId();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getRemoteContentItem(RemoteContentInterface $content): ?RemoteContentItemBaseInterface {
+    if (!$content instanceof RemoteArticleInterface || !$this->referencesRemoteContent($content)) {
+      return NULL;
+    }
+    $paragraph_ids = (array) ($this->getBlockConfig()['paragraph']['paragraph_id'] ?? []);
+    return $paragraph_ids ? $content->getParagraph(reset($paragraph_ids)) : NULL;
   }
 
   /**

@@ -3,7 +3,9 @@
 namespace Drupal\Tests\ghi_content\Kernel;
 
 use Drupal\Core\Block\BlockPluginInterface;
+use Drupal\Core\Cache\Cache;
 use Drupal\Core\Messenger\MessengerInterface;
+use Drupal\ghi_content\ContentManager\ArticleManager;
 use Drupal\ghi_content\Entity\Article;
 use Drupal\ghi_content\Entity\ContentReviewInterface;
 use Drupal\ghi_content\Entity\Document;
@@ -14,6 +16,10 @@ use Drupal\ghi_content\Plugin\Block\Paragraph;
 use Drupal\ghi_content\RemoteContent\HpcContentModule\RemoteArticle;
 use Drupal\layout_builder\Plugin\SectionStorage\OverridesSectionStorage;
 use Drupal\layout_builder\Section;
+use Drupal\layout_builder\SectionComponent;
+use Drupal\migrate\Plugin\MigrateIdMapInterface;
+use Drupal\migrate\Plugin\MigrationInterface;
+use Drupal\migrate\Plugin\MigrationPluginManagerInterface;
 use Drupal\node\Entity\Node;
 use Drupal\node\Entity\NodeType;
 use Drupal\taxonomy\Entity\Term;
@@ -24,6 +30,13 @@ use Drupal\Tests\hpc_api\Traits\PrivateAccessorTrait;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Group;
 use Prophecy\Argument;
+use GuzzleHttp\Client;
+use GuzzleHttp\Promise\Create;
+use GuzzleHttp\Psr7\Response;
+use Psr\Http\Message\RequestInterface;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Session\Session;
+use Symfony\Component\HttpFoundation\Session\Storage\MockArraySessionStorage;
 
 /**
  * Tests the import manager.
@@ -240,6 +253,202 @@ class ImportManagerTest extends KernelTestBase {
   }
 
   /**
+   * Provides the persistent and regular source response cache backends.
+   */
+  public static function dataProviderArticleRefreshCaches(): array {
+    return [
+      'persistent' => [TRUE, FALSE],
+      'regular' => [FALSE, FALSE],
+      'rejected replacement' => [TRUE, TRUE],
+    ];
+  }
+
+  /**
+   * Tests refreshes update rendered content and preserve custom layout blocks.
+   */
+  #[DataProvider('dataProviderArticleRefreshCaches')]
+  public function testArticleRefreshUpdatesRenderedParagraphs(bool $persistent, bool $reject_replacement): void {
+    if ($persistent) {
+      $this->enableModules(['pcb', 'hpc_remote_data_cache']);
+      $this->installSchema('hpc_remote_data_cache', ['hpc_remote_data_cache_index']);
+      $this->installConfig(['hpc_remote_data_cache']);
+    }
+    $this->config('ghi_content.remote_sources')->set('hpc_content_module', [
+      'base_url' => 'https://content.example.test',
+      'endpoint' => 'ncms',
+    ])->save();
+    $this->config('hpc_api.settings')->set('cache_lifetime', 3600)->save();
+    $this->createField('node', self::ARTICLE_BUNDLE, 'ghi_remote_article', ArticleManager::REMOTE_ARTICLE_FIELD, 'Remote article');
+    $this->createField('node', self::ARTICLE_BUNDLE, 'boolean', ContentReviewInterface::NEEDS_REVIEW_FIELD, 'Needs review');
+    $this->container->get('entity_display.repository')->getViewDisplay('node', self::ARTICLE_BUNDLE)
+      ->enableLayoutBuilder()->setOverridable()->save();
+
+    $paragraphs = [];
+    foreach ([1, 2, 3] as $id) {
+      $paragraphs[$id] = [
+        'id' => $id,
+        'uuid' => 'paragraph-' . $id,
+        'type' => 'text',
+        'typeLabel' => 'Text',
+        'rendered' => '<p>Original ' . $id . '</p>',
+      ];
+    }
+    $source_data = [
+      'id' => 42,
+      'title' => 'An article',
+      'created' => '2026-01-01T00:00:00Z',
+      'updated' => '2026-01-01T00:00:00Z',
+      'content' => [$paragraphs[1], $paragraphs[2]],
+    ];
+    $requests = [];
+    $other_requests = [];
+    $http_error = new Response(500, [], '{"errors":[{"message":"Source unavailable"}]}');
+    $rendered_failure = NULL;
+    $this->container->set('http_client', new Client([
+      'handler' => function (RequestInterface $request) use (&$source_data, &$requests, &$other_requests, &$rendered_failure) {
+        $query = json_decode((string) $request->getBody(), TRUE)['query'];
+        $rendered = str_contains($query, 'rendered');
+        preg_match('/article\s*\(\s*id\s*:\s*(\d+)/', $query, $matches);
+        if ((int) $matches[1] === 84) {
+          $other_requests[] = $rendered;
+          $data = $source_data;
+          $data['id'] = 84;
+          $data['content'] = [['id' => 2, 'uuid' => 'other-paragraph-2', 'type' => 'text', 'typeLabel' => 'Text']];
+          return Create::promiseFor(new Response(200, [], json_encode(['data' => ['article' => $data]])));
+        }
+        $requests[] = $rendered;
+        if ($rendered_failure && $rendered) {
+          return Create::promiseFor($rendered_failure);
+        }
+        return Create::promiseFor(new Response(200, [], json_encode(['data' => ['article' => $source_data]])));
+      },
+    ]));
+    $manager = $this->container->get('ghi_content.manager.article');
+    $node = Article::create([
+      'type' => self::ARTICLE_BUNDLE,
+      'title' => 'An article',
+      'uid' => 0,
+      ArticleManager::REMOTE_ARTICLE_FIELD => ['remote_source' => 'hpc_content_module', 'article_id' => 42],
+    ]);
+    $this->assertTrue($manager->updateNodeFromRemote($node, FALSE, TRUE));
+    $this->assertSame([TRUE], $requests);
+    $this->assertSame('<p>Original 1</p>', (string) $manager->loadRemoteContentForNode($node)->getParagraph(1)->getRendered());
+    $this->assertSame([TRUE], $requests);
+    if ($persistent) {
+      Cache::invalidateTags(['hpc_content_module:article:42']);
+      $this->assertSame('<p>Original 1</p>', (string) $manager->loadRemoteContentForNode($node)->getParagraph(1)->getRendered());
+      $this->assertSame([TRUE], $requests, 'Ordinary page invalidation keeps remote responses cached.');
+    }
+
+    $section = $this->container->get('ghi_content.import')->getNodeSections($node)[0];
+    $first_uuid = array_key_first($section->getComponents());
+    $removed_uuid = array_keys($section->getComponents())[1];
+    $manual = new SectionComponent('manual', 'content', ['id' => 'system_powered_by_block']);
+    $section->insertAfterComponent($first_uuid, $manual);
+    $page_cache = $this->container->get('cache.default');
+    $page_cache->set('article-page', 'Cached article page', -1, ['hpc_content_module:article:42']);
+    $this->assertTrue($manager->updateNodeFromRemote(clone $node, TRUE));
+    $this->assertNotFalse($page_cache->get('article-page'), 'A freshness check does not invalidate rendered pages.');
+    $this->assertSame([TRUE, TRUE], $requests);
+    if ($reject_replacement) {
+      $this->config('hpc_remote_data_cache.settings')->set('max_payload_size', 1)->save();
+    }
+    $paragraphs[1]['rendered'] = '<p>Updated 1</p>';
+    $source_data['content'] = [$paragraphs[1], $paragraphs[3], $paragraphs[2]];
+
+    $request_stack = $this->container->get('request_stack');
+    $request = Request::create('/node/42/edit', 'POST', [
+      'form_id' => 'node_article_edit_form',
+      'form_token' => 'test-token',
+      'title' => [['value' => 'Local article title']],
+      'entity_id' => 'local-selection',
+    ]);
+    $request->setSession(new Session(new MockArraySessionStorage()));
+    $request_stack->push($request);
+    $this->assertTrue($manager->updateNodeFromRemote($node));
+    $request_stack->pop();
+    $expected_requests = [TRUE, TRUE, TRUE];
+    $this->assertSame($expected_requests, $requests, 'Importing the snapshot does not make any additional article requests.');
+    $this->assertTrue($node->needsReview());
+    $components = $section->getComponentsByRegion('content');
+    $order = array_map(fn ($c) => $c->get('configuration')['hpc']['paragraph']['paragraph_id'][0] ?? $c->getPluginId(), array_values($components));
+    $this->assertSame([1, 3, 'system_powered_by_block', 2, 'related_articles'], $order);
+    $this->assertSame($manual, $section->getComponent('manual'));
+    if ($reject_replacement) {
+      $rendered_failure = $http_error;
+      $this->assertSame('<p>Original 1</p>', (string) $manager->loadRemoteContentForNode($node)->getParagraph(1)->getRendered(), 'A rejected replacement keeps the previous response available on error.');
+      $expected_requests[] = TRUE;
+      $rendered_failure = NULL;
+      $this->config('hpc_remote_data_cache.settings')->set('max_payload_size', 0)->save();
+      $expected_requests[] = TRUE;
+    }
+    $remote_article = $manager->loadRemoteContentForNode($node);
+    $this->assertSame('<p>Updated 1</p>', (string) $remote_article->getParagraph(1)->getRendered());
+    $this->assertNotNull($remote_article->getParagraph(3));
+    $this->assertSame($expected_requests, $requests, 'Each import fetches one complete article snapshot.');
+
+    // Removing an owned paragraph must keep a manually added paragraph from
+    // another article, even when its configured paragraph ID is the same.
+    $foreign = new SectionComponent('other-article', 'content', [
+      'id' => 'paragraph',
+      'sync' => ['source_uuid' => 'other-paragraph-2'],
+      'hpc' => [
+        'article_select' => ['article' => ['remote_source' => 'hpc_content_module', 'article_id' => 84]],
+        'paragraph' => ['paragraph_id' => [2]],
+      ],
+    ]);
+    $section->appendComponent($foreign);
+    $source_data['content'] = [$paragraphs[1], $paragraphs[3]];
+    $this->assertTrue($manager->updateNodeFromRemote($node));
+    $expected_requests[] = TRUE;
+    $this->assertArrayNotHasKey($removed_uuid, $section->getComponents());
+    $this->assertSame($foreign, $section->getComponent('other-article'));
+    $this->assertNull($manager->loadRemoteContentForNode($node)->getParagraph(2));
+
+    // A failed rendered fetch must not change the layout or evict good data.
+    $before_failure = $node->toArray();
+    $source_data['title'] = 'This failed update must not be applied';
+    $partial_article = $source_data;
+    $partial_article['content'][0]['rendered'] = NULL;
+    $graphql_error = new Response(200, [], json_encode([
+      'data' => ['article' => $partial_article],
+      'errors' => [['message' => 'Paragraph rendering failed', 'path' => ['article', 'content', 0, 'rendered']]],
+    ]));
+    foreach ([$http_error, $graphql_error] as $rendered_failure) {
+      $this->assertFalse($manager->updateNodeFromRemote($node));
+      $expected_requests[] = TRUE;
+      $this->assertSame($before_failure, $node->toArray());
+      $this->assertNotFalse($page_cache->get('article-page'));
+      $this->assertSame('<p>Updated 1</p>', (string) $manager->loadRemoteContentForNode($node)->getParagraph(1)->getRendered());
+    }
+    $this->assertSame($expected_requests, $requests);
+    $this->assertSame([], $other_requests, 'Importing paragraphs does not load unrelated articles.');
+
+    // Exercise the edit form's freshness check with a migration map.
+    $this->installSchema('node', ['node_access']);
+    $node->save();
+    $id_map = $this->prophesize(MigrateIdMapInterface::class);
+    $id_map->lookupDestinationIds(['id' => 42])->willReturn([[$node->id()]]);
+    $migration = $this->prophesize(MigrationInterface::class);
+    $migration->getIdMap()->willReturn($id_map->reveal());
+    $migration->getProcess()->willReturn(['title' => []]);
+    $migration_manager = $this->prophesize(MigrationPluginManagerInterface::class);
+    $migration_manager->getDefinitions()->willReturn(['articles_test' => ['source' => ['remote_source' => 'hpc_content_module']]]);
+    $migration_manager->createInstance('articles_test')->willReturn($migration->reveal());
+    $this->setPrivateProperty($manager, 'migrationManager', $migration_manager->reveal());
+    $page_cache->set('article-page', 'Cached article page', -1, ['hpc_content_module:article:42']);
+    $request_count = count($requests);
+    $rendered_failure = NULL;
+    $this->assertFalse($manager->isUpToDateWithRemote($node));
+    $this->assertCount($request_count + 1, $requests, 'The freshness check fetches and applies one snapshot.');
+    $this->assertNotFalse($page_cache->get('article-page'));
+    $rendered_failure = $graphql_error;
+    $this->assertNull($manager->isUpToDateWithRemote($node));
+    $this->assertCount($request_count + 2, $requests);
+    $this->assertNotFalse($page_cache->get('article-page'));
+  }
+
+  /**
    * Tests that multiple new components are positioned correctly.
    */
   public static function dataProviderPositionNewComponents() {
@@ -423,6 +632,7 @@ class ImportManagerTest extends KernelTestBase {
       $section,
       $new_components,
       $paragraphs,
+      $this->mockRemoteArticle(),
     ]);
     $this->assertCount(count($expected_order), $section_components);
 

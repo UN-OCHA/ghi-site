@@ -21,6 +21,7 @@ use Drupal\ghi_content\ContentManager\ArticleManager;
 use Drupal\ghi_content\Entity\ContentReviewInterface;
 use Drupal\ghi_content\Plugin\Block\DocumentChapter;
 use Drupal\ghi_content\Plugin\Block\Paragraph;
+use Drupal\ghi_content\Plugin\Block\RemoteContentItemBlockInterface;
 use Drupal\ghi_content\RemoteContent\RemoteArticleInterface;
 use Drupal\ghi_content\RemoteContent\RemoteContentImageInterface;
 use Drupal\ghi_content\RemoteContent\RemoteContentInterface;
@@ -380,7 +381,7 @@ class ImportManager implements ContainerInjectionInterface {
     }
 
     if ($existing_paragraphs_count && !empty($new_components)) {
-      $this->positionNewComponents($section, $new_components, $remote_paragraphs);
+      $this->positionNewComponents($section, $new_components, $remote_paragraphs, $article);
       if ($node instanceof ContentReviewInterface) {
         // Articles where paragraphs have been added to existing articles
         // need to be reviewed.
@@ -395,12 +396,9 @@ class ImportManager implements ContainerInjectionInterface {
         // Not a paragraph, ignore.
         continue;
       }
-      /** @var \Drupal\ghi_content\Plugin\Block\Paragraph */
       $plugin = $component->getPlugin();
-      if (!$plugin->getArticle() || $plugin->getArticle()->getId() != $article->getId()) {
-        // Only remove pragraphs from the same article. This allows to add more
-        // paragraphs from different articles.
-        // @todo Good idea?
+      if (!$plugin instanceof RemoteContentItemBlockInterface || !$plugin->referencesRemoteContent($article)) {
+        // Keep references to other articles without loading their responses.
         continue;
       }
       if (in_array($component->getUuid(), $paragraph_uuids)) {
@@ -530,7 +528,7 @@ class ImportManager implements ContainerInjectionInterface {
 
     // phpcs:disable
     // if ($existing_chapters_count && !empty($new_components)) {
-    //   $this->positionNewComponents($section, $new_components, $chapters);
+    //   $this->positionNewComponents($section, $new_components, $chapters, $document);
     //   if ($node instanceof ContentReviewInterface) {
     //     // Articles where paragraphs have been added to existing articles
     //     // need to be reviewed.
@@ -708,21 +706,20 @@ class ImportManager implements ContainerInjectionInterface {
    * @param \Drupal\ghi_content\RemoteContent\RemoteContentItemBaseInterface[] $remote_items
    *   An array of remote items of the remote content in the order
    *   defined on the remote.
+   * @param \Drupal\ghi_content\RemoteContent\RemoteContentInterface $content
+   *   The parent content snapshot used to resolve block references.
    * @param \Drupal\layout_builder\SectionComponent[] $exclude_components
    *   An array of components to exclude from the position logic.
    *
    * @return array|false
    *   An array of uuids of section components in the new order.
    */
-  private function getNewComponentOrder(array $components, SectionComponent $component, array $remote_items, $exclude_components = []) {
+  private function getNewComponentOrder(array $components, SectionComponent $component, array $remote_items, RemoteContentInterface $content, $exclude_components = []) {
     $plugin = $component->getPlugin();
-    if (!$plugin instanceof Paragraph && !$plugin instanceof DocumentChapter) {
+    if (!$plugin instanceof RemoteContentItemBlockInterface) {
       return FALSE;
     }
-    $remote_item = match ($plugin->getPluginId()) {
-      'document_chapter' => $plugin->getChapter(),
-      'paragraph' => $plugin->getParagraph(),
-    };
+    $remote_item = $plugin->getRemoteContentItem($content);
     if (!$remote_item) {
       return FALSE;
     }
@@ -742,7 +739,7 @@ class ImportManager implements ContainerInjectionInterface {
       }
       $plugin = $_component->getPlugin();
       $component_weights[$_component->getUuid()] = $weight;
-      $remote_items_by_uuids[$_component->getUuid()] = $plugin instanceof Paragraph ? $plugin->getParagraph()?->getId() : NULL;
+      $remote_items_by_uuids[$_component->getUuid()] = $plugin instanceof RemoteContentItemBlockInterface ? $plugin->getRemoteContentItem($content)?->getId() : NULL;
     }
     asort($component_weights);
 
@@ -809,18 +806,20 @@ class ImportManager implements ContainerInjectionInterface {
    *   The newly added component.
    * @param \Drupal\ghi_content\RemoteContent\RemoteContentItemBaseInterface[] $remote_items
    *   An array of remote items in the order defined on the remote.
+   * @param \Drupal\ghi_content\RemoteContent\RemoteContentInterface $content
+   *   The parent content snapshot used to resolve block references.
    *
    * @return array|false
    *   An array of uuids of section components in the new order.
    */
-  private function positionNewComponents(Section $section, array $new_components, array $remote_items) {
+  private function positionNewComponents(Section $section, array $new_components, array $remote_items, RemoteContentInterface $content) {
     $new_order = FALSE;
     $components = array_values($section->getComponents());
     ArrayHelper::sortObjectsByMethod($components, 'getWeight');
     $components = array_values($components);
 
     foreach ($new_components as $key => $component) {
-      $new_order = $this->getNewComponentOrder($components, $component, $remote_items, $key < count($new_components) - 1 ? array_slice($new_components, $key + 1) : []);
+      $new_order = $this->getNewComponentOrder($components, $component, $remote_items, $content, $key < count($new_components) - 1 ? array_slice($new_components, $key + 1) : []);
       if (!$new_order) {
         continue;
       }

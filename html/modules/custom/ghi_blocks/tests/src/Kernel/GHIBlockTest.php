@@ -189,6 +189,44 @@ class GHIBlockTest extends BlockKernelTestBase {
   }
 
   /**
+   * Tests AJAX selections vary cached content but request bookkeeping does not.
+   */
+  public function testBlockContentCacheVariesByAjaxSelection(): void {
+    $request = Request::create('/cache-switcher-test', 'POST', [
+      'entity_id' => 'first',
+      'ajax_page_state' => ['theme' => 'first'],
+      '_drupal_ajax' => 'first',
+      '_triggering_element_name' => 'first',
+      'form_build_id' => 'first',
+    ]);
+    $request_stack = $this->container->get('request_stack');
+    $request_stack->push($request);
+    try {
+      $plugin = $this->createBlockPlugin('ghi_blocks_ajax_selection_test', []);
+      $plugin->setCurrentUri('/cache-switcher-test');
+      $this->assertSame('first', $plugin->doBuildContent()[0]['#markup']);
+      $this->assertSame(1, $plugin->buildCount);
+
+      $request->request->set('entity_id', 'second');
+      $this->assertSame('second', $plugin->doBuildContent()[0]['#markup']);
+      $this->assertSame(2, $plugin->buildCount);
+
+      $request->request->replace([
+        'entity_id' => 'second',
+        'ajax_page_state' => ['theme' => 'second'],
+        '_drupal_ajax' => 'second',
+        '_triggering_element_name' => 'second',
+        'form_build_id' => 'second',
+      ]);
+      $this->assertSame('second', $plugin->doBuildContent()[0]['#markup']);
+      $this->assertSame(2, $plugin->buildCount);
+    }
+    finally {
+      $request_stack->pop();
+    }
+  }
+
+  /**
    * Tests that optional titles are rendered when enabled.
    */
   public function testOptionalTitleBuild() {
