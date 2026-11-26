@@ -138,6 +138,30 @@ class HistoricalTrendsTest extends PlanBlockKernelTestBase {
   }
 
   /**
+   * Tests missing prioritized values remain distinct from actual zeroes.
+   */
+  public function testMissingPrioritizedFigures(): void {
+    $this->createHomepage(2025);
+    $this->createHomepage(2024, [
+      'prioritized_target' => ['use_custom_value' => 1, 'custom_value' => '0'],
+      'prioritized_requirements' => ['use_custom_value' => 1, 'custom_value' => '0'],
+    ]);
+
+    $rows = $this->createHistoricalTrendsBlock()->buildDownloadData()['rows'];
+    foreach (['prioritized_target', 'prioritized_requirements'] as $key) {
+      $this->assertNull($rows[0][$key]['export_value']);
+      $this->assertSame('', $rows[0][$key]['data-raw-value']);
+      $this->assertSame('', (string) $rows[0][$key]['data']['#markup']);
+      $this->assertArrayNotHasKey('data-progress-group', $rows[0][$key]);
+
+      $this->assertSame(0, $rows[1][$key]['export_value']);
+      $this->assertSame(0, $rows[1][$key]['data-raw-value']);
+      $this->assertArrayNotHasKey('#markup', $rows[1][$key]['data']);
+      $this->assertArrayHasKey('data-progress-group', $rows[1][$key]);
+    }
+  }
+
+  /**
    * Tests Excel keeps ambiguous coverage blank and uses baseline percentages.
    */
   public function testExcelFundingCoverage(): void {
@@ -384,12 +408,12 @@ class HistoricalTrendsTest extends PlanBlockKernelTestBase {
       ])
       ->getMock();
     $query->method('getTotalRequirements')->willReturn(10000.0);
-    $query->method('getTotalPrioritizedRequirements')->willReturnCallback(fn () => 120000.0 + $query->getYear());
+    $query->method('getTotalPrioritizedRequirements')->willReturnCallback(fn () => $query->getYear() === 2025 ? NULL : 120000.0 + $query->getYear());
     $query->method('getTotalFunding')->willReturn(2500.0);
     $query->method('getCaseloadTotalValues')->willReturnCallback(fn () => [
       'in_need' => 1000 + $query->getYear(),
       'target' => 2000 + $query->getYear(),
-      'prioritized_target' => 100 + $query->getYear(),
+      'prioritized_target' => $query->getYear() === 2025 ? NULL : 100 + $query->getYear(),
       'latest_reach' => 0,
       'expected_reach' => 0,
       'reached_custom' => 0,

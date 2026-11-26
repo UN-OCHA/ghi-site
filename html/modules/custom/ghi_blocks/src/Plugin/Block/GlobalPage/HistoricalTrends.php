@@ -134,8 +134,20 @@ class HistoricalTrends extends GHIBlockBase implements OverrideDefaultTitleBlock
         $matches = $figures[$key] ?? [];
         $figure = count($matches) === 1 ? reset($matches) : NULL;
         $value = $figure['value'] ?? NULL;
+        // Numeric themes render NULL as zero. Keep a uniquely resolved but
+        // unavailable metric empty, while ambiguous configurations still use
+        // the explicit "No data" state.
+        if ($figure === NULL) {
+          $render = ['#markup' => $this->t('No data')];
+        }
+        elseif ($value === NULL) {
+          $render = ['#markup' => ''];
+        }
+        else {
+          $render = $figure['render'];
+        }
         $row[$key] = [
-          'data' => ThemeHelper::applyTableNumberFormatting($figure['render'] ?? ['#markup' => $this->t('No data')]),
+          'data' => ThemeHelper::applyTableNumberFormatting($render),
           'data-raw-value' => $value ?? '',
           'data-column-type' => $column['type'],
           'export_value' => $value,
