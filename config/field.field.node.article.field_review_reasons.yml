@@ -1,0 +1,19 @@
+uuid: 57d6564c-14ea-44dc-b3dd-fc2b22b26c1d
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_review_reasons
+    - node.type.article
+id: node.article.field_review_reasons
+field_name: field_review_reasons
+entity_type: node
+bundle: article
+label: 'Review reasons'
+description: 'Reasons why this article needs review.'
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: string

@@ -3,6 +3,8 @@
 namespace Drupal\ghi_content\Entity;
 
 use Drupal\Core\Cache\Cache;
+use Drupal\Core\Entity\EntityStorageInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\ghi_content\RemoteContent\RemoteArticleInterface;
 
 /**
@@ -11,6 +13,17 @@ use Drupal\ghi_content\RemoteContent\RemoteArticleInterface;
 class Article extends ContentBase implements ContentReviewInterface {
 
   public const BUNDLE = 'article';
+
+  /**
+   * {@inheritdoc}
+   */
+  public function preSave(EntityStorageInterface $storage) {
+    parent::preSave($storage);
+    // The review checkbox can also be cleared without calling needsReview().
+    if ($this->needsReview() === FALSE && $this->hasField(ContentReviewInterface::REVIEW_REASONS_FIELD)) {
+      $this->get(ContentReviewInterface::REVIEW_REASONS_FIELD)->setValue([]);
+    }
+  }
 
   /**
    * {@inheritdoc}
@@ -116,7 +129,7 @@ class Article extends ContentBase implements ContentReviewInterface {
   /**
    * {@inheritdoc}
    */
-  public function needsReview(?bool $state = NULL) {
+  public function needsReview(?bool $state = NULL, ?string $reason = NULL) {
     if (!$this->hasField(ContentReviewInterface::NEEDS_REVIEW_FIELD)) {
       return NULL;
     }
@@ -124,6 +137,32 @@ class Article extends ContentBase implements ContentReviewInterface {
       return (bool) $this->get(ContentReviewInterface::NEEDS_REVIEW_FIELD)->value;
     }
     $this->get(ContentReviewInterface::NEEDS_REVIEW_FIELD)->setValue($state);
+    if ($this->hasField(ContentReviewInterface::REVIEW_REASONS_FIELD)) {
+      $field = $this->get(ContentReviewInterface::REVIEW_REASONS_FIELD);
+      $reasons = $state ? array_column($field->getValue(), 'value') : [];
+      if ($state) {
+        $reasons[] = $reason ?? ContentReviewInterface::REVIEW_REASON_MANUAL;
+      }
+      $field->setValue(array_values(array_unique($reasons)));
+    }
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getReviewReasons(): array {
+    if (!$this->needsReview() || !$this->hasField(ContentReviewInterface::REVIEW_REASONS_FIELD)) {
+      return [];
+    }
+    // Store identifiers so editors see reasons in their interface language.
+    $labels = [
+      ContentReviewInterface::REVIEW_REASON_PARAGRAPH_ORDER => new TranslatableMarkup('The paragraph order changed in the source article and could not be fully applied to the HA layout.'),
+      ContentReviewInterface::REVIEW_REASON_PARAGRAPHS_ADDED => new TranslatableMarkup('Paragraphs were added during synchronization. Check their placement in the HA layout.'),
+      ContentReviewInterface::REVIEW_REASON_IMAGE_DOWNLOAD => new TranslatableMarkup('The source image could not be downloaded.'),
+      ContentReviewInterface::REVIEW_REASON_MANUAL => new TranslatableMarkup('An editor flagged this article for review.'),
+    ];
+    $reasons = array_column($this->get(ContentReviewInterface::REVIEW_REASONS_FIELD)->getValue(), 'value');
+    return array_intersect_key($labels, array_flip($reasons));
   }
 
   /**

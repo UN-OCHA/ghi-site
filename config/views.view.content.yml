@@ -8,6 +8,7 @@ dependencies:
     - field.storage.node.field_protected
     - field.storage.node.field_remote_article
     - field.storage.node.field_remote_document
+    - field.storage.node.field_review_reasons
     - field.storage.node.field_tags
     - field.storage.node.field_team
     - field.storage.node.field_year
@@ -5355,6 +5356,43 @@ display:
           type: string
           settings:
             link_to_entity: true
+        field_review_reasons:
+          id: field_review_reasons
+          table: node__field_review_reasons
+          field: field_review_reasons
+          relationship: none
+          group_type: group
+          admin_label: ''
+          plugin_id: field
+          label: 'Review reasons'
+          exclude: false
+          alter:
+            alter_text: false
+          element_type: ''
+          element_class: ''
+          element_label_type: ''
+          element_label_class: ''
+          element_label_colon: true
+          element_wrapper_type: ''
+          element_wrapper_class: ''
+          element_default_classes: true
+          empty: ''
+          hide_empty: false
+          empty_zero: false
+          hide_alter_empty: true
+          click_sort_column: value
+          type: ghi_review_reasons
+          settings: {  }
+          group_column: value
+          group_columns: {  }
+          group_rows: true
+          delta_limit: 0
+          delta_offset: 0
+          delta_reversed: false
+          delta_first_last: false
+          multi_type: ul
+          separator: ', '
+          field_api_classes: false
         field_tags:
           id: field_tags
           table: node__field_tags
@@ -5622,6 +5660,60 @@ display:
                 title: 'Not displayed'
                 operator: '='
                 value: '0'
+        field_review_reasons_value:
+          id: field_review_reasons_value
+          table: node__field_review_reasons
+          field: field_review_reasons_value
+          relationship: none
+          group_type: group
+          admin_label: ''
+          plugin_id: string
+          operator: '='
+          value: ''
+          group: 1
+          exposed: true
+          expose:
+            operator_id: ''
+            label: 'Review reason'
+            description: ''
+            use_operator: false
+            operator: ''
+            operator_limit_selection: false
+            operator_list: {  }
+            identifier: review_reason
+            required: false
+            remember: false
+            multiple: false
+            remember_roles:
+              authenticated: authenticated
+          is_grouped: true
+          group_info:
+            label: 'Review reason'
+            description: ''
+            identifier: review_reason
+            optional: true
+            widget: select
+            multiple: false
+            remember: false
+            default_group: All
+            default_group_multiple: {  }
+            group_items:
+              1:
+                title: 'Paragraph order changed in source'
+                operator: '='
+                value: paragraph_order
+              2:
+                title: 'Paragraphs added'
+                operator: '='
+                value: paragraphs_added
+              3:
+                title: 'Image download failed'
+                operator: '='
+                value: image_download
+              4:
+                title: 'Manually flagged'
+                operator: '='
+                value: manual
         field_needs_review_value:
           id: field_needs_review_value
           table: node__field_needs_review
@@ -5783,6 +5875,7 @@ display:
         - 'user.node_grants:view'
         - user.permissions
       tags:
+        - 'config:field.storage.node.field_review_reasons'
         - 'config:field.storage.node.field_tags'
   page_sections:
     id: page_sections

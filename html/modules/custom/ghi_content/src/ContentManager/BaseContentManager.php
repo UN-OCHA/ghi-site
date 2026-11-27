@@ -927,11 +927,28 @@ abstract class BaseContentManager implements ContainerInjectionInterface {
           '#markup' => '<p>' . ($node->needsReview() ? $this->t('This @label has been flagged as needing a review.', $t_args) : $this->t('This @label has not been flagged as needing a review yet.', $t_args)) . '</p>',
           '#weight' => 1,
         ];
+        $reasons = $node->getReviewReasons();
+        if ($node->needsReview() && $reasons) {
+          $form['needs_review']['reasons'] = [
+            '#type' => 'item',
+            '#title' => $this->t('Review reasons'),
+            '#weight' => 2,
+            'list' => [
+              '#theme' => 'item_list',
+              '#attributes' => ['class' => ['ghi-review-reasons']],
+              '#items' => array_map(fn ($reason, $description) => [
+                '#theme' => 'ghi_review_reason',
+                '#reason' => $reason,
+                '#description' => $description,
+              ], array_keys($reasons), array_values($reasons)),
+            ],
+          ];
+        }
         $form['needs_review']['confirm'] = [
           '#type' => 'submit',
           '#value' => $node->needsReview() ? $this->t('Mark as reviewed') : $this->t('Flag for review'),
           '#submit' => [[$this, 'formNeedsReviewSubmit']],
-          '#weight' => 2,
+          '#weight' => 3,
           '#limit_validation_errors' => [],
         ];
       }

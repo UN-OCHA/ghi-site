@@ -13,7 +13,9 @@ use Drupal\KernelTests\KernelTestBase;
 use Drupal\Tests\taxonomy\Traits\TaxonomyTestTrait;
 use Drupal\ghi_content\Import\ImportManager;
 use Drupal\ghi_content\Plugin\Block\Paragraph;
+use Drupal\ghi_content\Plugin\RemoteSource\HpcContentModule;
 use Drupal\ghi_content\RemoteContent\HpcContentModule\RemoteArticle;
+use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\layout_builder\Plugin\SectionStorage\OverridesSectionStorage;
 use Drupal\layout_builder\Section;
 use Drupal\layout_builder\SectionComponent;
@@ -96,6 +98,8 @@ class ImportManagerTest extends KernelTestBase {
 
     NodeType::create(['type' => self::BUNDLE])->save();
     NodeType::create(['type' => self::ARTICLE_BUNDLE])->save();
+    $this->createField('node', self::ARTICLE_BUNDLE, 'string', ContentReviewInterface::REVIEW_REASONS_FIELD, 'Review reasons');
+    FieldStorageConfig::loadByName('node', ContentReviewInterface::REVIEW_REASONS_FIELD)->setCardinality(-1)->save();
     NodeType::create(['type' => self::DOCUMENT_BUNDLE])->save();
     $this->createVocabulary([
       'vid' => self::TAGS_VID,
@@ -250,6 +254,165 @@ class ImportManagerTest extends KernelTestBase {
 
     // Make sure the needs review flag is set.
     $this->assertTrue($article_node->needsReview());
+    $this->assertArrayHasKey(ContentReviewInterface::REVIEW_REASON_PARAGRAPHS_ADDED, $article_node->getReviewReasons());
+  }
+
+  /**
+   * Tests failed image replacements retain the previous image and need review.
+   */
+  public function testFailedImageImportNeedsReview(): void {
+    $this->enableModules(['image']);
+    $this->createField('node', self::ARTICLE_BUNDLE, 'image', 'field_image', 'Image');
+    $this->createField('node', self::ARTICLE_BUNDLE, 'boolean', ContentReviewInterface::NEEDS_REVIEW_FIELD, 'Needs review');
+    $file = $this->container->get('file.repository')->writeData('Existing image', 'public://existing-image.png');
+    $node = Article::create([
+      'type' => self::ARTICLE_BUNDLE,
+      'title' => 'Article',
+      'field_image' => ['target_id' => $file->id(), 'alt' => 'Existing image'],
+    ]);
+    $source = $this->createMock(HpcContentModule::class);
+    $source->method('getFileSize')->willReturn(100);
+    $source->expects($this->once())->method('getFileContent')->willReturn(NULL);
+    $remote_article = new RemoteArticle((object) [
+      'id' => 42,
+      'image' => (object) ['imageUrl' => 'https://content.example.test/new-image.png'],
+    ], $source);
+    $before = $node->get('field_image')->getValue();
+    $this->container->get('ghi_content.import')->importImage($node, $remote_article);
+    $this->assertTrue($node->needsReview());
+    $this->assertArrayHasKey(ContentReviewInterface::REVIEW_REASON_IMAGE_DOWNLOAD, $node->getReviewReasons());
+    $this->assertSame($before, $node->get('field_image')->getValue());
+  }
+
+  /**
+   * Provides pure, customized and pre-existing article layouts.
+   */
+  public static function paragraphOrderReviewProvider(): array {
+    return [
+      'CM paragraphs only' => [FALSE, FALSE],
+      'custom HA blocks' => [TRUE, FALSE],
+      'existing page without a baseline' => [TRUE, TRUE],
+    ];
+  }
+
+  /**
+   * Tests source moves need review without changing the HA composition.
+   */
+  #[DataProvider('paragraphOrderReviewProvider')]
+  public function testParagraphOrderChangesNeedReview(bool $customized, bool $legacy): void {
+    $this->createField('node', self::ARTICLE_BUNDLE, 'boolean', ContentReviewInterface::NEEDS_REVIEW_FIELD, 'Needs review');
+    $this->container->get('entity_display.repository')->getViewDisplay('node', self::ARTICLE_BUNDLE)
+      ->enableLayoutBuilder()->setOverridable()->save();
+    $manager = $this->container->get('ghi_content.import');
+    $node = Article::create(['type' => self::ARTICLE_BUNDLE, 'title' => 'Article', 'uid' => 0]);
+    $manager->importArticleParagraphs($node, $this->createRemoteArticleWithParagraphOrder([1, 2, 3]));
+    $this->assertFalse($node->needsReview(), 'An initial import does not require review.');
+    $section = $manager->getNodeSections($node)[0];
+    if ($customized) {
+      $section->insertAfterComponent(array_key_first($section->getComponents()), new SectionComponent('custom', 'content', ['id' => 'system_powered_by_block']));
+      $section->appendComponent(new SectionComponent('foreign', 'content', [
+        'id' => 'paragraph',
+        'sync' => ['source_uuid' => 'foreign-paragraph'],
+        'hpc' => [
+          'article_select' => ['article' => ['remote_source' => 'hpc_content_module', 'article_id' => 84]],
+          'paragraph' => ['paragraph_id' => [1]],
+        ],
+      ]));
+    }
+    if ($legacy) {
+      $section->unsetThirdPartySetting('ghi_content', 'paragraph_order');
+      $manager->importArticleParagraphs($node, $this->createRemoteArticleWithParagraphOrder([1, 2, 3]));
+      $this->assertFalse($node->needsReview(), 'An unchanged existing page does not require review.');
+      $section->unsetThirdPartySetting('ghi_content', 'paragraph_order');
+    }
+
+    $before = $section->toArray()['components'];
+    $remote_article = $this->createRemoteArticleWithParagraphOrder([3, 1, 2]);
+    $manager->importArticleParagraphs($node, $remote_article);
+    $this->assertSame(!$legacy, $node->needsReview(), 'A source move needs review only when a prior CM baseline exists.');
+    $this->assertSame(!$legacy, array_key_exists(ContentReviewInterface::REVIEW_REASON_PARAGRAPH_ORDER, $node->getReviewReasons()));
+    $this->assertEquals($before, $section->toArray()['components'], 'Source reordering preserves all HA blocks, configuration and weights.');
+    $settings = $this->container->get('config.typed')->createFromNameAndData('layout_builder.section.third_party.ghi_content', $section->getThirdPartySettings('ghi_content'));
+    $this->assertCount(0, $settings->validate());
+
+    // Persist the acknowledgement and source baseline while retaining HA order.
+    $this->installSchema('node', ['node_access']);
+    $node->needsReview(FALSE);
+    $node->setSyncing(TRUE);
+    $node->save();
+    $node = $this->container->get('entity_type.manager')->getStorage('node')->loadUnchanged($node->id());
+    $manager->importArticleParagraphs($node, $remote_article);
+    $this->assertFalse($node->needsReview(), 'An unchanged source does not undo an editor\'s acknowledgement.');
+    $this->assertSame([], $node->getReviewReasons());
+
+    $manager->importArticleParagraphs($node, $this->createRemoteArticleWithParagraphOrder([2, 3, 1]));
+    $this->assertTrue($node->needsReview(), 'A subsequent source move requires a new review.');
+
+    $node->needsReview(FALSE);
+    $manager->importArticleParagraphs($node, $this->createRemoteArticleWithParagraphOrder([2, 1]));
+    $this->assertFalse($node->needsReview(), 'A deletion alone does not count as a move.');
+
+    $manager->importArticleParagraphs($node, $remote_article, [], NULL, TRUE);
+    $node->needsReview(FALSE);
+    $manager->importArticleParagraphs($node, $remote_article);
+    $this->assertFalse($node->needsReview(), 'A reset establishes the current source order.');
+  }
+
+  /**
+   * Provides source moves alongside intentional HA order differences.
+   */
+  public static function sourceAndLocalParagraphOrderProvider(): array {
+    return [
+      'HA changes alone' => [[2, 1, 3, 4], [1, 2, 3, 4], FALSE],
+      'CM adopts the HA order' => [[3, 1, 2, 4], [3, 1, 2, 4], FALSE],
+      'CM move already applied with another HA override' => [[2, 1, 4, 3], [1, 2, 4, 3], FALSE],
+      'CM move not applied with another HA override' => [[2, 1, 3, 4], [1, 2, 4, 3], TRUE],
+    ];
+  }
+
+  /**
+   * Tests only unapplied CM moves need review, independently of HA overrides.
+   */
+  #[DataProvider('sourceAndLocalParagraphOrderProvider')]
+  public function testOnlyUnappliedSourceMovesNeedReview(array $local_order, array $source_order, bool $needs_review): void {
+    $this->createField('node', self::ARTICLE_BUNDLE, 'boolean', ContentReviewInterface::NEEDS_REVIEW_FIELD, 'Needs review');
+    $this->container->get('entity_display.repository')->getViewDisplay('node', self::ARTICLE_BUNDLE)
+      ->enableLayoutBuilder()->setOverridable()->save();
+    $manager = $this->container->get('ghi_content.import');
+    $node = Article::create(['type' => self::ARTICLE_BUNDLE, 'title' => 'Article', 'uid' => 0]);
+    $manager->importArticleParagraphs($node, $this->createRemoteArticleWithParagraphOrder([1, 2, 3, 4]));
+    $section = $manager->getNodeSections($node)[0];
+    foreach ($section->getComponents() as $component) {
+      if ($component->getPluginId() !== 'paragraph') {
+        continue;
+      }
+      $id = $component->get('configuration')['hpc']['paragraph']['paragraph_id'][0];
+      $component->setWeight(array_search($id, $local_order));
+    }
+    $before = $section->toArray()['components'];
+    $manager->importArticleParagraphs($node, $this->createRemoteArticleWithParagraphOrder($source_order));
+    $this->assertSame($needs_review, $node->needsReview());
+    $this->assertSame($needs_review, array_key_exists(ContentReviewInterface::REVIEW_REASON_PARAGRAPH_ORDER, $node->getReviewReasons()));
+    $this->assertEquals($before, $section->toArray()['components'], 'Source moves preserve the HA composition.');
+  }
+
+  /**
+   * Create a source article with stable paragraph identities in a given order.
+   */
+  private function createRemoteArticleWithParagraphOrder(array $ids): RemoteArticle {
+    $source = $this->createMock(HpcContentModule::class);
+    $source->method('getPluginId')->willReturn('hpc_content_module');
+    return new RemoteArticle((object) [
+      'id' => 42,
+      'title' => 'Source article',
+      'content' => array_map(fn ($id) => (object) [
+        'id' => $id,
+        'uuid' => sprintf('00000000-0000-4000-8000-%012d', $id),
+        'type' => 'text',
+        'typeLabel' => 'Text',
+        'rendered' => '<p>Paragraph ' . $id . '</p>',
+      ], $ids),
+    ], $source);
   }
 
   /**
