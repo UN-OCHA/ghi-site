@@ -254,7 +254,10 @@ class ImportManager implements ContainerInjectionInterface {
       }
       else {
         $message = $this->t('Error retrieving image');
-        $file_field->setValue(NULL);
+        // Keep the last usable image when its replacement cannot be imported.
+        if ($node instanceof ContentReviewInterface) {
+          $node->needsReview(TRUE, ContentReviewInterface::REVIEW_REASON_IMAGE_DOWNLOAD);
+        }
       }
     }
     else {
@@ -299,6 +302,8 @@ class ImportManager implements ContainerInjectionInterface {
     $sections = $this->getNodeSections($node);
     $delta = 0;
     $section = &$sections[$delta];
+
+    $this->trackArticleParagraphOrder($node, $section, $article, $cleanup);
 
     $existing_paragraphs_count = count(array_filter(array_map(function ($component) {
       return $component->getPlugin() instanceof Paragraph;
@@ -385,7 +390,7 @@ class ImportManager implements ContainerInjectionInterface {
       if ($node instanceof ContentReviewInterface) {
         // Articles where paragraphs have been added to existing articles
         // need to be reviewed.
-        $node->needsReview(TRUE);
+        $node->needsReview(TRUE, ContentReviewInterface::REVIEW_REASON_PARAGRAPHS_ADDED);
       }
     }
 
@@ -416,6 +421,59 @@ class ImportManager implements ContainerInjectionInterface {
     }
 
     return TRUE;
+  }
+
+  /**
+   * Remember source order and flag moves that preserve the local composition.
+   *
+   * @param \Drupal\node\NodeInterface $node
+   *   The local article node.
+   * @param \Drupal\layout_builder\Section $section
+   *   The section containing the synchronized paragraphs.
+   * @param \Drupal\ghi_content\RemoteContent\RemoteArticleInterface $article
+   *   The current source article snapshot.
+   * @param bool $cleanup
+   *   Whether the layout will be rebuilt in source order.
+   */
+  private function trackArticleParagraphOrder(NodeInterface $node, Section $section, RemoteArticleInterface $article, bool $cleanup): void {
+    $source = $article->getSource()->getPluginId() . ':' . $article->getId();
+    $current_order = array_values(array_map(fn ($paragraph) => $paragraph->getUuid(), $article->getParagraphs()));
+    $previous_orders = $section->getThirdPartySetting('ghi_content', 'paragraph_order', []);
+    $previous_order = $previous_orders[$source] ?? NULL;
+
+    // Track CM independently of HA, including the first import and reviews
+    // acknowledged while intentionally retaining a different HA composition.
+    $section->setThirdPartySetting('ghi_content', 'paragraph_order', [$source => $current_order]);
+    // Without a baseline, existing differences cannot be attributed to CM.
+    if ($cleanup || $previous_order === NULL || $previous_order === $current_order || !$node instanceof ContentReviewInterface) {
+      return;
+    }
+
+    $local_order = [];
+    foreach ($section->getComponentsByRegion('content') as $component) {
+      $plugin = $component->getPlugin();
+      if (!$plugin instanceof RemoteContentItemBlockInterface || !$plugin->referencesRemoteContent($article)) {
+        continue;
+      }
+      $configuration = $component->get('configuration');
+      if (!empty($configuration['sync']['source_uuid'])) {
+        $local_order[] = $configuration['sync']['source_uuid'];
+      }
+    }
+
+    $previous_positions = array_flip($previous_order);
+    $local_positions = array_flip($local_order);
+    $common = array_values(array_intersect($current_order, $previous_order, $local_order));
+    foreach ($common as $position => $uuid) {
+      foreach (array_slice($common, $position + 1) as $following_uuid) {
+        // Only pairs whose relative order changed in CM matter. Other local
+        // differences can be deliberate HA overrides, even during a CM move.
+        if ($previous_positions[$uuid] > $previous_positions[$following_uuid] && $local_positions[$uuid] > $local_positions[$following_uuid]) {
+          $node->needsReview(TRUE, ContentReviewInterface::REVIEW_REASON_PARAGRAPH_ORDER);
+          return;
+        }
+      }
+    }
   }
 
   /**

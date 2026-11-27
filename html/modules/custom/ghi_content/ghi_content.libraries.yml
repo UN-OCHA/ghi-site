@@ -8,6 +8,18 @@ admin.article_list:
   css:
     component:
       css/admin/article_list.css: {}
+admin.review_reasons:
+  version: VERSION
+  css:
+    component:
+      css/admin/review_reasons.css: {}
+  js:
+    js/review_reasons.js: {}
+  dependencies:
+    - core/jquery
+    - core/drupal
+    - core/once
+    - hpc_common/tooltip
 admin.article_collection:
   version: VERSION
   css:

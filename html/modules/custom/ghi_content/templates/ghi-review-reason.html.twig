@@ -1,0 +1,18 @@
+{# Short review labels are shared by the sidebar and the review list. #}
+{% set labels = {
+  paragraph_order: 'Paragraph order changed in source'|t,
+  paragraphs_added: 'Paragraphs added'|t,
+  image_download: 'Image download failed'|t,
+  manual: 'Manually flagged'|t,
+} %}
+{{ attach_library('ghi_content/admin.review_reasons') }}
+<span class="ghi-review-reason">
+  <span class="ghi-review-reason__label">{{ labels[reason] }}</span>
+  <button type="button" class="ghi-review-reason__help"
+    aria-label="{{ 'More information about @reason'|t({'@reason': labels[reason]}) }}"
+    data-toggle="tooltip" data-theme="ghi-review-reason"
+    data-tippy-content="{{ description }}"
+    data-tippy-trigger="mouseenter focus click"
+    data-tippy-maxwidth="min(22.5rem, calc(100vw - 1.5rem))" data-tippy-arrow="false"
+    data-tippy-aria='{"content":"describedby","expanded":false}'>?</button>
+</span>

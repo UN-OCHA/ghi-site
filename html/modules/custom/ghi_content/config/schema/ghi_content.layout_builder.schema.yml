@@ -1,0 +1,12 @@
+layout_builder.section.third_party.ghi_content:
+  type: mapping
+  label: 'Content synchronization'
+  mapping:
+    paragraph_order:
+      type: sequence
+      label: 'Last imported paragraph order by source article'
+      sequence:
+        type: sequence
+        label: 'Paragraph order'
+        sequence:
+          type: uuid

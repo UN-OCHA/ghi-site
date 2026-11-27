@@ -303,9 +303,11 @@ class PlanCaseloadTrendsTableTest extends PlanBlockKernelTestBase {
     // Create a 2024 and a 2022 plan section besides the existing 2025 one.
     // Table rendering should insert an empty 2023 row between those source
     // rows.
+    // Related plans are keyed by source ID, so these IDs must be distinct.
     $this->createSection([
       'label' => 'Section node 2024',
       'field_base_object' => $this->createPlanBaseObject([
+        'field_original_id' => 11,
         'field_year' => 2024,
         'field_focus_country' => ['target_id' => $plan->getFocusCountry()->id()],
       ]),
@@ -313,6 +315,7 @@ class PlanCaseloadTrendsTableTest extends PlanBlockKernelTestBase {
     $this->createSection([
       'label' => 'Section node 2022',
       'field_base_object' => $this->createPlanBaseObject([
+        'field_original_id' => 12,
         'field_year' => 2022,
         'field_focus_country' => ['target_id' => $plan->getFocusCountry()->id()],
       ]),

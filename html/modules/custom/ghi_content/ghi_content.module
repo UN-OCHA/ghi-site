@@ -46,6 +46,12 @@ function ghi_content_entity_bundle_info_alter(array &$bundles) {
  */
 function ghi_content_theme($existing, $type, $theme, $path) {
   return [
+    'ghi_review_reason' => [
+      'variables' => [
+        'reason' => NULL,
+        'description' => NULL,
+      ],
+    ],
     'article_collection_cards' => [
       'variables' => [
         'articles' => [],
