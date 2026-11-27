@@ -7,6 +7,7 @@ use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Render\Markup;
 use Drupal\ghi_plans\ApiObjects\Attachments\Attachment;
 use Drupal\ghi_plans\ApiObjects\Entities\GoverningEntity;
+use Drupal\ghi_plans\Entity\Plan;
 use Drupal\hpc_api\ApiObjects\Types\MetricType;
 use Drupal\hpc_api\Query\FabricQueryManager;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -127,9 +128,7 @@ class DisaggregationModalController extends ControllerBase {
     $decimal_format = NULL;
     $plan_object = $attachment->getPlanObject();
     $decimal_format = $plan_object?->getDecimalFormat();
-    $plan_language = $plan_object?->getPlanLanguage();
-
-    $t_options = ['langcode' => $plan_language];
+    $t_options = Plan::buildTranslationOptions($plan_object);
 
     // Retrieve disaggregated data form the attachment. The results is an
     // object with the properties 'locations', 'categories' and 'metrics'.

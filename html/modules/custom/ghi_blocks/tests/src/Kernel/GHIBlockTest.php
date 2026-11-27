@@ -39,6 +39,7 @@ class GHIBlockTest extends BlockKernelTestBase {
     'layout_discovery',
     'migrate',
     'hpc_api',
+    'ghi_plans',
     'ghi_form_elements',
     'ghi_sections',
     'ghi_blocks',

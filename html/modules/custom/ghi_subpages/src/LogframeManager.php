@@ -311,7 +311,7 @@ class LogframeManager implements ContainerInjectionInterface {
       ],
     ];
     if ($parent_node instanceof PlanCluster && $ref_code == 'CL') {
-      $title_args = ['langcode' => $plan->getPlanLanguage()];
+      $title_args = $plan->getTranslationOptions();
       $title_map = [
         Plan::CLUSTER_TYPE_CLUSTER => $this->t('Go to cluster page', [], $title_args),
         Plan::CLUSTER_TYPE_SECTOR => $this->t('Go to sector page', [], $title_args),
@@ -364,11 +364,11 @@ class LogframeManager implements ContainerInjectionInterface {
     $context_mapping = $this->buildContextMappingForBlock($definition, $node);
     /** @var \Drupal\ghi_plans\Entity\Plan $plan */
     $plan = $node->getParentBaseNode()->getBaseObject();
-    $langcode = $plan->getPlanLanguage();
+    $translation_options = $plan->getTranslationOptions();
 
     $title_map = [
-      Plan::CLUSTER_TYPE_CLUSTER => $this->t('Cluster frameworks', [], ['langcode' => $langcode]),
-      Plan::CLUSTER_TYPE_SECTOR => $this->t('Sector frameworks', [], ['langcode' => $langcode]),
+      Plan::CLUSTER_TYPE_CLUSTER => $this->t('Cluster frameworks', [], $translation_options),
+      Plan::CLUSTER_TYPE_SECTOR => $this->t('Sector frameworks', [], $translation_options),
     ];
 
     // Append a new component.

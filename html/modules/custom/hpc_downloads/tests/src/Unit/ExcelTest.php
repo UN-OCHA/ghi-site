@@ -13,6 +13,7 @@ use PHPUnit\Framework\Attributes\Group;
  * Tests Excel download preparation and value rendering.
  */
 #[CoversMethod(Excel::class, 'prepareOptions')]
+#[CoversMethod(Excel::class, 'prepareExcelSheet')]
 #[CoversMethod(Excel::class, 'renderValue')]
 #[Group('hpc_downloads')]
 class ExcelTest extends UnitTestCase {
@@ -76,6 +77,31 @@ class ExcelTest extends UnitTestCase {
     $this->assertSame('Export & value', Excel::renderValue($build));
     $expected = ['data' => 'Export & value', 'colspan' => 2];
     $this->assertSame($expected, Excel::renderValue(['data' => $build, 'colspan' => 2]));
+  }
+
+  /**
+   * Tests that currency units are added from export column metadata.
+   */
+  public function testPrepareExcelSheetAddsCurrencyUnitsToHeaders(): void {
+    $renderer = $this->createMock(RendererInterface::class);
+    $renderer->method('hasRenderContext')->willReturn(FALSE);
+    $container = new ContainerBuilder();
+    $container->set('renderer', $renderer);
+    \Drupal::setContainer($container);
+
+    $prepared = Excel::prepareExcelSheet([
+      ['data' => 'Requirements', 'data-column-type' => 'currency'],
+      ['data' => 'Funding ($)', 'data-column-type' => 'currency'],
+      ['data' => 'People targeted', 'data-column-type' => 'amount'],
+      ['data' => '', 'data-column-type' => 'currency'],
+    ], []);
+
+    $this->assertSame([
+      'Requirements ($)',
+      'Funding ($)',
+      'People targeted',
+      '',
+    ], $prepared['header']);
   }
 
 }

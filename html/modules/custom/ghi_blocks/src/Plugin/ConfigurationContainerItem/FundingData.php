@@ -9,6 +9,7 @@ use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\ghi_base_objects\Entity\BaseObjectInterface;
 use Drupal\ghi_blocks\Traits\ConfigurationItemClusterRestrictTrait;
 use Drupal\ghi_blocks\Traits\ConfigurationItemValuePreviewTrait;
+use Drupal\ghi_blocks\Traits\FinancialTableItemTrait;
 use Drupal\ghi_blocks\Traits\PlanFootnoteTrait;
 use Drupal\ghi_form_elements\Attribute\ConfigurationContainerItem;
 use Drupal\ghi_form_elements\ConfigurationContainerItemPluginBase;
@@ -16,6 +17,7 @@ use Drupal\ghi_plans\ApiObjects\Attachments\CostAttachment;
 use Drupal\ghi_plans\ApiObjects\PlanEntityInterface;
 use Drupal\ghi_plans\Entity\GoverningEntity;
 use Drupal\ghi_plans\Entity\Plan;
+use Drupal\ghi_plans\Helpers\FinancialLabel;
 use Drupal\ghi_plans\Traits\FtsLinkTrait;
 use Drupal\hpc_api\ApiObjects\ApiObjectInterface;
 use Drupal\hpc_common\Helpers\ThemeHelper;
@@ -41,6 +43,7 @@ class FundingData extends ConfigurationContainerItemPluginBase {
 
   use ConfigurationItemClusterRestrictTrait;
   use ConfigurationItemValuePreviewTrait;
+  use FinancialTableItemTrait;
   use FtsLinkTrait;
   use PlanFootnoteTrait;
   use RenderArrayTrait;
@@ -136,7 +139,14 @@ class FundingData extends ConfigurationContainerItemPluginBase {
       $element['value_preview'] = $this->buildValuePreviewFormElement($preview_value);
     }
 
-    return $element;
+    $currency_types = [
+      'funding_totals',
+      'outside_funding',
+      'funding_gap',
+      'original_requirements',
+      'current_requirements',
+    ];
+    return $this->addFinancialTableLabelHint($element, in_array($data_type_key, $currency_types, TRUE));
   }
 
   /**
@@ -490,7 +500,7 @@ class FundingData extends ConfigurationContainerItemPluginBase {
       $fts_link = $this->needsFtsLink() ? self::buildFtsLink($link_icon, $this->getContextValue('plan_object'), $data_type['fts_link_target'], $this->getContextValue('base_object')) : NULL;
       $fts_tooltip = $fts_link ? [
         '#theme' => 'hpc_tooltip',
-        '#tooltip' => $this->t('View this data in FTS', [], ['langcode' => $plan_object?->getPlanLanguage()]),
+        '#tooltip' => $this->t('View this data in FTS', [], $this->buildPlanTranslationOptions($plan_object instanceof Plan ? $plan_object : NULL)),
         '#tag_content' => $fts_link,
       ] : NULL;
     }
@@ -586,7 +596,7 @@ class FundingData extends ConfigurationContainerItemPluginBase {
    * {@inheritdoc}
    */
   public function getColumnType() {
-    return $this->get('data_type') == 'funding_coverage' ? 'percentage' : parent::getColumnType();
+    return in_array($this->get('data_type'), ['funding_coverage', 'funding_progress_bar'], TRUE) ? 'percentage' : 'currency';
   }
 
   /**
@@ -613,10 +623,14 @@ class FundingData extends ConfigurationContainerItemPluginBase {
    *   An array of defined data types.
    */
   private function getDataTypes() {
+    $plan = $this->getContextValue('plan_object');
+    $plan = $plan instanceof Plan ? $plan : NULL;
+    $plan_translation_options = $this->buildPlanTranslationOptions($plan);
+    $financial_label_options = $this->buildPlanTranslationOptions($plan, FinancialLabel::TRANSLATION_CONTEXT);
     $available_types = [
       'funding_totals' => [
         'title' => $this->t('Funding totals'),
-        'default_label' => $this->t('Current funding ($)'),
+        'default_label' => $this->t('Funding', [], $plan_translation_options),
         'valid_context' => ['plan', 'governing_entity'],
         'cluster_restrict' => TRUE,
         'property' => 'total_funding',
@@ -625,14 +639,14 @@ class FundingData extends ConfigurationContainerItemPluginBase {
       ],
       'outside_funding' => [
         'title' => $this->t('Funded outside HRP'),
-        'default_label' => $this->t('Funded outside HRP ($)'),
+        'default_label' => $this->t('Funded outside HRP', [], $plan_translation_options),
         'valid_context' => ['plan'],
         'cluster_restrict' => FALSE,
         'property' => 'outside_funding',
       ],
       'funding_coverage' => [
         'title' => $this->t('Coverage (%)'),
-        'default_label' => $this->t('% Funded'),
+        'default_label' => $this->t('% Funded', [], $plan_translation_options),
         'valid_context' => ['plan', 'governing_entity'],
         'cluster_restrict' => TRUE,
         'property' => 'funding_coverage',
@@ -640,7 +654,7 @@ class FundingData extends ConfigurationContainerItemPluginBase {
       ],
       'funding_progress_bar' => [
         'title' => $this->t('Funding coverage progress bar'),
-        'default_label' => $this->t('Funding coverage'),
+        'default_label' => $this->t('Funding coverage', [], $plan_translation_options),
         'valid_context' => ['plan', 'governing_entity'],
         'cluster_restrict' => TRUE,
         'property' => 'funding_coverage',
@@ -651,21 +665,21 @@ class FundingData extends ConfigurationContainerItemPluginBase {
       ],
       'funding_gap' => [
         'title' => $this->t('Funding gap'),
-        'default_label' => $this->t('Unmet ($)'),
+        'default_label' => $this->t('Unmet', [], $plan_translation_options),
         'valid_context' => ['plan', 'governing_entity'],
         'cluster_restrict' => TRUE,
         'property' => 'funding_gap',
       ],
       'original_requirements' => [
         'title' => $this->t('Original requirements'),
-        'default_label' => $this->t('Original ($)'),
+        'default_label' => $this->t('Original requirements', [], $financial_label_options),
         'valid_context' => ['plan', 'governing_entity'],
         'cluster_restrict' => TRUE,
         'property' => 'original_requirements',
       ],
       'current_requirements' => [
         'title' => $this->t('Current requirements'),
-        'default_label' => $this->t('Requirements ($)'),
+        'default_label' => $this->t('Requirements', [], $financial_label_options),
         'valid_context' => ['plan', 'governing_entity'],
         'cluster_restrict' => TRUE,
         'property' => 'current_requirements',

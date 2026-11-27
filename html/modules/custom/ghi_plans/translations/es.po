@@ -92,11 +92,16 @@ msgstr "Población meta"
 msgid "People targeted (%)"
 msgstr "Población meta (%)"
 
-msgid "Requirements ($)"
-msgstr "Requerimientos financieros ($)"
+msgctxt "Financial table label"
+msgid "Requirements"
+msgstr "Requerimientos financieros"
 
-msgid "Funding ($)"
-msgstr "Financiación ($)"
+msgctxt "Financial table label"
+msgid "Original requirements"
+msgstr "Requerimientos financieros iniciales"
+
+msgid "Funding"
+msgstr "Financiación"
 
 msgid "% Funded"
 msgstr "% Financiado"

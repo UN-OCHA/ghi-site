@@ -9,12 +9,14 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Plugin\Context\EntityContextDefinition;
 use Drupal\Core\Security\TrustedCallbackInterface;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\ghi_blocks\Interfaces\FrontendTableBlockInterface;
 use Drupal\ghi_blocks\Interfaces\OverrideDefaultTitleBlockInterface;
 use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
 use Drupal\ghi_blocks\Traits\PlanFootnoteTrait;
 use Drupal\ghi_blocks\Traits\TableSoftLimitTrait;
 use Drupal\ghi_blocks\Traits\TableTrait;
 use Drupal\ghi_plans\Entity\Plan;
+use Drupal\ghi_plans\Helpers\FinancialLabel;
 use Drupal\ghi_plans\PlanMetricResolver;
 use Drupal\hpc_common\Helpers\BlockHelper;
 use Drupal\hpc_common\Helpers\CommonHelper;
@@ -37,7 +39,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
     'plan' => new EntityContextDefinition('entity:base_object', new TranslatableMarkup('Plan'), constraints: ['Bundle' => 'plan']),
   ]
 )]
-class PlanCaseloadTrendsTable extends GHIBlockBase implements OverrideDefaultTitleBlockInterface, HPCDownloadExcelInterface, HPCDownloadPNGInterface, TrustedCallbackInterface {
+class PlanCaseloadTrendsTable extends GHIBlockBase implements FrontendTableBlockInterface, OverrideDefaultTitleBlockInterface, HPCDownloadExcelInterface, HPCDownloadPNGInterface, TrustedCallbackInterface {
 
   use PlanFootnoteTrait;
   use RenderArrayTrait;
@@ -101,10 +103,8 @@ class PlanCaseloadTrendsTable extends GHIBlockBase implements OverrideDefaultTit
    */
   public function getDefaultTitle() {
     $title = parent::getDefaultTitle();
-    $langcode = $this->getCurrentPlanObject()?->getPlanLanguage() ?? 'en';
-    // phpcs:disable
-    return $title ? $this->t((string) $title, [], ['langcode' => $langcode]) : $title;
-    // phpcs:enable
+    // phpcs:ignore Drupal.Semantics.FunctionT.NotLiteralString
+    return $title ? $this->t((string) $title, [], $this->buildPlanTranslationOptions($this->getCurrentPlanObject())) : $title;
   }
 
   /**
@@ -243,8 +243,8 @@ class PlanCaseloadTrendsTable extends GHIBlockBase implements OverrideDefaultTit
     }
 
     $plan_object = $this->getCurrentPlanObject();
-    $langcode = $plan_object?->getPlanLanguage() ?? 'en';
-    $t_options = ['langcode' => $langcode];
+    $t_options = $this->buildPlanTranslationOptions($plan_object);
+    $financial_t_options = $this->buildPlanTranslationOptions($plan_object, FinancialLabel::TRANSLATION_CONTEXT);
 
     $header = [
       'year' => $this->buildHeaderColumn($this->t('Year', [], $t_options), 'number'),
@@ -258,9 +258,9 @@ class PlanCaseloadTrendsTable extends GHIBlockBase implements OverrideDefaultTit
       'target_percent' => $this->buildHeaderColumn($this->t('People targeted (%)', [], $t_options), 'amount'),
       'reached' => $this->buildHeaderColumn($this->t('People reached', [], $t_options), 'amount'),
       'reached_percent' => $this->buildHeaderColumn($this->t('People reached (%)', [], $t_options), 'amount'),
-      'requirements' => $this->buildHeaderColumn($this->t('Requirements ($)', [], $t_options), 'currency'),
-      'prioritized_requirements' => $this->buildHeaderColumn($this->t('Prioritized requirements ($)', [], $t_options), 'currency'),
-      'funding' => $this->buildHeaderColumn($this->t('Funding ($)', [], $t_options), 'currency'),
+      'requirements' => $this->buildHeaderColumn($this->t('Requirements', [], $financial_t_options), 'currency'),
+      'prioritized_requirements' => $this->buildHeaderColumn($this->t('Prioritized requirements', [], $financial_t_options), 'currency'),
+      'funding' => $this->buildHeaderColumn($this->t('Funding', [], $t_options), 'currency'),
       'coverage' => $this->buildHeaderColumn($this->t('% Funded', [], $t_options), 'percentage'),
     ];
     $rows = [];
@@ -625,6 +625,7 @@ class PlanCaseloadTrendsTable extends GHIBlockBase implements OverrideDefaultTit
    * {@inheritdoc}
    */
   public function getConfigForm(array $form, FormStateInterface $form_state) {
+    $financial_options = ['context' => FinancialLabel::TRANSLATION_CONTEXT];
     $form['columns'] = [
       '#type' => 'checkboxes',
       '#title' => $this->t('Columns'),
@@ -636,9 +637,9 @@ class PlanCaseloadTrendsTable extends GHIBlockBase implements OverrideDefaultTit
         'target_percent' => $this->t('People targeted (%)'),
         'reached' => $this->t('People reached'),
         'reached_percent' => $this->t('People reached (%)'),
-        'requirements' => $this->t('Requirements ($)'),
-        'prioritized_requirements' => $this->t('Prioritized requirements ($)'),
-        'funding' => $this->t('Funding ($)'),
+        'requirements' => FinancialLabel::withCurrencyUnit($this->t('Requirements', [], $financial_options)),
+        'prioritized_requirements' => FinancialLabel::withCurrencyUnit($this->t('Prioritized requirements', [], $financial_options)),
+        'funding' => FinancialLabel::withCurrencyUnit($this->t('Funding')),
         'coverage' => $this->t('% Funded'),
       ],
       '#default_value' => $this->getDefaultFormValueFromFormState($form_state, 'columns'),

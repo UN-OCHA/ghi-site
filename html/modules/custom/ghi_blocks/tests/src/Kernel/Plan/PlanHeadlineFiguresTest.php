@@ -238,8 +238,8 @@ class PlanHeadlineFiguresTest extends PlanBlockKernelTestBase {
     $this->assertStringContainsString('material-symbol-help', (string) $form['metric_source']['#title']);
     $this->assertSame('Country Module', (string) $form['metric_source']['#markup']);
     $this->assertSame('No value is currently available for this metric.', (string) $form['value_preview']['#description']);
-    $this->assertSame('Original ($)', (string) $financial_metric->getDefaultLabel());
-    $this->assertSame('Unmet ($)', (string) $financial_metric->getDefaultLabel('funding_gap'));
+    $this->assertSame('Original requirements', (string) $financial_metric->getDefaultLabel());
+    $this->assertSame('Unmet', (string) $financial_metric->getDefaultLabel('funding_gap'));
     $this->assertSame('% Funded', (string) $financial_metric->getDefaultLabel('coverage'));
 
     $override_plan = $this->createMock(Plan::class);

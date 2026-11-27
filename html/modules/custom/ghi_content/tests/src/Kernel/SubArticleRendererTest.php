@@ -53,6 +53,7 @@ class SubArticleRendererTest extends KernelTestBase {
     'ghi_blocks',
     'ghi_content_test',
     'ghi_content',
+    'ghi_plans',
     'ghi_form_elements',
     'ghi_sections',
     'ghi_subpages',

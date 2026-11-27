@@ -106,7 +106,7 @@ class Excel {
     // Prepare header and rows, render arrays, strip_tags, check_plain.
     $build['header'] = self::renderTableArray($build['header']);
     $build['header'] = array_values(array_map(function ($item) {
-      return is_array($item) && array_key_exists('data', $item) ? $item['data'] : (string) $item;
+      return self::getExportHeaderLabel($item);
     }, $build['header']));
 
     // Now that was an interesting problem. After adding the previous code
@@ -194,6 +194,20 @@ class Excel {
     }
     $build['rows'] = self::renderTableArray($build['rows']);
     return $build;
+  }
+
+  /**
+   * Gets an export label with units derived from column metadata.
+   */
+  private static function getExportHeaderLabel($item): string {
+    $label = is_array($item) && array_key_exists('data', $item) ? (string) $item['data'] : (string) $item;
+    $is_currency = is_array($item) && ($item['data-column-type'] ?? NULL) === 'currency';
+    if ($label !== '' && $is_currency && !preg_match('/\s*\(\$\)\s*$/u', $label)) {
+      // Keep translated display labels unit-free and add the invariant export
+      // unit from the column's formatting metadata.
+      $label .= ' ($)';
+    }
+    return $label;
   }
 
   /**

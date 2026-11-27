@@ -227,7 +227,7 @@ class PlanAttachmentMap extends GHIBlockBase implements MultiStepFormBlockInterf
       'json' => $map['data'],
       'id' => $map_id,
       'settings_key' => 'plan_attachment_map',
-      'disclaimer' => $conf['map']['common']['disclaimer'] ?: $this->getDefaultMapDisclaimer($this->getCurrentPlanObject()->getPlanLanguage()),
+      'disclaimer' => $conf['map']['common']['disclaimer'] ?: $this->getDefaultMapDisclaimer($this->buildPlanTranslationOptions($this->getCurrentPlanObject())),
       'pcodes_enabled' => $conf['map']['common']['pcodes_enabled'] ?? TRUE,
       'label_min_zoom' => (int) ($conf['map']['common']['label_min_zoom'] ?? 6),
       'style' => $style,

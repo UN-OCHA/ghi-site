@@ -14,6 +14,7 @@ use Drupal\Core\Url;
 use Drupal\ghi_blocks\Interfaces\ConfigValidationInterface;
 use Drupal\ghi_blocks\Interfaces\ConfigurableTableBlockInterface;
 use Drupal\ghi_blocks\Interfaces\CustomLinkBlockInterface;
+use Drupal\ghi_blocks\Interfaces\FrontendTableBlockInterface;
 use Drupal\ghi_blocks\Interfaces\MultiStepFormBlockInterface;
 use Drupal\ghi_blocks\Interfaces\OverrideDefaultTitleBlockInterface;
 use Drupal\ghi_blocks\Logframe\LogframeDownloadSource;
@@ -50,7 +51,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
     'plan_cluster' => new EntityContextDefinition('entity:base_object', new TranslatableMarkup('Cluster'), required: FALSE, constraints: ['Bundle' => 'governing_entity']),
   ],
 )]
-class PlanEntityLogframe extends GHIBlockBase implements MultiStepFormBlockInterface, ConfigurableTableBlockInterface, OverrideDefaultTitleBlockInterface, CustomLinkBlockInterface, TrustedCallbackInterface, ConfigValidationInterface, HPCDownloadExcelMultipleInterface {
+class PlanEntityLogframe extends GHIBlockBase implements MultiStepFormBlockInterface, ConfigurableTableBlockInterface, FrontendTableBlockInterface, OverrideDefaultTitleBlockInterface, CustomLinkBlockInterface, TrustedCallbackInterface, ConfigValidationInterface, HPCDownloadExcelMultipleInterface {
 
   use ConfigurationContainerTrait;
   use AttachmentTableTrait;
@@ -145,7 +146,7 @@ class PlanEntityLogframe extends GHIBlockBase implements MultiStepFormBlockInter
     $entities = $this->getRenderableEntities();
     $first_entity = !empty($entities) ? reset($entities) : NULL;
     if ($first_entity instanceof ApiObjectsPlan) {
-      return $this->t('Response plan', [], ['langcode' => $this->getCurrentPlanObject()?->getPlanLanguage()]);
+      return $this->t('Response plan', [], $this->buildPlanTranslationOptions($this->getCurrentPlanObject()));
     }
     if (!$first_entity instanceof EntityObjectInterface) {
       return NULL;
@@ -282,15 +283,15 @@ class PlanEntityLogframe extends GHIBlockBase implements MultiStepFormBlockInter
     }
     $count = count($rendered_items);
 
-    $langcode = $this->getCurrentPlanObject()?->getPlanLanguage() ?? 'en';
+    $t_options = $this->buildPlanTranslationOptions($this->getCurrentPlanObject());
     $first_entity = reset($entities);
     $build = [];
     $build['content'] = [
       '#theme' => 'plan_entity_logframe',
       '#items' => $rendered_items,
-      '#tooltip_show_data' => $this->t('Show data', [], ['langcode' => $langcode]),
-      '#tooltip_hide_data' => $this->t('Hide data', [], ['langcode' => $langcode]),
-      '#tooltip_no_data' => $this->t('No data', [], ['langcode' => $langcode]),
+      '#tooltip_show_data' => $this->t('Show data', [], $t_options),
+      '#tooltip_hide_data' => $this->t('Hide data', [], $t_options),
+      '#tooltip_no_data' => $this->t('No data', [], $t_options),
       '#wrapper_attributes' => [
         'class' => [
           'plan-entity-logframe',
@@ -374,7 +375,9 @@ class PlanEntityLogframe extends GHIBlockBase implements MultiStepFormBlockInter
    */
   private function buildFullLogframeDownloadLinks(): array {
     $links = [];
-    $langcode = $this->getCurrentPlanObject()?->getPlanLanguage() ?? 'en';
+    $plan = $this->getCurrentPlanObject();
+    $langcode = $plan?->getPlanLanguage() ?? 'en';
+    $t_options = $this->buildPlanTranslationOptions($plan);
     $scopes = $this->getFullLogframeDownloadOptions();
     foreach ($scopes as $scope => $label) {
       $link = $this->downloadDialog->buildDialogLink($this, $label, $label, $langcode)['#link'];
@@ -402,7 +405,7 @@ class PlanEntityLogframe extends GHIBlockBase implements MultiStepFormBlockInter
           'class' => ['cd-dropdown'],
           'data-cd-component' => 'ghi-download',
           'data-cd-icon' => 'arrow-down',
-          'data-cd-toggable' => $this->t('Download logframe', [], ['langcode' => $langcode]),
+          'data-cd-toggable' => $this->t('Download logframe', [], $t_options),
         ],
         'links' => ['#type' => 'container'] + $links,
       ],
@@ -427,9 +430,7 @@ class PlanEntityLogframe extends GHIBlockBase implements MultiStepFormBlockInter
     if (empty($variables['download_links'])) {
       return;
     }
-    $t_args = [
-      'langcode' => $this->getCurrentPlanObject()->getPlanLanguage() ?? 'en',
-    ];
+    $t_args = $this->buildPlanTranslationOptions($this->getCurrentPlanObject());
 
     if ($this->hasDownloadData()) {
       // Move the download link into a different position.
@@ -477,7 +478,9 @@ class PlanEntityLogframe extends GHIBlockBase implements MultiStepFormBlockInter
    *   An array of entity attachment tables.
    */
   public function buildTables(PlanEntityInterface $entity, array $conf) {
-    return empty($conf['attachment_tables']) ? [] : $this->buildAttachmentTables($entity, $conf, $this->getBlockContext());
+    $tables = empty($conf['attachment_tables']) ? [] : $this->buildAttachmentTables($entity, $conf, $this->getBlockContext());
+    $this->applyFrontendTableConfiguration($tables);
+    return $tables;
   }
 
   /**
@@ -537,8 +540,9 @@ class PlanEntityLogframe extends GHIBlockBase implements MultiStepFormBlockInter
    */
   private function buildLogframeItemRenderArray(PlanEntityInterface $entity, array $fragment): array {
     $conf = $this->getBlockConfig();
-    $langcode = $this->getCurrentPlanObject()?->getPlanLanguage() ?? 'en';
+    $t_options = $this->buildPlanTranslationOptions($this->getCurrentPlanObject());
     $state = $fragment['state'] ?? self::LOGFRAME_ITEM_STATE_PENDING;
+    $this->applyFrontendTableConfiguration($fragment);
 
     return [
       '#theme' => 'plan_entity_logframe_item',
@@ -549,9 +553,9 @@ class PlanEntityLogframe extends GHIBlockBase implements MultiStepFormBlockInter
       '#attachment_tables' => $fragment['attachment_tables'] ?? NULL,
       '#wrapper_attributes' => $this->buildItemWrapperAttributes($entity, $state),
       '#attachment_wrapper_attributes' => $fragment['attachment_wrapper_attributes'] ?? [],
-      '#tooltip_show_data' => $this->t('Show data', [], ['langcode' => $langcode]),
-      '#tooltip_hide_data' => $this->t('Hide data', [], ['langcode' => $langcode]),
-      '#tooltip_no_data' => $this->t('No data', [], ['langcode' => $langcode]),
+      '#tooltip_show_data' => $this->t('Show data', [], $t_options),
+      '#tooltip_hide_data' => $this->t('Hide data', [], $t_options),
+      '#tooltip_no_data' => $this->t('No data', [], $t_options),
     ];
   }
 

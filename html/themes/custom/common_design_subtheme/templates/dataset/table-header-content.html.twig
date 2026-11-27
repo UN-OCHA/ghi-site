@@ -1,0 +1,16 @@
+{#
+/**
+ * @file
+ * Keeps a textual header's final word and sort icon on the same line.
+ *
+ * Structured header content is rendered intact with the icon alongside it.
+ * Whitespace control preserves the original label for mobile row labels.
+ */
+#}
+<span class="ghi-table__header-content{% if cell.label_parts is defined %} ghi-table__header-content--inline{% endif %}">
+  {%- if cell.label_parts is defined -%}
+    <span class="ghi-table__header-label">{{ cell.label_parts.prefix }}<span class="ghi-table__header-end">{{ cell.label_parts.suffix }}<span class="ghi-table__sort-icon" aria-hidden="true"></span></span></span>
+  {%- else -%}
+    <span class="ghi-table__header-label">{{- cell.content -}}</span><span class="ghi-table__sort-icon" aria-hidden="true"></span>
+  {%- endif -%}
+</span>

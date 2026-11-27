@@ -210,7 +210,7 @@ class PageTemplateCreateTest extends KernelTestBase {
    * Tests exported restrictions do not filter the initial layout snapshot.
    */
   public function testExportedRestrictionsRetainSectionCollection(): void {
-    $this->enableModules(['file', 'hpc_common', 'hpc_downloads', 'ghi_form_elements', 'ghi_blocks']);
+    $this->enableModules(['file', 'hpc_common', 'hpc_downloads', 'ghi_plans', 'ghi_form_elements', 'ghi_blocks']);
     $this->installEntitySchema('file');
     $this->installSchema('file', ['file_usage']);
     $this->assertArrayHasKey('generic_link_carousel', $this->container->get('plugin.manager.block')->getDefinitions());

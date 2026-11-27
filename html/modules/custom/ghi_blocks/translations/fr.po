@@ -14,3 +14,4 @@ msgstr "(s’ouvre dans un nouvel onglet)"
 
 msgid "Image information"
 msgstr "Informations sur l’image"
+

@@ -53,6 +53,7 @@ function common_design_subtheme_theme_registry_alter(&$theme_registry) {
   // Defaults for tables and to make those settings available.
   $theme_registry['table']['variables']['block_id'] = NULL;
   $theme_registry['table']['variables']['cell_wrapping'] = TRUE;
+  $theme_registry['table']['variables']['distributed_columns'] = FALSE;
   $theme_registry['table']['variables']['sortable'] = FALSE;
   $theme_registry['table']['variables']['searchable'] = FALSE;
   $theme_registry['table']['variables']['progress_groups'] = FALSE;
@@ -489,8 +490,19 @@ function common_design_subtheme_preprocess_table(&$vars) {
   // Progress indicators.
   $progress_indicators = !empty($vars['progress_groups']);
   $progress_groups = [];
+  $first_column_width = NULL;
   if ($progress_indicators) {
     $attributes['class'][] = Html::getClass('has-progress-indicator');
+  }
+
+  if (!empty($vars['distributed_columns'])) {
+    $attributes['class'][] = 'ghi-table--distributed-columns';
+    $column_count = (int) ($vars['header_columns'] ?? 0);
+    if ($column_count > 0) {
+      // Prefer a larger descriptor column. Automatic table layout distributes
+      // the remaining width according to indicator labels and cell content.
+      $first_column_width = $column_count == 1 ? 100 : round(200 / ($column_count + 1), 4);
+    }
   }
 
   if (!empty($vars['sticky_rows'])) {
@@ -511,9 +523,29 @@ function common_design_subtheme_preprocess_table(&$vars) {
   }
 
   $vars['attributes'] = array_key_exists('attributes', $vars) ? NestedArray::mergeDeep($vars['attributes'], $attributes) : $attributes;
+  if ($first_column_width !== NULL) {
+    $styles = $vars['attributes']['style'] ?? [];
+    $styles = is_array($styles) ? $styles : [$styles];
+    $styles[] = '--ghi-table-first-column-width: ' . $first_column_width . '%;';
+    $vars['attributes']['style'] = $styles;
+  }
 
   // Process the header.
   foreach ($vars['header'] as &$header) {
+    $content = $header['content'] ?? NULL;
+    if (is_string($content) || $content instanceof TranslatableMarkup) {
+      // Structured header render arrays may contain intentional markup; only
+      // textual labels can be safely adjusted for typographic wrapping.
+      $header['content'] = _common_design_subtheme_bind_single_character_header_tokens((string) $content);
+      if ($sortable && preg_match('/^(.*?)([\S\x{00A0}\x{202F}]+)(\s*)$/us', $header['content'], $parts)) {
+        // Bind the final word to its sort icon without breaking existing
+        // nonbreaking groups such as "% Funded" or altering the label text.
+        $header['label_parts'] = [
+          'prefix' => $parts[1],
+          'suffix' => $parts[2] . $parts[3],
+        ];
+      }
+    }
     $attribute = is_array($header) && array_key_exists('attributes', $header) ? $header['attributes'] : NULL;
     if (!$attribute) {
       continue;
@@ -719,6 +751,16 @@ function common_design_subtheme_preprocess_table(&$vars) {
 
   $vars['wrapper_attributes'] = new Attribute($wrapper_attributes);
   $vars['#attached'] = array_key_exists('#attached', $vars) ? NestedArray::mergeDeep($vars['#attached'], $attached) : $attached;
+}
+
+/**
+ * Keeps isolated single-character tokens with an adjacent header-label word.
+ *
+ * Leading and internal tokens bind forward; a final token binds backward.
+ */
+function _common_design_subtheme_bind_single_character_header_tokens(string $label): string {
+  $bound_label = preg_replace('/(?<!\\S)(\\S)\\h+(?=\\S)/u', '$1' . "\u{00A0}", $label) ?? $label;
+  return preg_replace('/\\h+(\\S)(?=\\h*$)/u', "\u{00A0}" . '$1', $bound_label) ?? $bound_label;
 }
 
 /**

@@ -194,6 +194,9 @@ class PlanCaseloadTrendsTableTest extends PlanBlockKernelTestBase {
     $this->assertInstanceOf(CacheableMetadata::class, $table_data['cacheability']);
     $this->assertContains('plan_id:' . self::PLAN_ID, $table_data['cacheability']->getCacheTags());
     $this->assertContains('config:ghi_blocks.block_settings', $table_data['cacheability']->getCacheTags());
+    $this->assertSame('Requirements', (string) $table_data['header']['requirements']['data']);
+    $this->assertSame('Prioritized requirements', (string) $table_data['header']['prioritized_requirements']['data']);
+    $this->assertSame('Funding', (string) $table_data['header']['funding']['data']);
 
     $requirements_cell = $table_data['rows'][0]['requirements'];
     $this->assertEquals(3000, $requirements_cell['data-raw-value']);
@@ -302,10 +305,12 @@ class PlanCaseloadTrendsTableTest extends PlanBlockKernelTestBase {
     $plan = $plugin->getContextValue('plan');
     // Create a 2024 and a 2022 plan section besides the existing 2025 one.
     // Table rendering should insert an empty 2023 row between those source
-    // rows.
+    // rows. Use distinct Fabric IDs because related plans are keyed by source
+    // ID and the fixture helper's random defaults can collide.
     $this->createSection([
       'label' => 'Section node 2024',
       'field_base_object' => $this->createPlanBaseObject([
+        'field_original_id' => 11,
         'field_year' => 2024,
         'field_focus_country' => ['target_id' => $plan->getFocusCountry()->id()],
       ]),
@@ -313,6 +318,7 @@ class PlanCaseloadTrendsTableTest extends PlanBlockKernelTestBase {
     $this->createSection([
       'label' => 'Section node 2022',
       'field_base_object' => $this->createPlanBaseObject([
+        'field_original_id' => 12,
         'field_year' => 2022,
         'field_focus_country' => ['target_id' => $plan->getFocusCountry()->id()],
       ]),

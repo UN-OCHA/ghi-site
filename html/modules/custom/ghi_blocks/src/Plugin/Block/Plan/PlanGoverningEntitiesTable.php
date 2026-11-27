@@ -11,6 +11,7 @@ use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\ghi_base_objects\Helpers\BaseObjectHelper;
 use Drupal\ghi_blocks\Interfaces\ConfigurableTableBlockInterface;
 use Drupal\ghi_blocks\Interfaces\DeprecatedBlockInterface;
+use Drupal\ghi_blocks\Interfaces\FrontendTableBlockInterface;
 use Drupal\ghi_blocks\Interfaces\MultiStepFormBlockInterface;
 use Drupal\ghi_blocks\Interfaces\OverrideDefaultTitleBlockInterface;
 use Drupal\ghi_blocks\Plugin\Block\GHIBlockBase;
@@ -39,7 +40,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
     'plan' => new EntityContextDefinition('entity:base_object', new TranslatableMarkup('Plan'), constraints: ['Bundle' => 'plan']),
   ],
 )]
-class PlanGoverningEntitiesTable extends GHIBlockBase implements ConfigurableTableBlockInterface, MultiStepFormBlockInterface, OverrideDefaultTitleBlockInterface, HPCDownloadExcelInterface, HPCDownloadPNGInterface, DeprecatedBlockInterface {
+class PlanGoverningEntitiesTable extends GHIBlockBase implements ConfigurableTableBlockInterface, FrontendTableBlockInterface, MultiStepFormBlockInterface, OverrideDefaultTitleBlockInterface, HPCDownloadExcelInterface, HPCDownloadPNGInterface, DeprecatedBlockInterface {
 
   use ConfigurationContainerTrait;
   use ConfigurationItemClusterRestrictTrait;
@@ -524,7 +525,7 @@ class PlanGoverningEntitiesTable extends GHIBlockBase implements ConfigurableTab
       return $prototype_label;
     }
 
-    $t_options = ['langcode' => $plan->getPlanLanguage()];
+    $t_options = $this->buildPlanTranslationOptions($plan);
     $cluster_label_map = [
       Plan::CLUSTER_TYPE_CLUSTER => $this->t('Cluster', [], $t_options),
       Plan::CLUSTER_TYPE_SECTOR => $this->t('Sector', [], $t_options),

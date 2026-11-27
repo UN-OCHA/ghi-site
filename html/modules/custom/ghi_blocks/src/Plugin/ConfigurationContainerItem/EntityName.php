@@ -9,6 +9,7 @@ use Drupal\ghi_form_elements\Attribute\ConfigurationContainerItem;
 use Drupal\ghi_form_elements\ConfigurationContainerItemPluginBase;
 use Drupal\ghi_plans\ApiObjects\Entities\EntityObjectInterface;
 use Drupal\ghi_plans\ApiObjects\Entities\GoverningEntity;
+use Drupal\ghi_plans\Entity\Plan;
 use Drupal\node\NodeInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -51,7 +52,11 @@ class EntityName extends ConfigurationContainerItemPluginBase {
    */
   public function getDefaultLabel() {
     $configuration = $this->getPluginConfiguration();
-    return $configuration['default_label'] ?? $this->t('Cluster');
+    if (isset($configuration['default_label'])) {
+      return $configuration['default_label'];
+    }
+    $plan = $this->getContextValue('plan_object');
+    return $this->t('Cluster', [], $this->buildPlanTranslationOptions($plan instanceof Plan ? $plan : NULL));
   }
 
   /**
